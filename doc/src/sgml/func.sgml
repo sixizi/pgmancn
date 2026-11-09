@@ -21232,7 +21232,7 @@ MERGE INTO products p
  </sect1>
 
  <sect1 id="functions-subquery">
-  <title>Subquery Expressions</title>
+  <title>子查询表达式</title>
 
   <indexterm>
    <primary>EXISTS</primary>
@@ -21263,10 +21263,8 @@ MERGE INTO products p
   </indexterm>
 
   <para>
-   This section describes the <acronym>SQL</acronym>-compliant subquery
-   expressions available in <productname>PostgreSQL</productname>.
-   All of the expression forms documented in this section return
-   Boolean (true/false) results.
+   本节介绍 <acronym>SQL</acronym> 兼容的子查询表达式，这些表达式在 <productname>PostgreSQL</productname> 中可用。
+   本节记录的所有表达式形式都返回布尔（真/假）结果。
   </para>
 
   <sect2 id="functions-subquery-exists">
@@ -21277,40 +21275,28 @@ EXISTS (<replaceable>subquery</replaceable>)
 </synopsis>
 
   <para>
-   The argument of <token>EXISTS</token> is an arbitrary <command>SELECT</command> statement,
-   or <firstterm>subquery</firstterm>.  The
-   subquery is evaluated to determine whether it returns any rows.
-   If it returns at least one row, the result of <token>EXISTS</token> is
-   <quote>true</quote>; if the subquery returns no rows, the result of <token>EXISTS</token>
-   is <quote>false</quote>.
+   <token>EXISTS</token> 的参数是一个任意的 <command>SELECT</command> 语句，或者称为<firstterm>子查询</firstterm>。
+   该子查询会被求值，以确定它是否返回任何行。
+   如果它返回至少一行，则 <token>EXISTS</token> 的结果为<quote>真</quote>；如果子查询不返回任何行，则 <token>EXISTS</token> 的结果为<quote>假</quote>。
   </para>
 
   <para>
-   The subquery can refer to variables from the surrounding query,
-   which will act as constants during any one evaluation of the subquery.
+   子查询可以引用外围查询中的变量，在对该子查询的任意一次求值期间，这些变量将充当常量。
   </para>
 
   <para>
-   The subquery will generally only be executed long enough to determine
-   whether at least one row is returned, not all the way to completion.
-   It is unwise to write a subquery that has side effects (such as
-   calling sequence functions); whether the side effects occur
-   might be unpredictable.
+   子查询通常只会执行到足以确定是否返回至少一行为止，而不会一直执行到完成。
+   编写带有副作用的子查询（例如调用序列函数）是不明智的；副作用是否会发生可能无法预测。
   </para>
 
   <para>
-   Since the result depends only on whether any rows are returned,
-   and not on the contents of those rows, the output list of the
-   subquery is normally unimportant.  A common coding convention is
-   to write all <literal>EXISTS</literal> tests in the form
-   <literal>EXISTS(SELECT 1 WHERE ...)</literal>.  There are exceptions to
-   this rule however, such as subqueries that use <token>INTERSECT</token>.
+   由于结果只取决于是否返回任何行，而不取决于这些行的内容，因此子查询的输出列表通常无关紧要。
+   一种常见的编码约定是以 <literal>EXISTS(SELECT 1 WHERE ...)</literal> 的形式编写所有 <literal>EXISTS</literal> 测试。
+   不过，这条规则也有例外，例如使用 <token>INTERSECT</token> 的子查询。
   </para>
 
   <para>
-   This simple example is like an inner join on <literal>col2</literal>, but
-   it produces at most one output row for each <literal>tab1</literal> row,
-   even if there are several matching <literal>tab2</literal> rows:
+   这个简单的例子类似于对 <literal>col2</literal> 做内连接，但对于每个 <literal>tab1</literal> 行，它最多产生一行输出，即使有多个匹配的 <literal>tab2</literal> 行：
 <screen>
 SELECT col1
 FROM tab1
@@ -21327,25 +21313,15 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized
-   subquery, which must return exactly one column.  The left-hand expression
-   is evaluated and compared to each row of the subquery result.
-   The result of <token>IN</token> is <quote>true</quote> if any equal subquery row is found.
-   The result is <quote>false</quote> if no equal row is found (including the
-   case where the subquery returns no rows).
+   右侧是一个带括号的子查询，它必须正好返回一列。左侧表达式会被求值，并与子查询结果的每一行进行比较。如果找到任何相等的子查询行，<token>IN</token> 的结果为 <quote>true</quote>。如果没有找到相等的行（包括子查询返回零行的情况），结果为 <quote>false</quote>。
   </para>
 
   <para>
-   Note that if the left-hand expression yields null, or if there are
-   no equal right-hand values and at least one right-hand row yields
-   null, the result of the <token>IN</token> construct will be null, not false.
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   注意，如果左侧表达式产生空值，或者没有相等的右侧值并且至少有一个右侧行产生空值，则 <token>IN</token> 结构的结果将为空值，而不是假。这符合 SQL 关于空值布尔组合的正常规则。
   </para>
 
   <para>
-   As with <token>EXISTS</token>, it's unwise to assume that the subquery will
-   be evaluated completely.
+   与 <token>EXISTS</token> 一样，假定子查询会被完全求值是不明智的。
   </para>
 
 <synopsis>
@@ -21353,25 +21329,11 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The left-hand side of this form of <token>IN</token> is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The right-hand side is a parenthesized
-   subquery, which must return exactly as many columns as there are
-   expressions in the left-hand row.  The left-hand expressions are
-   evaluated and compared row-wise to each row of the subquery result.
-   The result of <token>IN</token> is <quote>true</quote> if any equal subquery row is found.
-   The result is <quote>false</quote> if no equal row is found (including the
-   case where the subquery returns no rows).
+   这种形式的 <token>IN</token> 的左侧是一个行构造器，如 <xref linkend="sql-syntax-row-constructors"/> 中所述。右侧是一个带括号的子查询，它返回的列数必须与左侧行中的表达式数量完全相同。左侧表达式会被求值，并按行与子查询结果的每一行进行比较。如果找到任何相等的子查询行，<token>IN</token> 的结果为 <quote>true</quote>。如果没有找到相等的行（包括子查询返回零行的情况），结果为 <quote>false</quote>。
   </para>
 
   <para>
-   As usual, null values in the rows are combined per
-   the normal rules of SQL Boolean expressions.  Two rows are considered
-   equal if all their corresponding members are non-null and equal; the rows
-   are unequal if any corresponding members are non-null and unequal;
-   otherwise the result of that row comparison is unknown (null).
-   If all the per-row results are either unequal or null, with at least one
-   null, then the result of <token>IN</token> is null.
+   像往常一样，行中的空值按照 SQL 布尔表达式的正常规则进行组合。如果两行的所有对应成员都非空且相等，则认为这两行相等；如果任何对应成员非空且不相等，则认为这两行不相等；否则该行比较的结果为未知（空值）。如果所有逐行结果都是不相等或空值，且至少有一个空值，那么 <token>IN</token> 的结果为空值。
   </para>
   </sect2>
 
@@ -21383,25 +21345,19 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized
-   subquery, which must return exactly one column.  The left-hand expression
-   is evaluated and compared to each row of the subquery result.
-   The result of <token>NOT IN</token> is <quote>true</quote> if only unequal subquery rows
-   are found (including the case where the subquery returns no rows).
-   The result is <quote>false</quote> if any equal row is found.
+   右侧是一个带括号的子查询，它必须正好返回一列。左侧表达式会被求值，并与子查询结果的每一行进行比较。
+   如果只找到不相等的子查询行（包括子查询返回零行的情况），<token>NOT IN</token> 的结果为 <quote>true</quote>。
+   如果找到任何相等的行，结果为 <quote>false</quote>。
   </para>
 
   <para>
-   Note that if the left-hand expression yields null, or if there are
-   no equal right-hand values and at least one right-hand row yields
-   null, the result of the <token>NOT IN</token> construct will be null, not true.
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   注意，如果左侧表达式产生空值，或者右侧没有相等的值并且至少有一行右侧行产生空值，
+   则 <token>NOT IN</token> 结构的结果将为空值，而不是 true。
+   这符合 SQL 关于空值布尔组合的常规规则。
   </para>
 
   <para>
-   As with <token>EXISTS</token>, it's unwise to assume that the subquery will
-   be evaluated completely.
+   与 <token>EXISTS</token> 一样，假定子查询会被完全求值是不明智的。
   </para>
 
 <synopsis>
@@ -21409,25 +21365,19 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The left-hand side of this form of <token>NOT IN</token> is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The right-hand side is a parenthesized
-   subquery, which must return exactly as many columns as there are
-   expressions in the left-hand row.  The left-hand expressions are
-   evaluated and compared row-wise to each row of the subquery result.
-   The result of <token>NOT IN</token> is <quote>true</quote> if only unequal subquery rows
-   are found (including the case where the subquery returns no rows).
-   The result is <quote>false</quote> if any equal row is found.
+   这种形式的 <token>NOT IN</token> 的左侧是一个行构造器，
+   如 <xref linkend="sql-syntax-row-constructors"/> 所述。
+   右侧是一个带括号的子查询，它返回的列数必须与左侧行中的表达式数量完全相同。
+   左侧表达式会被求值，并按行与子查询结果的每一行进行比较。
+   如果只找到不相等的子查询行（包括子查询返回零行的情况），<token>NOT IN</token> 的结果为 <quote>true</quote>。
+   如果找到任何相等的行，结果为 <quote>false</quote>。
   </para>
 
   <para>
-   As usual, null values in the rows are combined per
-   the normal rules of SQL Boolean expressions.  Two rows are considered
-   equal if all their corresponding members are non-null and equal; the rows
-   are unequal if any corresponding members are non-null and unequal;
-   otherwise the result of that row comparison is unknown (null).
-   If all the per-row results are either unequal or null, with at least one
-   null, then the result of <token>NOT IN</token> is null.
+   通常，行中的空值按照 SQL 布尔表达式的常规规则进行组合。如果两行的所有对应成员都非空且相等，
+   则认为这两行相等；如果任何对应成员非空且不相等，则认为这两行不相等；
+   否则该行比较的结果为未知（空值）。
+   如果所有逐行结果要么不相等要么为空值，且至少有一个空值，那么 <token>NOT IN</token> 的结果为空值。
   </para>
   </sect2>
 
@@ -21451,21 +21401,17 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
   </para>
 
   <para>
-   <token>SOME</token> is a synonym for <token>ANY</token>.
-   <token>IN</token> is equivalent to <literal>= ANY</literal>.
+   <token>SOME</token> 是 <token>ANY</token> 的同义词。
+   <token>IN</token> 等价于 <literal>= ANY</literal>。
   </para>
 
   <para>
-   Note that if there are no successes and at least one right-hand row yields
-   null for the operator's result, the result of the <token>ANY</token> construct
-   will be null, not false.
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   请注意，如果没有任何成功，并且至少有一行右侧行对于该运算符的结果产生空值，则 <token>ANY</token> 构造的结果将是空值，而不是假。
+   这符合 SQL 关于空值布尔组合的常规规则。
   </para>
 
   <para>
-   As with <token>EXISTS</token>, it's unwise to assume that the subquery will
-   be evaluated completely.
+   与 <token>EXISTS</token> 一样，假定子查询会被完全求值是不明智的。
   </para>
 
 <synopsis>
@@ -21474,25 +21420,16 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The left-hand side of this form of <token>ANY</token> is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The right-hand side is a parenthesized
-   subquery, which must return exactly as many columns as there are
-   expressions in the left-hand row.  The left-hand expressions are
-   evaluated and compared row-wise to each row of the subquery result,
-   using the given <replaceable>operator</replaceable>.
-   The result of <token>ANY</token> is <quote>true</quote> if the comparison
-   returns true for any subquery row.
-   The result is <quote>false</quote> if the comparison returns false for every
-   subquery row (including the case where the subquery returns no
-   rows).
-   The result is NULL if no comparison with a subquery row returns true,
-   and at least one comparison returns NULL.
+   这种形式的 <token>ANY</token> 的左侧是一个行构造器，如 <xref linkend="sql-syntax-row-constructors"/> 所述。
+   右侧是一个带括号的子查询，它返回的列数必须与左侧行中的表达式数量完全相同。
+   左侧表达式会被求值，并使用给定的 <replaceable>operator</replaceable> 与子查询结果的每一行按行进行比较。
+   如果与任一子查询行的比较返回真，则 <token>ANY</token> 的结果为<quote>真</quote>。
+   如果与每个子查询行的比较都返回假（包括子查询不返回任何行的情况），则结果为<quote>假</quote>。
+   如果与任何子查询行的比较都没有返回真，并且至少有一个比较返回 NULL，则结果为 NULL。
   </para>
 
   <para>
-   See <xref linkend="row-wise-comparison"/> for details about the meaning
-   of a row constructor comparison.
+   有关行构造器比较含义的详细信息，请参见 <xref linkend="row-wise-comparison"/>。
   </para>
   </sect2>
 
@@ -21517,12 +21454,11 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
   </para>
 
   <para>
-   <token>NOT IN</token> is equivalent to <literal>&lt;&gt; ALL</literal>.
+   <token>NOT IN</token> 等价于 <literal>&lt;&gt; ALL</literal>。
   </para>
 
   <para>
-   As with <token>EXISTS</token>, it's unwise to assume that the subquery will
-   be evaluated completely.
+   与 <token>EXISTS</token> 一样，假定子查询会被完全求值是不明智的。
   </para>
 
 <synopsis>
@@ -21530,30 +21466,25 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The left-hand side of this form of <token>ALL</token> is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The right-hand side is a parenthesized
-   subquery, which must return exactly as many columns as there are
-   expressions in the left-hand row.  The left-hand expressions are
-   evaluated and compared row-wise to each row of the subquery result,
-   using the given <replaceable>operator</replaceable>.
-   The result of <token>ALL</token> is <quote>true</quote> if the comparison
-   returns true for all subquery rows (including the
-   case where the subquery returns no rows).
-   The result is <quote>false</quote> if the comparison returns false for any
-   subquery row.
-   The result is NULL if no comparison with a subquery row returns false,
-   and at least one comparison returns NULL.
+   这种形式的 <token>ALL</token> 的左侧是一个行构造器，
+   如 <xref linkend="sql-syntax-row-constructors"/> 中所述。
+   右侧是一个带括号的子查询，它返回的列数必须与
+   左侧行中的表达式数量完全相同。左侧的表达式会被求值，
+   并使用给定的 <replaceable>operator</replaceable> 与子查询结果的每一行进行逐行比较。
+   如果对子查询的所有行比较都返回真（包括子查询返回零行的
+   情况），则 <token>ALL</token> 的结果为 <quote>true</quote>。
+   如果对任何子查询行的比较返回假，则结果为 <quote>false</quote>。
+   如果与子查询行的比较没有返回假，并且至少有一个比较返回
+   NULL，则结果为 NULL。
   </para>
 
   <para>
-   See <xref linkend="row-wise-comparison"/> for details about the meaning
-   of a row constructor comparison.
+   有关行构造器比较含义的详细信息，请参见 <xref linkend="row-wise-comparison"/>。
   </para>
   </sect2>
 
   <sect2 id="functions-subquery-single-row-comp">
-   <title>Single-Row Comparison</title>
+   <title>单行比较</title>
 
    <indexterm zone="functions-subquery">
     <primary>comparison</primary>
@@ -21565,18 +21496,17 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The left-hand side is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The right-hand side is a parenthesized subquery, which must return exactly
-   as many columns as there are expressions in the left-hand row. Furthermore,
-   the subquery cannot return more than one row.  (If it returns zero rows,
-   the result is taken to be null.)  The left-hand side is evaluated and
-   compared row-wise to the single subquery result row.
+   左侧是一个行构造器，
+   如 <xref linkend="sql-syntax-row-constructors"/> 中所述。
+   右侧是一个带括号的子查询，它返回的列数必须与
+   左侧行中的表达式数量完全相同。此外，
+   该子查询返回的行数不能超过一行。（如果它返回零行，
+   则结果被视为 null。）左侧会被求值，并与
+   子查询结果中的那一行进行逐行比较。
   </para>
 
   <para>
-   See <xref linkend="row-wise-comparison"/> for details about the meaning
-   of a row constructor comparison.
+   关于行构造器比较的含义，详见 <xref linkend="row-wise-comparison"/>。
   </para>
   </sect2>
  </sect1>
