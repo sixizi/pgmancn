@@ -709,7 +709,7 @@ int SPI_execute_extended(const char *<parameter>command</parameter>,
 
  <refnamediv>
   <refname>SPI_execute_with_args</refname>
-  <refpurpose>execute a command with out-of-line parameters</refpurpose>
+  <refpurpose>使用行外参数执行命令</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -722,45 +722,30 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <function>SPI_execute_with_args</function> executes a command that might
-   include references to externally supplied parameters.  The command text
-   refers to a parameter as <literal>$<replaceable>n</replaceable></literal>, and
-   the call specifies data types and values for each such symbol.
-   <parameter>read_only</parameter> and <parameter>count</parameter> have
-   the same interpretation as in <function>SPI_execute</function>.
+   <function>SPI_execute_with_args</function> 执行一条可能包含对外部提供的参数引用的命令。命令文本用 <literal>$<replaceable>n</replaceable></literal> 引用参数，调用时为每个这样的符号指定数据类型和值。<parameter>read_only</parameter> 和 <parameter>count</parameter> 的解释与 <function>SPI_execute</function> 中相同。
   </para>
 
   <para>
-   The main advantage of this routine compared to
-   <function>SPI_execute</function> is that data values can be inserted
-   into the command without tedious quoting/escaping, and thus with much
-   less risk of SQL-injection attacks.
+   与 <function>SPI_execute</function> 相比，此例程的主要优点是可以把数据值插入命令中，而无需繁琐的引号/转义处理，因此 SQL 注入攻击的风险要小得多。
   </para>
 
   <para>
-   Similar results can be achieved with <function>SPI_prepare</function> followed by
-   <function>SPI_execute_plan</function>; however, when using this function
-   the query plan is always customized to the specific parameter values
-   provided.
-   For one-time query execution, this function should be preferred.
-   If the same command is to be executed with many different parameters,
-   either method might be faster, depending on the cost of re-planning
-   versus the benefit of custom plans.
+   使用 <function>SPI_prepare</function> 后跟 <function>SPI_execute_plan</function> 也可以获得类似的结果；但是，使用此函数时，查询计划总是针对所提供的具体参数值进行定制。对于一次性查询执行，应优先使用此函数。如果要用许多不同的参数执行同一条命令，两种方法都可能更快，这取决于重新规划的成本与定制计划带来的收益之间的权衡。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Arguments</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>const char * <parameter>command</parameter></literal></term>
     <listitem>
      <para>
-      command string
+      命令字符串
      </para>
     </listitem>
    </varlistentry>
@@ -769,7 +754,7 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
     <term><literal>int <parameter>nargs</parameter></literal></term>
     <listitem>
      <para>
-      number of input parameters (<literal>$1</literal>, <literal>$2</literal>, etc.)
+      输入参数的数量（<literal>$1</literal>、<literal>$2</literal> 等）
      </para>
     </listitem>
    </varlistentry>
@@ -778,8 +763,7 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
     <term><literal>Oid * <parameter>argtypes</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, containing the
-      <acronym>OID</acronym>s of the data types of the parameters
+      一个长度为 <parameter>nargs</parameter> 的数组，包含各参数数据类型的 <acronym>OID</acronym>
      </para>
     </listitem>
    </varlistentry>
@@ -788,8 +772,7 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
     <term><literal>Datum * <parameter>values</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, containing the actual
-      parameter values
+      一个长度为 <parameter>nargs</parameter> 的数组，包含实际的参数值
      </para>
     </listitem>
    </varlistentry>
@@ -798,20 +781,11 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
     <term><literal>const char * <parameter>nulls</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, describing which
-      parameters are null
+      一个长度为 <parameter>nargs</parameter> 的数组，描述哪些参数为空
      </para>
 
      <para>
-      If <parameter>nulls</parameter> is <symbol>NULL</symbol> then
-      <function>SPI_execute_with_args</function> assumes that no parameters
-      are null.  Otherwise, each entry of the <parameter>nulls</parameter>
-      array should be <literal>'&nbsp;'</literal> if the corresponding parameter
-      value is non-null, or <literal>'n'</literal> if the corresponding parameter
-      value is null.  (In the latter case, the actual value in the
-      corresponding <parameter>values</parameter> entry doesn't matter.)  Note
-      that <parameter>nulls</parameter> is not a text string, just an array:
-      it does not need a <literal>'\0'</literal> terminator.
+      如果 <parameter>nulls</parameter> 为 <symbol>NULL</symbol>，则 <function>SPI_execute_with_args</function> 假定没有参数为空。否则，<parameter>nulls</parameter> 数组的每个条目在对应参数值非空时应为 <literal>'&nbsp;'</literal>，在对应参数值为空时应为 <literal>'n'</literal>。（在后一种情况下，对应 <parameter>values</parameter> 条目中的实际值无关紧要。）注意 <parameter>nulls</parameter> 不是文本字符串，而只是一个数组：它不需要 <literal>'\0'</literal> 终止符。
      </para>
     </listitem>
    </varlistentry>
@@ -819,7 +793,7 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
    <varlistentry>
     <term><literal>bool <parameter>read_only</parameter></literal></term>
     <listitem>
-     <para><literal>true</literal> for read-only execution</para>
+     <para><literal>true</literal> 表示只读执行</para>
     </listitem>
    </varlistentry>
 
@@ -827,8 +801,8 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
     <term><literal>long <parameter>count</parameter></literal></term>
     <listitem>
      <para>
-      maximum number of rows to return,
-      or <literal>0</literal> for no limit
+      要返回的最大行数，
+      或 <literal>0</literal> 表示不限制
      </para>
     </listitem>
    </varlistentry>
@@ -836,16 +810,16 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
  </refsect1>
 
  <refsect1>
-  <title>Return Value</title>
+  <title>返回值</title>
 
   <para>
-   The return value is the same as for <function>SPI_execute</function>.
+   返回值与 <function>SPI_execute</function> 的返回值相同。
   </para>
 
   <para>
-   <varname>SPI_processed</varname> and
-   <varname>SPI_tuptable</varname> are set as in
-   <function>SPI_execute</function> if successful.
+   如果成功，<varname>SPI_processed</varname> 和
+   <varname>SPI_tuptable</varname> 会像在
+   <function>SPI_execute</function> 中那样被设置。
   </para>
  </refsect1>
 </refentry>
