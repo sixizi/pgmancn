@@ -138,21 +138,14 @@
 
 
   <sect1 id="datetime-invalid-input">
-   <title>Handling of Invalid or Ambiguous Timestamps</title>
+   <title>处理无效或有歧义的时间戳</title>
 
    <para>
-    Ordinarily, if a date/time string is syntactically valid but contains
-    out-of-range field values, an error will be thrown.  For example, input
-    specifying the 31st of February will be rejected.
+    通常，如果日期/时间字符串在语法上有效但包含超出范围的字段值，将会抛出错误。例如，指定 2 月 31 日的输入将被拒绝。
    </para>
 
    <para>
-    During a daylight-savings-time transition, it is possible for a
-    seemingly valid timestamp string to represent a nonexistent or ambiguous
-    timestamp.  Such cases are not rejected; the ambiguity is resolved by
-    determining which UTC offset to apply.  For example, supposing that the
-    <xref linkend="guc-timezone"/> parameter is set
-    to <literal>America/New_York</literal>, consider
+    在夏令时转换期间，一个看似有效的时间戳字符串可能表示不存在或有歧义的时间戳。此类情况不会被拒绝；而是通过确定应用哪个 UTC 偏移量来解决歧义。例如，假设 <xref linkend="guc-timezone"/> 参数设置为 <literal>America/New_York</literal>，考虑
 <programlisting>
 =&gt; SELECT '2018-03-11 02:30'::timestamptz;
       timestamptz
@@ -160,15 +153,11 @@
  2018-03-11 03:30:00-04
 (1 row)
 </programlisting>
-    Because that day was a spring-forward transition date in that time zone,
-    there was no civil time instant 2:30AM; clocks jumped forward from 2AM
-    EST to 3AM EDT.  <productname>PostgreSQL</productname> interprets the
-    given time as if it were standard time (UTC-5), which then renders as
-    3:30AM EDT (UTC-4).
+    由于该日期是该时区的春季前跳转换日期，因此不存在民用时间 2:30AM；时钟从 2AM EST 跳到 3AM EDT。<productname>PostgreSQL</productname> 将给定时间按标准时间（UTC-5）解释，因此呈现为 3:30AM EDT（UTC-4）。
    </para>
 
    <para>
-    Conversely, consider the behavior during a fall-back transition:
+    相反，考虑回退转换期间的行为：
 <programlisting>
 =&gt; SELECT '2018-11-04 01:30'::timestamptz;
       timestamptz
@@ -176,12 +165,7 @@
  2018-11-04 01:30:00-05
 (1 row)
 </programlisting>
-    On that date, there were two possible interpretations of 1:30AM; there
-    was 1:30AM EDT, and then an hour later after clocks jumped back from
-    2AM EDT to 1AM EST, there was 1:30AM EST.
-    Again, <productname>PostgreSQL</productname> interprets the given time
-    as if it were standard time (UTC-5).  We can force the other
-    interpretation by specifying daylight-savings time:
+    在该日期，1:30AM 有两种可能的解释；先是 1:30AM EDT，然后一小时后时钟从 2AM EDT 跳回 1AM EST，此时是 1:30AM EST。同样，<productname>PostgreSQL</productname> 将给定时间按标准时间（UTC-5）解释。我们可以通过指定夏令时来强制采用另一种解释：
 <programlisting>
 =&gt; SELECT '2018-11-04 01:30 EDT'::timestamptz;
       timestamptz
@@ -192,22 +176,11 @@
    </para>
 
    <para>
-    The precise rule that is applied in such cases is that an invalid
-    timestamp that appears to fall within a jump-forward daylight savings
-    transition is assigned the UTC offset that prevailed in the time zone
-    just before the transition, while an ambiguous timestamp that could fall
-    on either side of a jump-back transition is assigned the UTC offset that
-    prevailed just after the transition.  In most time zones this is
-    equivalent to saying that <quote>the standard-time interpretation is
-    preferred when in doubt</quote>.
+    此类情况下应用的精确规则是：看似落在春季前跳夏令时转换范围内的无效时间戳，被赋予转换前该时区通行的 UTC 偏移量；而可能落在回退转换任一侧的有歧义时间戳，被赋予转换后通行的 UTC 偏移量。在大多数时区，这等同于说<quote>存疑时优先采用标准时间解释</quote>。
    </para>
 
    <para>
-    In all cases, the UTC offset associated with a timestamp can be
-    specified explicitly, using either a numeric UTC offset or a time zone
-    abbreviation that corresponds to a fixed UTC offset.  The rule just
-    given applies only when it is necessary to infer a UTC offset for a time
-    zone in which the offset varies.
+    在所有情况下，与时间戳关联的 UTC 偏移量都可以显式指定，使用数字 UTC 偏移量或对应固定 UTC 偏移量的时区缩写。刚才给出的规则仅在需要为偏移量会变化的时区推断 UTC 偏移量时适用。
    </para>
   </sect1>
 
