@@ -3889,7 +3889,7 @@ INSERT INTO mytable VALUES(-1);  -- fails
   </sect1>
 
   <sect1 id="datatype-oid">
-   <title>Object Identifier Types</title>
+   <title>对象标识符类型</title>
 
    <indexterm zone="datatype-oid">
     <primary>object identifier</primary>
@@ -3961,65 +3961,53 @@ INSERT INTO mytable VALUES(-1);  -- fails
    </indexterm>
 
    <para>
-    Object identifiers (OIDs) are used internally by
-    <productname>PostgreSQL</productname> as primary keys for various
-    system tables.
-    Type <type>oid</type> represents an object identifier.  There are also
-    several alias types for <type>oid</type>, each
-    named <type>reg<replaceable>something</replaceable></type>.
-    <xref linkend="datatype-oid-table"/> shows an
-    overview.
+    对象标识符（OID）由 <productname>PostgreSQL</productname> 内部用作各种系统表的主键。
+    类型 <type>oid</type> 表示一个对象标识符。此外还有若干
+    <type>oid</type> 的别名类型，每个都命名为 <type>reg<replaceable>something</replaceable></type>。
+    <xref linkend="datatype-oid-table"/> 给出了概览。
    </para>
 
    <para>
-    The <type>oid</type> type is currently implemented as an unsigned
-    four-byte integer.  Therefore, it is not large enough to provide
-    database-wide uniqueness in large databases, or even in large
-    individual tables.
+    目前 <type>oid</type> 类型实现为无符号的四字节整数。因此，它不足以在大型数据库中，
+    甚至在大型单个表中提供数据库范围的唯一性。
    </para>
 
    <para>
-    The <type>oid</type> type itself has few operations beyond comparison.
-    It can be cast to integer, however, and then manipulated using the
-    standard integer operators.  (Beware of possible
-    signed-versus-unsigned confusion if you do this.)
+    <type>oid</type> 类型本身除了比较之外几乎没有其他操作。
+    不过，它可以被转换为整数，然后使用标准的整数运算符进行操作。
+    （如果这样做，请注意可能出现的有关有符号与无符号的混淆。）
    </para>
 
    <para>
-    The OID alias types have no operations of their own except
-    for specialized input and output routines.  These routines are able
-    to accept and display symbolic names for system objects, rather than
-    the raw numeric value that type <type>oid</type> would use.  The alias
-    types allow simplified lookup of OID values for objects.  For example,
-    to examine the <structname>pg_attribute</structname> rows related to a table
-    <literal>mytable</literal>, one could write:
+    OID 别名类型除了专门的输入和输出例程之外，没有自己的操作。
+    这些例程能够接受并显示系统对象的符号名称，而不是 <type>oid</type> 类型
+    会使用的原始数值。别名类型允许简化对对象 OID 值的查找。例如，
+    要检查与表 <literal>mytable</literal> 相关的 <structname>pg_attribute</structname> 行，可以写：
 <programlisting>
 SELECT * FROM pg_attribute WHERE attrelid = 'mytable'::regclass;
 </programlisting>
-    rather than:
+    而不是：
 <programlisting>
 SELECT * FROM pg_attribute
   WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'mytable');
 </programlisting>
-    While that doesn't look all that bad by itself, it's still oversimplified.
-    A far more complicated sub-select would be needed to
-    select the right OID if there are multiple tables named
-    <literal>mytable</literal> in different schemas.
-    The <type>regclass</type> input converter handles the table lookup according
-    to the schema path setting, and so it does the <quote>right thing</quote>
-    automatically.  Similarly, casting a table's OID to
-    <type>regclass</type> is handy for symbolic display of a numeric OID.
+    虽然这本身看起来并不算太糟，但仍然过于简化。
+    如果在不同的模式中有多个名为 <literal>mytable</literal> 的表，
+    就需要一个复杂得多的子查询来选择正确的 OID。
+    <type>regclass</type> 输入转换器会根据模式路径设置处理表查找，
+    因此它会自动完成<quote>正确的事情</quote>。同样，将表的 OID 转换为
+    <type>regclass</type> 对于以符号方式显示数值 OID 很方便。
    </para>
 
     <table id="datatype-oid-table">
-     <title>Object Identifier Types</title>
+     <title>对象标识符类型</title>
      <tgroup cols="4">
       <thead>
        <row>
-        <entry>Name</entry>
-        <entry>References</entry>
-        <entry>Description</entry>
-        <entry>Value Example</entry>
+        <entry>名称</entry>
+        <entry>参考</entry>
+        <entry>描述</entry>
+        <entry>值示例</entry>
        </row>
       </thead>
 
@@ -4028,85 +4016,84 @@ SELECT * FROM pg_attribute
        <row>
         <entry><type>oid</type></entry>
         <entry>any</entry>
-        <entry>numeric object identifier</entry>
+        <entry>数字对象标识符</entry>
         <entry><literal>564182</literal></entry>
        </row>
 
        <row>
         <entry><type>regclass</type></entry>
         <entry><structname>pg_class</structname></entry>
-        <entry>relation name</entry>
+        <entry>关系名</entry>
         <entry><literal>pg_type</literal></entry>
        </row>
 
        <row>
         <entry><type>regcollation</type></entry>
         <entry><structname>pg_collation</structname></entry>
-        <entry>collation name</entry>
+        <entry>排序规则名</entry>
         <entry><literal>"POSIX"</literal></entry>
        </row>
 
        <row>
         <entry><type>regconfig</type></entry>
         <entry><structname>pg_ts_config</structname></entry>
-        <entry>text search configuration</entry>
+        <entry>文本搜索配置</entry>
         <entry><literal>english</literal></entry>
        </row>
 
        <row>
         <entry><type>regdictionary</type></entry>
         <entry><structname>pg_ts_dict</structname></entry>
-        <entry>text search dictionary</entry>
+        <entry>文本搜索字典</entry>
         <entry><literal>simple</literal></entry>
        </row>
 
        <row>
         <entry><type>regnamespace</type></entry>
         <entry><structname>pg_namespace</structname></entry>
-        <entry>namespace name</entry>
+        <entry>名字空间名</entry>
         <entry><literal>pg_catalog</literal></entry>
        </row>
 
        <row>
         <entry><type>regoper</type></entry>
         <entry><structname>pg_operator</structname></entry>
-        <entry>operator name</entry>
+        <entry>运算符名</entry>
         <entry><literal>+</literal></entry>
        </row>
 
        <row>
         <entry><type>regoperator</type></entry>
         <entry><structname>pg_operator</structname></entry>
-        <entry>operator with argument types</entry>
-        <entry><literal>*(integer,&zwsp;integer)</literal>
-         or <literal>-(NONE,&zwsp;integer)</literal></entry>
+        <entry>带参数类型的运算符</entry>
+        <entry><literal>*(integer,&zwsp;integer)</literal> 或 <literal>-(NONE,&zwsp;integer)</literal></entry>
        </row>
 
        <row>
         <entry><type>regproc</type></entry>
         <entry><structname>pg_proc</structname></entry>
-        <entry>function name</entry>
+        <entry>函数名</entry>
         <entry><literal>sum</literal></entry>
        </row>
 
        <row>
         <entry><type>regprocedure</type></entry>
         <entry><structname>pg_proc</structname></entry>
-        <entry>function with argument types</entry>
+        <entry>带参数类型的函数</entry>
         <entry><literal>sum(int4)</literal></entry>
        </row>
 
        <row>
         <entry><type>regrole</type></entry>
         <entry><structname>pg_authid</structname></entry>
-        <entry>role name</entry>
+        <entry>角色名</entry>
         <entry><literal>smithee</literal></entry>
        </row>
 
        <row>
         <entry><type>regtype</type></entry>
         <entry><structname>pg_type</structname></entry>
-        <entry>data type name</entry>
+        <entry>数据类型名</entry>
         <entry><literal>integer</literal></entry>
        </row>
       </tbody>
@@ -4114,45 +4101,17 @@ SELECT * FROM pg_attribute
     </table>
 
    <para>
-    All of the OID alias types for objects that are grouped by namespace
-    accept schema-qualified names, and will
-    display schema-qualified names on output if the object would not
-    be found in the current search path without being qualified.
-    For example, <literal>myschema.mytable</literal> is acceptable input
-    for <type>regclass</type> (if there is such a table).  That value
-    might be output as <literal>myschema.mytable</literal>, or
-    just <literal>mytable</literal>, depending on the current search path.
-    The <type>regproc</type> and <type>regoper</type> alias types will only
-    accept input names that are unique (not overloaded), so they are
-    of limited use; for most uses <type>regprocedure</type> or
-    <type>regoperator</type> are more appropriate.  For <type>regoperator</type>,
-    unary operators are identified by writing <literal>NONE</literal> for the unused
-    operand.
+    所有按命名空间分组的对象的 OID 别名类型都接受带模式限定的名称，并且在输出时，如果对象不加限定就无法在当前搜索路径中找到，则会显示带模式限定的名称。
+    例如，<literal>myschema.mytable</literal> 是 <type>regclass</type> 可接受的输入（如果存在这样的表）。根据当前搜索路径，该值可能输出为 <literal>myschema.mytable</literal>，也可能只是 <literal>mytable</literal>。
+    <type>regproc</type> 和 <type>regoper</type> 别名类型只接受唯一的（未重载的）输入名称，因此它们的用途有限；对于大多数用途，<type>regprocedure</type> 或 <type>regoperator</type> 更合适。对于 <type>regoperator</type>，一元运算符通过为未使用的操作数写 <literal>NONE</literal> 来标识。
    </para>
 
    <para>
-    The input functions for these types allow whitespace between tokens,
-    and will fold upper-case letters to lower case, except within double
-    quotes; this is done to make the syntax rules similar to the way
-    object names are written in SQL.  Conversely, the output functions
-    will use double quotes if needed to make the output be a valid SQL
-    identifier.  For example, the OID of a function
-    named <literal>Foo</literal> (with upper case <literal>F</literal>)
-    taking two integer arguments could be entered as
-    <literal>' "Foo" ( int, integer ) '::regprocedure</literal>.  The
-    output would look like <literal>"Foo"(integer,integer)</literal>.
-    Both the function name and the argument type names could be
-    schema-qualified, too.
+    这些类型的输入函数允许记号之间有空白，并且会将大写字母折叠为小写，双引号内除外；这样做是为了使语法规则类似于 SQL 中书写对象名称的方式。反之，输出函数会在需要时使用双引号，以使输出成为有效的 SQL 标识符。例如，名为 <literal>Foo</literal>（其中 <literal>F</literal> 为大写）且接受两个整数参数的函数的 OID 可以输入为 <literal>' "Foo" ( int, integer ) '::regprocedure</literal>。输出将类似于 <literal>"Foo"(integer,integer)</literal>。函数名和参数类型名也都可以带模式限定。
    </para>
 
    <para>
-    Many built-in <productname>PostgreSQL</productname> functions accept
-    the OID of a table, or another kind of database object, and for
-    convenience are declared as taking <type>regclass</type> (or the
-    appropriate OID alias type).  This means you do not have to look up
-    the object's OID by hand, but can just enter its name as a string
-    literal.  For example, the <function>nextval(regclass)</function> function
-    takes a sequence relation's OID, so you could call it like this:
+    许多内置的 <productname>PostgreSQL</productname> 函数接受表或其他类型数据库对象的 OID，为方便起见，它们被声明为接受 <type>regclass</type>（或相应的 OID 别名类型）。这意味着你不必手工查找对象的 OID，只需将其名称作为字符串字面量输入即可。例如，<function>nextval(regclass)</function> 函数接受序列关系的 OID，因此你可以这样调用它：
 <programlisting>
 nextval('foo')              <lineannotation>operates on sequence <literal>foo</literal></lineannotation>
 nextval('FOO')              <lineannotation>same as above</lineannotation>
@@ -4165,33 +4124,17 @@ nextval('foo')              <lineannotation>searches search path for <literal>fo
 
    <note>
     <para>
-     When you write the argument of such a function as an unadorned
-     literal string, it becomes a constant of type <type>regclass</type>
-     (or the appropriate type).
-     Since this is really just an OID, it will track the originally
-     identified object despite later renaming, schema reassignment,
-     etc.  This <quote>early binding</quote> behavior is usually desirable for
-     object references in column defaults and views.  But sometimes you might
-     want <quote>late binding</quote> where the object reference is resolved
-     at run time.  To get late-binding behavior, force the constant to be
-     stored as a <type>text</type> constant instead of <type>regclass</type>:
+     当你把这种函数的参数写成未加修饰的字面量字符串时，它就会变成 <type>regclass</type> 类型（或相应类型）的常量。由于这实际上只是一个 OID，因此即使之后对象被重命名、重新分配模式等，它仍会跟踪最初标识的对象。这种<quote>早期绑定</quote>行为对于列默认值和视图中的对象引用通常是理想的。但有时你可能想要<quote>晚期绑定</quote>，即在运行时才解析对象引用。要获得晚期绑定行为，请强制将该常量存储为 <type>text</type> 常量而不是 <type>regclass</type>：
 <programlisting>
 nextval('foo'::text)      <lineannotation><literal>foo</literal> is looked up at runtime</lineannotation>
 </programlisting>
-     The <function>to_regclass()</function> function and its siblings
-     can also be used to perform run-time lookups.  See
-     <xref linkend="functions-info-catalog-table"/>.
+<function>to_regclass()</function> 函数及其同类函数也可用于执行运行时查找。参见
+<xref linkend="functions-info-catalog-table"/>。
     </para>
    </note>
 
    <para>
-    Another practical example of use of <type>regclass</type>
-    is to look up the OID of a table listed in
-    the <literal>information_schema</literal> views, which don't supply
-    such OIDs directly.  One might for example wish to call
-    the <function>pg_relation_size()</function> function, which requires
-    the table OID.  Taking the above rules into account, the correct way
-    to do that is
+    <type>regclass</type> 的另一个实际用例是查找 <literal>information_schema</literal> 视图中列出的表的 OID，这些视图并不直接提供这样的 OID。例如，你可能希望调用 <function>pg_relation_size()</function> 函数，它需要表的 OID。考虑到上述规则，正确的做法是
 <programlisting>
 SELECT table_schema, table_name,
        pg_relation_size((quote_ident(table_schema) || '.' ||
@@ -4199,57 +4142,29 @@ SELECT table_schema, table_name,
 FROM information_schema.tables
 WHERE ...
 </programlisting>
-    The <function>quote_ident()</function> function will take care of
-    double-quoting the identifiers where needed.  The seemingly easier
+<function>quote_ident()</function> 函数会在需要时负责为标识符加上双引号。看似更简单的
 <programlisting>
 SELECT pg_relation_size(table_name)
 FROM information_schema.tables
 WHERE ...
 </programlisting>
-    is <emphasis>not recommended</emphasis>, because it will fail for
-    tables that are outside your search path or have names that require
-    quoting.
+<emphasis>不推荐</emphasis>使用，因为它对于不在你的搜索路径中的表或名称需要引号的表会失败。
    </para>
 
    <para>
-    An additional property of most of the OID alias types is the creation of
-    dependencies.  If a
-    constant of one of these types appears in a stored expression
-    (such as a column default expression or view), it creates a dependency
-    on the referenced object.  For example, if a column has a default
-    expression <literal>nextval('my_seq'::regclass)</literal>,
-    <productname>PostgreSQL</productname>
-    understands that the default expression depends on the sequence
-    <literal>my_seq</literal>, so the system will not let the sequence
-    be dropped without first removing the default expression.  The
-    alternative of <literal>nextval('my_seq'::text)</literal> does not
-    create a dependency.
-    (<type>regrole</type> is an exception to this property. Constants of this
-    type are not allowed in stored expressions.)
+    大多数 OID 别名类型的另一个特性是创建依赖关系。如果这些类型之一的常量出现在存储的表达式中（例如列默认值表达式或视图），它就会对所引用的对象创建依赖关系。例如，如果某列有一个默认表达式 <literal>nextval('my_seq'::regclass)</literal>，<productname>PostgreSQL</productname> 会理解该默认表达式依赖于序列 <literal>my_seq</literal>，因此系统不会允许在未先删除该默认表达式的情况下删除该序列。另一种写法 <literal>nextval('my_seq'::text)</literal> 则不会创建依赖关系。（<type>regrole</type> 是此特性的例外。该类型的常量不允许出现在存储的表达式中。）
    </para>
 
    <para>
-    Another identifier type used by the system is <type>xid</type>, or transaction
-    (abbreviated <abbrev>xact</abbrev>) identifier.  This is the data type of the system columns
-    <structfield>xmin</structfield> and <structfield>xmax</structfield>.  Transaction identifiers are 32-bit quantities.
-    In some contexts, a 64-bit variant <type>xid8</type> is used.  Unlike
-    <type>xid</type> values, <type>xid8</type> values increase strictly
-    monotonically and cannot be reused in the lifetime of a database
-    cluster.  See <xref linkend="transaction-id"/> for more details.
+    系统使用的另一种标识符类型是 <type>xid</type>，即事务（缩写为 <abbrev>xact</abbrev>）标识符。这是系统列 <structfield>xmin</structfield> 和 <structfield>xmax</structfield> 的数据类型。事务标识符是 32 位量。在某些上下文中，会使用 64 位变体 <type>xid8</type>。与 <type>xid</type> 值不同，<type>xid8</type> 值严格单调递增，并且在数据库集簇的生存期内不能被重用。更多细节请参见 <xref linkend="transaction-id"/>。
    </para>
 
    <para>
-    A third identifier type used by the system is <type>cid</type>, or
-    command identifier.  This is the data type of the system columns
-    <structfield>cmin</structfield> and <structfield>cmax</structfield>. Command identifiers are also 32-bit quantities.
+    系统使用的第三种标识符类型是 <type>cid</type>，即命令标识符。这是系统列 <structfield>cmin</structfield> 和 <structfield>cmax</structfield> 的数据类型。命令标识符也是 32 位量。
    </para>
 
    <para>
-    A final identifier type used by the system is <type>tid</type>, or tuple
-    identifier (row identifier).  This is the data type of the system column
-    <structfield>ctid</structfield>.  A tuple ID is a pair
-    (block number, tuple index within block) that identifies the
-    physical location of the row within its table.
+    系统使用的最后一种标识符类型是 <type>tid</type>，即元组标识符（行标识符）。这是系统列 <structfield>ctid</structfield> 的数据类型。元组 ID 是一个对（块号，块内的元组索引），用于标识该行在其表中的物理位置。
    </para>
 
    <para>
