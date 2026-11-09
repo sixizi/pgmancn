@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>REINDEX</refname>
-  <refpurpose>rebuild indexes</refpurpose>
+  <refpurpose>重建索引</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -33,50 +33,37 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>REINDEX</command> rebuilds an index using the data
-   stored in the index's table, replacing the old copy of the index. There are
-   several scenarios in which to use <command>REINDEX</command>:
+   <command>REINDEX</command> 使用索引所在表中存储的数据重建索引，替换索引的旧副本。在以下几种场景中可以使用 <command>REINDEX</command>：
 
    <itemizedlist>
     <listitem>
      <para>
-      An index has become corrupted, and no longer contains valid
-      data. Although in theory this should never happen, in
-      practice indexes can become corrupted due to software bugs or
-      hardware failures.  <command>REINDEX</command> provides a
-      recovery method.
+      索引已损坏，不再包含有效数据。尽管理论上这不应发生，但在实践中索引可能因软件缺陷或硬件故障而损坏。<command>REINDEX</command> 提供了一种恢复方法。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      An index has become <quote>bloated</quote>, that is it contains many
-      empty or nearly-empty pages.  This can occur with B-tree indexes in
-      <productname>PostgreSQL</productname> under certain uncommon access
-      patterns. <command>REINDEX</command> provides a way to reduce
-      the space consumption of the index by writing a new version of
-      the index without the dead pages. See <xref
-      linkend="routine-reindex"/> for more information.
+      索引已变得<quote>膨胀</quote>，即它包含许多空页或几乎为空的页。在 <productname>PostgreSQL</productname> 中，B-tree 索引在某些不常见的访问模式下可能出现这种情况。<command>REINDEX</command> 提供了一种方法，通过写入不含死页的新版本索引来减少索引的空间消耗。更多信息请参见 <xref
+      linkend="routine-reindex"/>。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      You have altered a storage parameter (such as fillfactor)
-      for an index, and wish to ensure that the change has taken full effect.
+      您已经修改了索引的某个存储参数（例如 fillfactor），并希望确保该更改已完全生效。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      If an index build fails with the <literal>CONCURRENTLY</literal> option,
-      this index is left as <quote>invalid</quote>. Such indexes are useless
-      but it can be convenient to use <command>REINDEX</command> to rebuild
-      them. Note that only <command>REINDEX INDEX</command> is able
-      to perform a concurrent build on an invalid index.
+      如果使用 <literal>CONCURRENTLY</literal> 选项的索引构建失败，
+      该索引会被保留为<quote>无效</quote>状态。这类索引毫无用处，
+      但使用 <command>REINDEX</command> 重建它们会比较方便。请注意，只有 <command>REINDEX INDEX</command>
+      才能对无效索引执行并发构建。
      </para>
     </listitem>
 
@@ -84,16 +71,15 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>INDEX</literal></term>
     <listitem>
      <para>
-      Recreate the specified index. This form of <command>REINDEX</command>
-      cannot be executed inside a transaction block when used with a
-      partitioned index.
+      重建指定的索引。当用于分区索引时，这种形式的 <command>REINDEX</command>
+      不能在事务块内执行。
      </para>
     </listitem>
    </varlistentry>
@@ -102,10 +88,10 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>TABLE</literal></term>
     <listitem>
      <para>
-      Recreate all indexes of the specified table.  If the table has a
-      secondary <quote>TOAST</quote> table, that is reindexed as well.
-      This form of <command>REINDEX</command> cannot be executed inside a
-      transaction block when used with a partitioned table.
+      重建指定表的所有索引。如果该表有一个辅助的
+      <quote>TOAST</quote> 表，该表也会被重建。
+      当用于分区表时，这种形式的 <command>REINDEX</command> 不能在
+      事务块内执行。
      </para>
     </listitem>
    </varlistentry>
@@ -114,11 +100,10 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>SCHEMA</literal></term>
     <listitem>
      <para>
-      Recreate all indexes of the specified schema.  If a table of this
-      schema has a secondary <quote>TOAST</quote> table, that is reindexed as
-      well. Indexes on shared system catalogs are also processed.
-      This form of <command>REINDEX</command> cannot be executed inside a
-      transaction block.
+      重建指定模式的所有索引。如果该模式中的某个表有一个辅助的
+      <quote>TOAST</quote> 表，该表也会被重建。共享系统目录上的索引
+      也会被处理。这种形式的 <command>REINDEX</command> 不能在
+      事务块内执行。
      </para>
     </listitem>
    </varlistentry>
@@ -127,11 +112,9 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>DATABASE</literal></term>
     <listitem>
      <para>
-      Recreate all indexes within the current database, except system
-      catalogs.
-      Indexes on system catalogs are not processed.
-      This form of <command>REINDEX</command> cannot be executed inside a
-      transaction block.
+      重建当前数据库内的所有索引，系统目录除外。
+      系统目录上的索引不会被处理。
+      这种形式的 <command>REINDEX</command> 不能在事务块内执行。
      </para>
     </listitem>
    </varlistentry>
@@ -140,11 +123,10 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>SYSTEM</literal></term>
     <listitem>
      <para>
-      Recreate all indexes on system catalogs within the current database.
-      Indexes on shared system catalogs are included.
-      Indexes on user tables are not processed.
-      This form of <command>REINDEX</command> cannot be executed inside a
-      transaction block.
+      重建当前数据库中系统目录上的所有索引。
+      包括共享系统目录上的索引。
+      用户表上的索引不会被处理。
+      这种形式的 <command>REINDEX</command> 不能在事务块内执行。
      </para>
     </listitem>
    </varlistentry>
@@ -153,11 +135,10 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of the specific index, table, or database to be
-      reindexed.  Index and table names can be schema-qualified.
-      Presently, <command>REINDEX DATABASE</command> and <command>REINDEX SYSTEM</command>
-      can only reindex the current database. Their parameter is optional,
-      and it must match the current database's name.
+      要重建索引的特定索引、表或数据库的名称。索引名和表名可以用模式限定。
+      目前，<command>REINDEX DATABASE</command> 和 <command>REINDEX SYSTEM</command>
+      只能重建当前数据库的索引。它们的参数是可选的，
+      并且必须与当前数据库的名称匹配。
      </para>
     </listitem>
    </varlistentry>
@@ -166,17 +147,14 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>CONCURRENTLY</literal></term>
     <listitem>
      <para>
-      When this option is used, <productname>PostgreSQL</productname> will rebuild the
-      index without taking any locks that prevent concurrent inserts,
-      updates, or deletes on the table; whereas a standard index rebuild
-      locks out writes (but not reads) on the table until it's done.
-      There are several caveats to be aware of when using this option
-      &mdash; see <xref linkend="sql-reindex-concurrently"/> below.
+      使用此选项时，<productname>PostgreSQL</productname> 将在重建索引时不获取任何会阻止对表进行并发插入、
+      更新或删除的锁；而标准的索引重建会阻止对表的写入（但不阻止读取），
+      直到重建完成。使用此选项时需要注意若干注意事项
+      &mdash; 参见下面的 <xref linkend="sql-reindex-concurrently"/>。
      </para>
      <para>
-      For temporary tables, <command>REINDEX</command> is always
-      non-concurrent, as no other session can access them, and
-      non-concurrent reindex is cheaper.
+      对于临时表，<command>REINDEX</command> 始终是非并发的，因为没有其他会话可以访问它们，
+      并且非并发重建索引的开销更低。
      </para>
     </listitem>
    </varlistentry>
@@ -185,7 +163,7 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>TABLESPACE</literal></term>
     <listitem>
      <para>
-      Specifies that indexes will be rebuilt on a new tablespace.
+      指定将在新的表空间上重建索引。
      </para>
     </listitem>
    </varlistentry>
@@ -194,8 +172,7 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><literal>VERBOSE</literal></term>
     <listitem>
      <para>
-      Prints a progress report as each index is reindexed
-      at <literal>INFO</literal> level.
+      在 <literal>INFO</literal> 级别重建每个索引时打印进度报告。
      </para>
     </listitem>
    </varlistentry>
@@ -204,12 +181,12 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><replaceable class="parameter">boolean</replaceable></term>
     <listitem>
      <para>
-      Specifies whether the selected option should be turned on or off.
-      You can write <literal>TRUE</literal>, <literal>ON</literal>, or
-      <literal>1</literal> to enable the option, and <literal>FALSE</literal>,
-      <literal>OFF</literal>, or <literal>0</literal> to disable it.  The
-      <replaceable class="parameter">boolean</replaceable> value can also
-      be omitted, in which case <literal>TRUE</literal> is assumed.
+      指定所选选项应打开还是关闭。
+      你可以写 <literal>TRUE</literal>、<literal>ON</literal> 或
+      <literal>1</literal> 来启用该选项，写 <literal>FALSE</literal>、
+      <literal>OFF</literal> 或 <literal>0</literal> 来禁用它。
+      <replaceable class="parameter">boolean</replaceable> 值也可以
+      省略，此时假定为 <literal>TRUE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -218,7 +195,7 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
     <term><replaceable class="parameter">new_tablespace</replaceable></term>
     <listitem>
      <para>
-      The tablespace where indexes will be rebuilt.
+      重建索引所在的表空间。
      </para>
     </listitem>
    </varlistentry>
@@ -226,126 +203,83 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注释</title>
 
   <para>
-   If you suspect corruption of an index on a user table, you can
-   simply rebuild that index, or all indexes on the table, using
-   <command>REINDEX INDEX</command> or <command>REINDEX TABLE</command>.
+   如果你怀疑用户表上的某个索引损坏，可以简单地使用
+   <command>REINDEX INDEX</command> 或 <command>REINDEX TABLE</command> 重建该索引，或重建该表上的所有索引。
   </para>
 
   <para>
-   Things are more difficult if you need to recover from corruption of
-   an index on a system table.  In this case it's important for the
-   system to not have used any of the suspect indexes itself.
-   (Indeed, in this sort of scenario you might find that server
-   processes are crashing immediately at start-up, due to reliance on
-   the corrupted indexes.)  To recover safely, the server must be started
-   with the <option>-P</option> option, which prevents it from using
-   indexes for system catalog lookups.
+   如果你需要从系统表上的索引损坏中恢复，情况会更加困难。
+   在这种情况下，重要的是系统自身没有使用任何可疑的索引。
+   （实际上，在这类场景中，你可能会发现服务器进程在启动时立即崩溃，
+   因为它们依赖于损坏的索引。）为了安全地恢复，服务器必须以
+   <option>-P</option> 选项启动，这会阻止它使用索引进行系统目录查找。
   </para>
 
   <para>
-   One way to do this is to shut down the server and start a single-user
-   <productname>PostgreSQL</productname> server
-   with the <option>-P</option> option included on its command line.
-   Then, <command>REINDEX DATABASE</command>, <command>REINDEX SYSTEM</command>,
-   <command>REINDEX TABLE</command>, or <command>REINDEX INDEX</command> can be
-   issued, depending on how much you want to reconstruct.  If in
-   doubt, use <command>REINDEX SYSTEM</command> to select
-   reconstruction of all system indexes in the database.  Then quit
-   the single-user server session and restart the regular server.
-   See the <xref linkend="app-postgres"/> reference page for more
-   information about how to interact with the single-user server
-   interface.
+   一种做法是关闭服务器，并启动一个单用户
+   <productname>PostgreSQL</productname> 服务器，
+   在其命令行中包含 <option>-P</option> 选项。
+   然后，可以根据你想要重建的程度，执行 <command>REINDEX DATABASE</command>、<command>REINDEX SYSTEM</command>、
+   <command>REINDEX TABLE</command> 或 <command>REINDEX INDEX</command>。如果有
+   疑问，使用 <command>REINDEX SYSTEM</command> 选择
+   重建数据库中的所有系统索引。然后退出
+   单用户服务器会话并重新启动常规服务器。
+   有关如何与单用户服务器接口交互的更多信息，
+   请参阅 <xref linkend="app-postgres"/> 参考页。
   </para>
 
   <para>
-   Alternatively, a regular server session can be started with
-   <option>-P</option> included in its command line options.
-   The method for doing this varies across clients, but in all
-   <application>libpq</application>-based clients, it is possible to set
-   the <envar>PGOPTIONS</envar> environment variable to <literal>-P</literal>
-   before starting the client.  Note that while this method does not
-   require locking out other clients, it might still be wise to prevent
-   other users from connecting to the damaged database until repairs
-   have been completed.
+   或者，也可以在启动常规服务器会话时，将 <option>-P</option> 包含在其命令行选项中。
+   具体做法因客户端而异，但在所有基于 <application>libpq</application> 的客户端中，都可以在启动客户端之前
+   把环境变量 <envar>PGOPTIONS</envar> 设置为 <literal>-P</literal>。请注意，虽然这种方法不需要阻止其他客户端连接，
+   但在修复完成之前，阻止其他用户连接到受损的数据库可能仍是明智之举。
   </para>
 
   <para>
-   <command>REINDEX</command> is similar to a drop and recreate of the index
-   in that the index contents are rebuilt from scratch.  However, the locking
-   considerations are rather different.  <command>REINDEX</command> locks out writes
-   but not reads of the index's parent table.  It also takes an
-   <literal>ACCESS EXCLUSIVE</literal> lock on the specific index being processed,
-   which will block reads that attempt to use that index. In particular,
-   the query planner tries to take an <literal>ACCESS SHARE</literal>
-   lock on every index of the table, regardless of the query, and so
-   <command>REINDEX</command> blocks virtually any queries except for some
-   prepared queries whose plan has been cached and which don't use this very
-   index. In contrast,
-   <command>DROP INDEX</command> momentarily takes an
-   <literal>ACCESS EXCLUSIVE</literal> lock on the parent table, blocking both
-   writes and reads.  The subsequent <command>CREATE INDEX</command> locks out
-   writes but not reads; since the index is not there, no read will attempt to
-   use it, meaning that there will be no blocking but reads might be forced
-   into expensive sequential scans.
+   <command>REINDEX</command> 类似于删除并重建索引，因为索引内容是从头重建的。不过，在锁方面的
+   考虑却相当不同。<command>REINDEX</command> 会阻止对索引的父表的写入，但不阻止读取。它还会对
+   正在处理的特定索引取得 <literal>ACCESS EXCLUSIVE</literal> 锁，这会阻塞试图使用该索引的读取。特别是，
+   查询规划器会尝试对表的每个索引取得 <literal>ACCESS SHARE</literal> 锁，而不管查询是什么，因此
+   <command>REINDEX</command> 会阻塞几乎所有的查询，只有某些计划已被缓存且不使用该索引的预备查询
+   除外。相比之下，<command>DROP INDEX</command> 会短暂地对父表取得 <literal>ACCESS EXCLUSIVE</literal> 锁，同时阻塞写入和读取。
+   随后的 <command>CREATE INDEX</command> 会阻止写入但不阻止读取；由于索引不存在，不会有读取尝试使用
+   它，这意味着不会有阻塞，但读取可能被迫进行昂贵的顺序扫描。
   </para>
 
   <para>
-   While <command>REINDEX</command> is running, the <xref
-   linkend="guc-search-path"/> is temporarily changed to <literal>pg_catalog,
-   pg_temp</literal>.
+   在 <command>REINDEX</command> 运行期间，<xref
+   linkend="guc-search-path"/> 会被临时改为 <literal>pg_catalog,
+   pg_temp</literal>。
   </para>
 
   <para>
-   Reindexing a single index or table requires
-   having the <literal>MAINTAIN</literal> privilege on the
-   table.  Note that while <command>REINDEX</command> on a partitioned index or
-   table requires having the <literal>MAINTAIN</literal> privilege on the
-   partitioned table, such commands skip the privilege checks when processing
-   the individual partitions.  Reindexing a schema or database requires being the
-   owner of that schema or database or having privileges of the
-   <xref linkend="predefined-role-pg-maintain"/>
-   role.  Note specifically that it's thus
-   possible for non-superusers to rebuild indexes of tables owned by
-   other users.  However, as a special exception,
-   <command>REINDEX DATABASE</command>, <command>REINDEX SCHEMA</command>,
-   and <command>REINDEX SYSTEM</command> will skip indexes on shared catalogs
-   unless the user has the <literal>MAINTAIN</literal> privilege on the
-   catalog.
+   重建单个索引或表需要拥有该表的 <literal>MAINTAIN</literal> 权限。请注意，虽然对分区索引或
+   分区表执行 <command>REINDEX</command> 需要拥有该分区表的 <literal>MAINTAIN</literal> 权限，但此类命令在处理
+   各个分区时会跳过权限检查。重建模式或数据库需要是该模式或数据库的所有者，
+   或者拥有 <xref linkend="predefined-role-pg-maintain"/>
+   角色的权限。特别要注意，因此非超级用户可以重建其他用户拥有的表的索引。
+   不过，作为特殊例外，<command>REINDEX DATABASE</command>、<command>REINDEX SCHEMA</command>
+   和 <command>REINDEX SYSTEM</command> 会跳过共享系统目录上的索引，
+   除非用户拥有该目录的 <literal>MAINTAIN</literal> 权限。
   </para>
 
   <para>
-   Reindexing partitioned indexes or partitioned tables is supported
-   with <command>REINDEX INDEX</command> or <command>REINDEX TABLE</command>,
-   respectively. Each partition of the specified partitioned relation is
-   reindexed in a separate transaction. Those commands cannot be used inside
-   a transaction block when working on a partitioned table or index.
+   对分区索引或分区表重建索引时，分别支持使用 <command>REINDEX INDEX</command> 或 <command>REINDEX TABLE</command>。指定分区关系的每个分区都会在一个单独的事务中重建索引。当操作分区表或分区索引时，这些命令不能在事务块内使用。
   </para>
 
   <para>
-   When using the <literal>TABLESPACE</literal> clause with
-   <command>REINDEX</command> on a partitioned index or table, only the
-   tablespace references of the leaf partitions are updated. As partitioned
-   indexes are not updated, it is recommended to separately use
-   <command>ALTER TABLE ONLY</command> on them so as any new partitions
-   attached inherit the new tablespace. On failure, it may not have moved
-   all the indexes to the new tablespace. Re-running the command will rebuild
-   all the leaf partitions and move previously-unprocessed indexes to the new
-   tablespace.
+   在分区索引或分区表上使用带 <literal>TABLESPACE</literal> 子句的 <command>REINDEX</command> 时，只会更新叶子分区的表空间引用。由于分区索引不会被更新，建议对它们单独使用 <command>ALTER TABLE ONLY</command>，以便附加的任何新分区继承新的表空间。失败时，可能并未将所有索引移动到新表空间。重新运行该命令将重建所有叶子分区，并将之前未处理的索引移动到新表空间。
   </para>
 
   <para>
-   If <literal>SCHEMA</literal>, <literal>DATABASE</literal> or
-   <literal>SYSTEM</literal> is used with <literal>TABLESPACE</literal>,
-   system relations are skipped and a single <literal>WARNING</literal>
-   will be generated. Indexes on TOAST tables are rebuilt, but not moved
-   to the new tablespace.
+   如果 <literal>SCHEMA</literal>、<literal>DATABASE</literal> 或 <literal>SYSTEM</literal> 与 <literal>TABLESPACE</literal> 一起使用，则会跳过系统关系，并生成单个 <literal>WARNING</literal>。TOAST 表上的索引会被重建，但不会移动到新表空间。
   </para>
 
   <refsect2 id="sql-reindex-concurrently" xreflabel="Rebuilding Indexes Concurrently">
-   <title>Rebuilding Indexes Concurrently</title>
+   <title>并发重建索引</title>
 
    <indexterm zone="sql-reindex-concurrently">
     <primary>index</primary>
@@ -353,105 +287,60 @@ REINDEX [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] { DA
    </indexterm>
 
    <para>
-    Rebuilding an index can interfere with regular operation of a database.
-    Normally <productname>PostgreSQL</productname> locks the table whose index is rebuilt
-    against writes and performs the entire index build with a single scan of the
-    table. Other transactions can still read the table, but if they try to
-    insert, update, or delete rows in the table they will block until the
-    index rebuild is finished. This could have a severe effect if the system is
-    a live production database. Very large tables can take many hours to be
-    indexed, and even for smaller tables, an index rebuild can lock out writers
-    for periods that are unacceptably long for a production system.
+    重建索引可能干扰数据库的正常运行。通常 <productname>PostgreSQL</productname> 会对重建索引的表加写锁，并通过一次表扫描完成整个索引构建。其他事务仍然可以读取该表，但如果它们试图插入、更新或删除表中的行，就会被阻塞，直到索引重建完成。如果系统是在线生产数据库，这可能产生严重影响。非常大的表可能需要数小时才能完成索引，即使对于较小的表，索引重建也可能在相当长的时间内阻塞写入者，这对生产系统而言是不可接受的。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> supports rebuilding indexes with minimum locking
-    of writes.  This method is invoked by specifying the
-    <literal>CONCURRENTLY</literal> option of <command>REINDEX</command>. When this option
-    is used, <productname>PostgreSQL</productname> must perform two scans of the table
-    for each index that needs to be rebuilt and wait for termination of
-    all existing transactions that could potentially use the index.
-    This method requires more total work than a standard index
-    rebuild and takes significantly longer to complete as it needs to wait
-    for unfinished transactions that might modify the index. However, since
-    it allows normal operations to continue while the index is being rebuilt, this
-    method is useful for rebuilding indexes in a production environment. Of
-    course, the extra CPU, memory and I/O load imposed by the index rebuild
-    may slow down other operations.
+    <productname>PostgreSQL</productname> 支持以最小的写锁重建索引。通过指定 <command>REINDEX</command> 的 <literal>CONCURRENTLY</literal> 选项来调用此方法。使用此选项时，<productname>PostgreSQL</productname> 必须对每个需要重建的索引执行两次表扫描，并等待所有可能使用该索引的现有事务终止。此方法所需的总工作量比标准索引重建更多，并且由于需要等待可能修改该索引的未完成事务，完成时间明显更长。不过，由于它允许在重建索引期间继续正常操作，因此该方法对于在生产环境中重建索引很有用。当然，索引重建带来的额外 CPU、内存和 I/O 负载可能会减慢其他操作。
    </para>
 
    <para>
-    The following steps occur in a concurrent reindex.  Each step is run in a
-    separate transaction.  If there are multiple indexes to be rebuilt, then
-    each step loops through all the indexes before moving to the next step.
+    并发重建索引会经历以下步骤。每个步骤都在一个单独的事务中运行。如果要重建多个索引，那么每个步骤都会遍历所有索引，然后再进入下一步。
 
     <orderedlist>
      <listitem>
       <para>
-       A new transient index definition is added to the catalog
-       <literal>pg_index</literal>.  This definition will be used to replace
-       the old index.  A <literal>SHARE UPDATE EXCLUSIVE</literal> lock at
-       session level is taken on the indexes being reindexed as well as their
-       associated tables to prevent any schema modification while processing.
+       一个新的临时索引定义会被加入到系统目录 <literal>pg_index</literal> 中。该定义将用于替换旧索引。在处理过程中，会对正在重建的索引及其关联的表获取会话级别的 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁，以防止任何模式修改。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       A first pass to build the index is done for each new index.  Once the
-       index is built, its flag <literal>pg_index.indisready</literal> is
-       switched to <quote>true</quote> to make it ready for inserts, making it
-       visible to other sessions once the transaction that performed the build
-       is finished.  This step is done in a separate transaction for each
-       index.
+       对每个新索引执行第一遍构建。索引构建完成后，其标志 <literal>pg_index.indisready</literal> 会被切换为 <quote>true</quote>，使其可以接受插入；一旦执行构建的事务完成，该索引对其他会话可见。此步骤对每个索引都在单独的事务中完成。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Then a second pass is performed to add tuples that were added while the
-       first pass was running.  This step is also done in a separate
-       transaction for each index.
+       然后执行第二遍，以加入在第一遍运行期间新增的元组。此步骤同样对每个索引都在单独的事务中完成。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       All the constraints that refer to the index are changed to refer to the
-       new index definition, and the names of the indexes are changed.  At
-       this point, <literal>pg_index.indisvalid</literal> is switched to
-       <quote>true</quote> for the new index and to <quote>false</quote> for
-       the old, and a cache invalidation is done causing all sessions that
-       referenced the old index to be invalidated.
+       所有引用该索引的约束都被改为引用新的索引定义，并且索引的名称也被更改。此时，新索引的 <literal>pg_index.indisvalid</literal> 被切换为 <quote>true</quote>，旧索引的被切换为 <quote>false</quote>，并执行缓存失效，使所有引用过旧索引的会话失效。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The old indexes have <literal>pg_index.indisready</literal> switched to
-       <quote>false</quote> to prevent any new tuple insertions, after waiting
-       for running queries that might reference the old index to complete.
+       在等待可能引用旧索引的运行中查询完成之后，旧索引的 <literal>pg_index.indisready</literal> 被切换为 <quote>false</quote>，以阻止任何新的元组插入。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The old indexes are dropped.  The <literal>SHARE UPDATE
-       EXCLUSIVE</literal> session locks for the indexes and the table are
-       released.
+       旧索引被删除。索引和表上的 <literal>SHARE UPDATE
+       EXCLUSIVE</literal> 会话锁被释放。
       </para>
      </listitem>
     </orderedlist>
    </para>
 
    <para>
-    If a problem arises while rebuilding the indexes, such as a
-    uniqueness violation in a unique index, the <command>REINDEX</command>
-    command will fail but leave behind an <quote>invalid</quote> new index in addition to
-    the pre-existing one. This index will be ignored for querying purposes
-    because it might be incomplete; however it will still consume update
-    overhead. The <application>psql</application> <command>\d</command> command will report
-    such an index as <literal>INVALID</literal>:
+    如果在重建索引时出现问题，例如唯一索引中出现唯一性冲突，<command>REINDEX</command>
+    命令将失败，但除了原有的索引之外，还会留下一个<quote>无效的</quote>新索引。该索引在查询时会被忽略，
+    因为它可能不完整；但它仍会消耗更新开销。<application>psql</application> <command>\d</command> 命令会将这样的索引报告为 <literal>INVALID</literal>：
 
 <programlisting>
 postgres=# \d tab
@@ -464,63 +353,50 @@ Indexes:
     "idx_ccnew" btree (col) INVALID
 </programlisting>
 
-    If the index marked <literal>INVALID</literal> is suffixed
-    <literal>_ccnew</literal>, then it corresponds to the transient
-    index created during the concurrent operation, and the recommended
-    recovery method is to drop it using <literal>DROP INDEX</literal>,
-    then attempt <command>REINDEX CONCURRENTLY</command> again.
-    If the invalid index is instead suffixed <literal>_ccold</literal>,
-    it corresponds to the original index which could not be dropped;
-    the recommended recovery method is to just drop said index, since the
-    rebuild proper has been successful.
-    A nonzero number may be appended to the suffix of the invalid index
-    names to keep them unique, like <literal>_ccnew1</literal>,
-    <literal>_ccold2</literal>, etc.
+    如果标记为 <literal>INVALID</literal> 的索引带有后缀
+    <literal>_ccnew</literal>，那么它对应于并发操作期间创建的临时索引，
+    推荐的恢复方法是使用 <literal>DROP INDEX</literal> 删除它，
+    然后再次尝试 <command>REINDEX CONCURRENTLY</command>。
+    如果该无效索引带有后缀 <literal>_ccold</literal>，
+    则它对应于无法删除的原始索引；
+    推荐的恢复方法是直接删除该索引，因为重建本身已经成功。
+    可以在无效索引名称的后缀后附加一个非零数字以保持其唯一性，例如 <literal>_ccnew1</literal>、
+    <literal>_ccold2</literal> 等。
    </para>
 
    <para>
-    Regular index builds permit other regular index builds on the same table
-    to occur simultaneously, but only one concurrent index build can occur on a
-    table at a time. In both cases, no other types of schema modification on
-    the table are allowed meanwhile.  Another difference is that a regular
-    <command>REINDEX TABLE</command> or <command>REINDEX INDEX</command>
-    command can be performed within a transaction block, but <command>REINDEX
-    CONCURRENTLY</command> cannot.
+    常规索引构建允许同一表上的其他常规索引构建同时进行，但一次只能在一个表上执行一个并发索引构建。在这两种情况下，期间都不允许对该表进行其他类型的模式修改。另一个区别是，常规的
+    <command>REINDEX TABLE</command> 或 <command>REINDEX INDEX</command>
+    命令可以在事务块内执行，而 <command>REINDEX
+    CONCURRENTLY</command> 则不能。
    </para>
 
    <para>
-    Like any long-running transaction, <command>REINDEX</command> on a table
-    can affect which tuples can be removed by concurrent
-    <command>VACUUM</command> on any other table.
+    与任何长时间运行的事务一样，对表执行 <command>REINDEX</command>
+    会影响其他表上并发的 <command>VACUUM</command> 可以删除哪些元组。
    </para>
 
    <para>
-    <command>REINDEX SYSTEM</command> does not support
-    <command>CONCURRENTLY</command> since system catalogs cannot be reindexed
-    concurrently.
+    <command>REINDEX SYSTEM</command> 不支持
+    <command>CONCURRENTLY</command>，因为系统目录无法并发重建索引。
    </para>
 
    <para>
-    Furthermore, indexes for exclusion constraints cannot be reindexed
-    concurrently.  If such an index is named directly in this command, an
-    error is raised.  If a table or database with exclusion constraint indexes
-    is reindexed concurrently, those indexes will be skipped.  (It is possible
-    to reindex such indexes without the <command>CONCURRENTLY</command> option.)
+    此外，用于排除约束的索引无法并发重建索引。如果在此命令中直接指定了这样的索引，则会引发错误。如果对带有排除约束索引的表或数据库进行并发重建索引，则会跳过这些索引。（可以在不使用 <command>CONCURRENTLY</command> 选项的情况下重建此类索引。）
    </para>
 
   <para>
-    Each backend running <command>REINDEX</command> will report its progress
-    in the <structname>pg_stat_progress_create_index</structname> view. See
-    <xref linkend="create-index-progress-reporting"/> for details.
+    每个运行 <command>REINDEX</command> 的后端都会在 <structname>pg_stat_progress_create_index</structname> 视图中报告其进度。详情请参见
+    <xref linkend="create-index-progress-reporting"/>。
   </para>
   </refsect2>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Rebuild a single index:
+   重建单个索引：
 
 <programlisting>
 REINDEX INDEX my_index;
@@ -528,7 +404,7 @@ REINDEX INDEX my_index;
   </para>
 
   <para>
-   Rebuild all the indexes on the table <literal>my_table</literal>:
+   重建表 <literal>my_table</literal> 上的所有索引：
 
 <programlisting>
 REINDEX TABLE my_table;
@@ -536,8 +412,7 @@ REINDEX TABLE my_table;
   </para>
 
   <para>
-   Rebuild all indexes in a particular database, without trusting the
-   system indexes to be valid already:
+   重建特定数据库中的所有索引，且不假定系统索引已经有效：
 
 <programlisting>
 $ <userinput>export PGOPTIONS="-P"</userinput>
@@ -548,8 +423,7 @@ broken_db=&gt; \q
 </programlisting></para>
 
   <para>
-   Rebuild indexes for a table, without blocking read and write operations
-   on involved relations while reindexing is in progress:
+   重建表的索引，且在重建进行期间不阻塞相关关系上的读写操作：
 
 <programlisting>
 REINDEX TABLE CONCURRENTLY my_broken_table;
@@ -557,15 +431,15 @@ REINDEX TABLE CONCURRENTLY my_broken_table;
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>REINDEX</command> command in the SQL standard.
+   SQL 标准中没有 <command>REINDEX</command> 命令。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createindex"/></member>
