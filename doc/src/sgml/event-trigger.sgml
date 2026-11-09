@@ -144,7 +144,7 @@
   </sect1>
 
   <sect1 id="event-trigger-interface">
-   <title>Writing Event Trigger Functions in C</title>
+   <title>用 C 编写事件触发器函数</title>
 
    <indexterm zone="event-trigger-interface">
     <primary>event trigger</primary>
@@ -152,44 +152,28 @@
    </indexterm>
 
    <para>
-    This section describes the low-level details of the interface to an
-    event trigger function. This information is only needed when writing
-    event trigger functions in C. If you are using a higher-level language
-    then these details are handled for you. In most cases you should
-    consider using a procedural language before writing your event triggers
-    in C. The documentation of each procedural language explains how to
-    write an event trigger in that language.
+    本节介绍事件触发器函数接口的底层细节。只有在用 C 编写事件触发器函数时才需要这些信息。如果你使用的是更高级的语言，那么这些细节会为你处理好。在大多数情况下，在用 C 编写事件触发器之前，你应该考虑使用过程语言。每种过程语言的文档都解释了如何用该语言编写事件触发器。
    </para>
 
    <para>
-    Event trigger functions must use the <quote>version 1</quote> function
-    manager interface.
+    事件触发器函数必须使用 <quote>版本 1</quote> 的函数管理器接口。
    </para>
 
    <para>
-    When a function is called by the event trigger manager, it is not passed
-    any normal arguments, but it is passed a <quote>context</quote> pointer
-    pointing to a <structname>EventTriggerData</structname> structure. C functions can
-    check whether they were called from the event trigger manager or not by
-    executing the macro:
+    当函数被事件触发器管理器调用时，不会向它传递任何普通参数，但会向它传递一个指向 <structname>EventTriggerData</structname> 结构的 <quote>上下文</quote> 指针。C 函数可以通过执行以下宏来检查自己是否由事件触发器管理器调用：
 <programlisting>
 CALLED_AS_EVENT_TRIGGER(fcinfo)
 </programlisting>
-    which expands to:
+    该宏展开为：
 <programlisting>
 ((fcinfo)-&gt;context != NULL &amp;&amp; IsA((fcinfo)-&gt;context, EventTriggerData))
 </programlisting>
-    If this returns true, then it is safe to cast
-    <literal>fcinfo-&gt;context</literal> to type <literal>EventTriggerData
-    *</literal> and make use of the pointed-to
-    <structname>EventTriggerData</structname> structure.  The function must
-    <emphasis>not</emphasis> alter the <structname>EventTriggerData</structname>
-    structure or any of the data it points to.
+    如果它返回真，那么就可以安全地把 <literal>fcinfo-&gt;context</literal> 转换为 <literal>EventTriggerData
+    *</literal> 类型，并使用所指向的 <structname>EventTriggerData</structname> 结构。该函数<emphasis>不得</emphasis>修改 <structname>EventTriggerData</structname> 结构或它所指向的任何数据。
    </para>
 
    <para>
-    <structname>struct EventTriggerData</structname> is defined in
-    <filename>commands/event_trigger.h</filename>:
+    <structname>struct EventTriggerData</structname> 定义在 <filename>commands/event_trigger.h</filename> 中：
 
 <programlisting>
 typedef struct EventTriggerData
@@ -201,14 +185,14 @@ typedef struct EventTriggerData
 } EventTriggerData;
 </programlisting>
 
-    where the members are defined as follows:
+    其中各成员的定义如下：
 
     <variablelist>
      <varlistentry>
       <term><structfield>type</structfield></term>
       <listitem>
        <para>
-        Always <literal>T_EventTriggerData</literal>.
+        始终为 <literal>T_EventTriggerData</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -217,12 +201,11 @@ typedef struct EventTriggerData
       <term><structfield>event</structfield></term>
       <listitem>
        <para>
-        Describes the event for which the function is called, one of
-        <literal>"login"</literal>, <literal>"ddl_command_start"</literal>,
-        <literal>"ddl_command_end"</literal>, <literal>"sql_drop"</literal>,
-        <literal>"table_rewrite"</literal>.
-        See <xref linkend="event-trigger-definition"/> for the meaning of these
-        events.
+        描述调用该函数所针对的事件，取值为
+        <literal>"login"</literal>、<literal>"ddl_command_start"</literal>、
+        <literal>"ddl_command_end"</literal>、<literal>"sql_drop"</literal>、
+        <literal>"table_rewrite"</literal> 之一。
+        这些事件的含义请参见 <xref linkend="event-trigger-definition"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -231,9 +214,8 @@ typedef struct EventTriggerData
       <term><structfield>parsetree</structfield></term>
       <listitem>
        <para>
-        A pointer to the parse tree of the command.  Check the PostgreSQL
-        source code for details.  The parse tree structure is subject to change
-        without notice.
+        指向该命令解析树的指针。详细信息请查阅 PostgreSQL
+        源代码。解析树结构可能随时更改，恕不另行通知。
        </para>
       </listitem>
      </varlistentry>
@@ -242,8 +224,7 @@ typedef struct EventTriggerData
       <term><structfield>tag</structfield></term>
       <listitem>
        <para>
-        The command tag associated with the event for which the event trigger
-        is run, for example <literal>"CREATE FUNCTION"</literal>.
+        与运行该事件触发器所针对的事件相关联的命令标签，例如 <literal>"CREATE FUNCTION"</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -251,9 +232,9 @@ typedef struct EventTriggerData
    </para>
 
    <para>
-    An event trigger function must return a <symbol>NULL</symbol> pointer
-    (<emphasis>not</emphasis> an SQL null value, that is, do not
-    set <parameter>isNull</parameter> true).
+    事件触发器函数必须返回一个 <symbol>NULL</symbol> 指针
+    （<emphasis>不是</emphasis> SQL null 值，也就是说，不要
+    将 <parameter>isNull</parameter> 设置为 true）。
    </para>
   </sect1>
 
