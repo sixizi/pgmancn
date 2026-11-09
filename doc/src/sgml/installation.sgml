@@ -1612,10 +1612,10 @@ build-postgresql:
  </sect1>
 
  <sect1 id="install-meson">
-  <title>Building and Installation with Meson</title>
+  <title>使用 Meson 构建和安装</title>
 
  <sect2 id="install-short-meson">
-  <title>Short Version</title>
+  <title>简短版本</title>
 
   <para>
 <synopsis>
@@ -1633,37 +1633,29 @@ su - postgres
 /usr/local/pgsql/bin/createdb test
 /usr/local/pgsql/bin/psql test
 </synopsis>
-   The long version is the rest of this
-   <phrase>section</phrase>.
+   详细版本是本
+   <phrase>节</phrase>的其余部分。
   </para>
  </sect2>
 
  <sect2 id="install-procedure-meson">
-  <title>Installation Procedure</title>
+  <title>安装过程</title>
 
   <procedure>
 
   <step id="meson-configure">
-   <title>Configuration</title>
+   <title>配置</title>
 
    <para>
-    The first step of the installation procedure is to configure the
-    build tree for your system and choose the options you would like. To
-    create and configure the build directory, you can start with the
-    <literal>meson setup</literal> command.
+    安装过程的第一步是为你的系统配置构建树，并选择你想要的选项。要创建并配置构建目录，可以从 <literal>meson setup</literal> 命令开始。
 <screen>
 <userinput>meson setup build</userinput>
 </screen>
-    The setup command takes a <literal>builddir</literal> and a <literal>srcdir</literal>
-    argument. If no <literal>srcdir</literal> is given, Meson will deduce the
-    <literal>srcdir</literal> based on the current directory and the location
-    of <literal>meson.build</literal>. The <literal>builddir</literal> is mandatory.
+    setup 命令接受一个 <literal>builddir</literal> 和一个 <literal>srcdir</literal> 参数。如果没有给出 <literal>srcdir</literal>，Meson 将根据当前目录和 <literal>meson.build</literal> 的位置推断 <literal>srcdir</literal>。<literal>builddir</literal> 是必需的。
    </para>
 
    <para>
-    Running <literal>meson setup</literal> loads the build configuration file and sets up the build directory.
-    Additionally, you can also pass several build options to Meson. Some commonly
-    used options are mentioned in the subsequent sections. For example:
+    运行 <literal>meson setup</literal> 会加载构建配置文件并建立构建目录。此外，你还可以向 Meson 传递若干构建选项。后续小节中会提到一些常用选项。例如：
 
 <screen>
 # configure with a different installation prefix
@@ -1678,113 +1670,87 @@ meson setup build -Dssl=openssl
    </para>
 
    <para>
-    Setting up the build directory is a one-time step. To reconfigure before a
-    new build, you can simply use the <literal>meson configure</literal> command
+    设置构建目录是一次性步骤。要在新的构建之前重新配置，只需使用 <literal>meson configure</literal> 命令
 <screen>
 meson configure -Dcassert=true
 </screen>
-    <command>meson configure</command>'s commonly used command-line options
-    are explained in <xref linkend="meson-options"/>.
+    <command>meson configure</command> 的常用命令行选项在 <xref linkend="meson-options"/> 中说明。
    </para>
   </step>
 
   <step id="meson-build">
-   <title>Build</title>
+   <title>构建</title>
 
    <para>
-    By default, <productname>Meson</productname> uses the <ulink
-    url="https://ninja-build.org/">Ninja</ulink> build tool.  To build
-    <productname>PostgreSQL</productname> from source using Meson, you can
-    simply use the <literal>ninja</literal> command in the build directory.
+    默认情况下，<productname>Meson</productname> 使用 <ulink
+    url="https://ninja-build.org/">Ninja</ulink> 构建工具。要使用 Meson
+    从源码构建 <productname>PostgreSQL</productname>，只需在构建目录中使用 <literal>ninja</literal> 命令。
 <screen>
 ninja
 </screen>
-    Ninja will automatically detect the number of CPUs in your computer and
-    parallelize itself accordingly. You can override the number of parallel
-    processes used with the command line argument <literal>-j</literal>.
+    Ninja 会自动检测你计算机中的 CPU 数量，并据此进行并行处理。你可以用命令行参数 <literal>-j</literal> 覆盖所使用的并行进程数。
    </para>
 
    <para>
-    It should be noted that after the initial configure step,
-    <command>ninja</command> is the only command you ever need to type to
-    compile. No matter how you alter your source tree (short of moving it to a
-    completely new location), Meson will detect the changes and regenerate
-    itself accordingly. This is especially handy if you have multiple build
-    directories. Often one of them is used for development (the "debug" build)
-    and others only every now and then (such as a "static analysis" build).
-    Any configuration can be built just by cd'ing to the corresponding
-    directory and running Ninja.
+    需要注意，在初始配置步骤之后，<command>ninja</command> 是你编译时唯一需要输入的命令。无论你如何改动源码树（除非把它移到全新的位置），Meson 都会检测到这些变化并相应地重新生成。如果你有多个构建目录，这尤其方便。通常其中一个用于开发（“debug”构建），其他的只是偶尔使用（例如“static analysis”构建）。任何配置都只需 cd 到相应目录并运行 Ninja 即可构建。
    </para>
 
    <para>
-    If you'd like to build with a backend other than ninja, you can use
-    configure with the <option>--backend</option> option to select the one you
-    want to use and then build using <literal>meson compile</literal>. To
-    learn more about these backends and other arguments you can provide to
-    ninja, you can refer to the <ulink
+    如果你想使用 ninja 之外的后端进行构建，可以在 configure 时使用 <option>--backend</option> 选项选择想要使用的后端，然后使用 <literal>meson compile</literal> 进行构建。要了解有关这些后端以及可以提供给 ninja 的其他参数的更多信息，可以参考 <ulink
     url="https://mesonbuild.com/Running-Meson.html#building-from-the-source">
-    Meson documentation</ulink>.
+    Meson 文档</ulink>。
    </para>
   </step>
 
   <step>
-   <title>Regression Tests</title>
+   <title>回归测试</title>
 
    <indexterm>
     <primary>regression test</primary>
    </indexterm>
 
    <para>
-    If you want to test the newly built server before you install it,
-    you can run the regression tests at this point. The regression
-    tests are a test suite to verify that <productname>PostgreSQL</productname>
-    runs on your machine in the way the developers expected it
-    to. Type:
+    如果你想在安装之前测试新构建的服务器，
+    此时可以运行回归测试。回归测试是一套测试套件，
+    用于验证 <productname>PostgreSQL</productname> 是否以开发者预期的方式在你的机器上运行。
+    输入：
 <screen>
 <userinput>meson test</userinput>
 </screen>
-    (This won't work as root; do it as an unprivileged user.)
-    See <xref linkend="regress"/> for
-    detailed information about interpreting the test results. You can
-    repeat this test at any later time by issuing the same command.
+    （不能以 root 身份运行；请以非特权用户身份执行。）
+    关于如何解读测试结果的详细信息，请参阅
+    <xref linkend="regress"/>。你可以在以后任何时候
+    通过发出相同的命令来重复此测试。
    </para>
 
    <para>
-    To run pg_regress and pg_isolation_regress tests against a running
-    postgres instance, specify <userinput>--setup running</userinput> as an
-    argument to <userinput>meson test</userinput>.
+    要针对正在运行的 postgres 实例运行 pg_regress 和 pg_isolation_regress 测试，
+    请将 <userinput>--setup running</userinput> 指定为
+    <userinput>meson test</userinput> 的参数。
    </para>
   </step>
 
   <step id="meson-install">
-   <title>Installing the Files</title>
+   <title>安装文件</title>
 
    <note>
     <para>
-     If you are upgrading an existing system be sure to read
-     <xref linkend="upgrading"/>,
-     which has instructions about upgrading a
-     cluster.
+     如果你要升级现有系统，请务必阅读
+     <xref linkend="upgrading"/>，
+     其中包含有关升级数据库集簇的说明。
     </para>
    </note>
 
    <para>
-    Once PostgreSQL is built, you can install it by simply running the
-    <literal>ninja install</literal> command.
+    PostgreSQL 构建完成后，只需运行
+    <literal>ninja install</literal> 命令即可安装。
 <screen>
 ninja install
 </screen>
    </para>
 
    <para>
-    This will install files into the directories that were specified
-    in <xref linkend="meson-configure"/>. Make sure that you have appropriate
-    permissions to write into that area. You might need to do this
-    step as root. Alternatively, you can create the target directories
-    in advance and arrange for appropriate permissions to be granted.
-    The standard installation provides all the header files needed for client
-    application development as well as for server-side program
-    development, such as custom functions or data types written in C.
+    这会将文件安装到 <xref linkend="meson-configure"/> 中指定的目录中。请确保您具有写入该区域的适当权限。您可能需要以 root 身份执行此步骤。或者，您可以预先创建目标目录并安排授予适当的权限。标准安装提供了客户端应用程序开发以及服务器端程序开发（例如用 C 编写的自定义函数或数据类型）所需的所有头文件。
    </para>
 
    <para>
@@ -1799,52 +1765,47 @@ ninja install
   </procedure>
 
   <formalpara>
-   <title>Uninstallation:</title>
+   <title>卸载：</title>
    <para>
-    To undo the installation, you can use the <command>ninja
-    uninstall</command> command.
+    要撤销安装，您可以使用 <command>ninja
+    uninstall</command> 命令。
    </para>
   </formalpara>
 
   <formalpara>
-   <title>Cleaning:</title>
+   <title>清理：</title>
    <para>
-    After the installation, you can free disk space by removing the built
-    files from the source tree with the <command>ninja clean</command>
-    command.
+    安装完成后，您可以使用 <command>ninja clean</command> 命令从源代码树中删除构建的文件，从而释放磁盘空间。
    </para>
   </formalpara>
   </sect2>
 
   <sect2 id="meson-options">
-   <title><literal>meson setup</literal> Options</title>
+   <title><literal>meson setup</literal> 选项</title>
 
    <para>
-    <command>meson setup</command>'s command-line options are explained below.
-    This list is not exhaustive (use <literal>meson configure --help</literal>
-    to get one that is).  The options not covered here are meant for advanced
-    use-cases, and are documented in the standard <ulink
+    <command>meson setup</command> 的命令行选项解释如下。
+    本列表并不详尽（使用 <literal>meson configure --help</literal>
+    可获得详尽的列表）。此处未涵盖的选项面向高级
+    用例，记录在标准 <ulink
     url="https://mesonbuild.com/Commands.html#configure">Meson
-    documentation</ulink>.  These arguments can be used with <command>meson
-    setup</command> as well.
+    文档</ulink>中。这些参数也可以与 <command>meson
+    setup</command> 一起使用。
    </para>
 
    <sect3 id="meson-options-locations">
-    <title>Installation Locations</title>
+    <title>安装位置</title>
 
      <para>
-      These options control where <literal>ninja install</literal> (or <literal>meson install</literal>) will put
-      the files.  The <option>--prefix</option> option (example
-      <xref linkend="install-short-meson"/>) is sufficient for
-      most cases.  If you have special needs, you can customize the
-      installation subdirectories with the other options described in this
-      section.  Beware however that changing the relative locations of the
-      different subdirectories may render the installation non-relocatable,
-      meaning you won't be able to move it after installation.
-      (The <literal>man</literal> and <literal>doc</literal> locations are
-      not affected by this restriction.)  For relocatable installs, you
-      might want to use the <literal>-Drpath=false</literal> option
-      described later.
+      这些选项控制 <literal>ninja install</literal>（或 <literal>meson install</literal>）将文件放置的位置。
+      <option>--prefix</option> 选项（示例见
+      <xref linkend="install-short-meson"/>）在大多数情况下已经足够。
+      如果有特殊需求，可以用本节描述的其他选项自定义
+      安装子目录。但要注意，改变不同子目录的相对位置
+      可能导致安装不可重定位，也就是说安装之后
+      无法移动它。（<literal>man</literal> 和 <literal>doc</literal> 位置
+      不受此限制影响。）对于可重定位的安装，
+      你可能想使用后面描述的 <literal>-Drpath=false</literal> 选项。
      </para>
 
      <variablelist>
@@ -1852,12 +1813,11 @@ ninja install
        <term><option>--prefix=<replaceable>PREFIX</replaceable></option></term>
        <listitem>
         <para>
-         Install all files under the directory <replaceable>PREFIX</replaceable>
-         instead of <filename>/usr/local/pgsql</filename> (on Unix based systems) or
-         <filename><replaceable>current drive letter</replaceable>:/usr/local/pgsql</filename> (on Windows).
-         The actual files will be installed into various subdirectories; no files
-         will ever be installed directly into the
-         <replaceable>PREFIX</replaceable> directory.
+         将所有文件安装到目录 <replaceable>PREFIX</replaceable> 下，
+         而不是 <filename>/usr/local/pgsql</filename>（在基于 Unix 的系统上）或
+         <filename><replaceable>current drive letter</replaceable>:/usr/local/pgsql</filename>（在 Windows 上）。
+         实际文件将被安装到各个子目录中；不会有文件
+         直接安装到 <replaceable>PREFIX</replaceable> 目录中。
         </para>
        </listitem>
       </varlistentry>
@@ -1866,8 +1826,8 @@ ninja install
        <term><option>--bindir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Specifies the directory for executable programs. The default
-         is <filename><replaceable>PREFIX</replaceable>/bin</filename>.
+         指定可执行程序所在的目录。默认
+         为 <filename><replaceable>PREFIX</replaceable>/bin</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1876,8 +1836,7 @@ ninja install
        <term><option>--sysconfdir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Sets the directory for various configuration files,
-         <filename><replaceable>PREFIX</replaceable>/etc</filename> by default.
+         设置各种配置文件的目录，默认为 <filename><replaceable>PREFIX</replaceable>/etc</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1886,9 +1845,7 @@ ninja install
        <term><option>--libdir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Sets the location to install libraries and dynamically loadable
-         modules. The default is
-         <filename><replaceable>PREFIX</replaceable>/lib</filename>.
+         设置安装库和动态可加载模块的位置。默认值为 <filename><replaceable>PREFIX</replaceable>/lib</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1897,8 +1854,7 @@ ninja install
        <term><option>--includedir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Sets the directory for installing C and C++ header files. The
-         default is <filename><replaceable>PREFIX</replaceable>/include</filename>.
+         设置安装 C 和 C++ 头文件的目录。默认值为 <filename><replaceable>PREFIX</replaceable>/include</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1907,10 +1863,7 @@ ninja install
        <term><option>--datadir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Sets the directory for read-only data files used by the
-         installed programs. The default is
-         <filename><replaceable>PREFIX</replaceable>/share</filename>. Note that this has
-         nothing to do with where your database files will be placed.
+         设置已安装程序所使用的只读数据文件的目录。默认值为 <filename><replaceable>PREFIX</replaceable>/share</filename>。注意，这与数据库文件将要放置的位置无关。
         </para>
        </listitem>
       </varlistentry>
@@ -1919,9 +1872,7 @@ ninja install
        <term><option>--localedir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         Sets the directory for installing locale data, in particular
-         message translation catalog files.  The default is
-         <filename><replaceable>DATADIR</replaceable>/locale</filename>.
+         设置安装区域设置数据（特别是消息翻译目录文件）的目录。默认值为 <filename><replaceable>DATADIR</replaceable>/locale</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1930,10 +1881,7 @@ ninja install
        <term><option>--mandir=<replaceable>DIRECTORY</replaceable></option></term>
        <listitem>
         <para>
-         The man pages that come with <productname>PostgreSQL</productname> will be installed under
-         this directory, in their respective
-         <filename>man<replaceable>x</replaceable></filename> subdirectories.
-         The default is <filename><replaceable>DATADIR</replaceable>/man</filename>.
+         <productname>PostgreSQL</productname> 附带的 man 手册页将安装在此目录下各自的 <filename>man<replaceable>x</replaceable></filename> 子目录中。默认值为 <filename><replaceable>DATADIR</replaceable>/man</filename>。
         </para>
        </listitem>
       </varlistentry>
@@ -1942,48 +1890,47 @@ ninja install
 
      <note>
       <para>
-       Care has been taken to make it possible to install
-       <productname>PostgreSQL</productname> into shared installation locations
-       (such as <filename>/usr/local/include</filename>) without
-       interfering with the namespace of the rest of the system. First,
-       the string <quote><literal>/postgresql</literal></quote> is
-       automatically appended to <varname>datadir</varname>,
-       <varname>sysconfdir</varname>, and <varname>docdir</varname>,
-       unless the fully expanded directory name already contains the
-       string <quote><literal>postgres</literal></quote> or
-       <quote><literal>pgsql</literal></quote>. For example, if you choose
-       <filename>/usr/local</filename> as prefix, the documentation will
-       be installed in <filename>/usr/local/doc/postgresql</filename>,
-       but if the prefix is <filename>/opt/postgres</filename>, then it
-       will be in <filename>/opt/postgres/doc</filename>. The public C
-       header files of the client interfaces are installed into
-       <varname>includedir</varname> and are namespace-clean. The
-       internal header files and the server header files are installed
-       into private directories under <varname>includedir</varname>. See
-       the documentation of each interface for information about how to
-       access its header files. Finally, a private subdirectory will
-       also be created, if appropriate, under <varname>libdir</varname>
-       for dynamically loadable modules.
+       已经注意到使 <productname>PostgreSQL</productname> 能够安装到共享安装位置
+       （例如 <filename>/usr/local/include</filename>）中，而不会干扰系统其余部分的
+       命名空间。首先，字符串 <quote><literal>/postgresql</literal></quote> 会被
+       自动追加到 <varname>datadir</varname>、
+       <varname>sysconfdir</varname> 和 <varname>docdir</varname>，
+       除非完全展开的目录名中已经包含
+       字符串 <quote><literal>postgres</literal></quote> 或
+       <quote><literal>pgsql</literal></quote>。例如，如果你选择
+       <filename>/usr/local</filename> 作为前缀，文档将
+       安装到 <filename>/usr/local/doc/postgresql</filename>，
+       但如果前缀是 <filename>/opt/postgres</filename>，那么它
+       将位于 <filename>/opt/postgres/doc</filename>。客户端接口的公共 C
+       头文件安装到
+       <varname>includedir</varname>，并且是命名空间干净的。内部头文件
+       和服务端头文件安装
+       到 <varname>includedir</varname> 下的私有目录中。有关
+       如何访问各接口头文件的信息，请参阅
+       各接口的文档。最后，如果合适，还会在
+       <varname>libdir</varname> 下为可动态加载的模块
+       创建一个私有子目录。
       </para>
      </note>
     </sect3>
 
    <sect3 id="meson-options-features">
-    <title><productname>PostgreSQL</productname> Features</title>
+    <title><productname>PostgreSQL</productname> 特性</title>
 
     <para>
-     The options described in this section enable building of
-     various optional <productname>PostgreSQL</productname> features.
-     Most of these require additional software, as described in
-     <xref linkend="install-requirements"/>, and will be automatically enabled if the
-     required software is found. You can change this behavior by manually
-     setting these features to <literal>enabled</literal> to require them
-     or <literal>disabled</literal> to not build with them.
+     本节描述的选项用于构建
+     各种可选的 <productname>PostgreSQL</productname> 特性。
+     其中大多数需要额外的软件，如
+     <xref linkend="install-requirements"/> 所述，并且如果找到
+     所需的软件，就会自动启用。你可以通过手动
+     将这些特性设置为 <literal>enabled</literal> 以要求它们，
+     或设置为 <literal>disabled</literal> 以不使用它们进行构建，
+     来改变此行为。
     </para>
 
     <para>
-     To specify PostgreSQL-specific options, the name of the option
-     must be prefixed by <literal>-D</literal>.
+     要指定 PostgreSQL 专用的选项，选项名
+     必须以 <literal>-D</literal> 为前缀。
     </para>
 
     <variablelist>
@@ -1991,11 +1938,11 @@ ninja install
       <term><option>-Dnls={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Enables or disables Native Language Support (<acronym>NLS</acronym>),
-        that is, the ability to display a program's messages in a language
-        other than English.  Defaults to auto and will be enabled
-        automatically if an implementation of the <application>Gettext
-        API</application> is found.
+        启用或禁用本地语言支持（<acronym>NLS</acronym>），
+        即以英语以外的语言显示程序消息的
+        能力。默认为 auto，如果找到
+        <application>Gettext
+        API</application> 的实现，将自动启用。
        </para>
       </listitem>
      </varlistentry>
@@ -2004,8 +1951,8 @@ ninja install
       <term><option>-Dplperl={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build the <application>PL/Perl</application> server-side language.
-        Defaults to auto.
+        构建 <application>PL/Perl</application> 服务器端语言。
+        默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2014,8 +1961,8 @@ ninja install
       <term><option>-Dplpython={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build the <application>PL/Python</application> server-side language.
-        Defaults to auto.
+        构建 <application>PL/Python</application> 服务器端语言。
+        默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2024,8 +1971,8 @@ ninja install
       <term><option>-Dpltcl={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build the <application>PL/Tcl</application> server-side language.
-        Defaults to auto.
+        构建 <application>PL/Tcl</application> 服务器端语言。
+        默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2034,7 +1981,7 @@ ninja install
       <term><option>-Dtcl_version=<replaceable>TCL_VERSION</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the Tcl version to use when building PL/Tcl.
+        指定构建 PL/Tcl 时使用的 Tcl 版本。
        </para>
       </listitem>
      </varlistentry>
@@ -2043,12 +1990,12 @@ ninja install
       <term><option>-Dicu={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with support for the
+        构建时支持
         <productname>ICU</productname><indexterm><primary>ICU</primary></indexterm>
-        library, enabling use of ICU collation features (see <xref
-        linkend="collation"/>).  Defaults to auto and requires the
-        <productname>ICU4C</productname> package to be installed.  The minimum
-        required version of <productname>ICU4C</productname> is currently 4.2.
+        库，从而可以使用 ICU 排序规则功能（参见 <xref
+        linkend="collation"/>）。默认为 auto，并且需要安装
+        <productname>ICU4C</productname> 包。<productname>ICU4C</productname> 的最低要求版本
+        目前为 4.2。
        </para>
       </listitem>
      </varlistentry>
@@ -2057,22 +2004,21 @@ ninja install
       <term><option>-Dllvm={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with support for <productname>LLVM</productname> based
-        <acronym>JIT</acronym> compilation (see <xref linkend="jit"/>).
-        This requires the <productname>LLVM</productname> library to be
-        installed.  The minimum required version of
-        <productname>LLVM</productname> is currently 14.  Disabled by
-        default.
+        构建时支持基于 <productname>LLVM</productname> 的
+        <acronym>JIT</acronym> 编译（参见 <xref linkend="jit"/>）。
+        这需要安装 <productname>LLVM</productname> 库。
+        <productname>LLVM</productname> 的最低要求版本
+        目前为 14。默认禁用。
        </para>
 
        <para>
         <command>llvm-config</command><indexterm><primary>llvm-config</primary></indexterm>
-        will be used to find the required compilation options.
-        <command>llvm-config</command>, and then
-        <command>llvm-config-$version</command> for all supported versions,
-        will be searched for in your <envar>PATH</envar>.  If that would not
-        yield the desired program, use <envar>LLVM_CONFIG</envar> to specify a
-        path to the correct <command>llvm-config</command>.
+        将用于查找所需的编译选项。
+        将在你的 <envar>PATH</envar> 中搜索
+        <command>llvm-config</command>，然后搜索所有受支持版本的
+        <command>llvm-config-$version</command>。如果这样仍无法
+        找到所需的程序，请使用 <envar>LLVM_CONFIG</envar> 指定
+        正确的 <command>llvm-config</command> 的路径。
        </para>
       </listitem>
      </varlistentry>
@@ -2081,8 +2027,8 @@ ninja install
       <term><option>-Dlz4={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with <productname>LZ4</productname> compression support.
-        Defaults to auto.
+        构建时支持 <productname>LZ4</productname> 压缩。
+        默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2091,8 +2037,8 @@ ninja install
       <term><option>-Dzstd={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with <productname>Zstandard</productname> compression support.
-        Defaults to auto.
+        构建时支持 <productname>Zstandard</productname> 压缩。
+        默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2106,13 +2052,12 @@ ninja install
       </term>
       <listitem>
        <para>
-        Build with support for <acronym>SSL</acronym> (encrypted) connections.
-        The only <replaceable>LIBRARY</replaceable> supported is
-        <option>openssl</option>. This requires the
-        <productname>OpenSSL</productname> package to be installed.  Building
-        with this will check for the required header files and libraries to
-        make sure that your <productname>OpenSSL</productname> installation is
-        sufficient before proceeding.  The default for this option is auto.
+        构建时支持 <acronym>SSL</acronym>（加密）连接。
+        唯一受支持的 <replaceable>LIBRARY</replaceable> 是
+        <option>openssl</option>。这需要安装
+        <productname>OpenSSL</productname> 软件包。使用此选项构建时会
+        检查所需的头文件和库，以确保在继续之前
+        你的 <productname>OpenSSL</productname> 安装是充分的。此选项的默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2121,16 +2066,15 @@ ninja install
       <term><option>-Dgssapi={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with support for GSSAPI authentication. MIT Kerberos is required
-        to be installed for GSSAPI.  On many systems, the GSSAPI system (a part
-        of the MIT Kerberos installation) is not installed in a location
-        that is searched by default (e.g., <filename>/usr/include</filename>,
-        <filename>/usr/lib</filename>).  In
-        those cases, PostgreSQL will query <command>pkg-config</command> to
-        detect the required compiler and linker options.  Defaults to auto.
-        <filename>meson configure</filename> will check for the required
-        header files and libraries to make sure that your GSSAPI installation
-        is sufficient before proceeding.
+        构建时支持 GSSAPI 认证。GSSAPI 需要安装 MIT Kerberos。
+        在许多系统上，GSSAPI 系统（MIT Kerberos 安装的
+        一部分）并未安装在默认搜索的位置
+        （例如 <filename>/usr/include</filename>、
+        <filename>/usr/lib</filename>）。在这些情况下，PostgreSQL 会查询 <command>pkg-config</command>
+        以检测所需的编译器和链接器选项。默认为 auto。
+        <filename>meson configure</filename> 将检查所需的
+        头文件和库，以确保在继续之前你的 GSSAPI 安装
+        是充分的。
        </para>
       </listitem>
      </varlistentry>
@@ -2158,9 +2102,8 @@ ninja install
       <term><option>-Dpam={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with
-        <acronym>PAM</acronym><indexterm><primary>PAM</primary></indexterm>
-        (Pluggable Authentication Modules) support.  Defaults to auto.
+        使用 <acronym>PAM</acronym><indexterm><primary>PAM</primary></indexterm>
+        （可插拔认证模块）支持进行构建。默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2169,8 +2112,7 @@ ninja install
       <term><option>-Dbsd_auth={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with BSD Authentication support.  (The BSD Authentication
-        framework is currently only available on OpenBSD.)  Defaults to auto.
+        使用 BSD 认证支持进行构建。（BSD 认证框架目前仅在 OpenBSD 上可用。）默认为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2179,14 +2121,9 @@ ninja install
       <term><option>-Dsystemd={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with support for
-        <application>systemd</application><indexterm><primary>systemd</primary></indexterm>
-        service notifications.  This improves integration if the server is
-        started under <application>systemd</application> but has no impact
-        otherwise; see <xref
-        linkend="server-start"/> for more information.  Defaults to
-        auto.  <application>libsystemd</application> and the associated header
-        files need to be installed to use this option.
+        构建对 <application>systemd</application><indexterm><primary>systemd</primary></indexterm>
+        服务通知的支持。如果服务器在 <application>systemd</application> 下启动，这会改善集成，否则没有影响；更多信息请参见 <xref
+        linkend="server-start"/>。默认为 auto。使用此选项需要安装 <application>libsystemd</application> 及相关的头文件。
        </para>
       </listitem>
      </varlistentry>
@@ -2195,9 +2132,7 @@ ninja install
       <term><option>-Dbonjour={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with support for Bonjour automatic service discovery.  Defaults
-        to auto and requires Bonjour support in your operating system.
-        Recommended on macOS.
+        构建对 Bonjour 自动服务发现的支持。默认为 auto，并且要求你的操作系统支持 Bonjour。建议在 macOS 上使用。
        </para>
       </listitem>
      </varlistentry>
@@ -2206,35 +2141,29 @@ ninja install
       <term><option>-Duuid=<replaceable>LIBRARY</replaceable></option></term>
       <listitem>
        <para>
-        Build the <xref linkend="uuid-ossp"/> module
-        (which provides functions to generate UUIDs), using the specified
-        UUID library.<indexterm><primary>UUID</primary></indexterm>
-        <replaceable>LIBRARY</replaceable> must be one of:
+        使用指定的 UUID 库构建 <xref linkend="uuid-ossp"/> 模块（该模块提供生成 UUID 的函数）。<indexterm><primary>UUID</primary></indexterm>
+        <replaceable>LIBRARY</replaceable> 必须是以下之一：
        </para>
        <itemizedlist>
         <listitem>
          <para>
-          <option>none</option> to not build the uuid module. This is the default.
+          <option>none</option> 表示不构建 uuid 模块。这是默认值。
          </para>
         </listitem>
         <listitem>
          <para>
-          <option>bsd</option> to use the UUID functions found in FreeBSD,
-          and some other BSD-derived systems
+          <option>bsd</option> 以使用 FreeBSD 及某些其他 BSD 衍生系统中提供的 UUID 函数
          </para>
         </listitem>
         <listitem>
          <para>
-          <option>e2fs</option> to use the UUID library created by
-          the <literal>e2fsprogs</literal> project; this library is present in most
-          Linux systems and in macOS, and can be obtained for other
-          platforms as well
+          <option>e2fs</option> 以使用由 <literal>e2fsprogs</literal> 项目创建的 UUID 库；该库存在于大多数 Linux 系统和 macOS 中，也可以为其他平台获取
          </para>
         </listitem>
         <listitem>
          <para>
-          <option>ossp</option> to use the <ulink
-          url="http://www.ossp.org/pkg/lib/uuid/">OSSP UUID library</ulink>
+          <option>ossp</option> 以使用 <ulink
+          url="http://www.ossp.org/pkg/lib/uuid/">OSSP UUID 库</ulink>
          </para>
         </listitem>
        </itemizedlist>
@@ -2245,12 +2174,10 @@ ninja install
       <term><option>-Dlibcurl={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with libcurl support for OAuth 2.0 client flows.
-        Libcurl version 7.61.0 or later is required for this feature.
-        Building with this will check for the required header files
-        and libraries to make sure that your <productname>Curl</productname>
-        installation is sufficient before proceeding. The default for this
-        option is auto.
+        使用 libcurl 支持构建 OAuth 2.0 客户端流程。
+        此功能需要 libcurl 7.61.0 或更高版本。
+        使用此选项构建时会检查所需的头文件和库，以确保在继续之前你的 <productname>Curl</productname>
+        安装是充分的。此选项的默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2259,14 +2186,13 @@ ninja install
       <term><option>-Dliburing={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with liburing, enabling io_uring support for asynchronous I/O.
-        Defaults to auto.
+        使用 liburing 构建，为异步 I/O 启用 io_uring 支持。
+        默认为 auto。
        </para>
 
        <para>
-        To use a liburing installation that is in an unusual location, you
-        can set <command>pkg-config</command>-related environment
-        variables (see its documentation).
+        要使用位于非标准位置的 liburing 安装，你可以设置与 <command>pkg-config</command> 相关的环境
+        变量（参见其文档）。
        </para>
       </listitem>
      </varlistentry>
@@ -2275,9 +2201,9 @@ ninja install
       <term><option>-Dlibnuma={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with libnuma support for basic NUMA support.
-        Only supported on platforms for which the <productname>libnuma</productname>
-        library is implemented. The default for this option is auto.
+        构建时启用 libnuma 支持，以获得基本的 NUMA 支持。
+        仅在实现了 <productname>libnuma</productname>
+        库的平台上受支持。此选项的默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2286,14 +2212,13 @@ ninja install
       <term><option>-Dlibxml={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with libxml2, enabling SQL/XML support.  Defaults to
-        auto. Libxml2 version 2.6.23 or later is required for this feature.
+        构建时启用 libxml2，从而启用 SQL/XML 支持。默认值为
+        auto。此特性需要 libxml2 2.6.23 或更高版本。
        </para>
 
        <para>
-        To use a libxml2 installation that is in an unusual location, you
-        can set <command>pkg-config</command>-related environment
-        variables (see its documentation).
+        要使用位于非标准位置的 libxml2 安装，可以设置与 <command>pkg-config</command>
+        相关的环境变量（参见其文档）。
        </para>
       </listitem>
      </varlistentry>
@@ -2302,11 +2227,11 @@ ninja install
       <term><option>-Dlibxslt={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with libxslt, enabling the
+        构建时启用 libxslt，使
         <xref linkend="xml2"/>
-        module to perform XSL transformations of XML.
-        <option>-Dlibxml</option> must be specified as well.  Defaults to
-        auto.
+        模块能够执行 XML 的 XSL 转换。
+        还必须同时指定 <option>-Dlibxml</option>。默认值为
+        auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2315,8 +2240,8 @@ ninja install
       <term><option>-Dselinux={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Build with SElinux support, enabling the <xref linkend="sepgsql"/>
-        extension.  Defaults to auto.
+        构建时启用 SElinux 支持，从而启用 <xref linkend="sepgsql"/>
+        扩展。默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2325,17 +2250,14 @@ ninja install
    </sect3>
 
    <sect3 id="meson-options-anti-features">
-    <title>Anti-Features</title>
+    <title>反特性</title>
 
     <variablelist>
      <varlistentry id="configure-readline-meson">
       <term><option>-Dreadline={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Allows use of the <application>Readline</application> library (and
-        <application>libedit</application> as well).  This option defaults to
-        auto and enables command-line editing and history in
-        <application>psql</application> and is strongly recommended.
+        允许使用 <application>Readline</application> 库（以及 <application>libedit</application>）。此选项默认为 auto，会在 <application>psql</application> 中启用命令行编辑和历史记录，强烈推荐启用。
        </para>
       </listitem>
      </varlistentry>
@@ -2344,11 +2266,7 @@ ninja install
       <term><option>-Dlibedit_preferred={ true | false }</option></term>
       <listitem>
        <para>
-        Setting this to true favors the use of the BSD-licensed
-        <application>libedit</application> library rather than GPL-licensed
-        <application>Readline</application>.  This option is significant only
-        if you have both libraries installed; the default is false, that is to
-        use <application>Readline</application>.
+        将此选项设为 true 会倾向于使用 BSD 许可的 <application>libedit</application> 库，而不是 GPL 许可的 <application>Readline</application>。仅当你同时安装了两个库时此选项才有意义；默认值为 false，即使用 <application>Readline</application>。
        </para>
       </listitem>
      </varlistentry>
@@ -2360,10 +2278,7 @@ ninja install
         <indexterm>
          <primary>zlib</primary>
         </indexterm>
-        Enables use of the <application>Zlib</application> library.
-        It defaults to auto and enables
-        support for compressed archives in <application>pg_dump</application>,
-        <application>pg_restore</application> and <application>pg_basebackup</application> and is recommended.
+        启用对 <application>Zlib</application> 库的使用。它默认为 auto，会启用对 <application>pg_dump</application>、<application>pg_restore</application> 和 <application>pg_basebackup</application> 中压缩归档的支持，推荐启用。
        </para>
       </listitem>
      </varlistentry>
@@ -2372,19 +2287,14 @@ ninja install
    </sect3>
 
    <sect3 id="meson-options-build-process">
-    <title>Build Process Details</title>
+    <title>构建过程细节</title>
 
     <variablelist>
      <varlistentry id="configure-auto-features-meson">
       <term><option>--auto-features={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Setting this option allows you to override the value of all
-        <quote>auto</quote> features (features that are enabled automatically
-        if the required software is found).  This can be useful when you want
-        to disable or enable all the <quote>optional</quote> features at once
-        without having to set each of them manually. The default value for
-        this parameter is auto.
+        设置此选项可以覆盖所有 <quote>auto</quote> 特性（即在找到所需软件时自动启用的特性）的取值。当你希望一次性禁用或启用所有 <quote>可选</quote> 特性而不必逐个手动设置时，这会很有用。此参数的默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2393,10 +2303,7 @@ ninja install
       <term><option>--backend=<replaceable>BACKEND</replaceable></option></term>
       <listitem>
        <para>
-        The default backend Meson uses is ninja and that should suffice for
-        most use cases.  However, if you'd like to fully integrate with Visual
-        Studio, you can set the <replaceable>BACKEND</replaceable> to
-        <literal>vs</literal>.
+        Meson 使用的默认后端是 ninja，对大多数用例来说已经足够。不过，如果你希望与 Visual Studio 完全集成，可以将 <replaceable>BACKEND</replaceable> 设置为 <literal>vs</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2405,7 +2312,7 @@ ninja install
       <term><option>-Dc_args=<replaceable>OPTIONS</replaceable></option></term>
       <listitem>
        <para>
-        This option can be used to pass extra options to the C compiler.
+        此选项可用于向 C 编译器传递额外的选项。
        </para>
       </listitem>
      </varlistentry>
@@ -2414,7 +2321,7 @@ ninja install
       <term><option>-Dc_link_args=<replaceable>OPTIONS</replaceable></option></term>
       <listitem>
        <para>
-        This option can be used to pass extra options to the C linker.
+        此选项可用于向 C 链接器传递额外的选项。
        </para>
       </listitem>
      </varlistentry>
@@ -2423,16 +2330,11 @@ ninja install
       <term><option>-Dextra_include_dirs=<replaceable>DIRECTORIES</replaceable></option></term>
       <listitem>
        <para>
-        <replaceable>DIRECTORIES</replaceable> is a comma-separated list of
-        directories that will be added to the list the compiler searches for
-        header files. If you have optional packages (such as GNU
-        <application>Readline</application>) installed in a non-standard
-        location, you have to use this option and probably also the
-        corresponding <option>-Dextra_lib_dirs</option> option.
+        <replaceable>DIRECTORIES</replaceable> 是一个以逗号分隔的目录列表，这些目录将被添加到编译器搜索头文件的目录列表中。如果你将可选软件包（例如 GNU <application>Readline</application>）安装在非标准位置，就必须使用此选项，并且很可能还需要使用对应的 <option>-Dextra_lib_dirs</option> 选项。
        </para>
 
        <para>
-        Example: <literal>-Dextra_include_dirs=/opt/gnu/include,/usr/sup/include</literal>.
+        示例：<literal>-Dextra_include_dirs=/opt/gnu/include,/usr/sup/include</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2441,14 +2343,10 @@ ninja install
       <term><option>-Dextra_lib_dirs=<replaceable>DIRECTORIES</replaceable></option></term>
       <listitem>
        <para>
-        <replaceable>DIRECTORIES</replaceable> is a comma-separated list of
-        directories to search for libraries. You will probably have to use
-        this option (and the corresponding
-        <option>-Dextra_include_dirs</option> option) if you have packages
-        installed in non-standard locations.
+        <replaceable>DIRECTORIES</replaceable> 是一个以逗号分隔的目录列表，用于搜索库。如果你将软件包安装在非标准位置，很可能必须使用此选项（以及对应的 <option>-Dextra_include_dirs</option> 选项）。
        </para>
        <para>
-        Example: <literal>-Dextra_lib_dirs=/opt/gnu/lib,/usr/sup/lib</literal>.
+        示例：<literal>-Dextra_lib_dirs=/opt/gnu/lib,/usr/sup/lib</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2456,38 +2354,18 @@ ninja install
      <varlistentry id="configure-system-tzdata-meson">
       <term><option>-Dsystem_tzdata=<replaceable>DIRECTORY</replaceable></option>
       <indexterm>
-       <primary>time zone data</primary>
+       <primary>时区数据</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        <productname>PostgreSQL</productname> includes its own time zone
-        database, which it requires for date and time operations.  This time
-        zone database is in fact compatible with the IANA time zone database
-        provided by many operating systems such as FreeBSD, Linux, and
-        Solaris, so it would be redundant to install it again.  When this
-        option is used, the system-supplied time zone database in
-        <replaceable>DIRECTORY</replaceable> is used instead of the one
-        included in the PostgreSQL source distribution.
-        <replaceable>DIRECTORY</replaceable> must be specified as an absolute
-        path.  <filename>/usr/share/zoneinfo</filename> is a likely directory
-        on some operating systems.  Note that the installation routine will
-        not detect mismatching or erroneous time zone data.  If you use this
-        option, you are advised to run the regression tests to verify that the
-        time zone data you have pointed to works correctly with
-        <productname>PostgreSQL</productname>.
+        <productname>PostgreSQL</productname> 包含自己的时区数据库，日期和时间操作需要用到它。这个时区数据库实际上与许多操作系统（如 FreeBSD、Linux 和 Solaris）提供的 IANA 时区数据库兼容，因此再次安装它将是多余的。使用此选项时，将使用 <replaceable>DIRECTORY</replaceable> 中系统提供的时区数据库，而不是 PostgreSQL 源代码分发中包含的那个。<replaceable>DIRECTORY</replaceable> 必须指定为绝对路径。<filename>/usr/share/zoneinfo</filename> 在某些操作系统上可能是一个目录。请注意，安装例程不会检测不匹配或错误的时区数据。如果使用此选项，建议您运行回归测试，以验证您所指向的时区数据能与 <productname>PostgreSQL</productname> 正确配合工作。
        </para>
 
        <indexterm><primary>cross compilation</primary></indexterm>
 
        <para>
-        This option is mainly aimed at binary package distributors who know
-        their target operating system well.  The main advantage of using this
-        option is that the PostgreSQL package won't need to be upgraded
-        whenever any of the many local daylight-saving time rules change.
-        Another advantage is that PostgreSQL can be cross-compiled more
-        straightforwardly if the time zone database files do not need to be
-        built during the installation.
+        此选项主要面向熟悉其目标操作系统的二进制包分发者。使用此选项的主要优点是，当许多本地夏令时规则中的任何一条发生变化时，PostgreSQL 包无需升级。另一个优点是，如果不需要在安装期间构建时区数据库文件，PostgreSQL 可以更直接地进行交叉编译。
        </para>
       </listitem>
      </varlistentry>
@@ -2496,12 +2374,8 @@ ninja install
       <term><option>-Dextra_version=<replaceable>STRING</replaceable></option></term>
       <listitem>
        <para>
-        Append <replaceable>STRING</replaceable> to the PostgreSQL version
-        number.  You can use this, for example, to mark binaries built from
-        unreleased <productname>Git</productname> snapshots or containing
-        custom patches with an extra version string, such as a <command>git
-        describe</command> identifier or a distribution package release
-        number.
+        将 <replaceable>STRING</replaceable> 追加到 PostgreSQL 版本号后面。例如，您可以用它来标记由未发布的 <productname>Git</productname> 快照构建的二进制文件，或包含自定义补丁的二进制文件，为其附加一个额外的版本字符串，例如 <command>git
+        describe</command> 标识符或发行包发布号。
        </para>
       </listitem>
      </varlistentry>
@@ -2510,17 +2384,7 @@ ninja install
       <term><option>-Drpath={ true | false }</option></term>
       <listitem>
        <para>
-        This option is set to true by default.  If set to false,
-        do not mark <productname>PostgreSQL</productname>'s executables
-        to indicate that they should search for shared libraries in the
-        installation's library directory (see <option>--libdir</option>).
-        On most platforms, this marking uses an absolute path to the
-        library directory, so that it will be unhelpful if you relocate
-        the installation later.  However, you will then need to provide
-        some other way for the executables to find the shared libraries.
-        Typically this requires configuring the operating system's
-        dynamic linker to search the library directory; see
-        <xref linkend="install-post-shlibs"/> for more detail.
+        此选项默认设置为 true。如果设置为 false，则不要标记 <productname>PostgreSQL</productname> 的可执行文件来表明它们应在安装的库目录中搜索共享库（参见 <option>--libdir</option>）。在大多数平台上，这种标记使用指向库目录的绝对路径，因此如果您以后迁移安装位置，它将不再有用。不过，那时您需要提供其他方式让可执行文件找到共享库。通常这需要配置操作系统的动态链接器来搜索该库目录；详见 <xref linkend="install-post-shlibs"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -2529,11 +2393,8 @@ ninja install
       <term><option>-D<replaceable>BINARY_NAME</replaceable>=<replaceable>PATH</replaceable></option></term>
       <listitem>
        <para>
-        If a program required to build PostgreSQL (with or without optional
-        flags) is stored at a non-standard path, you can specify it manually
-        to <literal>meson configure</literal>.  The complete list of programs
-        for which this is supported can be found by running <literal>meson
-        configure</literal>.  Example:
+        如果构建 PostgreSQL 所需的程序（无论是否带可选标志）存放在非标准路径下，你可以手动将其指定给 <literal>meson configure</literal>。可通过运行 <literal>meson
+        configure</literal> 查看支持此做法的程序的完整列表。示例：
 <programlisting>meson configure -DBISON=PATH_TO_BISON</programlisting>
        </para>
       </listitem>
@@ -2542,11 +2403,10 @@ ninja install
    </sect3>
 
    <sect3 id="meson-options-docs">
-    <title>Documentation</title>
+    <title>文档</title>
 
     <para>
-     See <xref linkend="docguide-toolsets"/> for the tools needed for building
-     the documentation.
+     有关构建文档所需的工具，请参见 <xref linkend="docguide-toolsets"/>。
     </para>
 
     <variablelist>
@@ -2555,8 +2415,7 @@ ninja install
       <term><option>-Ddocs={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Enables building the documentation in <acronym>HTML</acronym> and
-        <acronym>man</acronym> format. It defaults to auto.
+        启用构建 <acronym>HTML</acronym> 和 <acronym>man</acronym> 格式的文档。默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2565,8 +2424,7 @@ ninja install
       <term><option>-Ddocs_pdf={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Enables building the documentation in <acronym>PDF</acronym>
-        format. It defaults to auto.
+        启用构建 <acronym>PDF</acronym> 格式的文档。默认值为 auto。
        </para>
       </listitem>
      </varlistentry>
@@ -2587,20 +2445,14 @@ ninja install
    </sect3>
 
    <sect3 id="meson-options-misc">
-    <title>Miscellaneous</title>
+    <title>杂项</title>
 
     <variablelist>
      <varlistentry id="configure-pgport-meson">
       <term><option>-Dpgport=<replaceable>NUMBER</replaceable></option></term>
       <listitem>
        <para>
-        Set <replaceable>NUMBER</replaceable> as the default port number for
-        server and clients. The default is 5432. The port can always
-        be changed later on, but if you specify it here then both
-        server and clients will have the same default compiled in,
-        which can be very convenient.  Usually the only good reason
-        to select a non-default value is if you intend to run multiple
-        <productname>PostgreSQL</productname> servers on the same machine.
+        将 <replaceable>NUMBER</replaceable> 设置为服务器和客户端的默认端口号。默认值为 5432。端口号随时都可以更改，但如果你在这里指定了它，那么服务器和客户端在编译时就会使用相同的默认值，这会非常方便。通常，选择非默认值的唯一好理由是，你打算在同一台机器上运行多个 <productname>PostgreSQL</productname> 服务器。
        </para>
       </listitem>
      </varlistentry>
@@ -2609,12 +2461,9 @@ ninja install
       <term><option>-Dkrb_srvnam=<replaceable>NAME</replaceable></option></term>
       <listitem>
        <para>
-        The default name of the Kerberos service principal used
-        by GSSAPI.
-        <literal>postgres</literal> is the default. There's usually no
-        reason to change this unless you are building for a Windows
-        environment, in which case it must be set to upper case
-        <literal>POSTGRES</literal>.
+        GSSAPI 所使用的 Kerberos 服务主体（service principal）的默认名称。
+        <literal>postgres</literal> 是默认值。通常没有理由更改它，除非你是为 Windows 环境构建，在这种情况下必须将其设置为大写的
+        <literal>POSTGRES</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2623,20 +2472,7 @@ ninja install
       <term><option>-Dsegsize=<replaceable>SEGSIZE</replaceable></option></term>
       <listitem>
        <para>
-        Set the <firstterm>segment size</firstterm>, in gigabytes.  Large tables are
-        divided into multiple operating-system files, each of size equal
-        to the segment size.  This avoids problems with file size limits
-        that exist on many platforms.  The default segment size, 1 gigabyte,
-        is safe on all supported platforms.  If your operating system has
-        <quote>largefile</quote> support (which most do, nowadays), you can use
-        a larger segment size.  This can be helpful to reduce the number of
-        file descriptors consumed when working with very large tables.
-        But be careful not to select a value larger than is supported
-        by your platform and the file systems you intend to use.  Other
-        tools you might wish to use, such as <application>tar</application>, could
-        also set limits on the usable file size.
-        It is recommended, though not absolutely required, that this value
-        be a power of 2.
+        设置<firstterm>段大小</firstterm>，单位为吉字节。大表会被划分为多个操作系统文件，每个文件的大小等于段大小。这可以避免许多平台上存在的文件大小限制问题。默认段大小为 1 吉字节，在所有受支持的平台上都是安全的。如果你的操作系统支持<quote>大文件</quote>（如今大多数都支持），则可以使用更大的段大小。这有助于在处理非常大的表时减少所消耗的文件描述符数量。但要注意不要选择超过你的平台和你打算使用的文件系统所支持的值。你可能希望使用的其他工具（例如 <application>tar</application>）也可能对可用的文件大小设置限制。建议（尽管并非绝对要求）将此值设为 2 的幂。
        </para>
       </listitem>
      </varlistentry>
@@ -2645,11 +2481,7 @@ ninja install
       <term><option>-Dblocksize=<replaceable>BLOCKSIZE</replaceable></option></term>
       <listitem>
        <para>
-        Set the <firstterm>block size</firstterm>, in kilobytes.  This is the unit
-        of storage and I/O within tables.  The default, 8 kilobytes,
-        is suitable for most situations; but other values may be useful
-        in special cases.
-        The value must be a power of 2 between 1 and 32 (kilobytes).
+        设置<firstterm>块大小</firstterm>，单位为千字节。这是表内存储和 I/O 的单位。默认值 8 千字节适用于大多数情况；但在特殊情况下，其他值可能有用。该值必须是 1 到 32（千字节）之间的 2 的幂。
        </para>
       </listitem>
      </varlistentry>
@@ -2658,11 +2490,7 @@ ninja install
       <term><option>-Dwal_blocksize=<replaceable>BLOCKSIZE</replaceable></option></term>
       <listitem>
        <para>
-        Set the <firstterm>WAL block size</firstterm>, in kilobytes.  This is the unit
-        of storage and I/O within the WAL log.  The default, 8 kilobytes,
-        is suitable for most situations; but other values may be useful
-        in special cases.
-        The value must be a power of 2 between 1 and 64 (kilobytes).
+        设置<firstterm>WAL 块大小</firstterm>，单位为千字节。这是 WAL 日志内存储和 I/O 的单位。默认值 8 千字节适用于大多数情况；但在特殊情况下，其他值可能有用。该值必须是 1 到 64（千字节）之间的 2 的幂。
        </para>
       </listitem>
      </varlistentry>
@@ -2670,7 +2498,7 @@ ninja install
    </sect3>
 
    <sect3 id="meson-options-devel">
-    <title>Developer Options</title>
+    <title>开发者选项</title>
 
     <para>
      Most of the options in this section are only of interest for
@@ -2683,9 +2511,8 @@ ninja install
     </para>
 
     <para>
-     When building an installation that will be used to develop code inside
-     the server, it is recommended to use at least the <option>--buildtype=debug</option>
-     and <option>-Dcassert</option> options.
+     当构建一个将用于在服务器内部开发代码的安装时，建议至少使用 <option>--buildtype=debug</option>
+     和 <option>-Dcassert</option> 选项。
     </para>
 
     <variablelist>
@@ -2693,20 +2520,19 @@ ninja install
       <term><option>--buildtype=<replaceable>BUILDTYPE</replaceable></option></term>
       <listitem>
        <para>
-        This option can be used to specify the buildtype to use; defaults to
-        <option>debugoptimized</option>.  If you'd like finer control on the debug
-        symbols and optimization levels than what this option provides, you
-        can refer to the <option>--debug</option> and
-        <option>--optimization</option> flags.
+        此选项可用于指定要使用的构建类型；默认为
+        <option>debugoptimized</option>。如果你希望比此选项提供的更精细地控制调试符号和优化级别，
+        可以参考 <option>--debug</option> 和
+        <option>--optimization</option> 标志。
        </para>
 
        <para>
-        The following build types are generally used: <option>plain</option>,
-        <option>debug</option>, <option>debugoptimized</option> and
-        <option>release</option>.  More information about them can be found in
-        the <ulink
+        通常使用以下构建类型：<option>plain</option>、
+        <option>debug</option>、<option>debugoptimized</option> 和
+        <option>release</option>。有关它们的更多信息，可以在
+        <ulink
         url="https://mesonbuild.com/Running-Meson.html#configuring-the-build-directory">Meson
-        documentation</ulink>.
+        文档</ulink>中找到。
        </para>
       </listitem>
      </varlistentry>
@@ -2715,15 +2541,11 @@ ninja install
       <term><option>--debug</option></term>
       <listitem>
        <para>
-        Compiles all programs and libraries with debugging symbols.  This
-        means that you can run the programs in a debugger to analyze
-        problems. This enlarges the size of the installed executables
-        considerably, and on non-GCC compilers it usually also disables
-        compiler optimization, causing slowdowns. However, having the symbols
-        available is extremely helpful for dealing with any problems that
-        might arise.  Currently, this option is recommended for production
-        installations only if you use GCC.  But you should always have it on
-        if you are doing development work or running a beta version.
+        使用调试符号编译所有程序和库。这意味着你可以在调试器中运行程序来分析问题。
+        这会显著增大已安装可执行文件的大小，并且在非 GCC 编译器上通常还会禁用编译器优化，
+        导致速度变慢。然而，拥有可用的符号对于处理可能出现的任何问题都极为有帮助。
+        目前，仅当你使用 GCC 时，才建议在生产安装中使用此选项。
+        但如果你正在进行开发工作或运行 beta 版本，则应始终开启它。
        </para>
       </listitem>
      </varlistentry>
@@ -2732,7 +2554,7 @@ ninja install
       <term><option>--optimization</option>=<replaceable>LEVEL</replaceable></term>
       <listitem>
        <para>
-        Specify the optimization level. <option>LEVEL</option> can be set to any of {0,g,1,2,3,s}.
+        指定优化级别。<option>LEVEL</option> 可以设置为 {0,g,1,2,3,s} 中的任意一个。
        </para>
       </listitem>
      </varlistentry>
@@ -2741,8 +2563,7 @@ ninja install
       <term><option>--werror</option></term>
       <listitem>
        <para>
-        Setting this option asks the compiler to treat warnings as
-        errors. This can be useful for code development.
+        设置此选项要求编译器将警告视为错误。这对于代码开发很有用。
        </para>
       </listitem>
      </varlistentry>
@@ -2751,16 +2572,7 @@ ninja install
       <term><option>-Dcassert={ true | false }</option></term>
       <listitem>
        <para>
-        Enables <firstterm>assertion</firstterm> checks in the server, which
-        test for many <quote>cannot happen</quote> conditions.  This is
-        invaluable for code development purposes, but the tests slow down the
-        server significantly.  Also, having the tests turned on won't
-        necessarily enhance the stability of your server!  The assertion
-        checks are not categorized for severity, and so what might be a
-        relatively harmless bug will still lead to server restarts if it
-        triggers an assertion failure.  This option is not recommended for
-        production use, but you should have it on for development work or when
-        running a beta version.
+        在服务器中启用<firstterm>断言</firstterm>检查，这些检查会测试许多<quote>不可能发生</quote>的情况。这对于代码开发目的非常宝贵，但这些测试会显著拖慢服务器。此外，打开这些测试并不一定会增强服务器的稳定性！断言检查并未按严重程度分类，因此一个相对无害的缺陷如果触发了断言失败，仍然会导致服务器重启。不建议在生产环境中使用此选项，但在开发工作或运行 beta 版本时应当启用它。
        </para>
       </listitem>
      </varlistentry>
@@ -2769,9 +2581,7 @@ ninja install
       <term><option>-Dtap_tests={ auto | enabled | disabled }</option></term>
       <listitem>
        <para>
-        Enable tests using the Perl TAP tools.  Defaults to auto and requires
-        a Perl installation and the Perl module <literal>IPC::Run</literal>.
-        See <xref linkend="regress-tap"/> for more information.
+        启用使用 Perl TAP 工具的测试。默认为 auto，需要安装 Perl 以及 Perl 模块 <literal>IPC::Run</literal>。更多信息请参见 <xref linkend="regress-tap"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -2780,13 +2590,7 @@ ninja install
       <term><option>-DPG_TEST_EXTRA=<replaceable>TEST_SUITES</replaceable></option></term>
       <listitem>
        <para>
-        Enable additional test suites, which are not run by default because
-        they are not secure to run on a multiuser system, require special
-        software to run, or are resource intensive.  The argument is a
-        whitespace-separated list of tests to enable. See
-        <xref linkend="regress-additional"/> for details. If the
-        <envar>PG_TEST_EXTRA</envar> environment variable is set when the
-        tests are run, it overrides this setup-time option.
+        启用额外的测试套件，这些测试套件默认不会运行，因为在多用户系统上运行它们不安全、需要特殊软件才能运行，或者会消耗大量资源。参数是一个以空白分隔的待启用测试列表。详情请参见 <xref linkend="regress-additional"/>。如果在运行测试时设置了 <envar>PG_TEST_EXTRA</envar> 环境变量，它将覆盖此设置时选项。
        </para>
       </listitem>
      </varlistentry>
@@ -2795,13 +2599,7 @@ ninja install
       <term><option>-Db_coverage={ true | false }</option></term>
       <listitem>
        <para>
-        If using GCC, all programs and libraries are compiled with
-        code coverage testing instrumentation.  When run, they
-        generate files in the build directory with code coverage
-        metrics.
-        See <xref linkend="regress-coverage"/>
-        for more information. This option is for use only with GCC
-        and when doing development work.
+        如果使用 GCC，则所有程序和库在编译时都会加入代码覆盖率测试插桩。运行时，它们会在构建目录中生成带有代码覆盖率指标的文件。更多信息请参见 <xref linkend="regress-coverage"/>。此选项仅适用于 GCC，且仅在进行开发工作时使用。
        </para>
       </listitem>
      </varlistentry>
@@ -2813,17 +2611,14 @@ ninja install
         <indexterm>
          <primary>DTrace</primary>
         </indexterm>
-        Enabling this compiles <productname>PostgreSQL</productname> with support for the
-        dynamic tracing tool DTrace.
-        See <xref linkend="dynamic-trace"/> for more information.
+        启用此项会编译 <productname>PostgreSQL</productname> 并支持动态跟踪工具 DTrace。
+        更多信息请参见 <xref linkend="dynamic-trace"/>。
        </para>
 
        <para>
-        To point to the <command>dtrace</command> program, the
-        <option>DTRACE</option> option can be set.  This
-        will often be necessary because <command>dtrace</command> is
-        typically installed under <filename>/usr/sbin</filename>,
-        which might not be in your <envar>PATH</envar>.
+        要指向 <command>dtrace</command> 程序，可以设置 <option>DTRACE</option> 选项。这通常是必要的，
+        因为 <command>dtrace</command> 一般安装在 <filename>/usr/sbin</filename> 下，
+        而该目录可能不在你的 <envar>PATH</envar> 中。
        </para>
       </listitem>
      </varlistentry>
@@ -2832,13 +2627,11 @@ ninja install
       <term><option>-Dinjection_points={ true | false }</option></term>
       <listitem>
        <para>
-        Compiles <productname>PostgreSQL</productname> with support for
-        injection points in the server. Injection points allow to run
-        user-defined code from within the server in pre-defined code paths.
-        This helps in testing and in the investigation of concurrency scenarios
-        in a controlled fashion. This option is disabled by default.  See
-        <xref linkend="xfunc-addin-injection-points"/> for more details.  This
-        option is intended to be used only by developers for testing.
+        编译 <productname>PostgreSQL</productname> 并支持服务器中的注入点。注入点允许在预定义的代码路径中
+        从服务器内部运行用户定义的代码。这有助于以受控方式
+        进行测试和调查并发场景。此选项默认被禁用。更多细节请参见
+        <xref linkend="xfunc-addin-injection-points"/>。此选项
+        仅供开发人员用于测试。
        </para>
       </listitem>
      </varlistentry>
@@ -2847,11 +2640,10 @@ ninja install
        <term><option>-Dsegsize_blocks=SEGSIZE_BLOCKS</option></term>
        <listitem>
         <para>
-         Specify the relation segment size in blocks. If both
-         <option>-Dsegsize</option> and this option are specified, this option
-         wins.
+         以块为单位指定关系段大小。如果同时指定了
+         <option>-Dsegsize</option> 和此选项，则此选项优先。
 
-         This option is only for developers, to test segment related code.
+         此选项仅供开发人员用于测试与段相关的代码。
         </para>
        </listitem>
       </varlistentry>
@@ -2861,14 +2653,13 @@ ninja install
   </sect2>
 
   <sect2 id="targets-meson">
-   <title><literal>meson</literal> Build Targets</title>
+   <title><literal>meson</literal> 构建目标</title>
 
    <para>
-    Individual build targets can be built using <command>ninja</command> <replaceable>target</replaceable>.
+    可以使用 <command>ninja</command> <replaceable>target</replaceable> 构建单个构建目标。
 
-    When no target is specified, everything except documentation is
-    built. Individual build products can be built using the path/filename as
-    <replaceable>target</replaceable>.
+    当未指定目标时，除文档之外的所有内容都会被构建。
+    可以通过将路径/文件名作为 <replaceable>target</replaceable> 来构建单个构建产物。
    </para>
 
    &targets-meson;
