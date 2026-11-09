@@ -1192,7 +1192,7 @@ SELECT m.* FROM pg_statistic_ext join pg_statistic_ext_data on (oid = stxoid),
  </sect1>
 
  <sect1 id="explicit-joins">
-  <title>Controlling the Planner with Explicit <literal>JOIN</literal> Clauses</title>
+  <title>使用显式 <literal>JOIN</literal> 子句控制规划器</title>
 
   <indexterm zone="explicit-joins">
    <primary>join</primary>
@@ -1200,154 +1200,77 @@ SELECT m.* FROM pg_statistic_ext join pg_statistic_ext_data on (oid = stxoid),
   </indexterm>
 
   <para>
-   It is possible
-   to control the query planner to some extent by using the explicit <literal>JOIN</literal>
-   syntax.  To see why this matters, we first need some background.
+   通过使用显式的 <literal>JOIN</literal> 语法，可以在某种程度上控制查询规划器。为了理解为什么这一点很重要，我们首先需要一些背景知识。
   </para>
 
   <para>
-   In a simple join query, such as:
+   在一个简单的连接查询中，例如：
 <programlisting>
 SELECT * FROM a, b, c WHERE a.id = b.id AND b.ref = c.id;
 </programlisting>
-   the planner is free to join the given tables in any order.  For
-   example, it could generate a query plan that joins A to B, using
-   the <literal>WHERE</literal> condition <literal>a.id = b.id</literal>, and then
-   joins C to this joined table, using the other <literal>WHERE</literal>
-   condition.  Or it could join B to C and then join A to that result.
-   Or it could join A to C and then join them with B &mdash; but that
-   would be inefficient, since the full Cartesian product of A and C
-   would have to be formed, there being no applicable condition in the
-   <literal>WHERE</literal> clause to allow optimization of the join.  (All
-   joins in the <productname>PostgreSQL</productname> executor happen
-   between two input tables, so it's necessary to build up the result
-   in one or another of these fashions.)  The important point is that
-   these different join possibilities give semantically equivalent
-   results but might have hugely different execution costs.  Therefore,
-   the planner will explore all of them to try to find the most
-   efficient query plan.
+规划器可以自由地按任意顺序连接给定的表。例如，它可以生成一个查询计划，使用 <literal>WHERE</literal> 条件 <literal>a.id = b.id</literal> 将 A 连接到 B，然后使用另一个 <literal>WHERE</literal> 条件将 C 连接到这个连接后的表。或者它可以先将 B 连接到 C，再将 A 连接到该结果。又或者它可以先将 A 连接到 C，然后再将它们与 B 连接 &mdash; 但那样效率会很低，因为必须形成 A 和 C 的完整笛卡尔积，<literal>WHERE</literal> 子句中没有可用于优化该连接的条件。（<productname>PostgreSQL</productname> 执行器中的所有连接都发生在两个输入表之间，因此必须以这样或那样的方式逐步构建结果。）重要的一点是，这些不同的连接可能性会给出语义上等价的结果，但执行代价可能相差巨大。因此，规划器会探索所有这些可能性，以尝试找到最高效的查询计划。
   </para>
 
   <para>
-   When a query only involves two or three tables, there aren't many join
-   orders to worry about.  But the number of possible join orders grows
-   exponentially as the number of tables expands.  Beyond ten or so input
-   tables it's no longer practical to do an exhaustive search of all the
-   possibilities, and even for six or seven tables planning might take an
-   annoyingly long time.  When there are too many input tables, the
-   <productname>PostgreSQL</productname> planner will switch from exhaustive
-   search to a <firstterm>genetic</firstterm> probabilistic search
-   through a limited number of possibilities.  (The switch-over threshold is
-   set by the <xref linkend="guc-geqo-threshold"/> run-time
-   parameter.)
-   The genetic search takes less time, but it won't
-   necessarily find the best possible plan.
+   当查询只涉及两三个表时，需要担心的连接顺序并不多。但随着表数量的增加，可能的连接顺序数量会呈指数级增长。当输入表超过十个左右时，对所有可能性进行穷举搜索就不再实际，甚至对于六七个表，规划也可能耗费令人烦恼的长时间。当输入表太多时，<productname>PostgreSQL</productname> 规划器将从穷举搜索切换为在有限数量的可能性中进行的<firstterm>遗传</firstterm>概率搜索。（切换阈值由 <xref linkend="guc-geqo-threshold"/> 运行时参数设置。）遗传搜索耗时较少，但它不一定会找到最佳可能的计划。
   </para>
 
   <para>
-   When the query involves outer joins, the planner has less freedom
-   than it does for plain (inner) joins. For example, consider:
+   当查询涉及外连接时，规划器比处理普通（内）连接时的自由度更小。例如，考虑：
 <programlisting>
 SELECT * FROM a LEFT JOIN (b JOIN c ON (b.ref = c.id)) ON (a.id = b.id);
 </programlisting>
-   Although this query's restrictions are superficially similar to the
-   previous example, the semantics are different because a row must be
-   emitted for each row of A that has no matching row in the join of B and C.
-   Therefore the planner has no choice of join order here: it must join
-   B to C and then join A to that result.  Accordingly, this query takes
-   less time to plan than the previous query.  In other cases, the planner
-   might be able to determine that more than one join order is safe.
-   For example, given:
+   尽管这个查询的限制表面上与前一个例子相似，但语义不同，因为对于 A 中每一行，如果在 B 和 C 的连接中没有匹配行，也必须输出一行。因此规划器在这里没有选择连接顺序的余地：它必须先把 B 与 C 连接，然后把 A 与该结果连接。相应地，这个查询的规划时间比前一个查询更少。在其他情况下，规划器可能能够确定不止一个连接顺序是安全的。例如，给定：
 <programlisting>
 SELECT * FROM a LEFT JOIN b ON (a.bid = b.id) LEFT JOIN c ON (a.cid = c.id);
 </programlisting>
-   it is valid to join A to either B or C first.  Currently, only
-   <literal>FULL JOIN</literal> completely constrains the join order.  Most
-   practical cases involving <literal>LEFT JOIN</literal> or <literal>RIGHT JOIN</literal>
-   can be rearranged to some extent.
+   先把 A 与 B 或 C 中任一个连接都是合法的。目前，只有 <literal>FULL JOIN</literal> 会完全约束连接顺序。大多数涉及 <literal>LEFT JOIN</literal> 或 <literal>RIGHT JOIN</literal> 的实际情形都可以在某种程度上重新排列。
   </para>
 
   <para>
-   Explicit inner join syntax (<literal>INNER JOIN</literal>, <literal>CROSS
-   JOIN</literal>, or unadorned <literal>JOIN</literal>) is semantically the same as
-   listing the input relations in <literal>FROM</literal>, so it does not
-   constrain the join order.
+   显式内连接语法（<literal>INNER JOIN</literal>、<literal>CROSS
+   JOIN</literal> 或未加修饰的 <literal>JOIN</literal>）在语义上与在 <literal>FROM</literal> 中列出输入关系相同，因此它不会约束连接顺序。
   </para>
 
   <para>
-   Even though most kinds of <literal>JOIN</literal> don't completely constrain
-   the join order, it is possible to instruct the
-   <productname>PostgreSQL</productname> query planner to treat all
-   <literal>JOIN</literal> clauses as constraining the join order anyway.
-   For example, these three queries are logically equivalent:
+   尽管大多数种类的 <literal>JOIN</literal> 不会完全约束连接顺序，但可以指示 <productname>PostgreSQL</productname> 查询规划器把所有的 <literal>JOIN</literal> 子句都当作会约束连接顺序来处理。例如，下面这三个查询在逻辑上是等价的：
 <programlisting>
 SELECT * FROM a, b, c WHERE a.id = b.id AND b.ref = c.id;
 SELECT * FROM a CROSS JOIN b CROSS JOIN c WHERE a.id = b.id AND b.ref = c.id;
 SELECT * FROM a JOIN (b JOIN c ON (b.ref = c.id)) ON (a.id = b.id);
 </programlisting>
-   But if we tell the planner to honor the <literal>JOIN</literal> order,
-   the second and third take less time to plan than the first.  This effect
-   is not worth worrying about for only three tables, but it can be a
-   lifesaver with many tables.
+   但如果我们告诉规划器遵循 <literal>JOIN</literal> 的顺序，第二个和第三个查询的规划时间会比第一个少。对于只有三个表的情况，这种效应不值得担心，但在表很多时它可能是个救星。
   </para>
 
   <para>
-   To force the planner to follow the join order laid out by explicit
-   <literal>JOIN</literal>s,
-   set the <xref linkend="guc-join-collapse-limit"/> run-time parameter to 1.
-   (Other possible values are discussed below.)
+   要强制规划器遵循显式 <literal>JOIN</literal> 所给出的连接顺序，请把 <xref linkend="guc-join-collapse-limit"/> 运行时参数设置为 1。（其他可能的值将在下面讨论。）
   </para>
 
   <para>
-   You do not need to constrain the join order completely in order to
-   cut search time, because it's OK to use <literal>JOIN</literal> operators
-   within items of a plain <literal>FROM</literal> list.  For example, consider:
+   你不需要为了缩短搜索时间而完全约束连接顺序，因为在普通 <literal>FROM</literal> 列表的项中使用 <literal>JOIN</literal> 运算符是可以的。例如，考虑：
 <programlisting>
 SELECT * FROM a CROSS JOIN b, c, d, e WHERE ...;
 </programlisting>
-   With <varname>join_collapse_limit</varname> = 1, this
-   forces the planner to join A to B before joining them to other tables,
-   but doesn't constrain its choices otherwise.  In this example, the
-   number of possible join orders is reduced by a factor of 5.
+   当 <varname>join_collapse_limit</varname> = 1 时，这会强制规划器先把 A 与 B 连接，然后再把它们与其他表连接，但不会在其他方面约束它的选择。在这个例子中，可能的连接顺序数量减少了 5 倍。
   </para>
 
   <para>
-   Constraining the planner's search in this way is a useful technique
-   both for reducing planning time and for directing the planner to a
-   good query plan.  If the planner chooses a bad join order by default,
-   you can force it to choose a better order via <literal>JOIN</literal> syntax
-   &mdash; assuming that you know of a better order, that is.  Experimentation
-   is recommended.
+   以这种方式约束规划器的搜索是一种有用的技术，既可用于减少规划时间，也可用于引导规划器得到良好的查询计划。如果规划器默认选择了糟糕的连接顺序，你可以通过 <literal>JOIN</literal> 语法 &mdash; 强制它选择更好的顺序——当然，前提是你知道存在更好的顺序。建议进行实验。
   </para>
 
   <para>
-   A closely related issue that affects planning time is collapsing of
-   subqueries into their parent query.  For example, consider:
+   一个密切相关的、影响规划时间的问题是子查询折叠到其父查询中。例如，考虑：
 <programlisting>
 SELECT *
 FROM x, y,
     (SELECT * FROM a, b, c WHERE something) AS ss
 WHERE somethingelse;
 </programlisting>
-   This situation might arise from use of a view that contains a join;
-   the view's <literal>SELECT</literal> rule will be inserted in place of the view
-   reference, yielding a query much like the above.  Normally, the planner
-   will try to collapse the subquery into the parent, yielding:
+这种情况可能源于使用了包含连接的视图；视图的 <literal>SELECT</literal> 规则将被插入到视图引用的位置，从而产生与上面类似的查询。通常，规划器会尝试将子查询折叠到父查询中，从而产生：
 <programlisting>
 SELECT * FROM x, y, a, b, c WHERE something AND somethingelse;
 </programlisting>
-   This usually results in a better plan than planning the subquery
-   separately.  (For example, the outer <literal>WHERE</literal> conditions might be such that
-   joining X to A first eliminates many rows of A, thus avoiding the need to
-   form the full logical output of the subquery.)  But at the same time,
-   we have increased the planning time; here, we have a five-way join
-   problem replacing two separate three-way join problems.  Because of the
-   exponential growth of the number of possibilities, this makes a big
-   difference.  The planner tries to avoid getting stuck in huge join search
-   problems by not collapsing a subquery if more than <varname>from_collapse_limit</varname>
-   <literal>FROM</literal> items would result in the parent
-   query.  You can trade off planning time against quality of plan by
-   adjusting this run-time parameter up or down.
+这通常比单独规划子查询产生更好的计划。（例如，外层的 <literal>WHERE</literal> 条件可能使得先将 X 与 A 连接会消除 A 的许多行，从而避免形成子查询的完整逻辑输出。）但与此同时，我们增加了规划时间；这里，我们用一个五路连接问题取代了两个独立的三路连接问题。由于可能性的数量呈指数增长，这会造成很大的差异。如果折叠子查询会导致父查询中出现超过 <varname>from_collapse_limit</varname> 个 <literal>FROM</literal> 项，规划器就会通过不折叠子查询来避免陷入庞大的连接搜索问题。你可以通过调高或调低这个运行时参数来权衡规划时间与计划质量。
   </para>
 
   <para>
