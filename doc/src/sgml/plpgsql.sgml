@@ -2842,21 +2842,15 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
   </sect1>
 
   <sect1 id="plpgsql-transactions">
-   <title>Transaction Management</title>
+   <title>事务管理</title>
 
    <para>
-    In procedures invoked by the <command>CALL</command> command
-    as well as in anonymous code blocks (<command>DO</command> command),
-    it is possible to end transactions using the
-    commands <command>COMMIT</command> and <command>ROLLBACK</command>.  A new
-    transaction is started automatically after a transaction is ended using
-    these commands, so there is no separate <command>START
-    TRANSACTION</command> command.  (Note that <command>BEGIN</command> and
-    <command>END</command> have different meanings in PL/pgSQL.)
+    在由 <command>CALL</command> 命令调用的过程以及匿名代码块（<command>DO</command> 命令）中，可以使用 <command>COMMIT</command> 和 <command>ROLLBACK</command> 命令结束事务。使用这些命令结束事务后会自动开始一个新事务，因此没有单独的 <command>START
+    TRANSACTION</command> 命令。（注意，<command>BEGIN</command> 和 <command>END</command> 在 PL/pgSQL 中具有不同的含义。）
    </para>
 
    <para>
-    Here is a simple example:
+    下面是一个简单的例子：
 <programlisting>
 CREATE PROCEDURE transaction_test1()
 LANGUAGE plpgsql
@@ -2883,41 +2877,22 @@ CALL transaction_test1();
    </indexterm>
 
    <para id="plpgsql-transaction-chain">
-    A new transaction starts out with default transaction characteristics such
-    as transaction isolation level.  In cases where transactions are committed
-    in a loop, it might be desirable to start new transactions automatically
-    with the same characteristics as the previous one.  The commands
-    <command>COMMIT AND CHAIN</command> and <command>ROLLBACK AND
-    CHAIN</command> accomplish this.
+    新事务以默认的事务特征（例如事务隔离级别）开始。在循环中提交事务的情况下，可能希望自动启动与上一个事务具有相同特征的新事务。命令 <command>COMMIT AND CHAIN</command> 和 <command>ROLLBACK AND
+    CHAIN</command> 可实现这一点。
    </para>
 
    <para>
-    Transaction control is only possible in <command>CALL</command> or
-    <command>DO</command> invocations from the top level or nested
-    <command>CALL</command> or <command>DO</command> invocations without any
-    other intervening command.  For example, if the call stack is
-    <command>CALL proc1()</command> &rarr; <command>CALL proc2()</command>
-    &rarr; <command>CALL proc3()</command>, then the second and third
-    procedures can perform transaction control actions.  But if the call stack
-    is <command>CALL proc1()</command> &rarr; <command>SELECT
-    func2()</command> &rarr; <command>CALL proc3()</command>, then the last
-    procedure cannot do transaction control, because of the
-    <command>SELECT</command> in between.
+    只有在顶层调用的 <command>CALL</command> 或 <command>DO</command> 调用中，或者嵌套的 <command>CALL</command> 或 <command>DO</command> 调用中且中间没有任何其他命令时，才可能进行事务控制。例如，如果调用栈是 <command>CALL proc1()</command> &rarr; <command>CALL proc2()</command> &rarr; <command>CALL proc3()</command>，那么第二个和第三个过程可以执行事务控制操作。但如果调用栈是 <command>CALL proc1()</command> &rarr; <command>SELECT
+    func2()</command> &rarr; <command>CALL proc3()</command>，那么最后一个过程不能进行事务控制，因为中间有 <command>SELECT</command>。
    </para>
 
    <para>
-    <application>PL/pgSQL</application> does not support savepoints
-    (<command>SAVEPOINT</command>/<command>ROLLBACK TO
-    SAVEPOINT</command>/<command>RELEASE SAVEPOINT</command> commands).
-    Typical usage patterns for savepoints can be replaced by blocks with
-    exception handlers (see <xref linkend="plpgsql-error-trapping"/>).
-    Under the hood, a block with exception handlers forms a
-    subtransaction, which means that transactions cannot be ended inside
-    such a block.
+    <application>PL/pgSQL</application> 不支持保存点（<command>SAVEPOINT</command>/<command>ROLLBACK TO
+    SAVEPOINT</command>/<command>RELEASE SAVEPOINT</command> 命令）。保存点的典型使用模式可以用带异常处理器的块来替代（参见 <xref linkend="plpgsql-error-trapping"/>）。在底层，带异常处理器的块会形成一个子事务，这意味着在此类块内部不能结束事务。
    </para>
 
    <para>
-    Special considerations apply to cursor loops.  Consider this example:
+    游标循环有一些特殊的注意事项。考虑下面的例子：
 <programlisting>
 CREATE PROCEDURE transaction_test2()
 LANGUAGE plpgsql
@@ -2934,23 +2909,12 @@ $$;
 
 CALL transaction_test2();
 </programlisting>
-    Normally, cursors are automatically closed at transaction commit.
-    However, a cursor created as part of a loop like this is automatically
-    converted to a holdable cursor by the first <command>COMMIT</command> or
-    <command>ROLLBACK</command>.  That means that the cursor is fully
-    evaluated at the first <command>COMMIT</command> or
-    <command>ROLLBACK</command> rather than row by row.  The cursor is still
-    removed automatically after the loop, so this is mostly invisible to the
-    user.  But one must keep in mind that any table or row locks taken by
-    the cursor's query will no longer be held after the
-    first <command>COMMIT</command> or
-    <command>ROLLBACK</command>.
+    通常，游标在事务提交时会自动关闭。但是，像这样作为循环的一部分创建的游标，会在第一次 <command>COMMIT</command> 或 <command>ROLLBACK</command> 时自动转换为可保持游标。这意味着游标会在第一次 <command>COMMIT</command> 或 <command>ROLLBACK</command> 时被完整求值，而不是逐行求值。循环结束后游标仍然会被自动删除，因此这对用户来说基本上是不可见的。但必须记住，游标查询所取得的任何表锁或行锁在第一次 <command>COMMIT</command> 或 <command>ROLLBACK</command> 之后将不再被持有。
    </para>
 
    <para>
-    Transaction commands are not allowed in cursor loops driven by commands
-    that are not read-only (for example <command>UPDATE
-    ... RETURNING</command>).
+    由非只读命令（例如 <command>UPDATE
+    ... RETURNING</command>）驱动的游标循环中不允许使用事务命令。
    </para>
   </sect1>
 
