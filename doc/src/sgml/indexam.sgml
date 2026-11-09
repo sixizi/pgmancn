@@ -581,156 +581,67 @@ amtranslatecmptype (CompareType cmptype, Oid opfamily, Oid opcintype);
  </sect1>
 
  <sect1 id="index-scanning">
-  <title>Index Scanning</title>
+  <title>索引扫描</title>
 
   <para>
-   In an index scan, the index access method is responsible for regurgitating
-   the TIDs of all the tuples it has been told about that match the
-   <firstterm>scan keys</firstterm>.  The access method is <emphasis>not</emphasis> involved in
-   actually fetching those tuples from the index's parent table, nor in
-   determining whether they pass the scan's visibility test or other
-   conditions.
+   在索引扫描中，索引访问方法负责把它被告知的、匹配<firstterm>扫描键</firstterm>的所有元组的 TID 输出出来。访问方法<emphasis>不</emphasis>参与从索引的父表中实际获取那些元组，也不参与判断它们是否通过扫描的可见性测试或其他条件。
   </para>
 
   <para>
-   A scan key is the internal representation of a <literal>WHERE</literal> clause of
-   the form <replaceable>index_key</replaceable> <replaceable>operator</replaceable>
-   <replaceable>constant</replaceable>, where the index key is one of the columns of the
-   index and the operator is one of the members of the operator family
-   associated with that index column.  An index scan has zero or more scan
-   keys, which are implicitly ANDed &mdash; the returned tuples are expected
-   to satisfy all the indicated conditions.
+   扫描键是形如 <replaceable>index_key</replaceable> <replaceable>operator</replaceable>
+   <replaceable>constant</replaceable> 的 <literal>WHERE</literal> 子句的内部表示，其中索引键是索引的列之一，而运算符是与该索引列关联的运算符族中的成员之一。一次索引扫描有零个或多个扫描键，它们被隐式地 AND 在一起 &mdash; 返回的元组应满足所有指示的条件。
   </para>
 
   <para>
-   The access method can report that the index is <firstterm>lossy</firstterm>, or
-   requires rechecks, for a particular query.  This implies that the index
-   scan will return all the entries that pass the scan key, plus possibly
-   additional entries that do not.  The core system's index-scan machinery
-   will then apply the index conditions again to the heap tuple to verify
-   whether or not it really should be selected.  If the recheck option is not
-   specified, the index scan must return exactly the set of matching entries.
+   访问方法可以报告对于某个特定查询，该索引是<firstterm>有损的</firstterm>，或者需要重新检查。这意味着索引扫描将返回所有通过扫描键的条目，外加可能一些不通过的额外条目。核心系统的索引扫描机制随后会再次对堆元组应用索引条件，以验证它是否真的应该被选中。如果未指定重新检查选项，索引扫描必须精确返回匹配条目的集合。
   </para>
 
   <para>
-   Note that it is entirely up to the access method to ensure that it
-   correctly finds all and only the entries passing all the given scan keys.
-   Also, the core system will simply hand off all the <literal>WHERE</literal>
-   clauses that match the index keys and operator families, without any
-   semantic analysis to determine whether they are redundant or
-   contradictory.  As an example, given
-   <literal>WHERE x &gt; 4 AND x &gt; 14</literal> where <literal>x</literal> is a b-tree
-   indexed column, it is left to the b-tree <function>amrescan</function> function
-   to realize that the first scan key is redundant and can be discarded.
-   The extent of preprocessing needed during <function>amrescan</function> will
-   depend on the extent to which the index access method needs to reduce
-   the scan keys to a <quote>normalized</quote> form.
+   请注意，完全由访问方法负责确保它正确地找到且仅找到通过所有给定扫描键的条目。此外，核心系统只会把所有匹配索引键和运算符族的 <literal>WHERE</literal>
+   子句直接交给访问方法，而不做任何语义分析来判断它们是冗余的还是矛盾的。例如，给定
+   <literal>WHERE x &gt; 4 AND x &gt; 14</literal>，其中 <literal>x</literal> 是一个 b-tree
+   索引列，则要由 b-tree 的 <function>amrescan</function> 函数来意识到第一个扫描键是冗余的、可以丢弃。在 <function>amrescan</function> 期间所需预处理的多少，取决于索引访问方法需要把扫描键归约到<quote>规范化</quote>形式的程度。
   </para>
 
   <para>
-   Some access methods return index entries in a well-defined order, others
-   do not.  There are actually two different ways that an access method can
-   support sorted output:
+   有些访问方法以定义良好的顺序返回索引条目，有些则不然。访问方法实际上有两种不同的方式来支持排序输出：
 
     <itemizedlist>
      <listitem>
       <para>
-       Access methods that always return entries in the natural ordering
-       of their data (such as btree) should set
-       <structfield>amcanorder</structfield> to true.
-       Currently, such access methods must use btree-compatible strategy
-       numbers for their equality and ordering operators.
+       总是按照其数据的自然顺序返回条目的访问方法（例如 btree）应将 <structfield>amcanorder</structfield> 设置为 true。目前，这类访问方法必须为其相等运算符和排序运算符使用与 btree 兼容的策略编号。
       </para>
      </listitem>
      <listitem>
       <para>
-       Access methods that support ordering operators should set
-       <structfield>amcanorderbyop</structfield> to true.
-       This indicates that the index is capable of returning entries in
-       an order satisfying <literal>ORDER BY</literal> <replaceable>index_key</replaceable>
-       <replaceable>operator</replaceable> <replaceable>constant</replaceable>.  Scan modifiers
-       of that form can be passed to <function>amrescan</function> as described
-       previously.
+       支持排序运算符的访问方法应将 <structfield>amcanorderbyop</structfield> 设置为 true。这表示该索引能够按照满足 <literal>ORDER BY</literal> <replaceable>index_key</replaceable> <replaceable>operator</replaceable> <replaceable>constant</replaceable> 的顺序返回条目。如前所述，这种形式的扫描修饰符可以传递给 <function>amrescan</function>。
       </para>
      </listitem>
     </itemizedlist>
   </para>
 
   <para>
-   The <function>amgettuple</function> function has a <literal>direction</literal> argument,
-   which can be either <literal>ForwardScanDirection</literal> (the normal case)
-   or  <literal>BackwardScanDirection</literal>.  If the first call after
-   <function>amrescan</function> specifies <literal>BackwardScanDirection</literal>, then the
-   set of matching index entries is to be scanned back-to-front rather than in
-   the normal front-to-back direction, so <function>amgettuple</function> must return
-   the last matching tuple in the index, rather than the first one as it
-   normally would.  (This will only occur for access
-   methods that set <structfield>amcanorder</structfield> to true.)  After the
-   first call, <function>amgettuple</function> must be prepared to advance the scan in
-   either direction from the most recently returned entry.  (But if
-   <structfield>amcanbackward</structfield> is false, all subsequent
-   calls will have the same direction as the first one.)
+   <function>amgettuple</function> 函数有一个 <literal>direction</literal> 参数，它可以是 <literal>ForwardScanDirection</literal>（通常情况）或 <literal>BackwardScanDirection</literal>。如果 <function>amrescan</function> 之后的第一次调用指定了 <literal>BackwardScanDirection</literal>，那么匹配的索引条目集合将从后向前扫描，而不是按通常的从前向后方向扫描，因此 <function>amgettuple</function> 必须返回索引中最后一个匹配的元组，而不是像通常那样返回第一个。（这只会发生在将 <structfield>amcanorder</structfield> 设置为 true 的访问方法中。）在第一次调用之后，<function>amgettuple</function> 必须准备好从最近返回的条目开始向任一方向推进扫描。（但如果 <structfield>amcanbackward</structfield> 为 false，则所有后续调用都将与第一次调用方向相同。）
   </para>
 
   <para>
-   Access methods that support ordered scans must support <quote>marking</quote> a
-   position in a scan and later returning to the marked position.  The same
-   position might be restored multiple times.  However, only one position need
-   be remembered per scan; a new <function>ammarkpos</function> call overrides the
-   previously marked position.  An access method that does not support ordered
-   scans need not provide <function>ammarkpos</function> and <function>amrestrpos</function>
-   functions in <structname>IndexAmRoutine</structname>; set those pointers to NULL
-   instead.
+   支持有序扫描的访问方法必须支持在扫描中<quote>标记</quote>一个位置，并在之后返回到该标记位置。同一位置可能会被恢复多次。不过，每次扫描只需记住一个位置；新的 <function>ammarkpos</function> 调用会覆盖先前标记的位置。不支持有序扫描的访问方法不必在 <structname>IndexAmRoutine</structname> 中提供 <function>ammarkpos</function> 和 <function>amrestrpos</function> 函数；将这些指针设置为 NULL 即可。
   </para>
 
   <para>
-   Both the scan position and the mark position (if any) must be maintained
-   consistently in the face of concurrent insertions or deletions in the
-   index.  It is OK if a freshly-inserted entry is not returned by a scan that
-   would have found the entry if it had existed when the scan started, or for
-   the scan to return such an entry upon rescanning or backing
-   up even though it had not been returned the first time through.  Similarly,
-   a concurrent delete might or might not be reflected in the results of a scan.
-   What is important is that insertions or deletions not cause the scan to
-   miss or multiply return entries that were not themselves being inserted or
-   deleted.
+   在索引中存在并发插入或删除的情况下，扫描位置和标记位置（如果有）都必须保持一致。如果新插入的条目没有被某次扫描返回——而假如该条目在扫描开始时已存在，该扫描本会找到它——这是可以的；或者扫描在重新扫描或回退时返回了这样的条目，尽管第一次扫描时并未返回它，这也是可以的。同样，并发删除可能会也可能不会反映在扫描结果中。重要的是，插入或删除不应导致扫描遗漏或重复返回那些本身并未被插入或删除的条目。
   </para>
 
   <para>
-   If the index stores the original indexed data values (and not some lossy
-   representation of them), it is useful to
-   support <link linkend="indexes-index-only-scans">index-only scans</link>, in
-   which the index returns the actual data not just the TID of the heap tuple.
-   This will only avoid I/O if the visibility map shows that the TID is on an
-   all-visible page; else the heap tuple must be visited anyway to check
-   MVCC visibility.  But that is no concern of the access method's.
+   如果索引存储的是原始的被索引数据值（而不是它们的某种有损表示），那么支持 <link linkend="indexes-index-only-scans">仅索引扫描</link> 是很有用的，在这种扫描中索引返回实际数据，而不仅仅是堆元组的 TID。只有当可见性映射显示该 TID 位于全可见页面上时，这才能避免 I/O；否则无论如何都必须访问堆元组以检查 MVCC 可见性。但这与访问方法无关。
   </para>
 
   <para>
-   Instead of using <function>amgettuple</function>, an index scan can be done with
-   <function>amgetbitmap</function> to fetch all tuples in one call.  This can be
-   noticeably more efficient than <function>amgettuple</function> because it allows
-   avoiding lock/unlock cycles within the access method.  In principle
-   <function>amgetbitmap</function> should have the same effects as repeated
-   <function>amgettuple</function> calls, but we impose several restrictions to
-   simplify matters.  First of all, <function>amgetbitmap</function> returns all
-   tuples at once and marking or restoring scan positions isn't
-   supported. Secondly, the tuples are returned in a bitmap which doesn't
-   have any specific ordering, which is why <function>amgetbitmap</function> doesn't
-   take a <literal>direction</literal> argument.  (Ordering operators will never be
-   supplied for such a scan, either.)
-   Also, there is no provision for index-only scans with
-   <function>amgetbitmap</function>, since there is no way to return the contents of
-   index tuples.
-   Finally, <function>amgetbitmap</function>
-   does not guarantee any locking of the returned tuples, with implications
-   spelled out in <xref linkend="index-locking"/>.
+   索引扫描可以不使用 <function>amgettuple</function>，而是用 <function>amgetbitmap</function> 在一次调用中取出所有元组。这可能比 <function>amgettuple</function> 明显更高效，因为它允许避免访问方法内部的加锁/解锁循环。原则上 <function>amgetbitmap</function> 应该与重复调用 <function>amgettuple</function> 具有相同的效果，但为了简化问题我们施加了几项限制。首先，<function>amgetbitmap</function> 一次返回所有元组，并且不支持标记或恢复扫描位置。其次，元组以位图形式返回，其中没有任何特定的顺序，这就是 <function>amgetbitmap</function> 不接受 <literal>direction</literal> 参数的原因。（对于这种扫描也永远不会提供排序运算符。）此外，<function>amgetbitmap</function> 没有提供仅索引扫描的支持，因为无法返回索引元组的内容。最后，<function>amgetbitmap</function> 不保证对返回的元组加任何锁，其影响在 <xref linkend="index-locking"/> 中详细说明。
   </para>
 
   <para>
-   Note that it is permitted for an access method to implement only
-   <function>amgetbitmap</function> and not <function>amgettuple</function>, or vice versa,
-   if its internal implementation is unsuited to one API or the other.
+   请注意，如果某个访问方法的内部实现不适合某一个 API 而不适合另一个，那么允许它只实现 <function>amgetbitmap</function> 而不实现 <function>amgettuple</function>，或者反之。
   </para>
 
  </sect1>
