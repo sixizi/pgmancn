@@ -1036,283 +1036,185 @@ SELCT 1/0;<!-- this typo is intentional -->
  </sect1>
 
  <sect1 id="sasl-authentication">
-  <title>SASL Authentication</title>
+  <title>SASL 认证</title>
 
   <para>
-   <firstterm>SASL</firstterm> is a framework for authentication in connection-oriented
-   protocols. At the moment, <productname>PostgreSQL</productname> implements three
-   SASL authentication mechanisms: SCRAM-SHA-256, SCRAM-SHA-256-PLUS, and
-   OAUTHBEARER. More might be added in the future. The below steps illustrate how SASL
-   authentication is performed in general, while the next subsections give
-   more details on particular mechanisms.
+   <firstterm>SASL</firstterm> 是面向连接的协议中的一种认证框架。目前，<productname>PostgreSQL</productname> 实现了三种 SASL 认证机制：SCRAM-SHA-256、SCRAM-SHA-256-PLUS 和 OAUTHBEARER。将来可能会添加更多机制。下面的步骤说明了一般情况下 SASL 认证是如何执行的，而接下来的几个小节会给出特定机制的更多细节。
   </para>
 
   <procedure>
-   <title>SASL Authentication Message Flow</title>
+   <title>SASL 认证消息流</title>
 
    <step id="sasl-auth-begin">
     <para>
-     To begin a SASL authentication exchange, the server sends an
-     AuthenticationSASL message. It includes a list of SASL authentication
-     mechanisms that the server can accept, in the server's preferred order.
+     要开始一次 SASL 认证交换，服务器会发送一条 AuthenticationSASL 消息。该消息包含服务器可以接受的 SASL 认证机制列表，按服务器首选的顺序排列。
     </para>
    </step>
 
    <step id="sasl-auth-initial-response">
     <para>
-     The client selects one of the supported mechanisms from the list, and sends
-     a SASLInitialResponse message to the server. The message includes the name
-     of the selected mechanism, and an optional Initial Client Response, if the
-     selected mechanism uses that.
+     客户端从列表中选择一种受支持的机制，并向服务器发送一条 SASLInitialResponse 消息。该消息包含所选机制的名称，以及可选的初始客户端响应（如果所选机制使用该响应）。
     </para>
    </step>
 
    <step id="sasl-auth-continue">
     <para>
-     One or more server-challenge and client-response message will follow. Each
-     server-challenge is sent in an AuthenticationSASLContinue message, followed
-     by a response from client in a SASLResponse message. The particulars of
-     the messages are mechanism specific.
+     随后会有一条或多条服务器挑战与客户端响应消息。每个服务器挑战通过一条 AuthenticationSASLContinue 消息发送，之后客户端通过一条 SASLResponse 消息发送响应。这些消息的具体细节因机制而异。
     </para>
    </step>
 
    <step id="sasl-auth-end">
     <para>
-     Finally, when the authentication exchange is completed successfully, the
-     server sends an optional AuthenticationSASLFinal message, followed
-     immediately by an AuthenticationOk message. The AuthenticationSASLFinal
-     contains additional server-to-client data, whose content is particular to the
-     selected authentication mechanism. If the authentication mechanism doesn't
-     use additional data that's sent at completion, the AuthenticationSASLFinal
-     message is not sent.
+     最后，当认证交换成功完成时，服务器会发送一条可选的 AuthenticationSASLFinal 消息，紧接着发送一条 AuthenticationOk 消息。AuthenticationSASLFinal 包含额外的服务器到客户端数据，其内容特定于所选的认证机制。如果认证机制在完成时不使用额外发送的数据，则不会发送 AuthenticationSASLFinal 消息。
     </para>
    </step>
   </procedure>
 
   <para>
-   On error, the server can abort the authentication at any stage, and send an
-   ErrorMessage.
+   出错时，服务器可以在任何阶段中止认证，并发送一条 ErrorMessage。
   </para>
 
   <sect2 id="sasl-scram-sha-256">
-   <title>SCRAM-SHA-256 Authentication</title>
+   <title>SCRAM-SHA-256 认证</title>
 
    <para>
-    <literal>SCRAM-SHA-256</literal>, and its variant with channel
-    binding <literal>SCRAM-SHA-256-PLUS</literal>, are password-based
-    authentication mechanisms. They are described in
-    detail in <ulink url="https://datatracker.ietf.org/doc/html/rfc7677">RFC 7677</ulink>
-    and <ulink url="https://datatracker.ietf.org/doc/html/rfc5802">RFC 5802</ulink>.
+    <literal>SCRAM-SHA-256</literal> 及其带通道绑定的变体 <literal>SCRAM-SHA-256-PLUS</literal> 是基于密码的认证机制。它们分别在 <ulink url="https://datatracker.ietf.org/doc/html/rfc7677">RFC 7677</ulink> 和 <ulink url="https://datatracker.ietf.org/doc/html/rfc5802">RFC 5802</ulink> 中有详细描述。
    </para>
 
    <para>
-    When SCRAM-SHA-256 is used in PostgreSQL, the server will ignore the user name
-    that the client sends in the <structname>client-first-message</structname>. The user name
-    that was already sent in the startup message is used instead.
-    <productname>PostgreSQL</productname> supports multiple character encodings, while SCRAM
-    dictates UTF-8 to be used for the user name, so it might be impossible to
-    represent the PostgreSQL user name in UTF-8.
+    当在 PostgreSQL 中使用 SCRAM-SHA-256 时，服务器将忽略客户端在 <structname>client-first-message</structname> 中发送的用户名。而是使用已在启动消息中发送的用户名。<productname>PostgreSQL</productname> 支持多种字符编码，而 SCRAM 规定用户名必须使用 UTF-8，因此可能无法用 UTF-8 表示 PostgreSQL 用户名。
    </para>
 
    <para>
-    The SCRAM specification dictates that the password is also in UTF-8, and is
-    processed with the <firstterm>SASLprep</firstterm> algorithm.
-    <productname>PostgreSQL</productname>, however, does not require UTF-8 to be used for
-    the password. When a user's password is set, it is processed with SASLprep
-    as if it was in UTF-8, regardless of the actual encoding used. However, if
-    it is not a legal UTF-8 byte sequence, or it contains UTF-8 byte sequences
-    that are prohibited by the SASLprep algorithm, the raw password will be used
-    without SASLprep processing, instead of throwing an error. This allows the
-    password to be normalized when it is in UTF-8, but still allows a non-UTF-8
-    password to be used, and doesn't require the system to know which encoding
-    the password is in.
+    SCRAM 规范规定密码也采用 UTF-8，并使用 <firstterm>SASLprep</firstterm> 算法处理。然而，<productname>PostgreSQL</productname> 并不要求密码使用 UTF-8。当设置用户密码时，无论实际使用的是哪种编码，都会将其视为 UTF-8 并用 SASLprep 处理。但是，如果它不是合法的 UTF-8 字节序列，或者包含 SASLprep 算法所禁止的 UTF-8 字节序列，则将使用原始密码而不进行 SASLprep 处理，而不是抛出错误。这样，当密码为 UTF-8 时可以对其进行规范化，同时仍允许使用非 UTF-8 密码，并且不要求系统知道密码使用的是哪种编码。
    </para>
 
    <para>
-    <firstterm>Channel binding</firstterm> is supported in PostgreSQL builds with
-    SSL support. The SASL mechanism name for SCRAM with channel binding is
-    <literal>SCRAM-SHA-256-PLUS</literal>.  The channel binding type used by
-    PostgreSQL is <literal>tls-server-end-point</literal>.
+    <firstterm>通道绑定</firstterm>在支持 SSL 的 PostgreSQL 构建版本中受支持。带通道绑定的 SCRAM 的 SASL 机制名称为 <literal>SCRAM-SHA-256-PLUS</literal>。PostgreSQL 使用的通道绑定类型为 <literal>tls-server-end-point</literal>。
    </para>
 
    <para>
-    In <acronym>SCRAM</acronym> without channel binding, the server chooses
-    a random number that is transmitted to the client to be mixed with the
-    user-supplied password in the transmitted password hash.  While this
-    prevents the password hash from being successfully retransmitted in
-    a later session, it does not prevent a fake server between the real
-    server and client from passing through the server's random value
-    and successfully authenticating.
+    在不带通道绑定的 <acronym>SCRAM</acronym> 中，服务器选择一个随机数发送给客户端，以便在传输的口令散列中与用户提供的口令混合。虽然这可以防止口令散列在之后的会话中被成功重传，但它不能防止真实服务器与客户端之间的假冒服务器转发服务器的随机值并成功通过认证。
    </para>
 
    <para>
-    <acronym>SCRAM</acronym> with channel binding prevents such
-    man-in-the-middle attacks by mixing the signature of the server's
-    certificate into the transmitted password hash. While a fake server can
-    retransmit the real server's certificate, it doesn't have access to the
-    private key matching that certificate, and therefore cannot prove it is
-    the owner, causing SSL connection failure.
+    带通道绑定的 <acronym>SCRAM</acronym> 通过把服务器证书的签名混入传输的口令散列，可防止此类中间人攻击。虽然假冒服务器可以重传真实服务器的证书，但它无法访问与该证书匹配的私钥，因此无法证明自己是所有者，从而导致 SSL 连接失败。
    </para>
 
    <procedure>
-    <title>Example</title>
+    <title>示例</title>
     <step id="scram-begin">
      <para>
-      The server sends an AuthenticationSASL message. It includes a list of
-      SASL authentication mechanisms that the server can accept.
-      This will be <literal>SCRAM-SHA-256-PLUS</literal>
-      and <literal>SCRAM-SHA-256</literal> if the server is built with SSL
-      support, or else just the latter.
+      服务器发送 AuthenticationSASL 消息。其中包含服务器可以接受的 SASL 认证机制列表。如果服务器构建时带有 SSL 支持，则会是 <literal>SCRAM-SHA-256-PLUS</literal> 和 <literal>SCRAM-SHA-256</literal>，否则只有后者。
      </para>
     </step>
 
     <step id="scram-client-first">
      <para>
-      The client responds by sending a SASLInitialResponse message, which
-      indicates the chosen mechanism, <literal>SCRAM-SHA-256</literal> or
-      <literal>SCRAM-SHA-256-PLUS</literal>. (A client is free to choose either
-      mechanism, but for better security it should choose the channel-binding
-      variant if it can support it.) In the Initial Client response field, the
-      message contains the SCRAM <structname>client-first-message</structname>.
-      The <structname>client-first-message</structname> also contains the channel
-      binding type chosen by the client.
+      客户端通过发送 SASLInitialResponse 消息进行响应，该消息指明所选的机制，即 <literal>SCRAM-SHA-256</literal> 或 <literal>SCRAM-SHA-256-PLUS</literal>。（客户端可以自由选择任一机制，但为了更好的安全性，如果能够支持，它应选择通道绑定变体。）在 Initial Client response 字段中，该消息包含 SCRAM <structname>client-first-message</structname>。<structname>client-first-message</structname> 还包含客户端选择的通道绑定类型。
      </para>
     </step>
 
     <step id="scram-server-first">
      <para>
-      Server sends an AuthenticationSASLContinue message, with a SCRAM
-      <structname>server-first-message</structname> as the content.
+      服务器发送一条 AuthenticationSASLContinue 消息，内容为 SCRAM
+      <structname>server-first-message</structname>。
      </para>
     </step>
 
     <step id="scram-client-final">
      <para>
-      Client sends a SASLResponse message, with SCRAM
-      <structname>client-final-message</structname> as the content.
+      客户端发送一条 SASLResponse 消息，内容为 SCRAM
+      <structname>client-final-message</structname>。
      </para>
     </step>
 
     <step id="scram-server-final">
      <para>
-      Server sends an AuthenticationSASLFinal message, with the SCRAM
-      <structname>server-final-message</structname>, followed immediately by
-      an AuthenticationOk message.
+      服务器发送一条 AuthenticationSASLFinal 消息，内容为 SCRAM
+      <structname>server-final-message</structname>，紧接着发送一条 AuthenticationOk 消息。
      </para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 id="sasl-oauthbearer">
-   <title>OAUTHBEARER Authentication</title>
+   <title>OAUTHBEARER 认证</title>
 
    <para>
-    <literal>OAUTHBEARER</literal> is a token-based mechanism for federated
-    authentication. It is described in detail in
-    <ulink url="https://datatracker.ietf.org/doc/html/rfc7628">RFC 7628</ulink>.
+    <literal>OAUTHBEARER</literal> 是一种基于令牌的联合认证机制。其详细描述见
+    <ulink url="https://datatracker.ietf.org/doc/html/rfc7628">RFC 7628</ulink>。
    </para>
 
    <para>
-    A typical exchange differs depending on whether or not the client already
-    has a bearer token cached for the current user. If it does not, the exchange
-    will take place over two connections: the first "discovery" connection to
-    obtain OAuth metadata from the server, and the second connection to send
-    the token after the client has obtained it. (libpq does not currently
-    implement a caching method as part of its builtin flow, so it uses the
-    two-connection exchange.)
+    典型的交换过程会有所不同，取决于客户端是否已经为当前用户缓存了
+    bearer 令牌。如果尚未缓存，则交换将通过两个连接进行：第一个是“发现”
+    连接，用于从服务器获取 OAuth 元数据；第二个连接则在客户端取得令牌之后
+    用于发送该令牌。（libpq 目前尚未在其内置流程中实现缓存方法，因此它使用
+    双连接交换。）
    </para>
 
    <para>
-    This mechanism is client-initiated, like SCRAM. The client initial response
-    consists of the standard "GS2" header used by SCRAM, followed by a list of
-    <literal>key=value</literal> pairs. The only key currently supported by
-    the server is <literal>auth</literal>, which contains the bearer token.
-    <literal>OAUTHBEARER</literal> additionally specifies three optional
-    components of the client initial response (the <literal>authzid</literal> of
-    the GS2 header, and the <structfield>host</structfield> and
-    <structfield>port</structfield> keys) which are currently ignored by the
-    server.
+    该机制由客户端发起，与 SCRAM 类似。客户端的初始响应由 SCRAM 所使用的标准 "GS2" 头部组成，其后是 <literal>key=value</literal> 对的列表。服务器当前唯一支持的键是 <literal>auth</literal>，其中包含持有者令牌。<literal>OAUTHBEARER</literal> 还额外规定了客户端初始响应的三个可选组成部分（GS2 头部的 <literal>authzid</literal>，以及 <structfield>host</structfield> 和 <structfield>port</structfield> 键），服务器目前会忽略它们。
    </para>
 
    <para>
-    <literal>OAUTHBEARER</literal> does not support channel binding, and there
-    is no "OAUTHBEARER-PLUS" mechanism. This mechanism does not make use of
-    server data during a successful authentication, so the
-    AuthenticationSASLFinal message is not used in the exchange.
+    <literal>OAUTHBEARER</literal> 不支持通道绑定，也不存在 "OAUTHBEARER-PLUS" 机制。该机制在成功认证期间不使用服务器数据，因此交换过程中不使用 AuthenticationSASLFinal 消息。
    </para>
 
    <procedure>
-    <title>Example</title>
+    <title>示例</title>
     <step>
      <para>
-      During the first exchange, the server sends an AuthenticationSASL message
-      with the <literal>OAUTHBEARER</literal> mechanism advertised.
+      在第一次交换中，服务器发送一条 AuthenticationSASL 消息，其中通告了 <literal>OAUTHBEARER</literal> 机制。
      </para>
     </step>
 
     <step>
      <para>
-      The client responds by sending a SASLInitialResponse message which
-      indicates the <literal>OAUTHBEARER</literal> mechanism. Assuming the
-      client does not already have a valid bearer token for the current user,
-      the <structfield>auth</structfield> field is empty, indicating a discovery
-      connection.
+      客户端通过发送一条 SASLInitialResponse 消息进行响应，其中指明 <literal>OAUTHBEARER</literal> 机制。假设客户端尚未持有当前用户的有效持有者令牌，则 <structfield>auth</structfield> 字段为空，表示这是一次发现连接。
      </para>
     </step>
 
     <step>
      <para>
-      Server sends an AuthenticationSASLContinue message containing an error
-      <literal>status</literal> alongside a well-known URI and scopes that the
-      client should use to conduct an OAuth flow.
+      服务器发送一条 AuthenticationSASLContinue 消息，其中包含一个错误 <literal>status</literal>，以及客户端应当用于执行 OAuth 流程的知名 URI 和作用域。
      </para>
     </step>
 
     <step>
      <para>
-      Client sends a SASLResponse message containing the empty set (a single
-      <literal>0x01</literal> byte) to finish its half of the discovery
-      exchange.
+      客户端发送一条包含空集（单个 <literal>0x01</literal> 字节）的 SASLResponse 消息，以完成其在发现交换中的那一半。
      </para>
     </step>
 
     <step>
      <para>
-      Server sends an ErrorMessage to fail the first exchange.
+      服务器发送一条 ErrorMessage 以使第一次交换失败。
      </para>
      <para>
-      At this point, the client conducts one of many possible OAuth flows to
-      obtain a bearer token, using any metadata that it has been configured with
-      in addition to that provided by the server. (This description is left
-      deliberately vague; <literal>OAUTHBEARER</literal> does not specify or
-      mandate any particular method for obtaining a token.)
+      此时，客户端使用其配置中提供的任何元数据以及服务器提供的元数据，执行众多可能的 OAuth 流程之一来获取持有者令牌。（此描述有意保持模糊；<literal>OAUTHBEARER</literal> 并未指定或强制要求任何特定的令牌获取方法。）
      </para>
      <para>
-      Once it has a token, the client reconnects to the server for the final
-      exchange:
+      一旦获得令牌，客户端便重新连接到服务器以进行最终交换：
      </para>
     </step>
 
     <step>
      <para>
-      The server once again sends an AuthenticationSASL message with the
-      <literal>OAUTHBEARER</literal> mechanism advertised.
+      服务器再次发送一条 AuthenticationSASL 消息，其中通告了 <literal>OAUTHBEARER</literal> 机制。
      </para>
     </step>
 
     <step>
      <para>
-      The client responds by sending a SASLInitialResponse message, but this
-      time the <structfield>auth</structfield> field in the message contains the
-      bearer token that was obtained during the client flow.
+      客户端通过发送一条 SASLInitialResponse 消息来响应，但这一次消息中的 <structfield>auth</structfield> 字段包含在客户端流程中获取的持有者令牌。
      </para>
     </step>
 
     <step>
      <para>
-      The server validates the token according to the instructions of the
-      token provider. If the client is authorized to connect, it sends an
-      AuthenticationOk message to end the SASL exchange.
+      服务器根据令牌提供者的指示验证该令牌。如果客户端被授权连接，服务器会发送一条 AuthenticationOk 消息来结束 SASL 交换。
      </para>
     </step>
    </procedure>
