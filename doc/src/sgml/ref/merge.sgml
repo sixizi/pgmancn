@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>MERGE</refname>
-  <refpurpose>conditionally insert, update, or delete rows of a table</refpurpose>
+  <refpurpose>有条件地插入、更新或删除表中的行</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -58,106 +58,62 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>MERGE</command> performs actions that modify rows in the
-   target table identified as <replaceable class="parameter">target_table_name</replaceable>,
-   using the <replaceable class="parameter">data_source</replaceable>.
-   <command>MERGE</command> provides a single <acronym>SQL</acronym>
-   statement that can conditionally <command>INSERT</command>,
-   <command>UPDATE</command> or <command>DELETE</command> rows, a task
-   that would otherwise require multiple procedural language statements.
+   <command>MERGE</command> 执行修改目标表中行的操作，目标表由 <replaceable class="parameter">target_table_name</replaceable> 标识，使用 <replaceable class="parameter">data_source</replaceable>。
+   <command>MERGE</command> 提供单条 <acronym>SQL</acronym>
+   语句，可以有条件地 <command>INSERT</command>、
+   <command>UPDATE</command> 或 <command>DELETE</command> 行，而这项任务原本需要多条过程语言语句。
   </para>
 
   <para>
-   First, the <command>MERGE</command> command performs a join
-   from <replaceable class="parameter">data_source</replaceable> to
-   the target table
-   producing zero or more candidate change rows.  For each candidate change
-   row, the status of <literal>MATCHED</literal>,
-   <literal>NOT MATCHED BY SOURCE</literal>,
-   or <literal>NOT MATCHED [BY TARGET]</literal>
-   is set just once, after which <literal>WHEN</literal> clauses are evaluated
-   in the order specified.  For each candidate change row, the first clause to
-   evaluate as true is executed.  No more than one <literal>WHEN</literal>
-   clause is executed for any candidate change row.
+   首先，<command>MERGE</command> 命令执行从 <replaceable class="parameter">data_source</replaceable> 到
+   目标表的连接，
+   产生零个或多个候选变更行。对于每个候选变更行，
+   <literal>MATCHED</literal>、<literal>NOT MATCHED BY SOURCE</literal>
+   或 <literal>NOT MATCHED [BY TARGET]</literal> 的状态
+   只设置一次，随后按指定顺序对 <literal>WHEN</literal> 子句求值。
+   对于每个候选变更行，执行第一个求值为真的子句。
+   对于任何候选变更行，最多执行一个 <literal>WHEN</literal>
+   子句。
   </para>
 
   <para>
-   <command>MERGE</command> actions have the same effect as
-   regular <command>UPDATE</command>, <command>INSERT</command>, or
-   <command>DELETE</command> commands of the same names. The syntax of
-   those commands is different, notably that there is no <literal>WHERE</literal>
-   clause and no table name is specified.  All actions refer to the
-   target table,
-   though modifications to other tables may be made using triggers.
+   <command>MERGE</command> 动作与同名的常规 <command>UPDATE</command>、<command>INSERT</command> 或
+   <command>DELETE</command> 命令具有相同的效果。这些命令的语法不同，
+   特别是没有 <literal>WHERE</literal>
+   子句，也不指定表名。所有动作都引用
+   目标表，不过可以使用触发器对其他表进行修改。
   </para>
 
   <para>
-   When <literal>DO NOTHING</literal> is specified, the source row is
-   skipped. Since actions are evaluated in their specified order, <literal>DO
-   NOTHING</literal> can be handy to skip non-interesting source rows before
-   more fine-grained handling.
+   当指定 <literal>DO NOTHING</literal> 时，源行会被跳过。由于动作按其指定顺序求值，<literal>DO
+   NOTHING</literal> 可以方便地在进行更细粒度处理之前跳过不感兴趣的源行。
   </para>
 
   <para>
-   The optional <literal>RETURNING</literal> clause causes <command>MERGE</command>
-   to compute and return value(s) based on each row inserted, updated, or
-   deleted.  Any expression using the source or target table's columns, or
-   the <link linkend="merge-action"><function>merge_action()</function></link>
-   function can be computed.  By default, when an <command>INSERT</command> or
-   <command>UPDATE</command> action is performed, the new values of the target
-   table's columns are used, and when a <command>DELETE</command> is performed,
-   the old values of the target table's columns are used, but it is also
-   possible to explicitly request old and new values.  The syntax of the
-   <literal>RETURNING</literal> list is identical to that of the output list
-   of <command>SELECT</command>.
+   可选的 <literal>RETURNING</literal> 子句使 <command>MERGE</command> 基于插入、更新或删除的每一行计算并返回值。可以使用源表或目标表的列的任何表达式，或 <link linkend="merge-action"><function>merge_action()</function></link> 函数进行计算。默认情况下，当执行 <command>INSERT</command> 或 <command>UPDATE</command> 操作时，使用目标表列的新值；当执行 <command>DELETE</command> 时，使用目标表列的旧值，但也可以显式请求旧值和新值。<literal>RETURNING</literal> 列表的语法与 <command>SELECT</command> 的输出列表的语法相同。
   </para>
 
   <para>
-   There is no separate <literal>MERGE</literal> privilege.
-   If you specify an update action, you must have the
-   <literal>UPDATE</literal> privilege on the column(s)
-   of the target table
-   that are referred to in the <literal>SET</literal> clause.
-   If you specify an insert action, you must have the <literal>INSERT</literal>
-   privilege on the target table.
-   If you specify a delete action, you must have the <literal>DELETE</literal>
-   privilege on the target table.
-   If you specify a <literal>DO NOTHING</literal> action, you must have
-   the <literal>SELECT</literal> privilege on at least one column
-   of the target table.
-   You will also need <literal>SELECT</literal> privilege on any column(s)
-   of the <replaceable class="parameter">data_source</replaceable> and
-   of the target table referred to
-   in any <literal>condition</literal> (including <literal>join_condition</literal>)
-   or <literal>expression</literal>.
-   Privileges are tested once at statement start and are checked
-   whether or not particular <literal>WHEN</literal> clauses are executed.
+   没有单独的 <literal>MERGE</literal> 权限。如果指定更新操作，必须对 <literal>SET</literal> 子句中引用的目标表列具有 <literal>UPDATE</literal> 权限。如果指定插入操作，必须对目标表具有 <literal>INSERT</literal> 权限。如果指定删除操作，必须对目标表具有 <literal>DELETE</literal> 权限。如果指定 <literal>DO NOTHING</literal> 操作，必须对目标表的至少一列具有 <literal>SELECT</literal> 权限。还需要对 <replaceable class="parameter">data_source</replaceable> 以及目标表中在任何 <literal>condition</literal>（包括 <literal>join_condition</literal>）或 <literal>expression</literal> 中引用的任何列具有 <literal>SELECT</literal> 权限。权限在语句开始时测试一次，并且无论是否执行特定的 <literal>WHEN</literal> 子句都会进行检查。
   </para>
 
   <para>
-   <command>MERGE</command> is not supported if the
-   target table is a
-   materialized view, foreign table, or if it has any
-   rules defined on it.
+   如果目标表是物化视图、外部表，或者在其上定义了任何规则，则不支持 <command>MERGE</command>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">with_query</replaceable></term>
     <listitem>
      <para>
-      The <literal>WITH</literal> clause allows you to specify one or more
-      subqueries that can be referenced by name in the <command>MERGE</command>
-      query. See <xref linkend="queries-with"/> and <xref linkend="sql-select"/>
-      for details.  Note that <literal>WITH RECURSIVE</literal> is not supported
-      by <command>MERGE</command>.
+      <literal>WITH</literal> 子句允许指定一个或多个子查询，这些子查询可以在 <command>MERGE</command> 查询中按名称引用。有关详细信息，请参见 <xref linkend="queries-with"/> 和 <xref linkend="sql-select"/>。注意 <command>MERGE</command> 不支持 <literal>WITH RECURSIVE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -166,25 +122,11 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">target_table_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the target table or view to
-      merge into.  If <literal>ONLY</literal> is specified before a table
-      name, matching rows are updated or deleted in the named table only.  If
-      <literal>ONLY</literal> is not specified, matching rows are also updated
-      or deleted in any tables inheriting from the named table.  Optionally,
-      <literal>*</literal> can be specified after the table name to explicitly
-      indicate that descendant tables are included.  The
-      <literal>ONLY</literal> keyword and <literal>*</literal> option do not
-      affect insert actions, which always insert into the named table only.
+      要合并到的目标表或视图的名称（可以选择性地使用模式限定）。如果在表名之前指定了 <literal>ONLY</literal>，则仅在指定的表中更新或删除匹配的行。如果未指定 <literal>ONLY</literal>，则也会在从指定表继承的任何表中更新或删除匹配的行。可选地，可以在表名之后指定 <literal>*</literal>，以明确指示包含后代表。<literal>ONLY</literal> 关键字和 <literal>*</literal> 选项不影响插入操作，插入操作始终只插入到指定的表中。
      </para>
 
      <para>
-      If <replaceable class="parameter">target_table_name</replaceable> is a
-      view, it must either be automatically updatable with no
-      <literal>INSTEAD OF</literal> triggers, or it must have
-      <literal>INSTEAD OF</literal> triggers for every type of action
-      (<literal>INSERT</literal>, <literal>UPDATE</literal>, and
-      <literal>DELETE</literal>) specified in the <literal>WHEN</literal>
-      clauses.  Views with rules are not supported.
+      如果 <replaceable class="parameter">target_table_name</replaceable> 是一个视图，那么它要么必须可自动更新且没有 <literal>INSTEAD OF</literal> 触发器，要么必须为 <literal>WHEN</literal> 子句中指定的每一种动作类型（<literal>INSERT</literal>、<literal>UPDATE</literal> 和 <literal>DELETE</literal>）都设置 <literal>INSTEAD OF</literal> 触发器。不支持带规则的视图。
      </para>
     </listitem>
    </varlistentry>
@@ -193,11 +135,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">target_alias</replaceable></term>
     <listitem>
      <para>
-      A substitute name for the target table. When an alias is
-      provided, it completely hides the actual name of the table.  For
-      example, given <literal>MERGE INTO foo AS f</literal>, the remainder of the
-      <command>MERGE</command> statement must refer to this table as
-      <literal>f</literal> not <literal>foo</literal>.
+      目标表的替代名称。当提供了别名时，它会完全隐藏表的实际名称。例如，给定 <literal>MERGE INTO foo AS f</literal>，<command>MERGE</command> 语句的其余部分必须用 <literal>f</literal> 而不是 <literal>foo</literal> 来引用该表。
      </para>
     </listitem>
    </varlistentry>
@@ -206,13 +144,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">source_table_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the source table, view, or
-      transition table.  If <literal>ONLY</literal> is specified before the
-      table name, matching rows are included from the named table only.  If
-      <literal>ONLY</literal> is not specified, matching rows are also included
-      from any tables inheriting from the named table.  Optionally,
-      <literal>*</literal> can be specified after the table name to explicitly
-      indicate that descendant tables are included.
+      源表、视图或转换表的名称（可以选择性地使用模式限定）。如果在表名之前指定了 <literal>ONLY</literal>，则只包含来自所指定表的匹配行。如果未指定 <literal>ONLY</literal>，则还会包含来自任何继承自该表的表的匹配行。可选地，可以在表名之后指定 <literal>*</literal>，以明确表示包含后代表。
      </para>
     </listitem>
    </varlistentry>
@@ -221,12 +153,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">source_query</replaceable></term>
     <listitem>
      <para>
-      A query (<command>SELECT</command> statement or <command>VALUES</command>
-      statement) that supplies the rows to be merged into the
-      target table.
-      Refer to the <xref linkend="sql-select"/>
-      statement or <xref linkend="sql-values"/>
-      statement for a description of the syntax.
+      提供要合并到目标表中的行的查询（<command>SELECT</command> 语句或 <command>VALUES</command> 语句）。有关语法的说明，请参阅 <xref linkend="sql-select"/> 语句或 <xref linkend="sql-values"/> 语句。
      </para>
     </listitem>
    </varlistentry>
@@ -235,9 +162,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">source_alias</replaceable></term>
     <listitem>
      <para>
-      A substitute name for the data source. When an alias is
-      provided, it completely hides the actual name of the table or the fact
-      that a query was issued.
+      数据源的替代名称。当提供了别名时，它会完全隐藏表的实际名称，或隐藏实际发出的是查询这一事实。
      </para>
     </listitem>
    </varlistentry>
@@ -246,31 +171,14 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">join_condition</replaceable></term>
     <listitem>
      <para>
-      <replaceable class="parameter">join_condition</replaceable> is
-      an expression resulting in a value of type
-      <type>boolean</type> (similar to a <literal>WHERE</literal>
-      clause) that specifies which rows in the
-      <replaceable class="parameter">data_source</replaceable>
-      match rows in the target table.
+      <replaceable class="parameter">join_condition</replaceable> 是一个结果为 <type>boolean</type> 类型值的表达式（类似于 <literal>WHERE</literal> 子句），它指定 <replaceable class="parameter">data_source</replaceable> 中的哪些行与目标表中的行匹配。
      </para>
      <warning>
       <para>
-       Only columns from the target table
-       that attempt to match <replaceable class="parameter">data_source</replaceable>
-       rows should appear in <replaceable class="parameter">join_condition</replaceable>.
-       <replaceable class="parameter">join_condition</replaceable> subexpressions that
-       only reference the target table's
-       columns can affect which action is taken, often in surprising ways.
+       只有目标表中尝试匹配 <replaceable class="parameter">data_source</replaceable> 行的列才应出现在 <replaceable class="parameter">join_condition</replaceable> 中。仅引用目标表列的 <replaceable class="parameter">join_condition</replaceable> 子表达式可能影响所采取的动作，而且往往以出人意料的方式。
       </para>
       <para>
-       If both <literal>WHEN NOT MATCHED BY SOURCE</literal> and
-       <literal>WHEN NOT MATCHED [BY TARGET]</literal> clauses are specified,
-       the <command>MERGE</command> command will perform a <literal>FULL</literal>
-       join between <replaceable class="parameter">data_source</replaceable>
-       and the target table.  For this to work, at least one
-       <replaceable class="parameter">join_condition</replaceable> subexpression
-       must use an operator that can support a hash join, or all of the
-       subexpressions must use operators that can support a merge join.
+       如果同时指定了 <literal>WHEN NOT MATCHED BY SOURCE</literal> 和 <literal>WHEN NOT MATCHED [BY TARGET]</literal> 子句，<command>MERGE</command> 命令将在 <replaceable class="parameter">data_source</replaceable> 与目标表之间执行 <literal>FULL</literal> 连接。为此，至少有一个 <replaceable class="parameter">join_condition</replaceable> 子表达式必须使用支持哈希连接的运算符，或者所有子表达式都必须使用支持合并连接的运算符。
       </para>
      </warning>
     </listitem>
@@ -280,46 +188,19 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">when_clause</replaceable></term>
     <listitem>
      <para>
-      At least one <literal>WHEN</literal> clause is required.
+      至少需要一个 <literal>WHEN</literal> 子句。
      </para>
      <para>
-      The <literal>WHEN</literal> clause may specify <literal>WHEN MATCHED</literal>,
-      <literal>WHEN NOT MATCHED BY SOURCE</literal>, or
-      <literal>WHEN NOT MATCHED [BY TARGET]</literal>.
-      Note that the <acronym>SQL</acronym> standard only defines
-      <literal>WHEN MATCHED</literal> and <literal>WHEN NOT MATCHED</literal>
-      (which is defined to mean no matching target row).
-      <literal>WHEN NOT MATCHED BY SOURCE</literal> is an extension to the
-      <acronym>SQL</acronym> standard, as is the option to append
-      <literal>BY TARGET</literal> to <literal>WHEN NOT MATCHED</literal>, to
-      make its meaning more explicit.
+      <literal>WHEN</literal> 子句可以指定 <literal>WHEN MATCHED</literal>、<literal>WHEN NOT MATCHED BY SOURCE</literal> 或 <literal>WHEN NOT MATCHED [BY TARGET]</literal>。请注意，<acronym>SQL</acronym> 标准只定义了 <literal>WHEN MATCHED</literal> 和 <literal>WHEN NOT MATCHED</literal>（后者定义为没有匹配的目标行）。<literal>WHEN NOT MATCHED BY SOURCE</literal> 是对 <acronym>SQL</acronym> 标准的扩展，将 <literal>BY TARGET</literal> 追加到 <literal>WHEN NOT MATCHED</literal> 以使其含义更明确的选项也是如此。
      </para>
      <para>
-      If the <literal>WHEN</literal> clause specifies <literal>WHEN MATCHED</literal>
-      and the candidate change row matches a row in the
-      <replaceable class="parameter">data_source</replaceable> to a row in the
-      target table, the <literal>WHEN</literal> clause is executed if the
-      <replaceable class="parameter">condition</replaceable> is
-      absent or it evaluates to <literal>true</literal>.
+      如果 <literal>WHEN</literal> 子句指定了 <literal>WHEN MATCHED</literal>，并且候选变更行将 <replaceable class="parameter">data_source</replaceable> 中的某一行与目标表中的某一行匹配，那么当 <replaceable class="parameter">condition</replaceable> 不存在或求值为 <literal>true</literal> 时，将执行 <literal>WHEN</literal> 子句。
      </para>
      <para>
-      If the <literal>WHEN</literal> clause specifies
-      <literal>WHEN NOT MATCHED BY SOURCE</literal> and the candidate change
-      row represents a row in the target table that does not match a row in the
-      <replaceable class="parameter">data_source</replaceable>, the
-      <literal>WHEN</literal> clause is executed if the
-      <replaceable class="parameter">condition</replaceable> is
-      absent or it evaluates to <literal>true</literal>.
+      如果 <literal>WHEN</literal> 子句指定了 <literal>WHEN NOT MATCHED BY SOURCE</literal>，并且候选变更行表示目标表中与 <replaceable class="parameter">data_source</replaceable> 中某一行不匹配的行，那么当 <replaceable class="parameter">condition</replaceable> 不存在或求值为 <literal>true</literal> 时，将执行 <literal>WHEN</literal> 子句。
      </para>
      <para>
-      If the <literal>WHEN</literal> clause specifies
-      <literal>WHEN NOT MATCHED [BY TARGET]</literal> and the candidate change
-      row represents a row in the
-      <replaceable class="parameter">data_source</replaceable> that does not
-      match a row in the target table,
-      the <literal>WHEN</literal> clause is executed if the
-      <replaceable class="parameter">condition</replaceable> is
-      absent or it evaluates to <literal>true</literal>.
+      如果 <literal>WHEN</literal> 子句指定了 <literal>WHEN NOT MATCHED [BY TARGET]</literal>，并且候选变更行表示 <replaceable class="parameter">data_source</replaceable> 中与目标表中的行不匹配的一行，那么当 <replaceable class="parameter">condition</replaceable> 不存在或其求值为 <literal>true</literal> 时，将执行 <literal>WHEN</literal> 子句。
      </para>
     </listitem>
    </varlistentry>
@@ -328,20 +209,10 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">condition</replaceable></term>
     <listitem>
      <para>
-      An expression that returns a value of type <type>boolean</type>.
-      If this expression for a <literal>WHEN</literal> clause
-      returns <literal>true</literal>, then the action for that clause
-      is executed for that row.
+      一个返回 <type>boolean</type> 类型值的表达式。如果 <literal>WHEN</literal> 子句的这个表达式返回 <literal>true</literal>，则对该行执行该子句的动作。
      </para>
      <para>
-      A condition on a <literal>WHEN MATCHED</literal> clause can refer to columns
-      in both the source and the target relations. A condition on a
-      <literal>WHEN NOT MATCHED BY SOURCE</literal> clause can only refer to
-      columns from the target relation, since by definition there is no matching
-      source row. A condition on a <literal>WHEN NOT MATCHED [BY TARGET]</literal>
-      clause can only refer to columns from
-      the source relation, since by definition there is no matching target row.
-      Only the system attributes from the target table are accessible.
+      <literal>WHEN MATCHED</literal> 子句上的条件可以引用源关系和目标关系中的列。<literal>WHEN NOT MATCHED BY SOURCE</literal> 子句上的条件只能引用目标关系中的列，因为根据定义不存在匹配的源行。<literal>WHEN NOT MATCHED [BY TARGET]</literal> 子句上的条件只能引用源关系中的列，因为根据定义不存在匹配的目标行。只有目标表中的系统属性可访问。
      </para>
     </listitem>
    </varlistentry>
@@ -350,33 +221,21 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">merge_insert</replaceable></term>
     <listitem>
      <para>
-      The specification of an <literal>INSERT</literal> action that inserts
-      one row into the target table.
-      The target column names can be listed in any order. If no list of
-      column names is given at all, the default is all the columns of the
-      table in their declared order.
+      <literal>INSERT</literal> 动作的说明，该动作向目标表插入一行。目标列名可以按任意顺序列出。如果完全没有给出列名列表，则默认为表中的所有列，按其声明的顺序。
      </para>
      <para>
-      Each column not present in the explicit or implicit column list will be
-      filled with a default value, either its declared default value
-      or null if there is none.
+      未出现在显式或隐式列列表中的每一列都将被填充为默认值，即其声明的默认值，若没有默认值则为 null。
      </para>
      <para>
-      If the target table
-      is a partitioned table, each row is routed to the appropriate partition
-      and inserted into it.
-      If the target table
-      is a partition, an error will occur if any input row violates the
-      partition constraint.
+      如果目标表是分区表，则每一行都会被路由到相应的分区并插入其中。如果目标表是一个分区，则任何输入行违反分区约束时都会发生错误。
      </para>
      <para>
-      Column names may not be specified more than once.
-      <command>INSERT</command> actions cannot contain sub-selects.
+      列名不能指定多次。
+      <command>INSERT</command> 动作不能包含子查询。
      </para>
      <para>
-      Only one <literal>VALUES</literal> clause can be specified.
-      The <literal>VALUES</literal> clause can only refer to columns from
-      the source relation, since by definition there is no matching target row.
+      只能指定一个 <literal>VALUES</literal> 子句。
+      <literal>VALUES</literal> 子句只能引用来自源关系的列，因为按照定义不存在匹配的目标行。
      </para>
     </listitem>
    </varlistentry>
@@ -385,12 +244,11 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">merge_update</replaceable></term>
     <listitem>
      <para>
-      The specification of an <literal>UPDATE</literal> action that updates
-      the current row of the target table.
-      Column names may not be specified more than once.
+      指定一个更新目标表当前行的 <literal>UPDATE</literal> 动作。
+      列名不能指定多次。
      </para>
      <para>
-      Neither a table name nor a <literal>WHERE</literal> clause are allowed.
+      不允许使用表名，也不允许使用 <literal>WHERE</literal> 子句。
      </para>
     </listitem>
    </varlistentry>
@@ -399,10 +257,8 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">merge_delete</replaceable></term>
     <listitem>
      <para>
-      Specifies a <literal>DELETE</literal> action that deletes the current row
-      of the target table.
-      Do not include the table name or any other clauses, as you would normally
-      do with a <xref linkend="sql-delete"/> command.
+      指定一个删除目标表当前行的 <literal>DELETE</literal> 动作。
+      不要包含表名或任何其他子句，就像通常使用 <xref linkend="sql-delete"/> 命令时那样。
      </para>
     </listitem>
    </varlistentry>
@@ -411,12 +267,8 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">column_name</replaceable></term>
     <listitem>
      <para>
-      The name of a column in the target table.  The column name
-      can be qualified with a subfield name or array subscript, if
-      needed.  (Inserting into only some fields of a composite
-      column leaves the other fields null.)
-      Do not include the table's name in the specification
-      of a target column.
+      目标表中列的名称。如有需要，列名可以用子字段名或数组下标限定。（只向复合列的某些字段插入时，其他字段会保留为空。）
+      不要在目标列的指定中包含表名。
      </para>
     </listitem>
    </varlistentry>
@@ -425,10 +277,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><literal>OVERRIDING SYSTEM VALUE</literal></term>
     <listitem>
      <para>
-      Without this clause, it is an error to specify an explicit value
-      (other than <literal>DEFAULT</literal>) for an identity column defined
-      as <literal>GENERATED ALWAYS</literal>.  This clause overrides that
-      restriction.
+      如果没有这个子句，则为定义为 <literal>GENERATED ALWAYS</literal> 的标识列指定显式值（<literal>DEFAULT</literal> 除外）会报错。这个子句会覆盖该限制。
      </para>
     </listitem>
    </varlistentry>
@@ -437,9 +286,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><literal>OVERRIDING USER VALUE</literal></term>
     <listitem>
      <para>
-      If this clause is specified, then any values supplied for identity
-      columns defined as <literal>GENERATED BY DEFAULT</literal> are ignored
-      and the default sequence-generated values are applied.
+      如果指定了这个子句，则为定义为 <literal>GENERATED BY DEFAULT</literal> 的标识列提供的任何值都会被忽略，并应用由序列生成的默认值。
      </para>
     </listitem>
    </varlistentry>
@@ -448,9 +295,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><literal>DEFAULT VALUES</literal></term>
     <listitem>
      <para>
-      All columns will be filled with their default values.
-      (An <literal>OVERRIDING</literal> clause is not permitted in this
-      form.)
+      所有列都将用它们的默认值填充。（这种形式不允许使用 <literal>OVERRIDING</literal> 子句。）
      </para>
     </listitem>
    </varlistentry>
@@ -459,15 +304,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">expression</replaceable></term>
     <listitem>
      <para>
-      An expression to assign to the column.  If used in a
-      <literal>WHEN MATCHED</literal> clause, the expression can use values
-      from the original row in the target table, and values from the
-      <replaceable class="parameter">data_source</replaceable> row.
-      If used in a <literal>WHEN NOT MATCHED BY SOURCE</literal> clause, the
-      expression can only use values from the original row in the target table.
-      If used in a <literal>WHEN NOT MATCHED [BY TARGET]</literal> clause, the
-      expression can only use values from the
-      <replaceable class="parameter">data_source</replaceable> row.
+      要赋给该列的表达式。如果在 <literal>WHEN MATCHED</literal> 子句中使用，该表达式可以使用目标表中原始行的值，以及 <replaceable class="parameter">data_source</replaceable> 行的值。如果在 <literal>WHEN NOT MATCHED BY SOURCE</literal> 子句中使用，该表达式只能使用目标表中原始行的值。如果在 <literal>WHEN NOT MATCHED [BY TARGET]</literal> 子句中使用，该表达式只能使用 <replaceable class="parameter">data_source</replaceable> 行的值。
      </para>
     </listitem>
    </varlistentry>
@@ -476,8 +313,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><literal>DEFAULT</literal></term>
     <listitem>
      <para>
-      Set the column to its default value (which will be <literal>NULL</literal>
-      if no specific default expression has been assigned to it).
+      将该列设置为其默认值（如果没有为它指定特定的默认表达式，则该值为 <literal>NULL</literal>）。
      </para>
     </listitem>
    </varlistentry>
@@ -486,17 +322,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">sub-SELECT</replaceable></term>
     <listitem>
      <para>
-      A <literal>SELECT</literal> sub-query that produces as many output columns
-      as are listed in the parenthesized column list preceding it.  The
-      sub-query must yield no more than one row when executed.  If it
-      yields one row, its column values are assigned to the target columns;
-      if it yields no rows, NULL values are assigned to the target columns.
-      If used in a <literal>WHEN MATCHED</literal> clause, the sub-query can
-      refer to values from the original row in the target table, and values
-      from the <replaceable class="parameter">data_source</replaceable> row.
-      If used in a <literal>WHEN NOT MATCHED BY SOURCE</literal> clause, the
-      sub-query can only refer to values from the original row in the target
-      table.
+      一个 <literal>SELECT</literal> 子查询，它产生的输出列数与其前面括号中的列列表所列出的列数相同。该子查询在执行时最多只能产生一行。如果它产生一行，则其列值被赋给目标列；如果它不产生任何行，则将 NULL 值赋给目标列。如果在 <literal>WHEN MATCHED</literal> 子句中使用，该子查询可以引用目标表中原始行的值，以及 <replaceable class="parameter">data_source</replaceable> 行的值。如果在 <literal>WHEN NOT MATCHED BY SOURCE</literal> 子句中使用，该子查询只能引用目标表中原始行的值。
      </para>
     </listitem>
    </varlistentry>
@@ -505,17 +331,10 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">output_alias</replaceable></term>
     <listitem>
      <para>
-      An optional substitute name for <literal>OLD</literal> or
-      <literal>NEW</literal> rows in the <literal>RETURNING</literal> list.
+      在 <literal>RETURNING</literal> 列表中为 <literal>OLD</literal> 或 <literal>NEW</literal> 行提供的可选替代名称。
      </para>
      <para>
-      By default, old values from the target table can be returned by writing
-      <literal>OLD.<replaceable class="parameter">column_name</replaceable></literal>
-      or <literal>OLD.*</literal>, and new values can be returned by writing
-      <literal>NEW.<replaceable class="parameter">column_name</replaceable></literal>
-      or <literal>NEW.*</literal>.  When an alias is provided, these names are
-      hidden and the old or new rows must be referred to using the alias.
-      For example <literal>RETURNING WITH (OLD AS o, NEW AS n) o.*, n.*</literal>.
+      默认情况下，可以通过写 <literal>OLD.<replaceable class="parameter">column_name</replaceable></literal> 或 <literal>OLD.*</literal> 返回目标表中的旧值，通过写 <literal>NEW.<replaceable class="parameter">column_name</replaceable></literal> 或 <literal>NEW.*</literal> 返回新值。当提供了别名时，这些名称会被隐藏，必须使用该别名来引用旧行或新行。例如 <literal>RETURNING WITH (OLD AS o, NEW AS n) o.*, n.*</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -524,30 +343,13 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">output_expression</replaceable></term>
     <listitem>
      <para>
-      An expression to be computed and returned by the <command>MERGE</command>
-      command after each row is changed (whether inserted, updated, or deleted).
-      The expression can use any columns of the source or target tables, or the
-      <link linkend="merge-action"><function>merge_action()</function></link>
-      function to return additional information about the action executed.
+      一个表达式，在每一行被更改（无论是插入、更新还是删除）之后由 <command>MERGE</command> 命令计算并返回。该表达式可以使用源表或目标表的任意列，或使用 <link linkend="merge-action"><function>merge_action()</function></link> 函数来返回有关所执行操作的附加信息。
      </para>
      <para>
-      Writing <literal>*</literal> will return all columns from the source
-      table, followed by all columns from the target table.  Often this will
-      lead to a lot of duplication, since it is common for the source and
-      target tables to have a lot of the same columns.  This can be avoided by
-      qualifying the <literal>*</literal> with the name or alias of the source
-      or target table.
+      写 <literal>*</literal> 将返回源表的所有列，随后是目标表的所有列。这通常会导致大量重复，因为源表和目标表常常有许多相同的列。可以通过用源表或目标表的名称或别名限定 <literal>*</literal> 来避免这种情况。
      </para>
      <para>
-      A column name or <literal>*</literal> may also be qualified using
-      <literal>OLD</literal> or <literal>NEW</literal>, or the corresponding
-      <replaceable class="parameter">output_alias</replaceable> for
-      <literal>OLD</literal> or <literal>NEW</literal>, to cause old or new
-      values from the target table to be returned.  An unqualified column
-      name from the target table, or a column name or <literal>*</literal>
-      qualified using the target table name or alias will return new values
-      for <literal>INSERT</literal> and <literal>UPDATE</literal> actions, and
-      old values for <literal>DELETE</literal> actions.
+      列名或 <literal>*</literal> 也可以使用 <literal>OLD</literal> 或 <literal>NEW</literal> 限定，或者对于 <literal>OLD</literal> 或 <literal>NEW</literal> 使用相应的 <replaceable class="parameter">output_alias</replaceable> 限定，以使目标表中的旧值或新值被返回。来自目标表的未限定列名，或者使用目标表名称或别名限定的列名或 <literal>*</literal>，对于 <literal>INSERT</literal> 和 <literal>UPDATE</literal> 操作将返回新值，对于 <literal>DELETE</literal> 操作将返回旧值。
      </para>
     </listitem>
    </varlistentry>
@@ -556,7 +358,7 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
     <term><replaceable class="parameter">output_name</replaceable></term>
     <listitem>
      <para>
-      A name to use for a returned column.
+      用于返回列的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -565,167 +367,106 @@ MERGE INTO [ ONLY ] <replaceable class="parameter">target_table_name</replaceabl
  </refsect1>
 
  <refsect1>
-  <title>Outputs</title>
+  <title>输出</title>
 
   <para>
-   On successful completion, a <command>MERGE</command> command returns a command
-   tag of the form
+   成功完成后，<command>MERGE</command> 命令会返回如下形式的命令标签：
 <screen>
 MERGE <replaceable class="parameter">total_count</replaceable>
 </screen>
-   The <replaceable class="parameter">total_count</replaceable> is the total
-   number of rows changed (whether inserted, updated, or deleted).
-   If <replaceable class="parameter">total_count</replaceable> is 0, no rows
-   were changed in any way.
+   <replaceable class="parameter">total_count</replaceable> 是更改的总行数（无论是插入、更新还是删除）。
+   如果 <replaceable class="parameter">total_count</replaceable> 为 0，则没有以任何方式更改任何行。
   </para>
 
   <para>
-   If the <command>MERGE</command> command contains a <literal>RETURNING</literal>
-   clause, the result will be similar to that of a <command>SELECT</command>
-   statement containing the columns and values defined in the
-   <literal>RETURNING</literal> list, computed over the row(s) inserted, updated,
-   or deleted by the command.
+   如果 <command>MERGE</command> 命令包含 <literal>RETURNING</literal> 子句，其结果将类似于包含 <literal>RETURNING</literal> 列表中定义的列和值的 <command>SELECT</command> 语句的结果，这些列和值是在该命令插入、更新或删除的行上计算得出的。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   The following steps take place during the execution of
-   <command>MERGE</command>.
+   在执行 <command>MERGE</command> 期间会执行以下步骤。
     <orderedlist>
      <listitem>
       <para>
-       Perform any <literal>BEFORE STATEMENT</literal> triggers for all
-       actions specified, whether or not their <literal>WHEN</literal>
-       clauses match.
+       对指定的所有操作执行任何 <literal>BEFORE STATEMENT</literal> 触发器，无论其 <literal>WHEN</literal> 子句是否匹配。
       </para>
      </listitem>
      <listitem>
       <para>
-       Perform a join from source to target table.
-       The resulting query will be optimized normally and will produce
-       a set of candidate change rows. For each candidate change row,
+       执行从源表到目标表的连接。
+       生成的查询将按常规进行优化，并产生一组候选变更行。对于每个候选变更行，
        <orderedlist>
         <listitem>
          <para>
-          Evaluate whether each row is <literal>MATCHED</literal>,
-          <literal>NOT MATCHED BY SOURCE</literal>, or
-          <literal>NOT MATCHED [BY TARGET]</literal>.
+          判断每一行是 <literal>MATCHED</literal>、
+          <literal>NOT MATCHED BY SOURCE</literal> 还是
+          <literal>NOT MATCHED [BY TARGET]</literal>。
          </para>
         </listitem>
         <listitem>
          <para>
-          Test each <literal>WHEN</literal> condition in the order
-          specified until one returns true.
+          按指定顺序测试每个 <literal>WHEN</literal> 条件，直到某个条件返回 true。
          </para>
         </listitem>
         <listitem>
          <para>
-          When a condition returns true, perform the following actions:
+          当某个条件返回 true 时，执行以下操作：
           <orderedlist>
            <listitem>
             <para>
-             Perform any <literal>BEFORE ROW</literal> triggers that fire
-             for the action's event type.
+             执行为该操作的事件类型触发的所有 <literal>BEFORE ROW</literal> 触发器。
             </para>
            </listitem>
            <listitem>
             <para>
-             Perform the specified action, invoking any check constraints on the
-             target table.
+             执行指定的操作，并调用目标表上的任何检查约束。
             </para>
            </listitem>
            <listitem>
             <para>
-             Perform any <literal>AFTER ROW</literal> triggers that fire for
-             the action's event type.
+             执行任何为该操作的事件类型触发的 <literal>AFTER ROW</literal> 触发器。
             </para>
            </listitem>
           </orderedlist>
-          If the target relation is a view with <literal>INSTEAD OF ROW</literal>
-          triggers for the action's event type, they are used to perform the
-          action instead.
+          如果目标关系是一个视图，且该视图带有针对该操作事件类型的 <literal>INSTEAD OF ROW</literal> 触发器，则改用这些触发器来执行该操作。
          </para>
         </listitem>
        </orderedlist></para>
      </listitem>
      <listitem>
       <para>
-       Perform any <literal>AFTER STATEMENT</literal> triggers for actions
-       specified, whether or not they actually occur.  This is similar to the
-       behavior of an <command>UPDATE</command> statement that modifies no rows.
+       执行针对所指定操作的所有 <literal>AFTER STATEMENT</literal> 触发器，无论这些操作是否实际发生。这类似于不修改任何行的 <command>UPDATE</command> 语句的行为。
       </para>
      </listitem>
     </orderedlist>
-   In summary, statement triggers for an event type (say,
-   <command>INSERT</command>) will be fired whenever we
-   <emphasis>specify</emphasis> an action of that kind.
-   In contrast, row-level triggers will fire only for the specific event type
-   being <emphasis>executed</emphasis>.
-   So a <command>MERGE</command> command might fire statement triggers for both
-   <command>UPDATE</command> and <command>INSERT</command>, even though only
-   <command>UPDATE</command> row triggers were fired.
+   总之，只要<emphasis>指定</emphasis>了某种类型的操作，该事件类型（比如 <command>INSERT</command>）的语句触发器就会被触发。相反，行级触发器只会为正在<emphasis>执行</emphasis>的特定事件类型触发。因此，一条 <command>MERGE</command> 命令可能会同时触发 <command>UPDATE</command> 和 <command>INSERT</command> 的语句触发器，即使只触发了 <command>UPDATE</command> 行触发器。
   </para>
 
   <para>
-   You should ensure that the join produces at most one candidate change row
-   for each target row.  In other words, a target row shouldn't join to more
-   than one data source row.  If it does, then only one of the candidate change
-   rows will be used to modify the target row; later attempts to modify the
-   row will cause an error.
-   This can also occur if row triggers make changes to the target table
-   and the rows so modified are then subsequently also modified by
-   <command>MERGE</command>.
-   If the repeated action is an <command>INSERT</command>, this will
-   cause a uniqueness violation, while a repeated <command>UPDATE</command>
-   or <command>DELETE</command> will cause a cardinality violation; the
-   latter behavior is required by the <acronym>SQL</acronym> standard.
-   This differs from historical <productname>PostgreSQL</productname>
-   behavior of joins in <command>UPDATE</command> and
-   <command>DELETE</command> statements where second and subsequent
-   attempts to modify the same row are simply ignored.
+   应确保连接为每个目标行最多产生一个候选变更行。换句话说，一个目标行不应与多于一个数据源行连接。如果出现这种情况，那么只有其中一个候选变更行会被用来修改目标行；之后对该行的修改尝试将导致错误。如果行触发器对目标表做了修改，而被修改的行随后又被 <command>MERGE</command> 修改，也可能发生这种情况。如果重复的操作是 <command>INSERT</command>，会导致唯一性冲突；而重复的 <command>UPDATE</command> 或 <command>DELETE</command> 会导致基数冲突；后一种行为是 <acronym>SQL</acronym> 标准所要求的。这与 <command>UPDATE</command> 和 <command>DELETE</command> 语句中连接的历史 <productname>PostgreSQL</productname> 行为不同，在那种行为中，对同一行的第二次及后续修改尝试会被直接忽略。
   </para>
 
   <para>
-   If a <literal>WHEN</literal> clause omits an <literal>AND</literal>
-   sub-clause, it becomes the final reachable clause of that
-   kind (<literal>MATCHED</literal>, <literal>NOT MATCHED BY SOURCE</literal>,
-   or <literal>NOT MATCHED [BY TARGET]</literal>).
-   If a later <literal>WHEN</literal> clause of that kind
-   is specified it would be provably unreachable and an error is raised.
-   If no final reachable clause is specified of either kind, it is
-   possible that no action will be taken for a candidate change row.
+   如果 <literal>WHEN</literal> 子句省略了 <literal>AND</literal> 子子句，它就成为该类型（<literal>MATCHED</literal>、<literal>NOT MATCHED BY SOURCE</literal> 或 <literal>NOT MATCHED [BY TARGET]</literal>）的最终可达子句。如果随后又指定了该类型的 <literal>WHEN</literal> 子句，则可以证明它是不可达的，并会引发错误。如果两种类型都没有指定最终可达子句，则可能不会对候选变更行采取任何操作。
   </para>
 
   <para>
-   The order in which rows are generated from the data source is
-   indeterminate by default.
-   A <replaceable class="parameter">source_query</replaceable> can be
-   used to specify a consistent ordering, if required, which might be
-   needed to avoid deadlocks between concurrent transactions.
+   默认情况下，从数据源生成行的顺序是不确定的。如果需要，可以使用 <replaceable class="parameter">source_query</replaceable> 来指定一致的顺序，这可能是避免并发事务之间发生死锁所需要的。
   </para>
 
   <para>
-   When <command>MERGE</command> is run concurrently with other commands
-   that modify the target table, the usual transaction isolation rules
-   apply; see <xref linkend="transaction-iso"/> for an explanation
-   on the behavior at each isolation level.
-   You may also wish to consider using <command>INSERT ... ON CONFLICT</command>
-   as an alternative statement which offers the ability to run an
-   <command>UPDATE</command> if a concurrent <command>INSERT</command>
-   occurs.  There are a variety of differences and restrictions between
-   the two statement types and they are not interchangeable.
+   当 <command>MERGE</command> 与其他修改目标表的命令并发运行时，适用通常的事务隔离规则；关于各隔离级别下行为的说明，请参见 <xref linkend="transaction-iso"/>。你可能还需要考虑使用 <command>INSERT ... ON CONFLICT</command> 作为替代语句，它提供了在发生并发 <command>INSERT</command> 时运行 <command>UPDATE</command> 的能力。这两种语句类型之间存在各种差异和限制，它们不能互换使用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Perform maintenance on <literal>customer_accounts</literal> based
-   upon new <literal>recent_transactions</literal>.
+   基于新的 <literal>recent_transactions</literal> 对 <literal>customer_accounts</literal> 执行维护。
 
 <programlisting>
 MERGE INTO customer_account ca
@@ -740,10 +481,7 @@ WHEN NOT MATCHED THEN
   </para>
 
   <para>
-   Attempt to insert a new stock item along with the quantity of stock. If
-   the item already exists, instead update the stock count of the existing
-   item. Don't allow entries that have zero stock. Return details of all
-   changes made.
+   尝试插入一个新的库存项及其库存数量。如果该项已经存在，则改为更新现有项的库存计数。不允许库存为零的条目。返回所有所做更改的详细信息。
 <programlisting>
 MERGE INTO wines w
 USING wine_stock_changes s
@@ -757,14 +495,11 @@ WHEN MATCHED THEN
 RETURNING merge_action(), w.winename, old.stock AS old_stock, new.stock AS new_stock;
 </programlisting>
 
-   The <literal>wine_stock_changes</literal> table might be, for example, a
-   temporary table recently loaded into the database.
+   <literal>wine_stock_changes</literal> 表例如可以是一个最近加载到数据库中的临时表。
   </para>
 
   <para>
-   Update <literal>wines</literal> based on a replacement wine list, inserting
-   rows for any new stock, updating modified stock entries, and deleting any
-   wines not present in the new list.
+   基于一份替换的葡萄酒清单更新 <literal>wines</literal>，为任何新库存插入行，更新已修改的库存条目，并删除新清单中不存在的任何葡萄酒。
 <programlisting>
 MERGE INTO wines w
 USING new_wine_list s
@@ -781,16 +516,15 @@ WHEN NOT MATCHED BY SOURCE THEN
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
    <para>
-    This command conforms to the <acronym>SQL</acronym> standard.
+    本命令符合 <acronym>SQL</acronym> 标准。
   </para>
    <para>
-    The <literal>WITH</literal> clause, <literal>BY SOURCE</literal> and
-    <literal>BY TARGET</literal> qualifiers to
-    <literal>WHEN NOT MATCHED</literal>, <literal>DO NOTHING</literal> action,
-    and <literal>RETURNING</literal> clause are extensions to the
-    <acronym>SQL</acronym> standard.
+    <literal>WITH</literal> 子句、<literal>WHEN NOT MATCHED</literal> 的 <literal>BY SOURCE</literal> 和
+    <literal>BY TARGET</literal> 限定符、<literal>DO NOTHING</literal> 动作
+    以及 <literal>RETURNING</literal> 子句是对
+    <acronym>SQL</acronym> 标准的扩展。
   </para>
  </refsect1>
 </refentry>
