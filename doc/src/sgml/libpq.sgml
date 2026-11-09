@@ -2525,16 +2525,15 @@ void *PQgetssl(const PGconn *conn);
  </sect1>
 
  <sect1 id="libpq-exec">
-  <title>Command Execution Functions</title>
+  <title>命令执行函数</title>
 
   <para>
-   Once a connection to a database server has been successfully
-   established, the functions described here are used to perform
-   SQL queries and commands.
+   一旦成功建立到数据库服务器的连接，这里描述的函数就用于执行
+   SQL 查询和命令。
   </para>
 
   <sect2 id="libpq-exec-main">
-   <title>Main Functions</title>
+   <title>主要函数</title>
 
    <para>
     <variablelist>
@@ -2543,7 +2542,7 @@ void *PQgetssl(const PGconn *conn);
 
       <listitem>
        <para>
-        Submits a command to the server and waits for the result.
+        向服务器提交命令并等待结果。
 
 <synopsis>
 PGresult *PQexec(PGconn *conn, const char *command);
@@ -2551,32 +2550,25 @@ PGresult *PQexec(PGconn *conn, const char *command);
        </para>
 
        <para>
-        Returns a <structname>PGresult</structname> pointer or possibly a null
-        pointer.  A non-null pointer will generally be returned except in
-        out-of-memory conditions or serious errors such as inability to send
-        the command to the server.  The <xref linkend="libpq-PQresultStatus"/> function
-        should be called to check the return value for any errors (including
-        the value of a null pointer, in which case it will return
-        <symbol>PGRES_FATAL_ERROR</symbol>).  Use
-        <xref linkend="libpq-PQerrorMessage"/> to get more information about such
-        errors.
+        返回一个 <structname>PGresult</structname> 指针，也可能返回空指针。通常返回非空指针，
+        除非出现内存不足或无法向服务器发送命令等严重错误。
+        应调用 <xref linkend="libpq-PQresultStatus"/> 函数检查返回值是否有错误
+        （包括空指针的情况，此时它将返回 <symbol>PGRES_FATAL_ERROR</symbol>）。使用
+        <xref linkend="libpq-PQerrorMessage"/> 获取有关此类错误的更多信息。
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    The command string can include multiple SQL commands
-    (separated by semicolons).  Multiple queries sent in a single
-    <xref linkend="libpq-PQexec"/> call are processed in a single transaction, unless
-    there are explicit <command>BEGIN</command>/<command>COMMIT</command>
-    commands included in the query string to divide it into multiple
-    transactions.  (See <xref linkend="protocol-flow-multi-statement"/>
-    for more details about how the server handles multi-query strings.)
-    Note however that the returned
-    <structname>PGresult</structname> structure describes only the result
-    of the last command executed from the string.  Should one of the
-    commands fail, processing of the string stops with it and the returned
-    <structname>PGresult</structname> describes the error condition.
+    命令字符串可以包含多个 SQL 命令（以分号分隔）。在一次
+    <xref linkend="libpq-PQexec"/> 调用中发送的多个查询会在单个事务中处理，除非
+    查询字符串中包含了显式的 <command>BEGIN</command>/<command>COMMIT</command>
+    命令将其划分为多个事务。（有关服务器如何处理多查询字符串的更多细节，请参见
+    <xref linkend="protocol-flow-multi-statement"/>。）
+    但请注意，返回的
+    <structname>PGresult</structname> 结构只描述该字符串中执行的最后一条命令的结果。如果其中某条
+    命令失败，字符串的处理会随之停止，返回的
+    <structname>PGresult</structname> 描述该错误状况。
    </para>
 
    <para>
@@ -2586,9 +2578,8 @@ PGresult *PQexec(PGconn *conn, const char *command);
 
       <listitem>
        <para>
-        Submits a command to the server and waits for the result,
-        with the ability to pass parameters separately from the SQL
-        command text.
+        向服务器提交命令并等待结果，
+        能够将参数与 SQL 命令文本分开传递。
 
 <synopsis>
 PGresult *PQexecParams(PGconn *conn,
@@ -2603,14 +2594,13 @@ PGresult *PQexecParams(PGconn *conn,
        </para>
 
        <para>
-        <xref linkend="libpq-PQexecParams"/> is like <xref linkend="libpq-PQexec"/>, but offers additional
-        functionality: parameter values can be specified separately from the command
-        string proper, and query results can be requested in either text or binary
-        format.
+        <xref linkend="libpq-PQexecParams"/> 类似于 <xref linkend="libpq-PQexec"/>，但提供了额外的
+        功能：参数值可以与命令字符串本身分开指定，查询结果可以以文本或二进制
+        格式请求。
        </para>
 
        <para>
-        The function arguments are:
+        该函数的参数为：
 
         <variablelist>
          <varlistentry>
@@ -2618,7 +2608,7 @@ PGresult *PQexecParams(PGconn *conn,
 
           <listitem>
            <para>
-            The connection object to send the command through.
+            用于发送命令的连接对象。
            </para>
           </listitem>
          </varlistentry>
@@ -2627,9 +2617,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>command</parameter></term>
           <listitem>
            <para>
-            The SQL command string to be executed. If parameters are used,
-            they are referred to in the command string as <literal>$1</literal>,
-            <literal>$2</literal>, etc.
+            要执行的 SQL 命令字符串。如果使用了参数，则在命令字符串中以 <literal>$1</literal>、<literal>$2</literal> 等引用它们。
            </para>
           </listitem>
          </varlistentry>
@@ -2638,11 +2626,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>nParams</parameter></term>
           <listitem>
            <para>
-            The number of parameters supplied; it is the length of the arrays
-            <parameter>paramTypes[]</parameter>, <parameter>paramValues[]</parameter>,
-            <parameter>paramLengths[]</parameter>, and <parameter>paramFormats[]</parameter>. (The
-            array pointers can be <symbol>NULL</symbol> when <parameter>nParams</parameter>
-            is zero.)
+            提供的参数个数；它是数组 <parameter>paramTypes[]</parameter>、<parameter>paramValues[]</parameter>、<parameter>paramLengths[]</parameter> 和 <parameter>paramFormats[]</parameter> 的长度。（当 <parameter>nParams</parameter> 为零时，数组指针可以为 <symbol>NULL</symbol>。）
            </para>
           </listitem>
          </varlistentry>
@@ -2651,11 +2635,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>paramTypes[]</parameter></term>
           <listitem>
            <para>
-            Specifies, by OID, the data types to be assigned to the
-            parameter symbols.  If <parameter>paramTypes</parameter> is
-            <symbol>NULL</symbol>, or any particular element in the array
-            is zero, the server infers a data type for the parameter symbol
-            in the same way it would do for an untyped literal string.
+            通过 OID 指定要赋予参数符号的数据类型。如果 <parameter>paramTypes</parameter> 为 <symbol>NULL</symbol>，或者数组中的任一特定元素为零，则服务器会以处理无类型字面字符串的同样方式为该参数符号推断数据类型。
            </para>
           </listitem>
          </varlistentry>
@@ -2664,11 +2644,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>paramValues[]</parameter></term>
           <listitem>
            <para>
-            Specifies the actual values of the parameters.  A null pointer
-            in this array means the corresponding parameter is null;
-            otherwise the pointer points to a zero-terminated text string
-            (for text format) or binary data in the format expected by the
-            server (for binary format).
+            指定参数的实际值。该数组中的空指针表示相应参数为 null；否则该指针指向以零结尾的文本字符串（用于文本格式）或采用服务器所期望格式的二进制数据（用于二进制格式）。
            </para>
           </listitem>
          </varlistentry>
@@ -2677,9 +2653,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>paramLengths[]</parameter></term>
           <listitem>
            <para>
-            Specifies the actual data lengths of binary-format parameters.
-            It is ignored for null parameters and text-format parameters.
-            The array pointer can be null when there are no binary parameters.
+            指定二进制格式参数的实际数据长度。对于 null 参数和文本格式参数，该值被忽略。当没有二进制参数时，数组指针可以为 null。
            </para>
           </listitem>
          </varlistentry>
@@ -2688,21 +2662,12 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>paramFormats[]</parameter></term>
           <listitem>
            <para>
-            Specifies whether parameters are text (put a zero in the
-            array entry for the corresponding parameter) or binary (put
-            a one in the array entry for the corresponding parameter).
-            If the array pointer is null then all parameters are presumed
-            to be text strings.
+            指定参数是文本（在对应参数的数组项中填入零）还是二进制（在对应参数的数组项中填入一）。如果数组指针为 null，则假定所有参数都是文本字符串。
            </para>
            <para>
-            Values passed in binary format require knowledge of
-            the internal representation expected by the backend.
-            For example, integers must be passed in network byte
-            order.  Passing <type>numeric</type> values requires
-            knowledge of the server storage format, as implemented
-            in
-            <filename>src/backend/utils/adt/numeric.c::numeric_send()</filename> and
-            <filename>src/backend/utils/adt/numeric.c::numeric_recv()</filename>.
+            以二进制格式传递的值需要了解后端所期望的内部表示。例如，整数必须以网络字节序传递。传递 <type>numeric</type> 值需要了解服务器的存储格式，其实现位于
+            <filename>src/backend/utils/adt/numeric.c::numeric_send()</filename> 和
+            <filename>src/backend/utils/adt/numeric.c::numeric_recv()</filename> 中。
            </para>
           </listitem>
          </varlistentry>
@@ -2711,10 +2676,7 @@ PGresult *PQexecParams(PGconn *conn,
           <term><parameter>resultFormat</parameter></term>
           <listitem>
            <para>
-            Specify zero to obtain results in text format, or one to obtain
-            results in binary format.  (There is not currently a provision
-            to obtain different result columns in different formats,
-            although that is possible in the underlying protocol.)
+            指定零以文本格式获得结果，或指定一以二进制格式获得结果。（目前还没有提供以不同格式获得不同结果列的机制，尽管在底层协议中这是可能的。）
            </para>
           </listitem>
          </varlistentry>
@@ -2726,37 +2688,21 @@ PGresult *PQexecParams(PGconn *conn,
    </para>
 
    <para>
-    The primary advantage of <xref linkend="libpq-PQexecParams"/> over
-    <xref linkend="libpq-PQexec"/> is that parameter values can be separated from the
-    command string, thus avoiding the need for tedious and error-prone
-    quoting and escaping.
+    <xref linkend="libpq-PQexecParams"/> 相对于
+    <xref linkend="libpq-PQexec"/> 的主要优点是参数值可以与命令字符串分离，从而避免了繁琐且容易出错的引用和转义。
    </para>
 
    <para>
-    Unlike <xref linkend="libpq-PQexec"/>, <xref linkend="libpq-PQexecParams"/> allows at most
-    one SQL command in the given string.  (There can be semicolons in it,
-    but not more than one nonempty command.)  This is a limitation of the
-    underlying protocol, but has some usefulness as an extra defense against
-    SQL-injection attacks.
+    与 <xref linkend="libpq-PQexec"/> 不同，<xref linkend="libpq-PQexecParams"/> 在给定字符串中最多只允许一条 SQL 命令。（其中可以有分号，但不能有多于一条非空命令。）这是底层协议的限制，但作为对 SQL 注入攻击的额外防御也有一定用处。
    </para>
 
    <tip>
     <para>
-     Specifying parameter types via OIDs is tedious, particularly if you prefer
-     not to hard-wire particular OID values into your program.  However, you can
-     avoid doing so even in cases where the server by itself cannot determine the
-     type of the parameter, or chooses a different type than you want.  In the
-     SQL command text, attach an explicit cast to the parameter symbol to show what
-     data type you will send.  For example:
+     通过 OID 指定参数类型很繁琐，特别是当你不想把特定的 OID 值硬编码到程序中时。不过，即使在服务器自身无法确定参数类型，或选择了与你期望不同的类型的情况下，你也可以避免这样做。在 SQL 命令文本中，给参数符号附加一个显式造型，以表明你将发送什么数据类型。例如：
 <programlisting>
 SELECT * FROM mytable WHERE x = $1::bigint;
 </programlisting>
-     This forces parameter <literal>$1</literal> to be treated as <type>bigint</type>, whereas
-     by default it would be assigned the same type as <literal>x</literal>.  Forcing the
-     parameter type decision, either this way or by specifying a numeric type OID,
-     is strongly recommended when sending parameter values in binary format, because
-     binary format has less redundancy than text format and so there is less chance
-     that the server will detect a type mismatch mistake for you.
+     这会强制把参数 <literal>$1</literal> 当作 <type>bigint</type> 处理，而默认情况下它会被赋予与 <literal>x</literal> 相同的类型。当以二进制格式发送参数值时，强烈建议通过这种方式或指定数字类型 OID 来强制确定参数类型，因为二进制格式的冗余比文本格式少，因此服务器为你检测出类型不匹配错误的机会也更小。
     </para>
    </tip>
 
@@ -2767,8 +2713,7 @@ SELECT * FROM mytable WHERE x = $1::bigint;
 
       <listitem>
        <para>
-        Submits a request to create a prepared statement with the
-        given parameters, and waits for completion.
+        提交一个使用给定参数创建预备语句的请求，并等待完成。
 <synopsis>
 PGresult *PQprepare(PGconn *conn,
                     const char *stmtName,
@@ -2779,51 +2724,21 @@ PGresult *PQprepare(PGconn *conn,
        </para>
 
        <para>
-        <xref linkend="libpq-PQprepare"/> creates a prepared statement for later
-        execution with <xref linkend="libpq-PQexecPrepared"/>.  This feature allows
-        commands to be executed repeatedly without being parsed and
-        planned each time;  see <xref linkend="sql-prepare"/> for details.
+        <xref linkend="libpq-PQprepare"/> 创建一个预备语句，以便稍后使用 <xref linkend="libpq-PQexecPrepared"/> 执行。此特性允许命令被重复执行，而无需每次都进行解析和规划；详情请参见 <xref linkend="sql-prepare"/>。
        </para>
 
        <para>
-        The function creates a prepared statement named
-        <parameter>stmtName</parameter> from the <parameter>query</parameter> string, which
-        must contain a single SQL command.  <parameter>stmtName</parameter> can be
-        <literal>""</literal> to create an unnamed statement, in which case any
-        pre-existing unnamed statement is automatically replaced; otherwise
-        it is an error if the statement name is already defined in the
-        current session.  If any parameters are used, they are referred
-        to in the query as <literal>$1</literal>, <literal>$2</literal>, etc.
-        <parameter>nParams</parameter> is the number of parameters for which types
-        are pre-specified in the array <parameter>paramTypes[]</parameter>.  (The
-        array pointer can be <symbol>NULL</symbol> when
-        <parameter>nParams</parameter> is zero.) <parameter>paramTypes[]</parameter>
-        specifies, by OID, the data types to be assigned to the parameter
-        symbols.  If <parameter>paramTypes</parameter> is <symbol>NULL</symbol>,
-        or any particular element in the array is zero, the server assigns
-        a data type to the parameter symbol in the same way it would do
-        for an untyped literal string.  Also, the query can use parameter
-        symbols with numbers higher than <parameter>nParams</parameter>; data types
-        will be inferred for these symbols as well.  (See
-        <xref linkend="libpq-PQdescribePrepared"/> for a means to find out
-        what data types were inferred.)
+        该函数从 <parameter>query</parameter> 字符串创建一个名为 <parameter>stmtName</parameter> 的预备语句，该字符串必须包含一条 SQL 命令。<parameter>stmtName</parameter> 可以是 <literal>""</literal>，以创建一个未命名语句，在这种情况下，任何先前存在的未命名语句都会被自动替换；否则，如果该语句名已在当前会话中定义，则会报错。如果使用了任何参数，则在查询中以 <literal>$1</literal>、<literal>$2</literal> 等引用它们。<parameter>nParams</parameter> 是在数组 <parameter>paramTypes[]</parameter> 中预先指定类型的参数个数。（当 <parameter>nParams</parameter> 为零时，数组指针可以为 <symbol>NULL</symbol>。）<parameter>paramTypes[]</parameter> 通过 OID 指定要赋予参数符号的数据类型。如果 <parameter>paramTypes</parameter> 为 <symbol>NULL</symbol>，或者数组中的任何特定元素为零，则服务器会以处理无类型字面字符串的相同方式为参数符号分配数据类型。此外，查询可以使用编号高于 <parameter>nParams</parameter> 的参数符号；这些符号的数据类型也会被推断出来。（有关查明推断了哪些数据类型的方法，请参见 <xref linkend="libpq-PQdescribePrepared"/>。）
        </para>
 
        <para>
-        As with <xref linkend="libpq-PQexec"/>, the result is normally a
-        <structname>PGresult</structname> object whose contents indicate
-        server-side success or failure.  A null result indicates
-        out-of-memory or inability to send the command at all.  Use
-        <xref linkend="libpq-PQerrorMessage"/> to get more information about
-        such errors.
+        与 <xref linkend="libpq-PQexec"/> 一样，结果通常是一个 <structname>PGresult</structname> 对象，其内容指示服务器端的成功或失败。空结果表示内存不足或根本无法发送命令。使用 <xref linkend="libpq-PQerrorMessage"/> 获取有关此类错误的更多信息。
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    Prepared statements for use with <xref linkend="libpq-PQexecPrepared"/> can also
-    be created by executing SQL <xref linkend="sql-prepare"/>
-    statements.
+    用于 <xref linkend="libpq-PQexecPrepared"/> 的预备语句也可以通过执行 SQL <xref linkend="sql-prepare"/> 语句来创建。
    </para>
 
    <para>
@@ -2833,8 +2748,7 @@ PGresult *PQprepare(PGconn *conn,
 
       <listitem>
        <para>
-        Sends a request to execute a prepared statement with given
-        parameters, and waits for the result.
+        发送一个执行带有给定参数的预备语句的请求，并等待结果。
 <synopsis>
 PGresult *PQexecPrepared(PGconn *conn,
                          const char *stmtName,
@@ -2847,20 +2761,15 @@ PGresult *PQexecPrepared(PGconn *conn,
        </para>
 
        <para>
-        <xref linkend="libpq-PQexecPrepared"/> is like <xref linkend="libpq-PQexecParams"/>,
-        but the command to be executed is specified by naming a
-        previously-prepared statement, instead of giving a query string.
-        This feature allows commands that will be used repeatedly to be
-        parsed and planned just once, rather than each time they are
-        executed.  The statement must have been prepared previously in
-        the current session.
+        <xref linkend="libpq-PQexecPrepared"/> 类似于 <xref linkend="libpq-PQexecParams"/>，
+        但被执行的命令是通过指定一个先前准备好的语句的名称来给出的，而不是给出查询字符串。
+        该特性允许将被重复使用的命令只被解析和规划一次，而不是每次执行时都重新解析和规划。
+        该语句必须在当前会话中事先准备好。
        </para>
 
        <para>
-        The parameters are identical to <xref linkend="libpq-PQexecParams"/>, except that the
-        name of a prepared statement is given instead of a query string, and the
-        <parameter>paramTypes[]</parameter> parameter is not present (it is not needed since
-        the prepared statement's parameter types were determined when it was created).
+        参数与 <xref linkend="libpq-PQexecParams"/> 相同，只是给出的是预备语句的名称而不是查询字符串，
+        并且不存在 <parameter>paramTypes[]</parameter> 参数（不需要它，因为预备语句的参数类型在创建时就已经确定）。
        </para>
       </listitem>
      </varlistentry>
@@ -2870,30 +2779,18 @@ PGresult *PQexecPrepared(PGconn *conn,
 
       <listitem>
        <para>
-        Submits a request to obtain information about the specified
-        prepared statement, and waits for completion.
+        提交一个获取指定预备语句相关信息的请求，并等待完成。
 <synopsis>
 PGresult *PQdescribePrepared(PGconn *conn, const char *stmtName);
 </synopsis>
        </para>
 
        <para>
-        <xref linkend="libpq-PQdescribePrepared"/> allows an application to obtain
-        information about a previously prepared statement.
+        <xref linkend="libpq-PQdescribePrepared"/> 允许应用程序获取先前准备好的语句的信息。
        </para>
 
        <para>
-        <parameter>stmtName</parameter> can be <literal>""</literal> or <symbol>NULL</symbol> to reference
-        the unnamed statement, otherwise it must be the name of an existing
-        prepared statement.  On success, a <structname>PGresult</structname> with
-        status <literal>PGRES_COMMAND_OK</literal> is returned.  The
-        functions <xref linkend="libpq-PQnparams"/> and
-        <xref linkend="libpq-PQparamtype"/> can be applied to this
-        <structname>PGresult</structname> to obtain information about the parameters
-        of the prepared statement, and the functions
-        <xref linkend="libpq-PQnfields"/>, <xref linkend="libpq-PQfname"/>,
-        <xref linkend="libpq-PQftype"/>, etc. provide information about the
-        result columns (if any) of the statement.
+        <parameter>stmtName</parameter> 可以是 <literal>""</literal> 或 <symbol>NULL</symbol> 以引用未命名语句，否则它必须是现有预备语句的名称。成功时，返回一个状态为 <literal>PGRES_COMMAND_OK</literal> 的 <structname>PGresult</structname>。函数 <xref linkend="libpq-PQnparams"/> 和 <xref linkend="libpq-PQparamtype"/> 可以作用于这个 <structname>PGresult</structname>，以获取有关该预备语句参数的信息，而函数 <xref linkend="libpq-PQnfields"/>、<xref linkend="libpq-PQfname"/>、<xref linkend="libpq-PQftype"/> 等则提供有关该语句结果列（如果有）的信息。
        </para>
       </listitem>
      </varlistentry>
@@ -2903,30 +2800,18 @@ PGresult *PQdescribePrepared(PGconn *conn, const char *stmtName);
 
       <listitem>
        <para>
-        Submits a request to obtain information about the specified
-        portal, and waits for completion.
+        提交一个请求以获取有关指定 portal 的信息，并等待完成。
 <synopsis>
 PGresult *PQdescribePortal(PGconn *conn, const char *portalName);
 </synopsis>
        </para>
 
        <para>
-        <xref linkend="libpq-PQdescribePortal"/> allows an application to obtain
-        information about a previously created portal.
-        (<application>libpq</application> does not provide any direct access to
-        portals, but you can use this function to inspect the properties
-        of a cursor created with a <command>DECLARE CURSOR</command> SQL command.)
+        <xref linkend="libpq-PQdescribePortal"/> 允许应用程序获取有关先前创建的 portal 的信息。（<application>libpq</application> 不提供对 portal 的任何直接访问，但你可以使用此函数检查用 <command>DECLARE CURSOR</command> SQL 命令创建的游标的属性。）
        </para>
 
        <para>
-        <parameter>portalName</parameter> can be <literal>""</literal> or <symbol>NULL</symbol> to reference
-        the unnamed portal, otherwise it must be the name of an existing
-        portal.  On success, a <structname>PGresult</structname> with status
-        <literal>PGRES_COMMAND_OK</literal> is returned.  The functions
-        <xref linkend="libpq-PQnfields"/>, <xref linkend="libpq-PQfname"/>,
-        <xref linkend="libpq-PQftype"/>, etc. can be applied to the
-        <structname>PGresult</structname> to obtain information about the result
-        columns (if any) of the portal.
+        <parameter>portalName</parameter> 可以是 <literal>""</literal> 或 <symbol>NULL</symbol> 以引用未命名 portal，否则它必须是现有 portal 的名称。成功时，返回一个状态为 <literal>PGRES_COMMAND_OK</literal> 的 <structname>PGresult</structname>。函数 <xref linkend="libpq-PQnfields"/>、<xref linkend="libpq-PQfname"/>、<xref linkend="libpq-PQftype"/> 等可以作用于该 <structname>PGresult</structname>，以获取有关该 portal 结果列（如果有）的信息。
        </para>
       </listitem>
      </varlistentry>
@@ -2936,26 +2821,18 @@ PGresult *PQdescribePortal(PGconn *conn, const char *portalName);
 
       <listitem>
        <para>
-        Submits a request to close the specified prepared statement, and waits
-        for completion.
+        提交关闭指定预备语句的请求，并等待完成。
 <synopsis>
 PGresult *PQclosePrepared(PGconn *conn, const char *stmtName);
 </synopsis>
        </para>
 
        <para>
-        <xref linkend="libpq-PQclosePrepared"/> allows an application to close
-        a previously prepared statement. Closing a statement releases all
-        of its associated resources on the server and allows its name to be
-        reused.
+        <xref linkend="libpq-PQclosePrepared"/> 允许应用关闭先前创建的预备语句。关闭语句会释放该语句在服务器上的所有相关资源，并允许其名称被重用。
        </para>
 
        <para>
-        <parameter>stmtName</parameter> can be <literal>""</literal> or
-        <symbol>NULL</symbol> to reference the unnamed statement. It is fine
-        if no statement exists with this name, in that case the operation is a
-        no-op. On success, a <structname>PGresult</structname> with
-        status <literal>PGRES_COMMAND_OK</literal> is returned.
+        <parameter>stmtName</parameter> 可以是 <literal>""</literal> 或 <symbol>NULL</symbol>，用于引用未命名语句。如果不存在该名称的语句也没有关系，这种情况下该操作是空操作。成功时，返回状态为 <structname>PGresult</structname> 的 <literal>PGRES_COMMAND_OK</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2965,28 +2842,20 @@ PGresult *PQclosePrepared(PGconn *conn, const char *stmtName);
 
       <listitem>
        <para>
-        Submits a request to close the specified portal, and waits for
-        completion.
+        提交关闭指定门户的请求，并等待完成。
 <synopsis>
 PGresult *PQclosePortal(PGconn *conn, const char *portalName);
 </synopsis>
        </para>
 
        <para>
-        <xref linkend="libpq-PQclosePortal"/> allows an application to trigger
-        a close of a previously created portal. Closing a portal releases all
-        of its associated resources on the server and allows its name to be
-        reused. (<application>libpq</application> does not provide any
-        direct access to portals, but you can use this function to close a
-        cursor created with a <command>DECLARE CURSOR</command> SQL command.)
+        <xref linkend="libpq-PQclosePortal"/> 允许应用触发关闭先前创建的门户。关闭门户会释放该门户在服务器上的所有相关资源，并允许其名称被重用。（<application>libpq</application> 不提供对门户的任何直接访问，但你可以使用此函数关闭由 <command>DECLARE CURSOR</command> SQL 命令创建的游标。）
        </para>
 
        <para>
-        <parameter>portalName</parameter> can be <literal>""</literal> or
-        <symbol>NULL</symbol> to reference the unnamed portal. It is fine
-        if no portal exists with this name, in that case the operation is a
-        no-op. On success, a <structname>PGresult</structname> with status
-        <literal>PGRES_COMMAND_OK</literal> is returned.
+        <parameter>portalName</parameter> 可以是 <literal>""</literal> 或
+        <symbol>NULL</symbol>，用于引用未命名门户。如果不存在具有该名称的门户也没有关系，在这种情况下该操作是空操作。成功时，返回状态为
+        <literal>PGRES_COMMAND_OK</literal> 的 <structname>PGresult</structname>。
        </para>
       </listitem>
      </varlistentry>
@@ -2994,14 +2863,12 @@ PGresult *PQclosePortal(PGconn *conn, const char *portalName);
    </para>
 
    <para>
-    The <structname>PGresult</structname><indexterm><primary>PGresult</primary></indexterm>
-    structure encapsulates the result returned by the server.
-    <application>libpq</application> application programmers should be
-    careful to maintain the <structname>PGresult</structname> abstraction.
-    Use the accessor functions below to get at the contents of
-    <structname>PGresult</structname>.  Avoid directly referencing the
-    fields of the <structname>PGresult</structname> structure because they
-    are subject to change in the future.
+    <structname>PGresult</structname><indexterm><primary>PGresult</primary></indexterm>
+    结构封装了服务器返回的结果。
+    <application>libpq</application> 应用程序员应小心维护 <structname>PGresult</structname>
+    抽象。使用下面的访问器函数来获取
+    <structname>PGresult</structname> 的内容。避免直接引用
+    <structname>PGresult</structname> 结构的字段，因为它们将来可能会发生变化。
 
     <variablelist>
      <varlistentry id="libpq-PQresultStatus">
@@ -3009,21 +2876,21 @@ PGresult *PQclosePortal(PGconn *conn, const char *portalName);
 
       <listitem>
        <para>
-        Returns the result status of the command.
+        返回命令的结果状态。
 <synopsis>
 ExecStatusType PQresultStatus(const PGresult *res);
 </synopsis>
        </para>
 
        <para>
-        <xref linkend="libpq-PQresultStatus"/> can return one of the following values:
+        <xref linkend="libpq-PQresultStatus"/> 可以返回下列值之一：
 
         <variablelist>
          <varlistentry id="libpq-pgres-empty-query">
           <term><literal>PGRES_EMPTY_QUERY</literal></term>
           <listitem>
            <para>
-            The string sent to the server was empty.
+            发送到服务器的字符串为空。
            </para>
           </listitem>
          </varlistentry>
@@ -3032,7 +2899,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_COMMAND_OK</literal></term>
           <listitem>
            <para>
-            Successful completion of a command returning no data.
+            返回无数据的命令成功完成。
            </para>
           </listitem>
          </varlistentry>
@@ -3041,8 +2908,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_TUPLES_OK</literal></term>
           <listitem>
            <para>
-            Successful completion of a command returning data (such as
-            a <command>SELECT</command> or <command>SHOW</command>).
+            返回数据的命令（例如 <command>SELECT</command> 或 <command>SHOW</command>）成功完成。
            </para>
           </listitem>
          </varlistentry>
@@ -3051,7 +2917,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_COPY_OUT</literal></term>
           <listitem>
            <para>
-            Copy Out (from server) data transfer started.
+            Copy Out（从服务器）数据传输已开始。
            </para>
           </listitem>
          </varlistentry>
@@ -3060,7 +2926,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_COPY_IN</literal></term>
           <listitem>
            <para>
-            Copy In (to server) data transfer started.
+            Copy In（到服务器）数据传输已开始。
            </para>
           </listitem>
          </varlistentry>
@@ -3069,7 +2935,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_BAD_RESPONSE</literal></term>
           <listitem>
            <para>
-            The server's response was not understood.
+            无法理解服务器的响应。
            </para>
           </listitem>
          </varlistentry>
@@ -3078,7 +2944,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_NONFATAL_ERROR</literal></term>
           <listitem>
            <para>
-            A nonfatal error (a notice or warning) occurred.
+            发生了非致命错误（通知或警告）。
            </para>
           </listitem>
          </varlistentry>
@@ -3087,7 +2953,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_FATAL_ERROR</literal></term>
           <listitem>
            <para>
-            A fatal error occurred.
+            发生了致命错误。
            </para>
           </listitem>
          </varlistentry>
@@ -3096,9 +2962,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_COPY_BOTH</literal></term>
           <listitem>
            <para>
-            Copy In/Out (to and from server) data transfer started.  This
-            feature is currently used only for streaming replication,
-            so this status should not occur in ordinary applications.
+            复制进/出（到服务器和从服务器）数据传输已开始。此特性目前仅用于流复制，因此普通应用中不应出现此状态。
            </para>
           </listitem>
          </varlistentry>
@@ -3107,10 +2971,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_SINGLE_TUPLE</literal></term>
           <listitem>
            <para>
-            The <structname>PGresult</structname> contains a single result tuple
-            from the current command.  This status occurs only when
-            single-row mode has been selected for the query
-            (see <xref linkend="libpq-single-row-mode"/>).
+            <structname>PGresult</structname> 包含来自当前命令的单个结果元组。仅当为该查询选择了单行模式时才会出现此状态（参见 <xref linkend="libpq-single-row-mode"/>）。
            </para>
           </listitem>
          </varlistentry>
@@ -3119,12 +2980,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_TUPLES_CHUNK</literal></term>
           <listitem>
            <para>
-            The <structname>PGresult</structname> contains several result tuples
-            from the current command.  This status occurs only when
-            chunked mode has been selected for the query
-            (see <xref linkend="libpq-single-row-mode"/>).
-            The number of tuples will not exceed the limit passed to
-            <xref linkend="libpq-PQsetChunkedRowsMode"/>.
+            <structname>PGresult</structname> 包含来自当前命令的多个结果元组。仅当为该查询选择了分块模式时才会出现此状态（参见 <xref linkend="libpq-single-row-mode"/>）。元组数量不会超过传递给 <xref linkend="libpq-PQsetChunkedRowsMode"/> 的限制。
            </para>
           </listitem>
          </varlistentry>
@@ -3133,11 +2989,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_PIPELINE_SYNC</literal></term>
           <listitem>
            <para>
-            The <structname>PGresult</structname> represents a
-            synchronization point in pipeline mode, requested by either
-            <xref linkend="libpq-PQpipelineSync"/> or
-            <xref linkend="libpq-PQsendPipelineSync"/>.
-            This status occurs only when pipeline mode has been selected.
+            <structname>PGresult</structname> 表示管道模式中的一个同步点，由 <xref linkend="libpq-PQpipelineSync"/> 或 <xref linkend="libpq-PQsendPipelineSync"/> 请求。仅当选择了管道模式时才会出现此状态。
            </para>
           </listitem>
          </varlistentry>
@@ -3146,30 +2998,14 @@ ExecStatusType PQresultStatus(const PGresult *res);
           <term><literal>PGRES_PIPELINE_ABORTED</literal></term>
           <listitem>
            <para>
-            The <structname>PGresult</structname> represents a pipeline that has
-            received an error from the server.  <function>PQgetResult</function>
-            must be called repeatedly, and each time it will return this status code
-            until the end of the current pipeline, at which point it will return
-            <literal>PGRES_PIPELINE_SYNC</literal> and normal processing can
-            resume.
+            <structname>PGresult</structname> 表示一个已从服务器接收到错误的管道。必须反复调用 <function>PQgetResult</function>，每次它都会返回此状态码，直到当前管道结束，此时它将返回 <literal>PGRES_PIPELINE_SYNC</literal>，随后即可恢复正常处理。
            </para>
           </listitem>
          </varlistentry>
 
         </variablelist>
 
-        If the result status is <literal>PGRES_TUPLES_OK</literal>,
-        <literal>PGRES_SINGLE_TUPLE</literal>, or
-        <literal>PGRES_TUPLES_CHUNK</literal>, then
-        the functions described below can be used to retrieve the rows
-        returned by the query.  Note that a <command>SELECT</command>
-        command that happens to retrieve zero rows still shows
-        <literal>PGRES_TUPLES_OK</literal>.
-        <literal>PGRES_COMMAND_OK</literal> is for commands that can never
-        return rows (<command>INSERT</command> or <command>UPDATE</command>
-        without a <literal>RETURNING</literal> clause,
-        etc.). A response of <literal>PGRES_EMPTY_QUERY</literal> might
-        indicate a bug in the client software.
+        如果结果状态是 <literal>PGRES_TUPLES_OK</literal>、<literal>PGRES_SINGLE_TUPLE</literal> 或 <literal>PGRES_TUPLES_CHUNK</literal>，那么可以使用下面描述的函数来获取查询返回的行。请注意，一个恰好检索到零行的 <command>SELECT</command> 命令仍然会显示 <literal>PGRES_TUPLES_OK</literal>。<literal>PGRES_COMMAND_OK</literal> 用于那些永远不会返回行的命令（不带 <literal>RETURNING</literal> 子句的 <command>INSERT</command> 或 <command>UPDATE</command> 等）。返回 <literal>PGRES_EMPTY_QUERY</literal> 可能表明客户端软件存在缺陷。
        </para>
 
        <para>
@@ -3187,9 +3023,7 @@ ExecStatusType PQresultStatus(const PGresult *res);
 
       <listitem>
        <para>
-        Converts the enumerated type returned by
-        <xref linkend="libpq-PQresultStatus"/> into a string constant describing the
-        status code. The caller should not free the result.
+        将 <xref linkend="libpq-PQresultStatus"/> 返回的枚举类型转换为描述该状态码的字符串常量。调用方不应释放该结果。
 
 <synopsis>
 char *PQresStatus(ExecStatusType status);
@@ -3203,30 +3037,22 @@ char *PQresStatus(ExecStatusType status);
 
       <listitem>
        <para>
-        Returns the error message associated with the command, or an empty string
-        if there was no error.
+        返回与该命令关联的错误消息，如果没有错误则返回空字符串。
 <synopsis>
 char *PQresultErrorMessage(const PGresult *res);
 </synopsis>
-        If there was an error, the returned string will include a trailing
-        newline.  The caller should not free the result directly. It will
-        be freed when the associated <structname>PGresult</structname> handle is
-        passed to <xref linkend="libpq-PQclear"/>.
+        如果存在错误，返回的字符串将包含一个结尾换行符。调用方不应直接释放该结果。当关联的 <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，它将被释放。
        </para>
 
        <para>
-        Immediately following a <xref linkend="libpq-PQexec"/> or
-        <xref linkend="libpq-PQgetResult"/> call,
-        <xref linkend="libpq-PQerrorMessage"/> (on the connection) will return
-        the same string as <xref linkend="libpq-PQresultErrorMessage"/> (on
-        the result).  However, a <structname>PGresult</structname> will
-        retain its error message until destroyed, whereas the connection's
-        error message will change when subsequent operations are done.
-        Use <xref linkend="libpq-PQresultErrorMessage"/> when you want to
-        know the status associated with a particular
-        <structname>PGresult</structname>; use
-        <xref linkend="libpq-PQerrorMessage"/> when you want to know the
-        status from the latest operation on the connection.
+        在紧接 <xref linkend="libpq-PQexec"/> 或
+        <xref linkend="libpq-PQgetResult"/> 调用之后，
+        <xref linkend="libpq-PQerrorMessage"/>（在连接上）将返回与
+        <xref linkend="libpq-PQresultErrorMessage"/>（在结果上）相同的字符串。
+        然而，<structname>PGresult</structname> 会保留其错误消息直到被销毁，而连接的错误消息会在后续操作执行时改变。
+        当你想知道与特定 <structname>PGresult</structname> 关联的状态时，使用
+        <xref linkend="libpq-PQresultErrorMessage"/>；当你想知道连接上最近一次操作的状态时，
+        使用 <xref linkend="libpq-PQerrorMessage"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -3236,34 +3062,28 @@ char *PQresultErrorMessage(const PGresult *res);
 
       <listitem>
        <para>
-        Returns a reformatted version of the error message associated with
-        a <structname>PGresult</structname> object.
+        返回与 <structname>PGresult</structname> 对象关联的错误消息的重新格式化版本。
 <synopsis>
 char *PQresultVerboseErrorMessage(const PGresult *res,
                                   PGVerbosity verbosity,
                                   PGContextVisibility show_context);
 </synopsis>
-        In some situations a client might wish to obtain a more detailed
-        version of a previously-reported error.
-        <xref linkend="libpq-PQresultVerboseErrorMessage"/> addresses this need
-        by computing the message that would have been produced
-        by <xref linkend="libpq-PQresultErrorMessage"/> if the specified
-        verbosity settings had been in effect for the connection when the
-        given <structname>PGresult</structname> was generated.  If
-        the <structname>PGresult</structname> is not an error result,
-        <quote>PGresult is not an error result</quote> is reported instead.
-        The returned string includes a trailing newline.
+        在某些情况下，客户端可能希望获得先前报告的错误更详细的版本。
+        <xref linkend="libpq-PQresultVerboseErrorMessage"/> 通过计算如下消息来满足这一需求：
+        如果在生成给定 <structname>PGresult</structname> 时指定的详细程度设置已对该连接生效，
+        那么 <xref linkend="libpq-PQresultErrorMessage"/> 将会产生的消息。
+        如果 <structname>PGresult</structname> 不是错误结果，则改为报告
+        <quote>PGresult is not an error result</quote>。
+        返回的字符串包含末尾换行符。
        </para>
 
        <para>
-        Unlike most other functions for extracting data from
-        a <structname>PGresult</structname>, the result of this function is a freshly
-        allocated string.  The caller must free it
-        using <function>PQfreemem()</function> when the string is no longer needed.
+        与大多数从 <structname>PGresult</structname> 中提取数据的其他函数不同，此函数的结果是一个
+        新分配的字符串。当不再需要该字符串时，调用者必须使用 <function>PQfreemem()</function> 释放它。
        </para>
 
        <para>
-        A NULL return is possible if there is insufficient memory.
+        如果内存不足，可能返回 NULL。
        </para>
       </listitem>
      </varlistentry>
@@ -3272,32 +3092,21 @@ char *PQresultVerboseErrorMessage(const PGresult *res,
       <term><function>PQresultErrorField</function><indexterm><primary>PQresultErrorField</primary></indexterm></term>
       <listitem>
        <para>
-        Returns an individual field of an error report.
+        返回错误报告中的单个字段。
 <synopsis>
 char *PQresultErrorField(const PGresult *res, int fieldcode);
 </synopsis>
-        <parameter>fieldcode</parameter> is an error field identifier; see the symbols
-        listed below.  <symbol>NULL</symbol> is returned if the
-        <structname>PGresult</structname> is not an error or warning result,
-        or does not include the specified field.  Field values will normally
-        not include a trailing newline. The caller should not free the
-        result directly. It will be freed when the
-        associated <structname>PGresult</structname> handle is passed to
-        <xref linkend="libpq-PQclear"/>.
+        <parameter>fieldcode</parameter> 是错误字段标识符；请参见下面列出的符号。如果 <structname>PGresult</structname> 不是错误或警告结果，或者不包含指定的字段，则返回 <symbol>NULL</symbol>。字段值通常不包含末尾换行符。调用方不应直接释放结果。当关联的 <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，该结果将被释放。
        </para>
 
        <para>
-        The following field codes are available:
+        以下字段代码可用：
         <variablelist>
          <varlistentry id="libpq-pg-diag-severity">
           <term><symbol>PG_DIAG_SEVERITY</symbol></term>
           <listitem>
            <para>
-            The severity; the field contents are <literal>ERROR</literal>,
-            <literal>FATAL</literal>, or <literal>PANIC</literal> (in an error message),
-            or <literal>WARNING</literal>, <literal>NOTICE</literal>, <literal>DEBUG</literal>,
-            <literal>INFO</literal>, or <literal>LOG</literal> (in a notice message), or
-            a localized translation of one of these.  Always present.
+            严重性；字段内容为 <literal>ERROR</literal>、<literal>FATAL</literal> 或 <literal>PANIC</literal>（在错误消息中），或者为 <literal>WARNING</literal>、<literal>NOTICE</literal>、<literal>DEBUG</literal>、<literal>INFO</literal> 或 <literal>LOG</literal>（在通知消息中），或者为其中之一的本地化翻译。始终存在。
            </para>
           </listitem>
          </varlistentry>
@@ -3306,30 +3115,18 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_SEVERITY_NONLOCALIZED</symbol></term>
           <listitem>
            <para>
-            The severity; the field contents are <literal>ERROR</literal>,
-            <literal>FATAL</literal>, or <literal>PANIC</literal> (in an error message),
-            or <literal>WARNING</literal>, <literal>NOTICE</literal>, <literal>DEBUG</literal>,
-            <literal>INFO</literal>, or <literal>LOG</literal> (in a notice message).
-            This is identical to the <symbol>PG_DIAG_SEVERITY</symbol> field except
-            that the contents are never localized.  This is present only in
-            reports generated by <productname>PostgreSQL</productname> versions 9.6
-            and later.
+            严重性；字段内容为 <literal>ERROR</literal>、<literal>FATAL</literal> 或 <literal>PANIC</literal>（在错误消息中），或者为 <literal>WARNING</literal>、<literal>NOTICE</literal>、<literal>DEBUG</literal>、<literal>INFO</literal> 或 <literal>LOG</literal>（在通知消息中）。这与 <symbol>PG_DIAG_SEVERITY</symbol> 字段相同，只是内容从不本地化。仅出现在由 <productname>PostgreSQL</productname> 9.6 及更高版本生成的报告中。
            </para>
           </listitem>
          </varlistentry>
 
          <varlistentry id="libpq-pg-diag-sqlstate">
           <term><symbol>PG_DIAG_SQLSTATE</symbol><indexterm
-          ><primary>error codes</primary><secondary>libpq</secondary></indexterm></term>
+          ><primary>错误代码</primary><secondary>libpq</secondary></indexterm></term>
           <listitem>
            <para>
-            The SQLSTATE code for the error. The SQLSTATE code identifies
-            the type of error that has occurred; it can be used by
-            front-end applications to perform specific operations (such
-            as error handling) in response to a particular database error.
-            For a list of the possible SQLSTATE codes, see <xref
-            linkend="errcodes-appendix"/>. This field is not localizable,
-            and is always present.
+            错误的 SQLSTATE 代码。SQLSTATE 代码标识已发生的错误类型；前端应用程序可以使用它来针对特定的数据库错误执行特定操作（例如错误处理）。有关可能的 SQLSTATE 代码列表，请参见 <xref
+            linkend="errcodes-appendix"/>。此字段不可本地化，并且始终存在。
            </para>
           </listitem>
          </varlistentry>
@@ -3338,8 +3135,8 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_MESSAGE_PRIMARY</symbol></term>
           <listitem>
            <para>
-            The primary human-readable error message (typically one line).
-            Always present.
+            主要的人类可读错误消息（通常为一行）。
+            始终存在。
            </para>
           </listitem>
          </varlistentry>
@@ -3348,8 +3145,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_MESSAGE_DETAIL</symbol></term>
           <listitem>
            <para>
-            Detail: an optional secondary error message carrying more
-            detail about the problem.  Might run to multiple lines.
+            Detail：可选的次级错误消息，携带关于该问题的更多细节。可能有多行。
            </para>
           </listitem>
          </varlistentry>
@@ -3358,10 +3154,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_MESSAGE_HINT</symbol></term>
           <listitem>
            <para>
-            Hint: an optional suggestion what to do about the problem.
-            This is intended to differ from detail in that it offers advice
-            (potentially inappropriate) rather than hard facts.  Might
-            run to multiple lines.
+            Hint：可选的关于如何处理该问题的建议。它与 detail 的区别在于：它提供的是建议（可能并不恰当），而不是确凿的事实。可能有多行。
            </para>
           </listitem>
          </varlistentry>
@@ -3370,10 +3163,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_STATEMENT_POSITION</symbol></term>
           <listitem>
            <para>
-            A string containing a decimal integer indicating an error cursor
-            position as an index into the original statement string.  The
-            first character has index 1, and positions are measured in
-            characters not bytes.
+            一个包含十进制整数的字符串，表示错误游标位置，即原始语句字符串中的索引。第一个字符的索引为 1，位置以字符而非字节为单位计量。
            </para>
           </listitem>
          </varlistentry>
@@ -3382,12 +3172,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_INTERNAL_POSITION</symbol></term>
           <listitem>
            <para>
-            This is defined the same as the
-            <symbol>PG_DIAG_STATEMENT_POSITION</symbol> field, but it is used
-            when the cursor position refers to an internally generated
-            command rather than the one submitted by the client.  The
-            <symbol>PG_DIAG_INTERNAL_QUERY</symbol> field will always appear when
-            this field appears.
+            此字段的定义与 <symbol>PG_DIAG_STATEMENT_POSITION</symbol> 字段相同，但当游标位置指向内部生成的命令而非客户端提交的命令时使用此字段。当此字段出现时，<symbol>PG_DIAG_INTERNAL_QUERY</symbol> 字段将始终出现。
            </para>
           </listitem>
          </varlistentry>
@@ -3396,8 +3181,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_INTERNAL_QUERY</symbol></term>
           <listitem>
            <para>
-            The text of a failed internally-generated command.  This could
-            be, for example, an SQL query issued by a PL/pgSQL function.
+            失败的内​​部生成命令的文本。例如，这可能是由 PL/pgSQL 函数发出的 SQL 查询。
            </para>
           </listitem>
          </varlistentry>
@@ -3406,10 +3190,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_CONTEXT</symbol></term>
           <listitem>
            <para>
-            An indication of the context in which the error occurred.
-            Presently this includes a call stack traceback of active
-            procedural language functions and internally-generated queries.
-            The trace is one entry per line, most recent first.
+            指示错误发生的上下文。目前这包括活动过程语言函数和内部生成查询的调用栈回溯。回溯每行一个条目，最近的在前。
            </para>
           </listitem>
          </varlistentry>
@@ -3418,8 +3199,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_SCHEMA_NAME</symbol></term>
           <listitem>
            <para>
-            If the error was associated with a specific database object,
-            the name of the schema containing that object, if any.
+            如果错误与特定的数据库对象相关，则为包含该对象的模式的名称（如果有）。
            </para>
           </listitem>
          </varlistentry>
@@ -3428,9 +3208,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_TABLE_NAME</symbol></term>
           <listitem>
            <para>
-            If the error was associated with a specific table, the name of the
-            table.  (Refer to the schema name field for the name of the
-            table's schema.)
+            如果错误与特定的表相关，则为该表的名称。（表所属模式的名称请参考模式名称字段。）
            </para>
           </listitem>
          </varlistentry>
@@ -3439,9 +3217,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_COLUMN_NAME</symbol></term>
           <listitem>
            <para>
-            If the error was associated with a specific table column, the name
-            of the column.  (Refer to the schema and table name fields to
-            identify the table.)
+            如果错误与特定的表列相关，则为该列的名称。（请参考模式名称和表名称字段以确定该表。）
            </para>
           </listitem>
          </varlistentry>
@@ -3450,9 +3226,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_DATATYPE_NAME</symbol></term>
           <listitem>
            <para>
-            If the error was associated with a specific data type, the name of
-            the data type.  (Refer to the schema name field for the name of
-            the data type's schema.)
+            如果错误与特定的数据类型相关，则为该数据类型的名称。（数据类型所属模式的名称请参考模式名称字段。）
            </para>
           </listitem>
          </varlistentry>
@@ -3461,11 +3235,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_CONSTRAINT_NAME</symbol></term>
           <listitem>
            <para>
-            If the error was associated with a specific constraint, the name
-            of the constraint.  Refer to fields listed above for the
-            associated table or domain.  (For this purpose, indexes are
-            treated as constraints, even if they weren't created with
-            constraint syntax.)
+            如果错误与特定的约束相关，则为该约束的名称。相关的表或域请参考上面列出的字段。（为此目的，索引被视为约束，即使它们不是用约束语法创建的。）
            </para>
           </listitem>
          </varlistentry>
@@ -3474,8 +3244,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_SOURCE_FILE</symbol></term>
           <listitem>
            <para>
-            The file name of the source-code location where the error was
-            reported.
+            报告错误的源代码位置的文件名。
            </para>
           </listitem>
          </varlistentry>
@@ -3484,8 +3253,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_SOURCE_LINE</symbol></term>
           <listitem>
            <para>
-            The line number of the source-code location where the error
-            was reported.
+            报告错误的源代码位置的行号。
            </para>
           </listitem>
          </varlistentry>
@@ -3494,7 +3262,7 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
           <term><symbol>PG_DIAG_SOURCE_FUNCTION</symbol></term>
           <listitem>
            <para>
-            The name of the source-code function reporting the error.
+            报告错误的源代码函数名。
            </para>
           </listitem>
          </varlistentry>
@@ -3503,34 +3271,20 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
 
        <note>
         <para>
-         The fields for schema name, table name, column name, data type name,
-         and constraint name are supplied only for a limited number of error
-         types; see <xref linkend="errcodes-appendix"/>.  Do not assume that
-         the presence of any of these fields guarantees the presence of
-         another field.  Core error sources observe the interrelationships
-         noted above, but user-defined functions may use these fields in other
-         ways.  In the same vein, do not assume that these fields denote
-         contemporary objects in the current database.
+         模式名、表名、列名、数据类型名和约束名这些字段只对有限数量的错误类型提供；见 <xref linkend="errcodes-appendix"/>。不要假定这些字段中任何一个的存在就保证另一个字段的存在。核心错误源遵守上面提到的相互关系，但用户定义的函数可能以其他方式使用这些字段。同样，不要假定这些字段表示当前数据库中的现存对象。
         </para>
        </note>
 
        <para>
-        The client is responsible for formatting displayed information to meet
-        its needs; in particular it should break long lines as needed.
-        Newline characters appearing in the error message fields should be
-        treated as paragraph breaks, not line breaks.
+        客户端负责格式化显示的信息以满足其需要；特别是它应该根据需要断开长行。错误消息字段中出现的换行符应被视为段落分隔符，而不是换行符。
        </para>
 
        <para>
-        Errors generated internally by <application>libpq</application> will
-        have severity and primary message, but typically no other fields.
+        由 <application>libpq</application> 内部生成的错误将具有严重性和主消息，但通常没有其他字段。
        </para>
 
        <para>
-        Note that error fields are only available from
-        <structname>PGresult</structname> objects, not
-        <structname>PGconn</structname> objects; there is no
-        <function>PQerrorField</function> function.
+        注意，错误字段只能从 <structname>PGresult</structname> 对象获得，而不能从 <structname>PGconn</structname> 对象获得；不存在 <function>PQerrorField</function> 函数。
        </para>
       </listitem>
      </varlistentry>
@@ -3539,25 +3293,17 @@ char *PQresultErrorField(const PGresult *res, int fieldcode);
       <term><function>PQclear</function><indexterm><primary>PQclear</primary></indexterm></term>
       <listitem>
        <para>
-        Frees  the  storage  associated with a
-        <structname>PGresult</structname>.  Every command result should be
-        freed via <xref linkend="libpq-PQclear"/> when it  is  no  longer
-        needed.
+        释放与 <structname>PGresult</structname> 关联的存储空间。每个命令结果在不再需要时都应通过 <xref linkend="libpq-PQclear"/> 释放。
 
 <synopsis>
 void PQclear(PGresult *res);
 </synopsis>
 
-        If the argument is a <symbol>NULL</symbol> pointer, no operation is
-        performed.
+        如果参数是 <symbol>NULL</symbol> 指针，则不执行任何操作。
        </para>
 
        <para>
-        You can keep a <structname>PGresult</structname> object around for
-        as long as you need it; it does not go away when you issue a new
-        command, nor even if you close the connection.  To get rid of it,
-        you must call <xref linkend="libpq-PQclear"/>.  Failure to do this
-        will result in memory leaks in your application.
+        你可以根据需要长期保留一个 <structname>PGresult</structname> 对象；它不会在你发出新命令时消失，甚至在你关闭连接时也不会消失。要清除它，必须调用 <xref linkend="libpq-PQclear"/>。如果不这样做，将导致应用程序中出现内存泄漏。
        </para>
       </listitem>
      </varlistentry>
@@ -3566,20 +3312,11 @@ void PQclear(PGresult *res);
   </sect2>
 
   <sect2 id="libpq-exec-select-info">
-   <title>Retrieving Query Result Information</title>
+   <title>检索查询结果信息</title>
 
    <para>
-    These functions are used to extract information from a
-    <structname>PGresult</structname> object that represents a successful
-    query result (that is, one that has status
-    <literal>PGRES_TUPLES_OK</literal>,
-    <literal>PGRES_SINGLE_TUPLE</literal>, or
-    <literal>PGRES_TUPLES_CHUNK</literal>).
-    They can also be used to extract
-    information from a successful Describe operation: a Describe's result
-    has all the same column information that actual execution of the query
-    would provide, but it has zero rows.  For objects with other status values,
-    these functions will act as though the result has zero rows and zero columns.
+    这些函数用于从表示成功查询结果的 <structname>PGresult</structname> 对象中提取信息（即状态为 <literal>PGRES_TUPLES_OK</literal>、<literal>PGRES_SINGLE_TUPLE</literal> 或 <literal>PGRES_TUPLES_CHUNK</literal> 的对象）。
+    它们也可用于从成功的 Describe 操作中提取信息：Describe 的结果具有与实际执行查询时提供的所有相同列信息，但它的行数为零。对于具有其他状态值的对象，这些函数将视其结果为零行零列。
    </para>
 
    <variablelist>
@@ -3588,10 +3325,7 @@ void PQclear(PGresult *res);
 
      <listitem>
       <para>
-       Returns the number of rows (tuples) in the query result.
-       (Note that <structname>PGresult</structname> objects are limited to no more
-       than <literal>INT_MAX</literal> rows, so an <type>int</type> result is
-       sufficient.)
+       返回查询结果中的行（元组）数。（注意 <structname>PGresult</structname> 对象被限制为不超过 <literal>INT_MAX</literal> 行，因此一个 <type>int</type> 结果就足够了。）
 
 <synopsis>
 int PQntuples(const PGresult *res);
@@ -3606,8 +3340,7 @@ int PQntuples(const PGresult *res);
 
      <listitem>
       <para>
-       Returns the number of columns (fields) in each row of the query
-       result.
+       返回查询结果中每一行的列（字段）数。
 
 <synopsis>
 int PQnfields(const PGresult *res);
@@ -3621,11 +3354,7 @@ int PQnfields(const PGresult *res);
 
      <listitem>
       <para>
-       Returns the column name associated with the given column number.
-       Column numbers start at 0. The caller should not free the result
-       directly. It will be freed when the associated
-       <structname>PGresult</structname> handle is passed to
-       <xref linkend="libpq-PQclear"/>.
+       返回与给定列号相关联的列名。列号从 0 开始。调用者不应直接释放该结果。当相关联的 <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，它将被释放。
 <synopsis>
 char *PQfname(const PGresult *res,
               int column_number);
@@ -3633,7 +3362,7 @@ char *PQfname(const PGresult *res,
       </para>
 
       <para>
-       <symbol>NULL</symbol> is returned if the column number is out of range.
+       如果列号超出范围，则返回 <symbol>NULL</symbol>。
       </para>
      </listitem>
     </varlistentry>
@@ -3643,7 +3372,7 @@ char *PQfname(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the column number associated with the given column name.
+       返回与给定列名关联的列号。
 <synopsis>
 int PQfnumber(const PGresult *res,
               const char *column_name);
@@ -3651,17 +3380,15 @@ int PQfnumber(const PGresult *res,
       </para>
 
       <para>
-       -1 is returned if the given name does not match any column.
+       如果给定名称不匹配任何列，则返回 -1。
       </para>
 
       <para>
-       The given name is treated like an identifier in an SQL command,
-       that is, it is downcased unless double-quoted.  For example, given
-       a query result generated from the SQL command:
+       给定名称会像 SQL 命令中的标识符一样处理，也就是说，除非用双引号括起，否则它会被转换为小写。例如，给定由以下 SQL 命令生成的查询结果：
 <programlisting>
 SELECT 1 AS FOO, 2 AS "BAR";
 </programlisting>
-       we would have the results:
+我们将得到如下结果：
 <programlisting>
 PQfname(res, 0)              <lineannotation>foo</lineannotation>
 PQfname(res, 1)              <lineannotation>BAR</lineannotation>
@@ -3679,8 +3406,7 @@ PQfnumber(res, "\"BAR\"")    <lineannotation>1</lineannotation>
 
      <listitem>
       <para>
-       Returns the OID of the table from which the given column was
-       fetched.  Column numbers start at 0.
+       返回给定列所取自的表的 OID。列号从 0 开始。
 <synopsis>
 Oid PQftable(const PGresult *res,
              int column_number);
@@ -3688,17 +3414,11 @@ Oid PQftable(const PGresult *res,
       </para>
 
       <para>
-       <literal>InvalidOid</literal> is returned if the column number is out of range,
-       or if the specified column is not a simple reference to a table column.
-       You can query the system table <literal>pg_class</literal> to determine
-       exactly which table is referenced.
+       如果列号超出范围，或者指定的列不是对表列的简单引用，则返回 <literal>InvalidOid</literal>。你可以查询系统表 <literal>pg_class</literal> 来确定究竟引用了哪个表。
       </para>
 
       <para>
-       The type <type>Oid</type> and the constant
-       <literal>InvalidOid</literal> will be defined when you include
-       the <application>libpq</application> header file. They will both
-       be some integer type.
+       当你包含 <application>libpq</application> 头文件时，类型 <type>Oid</type> 和常量 <literal>InvalidOid</literal> 将被定义。它们都将是某种整数类型。
       </para>
      </listitem>
     </varlistentry>
@@ -3708,9 +3428,7 @@ Oid PQftable(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the column number (within its table) of the column making
-       up the specified query result column.  Query-result column numbers
-       start at 0, but table columns have nonzero numbers.
+       返回构成指定查询结果列的列（在其所属表内）的列号。查询结果列号从 0 开始，但表列具有非零编号。
 <synopsis>
 int PQftablecol(const PGresult *res,
                 int column_number);
@@ -3718,8 +3436,7 @@ int PQftablecol(const PGresult *res,
       </para>
 
       <para>
-       Zero is returned if the column number is out of range, or if the
-       specified column is not a simple reference to a table column.
+       如果列号超出范围，或者指定的列不是对表列的简单引用，则返回零。
       </para>
      </listitem>
     </varlistentry>
@@ -3729,8 +3446,7 @@ int PQftablecol(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the format code indicating the format of the given
-       column.  Column numbers start at 0.
+       返回格式代码，指示给定列的格式。列号从 0 开始。
 <synopsis>
 int PQfformat(const PGresult *res,
               int column_number);
@@ -3738,9 +3454,7 @@ int PQfformat(const PGresult *res,
       </para>
 
       <para>
-       Format code zero indicates textual data representation, while format
-       code one indicates binary representation.  (Other codes are reserved
-       for future definition.)
+       格式代码 0 表示文本数据表示，而格式代码 1 表示二进制表示。（其他代码保留供将来定义。）
       </para>
      </listitem>
     </varlistentry>
@@ -3750,9 +3464,7 @@ int PQfformat(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the data type associated with the given  column number.
-       The  integer  returned is the internal OID number of the type.
-       Column numbers start at 0.
+       返回与给定列号关联的数据类型。返回的整数是该类型的内部 OID 编号。列号从 0 开始。
 <synopsis>
 Oid PQftype(const PGresult *res,
             int column_number);
@@ -3760,12 +3472,7 @@ Oid PQftype(const PGresult *res,
       </para>
 
       <para>
-       You can query the system table <literal>pg_type</literal> to
-       obtain the names and properties of the various data types. The
-       <acronym>OID</acronym>s of the built-in data types are defined
-       in the file <filename>catalog/pg_type_d.h</filename>
-       in the <productname>PostgreSQL</productname>
-       installation's <filename>include</filename> directory.
+       你可以查询系统表 <literal>pg_type</literal> 以获取各种数据类型的名称和属性。内置数据类型的 <acronym>OID</acronym> 定义在 <productname>PostgreSQL</productname> 安装目录的 <filename>include</filename> 目录下的文件 <filename>catalog/pg_type_d.h</filename> 中。
       </para>
      </listitem>
     </varlistentry>
@@ -3775,8 +3482,7 @@ Oid PQftype(const PGresult *res,
 
      <listitem>
       <para>
-       Returns  the type modifier of the column associated with the
-       given column number.  Column numbers start at 0.
+       返回与给定列号相关联的列的类型修饰符。列号从 0 开始。
 <synopsis>
 int PQfmod(const PGresult *res,
            int column_number);
@@ -3784,11 +3490,7 @@ int PQfmod(const PGresult *res,
       </para>
 
       <para>
-       The interpretation of modifier values is type-specific; they
-       typically indicate precision or size limits.  The value -1 is
-       used to indicate <quote>no information available</quote>.  Most data
-       types do not use modifiers, in which case the value is always
-       -1.
+       修饰符值的解释是类型相关的；它们通常表示精度或大小限制。值 -1 用于表示<quote>没有可用信息</quote>。大多数数据类型不使用修饰符，在这种情况下该值始终为 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -3798,8 +3500,7 @@ int PQfmod(const PGresult *res,
 
      <listitem>
       <para>
-       Returns  the  size  in bytes of the column associated with the
-       given column number.  Column numbers start at 0.
+       返回与给定列号相关联的列的字节大小。列号从 0 开始。
 <synopsis>
 int PQfsize(const PGresult *res,
             int column_number);
@@ -3807,11 +3508,7 @@ int PQfsize(const PGresult *res,
       </para>
 
       <para>
-       <xref linkend="libpq-PQfsize"/> returns the space allocated for this column
-       in a database row, in other words the size of the server's
-       internal representation of the data type.  (Accordingly, it is
-       not really very useful to clients.) A negative value indicates
-       the data type is variable-length.
+       <xref linkend="libpq-PQfsize"/> 返回数据库行中为该列分配的空间，换句话说，就是服务器对该数据类型的内部表示的大小。（因此，它对客户端其实并不十分有用。）负值表示该数据类型是变长的。
       </para>
      </listitem>
     </varlistentry>
@@ -3821,20 +3518,18 @@ int PQfsize(const PGresult *res,
 
      <listitem>
       <para>
-       Returns 1 if the <structname>PGresult</structname> contains binary data
-       and 0 if it contains text data.
+       如果 <structname>PGresult</structname> 包含二进制数据则返回 1，如果包含文本数据则返回 0。
 <synopsis>
 int PQbinaryTuples(const PGresult *res);
 </synopsis>
       </para>
 
       <para>
-       This function is deprecated (except for its use in connection with
-       <command>COPY</command>), because it is possible for a single
-       <structname>PGresult</structname> to contain text data in some columns and
-       binary data in others.  <xref linkend="libpq-PQfformat"/> is preferred.
-       <xref linkend="libpq-PQbinaryTuples"/> returns 1 only if all columns of the
-       result are binary (format 1).
+       该函数已被废弃（除了在与 <command>COPY</command> 配合使用时），因为单个
+       <structname>PGresult</structname> 可能在某些列中包含文本数据，而在其他列中包含
+       二进制数据。首选 <xref linkend="libpq-PQfformat"/>。
+       <xref linkend="libpq-PQbinaryTuples"/> 仅当结果的所有列都是二进制
+       （格式 1）时才返回 1。
       </para>
      </listitem>
     </varlistentry>
@@ -3844,11 +3539,10 @@ int PQbinaryTuples(const PGresult *res);
 
      <listitem>
       <para>
-       Returns a single field value of one row of a
-       <structname>PGresult</structname>.  Row and column numbers start
-       at 0.  The caller should not free the result directly.  It will
-       be freed when the associated <structname>PGresult</structname> handle is
-       passed to <xref linkend="libpq-PQclear"/>.
+       返回 <structname>PGresult</structname> 中某一行的单个字段值。行号和列号
+       从 0 开始。调用者不应直接释放该结果。当关联的
+       <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，
+       它将被释放。
 <synopsis>
 char *PQgetvalue(const PGresult *res,
                  int row_number,
@@ -3857,29 +3551,26 @@ char *PQgetvalue(const PGresult *res,
       </para>
 
       <para>
-       For data in text format, the value returned by
-       <xref linkend="libpq-PQgetvalue"/> is a null-terminated character
-       string  representation of the field value.  For data in binary
-       format, the value is in the binary representation determined by
-       the data type's <function>typsend</function> and <function>typreceive</function>
-       functions.  (The value is actually followed by a zero byte in
-       this case too, but that is not ordinarily useful, since the
-       value is likely to contain embedded nulls.)
+       对于文本格式的数据，<xref linkend="libpq-PQgetvalue"/> 返回的值
+       是字段值的以空字符结尾的字符串表示。对于二进制格式的
+       数据，该值采用由数据类型的 <function>typsend</function> 和 <function>typreceive</function>
+       函数确定的二进制表示。（在这种情况下，该值实际上后面也跟有一个
+       零字节，但这通常没有用，因为该值很可能包含内嵌的
+       空字符。）
       </para>
 
       <para>
-       An empty string is returned if the field value is null.  See
-       <xref linkend="libpq-PQgetisnull"/> to distinguish null values from
-       empty-string values.
+       如果字段值为空值，则返回空字符串。参见
+       <xref linkend="libpq-PQgetisnull"/> 以区分空值与
+       空字符串值。
       </para>
 
       <para>
-       The pointer returned  by  <xref linkend="libpq-PQgetvalue"/> points
-       to storage that is part of the <structname>PGresult</structname>
-       structure.  One should not modify the data it points to, and one
-       must explicitly copy the data into other storage if it is to be
-       used past the lifetime of the  <structname>PGresult</structname>
-       structure itself.
+       由 <xref linkend="libpq-PQgetvalue"/> 返回的指针
+       指向属于 <structname>PGresult</structname>
+       结构一部分的存储。不应修改它所指向的数据；如果要在
+       <structname>PGresult</structname>
+       结构本身的生存期之后继续使用这些数据，必须显式地将其复制到其他存储中。
       </para>
      </listitem>
     </varlistentry>
@@ -3887,12 +3578,11 @@ char *PQgetvalue(const PGresult *res,
     <varlistentry id="libpq-PQgetisnull">
      <term><function>PQgetisnull</function><indexterm
      ><primary>PQgetisnull</primary></indexterm><indexterm
-     ><primary>null value</primary><secondary sortas="libpq">in libpq</secondary></indexterm></term>
+     ><primary>空值</primary><secondary sortas="libpq">在 libpq 中</secondary></indexterm></term>
 
      <listitem>
       <para>
-       Tests a field for a null value.  Row and column numbers start
-       at 0.
+       测试字段是否为空值。行号和列号从 0 开始。
 <synopsis>
 int PQgetisnull(const PGresult *res,
                 int row_number,
@@ -3901,10 +3591,9 @@ int PQgetisnull(const PGresult *res,
       </para>
 
       <para>
-       This function returns  1 if the field is null and 0 if it
-       contains a non-null value.  (Note that
-       <xref linkend="libpq-PQgetvalue"/> will return an empty string,
-       not a null pointer, for a null field.)
+       如果字段为空值，该函数返回 1；如果包含非空值，则返回 0。（注意，
+       <xref linkend="libpq-PQgetvalue"/> 对于空值字段将返回空字符串，
+       而不是空指针。）
       </para>
      </listitem>
     </varlistentry>
@@ -3914,8 +3603,7 @@ int PQgetisnull(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the actual length of a field value in bytes.  Row and
-       column numbers start at 0.
+       返回一个字段值的实际长度（以字节为单位）。行号和列号从 0 开始。
 <synopsis>
 int PQgetlength(const PGresult *res,
                 int row_number,
@@ -3924,13 +3612,12 @@ int PQgetlength(const PGresult *res,
       </para>
 
       <para>
-       This is the actual data length for the particular data value,
-       that is, the size of the object pointed to by
-       <xref linkend="libpq-PQgetvalue"/>.  For text data format this is
-       the same as <function>strlen()</function>.  For binary format this is
-       essential information.  Note that one should <emphasis>not</emphasis>
-       rely on <xref linkend="libpq-PQfsize"/> to obtain the actual data
-       length.
+       这是特定数据值的实际数据长度，即
+       <xref linkend="libpq-PQgetvalue"/> 所指向对象的大小。对于文本数据格式，这与
+       <function>strlen()</function> 相同。对于二进制格式，这是
+       必不可少的信息。请注意，<emphasis>不应</emphasis>
+       依赖 <xref linkend="libpq-PQfsize"/> 来获取实际数据
+       长度。
       </para>
      </listitem>
     </varlistentry>
@@ -3940,16 +3627,16 @@ int PQgetlength(const PGresult *res,
 
      <listitem>
       <para>
-       Returns the number of parameters of a prepared statement.
+       返回预备语句的参数个数。
 <synopsis>
 int PQnparams(const PGresult *res);
 </synopsis>
       </para>
 
       <para>
-       This function is only useful when inspecting the result of
-       <xref linkend="libpq-PQdescribePrepared"/>.  For other types of results it
-       will return zero.
+       此函数仅在检查
+       <xref linkend="libpq-PQdescribePrepared"/> 的结果时有用。对于其他类型的结果，
+       它将返回零。
       </para>
      </listitem>
     </varlistentry>
@@ -3959,17 +3646,14 @@ int PQnparams(const PGresult *res);
 
      <listitem>
       <para>
-       Returns the data type of the indicated statement parameter.
-       Parameter numbers start at 0.
+       返回指定语句参数的数据类型。参数编号从 0 开始。
 <synopsis>
 Oid PQparamtype(const PGresult *res, int param_number);
 </synopsis>
       </para>
 
       <para>
-       This function is only useful when inspecting the result of
-       <xref linkend="libpq-PQdescribePrepared"/>.  For other types of results it
-       will return zero.
+       此函数仅在检查 <xref linkend="libpq-PQdescribePrepared"/> 的结果时有用。对于其他类型的结果，它将返回零。
       </para>
      </listitem>
     </varlistentry>
@@ -3979,8 +3663,7 @@ Oid PQparamtype(const PGresult *res, int param_number);
 
      <listitem>
       <para>
-       Prints out all the rows and,  optionally,  the column names  to
-       the specified output stream.
+       将所有行以及（可选）列名打印到指定的输出流。
 <synopsis>
 void PQprint(FILE *fout,      /* output stream */
              const PGresult *res,
@@ -4002,9 +3685,7 @@ typedef struct
       </para>
 
       <para>
-       This function was formerly used by <application>psql</application>
-       to print query results, but this is no longer the case.  Note
-       that it assumes all the data is in text format.
+       此函数以前由 <application>psql</application> 用来打印查询结果，但现在已不再如此。请注意，它假定所有数据都是文本格式。
       </para>
      </listitem>
     </varlistentry>
@@ -4012,11 +3693,10 @@ typedef struct
   </sect2>
 
   <sect2 id="libpq-exec-nonselect">
-   <title>Retrieving Other Result Information</title>
+   <title>获取其他结果信息</title>
 
    <para>
-    These functions are used to extract other information from
-    <structname>PGresult</structname> objects.
+    这些函数用于从 <structname>PGresult</structname> 对象中提取其他信息。
    </para>
 
    <variablelist>
@@ -4025,19 +3705,14 @@ typedef struct
 
      <listitem>
       <para>
-       Returns the command status tag from the SQL command that generated
-       the <structname>PGresult</structname>.
+       返回生成该 <structname>PGresult</structname> 的 SQL 命令的命令状态标签。
 <synopsis>
 char *PQcmdStatus(PGresult *res);
 </synopsis>
       </para>
 
       <para>
-       Commonly this is just the name of the command, but it might include
-       additional data such as the number of rows processed. The caller
-       should not free the result directly. It will be freed when the
-       associated <structname>PGresult</structname> handle is passed to
-       <xref linkend="libpq-PQclear"/>.
+       通常这只是命令的名称，但也可能包含附加数据，例如处理的行数。调用者不应直接释放该结果。当关联的 <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，它将被释放。
       </para>
      </listitem>
     </varlistentry>
@@ -4047,28 +3722,14 @@ char *PQcmdStatus(PGresult *res);
 
      <listitem>
       <para>
-       Returns the number of rows affected by the SQL command.
+       返回受该 SQL 命令影响的行数。
 <synopsis>
 char *PQcmdTuples(PGresult *res);
 </synopsis>
       </para>
 
       <para>
-       This function returns a string containing the number of rows
-       affected by the <acronym>SQL</acronym> statement that generated the
-       <structname>PGresult</structname>. This function can only be used following
-       the execution of a <command>SELECT</command>, <command>CREATE TABLE AS</command>,
-       <command>INSERT</command>, <command>UPDATE</command>, <command>DELETE</command>,
-       <command>MERGE</command>, <command>MOVE</command>, <command>FETCH</command>,
-       or <command>COPY</command> statement, or an <command>EXECUTE</command> of a
-       prepared query that contains an <command>INSERT</command>,
-       <command>UPDATE</command>, <command>DELETE</command>,
-       or <command>MERGE</command> statement.
-       If the command that generated the <structname>PGresult</structname> was anything
-       else, <xref linkend="libpq-PQcmdTuples"/> returns an empty string. The caller
-       should not free the return value directly. It will be freed when
-       the associated <structname>PGresult</structname> handle is passed to
-       <xref linkend="libpq-PQclear"/>.
+       该函数返回一个字符串，其中包含生成 <structname>PGresult</structname> 的 <acronym>SQL</acronym> 语句所影响的行数。该函数只能在执行 <command>SELECT</command>、<command>CREATE TABLE AS</command>、<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command>、<command>MERGE</command>、<command>MOVE</command>、<command>FETCH</command> 或 <command>COPY</command> 语句之后使用，或者在执行包含 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command> 语句的预备查询的 <command>EXECUTE</command> 之后使用。如果生成 <structname>PGresult</structname> 的命令是其他任何命令，<xref linkend="libpq-PQcmdTuples"/> 返回空字符串。调用者不应直接释放返回值。当关联的 <structname>PGresult</structname> 句柄被传递给 <xref linkend="libpq-PQclear"/> 时，它将被释放。
       </para>
      </listitem>
     </varlistentry>
@@ -4078,14 +3739,7 @@ char *PQcmdTuples(PGresult *res);
 
      <listitem>
       <para>
-       Returns the OID<indexterm><primary>OID</primary><secondary>in libpq</secondary></indexterm>
-       of the inserted row, if the <acronym>SQL</acronym> command was an
-       <command>INSERT</command> that inserted exactly one row into a table that
-       has OIDs, or a <command>EXECUTE</command> of a prepared query containing
-       a suitable <command>INSERT</command> statement.  Otherwise, this function
-       returns <literal>InvalidOid</literal>. This function will also
-       return <literal>InvalidOid</literal> if the table affected by the
-       <command>INSERT</command> statement does not contain OIDs.
+       如果 <acronym>SQL</acronym> 命令是一个向具有 OID 的表中恰好插入一行的 <command>INSERT</command>，或者是包含合适的 <command>INSERT</command> 语句的预备查询的 <command>EXECUTE</command>，则返回所插入行的 OID<indexterm><primary>OID</primary><secondary>in libpq</secondary></indexterm>。否则，该函数返回 <literal>InvalidOid</literal>。如果受 <command>INSERT</command> 语句影响的表不包含 OID，该函数也将返回 <literal>InvalidOid</literal>。
 <synopsis>
 Oid PQoidValue(const PGresult *res);
 </synopsis>
@@ -4098,10 +3752,7 @@ Oid PQoidValue(const PGresult *res);
 
      <listitem>
       <para>
-       This function is deprecated in favor of
-       <xref linkend="libpq-PQoidValue"/> and is not thread-safe.
-       It returns a string with the OID of the inserted row, while
-       <xref linkend="libpq-PQoidValue"/> returns the OID value.
+       该函数已被弃用，建议改用 <xref linkend="libpq-PQoidValue"/>，并且它不是线程安全的。它返回一个包含所插入行 OID 的字符串，而 <xref linkend="libpq-PQoidValue"/> 返回 OID 值。
 <synopsis>
 char *PQoidStatus(const PGresult *res);
 </synopsis>
@@ -4114,7 +3765,7 @@ char *PQoidStatus(const PGresult *res);
   </sect2>
 
   <sect2 id="libpq-exec-escape-string">
-   <title>Escaping Strings for Inclusion in SQL Commands</title>
+   <title>为包含在 SQL 命令中而转义字符串</title>
 
    <indexterm zone="libpq-exec-escape-string">
     <primary>escaping strings</primary>
@@ -4133,50 +3784,25 @@ char *PQescapeLiteral(PGconn *conn, const char *str, size_t length);
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeLiteral"/> escapes a string for
-      use within an SQL command.  This is useful when inserting data
-      values as literal constants in SQL commands.  Certain characters
-      (such as quotes and backslashes) must be escaped to prevent them
-      from being interpreted specially by the SQL parser.
-      <xref linkend="libpq-PQescapeLiteral"/> performs this operation.
+      <xref linkend="libpq-PQescapeLiteral"/> 为在 SQL 命令中使用的字符串进行转义。当把数据值作为字面常量插入 SQL 命令时，这很有用。某些字符（如引号和反斜杠）必须转义，以防止它们被 SQL 解析器特殊解释。<xref linkend="libpq-PQescapeLiteral"/> 执行此操作。
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeLiteral"/> returns an escaped version of the
-      <parameter>str</parameter> parameter in memory allocated with
-      <function>malloc()</function>.  This memory should be freed using
-      <function>PQfreemem()</function> when the result is no longer needed.
-      A terminating zero byte is not required, and should not be
-      counted in <parameter>length</parameter>.  (If a terminating zero byte is found
-      before <parameter>length</parameter> bytes are processed,
-      <xref linkend="libpq-PQescapeLiteral"/> stops at the zero; the behavior is
-      thus rather like <function>strncpy</function>.) The
-      return string has all special characters replaced so that they can
-      be properly processed by the <productname>PostgreSQL</productname>
-      string literal parser.  A terminating zero byte is also added.  The
-      single quotes that must surround <productname>PostgreSQL</productname>
-      string literals are included in the result string.
+      <xref linkend="libpq-PQescapeLiteral"/> 返回 <parameter>str</parameter> 参数的转义版本，其内存由 <function>malloc()</function> 分配。当不再需要该结果时，应使用 <function>PQfreemem()</function> 释放这块内存。不需要终止零字节，也不应将其计入 <parameter>length</parameter>。（如果在处理完 <parameter>length</parameter> 个字节之前就遇到终止零字节，<xref linkend="libpq-PQescapeLiteral"/> 会在该零字节处停止；因此其行为很像 <function>strncpy</function>。）返回的字符串中所有特殊字符都已被替换，以便它们能被 <productname>PostgreSQL</productname> 字符串字面量解析器正确处理。同时还会添加终止零字节。必须包围 <productname>PostgreSQL</productname> 字符串字面量的单引号也包含在结果字符串中。
      </para>
 
      <para>
-      On error, <xref linkend="libpq-PQescapeLiteral"/> returns <symbol>NULL</symbol> and a suitable
-      message is stored in the <parameter>conn</parameter> object.
+      出错时，<xref linkend="libpq-PQescapeLiteral"/> 返回 <symbol>NULL</symbol>，并将一条适当的消息存储在 <parameter>conn</parameter> 对象中。
      </para>
 
      <tip>
       <para>
-       It is especially important to do proper escaping when handling
-       strings that were received from an untrustworthy source.
-       Otherwise there is a security risk: you are vulnerable to
-       <quote>SQL injection</quote> attacks wherein unwanted SQL commands are
-       fed to your database.
+       在处理来自不可信来源的字符串时，进行正确的转义尤为重要。否则就会存在安全风险：你容易受到 <quote>SQL 注入</quote> 攻击，即不需要的 SQL 命令被送入你的数据库。
       </para>
      </tip>
 
      <para>
-      Note that it is neither necessary nor correct to do escaping when a data
-      value is passed as a separate parameter in <xref linkend="libpq-PQexecParams"/> or
-      its sibling routines.
+      注意，当数据值作为单独参数传递给 <xref linkend="libpq-PQexecParams"/> 或其同类例程时，进行转义既不必要也不正确。
      </para>
      </listitem>
     </varlistentry>
@@ -4192,40 +3818,20 @@ char *PQescapeIdentifier(PGconn *conn, const char *str, size_t length);
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeIdentifier"/> escapes a string for
-      use as an SQL identifier, such as a table, column, or function name.
-      This is useful when a user-supplied identifier might contain
-      special characters that would otherwise not be interpreted as part
-      of the identifier by the SQL parser, or when the identifier might
-      contain upper case characters whose case should be preserved.
+      <xref linkend="libpq-PQescapeIdentifier"/> 转义一个字符串，使其可用作 SQL 标识符，例如表、列或函数名。当用户提供的标识符可能包含特殊字符（否则 SQL 解析器不会将其解释为标识符的一部分），或者标识符可能包含应保留大小写的大写字符时，这很有用。
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeIdentifier"/> returns a version of the
-      <parameter>str</parameter> parameter escaped as an SQL identifier
-      in memory allocated with <function>malloc()</function>.  This memory must be
-      freed using <function>PQfreemem()</function> when the result is no longer
-      needed.  A terminating zero byte is not required, and should not be
-      counted in <parameter>length</parameter>.  (If a terminating zero byte is found
-      before <parameter>length</parameter> bytes are processed,
-      <xref linkend="libpq-PQescapeIdentifier"/> stops at the zero; the behavior is
-      thus rather like <function>strncpy</function>.) The
-      return string has all special characters replaced so that it
-      will be properly processed as an SQL identifier.  A terminating zero byte
-      is also added.  The return string will also be surrounded by double
-      quotes.
+      <xref linkend="libpq-PQescapeIdentifier"/> 返回 <parameter>str</parameter> 参数转义为 SQL 标识符后的版本，其内存由 <function>malloc()</function> 分配。当不再需要该结果时，必须使用 <function>PQfreemem()</function> 释放这块内存。不需要终止零字节，也不应将其计入 <parameter>length</parameter>。（如果在处理完 <parameter>length</parameter> 个字节之前就遇到终止零字节，<xref linkend="libpq-PQescapeIdentifier"/> 会在零处停止；因此其行为很像 <function>strncpy</function>。）返回的字符串中所有特殊字符都已被替换，以便它能被正确地作为 SQL 标识符处理。同时还会添加终止零字节。返回的字符串还会被双引号包围。
      </para>
 
      <para>
-      On error, <xref linkend="libpq-PQescapeIdentifier"/> returns <symbol>NULL</symbol> and a suitable
-      message is stored in the <parameter>conn</parameter> object.
+      出错时，<xref linkend="libpq-PQescapeIdentifier"/> 返回 <symbol>NULL</symbol>，并将适当的消息存储在 <parameter>conn</parameter> 对象中。
      </para>
 
      <tip>
       <para>
-       As with string literals, to prevent SQL injection attacks,
-       SQL identifiers must be escaped when they are received from an
-       untrustworthy source.
+       与字符串字面量一样，为防止 SQL 注入攻击，当从不可信来源接收 SQL 标识符时，必须对其进行转义。
       </para>
      </tip>
      </listitem>
@@ -4244,39 +3850,36 @@ size_t PQescapeStringConn(PGconn *conn,
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeStringConn"/> escapes string literals, much like
-      <xref linkend="libpq-PQescapeLiteral"/>.  Unlike <xref linkend="libpq-PQescapeLiteral"/>,
-      the caller is responsible for providing an appropriately sized buffer.
-      Furthermore, <xref linkend="libpq-PQescapeStringConn"/> does not generate the
-      single quotes that must surround <productname>PostgreSQL</productname> string
-      literals; they should be provided in the SQL command that the
-      result is inserted into.  The parameter <parameter>from</parameter> points to
-      the first character of the string that is to be escaped, and the
-      <parameter>length</parameter> parameter gives the number of bytes in this
-      string.  A terminating zero byte is not required, and should not be
-      counted in <parameter>length</parameter>.  (If a terminating zero byte is found
-      before <parameter>length</parameter> bytes are processed,
-      <xref linkend="libpq-PQescapeStringConn"/> stops at the zero; the behavior is
-      thus rather like <function>strncpy</function>.) <parameter>to</parameter> shall point
-      to a buffer that is able to hold at least one more byte than twice
-      the value of <parameter>length</parameter>, otherwise the behavior is undefined.
-      Behavior is likewise undefined if the <parameter>to</parameter> and
-      <parameter>from</parameter> strings overlap.
+      <xref linkend="libpq-PQescapeStringConn"/> 转义字符串字面量，与
+      <xref linkend="libpq-PQescapeLiteral"/> 非常相似。与 <xref linkend="libpq-PQescapeLiteral"/> 不同，
+      调用者负责提供大小合适的缓冲区。
+      此外，<xref linkend="libpq-PQescapeStringConn"/> 不会生成
+      包围 <productname>PostgreSQL</productname> 字符串字面量所必需的单引号；这些单引号应由
+      插入结果的 SQL 命令提供。参数 <parameter>from</parameter> 指向
+      要转义的字符串的第一个字符，<parameter>length</parameter> 参数给出该
+      字符串的字节数。不需要终止零字节，也不应
+      将其计入 <parameter>length</parameter>。（如果在处理完 <parameter>length</parameter> 个字节之前
+      遇到终止零字节，
+      <xref linkend="libpq-PQescapeStringConn"/> 会在该零字节处停止；因此其行为
+      很像 <function>strncpy</function>。）<parameter>to</parameter> 应指向
+      一个缓冲区，其容量至少为 <parameter>length</parameter> 值的两倍再加一个字节，
+      否则行为未定义。
+      如果 <parameter>to</parameter> 和 <parameter>from</parameter> 字符串重叠，行为同样未定义。
      </para>
 
      <para>
-      If the <parameter>error</parameter> parameter is not <symbol>NULL</symbol>, then
-      <literal>*error</literal> is set to zero on success, nonzero on error.
-      Presently the only possible error conditions involve invalid multibyte
-      encoding in the source string.  The output string is still generated
-      on error, but it can be expected that the server will reject it as
-      malformed.  On error, a suitable message is stored in the
-      <parameter>conn</parameter> object, whether or not <parameter>error</parameter> is <symbol>NULL</symbol>.
+      如果 <parameter>error</parameter> 参数不是 <symbol>NULL</symbol>，则
+      成功时 <literal>*error</literal> 被设置为零，出错时设置为非零。
+      目前唯一可能的错误情况是源字符串中存在无效的
+      多字节编码。出错时仍会生成输出字符串，
+      但可以预期服务器会将其视为格式错误而拒绝。
+      出错时，无论 <parameter>error</parameter> 是否为 <symbol>NULL</symbol>，
+      都会在 <parameter>conn</parameter> 对象中存储一条合适的消息。
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeStringConn"/> returns the number of bytes written
-      to <parameter>to</parameter>, not including the terminating zero byte.
+      <xref linkend="libpq-PQescapeStringConn"/> 返回写入
+      <parameter>to</parameter> 的字节数，不包括终止零字节。
      </para>
      </listitem>
     </varlistentry>
@@ -4286,30 +3889,27 @@ size_t PQescapeStringConn(PGconn *conn,
 
      <listitem>
      <para>
-       <xref linkend="libpq-PQescapeString"/> is an older, deprecated version of
-       <xref linkend="libpq-PQescapeStringConn"/>.
+       <xref linkend="libpq-PQescapeString"/> 是
+       <xref linkend="libpq-PQescapeStringConn"/> 的较旧的、已废弃的版本。
 <synopsis>
 size_t PQescapeString (char *to, const char *from, size_t length);
 </synopsis>
      </para>
 
      <para>
-      The only difference from <xref linkend="libpq-PQescapeStringConn"/> is that
-      <xref linkend="libpq-PQescapeString"/> does not take <structname>PGconn</structname>
-      or <parameter>error</parameter> parameters.
-      Because of this, it cannot adjust its behavior depending on the
-      connection properties (such as character encoding) and therefore
-      <emphasis>it might give the wrong results</emphasis>.  Also, it has no way
-      to report error conditions.
+      与 <xref linkend="libpq-PQescapeStringConn"/> 的唯一区别是
+      <xref linkend="libpq-PQescapeString"/> 不接受 <structname>PGconn</structname>
+      或 <parameter>error</parameter> 参数。
+      因此，它无法根据连接属性（例如字符编码）调整其行为，
+      所以<emphasis>它可能给出错误的结果</emphasis>。此外，它无法
+      报告错误情况。
      </para>
 
      <para>
-      <xref linkend="libpq-PQescapeString"/> can be used safely in
-      client programs that work with only one <productname>PostgreSQL</productname>
-      connection at a time (in this case it can find out what it needs to
-      know <quote>behind the scenes</quote>).  In other contexts it is a security
-      hazard and should be avoided in favor of
-      <xref linkend="libpq-PQescapeStringConn"/>.
+      <xref linkend="libpq-PQescapeString"/> 可以安全地用于一次只使用一个 <productname>PostgreSQL</productname>
+      连接的客户端程序（在这种情况下，它可以在<quote>幕后</quote>找出它需要
+      知道的信息）。在其他上下文中，它存在安全隐患，应避免使用，而改用
+      <xref linkend="libpq-PQescapeStringConn"/>。
      </para>
      </listitem>
     </varlistentry>
@@ -4319,9 +3919,9 @@ size_t PQescapeString (char *to, const char *from, size_t length);
 
      <listitem>
      <para>
-       Escapes binary data for use within an SQL command with the type
-       <type>bytea</type>.  As with <xref linkend="libpq-PQescapeStringConn"/>,
-       this is only used when inserting data directly into an SQL command string.
+       转义二进制数据，以便在类型为 <type>bytea</type> 的 SQL 命令中使用。与
+       <xref linkend="libpq-PQescapeStringConn"/> 一样，这仅在将数据直接
+       插入 SQL 命令字符串时使用。
 <synopsis>
 unsigned char *PQescapeByteaConn(PGconn *conn,
                                  const unsigned char *from,
@@ -4331,41 +3931,30 @@ unsigned char *PQescapeByteaConn(PGconn *conn,
       </para>
 
       <para>
-       Certain byte values must be escaped when used as part of a
-       <type>bytea</type> literal in an <acronym>SQL</acronym> statement.
-       <xref linkend="libpq-PQescapeByteaConn"/> escapes bytes using
-       either hex encoding or backslash escaping.  See <xref
-       linkend="datatype-binary"/> for more information.
+       某些字节值在 <acronym>SQL</acronym> 语句中作为 <type>bytea</type> 字面量的一部分使用时必须
+       被转义。<xref linkend="libpq-PQescapeByteaConn"/> 使用十六进制编码
+       或反斜杠转义来转义字节。更多信息请参见 <xref
+       linkend="datatype-binary"/>。
       </para>
 
       <para>
-       The <parameter>from</parameter> parameter points to the first
-       byte of the string that is to be escaped, and the
-       <parameter>from_length</parameter> parameter gives the number of
-       bytes in this binary string.  (A terminating zero byte is
-       neither necessary nor counted.)  The <parameter>to_length</parameter>
-       parameter points to a variable that will hold the resultant
-       escaped string length. This result string length includes the terminating
-       zero byte of the result.
+       <parameter>from</parameter> 参数指向要转义的字符串的第一个字节，<parameter>from_length</parameter> 参数给出
+       此二进制字符串中的字节数。（终止零字节既不是必需的，也不计入
+       其中。）<parameter>to_length</parameter> 参数指向一个变量，该变量将保存转义后的结果
+       字符串长度。此结果字符串长度包含结果的终止零字节。
       </para>
 
       <para>
-       <xref linkend="libpq-PQescapeByteaConn"/> returns an escaped version of the
-       <parameter>from</parameter> parameter binary string in memory
-       allocated with <function>malloc()</function>.  This memory should be freed using
-       <function>PQfreemem()</function> when the result is no longer needed.  The
-       return string has all special characters replaced so that they can
-       be properly processed by the <productname>PostgreSQL</productname>
-       string literal parser, and the <type>bytea</type> input function. A
-       terminating zero byte is also added.  The single quotes that must
-       surround <productname>PostgreSQL</productname> string literals are
-       not part of the result string.
+       <xref linkend="libpq-PQescapeByteaConn"/> 返回 <parameter>from</parameter> 参数二进制
+       字符串的转义版本，该版本位于用 <function>malloc()</function> 分配的内存中。当不再需要
+       结果时，应使用 <function>PQfreemem()</function> 释放此内存。返回的字符串中所有特殊字符
+       均已被替换，以便它们能被 <productname>PostgreSQL</productname> 字符串字面量解析器和 <type>bytea</type>
+       输入函数正确处理。同时还添加了终止零字节。必须包围 <productname>PostgreSQL</productname>
+       字符串字面量的单引号不属于结果字符串的一部分。
       </para>
 
       <para>
-       On error, a null pointer is returned, and a suitable error message
-       is stored in the <parameter>conn</parameter> object.  Currently, the only
-       possible error is insufficient memory for the result string.
+       出错时，返回空指针，并将适当的错误消息存储在 <parameter>conn</parameter> 对象中。目前，唯一可能的错误是结果字符串的内存不足。
       </para>
      </listitem>
     </varlistentry>
@@ -4375,8 +3964,7 @@ unsigned char *PQescapeByteaConn(PGconn *conn,
 
      <listitem>
       <para>
-       <xref linkend="libpq-PQescapeBytea"/> is an older, deprecated version of
-       <xref linkend="libpq-PQescapeByteaConn"/>.
+       <xref linkend="libpq-PQescapeBytea"/> 是 <xref linkend="libpq-PQescapeByteaConn"/> 的一个较旧的、已废弃的版本。
 <synopsis>
 unsigned char *PQescapeBytea(const unsigned char *from,
                              size_t from_length,
@@ -4385,15 +3973,7 @@ unsigned char *PQescapeBytea(const unsigned char *from,
       </para>
 
       <para>
-       The only difference from <xref linkend="libpq-PQescapeByteaConn"/> is that
-       <xref linkend="libpq-PQescapeBytea"/> does not take a <structname>PGconn</structname>
-       parameter.  Because of this, <xref linkend="libpq-PQescapeBytea"/> can
-       only be used safely in client programs that use a single
-       <productname>PostgreSQL</productname> connection at a time (in this case
-       it can find out what it needs to know <quote>behind the
-       scenes</quote>).  It <emphasis>might give the wrong results</emphasis> if
-       used in programs that use multiple database connections (use
-       <xref linkend="libpq-PQescapeByteaConn"/> in such cases).
+       与 <xref linkend="libpq-PQescapeByteaConn"/> 的唯一区别是 <xref linkend="libpq-PQescapeBytea"/> 不接受 <structname>PGconn</structname> 参数。因此，<xref linkend="libpq-PQescapeBytea"/> 只能安全地用于一次使用单个 <productname>PostgreSQL</productname> 连接的客户端程序（在这种情况下，它可以在<quote>幕后</quote>找出所需的信息）。如果在使用多个数据库连接的程序中使用它，<emphasis>可能会给出错误的结果</emphasis>（这种情况下请使用 <xref linkend="libpq-PQescapeByteaConn"/>）。
       </para>
      </listitem>
     </varlistentry>
@@ -4403,10 +3983,7 @@ unsigned char *PQescapeBytea(const unsigned char *from,
 
      <listitem>
       <para>
-       Converts a string representation of binary data into binary data
-       &mdash; the reverse of <xref linkend="libpq-PQescapeBytea"/>.  This
-       is needed when retrieving <type>bytea</type> data in text format,
-       but not when retrieving it in binary format.
+       将二进制数据的字符串表示转换为二进制数据 &mdash; 是 <xref linkend="libpq-PQescapeBytea"/> 的逆操作。当以文本格式检索 <type>bytea</type> 数据时需要这样做，而以二进制格式检索时则不需要。
 
 <synopsis>
 unsigned char *PQunescapeBytea(const unsigned char *from, size_t *to_length);
@@ -4414,22 +3991,11 @@ unsigned char *PQunescapeBytea(const unsigned char *from, size_t *to_length);
       </para>
 
       <para>
-       The <parameter>from</parameter> parameter points to a string
-       such as might be returned by <xref linkend="libpq-PQgetvalue"/> when applied
-       to a <type>bytea</type> column. <xref linkend="libpq-PQunescapeBytea"/>
-       converts this string representation into its binary representation.
-       It returns a pointer to a buffer allocated with
-       <function>malloc()</function>, or <symbol>NULL</symbol> on error, and puts the size of
-       the buffer in <parameter>to_length</parameter>. The result must be
-       freed using <xref linkend="libpq-PQfreemem"/> when it is no longer needed.
+       <parameter>from</parameter> 参数指向一个字符串，该字符串可能类似于将 <xref linkend="libpq-PQgetvalue"/> 应用于 <type>bytea</type> 列时返回的结果。<xref linkend="libpq-PQunescapeBytea"/> 将此字符串表示形式转换为其二进制表示形式。它返回一个用 <function>malloc()</function> 分配的缓冲区指针，出错时返回 <symbol>NULL</symbol>，并将缓冲区的大小放入 <parameter>to_length</parameter>。当不再需要时，必须使用 <xref linkend="libpq-PQfreemem"/> 释放结果。
       </para>
 
       <para>
-       This conversion is not exactly the inverse of
-       <xref linkend="libpq-PQescapeBytea"/>, because the string is not expected
-       to be <quote>escaped</quote> when received from <xref linkend="libpq-PQgetvalue"/>.
-       In particular this means there is no need for string quoting considerations,
-       and so no need for a <structname>PGconn</structname> parameter.
+       此转换并不完全是 <xref linkend="libpq-PQescapeBytea"/> 的逆操作，因为从 <xref linkend="libpq-PQgetvalue"/> 接收到的字符串不应是<quote>转义</quote>过的。特别是，这意味着无需考虑字符串引号问题，因此也不需要 <structname>PGconn</structname> 参数。
       </para>
      </listitem>
     </varlistentry>
