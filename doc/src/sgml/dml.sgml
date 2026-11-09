@@ -190,7 +190,7 @@ DELETE FROM products;
  </sect1>
 
  <sect1 id="dml-returning">
-  <title>Returning Data from Modified Rows</title>
+  <title>从被修改的行返回数据</title>
 
   <indexterm zone="dml-returning">
    <primary>RETURNING</primary>
@@ -217,46 +217,25 @@ DELETE FROM products;
   </indexterm>
 
   <para>
-   Sometimes it is useful to obtain data from modified rows while they are
-   being manipulated.  The <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, and <command>MERGE</command> commands all have an
-   optional <literal>RETURNING</literal> clause that supports this.  Use
-   of <literal>RETURNING</literal> avoids performing an extra database query to
-   collect the data, and is especially valuable when it would otherwise be
-   difficult to identify the modified rows reliably.
+   有时在操纵被修改的行时，从中获取数据是很有用的。<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 和 <command>MERGE</command> 命令都带有一个可选的 <literal>RETURNING</literal> 子句来支持这一功能。使用 <literal>RETURNING</literal> 可以避免为了收集数据而执行一次额外的数据库查询，尤其是当否则很难可靠地识别被修改的行时，这一功能特别有价值。
   </para>
 
   <para>
-   The allowed contents of a <literal>RETURNING</literal> clause are the same as
-   a <command>SELECT</command> command's output list
-   (see <xref linkend="queries-select-lists"/>).  It can contain column
-   names of the command's target table, or value expressions using those
-   columns.  A common shorthand is <literal>RETURNING *</literal>, which selects
-   all columns of the target table in order.
+   <literal>RETURNING</literal> 子句允许的内容与 <command>SELECT</command> 命令的输出列表相同（参见 <xref linkend="queries-select-lists"/>）。它可以包含该命令目标表的列名，或使用这些列的值表达式。一个常见的简写是 <literal>RETURNING *</literal>，它按顺序选择目标表的所有列。
   </para>
 
   <para>
-   In an <command>INSERT</command>, the default data available to
-   <literal>RETURNING</literal> is
-   the row as it was inserted.  This is not so useful in trivial inserts,
-   since it would just repeat the data provided by the client.  But it can
-   be very handy when relying on computed default values.  For example,
-   when using a <link linkend="datatype-serial"><type>serial</type></link>
-   column to provide unique identifiers, <literal>RETURNING</literal> can return
-   the ID assigned to a new row:
+   在 <command>INSERT</command> 中，<literal>RETURNING</literal> 可用的默认数据是插入后的行。这在简单的插入中不太有用，因为它只是重复客户端提供的数据。但在依赖计算出的默认值时，它可能非常方便。例如，当使用 <link linkend="datatype-serial"><type>serial</type></link> 列来提供唯一标识符时，<literal>RETURNING</literal> 可以返回分配给新行的 ID：
 <programlisting>
 CREATE TABLE users (firstname text, lastname text, id serial primary key);
 
 INSERT INTO users (firstname, lastname) VALUES ('Joe', 'Cool') RETURNING id;
 </programlisting>
-   The <literal>RETURNING</literal> clause is also very useful
-   with <literal>INSERT ... SELECT</literal>.
+   <literal>RETURNING</literal> 子句与 <literal>INSERT ... SELECT</literal> 一起使用时也非常有用。
   </para>
 
   <para>
-   In an <command>UPDATE</command>, the default data available to
-   <literal>RETURNING</literal> is
-   the new content of the modified row.  For example:
+   在 <command>UPDATE</command> 中，<literal>RETURNING</literal> 可用的默认数据是被修改行的新内容。例如：
 <programlisting>
 UPDATE products SET price = price * 1.10
   WHERE price &lt;= 99.99
@@ -265,9 +244,7 @@ UPDATE products SET price = price * 1.10
   </para>
 
   <para>
-   In a <command>DELETE</command>, the default data available to
-   <literal>RETURNING</literal> is
-   the content of the deleted row.  For example:
+   在 <command>DELETE</command> 中，<literal>RETURNING</literal> 可用的默认数据是被删除行的内容。例如：
 <programlisting>
 DELETE FROM products
   WHERE obsoletion_date = 'today'
@@ -276,13 +253,7 @@ DELETE FROM products
   </para>
 
   <para>
-   In a <command>MERGE</command>, the default data available to
-   <literal>RETURNING</literal> is
-   the content of the source row plus the content of the inserted, updated, or
-   deleted target row.  Since it is quite common for the source and target to
-   have many of the same columns, specifying <literal>RETURNING *</literal>
-   can lead to a lot of duplicated columns, so it is often more useful to
-   qualify it so as to return just the source or target row.  For example:
+   在 <command>MERGE</command> 中，<literal>RETURNING</literal> 可用的默认数据是源行的内容加上插入、更新或删除的目标行的内容。由于源和目标通常有许多相同的列，指定 <literal>RETURNING *</literal> 可能会导致大量重复的列，因此通常更有用的是对它加以限定，以便只返回源行或目标行。例如：
 <programlisting>
 MERGE INTO products p USING new_products n ON p.product_no = n.product_no
   WHEN NOT MATCHED THEN INSERT VALUES (n.product_no, n.name, n.price)
@@ -292,39 +263,22 @@ MERGE INTO products p USING new_products n ON p.product_no = n.product_no
   </para>
 
   <para>
-   In each of these commands, it is also possible to explicitly return the
-   old and new content of the modified row.  For example:
+   在这些命令的每一条中，也可以显式返回被修改行的旧内容和新内容。例如：
 <programlisting>
 UPDATE products SET price = price * 1.10
   WHERE price &lt;= 99.99
   RETURNING name, old.price AS old_price, new.price AS new_price,
             new.price - old.price AS price_change;
 </programlisting>
-   In this example, writing <literal>new.price</literal> is the same as
-   just writing <literal>price</literal>, but it makes the meaning clearer.
+   在这个例子中，写 <literal>new.price</literal> 与只写 <literal>price</literal> 相同，但它使含义更清晰。
   </para>
 
   <para>
-   This syntax for returning old and new values is available in
-   <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, and <command>MERGE</command> commands, but
-   typically old values will be <literal>NULL</literal> for an
-   <command>INSERT</command>, and new values will be <literal>NULL</literal>
-   for a <command>DELETE</command>.  However, there are situations where it
-   can still be useful for those commands.  For example, in an
-   <command>INSERT</command> with an
-   <link linkend="sql-on-conflict"><literal>ON CONFLICT DO UPDATE</literal></link>
-   clause, the old values will be non-<literal>NULL</literal> for conflicting
-   rows.  Similarly, if a <command>DELETE</command> is turned into an
-   <command>UPDATE</command> by a <link linkend="sql-createrule">rewrite rule</link>,
-   the new values may be non-<literal>NULL</literal>.
+   这种返回旧值和新值的语法可用于 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 和 <command>MERGE</command> 命令，但通常对于 <command>INSERT</command>，旧值将是 <literal>NULL</literal>，而对于 <command>DELETE</command>，新值将是 <literal>NULL</literal>。不过，在某些情况下，这些命令仍然有用。例如，在带有 <link linkend="sql-on-conflict"><literal>ON CONFLICT DO UPDATE</literal></link> 子句的 <command>INSERT</command> 中，冲突行的旧值将是非 <literal>NULL</literal>。类似地，如果 <command>DELETE</command> 被 <link linkend="sql-createrule">重写规则</link>转换为 <command>UPDATE</command>，则新值可能是非 <literal>NULL</literal>。
   </para>
 
   <para>
-   If there are triggers (<xref linkend="triggers"/>) on the target table,
-   the data available to <literal>RETURNING</literal> is the row as modified by
-   the triggers.  Thus, inspecting columns computed by triggers is another
-   common use-case for <literal>RETURNING</literal>.
+   如果目标表上有触发器（<xref linkend="triggers"/>），则 <literal>RETURNING</literal> 可用的数据是经过触发器修改后的行。因此，检查由触发器计算的列是 <literal>RETURNING</literal> 的另一个常见用例。
   </para>
 
  </sect1>
