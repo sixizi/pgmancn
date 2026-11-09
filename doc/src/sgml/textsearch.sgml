@@ -2565,36 +2565,18 @@ CREATE TEXT SEARCH DICTIONARY english_stem (
  </sect1>
 
  <sect1 id="textsearch-configuration">
-  <title>Configuration Example</title>
+  <title>配置示例</title>
 
    <para>
-    A text search configuration specifies all options necessary to transform a
-    document into a <type>tsvector</type>: the parser to use to break text
-    into tokens, and the dictionaries to use to transform each token into a
-    lexeme.  Every call of
-    <function>to_tsvector</function> or <function>to_tsquery</function>
-    needs a text search configuration to perform its processing.
-    The configuration parameter
-    <xref linkend="guc-default-text-search-config"/>
-    specifies the name of the default configuration, which is the
-    one used by text search functions if an explicit configuration
-    parameter is omitted.
-    It can be set in <filename>postgresql.conf</filename>, or set for an
-    individual session using the <command>SET</command> command.
+    文本搜索配置指定了将文档转换为 <type>tsvector</type> 所需的全部选项：用于将文本切分为词元的解析器，以及用于将每个词元转换为词位的字典。每次调用 <function>to_tsvector</function> 或 <function>to_tsquery</function> 都需要一个文本搜索配置来执行其处理。配置参数 <xref linkend="guc-default-text-search-config"/> 指定默认配置的名称，当省略显式配置参数时，文本搜索函数使用的就是该默认配置。它可以在 <filename>postgresql.conf</filename> 中设置，也可以使用 <command>SET</command> 命令为单个会话设置。
    </para>
 
    <para>
-    Several predefined text search configurations are available, and
-    you can create custom configurations easily.  To facilitate management
-    of text search objects, a set of <acronym>SQL</acronym> commands
-    is available, and there are several <application>psql</application> commands that display information
-    about text search objects (<xref linkend="textsearch-psql"/>).
+    有若干预定义的文本搜索配置可用，而且你可以轻松创建自定义配置。为便于管理文本搜索对象，提供了一组 <acronym>SQL</acronym> 命令，还有若干 <application>psql</application> 命令可以显示有关文本搜索对象的信息（<xref linkend="textsearch-psql"/>）。
    </para>
 
    <para>
-    As an example we will create a configuration
-    <literal>pg</literal>, starting by duplicating the built-in
-    <literal>english</literal> configuration:
+    作为一个示例，我们将创建一个配置 <literal>pg</literal>，首先复制内置的 <literal>english</literal> 配置：
 
 <programlisting>
 CREATE TEXT SEARCH CONFIGURATION public.pg ( COPY = pg_catalog.english );
@@ -2602,9 +2584,7 @@ CREATE TEXT SEARCH CONFIGURATION public.pg ( COPY = pg_catalog.english );
    </para>
 
    <para>
-    We will use a PostgreSQL-specific synonym list
-    and store it in <filename>$SHAREDIR/tsearch_data/pg_dict.syn</filename>.
-    The file contents look like:
+    我们将使用一个 PostgreSQL 专用的同义词列表，并将其存放在 <filename>$SHAREDIR/tsearch_data/pg_dict.syn</filename> 中。该文件的内容如下：
 
 <programlisting>
 postgres    pg
@@ -2612,7 +2592,7 @@ pgsql       pg
 postgresql  pg
 </programlisting>
 
-    We define the synonym dictionary like this:
+    我们这样定义同义词字典：
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY pg_dict (
@@ -2621,8 +2601,7 @@ CREATE TEXT SEARCH DICTIONARY pg_dict (
 );
 </programlisting>
 
-    Next we register the <productname>Ispell</productname> dictionary
-    <literal>english_ispell</literal>, which has its own configuration files:
+    接下来我们注册 <productname>Ispell</productname> 字典 <literal>english_ispell</literal>，它有自己的配置文件：
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY english_ispell (
@@ -2633,8 +2612,7 @@ CREATE TEXT SEARCH DICTIONARY english_ispell (
 );
 </programlisting>
 
-    Now we can set up the mappings for words in configuration
-    <literal>pg</literal>:
+    现在我们可以为配置 <literal>pg</literal> 中的词建立映射：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION pg
@@ -2643,8 +2621,7 @@ ALTER TEXT SEARCH CONFIGURATION pg
     WITH pg_dict, english_ispell, english_stem;
 </programlisting>
 
-    We choose not to index or search some token types that the built-in
-    configuration does handle:
+    我们选择对内置配置确实会处理的一些词元类型既不建立索引也不进行搜索：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION pg
@@ -2653,7 +2630,7 @@ ALTER TEXT SEARCH CONFIGURATION pg
    </para>
 
    <para>
-    Now we can test our configuration:
+    现在我们可以测试我们的配置：
 
 <programlisting>
 SELECT * FROM ts_debug('public.pg', '
@@ -2665,8 +2642,7 @@ version of our software.
    </para>
 
    <para>
-    The next step is to set the session to use the new configuration, which was
-    created in the <literal>public</literal> schema:
+    下一步是将会话设置为使用在 <literal>public</literal> 模式中创建的新配置：
 
 <screen>
 =&gt; \dF
