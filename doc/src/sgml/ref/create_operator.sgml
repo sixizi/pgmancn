@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE OPERATOR</refname>
-  <refpurpose>define a new operator</refpurpose>
+  <refpurpose>定义一个新运算符</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -32,106 +32,101 @@ CREATE OPERATOR <replaceable>name</replaceable> (
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE OPERATOR</command> defines a new operator,
-   <replaceable class="parameter">name</replaceable>.  The user who
-   defines an operator becomes its owner.  If a schema name is given
-   then the operator is created in the specified schema.  Otherwise it
-   is created in the current schema.
+   <command>CREATE OPERATOR</command> 定义一个新运算符，
+   <replaceable class="parameter">name</replaceable>。定义运算符的用户成为其所有者。如果给出了模式名，
+   则该运算符创建在指定的模式中。否则，
+   它创建在当前模式中。
   </para>
 
   <para>
-   The operator name is a sequence of up to <symbol>NAMEDATALEN</symbol>-1
-   (63 by default) characters from the following list:
+   运算符名称是由下列列表中的字符组成的序列，最多
+   <symbol>NAMEDATALEN</symbol>-1（默认为 63）个字符：
 <literallayout>
 + - * / &lt; &gt; = ~ ! @ # % ^ &amp; | ` ?
 </literallayout>
 
-   There are a few restrictions on your choice of name:
+   对名称的选择有一些限制：
    <itemizedlist>
     <listitem>
      <para>
-     <literal>--</literal> and <literal>/*</literal> cannot appear anywhere in an operator name,
-     since they will be taken as the start of a comment.
+     <literal>--</literal> 和 <literal>/*</literal> 不能出现在运算符名称的任何位置，
+     因为它们会被当作注释的开始。
      </para>
     </listitem>
     <listitem>
      <para>
-     A multicharacter operator name cannot end in <literal>+</literal> or
-     <literal>-</literal>,
-     unless the name also contains at least one of these characters:
+     多字符运算符名称不能以 <literal>+</literal> 或
+     <literal>-</literal> 结尾，
+     除非该名称还至少包含下列字符之一：
 <literallayout>
 ~ ! @ # % ^ &amp; | ` ?
 </literallayout>
-     For example, <literal>@-</literal> is an allowed operator name,
-     but <literal>*-</literal> is not.
-     This restriction allows <productname>PostgreSQL</productname> to
-     parse SQL-compliant commands without requiring spaces between tokens.
+     例如，<literal>@-</literal> 是允许的运算符名称，
+     而 <literal>*-</literal> 不是。
+     此限制使得 <productname>PostgreSQL</productname> 能够解析符合 SQL 的命令，
+     而无需在记号之间添加空格。
      </para>
     </listitem>
     <listitem>
      <para>
-     The symbol <literal>=&gt;</literal> is reserved by the SQL grammar,
-     so it cannot be used as an operator name.
+     符号 <literal>=&gt;</literal> 被 SQL 语法保留，
+     因此它不能用作运算符名称。
      </para>
     </listitem>
    </itemizedlist>
   </para>
 
   <para>
-   The operator <literal>!=</literal> is mapped to
-   <literal>&lt;&gt;</literal> on input, so these two names are always
-   equivalent.
+   运算符 <literal>!=</literal> 在输入时会被映射为
+   <literal>&lt;&gt;</literal>，因此这两个名称总是
+   等价的。
   </para>
 
   <para>
-   For binary operators, both <literal>LEFTARG</literal> and
-   <literal>RIGHTARG</literal> must be defined.  For prefix operators only
-   <literal>RIGHTARG</literal> should be defined.
-   The <replaceable class="parameter">function_name</replaceable>
-   function must have been previously defined using <command>CREATE
-   FUNCTION</command> and must be defined to accept the correct number
-   of arguments (either one or two) of the indicated types.
+   对于二元运算符，必须同时定义 <literal>LEFTARG</literal> 和
+   <literal>RIGHTARG</literal>。对于前缀运算符，只应定义
+   <literal>RIGHTARG</literal>。
+   <replaceable class="parameter">function_name</replaceable>
+   函数必须事先使用 <command>CREATE
+   FUNCTION</command> 定义过，并且必须定义为接受所示类型的正确
+   参数个数（一个或两个）。
   </para>
 
   <para>
-   In the syntax of <literal>CREATE OPERATOR</literal>, the keywords
-   <literal>FUNCTION</literal> and <literal>PROCEDURE</literal> are
-   equivalent, but the referenced function must in any case be a function, not
-   a procedure.  The use of the keyword <literal>PROCEDURE</literal> here is
-   historical and deprecated.
+   在 <literal>CREATE OPERATOR</literal> 的语法中，关键字
+   <literal>FUNCTION</literal> 和 <literal>PROCEDURE</literal> 是
+   等价的，但被引用的函数在任何情况下都必须是函数，而不是
+   过程。此处使用关键字 <literal>PROCEDURE</literal> 是
+   历史遗留做法，已废弃。
   </para>
 
   <para>
-   The other clauses specify optional operator optimization attributes.
-   Their meaning is detailed in <xref linkend="xoper-optimization"/>.
+   其他子句指定可选的运算符优化属性。
+   它们的含义在 <xref linkend="xoper-optimization"/> 中详细说明。
   </para>
 
   <para>
-   To be able to create an operator, you must have <literal>USAGE</literal>
-   privilege on the argument types and the return type, as well
-   as <literal>EXECUTE</literal> privilege on the underlying function.  If a
-   commutator or negator operator is specified, you must own those operators.
+   要能够创建运算符，你必须对参数类型和返回类型具有 <literal>USAGE</literal>
+   权限，并且
+   对底层函数具有 <literal>EXECUTE</literal> 权限。如果
+   指定了交换运算符或反运算符，你必须拥有这些运算符。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
      <varlistentry>
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name of the operator to be defined. See above for allowable
-        characters.  The name can be schema-qualified, for example
-        <literal>CREATE OPERATOR myschema.+ (...)</literal>.  If not, then
-        the operator is created in the current schema.  Two operators
-        in the same schema can have the same name if they operate on
-        different data types.  This is called
-        <firstterm>overloading</firstterm>.
+        要定义的运算符的名称。关于允许的字符见上文。名称可以用模式限定，例如
+        <literal>CREATE OPERATOR myschema.+ (...)</literal>。如果没有限定，那么该运算符会在当前模式中创建。同一模式中的两个运算符如果操作的数据类型不同，可以具有相同的名称。这称为
+        <firstterm>重载</firstterm>。
        </para>
       </listitem>
      </varlistentry>
@@ -140,7 +135,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">function_name</replaceable></term>
       <listitem>
        <para>
-        The function used to implement this operator.
+        用于实现该运算符的函数。
        </para>
       </listitem>
      </varlistentry>
@@ -149,8 +144,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">left_type</replaceable></term>
       <listitem>
        <para>
-        The data type of the operator's left operand, if any.
-        This option would be omitted for a prefix operator.
+        该运算符左操作数的数据类型（如果有）。对于前缀运算符，将省略此选项。
        </para>
       </listitem>
      </varlistentry>
@@ -159,7 +153,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">right_type</replaceable></term>
       <listitem>
        <para>
-        The data type of the operator's right operand.
+        该运算符右操作数的数据类型。
        </para>
       </listitem>
      </varlistentry>
@@ -168,7 +162,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">com_op</replaceable></term>
       <listitem>
        <para>
-        The commutator of this operator.
+        该运算符的交换子。
        </para>
       </listitem>
      </varlistentry>
@@ -177,7 +171,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">neg_op</replaceable></term>
       <listitem>
        <para>
-        The negator of this operator.
+        此运算符的否定运算符。
        </para>
       </listitem>
      </varlistentry>
@@ -186,7 +180,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">res_proc</replaceable></term>
       <listitem>
        <para>
-        The restriction selectivity estimator function for this operator.
+        此运算符的限制选择率估算函数。
        </para>
       </listitem>
      </varlistentry>
@@ -195,7 +189,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><replaceable class="parameter">join_proc</replaceable></term>
       <listitem>
        <para>
-        The join selectivity estimator function for this operator.
+        此运算符的连接选择率估算函数。
        </para>
       </listitem>
      </varlistentry>
@@ -204,7 +198,7 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><literal>HASHES</literal></term>
       <listitem>
        <para>
-       Indicates this operator can support a hash join.
+       表示此运算符可以支持哈希连接。
        </para>
       </listitem>
      </varlistentry>
@@ -213,117 +207,90 @@ CREATE OPERATOR <replaceable>name</replaceable> (
       <term><literal>MERGES</literal></term>
       <listitem>
        <para>
-       Indicates this operator can support a merge join.
+       表示此运算符可以支持合并连接。
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
   <para>
-   To give a schema-qualified operator name in <replaceable
-   class="parameter">com_op</replaceable> or the other optional
-   arguments, use the <literal>OPERATOR()</literal> syntax, for example:
+   要在 <replaceable
+   class="parameter">com_op</replaceable> 或其他可选参数中给出带模式限定的运算符名称，请使用 <literal>OPERATOR()</literal> 语法，例如：
 <programlisting>
 COMMUTATOR = OPERATOR(myschema.===) ,
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   Refer to <xref linkend="xoper"/> and <xref linkend="xoper-optimization"/>
-   for further information.
+   请参阅 <xref linkend="xoper"/> 和 <xref linkend="xoper-optimization"/>
+   以获取更多信息。
   </para>
 
   <para>
-   When you are defining a self-commutative operator, you just do it.
-   When you are defining a pair of commutative operators, things are
-   a little trickier: how can the first one to be defined refer to the
-   other one, which you haven't defined yet?  There are three solutions
-   to this problem:
+   当你定义自交换运算符时，直接定义即可。
+   当你定义一对交换运算符时，情况会稍微棘手一些：先定义的那个如何引用
+   另一个尚未定义的运算符？这个问题有三种解决方案：
 
    <itemizedlist>
     <listitem>
      <para>
-      One way is to omit the <literal>COMMUTATOR</literal> clause in the
-      first operator that you define, and then provide one in the second
-      operator's definition.  Since <productname>PostgreSQL</productname>
-      knows that commutative operators come in pairs, when it sees the
-      second definition it will automatically go back and fill in the
-      missing <literal>COMMUTATOR</literal> clause in the first
-      definition.
+      一种方法是在你定义的第一个运算符中省略 <literal>COMMUTATOR</literal> 子句，
+      然后在第二个运算符的定义中提供该子句。由于 <productname>PostgreSQL</productname>
+      知道交换运算符是成对出现的，当它看到第二个定义时，
+      会自动回过头来补上第一个定义中缺失的 <literal>COMMUTATOR</literal> 子句。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Another, more straightforward way is just to
-      include <literal>COMMUTATOR</literal> clauses in both definitions.
-      When <productname>PostgreSQL</productname> processes the first
-      definition and realizes that <literal>COMMUTATOR</literal> refers to
-      a nonexistent operator, the system will make a dummy entry for that
-      operator in the system catalog.  This dummy entry will have valid
-      data only for the operator name, left and right operand types, and
-      owner, since that's all that <productname>PostgreSQL</productname>
-      can deduce at this point.  The first operator's catalog entry will
-      link to this dummy entry.  Later, when you define the second
-      operator, the system updates the dummy entry with the additional
-      information from the second definition.  If you try to use the dummy
-      operator before it's been filled in, you'll just get an error
-      message.
+      另一种更直接的方法是在两个定义中都包含 <literal>COMMUTATOR</literal> 子句。
+      当 <productname>PostgreSQL</productname> 处理第一个定义并意识到 <literal>COMMUTATOR</literal> 引用了一个
+      不存在的运算符时，系统会在系统目录中为该运算符创建一个占位条目。
+      这个占位条目只有运算符名称、左右操作数类型和所有者是有效数据，
+      因为这是 <productname>PostgreSQL</productname> 此时所能推断出的全部信息。
+      第一个运算符的目录条目将链接到这个占位条目。之后，当你定义第二个
+      运算符时，系统会用第二个定义中的附加信息更新该占位条目。如果你在
+      占位条目被填充之前尝试使用该占位运算符，只会得到一条错误消息。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Alternatively, both operators can be defined
-      without <literal>COMMUTATOR</literal> clauses
-      and then <command>ALTER OPERATOR</command> can be used to set their
-      commutator links.  It's sufficient to <command>ALTER</command>
-      either one of the pair.
+      或者，两个运算符都可以在不带 <literal>COMMUTATOR</literal> 子句的情况下定义，
+      然后可以使用 <command>ALTER OPERATOR</command> 来设置它们的交换运算符链接。
+      只需对这对运算符中的任意一个执行 <command>ALTER</command> 即可。
      </para>
     </listitem>
    </itemizedlist>
 
-   In all three cases, you must own both operators in order to mark
-   them as commutators.
+   在所有三种情况下，你必须拥有这两个运算符，才能将它们标记为交换运算符。
   </para>
 
   <para>
-   Pairs of negator operators can be defined using the same methods
-   as for commutator pairs.
+   否定运算符对可以使用与交换运算符对相同的方法来定义。
   </para>
 
   <para>
-   It is not possible to specify an operator's lexical precedence in
-   <command>CREATE OPERATOR</command>, because the parser's precedence behavior
-   is hard-wired.  See <xref linkend="sql-precedence"/> for precedence details.
+   无法在 <command>CREATE OPERATOR</command> 中指定运算符的词法优先级，因为解析器的优先级行为是硬编码的。有关优先级的详细信息，请参见 <xref linkend="sql-precedence"/>。
   </para>
 
   <para>
-   The obsolete options <literal>SORT1</literal>, <literal>SORT2</literal>,
-   <literal>LTCMP</literal>, and <literal>GTCMP</literal> were formerly used to
-   specify the names of sort operators associated with a merge-joinable
-   operator.  This is no longer necessary, since information about
-   associated operators is found by looking at B-tree operator families
-   instead.  If one of these options is given, it is ignored except
-   for implicitly setting <literal>MERGES</literal> true.
+   已废弃的选项 <literal>SORT1</literal>、<literal>SORT2</literal>、<literal>LTCMP</literal> 和 <literal>GTCMP</literal> 以前用于指定与可合并连接运算符相关联的排序运算符的名称。这已不再必要，因为有关关联运算符的信息改为通过查看 B-tree 运算符族来获得。如果给出了这些选项之一，它会被忽略，只是会隐式地将 <literal>MERGES</literal> 设置为 true。
   </para>
 
   <para>
-   Use <link linkend="sql-dropoperator"><command>DROP OPERATOR</command></link> to delete user-defined operators
-   from a database.  Use <link linkend="sql-alteroperator"><command>ALTER OPERATOR</command></link> to modify operators in a
-   database.
+   使用 <link linkend="sql-dropoperator"><command>DROP OPERATOR</command></link> 从数据库中删除用户定义的运算符。使用 <link linkend="sql-alteroperator"><command>ALTER OPERATOR</command></link> 修改数据库中的运算符。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   The following command defines a new operator, area-equality, for
-   the data type <type>box</type>:
+   下面的命令为数据类型 <type>box</type> 定义了一个新的运算符 area-equality：
 <programlisting>
 CREATE OPERATOR === (
     LEFTARG = box,
@@ -339,17 +306,15 @@ CREATE OPERATOR === (
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE OPERATOR</command> is a
-   <productname>PostgreSQL</productname> extension.  There are no
-   provisions for user-defined operators in the SQL standard.
+   <command>CREATE OPERATOR</command> 是一个 <productname>PostgreSQL</productname> 扩展。SQL 标准中没有为用户定义运算符提供任何规定。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alteroperator"/></member>
