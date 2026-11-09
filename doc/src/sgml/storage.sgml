@@ -352,7 +352,7 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 
 <sect1 id="storage-fsm">
 
-<title>Free Space Map</title>
+<title>空闲空间映射</title>
 
 <indexterm>
  <primary>Free Space Map</primary>
@@ -360,35 +360,19 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 <indexterm><primary>FSM</primary><see>Free Space Map</see></indexterm>
 
 <para>
-Each heap and index relation, except for hash indexes, has a Free Space Map
-(<acronym>FSM</acronym>) to keep track of available space in the relation.
-It's stored alongside the main relation data in a separate relation fork,
-named after the filenode number of the relation, plus a <literal>_fsm</literal>
-suffix. For example, if the filenode of a relation is 12345, the
-<acronym>FSM</acronym> is stored in a file called
-<filename>12345_fsm</filename>, in the same directory as the main relation file.
+除哈希索引外，每个堆和索引关系都有一个空闲空间映射（<acronym>FSM</acronym>），用于跟踪该关系中可用的空间。它与主关系数据一起存储在一个单独的关系 fork 中，该 fork 以关系的 filenode 编号加上 <literal>_fsm</literal> 后缀命名。例如，如果某个关系的 filenode 为 12345，则 <acronym>FSM</acronym> 存储在名为 <filename>12345_fsm</filename> 的文件中，与主关系文件位于同一目录。
 </para>
 
 <para>
-The Free Space Map is organized as a tree of <acronym>FSM</acronym> pages. The
-bottom level <acronym>FSM</acronym> pages store the free space available on each
-heap (or index) page, using one byte to represent each such page. The upper
-levels aggregate information from the lower levels.
+空闲空间映射组织为一棵由 <acronym>FSM</acronym> 页面构成的树。底层 <acronym>FSM</acronym> 页面使用一个字节表示每个堆（或索引）页面，以此存储每个页面上的可用空闲空间。上层则汇总来自下层的信息。
 </para>
 
 <para>
-Within each <acronym>FSM</acronym> page is a binary tree, stored in an array with
-one byte per node. Each leaf node represents a heap page, or a lower level
-<acronym>FSM</acronym> page. In each non-leaf node, the higher of its children's
-values is stored. The maximum value in the leaf nodes is therefore stored
-at the root.
+每个 <acronym>FSM</acronym> 页面内是一棵二叉树，存储在一个每个节点占一个字节的数组中。每个叶子节点表示一个堆页面或一个下层 <acronym>FSM</acronym> 页面。在每个非叶子节点中，存储其子节点值中较大的那个。因此，叶子节点中的最大值存储在根节点。
 </para>
 
 <para>
-See <filename>src/backend/storage/freespace/README</filename> for more details on
-how the <acronym>FSM</acronym> is structured, and how it's updated and searched.
-The <xref linkend="pgfreespacemap"/> module
-can be used to examine the information stored in free space maps.
+有关 <acronym>FSM</acronym> 的结构以及如何更新和搜索的更多细节，请参见 <filename>src/backend/storage/freespace/README</filename>。<xref linkend="pgfreespacemap"/> 模块可用于检查空闲空间映射中存储的信息。
 </para>
 
 </sect1>
