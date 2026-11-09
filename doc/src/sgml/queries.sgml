@@ -1347,7 +1347,7 @@ SELECT a FROM b UNION (SELECT x FROM y LIMIT 10)
 
 
  <sect1 id="queries-order">
-  <title>Sorting Rows (<literal>ORDER BY</literal>)</title>
+  <title>对行进行排序（<literal>ORDER BY</literal>）</title>
 
   <indexterm zone="queries-order">
    <primary>sorting</primary>
@@ -1358,13 +1358,7 @@ SELECT a FROM b UNION (SELECT x FROM y LIMIT 10)
   </indexterm>
 
   <para>
-   After a query has produced an output table (after the select list
-   has been processed) it can optionally be sorted.  If sorting is not
-   chosen, the rows will be returned in an unspecified order.  The actual
-   order in that case will depend on the scan and join plan types and
-   the order on disk, but it must not be relied on.  A particular
-   output ordering can only be guaranteed if the sort step is explicitly
-   chosen.
+   查询产生输出表之后（在处理完选择列表之后），可以选择对其进行排序。如果没有选择排序，那么行将以未指定的顺序返回。在这种情况下，实际顺序将取决于扫描和连接计划类型以及磁盘上的顺序，但不能依赖它。只有显式选择了排序步骤，才能保证特定的输出顺序。
   </para>
 
   <para>
@@ -1391,58 +1385,36 @@ SELECT a, b FROM table1 ORDER BY a + b, c;
    determined with the <literal>&gt;</literal> operator.
     <footnote>
      <para>
-      Actually, <productname>PostgreSQL</productname> uses the <firstterm>default B-tree
-      operator class</firstterm> for the expression's data type to determine the sort
-      ordering for <literal>ASC</literal> and <literal>DESC</literal>.  Conventionally,
-      data types will be set up so that the <literal>&lt;</literal> and
-      <literal>&gt;</literal> operators correspond to this sort ordering,
-      but a user-defined data type's designer could choose to do something
-      different.
+      实际上，<productname>PostgreSQL</productname> 使用表达式数据类型的<firstterm>默认 B-tree 运算符类</firstterm>来确定 <literal>ASC</literal> 和 <literal>DESC</literal> 的排序顺序。按照惯例，数据类型的设置会使得 <literal>&lt;</literal> 和 <literal>&gt;</literal> 运算符对应该排序顺序，但用户定义数据类型的设计者可以选择做不同的处理。
      </para>
     </footnote>
   </para>
 
   <para>
-   The <literal>NULLS FIRST</literal> and <literal>NULLS LAST</literal> options can be
-   used to determine whether nulls appear before or after non-null values
-   in the sort ordering.  By default, null values sort as if larger than any
-   non-null value; that is, <literal>NULLS FIRST</literal> is the default for
-   <literal>DESC</literal> order, and <literal>NULLS LAST</literal> otherwise.
+   <literal>NULLS FIRST</literal> 和 <literal>NULLS LAST</literal> 选项可用于确定在排序顺序中空值出现在非空值之前还是之后。默认情况下，空值排序时就好像它比任何非空值都大；也就是说，对于 <literal>DESC</literal> 顺序，<literal>NULLS FIRST</literal> 是默认值，否则为 <literal>NULLS LAST</literal>。
   </para>
 
   <para>
-   Note that the ordering options are considered independently for each
-   sort column.  For example <literal>ORDER BY x, y DESC</literal> means
-   <literal>ORDER BY x ASC, y DESC</literal>, which is not the same as
-   <literal>ORDER BY x DESC, y DESC</literal>.
+   请注意，排序选项是对每个排序列独立考虑的。例如 <literal>ORDER BY x, y DESC</literal> 表示 <literal>ORDER BY x ASC, y DESC</literal>，这与 <literal>ORDER BY x DESC, y DESC</literal> 不同。
   </para>
 
   <para>
-   A <replaceable>sort_expression</replaceable> can also be the column label or number
-   of an output column, as in:
+   <replaceable>sort_expression</replaceable> 也可以是输出列的列标签或编号，例如：
 <programlisting>
 SELECT a + b AS sum, c FROM table1 ORDER BY sum;
 SELECT a, max(b) FROM table1 GROUP BY a ORDER BY 1;
 </programlisting>
-   both of which sort by the first output column.  Note that an output
-   column name has to stand alone, that is, it cannot be used in an expression
-   &mdash; for example, this is <emphasis>not</emphasis> correct:
+   两者都按第一个输出列排序。请注意，输出列名必须单独出现，也就是说，它不能用在表达式中 &mdash; 例如，下面这样是<emphasis>不</emphasis>正确的：
 <programlisting>
 SELECT a + b AS sum, c FROM table1 ORDER BY sum + c;          -- wrong
 </programlisting>
-   This restriction is made to reduce ambiguity.  There is still
-   ambiguity if an <literal>ORDER BY</literal> item is a simple name that
-   could match either an output column name or a column from the table
-   expression.  The output column is used in such cases.  This would
-   only cause confusion if you use <literal>AS</literal> to rename an output
-   column to match some other table column's name.
+   做出这一限制是为了减少歧义。如果 <literal>ORDER BY</literal> 项是一个简单名称，它既可能匹配输出列名，也可能匹配表表达式中的列，那么仍然存在歧义。在这种情况下会使用输出列。只有当你使用 <literal>AS</literal> 将输出列重命名为与其他表列的名称相同时，这才会引起混淆。
   </para>
 
   <para>
-   <literal>ORDER BY</literal> can be applied to the result of a
-   <literal>UNION</literal>, <literal>INTERSECT</literal>, or <literal>EXCEPT</literal>
-   combination, but in this case it is only permitted to sort by
-   output column names or numbers, not by expressions.
+   <literal>ORDER BY</literal> 可以应用于
+   <literal>UNION</literal>、<literal>INTERSECT</literal> 或 <literal>EXCEPT</literal>
+   组合的结果，但在这种情况下，只允许按输出列名或列号排序，而不能按表达式排序。
   </para>
  </sect1>
 
