@@ -1911,7 +1911,7 @@ int SPI_execp(SPIPlanPtr <parameter>plan</parameter>, Datum * <parameter>values<
 
  <refnamediv>
   <refname>SPI_cursor_open</refname>
-  <refpurpose>set up a cursor using a statement created with <function>SPI_prepare</function></refpurpose>
+  <refpurpose>使用由 <function>SPI_prepare</function> 创建的语句建立一个游标</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -1923,42 +1923,31 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <function>SPI_cursor_open</function> sets up a cursor (internally,
-   a portal) that will execute a statement prepared by
-   <function>SPI_prepare</function>.  The parameters have the same
-   meanings as the corresponding parameters to
-   <function>SPI_execute_plan</function>.
+   <function>SPI_cursor_open</function> 建立一个游标（在内部是一个 portal），该游标将执行由 <function>SPI_prepare</function> 预备的语句。这些参数的含义与 <function>SPI_execute_plan</function> 的对应参数相同。
   </para>
 
   <para>
-   Using a cursor instead of executing the statement directly has two
-   benefits.  First, the result rows can be retrieved a few at a time,
-   avoiding memory overrun for queries that return many rows.  Second,
-   a portal can outlive the current C function (it can, in fact, live
-   to the end of the current transaction).  Returning the portal name
-   to the C function's caller provides a way of returning a row set as
-   result.
+   使用游标而不是直接执行语句有两个好处。首先，结果行可以一次取回几行，从而避免返回大量行的查询出现内存溢出。其次，portal 的生命周期可以长于当前 C 函数（事实上，它可以存活到当前事务结束）。将 portal 名称返回给 C 函数的调用者，就提供了一种将行集作为结果返回的方式。
   </para>
 
   <para>
-   The passed-in parameter data will be copied into the cursor's portal, so it
-   can be freed while the cursor still exists.
+   传入的参数数据将被复制到游标的 portal 中，因此可以在游标仍然存在时将其释放。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Arguments</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>const char * <parameter>name</parameter></literal></term>
     <listitem>
      <para>
-      name for portal, or <symbol>NULL</symbol> to let the system
-      select a name
+      门户的名称，或者用 <symbol>NULL</symbol> 让系统
+      选择一个名称
      </para>
     </listitem>
    </varlistentry>
@@ -1967,7 +1956,7 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
     <term><literal>SPIPlanPtr <parameter>plan</parameter></literal></term>
     <listitem>
      <para>
-      prepared statement (returned by <function>SPI_prepare</function>)
+      预备语句（由 <function>SPI_prepare</function> 返回）
      </para>
     </listitem>
    </varlistentry>
@@ -1976,8 +1965,8 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
     <term><literal>Datum * <parameter>values</parameter></literal></term>
     <listitem>
      <para>
-      An array of actual parameter values.  Must have same length as the
-      statement's number of arguments.
+      实际参数值组成的数组。其长度必须与
+      该语句的参数个数相同。
      </para>
     </listitem>
    </varlistentry>
@@ -1986,20 +1975,18 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
     <term><literal>const char * <parameter>nulls</parameter></literal></term>
     <listitem>
      <para>
-      An array describing which parameters are null.  Must have same length as
-      the statement's number of arguments.
+      描述哪些参数为空的数组。其长度必须与
+      该语句的参数个数相同。
      </para>
 
      <para>
-      If <parameter>nulls</parameter> is <symbol>NULL</symbol> then
-      <function>SPI_cursor_open</function> assumes that no parameters
-      are null.  Otherwise, each entry of the <parameter>nulls</parameter>
-      array should be <literal>'&nbsp;'</literal> if the corresponding parameter
-      value is non-null, or <literal>'n'</literal> if the corresponding parameter
-      value is null.  (In the latter case, the actual value in the
-      corresponding <parameter>values</parameter> entry doesn't matter.)  Note
-      that <parameter>nulls</parameter> is not a text string, just an array:
-      it does not need a <literal>'\0'</literal> terminator.
+      如果 <parameter>nulls</parameter> 为 <symbol>NULL</symbol>，则
+      <function>SPI_cursor_open</function> 假定没有参数为空。否则，<parameter>nulls</parameter>
+      数组的每个元素在对应参数值非空时应为 <literal>'&nbsp;'</literal>，
+      在对应参数值为空时应为 <literal>'n'</literal>。（在后一种情况下，
+      对应的 <parameter>values</parameter> 元素中的实际值无关紧要。）注意
+      <parameter>nulls</parameter> 不是文本字符串，而只是一个数组：
+      它不需要 <literal>'\0'</literal> 终止符。
      </para>
     </listitem>
    </varlistentry>
@@ -2007,18 +1994,17 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
    <varlistentry>
     <term><literal>bool <parameter>read_only</parameter></literal></term>
     <listitem>
-     <para><literal>true</literal> for read-only execution</para>
+     <para><literal>true</literal> 用于只读执行</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </refsect1>
 
  <refsect1>
-  <title>Return Value</title>
+  <title>返回值</title>
 
   <para>
-   Pointer to portal containing the cursor.  Note there is no error
-   return convention; any error will be reported via <function>elog</function>.
+   指向包含该游标的 portal 的指针。注意，没有错误返回约定；任何错误都将通过 <function>elog</function> 报告。
   </para>
  </refsect1>
 </refentry>
