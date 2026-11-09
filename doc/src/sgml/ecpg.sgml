@@ -1555,24 +1555,20 @@ EXEC SQL SELECT b INTO :val :val_ind FROM test1;
  </sect1>
 
  <sect1 id="ecpg-dynamic">
-  <title>Dynamic SQL</title>
+  <title>动态 SQL</title>
 
   <para>
-   In many cases, the particular SQL statements that an application
-   has to execute are known at the time the application is written.
-   In some cases, however, the SQL statements are composed at run time
-   or provided by an external source.  In these cases you cannot embed
-   the SQL statements directly into the C source code, but there is a
-   facility that allows you to call arbitrary SQL statements that you
-   provide in a string variable.
+   在许多情况下，应用程序必须执行的特定 SQL 语句在编写应用程序时就已经确定。
+   然而在某些情况下，SQL 语句是在运行时组合而成或由外部来源提供的。在这些情况下，
+   你无法将 SQL 语句直接嵌入 C 源代码中，但有一种机制允许你调用在字符串变量中
+   提供的任意 SQL 语句。
   </para>
 
   <sect2 id="ecpg-dynamic-without-result">
-   <title>Executing Statements without a Result Set</title>
+   <title>执行不带结果集的语句</title>
 
    <para>
-    The simplest way to execute an arbitrary SQL statement is to use
-    the command <command>EXECUTE IMMEDIATE</command>.  For example:
+    执行任意 SQL 语句最简单的方法是使用 <command>EXECUTE IMMEDIATE</command> 命令。例如：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 const char *stmt = "CREATE TABLE test1 (...);";
@@ -1580,26 +1576,21 @@ EXEC SQL END DECLARE SECTION;
 
 EXEC SQL EXECUTE IMMEDIATE :stmt;
 </programlisting>
-    <command>EXECUTE IMMEDIATE</command> can be used for SQL
-    statements that do not return a result set (e.g.,
-    DDL, <command>INSERT</command>, <command>UPDATE</command>,
-    <command>DELETE</command>).  You cannot execute statements that
-    retrieve data (e.g., <command>SELECT</command>) this way.  The
-    next section describes how to do that.
+    <command>EXECUTE IMMEDIATE</command> 可用于不返回结果集的 SQL 语句（例如
+    DDL、<command>INSERT</command>、<command>UPDATE</command>、
+    <command>DELETE</command>）。你不能用这种方式执行检索数据的语句（例如 <command>SELECT</command>）。
+    下一节介绍如何做到这一点。
    </para>
   </sect2>
 
   <sect2 id="ecpg-dynamic-input">
-   <title>Executing a Statement with Input Parameters</title>
+   <title>执行带输入参数的语句</title>
 
    <para>
-    A more powerful way to execute arbitrary SQL statements is to
-    prepare them once and execute the prepared statement as often as
-    you like.  It is also possible to prepare a generalized version of
-    a statement and then execute specific versions of it by
-    substituting parameters.  When preparing the statement, write
-    question marks where you want to substitute parameters later.  For
-    example:
+    执行任意 SQL 语句的一种更强大的方法是先预备一次语句，然后按你的需要
+    反复执行该预备语句。也可以预备一个语句的通用版本，然后通过替换参数
+    来执行它的具体版本。在预备语句时，在稍后要替换参数的位置写上问号。
+    例如：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 const char *stmt = "INSERT INTO test1 VALUES(?, ?);";
@@ -1612,8 +1603,7 @@ EXEC SQL EXECUTE mystmt USING 42, 'foobar';
    </para>
 
    <para>
-    When you don't need the prepared statement anymore, you should
-    deallocate it:
+    当不再需要预备语句时，应将其释放：
 <programlisting>
 EXEC SQL DEALLOCATE PREPARE <replaceable>name</replaceable>;
 </programlisting>
@@ -1621,12 +1611,10 @@ EXEC SQL DEALLOCATE PREPARE <replaceable>name</replaceable>;
   </sect2>
 
   <sect2 id="ecpg-dynamic-with-result">
-   <title>Executing a Statement with a Result Set</title>
+   <title>执行带结果集的语句</title>
 
    <para>
-    To execute an SQL statement with a single result row,
-    <command>EXECUTE</command> can be used.  To save the result, add
-    an <literal>INTO</literal> clause.
+    要执行返回单行结果的 SQL 语句，可以使用 <command>EXECUTE</command>。要保存结果，请添加 <literal>INTO</literal> 子句。
 <programlisting><![CDATA[
 EXEC SQL BEGIN DECLARE SECTION;
 const char *stmt = "SELECT a, b, c FROM test1 WHERE a > ?";
@@ -1639,16 +1627,11 @@ EXEC SQL PREPARE mystmt FROM :stmt;
 EXEC SQL EXECUTE mystmt INTO :v1, :v2, :v3 USING 37;
 ]]>
 </programlisting>
-    An <command>EXECUTE</command> command can have an
-    <literal>INTO</literal> clause, a <literal>USING</literal> clause,
-    both, or neither.
+一条 <command>EXECUTE</command> 命令可以带有 <literal>INTO</literal> 子句、<literal>USING</literal> 子句、两者都有，或者两者都没有。
    </para>
 
    <para>
-    If a query is expected to return more than one result row, a
-    cursor should be used, as in the following example.
-    (See <xref linkend="ecpg-cursors"/> for more details about the
-    cursor.)
+    如果预期查询会返回多行结果，则应使用游标，如下例所示。（有关游标的更多细节，请参见 <xref linkend="ecpg-cursors"/>。）
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 char dbaname[128];
