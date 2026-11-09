@@ -836,7 +836,7 @@ int SPI_execute_with_args(const char *<parameter>command</parameter>,
 
  <refnamediv>
   <refname>SPI_prepare</refname>
-  <refpurpose>prepare a statement, without executing it yet</refpurpose>
+  <refpurpose>预备一条语句，但暂不执行它</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -846,54 +846,43 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <function>SPI_prepare</function> creates and returns a prepared
-   statement for the specified command, but doesn't execute the command.
-   The prepared statement can later be executed repeatedly using
-   <function>SPI_execute_plan</function>.
+   <function>SPI_prepare</function> 为指定的命令创建并返回一个预备语句，但不执行该命令。
+   之后可以使用 <function>SPI_execute_plan</function> 反复执行该预备语句。
   </para>
 
   <para>
-   When the same or a similar command is to be executed repeatedly, it
-   is generally advantageous to perform parse analysis only once, and
-   might furthermore be advantageous to re-use an execution plan for the
-   command.
-   <function>SPI_prepare</function> converts a command string into a
-   prepared statement that encapsulates the results of parse analysis.
-   The prepared statement also provides a place for caching an execution plan
-   if it is found that generating a custom plan for each execution is not
-   helpful.
+   当同一条或类似的命令需要反复执行时，通常只做一次解析分析是有利的，
+   而且为命令复用一个执行计划可能更为有利。
+   <function>SPI_prepare</function> 把一个命令字符串转换为预备语句，其中封装了解析分析的结果。
+   如果发现为每次执行生成定制计划并无益处，该预备语句还提供了一个
+   缓存执行计划的位置。
   </para>
 
   <para>
-   A prepared command can be generalized by writing parameters
-   (<literal>$1</literal>, <literal>$2</literal>, etc.) in place of what would be
-   constants in a normal command.  The actual values of the parameters
-   are then specified when <function>SPI_execute_plan</function> is called.
-   This allows the prepared command to be used over a wider range of
-   situations than would be possible without parameters.
+   通过在原本应为常量的位置书写参数（<literal>$1</literal>、<literal>$2</literal> 等），
+   可以把预备命令泛化。参数的实际值则在调用 <function>SPI_execute_plan</function> 时指定。
+   这使得预备命令能够用于比不带参数时更广泛的情形。
   </para>
 
   <para>
-   The statement returned by <function>SPI_prepare</function> can be used
-   only in the current invocation of the C function, since
-   <function>SPI_finish</function> frees memory allocated for such a
-   statement.  But the statement can be saved for longer using the functions
-   <function>SPI_keepplan</function> or <function>SPI_saveplan</function>.
+   <function>SPI_prepare</function> 返回的语句只能用于当前这次 C 函数调用，因为
+   <function>SPI_finish</function> 会释放为该语句分配的内存。但可以使用函数
+   <function>SPI_keepplan</function> 或 <function>SPI_saveplan</function> 把该语句保存更长时间。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Arguments</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>const char * <parameter>command</parameter></literal></term>
     <listitem>
      <para>
-      command string
+      命令字符串
      </para>
     </listitem>
    </varlistentry>
@@ -902,7 +891,7 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
     <term><literal>int <parameter>nargs</parameter></literal></term>
     <listitem>
      <para>
-      number of input parameters (<literal>$1</literal>, <literal>$2</literal>, etc.)
+      输入参数的数量（<literal>$1</literal>、<literal>$2</literal> 等）
      </para>
     </listitem>
    </varlistentry>
@@ -911,8 +900,7 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
     <term><literal>Oid * <parameter>argtypes</parameter></literal></term>
     <listitem>
      <para>
-      pointer to an array containing the <acronym>OID</acronym>s of
-      the data types of the parameters
+      指向一个数组的指针，该数组包含各参数数据类型的 <acronym>OID</acronym>
      </para>
     </listitem>
    </varlistentry>
@@ -920,7 +908,7 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
  </refsect1>
 
  <refsect1>
-  <title>Return Value</title>
+  <title>返回值</title>
 
   <para>
    <function>SPI_prepare</function> returns a non-null pointer to an
@@ -936,22 +924,10 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   If no parameters are defined, a generic plan will be created at the
-   first use of <function>SPI_execute_plan</function>, and used for all
-   subsequent executions as well.  If there are parameters, the first few uses
-   of <function>SPI_execute_plan</function> will generate custom plans
-   that are specific to the supplied parameter values.  After enough uses
-   of the same prepared statement, <function>SPI_execute_plan</function> will
-   build a generic plan, and if that is not too much more expensive than the
-   custom plans, it will start using the generic plan instead of re-planning
-   each time.  If this default behavior is unsuitable, you can alter it by
-   passing the <literal>CURSOR_OPT_GENERIC_PLAN</literal> or
-   <literal>CURSOR_OPT_CUSTOM_PLAN</literal> flag to
-   <function>SPI_prepare_cursor</function>, to force use of generic or custom
-   plans respectively.
+   如果没有定义参数，那么在第一次使用 <function>SPI_execute_plan</function> 时会创建一个通用计划，并且后续所有执行也都使用该计划。如果有参数，那么最初几次使用 <function>SPI_execute_plan</function> 时会生成针对所提供参数值的定制计划。在对同一个预备语句使用足够多次之后，<function>SPI_execute_plan</function> 将构建一个通用计划，如果该计划的代价不比定制计划高太多，它就会开始使用通用计划，而不是每次都重新规划。如果这种默认行为不合适，你可以通过向 <function>SPI_prepare_cursor</function> 传入 <literal>CURSOR_OPT_GENERIC_PLAN</literal> 或 <literal>CURSOR_OPT_CUSTOM_PLAN</literal> 标志来改变它，从而分别强制使用通用计划或定制计划。
   </para>
 
   <para>
@@ -969,19 +945,15 @@ SPIPlanPtr SPI_prepare(const char * <parameter>command</parameter>, int <paramet
   </para>
 
   <para>
-   This function should only be called from a connected C function.
+   该函数只应从已连接的 C 函数中调用。
   </para>
 
   <para>
-   <type>SPIPlanPtr</type> is declared as a pointer to an opaque struct type in
-   <filename>spi.h</filename>.  It is unwise to try to access its contents
-   directly, as that makes your code much more likely to break in
-   future revisions of <productname>PostgreSQL</productname>.
+   <type>SPIPlanPtr</type> 在 <filename>spi.h</filename> 中声明为指向不透明结构体类型的指针。试图直接访问其内容是不明智的，因为那会使你的代码在 <productname>PostgreSQL</productname> 的未来版本中更有可能失效。
   </para>
 
   <para>
-   The name <type>SPIPlanPtr</type> is somewhat historical, since the data
-   structure no longer necessarily contains an execution plan.
+   <type>SPIPlanPtr</type> 这个名称有些历史渊源，因为该数据结构已不再必然包含执行计划。
   </para>
  </refsect1>
 </refentry>
