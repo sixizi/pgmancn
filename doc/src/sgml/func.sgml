@@ -21513,7 +21513,7 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 
 
  <sect1 id="functions-comparisons">
-  <title>Row and Array Comparisons</title>
+  <title>行与数组比较</title>
 
   <indexterm>
    <primary>IN</primary>
@@ -21563,15 +21563,9 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
   </indexterm>
 
   <para>
-   This section describes several specialized constructs for making
-   multiple comparisons between groups of values.  These forms are
-   syntactically related to the subquery forms of the previous section,
-   but do not involve subqueries.
-   The forms involving array subexpressions are
-   <productname>PostgreSQL</productname> extensions; the rest are
-   <acronym>SQL</acronym>-compliant.
-   All of the expression forms documented in this section return
-   Boolean (true/false) results.
+   本节介绍几种用于在值组之间进行多重比较的专用构造。这些形式在语法上与上一节中的子查询形式相关，但不涉及子查询。
+   涉及数组子表达式的形式是 <productname>PostgreSQL</productname> 扩展；其余形式符合 <acronym>SQL</acronym> 标准。
+   本节记录的所有表达式形式都返回布尔（真/假）结果。
   </para>
 
   <sect2 id="functions-comparisons-in-scalar">
@@ -21582,10 +21576,7 @@ WHERE EXISTS (SELECT 1 FROM tab2 WHERE col2 = tab1.col2);
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized list
-   of expressions.  The result is <quote>true</quote> if the left-hand expression's
-   result is equal to any of the right-hand expressions.  This is a shorthand
-   notation for
+   右侧是一个带括号的表达式列表。如果左侧表达式的结果等于右侧任意一个表达式，则结果为<quote>真</quote>。这是以下写法的简写形式
 
 <synopsis>
 <replaceable>expression</replaceable> = <replaceable>value1</replaceable>
@@ -21597,11 +21588,8 @@ OR
   </para>
 
   <para>
-   Note that if the left-hand expression yields null, or if there are
-   no equal right-hand values and at least one right-hand expression yields
-   null, the result of the <token>IN</token> construct will be null, not false.
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   请注意，如果左侧表达式产生空值，或者右侧没有相等的值且至少有一个右侧表达式产生空值，则 <token>IN</token> 构造的结果将为空值，而不是假。
+   这符合 SQL 关于空值布尔组合的常规规则。
   </para>
   </sect2>
 
@@ -21613,10 +21601,7 @@ OR
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized list
-   of expressions.  The result is <quote>true</quote> if the left-hand expression's
-   result is unequal to all of the right-hand expressions.  This is a shorthand
-   notation for
+   右侧是一个带括号的表达式列表。如果左侧表达式的结果不等于右侧所有表达式，则结果为<quote>真</quote>。这是以下写法的简写形式
 
 <synopsis>
 <replaceable>expression</replaceable> &lt;&gt; <replaceable>value1</replaceable>
@@ -21628,26 +21613,19 @@ AND
   </para>
 
   <para>
-   Note that if the left-hand expression yields null, or if there are
-   no equal right-hand values and at least one right-hand expression yields
-   null, the result of the <token>NOT IN</token> construct will be null, not true
-   as one might naively expect.
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   请注意，如果左侧表达式产生空值，或者右侧没有相等的值且至少有一个右侧表达式产生空值，则 <token>NOT IN</token> 构造的结果将为空值，而不是人们可能天真地期望的真。
+   这符合 SQL 关于空值布尔组合的常规规则。
   </para>
 
   <tip>
   <para>
-   <literal>x NOT IN y</literal> is equivalent to <literal>NOT (x IN y)</literal> in all
-   cases.  However, null values are much more likely to trip up the novice when
-   working with <token>NOT IN</token> than when working with <token>IN</token>.
-   It is best to express your condition positively if possible.
+   <literal>x NOT IN y</literal> 在所有情况下都等价于 <literal>NOT (x IN y)</literal>。不过，在使用 <token>NOT IN</token> 时，空值比在使用 <token>IN</token> 时更容易让新手出错。如果可能，最好以肯定的方式表达条件。
   </para>
   </tip>
   </sect2>
 
   <sect2 id="functions-comparisons-any-some">
-   <title><literal>ANY</literal>/<literal>SOME</literal> (array)</title>
+   <title><literal>ANY</literal>/<literal>SOME</literal>（数组）</title>
 
 <synopsis>
 <replaceable>expression</replaceable> <replaceable>operator</replaceable> ANY (<replaceable>array expression</replaceable>)
@@ -21655,112 +21633,54 @@ AND
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized expression, which must yield an
-   array value.
-   The left-hand expression
-   is evaluated and compared to each element of the array using the
-   given <replaceable>operator</replaceable>, which must yield a Boolean
-   result.
-   The result of <token>ANY</token> is <quote>true</quote> if any true result is obtained.
-   The result is <quote>false</quote> if no true result is found (including the
-   case where the array has zero elements).
+   右侧是一个带括号的表达式，它必须产生一个数组值。左侧表达式会被求值，并使用给定的 <replaceable>operator</replaceable> 与数组的每个元素进行比较，该运算符必须产生布尔结果。如果得到任何为真的结果，<token>ANY</token> 的结果就是 <quote>true</quote>。如果没有找到为真的结果（包括数组元素为零个的情况），结果就是 <quote>false</quote>。
   </para>
 
   <para>
-   If the array expression yields a null array, the result of
-   <token>ANY</token> will be null.  If the left-hand expression yields null,
-   the result of <token>ANY</token> is ordinarily null (though a non-strict
-   comparison operator could possibly yield a different result).
-   Also, if the right-hand array contains any null elements and no true
-   comparison result is obtained, the result of <token>ANY</token>
-   will be null, not false (again, assuming a strict comparison operator).
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   如果数组表达式产生一个空数组，<token>ANY</token> 的结果将为空。如果左侧表达式产生空值，<token>ANY</token> 的结果通常为空（不过非严格的比较运算符可能会产生不同的结果）。此外，如果右侧数组包含任何空元素且没有得到为真的比较结果，<token>ANY</token> 的结果将为空，而不是假（同样，假设使用的是严格比较运算符）。这符合 SQL 对空值进行布尔组合的正常规则。
   </para>
 
   <para>
-   <token>SOME</token> is a synonym for <token>ANY</token>.
+   <token>SOME</token> 是 <token>ANY</token> 的同义词。
   </para>
   </sect2>
 
   <sect2 id="functions-comparisons-all">
-   <title><literal>ALL</literal> (array)</title>
+   <title><literal>ALL</literal>（数组）</title>
 
 <synopsis>
 <replaceable>expression</replaceable> <replaceable>operator</replaceable> ALL (<replaceable>array expression</replaceable>)
 </synopsis>
 
   <para>
-   The right-hand side is a parenthesized expression, which must yield an
-   array value.
-   The left-hand expression
-   is evaluated and compared to each element of the array using the
-   given <replaceable>operator</replaceable>, which must yield a Boolean
-   result.
-   The result of <token>ALL</token> is <quote>true</quote> if all comparisons yield true
-   (including the case where the array has zero elements).
-   The result is <quote>false</quote> if any false result is found.
+   右侧是一个带括号的表达式，它必须产生一个数组值。
+   左侧表达式会被求值，并使用给定的 <replaceable>operator</replaceable> 与数组的每个元素进行比较，该运算符必须产生一个布尔结果。
+   如果所有比较都产生 true（包括数组元素为零个的情况），则 <token>ALL</token> 的结果为 <quote>true</quote>。
+   如果发现任何 false 结果，则结果为 <quote>false</quote>。
   </para>
 
   <para>
-   If the array expression yields a null array, the result of
-   <token>ALL</token> will be null.  If the left-hand expression yields null,
-   the result of <token>ALL</token> is ordinarily null (though a non-strict
-   comparison operator could possibly yield a different result).
-   Also, if the right-hand array contains any null elements and no false
-   comparison result is obtained, the result of <token>ALL</token>
-   will be null, not true (again, assuming a strict comparison operator).
-   This is in accordance with SQL's normal rules for Boolean combinations
-   of null values.
+   如果数组表达式产生一个空数组，则 <token>ALL</token> 的结果将为 null。如果左侧表达式产生 null，则 <token>ALL</token> 的结果通常为 null（不过非严格的比较运算符可能会产生不同的结果）。此外，如果右侧数组包含任何 null 元素且没有获得 false 比较结果，则 <token>ALL</token> 的结果将为 null，而不是 true（同样，这里假定是严格的比较运算符）。这符合 SQL 关于 null 值的布尔组合的正常规则。
   </para>
   </sect2>
 
   <sect2 id="row-wise-comparison">
-   <title>Row Constructor Comparison</title>
+   <title>行构造器比较</title>
 
 <synopsis>
 <replaceable>row_constructor</replaceable> <replaceable>operator</replaceable> <replaceable>row_constructor</replaceable>
 </synopsis>
 
   <para>
-   Each side is a row constructor,
-   as described in <xref linkend="sql-syntax-row-constructors"/>.
-   The two row constructors must have the same number of fields.
-   The given <replaceable>operator</replaceable> is applied to each pair
-   of corresponding fields.  (Since the fields could be of different
-   types, this means that a different specific operator could be selected
-   for each pair.)
-   All the selected operators must be members of some B-tree operator
-   class, or be the negator of an <literal>=</literal> member of a B-tree
-   operator class, meaning that row constructor comparison is only
-   possible when the <replaceable>operator</replaceable> is
-   <literal>=</literal>,
-   <literal>&lt;&gt;</literal>,
-   <literal>&lt;</literal>,
-   <literal>&lt;=</literal>,
-   <literal>&gt;</literal>, or
-   <literal>&gt;=</literal>,
-   or has semantics similar to one of these.
+   每一侧都是一个行构造器，如 <xref linkend="sql-syntax-row-constructors"/> 中所述。两个行构造器必须具有相同数量的字段。给定的 <replaceable>operator</replaceable> 会应用于每一对对应字段。（由于这些字段可能具有不同的类型，这意味着每一对字段可能会选择不同的具体运算符。）所有选定的运算符都必须是某个 B-tree 运算符类的成员，或者是某个 B-tree 运算符类成员的 <literal>=</literal> 的否定符，这意味着只有当 <replaceable>operator</replaceable> 为 <literal>=</literal>、<literal>&lt;&gt;</literal>、<literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>&gt;</literal>、<literal>&gt;=</literal> 之一，或者具有与其中之一相似的语义时，才可能进行行构造器比较。
   </para>
 
   <para>
-   The <literal>=</literal> and <literal>&lt;&gt;</literal> cases work slightly differently
-   from the others.  Two rows are considered
-   equal if all their corresponding members are non-null and equal; the rows
-   are unequal if any corresponding members are non-null and unequal;
-   otherwise the result of the row comparison is unknown (null).
+   <literal>=</literal> 和 <literal>&lt;&gt;</literal> 两种情况的工作方式与其他情况略有不同。如果两个行的所有对应成员都非 null 且相等，则认为这两个行相等；如果任何对应成员非 null 且不相等，则认为这两个行不相等；否则行比较的结果为未知（null）。
   </para>
 
   <para>
-   For the <literal>&lt;</literal>, <literal>&lt;=</literal>, <literal>&gt;</literal> and
-   <literal>&gt;=</literal> cases, the row elements are compared left-to-right,
-   stopping as soon as an unequal or null pair of elements is found.
-   If either of this pair of elements is null, the result of the
-   row comparison is unknown (null); otherwise comparison of this pair
-   of elements determines the result.  For example,
-   <literal>ROW(1,2,NULL) &lt; ROW(1,3,0)</literal>
-   yields true, not null, because the third pair of elements are not
-   considered.
+   对于 <literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>&gt;</literal> 和 <literal>&gt;=</literal> 这几种情况，行元素从左到右进行比较，一旦发现一对不相等或为 null 的元素就停止。如果这对元素中有任何一个为 null，则行比较的结果为未知（null）；否则，这对元素的比较将决定结果。例如，<literal>ROW(1,2,NULL) &lt; ROW(1,3,0)</literal> 产生 true，而不是 null，因为第三对元素不会被考虑。
   </para>
 
 <synopsis>
@@ -21768,11 +21688,7 @@ AND
 </synopsis>
 
   <para>
-   This construct is similar to a <literal>&lt;&gt;</literal> row comparison,
-   but it does not yield null for null inputs.  Instead, any null value is
-   considered unequal to (distinct from) any non-null value, and any two
-   nulls are considered equal (not distinct).  Thus the result will
-   either be true or false, never null.
+   此构造类似于 <literal>&lt;&gt;</literal> 行比较，但对于 null 输入不会产生 null。相反，任何 null 值都被认为不等于（区别于）任何非 null 值，而任意两个 null 被认为是相等的（不区分）。因此结果要么为真要么为假，绝不会是 null。
   </para>
 
 <synopsis>
@@ -21780,71 +21696,37 @@ AND
 </synopsis>
 
   <para>
-   This construct is similar to a <literal>=</literal> row comparison,
-   but it does not yield null for null inputs.  Instead, any null value is
-   considered unequal to (distinct from) any non-null value, and any two
-   nulls are considered equal (not distinct).  Thus the result will always
-   be either true or false, never null.
+   此构造类似于 <literal>=</literal> 行比较，但对于 null 输入不会产生 null。相反，任何 null 值都被认为不等于（区别于）任何非 null 值，而任意两个 null 被认为是相等的（不区分）。因此结果总是要么为真要么为假，绝不会是 null。
   </para>
 
   </sect2>
 
   <sect2 id="composite-type-comparison">
-   <title>Composite Type Comparison</title>
+   <title>复合类型比较</title>
 
 <synopsis>
 <replaceable>record</replaceable> <replaceable>operator</replaceable> <replaceable>record</replaceable>
 </synopsis>
 
   <para>
-   The SQL specification requires row-wise comparison to return NULL if the
-   result depends on comparing two NULL values or a NULL and a non-NULL.
-   <productname>PostgreSQL</productname> does this only when comparing the
-   results of two row constructors (as in
-   <xref linkend="row-wise-comparison"/>) or comparing a row constructor
-   to the output of a subquery (as in <xref linkend="functions-subquery"/>).
-   In other contexts where two composite-type values are compared, two
-   NULL field values are considered equal, and a NULL is considered larger
-   than a non-NULL.  This is necessary in order to have consistent sorting
-   and indexing behavior for composite types.
+   SQL 标准要求：如果行比较的结果取决于比较两个 NULL 值或一个 NULL 与一个非 NULL 值，则应返回 NULL。<productname>PostgreSQL</productname> 仅在比较两个行构造器的结果时（如 <xref linkend="row-wise-comparison"/> 中所述）或将行构造器与子查询的输出比较时（如 <xref linkend="functions-subquery"/> 中所述）才这样做。在其他比较两个复合类型值的上下文中，两个 NULL 字段值被认为是相等的，并且 NULL 被认为大于非 NULL。为了对复合类型保持一致的排序和索引行为，这是必要的。
   </para>
 
   <para>
-   Each side is evaluated and they are compared row-wise.  Composite type
-   comparisons are allowed when the <replaceable>operator</replaceable> is
-   <literal>=</literal>,
-   <literal>&lt;&gt;</literal>,
-   <literal>&lt;</literal>,
-   <literal>&lt;=</literal>,
-   <literal>&gt;</literal> or
-   <literal>&gt;=</literal>,
-   or has semantics similar to one of these.  (To be specific, an operator
-   can be a row comparison operator if it is a member of a B-tree operator
-   class, or is the negator of the <literal>=</literal> member of a B-tree operator
-   class.)  The default behavior of the above operators is the same as for
-   <literal>IS [ NOT ] DISTINCT FROM</literal> for row constructors (see
-   <xref linkend="row-wise-comparison"/>).
+   每一侧都会被求值，然后按行进行比较。当 <replaceable>operator</replaceable> 为 <literal>=</literal>、<literal>&lt;&gt;</literal>、<literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>&gt;</literal> 或 <literal>&gt;=</literal>，或具有与其中之一相似的语义时，允许进行复合类型比较。（具体来说，如果一个运算符是 B-tree 运算符类的成员，或者是 B-tree 运算符类中 <literal>=</literal> 成员的否定符，那么它就可以作为行比较运算符。）上述运算符的默认行为与行构造器的 <literal>IS [ NOT ] DISTINCT FROM</literal> 相同（参见 <xref linkend="row-wise-comparison"/>）。
   </para>
 
   <para>
-   To support matching of rows which include elements without a default
-   B-tree operator class, the following operators are defined for composite
-   type comparison:
-   <literal>*=</literal>,
-   <literal>*&lt;&gt;</literal>,
-   <literal>*&lt;</literal>,
-   <literal>*&lt;=</literal>,
-   <literal>*&gt;</literal>, and
-   <literal>*&gt;=</literal>.
-   These operators compare the internal binary representation of the two
-   rows.  Two rows might have a different binary representation even
-   though comparisons of the two rows with the equality operator is true.
-   The ordering of rows under these comparison operators is deterministic
-   but not otherwise meaningful.  These operators are used internally
-   for materialized views and might be useful for other specialized
-   purposes such as replication and B-Tree deduplication (see <xref
-   linkend="btree-deduplication"/>).  They are not intended to be
-   generally useful for writing queries, though.
+   为了支持匹配包含没有默认 B-tree 运算符类的元素的行，定义了以下运算符用于复合类型比较：
+   <literal>*=</literal>、
+   <literal>*&lt;&gt;</literal>、
+   <literal>*&lt;</literal>、
+   <literal>*&lt;=</literal>、
+   <literal>*&gt;</literal> 和
+   <literal>*&gt;=</literal>。
+   这些运算符比较两个行的内部二进制表示。即使使用等值运算符比较两个行结果为真，两个行的二进制表示也可能不同。
+   在这些比较运算符下，行的排序是确定性的，但除此之外没有其他含义。这些运算符在内部用于物化视图，并且可能对其他特殊用途有用，例如复制和 B-Tree 去重（参见 <xref
+   linkend="btree-deduplication"/>）。不过，它们并不打算普遍用于编写查询。
   </para>
   </sect2>
  </sect1>
