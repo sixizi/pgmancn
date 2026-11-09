@@ -338,9 +338,7 @@ WHERE to_tsvector('english', body) @@ to_tsquery('english', 'friend');
    </para>
 
    <para>
-    The query above specifies that the <literal>english</literal> configuration
-    is to be used to parse and normalize the strings.  Alternatively we
-    could omit the configuration parameters:
+    上面的查询指定使用 <literal>english</literal> 配置来解析和规范化这些字符串。或者，我们也可以省略配置参数：
 
 <programlisting>
 SELECT title
@@ -348,8 +346,8 @@ FROM pgweb
 WHERE to_tsvector(body) @@ to_tsquery('friend');
 </programlisting>
 
-    This query will use the configuration set by <xref
-    linkend="guc-default-text-search-config"/>.
+    这个查询将使用由 <xref
+    linkend="guc-default-text-search-config"/> 所设置的配置。
    </para>
 
    <para>
@@ -453,17 +451,11 @@ LIMIT 10;
    </para>
 
    <para>
-    One advantage of the separate-column approach over an expression index
-    is that it is not necessary to explicitly specify the text search
-    configuration in queries in order to make use of the index.  As shown
-    in the example above, the query can depend on
-    <varname>default_text_search_config</varname>.  Another advantage is that
-    searches will be faster, since it will not be necessary to redo the
-    <function>to_tsvector</function> calls to verify index matches.  (This is more
-    important when using a GiST index than a GIN index; see <xref
-    linkend="textsearch-indexes"/>.)  The expression-index approach is
-    simpler to set up, however, and it requires less disk space since the
-    <type>tsvector</type> representation is not stored explicitly.
+    与表达式索引相比，独立列方法的一个优点是：为了利用该索引，不必在查询中显式指定文本检索配置。如上面的例子所示，查询可以依赖于
+    <varname>default_text_search_config</varname>。另一个优点是检索会更快，因为不必重新执行
+    <function>to_tsvector</function> 调用来验证索引匹配。（在使用 GiST 索引时，这一点比使用 GIN 索引时更为重要；参见 <xref
+    linkend="textsearch-indexes"/>。）不过，表达式索引方法设置起来更简单，而且由于不显式存储
+    <type>tsvector</type> 表示，它需要的磁盘空间更少。
    </para>
 
   </sect2>
@@ -508,31 +500,15 @@ SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
    </para>
 
    <para>
-    The <function>to_tsvector</function> function internally calls a parser
-    which breaks the document text into tokens and assigns a type to
-    each token.  For each token, a list of
-    dictionaries (<xref linkend="textsearch-dictionaries"/>) is consulted,
-    where the list can vary depending on the token type.  The first dictionary
-    that <firstterm>recognizes</firstterm> the token emits one or more normalized
-    <firstterm>lexemes</firstterm> to represent the token.  For example,
-    <literal>rats</literal> became <literal>rat</literal> because one of the
-    dictionaries recognized that the word <literal>rats</literal> is a plural
-    form of <literal>rat</literal>.  Some words are recognized as
-    <firstterm>stop words</firstterm> (<xref linkend="textsearch-stopwords"/>), which
-    causes them to be ignored since they occur too frequently to be useful in
-    searching.  In our example these are
-    <literal>a</literal>, <literal>on</literal>, and <literal>it</literal>.
-    If no dictionary in the list recognizes the token then it is also ignored.
-    In this example that happened to the punctuation sign <literal>-</literal>
-    because there are in fact no dictionaries assigned for its token type
-    (<literal>Space symbols</literal>), meaning space tokens will never be
-    indexed. The choices of parser, dictionaries and which types of tokens to
-    index are determined by the selected text search configuration (<xref
-    linkend="textsearch-configuration"/>).  It is possible to have
-    many different configurations in the same database, and predefined
-    configurations are available for various languages. In our example
-    we used the default configuration <literal>english</literal> for the
-    English language.
+    <function>to_tsvector</function> 函数在内部调用一个解析器，它把文档文本分解成记号，并为每个记号指定一个类型。对于每个记号，都会查询一个词典列表（<xref linkend="textsearch-dictionaries"/>），该列表可以随记号类型的不同而变化。第一个<firstterm>识别</firstterm>该记号的词典会发出一个或多个规范化的<firstterm>词素</firstterm>来表示该记号。例如，
+    <literal>rats</literal> 变成了 <literal>rat</literal>，因为其中一个词典识别出单词 <literal>rats</literal> 是
+    <literal>rat</literal> 的复数形式。有些词被识别为<firstterm>停用词</firstterm>（<xref linkend="textsearch-stopwords"/>），这会使它们被忽略，因为它们出现得过于频繁，在检索中没有用处。在我们的例子中，这些词是
+    <literal>a</literal>、<literal>on</literal> 和 <literal>it</literal>。
+    如果列表中没有词典识别该记号，那么它也会被忽略。
+    在这个例子中，标点符号 <literal>-</literal> 就是这种情况，因为实际上并没有为它的记号类型
+    （<literal>Space symbols</literal>）指定任何词典，这意味着空白记号永远不会被索引。解析器、词典以及要索引哪些记号类型的选择，由所选的文本检索配置决定（<xref
+    linkend="textsearch-configuration"/>）。在同一个数据库中可以有多种不同的配置，并且针对各种语言都提供了预定义配置。在我们的例子中，
+    我们使用了英语的默认配置 <literal>english</literal>。
    </para>
 
    <para>
@@ -540,11 +516,10 @@ SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
    </para>
 
    <para>
-    Because <function>to_tsvector</function>(<literal>NULL</literal>) will
-    return <literal>NULL</literal>, it is recommended to use
-    <function>coalesce</function> whenever a field might be null.
-    Here is the recommended method for creating
-    a <type>tsvector</type> from a structured document:
+    由于 <function>to_tsvector</function>(<literal>NULL</literal>) 会返回
+    <literal>NULL</literal>，建议在字段可能为 null 时使用
+    <function>coalesce</function>。以下是从结构化文档创建
+    <type>tsvector</type> 的推荐方法：
 
 <programlisting>
 UPDATE tt SET ti =
@@ -554,12 +529,10 @@ UPDATE tt SET ti =
     setweight(to_tsvector(coalesce(body,'')), 'D');
 </programlisting>
 
-    Here we have used <function>setweight</function> to label the source
-    of each lexeme in the finished <type>tsvector</type>, and then merged
-    the labeled <type>tsvector</type> values using the <type>tsvector</type>
-    concatenation operator <literal>||</literal>.  (<xref
-    linkend="textsearch-manipulate-tsvector"/> gives details about these
-    operations.)
+    这里我们使用 <function>setweight</function> 为最终 <type>tsvector</type>
+    中的每个词素标注来源，然后使用 <type>tsvector</type> 连接运算符
+    合并带标签的 <type>tsvector</type> 值，该运算符为 <literal>||</literal>。
+    （<xref linkend="textsearch-manipulate-tsvector"/> 提供了这些操作的详情。）
    </para>
 
   </sect2>
@@ -580,19 +553,16 @@ to_tsquery(<optional> <replaceable class="parameter">config</replaceable> <type>
 </synopsis>
 
    <para>
-    <function>to_tsquery</function> creates a <type>tsquery</type> value from
-    <replaceable>querytext</replaceable>, which must consist of single tokens
-    separated by the <type>tsquery</type> operators <literal>&amp;</literal> (AND),
-    <literal>|</literal> (OR), <literal>!</literal> (NOT), and
-    <literal>&lt;-&gt;</literal> (FOLLOWED BY), possibly grouped
-    using parentheses.  In other words, the input to
-    <function>to_tsquery</function> must already follow the general rules for
-    <type>tsquery</type> input, as described in <xref
-    linkend="datatype-tsquery"/>.  The difference is that while basic
-    <type>tsquery</type> input takes the tokens at face value,
-    <function>to_tsquery</function> normalizes each token into a lexeme using
-    the specified or default configuration, and discards any tokens that are
-    stop words according to the configuration.  For example:
+    <function>to_tsquery</function> 创建一个 <type>tsquery</type> 值，
+    其来源是 <replaceable>querytext</replaceable>；该文本
+    必须由单个词项组成，词项之间使用 <type>tsquery</type> 运算符
+    <literal>&amp;</literal>（AND）、<literal>|</literal>（OR）、
+    <literal>!</literal>（NOT）和 <literal>&lt;-&gt;</literal>（FOLLOWED BY）
+    分隔，并可用括号分组。换言之，<function>to_tsquery</function> 的输入必须已经遵循
+    <type>tsquery</type> 输入的一般规则（如 <xref linkend="datatype-tsquery"/> 所述）。
+    区别在于，基本 <type>tsquery</type> 输入按字面处理词项，
+    而 <function>to_tsquery</function> 会使用指定或默认配置将每个词项规范化为词素，
+    并丢弃配置认定为停用词的词项。例如：
 
 <screen>
 SELECT to_tsquery('english', 'The &amp; Fat &amp; Rats');
@@ -601,9 +571,8 @@ SELECT to_tsquery('english', 'The &amp; Fat &amp; Rats');
  'fat' &amp; 'rat'
 </screen>
 
-    As in basic <type>tsquery</type> input, weight(s) can be attached to each
-    lexeme to restrict it to match only <type>tsvector</type> lexemes of those
-    weight(s).  For example:
+    与基本 <type>tsquery</type> 输入一样，可为每个词素附加权重，
+    以将其限制为只匹配具有这些权重的 <type>tsvector</type> 词素。例如：
 
 <screen>
 SELECT to_tsquery('english', 'Fat | Rats:AB');
@@ -612,7 +581,7 @@ SELECT to_tsquery('english', 'Fat | Rats:AB');
  'fat' | 'rat':AB
 </screen>
 
-    Also, <literal>*</literal> can be attached to a lexeme to specify prefix matching:
+    此外，可为词素附加 <literal>*</literal> 以指定前缀匹配：
 
 <screen>
 SELECT to_tsquery('supern:*A &amp; star:A*B');
@@ -621,8 +590,7 @@ SELECT to_tsquery('supern:*A &amp; star:A*B');
  'supern':*A &amp; 'star':*AB
 </screen>
 
-    Such a lexeme will match any word in a <type>tsvector</type> that begins
-    with the given string.
+    这样的词素将匹配 <type>tsvector</type> 中以给定字符串开头的任何词。
    </para>
 
    <para>
@@ -710,14 +678,13 @@ websearch_to_tsquery(<optional> <replaceable class="parameter">config</replaceab
 </synopsis>
 
    <para>
-    <function>websearch_to_tsquery</function> creates a <type>tsquery</type>
-    value from <replaceable>querytext</replaceable> using an alternative
-    syntax in which simple unformatted text is a valid query.
-    Unlike <function>plainto_tsquery</function>
-    and <function>phraseto_tsquery</function>, it also recognizes certain
-    operators. Moreover, this function will never raise syntax errors,
-    which makes it possible to use raw user-supplied input for search.
-    The following syntax is supported:
+    <function>websearch_to_tsquery</function> 创建一个 <type>tsquery</type> 值，
+    其来源是 <replaceable>querytext</replaceable>；它使用另一种语法，
+    在这种语法中，简单的未格式化文本也是有效查询。与
+    <function>plainto_tsquery</function> 和
+    <function>phraseto_tsquery</function> 不同，它还识别某些运算符。
+    此外，该函数永远不会引发语法错误，因此可以将用户提供的原始输入用于搜索。
+    支持以下语法：
 
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
@@ -742,12 +709,7 @@ websearch_to_tsquery(<optional> <replaceable class="parameter">config</replaceab
      </listitem>
     </itemizedlist>
 
-    Other punctuation is ignored.  So
-    like <function>plainto_tsquery</function>
-    and <function>phraseto_tsquery</function>,
-    the <function>websearch_to_tsquery</function> function will not
-    recognize <type>tsquery</type> operators, weight labels, or prefix-match
-    labels in its input.
+    其他标点符号会被忽略。因此，与 <function>plainto_tsquery</function> 和 <function>phraseto_tsquery</function> 一样，<function>websearch_to_tsquery</function> 函数不会识别其输入中的 <type>tsquery</type> 运算符、权重标签或前缀匹配标签。
    </para>
 
    <para>
@@ -801,7 +763,7 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
    </para>
 
    <para>
-    The two ranking functions currently available are:
+    目前可用的两个排序函数是：
 
     <variablelist>
 
@@ -838,13 +800,12 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
        </para>
 
        <para>
-        This function requires lexeme positional information to perform
-        its calculation.  Therefore, it ignores any <quote>stripped</quote>
-        lexemes in the <type>tsvector</type>.  If there are no unstripped
-        lexemes in the input, the result will be zero.  (See <xref
-        linkend="textsearch-manipulate-tsvector"/> for more information
-        about the <function>strip</function> function and positional information
-        in <type>tsvector</type>s.)
+        此函数需要词素位置信息来执行计算。因此，它会忽略
+        任何已<quote>剥离</quote>的词素（这些词素位于 <type>tsvector</type> 中）。
+        如果输入中没有未剥离的词素，则结果为零。（请参见
+        <xref linkend="textsearch-manipulate-tsvector"/>，了解有关
+        <function>strip</function> 函数以及 <type>tsvector</type>
+        中位置信息的更多信息。）
        </para>
       </listitem>
      </varlistentry>
@@ -870,15 +831,7 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
    </para>
 
    <para>
-    Since a longer document has a greater chance of containing a query term
-    it is reasonable to take into account document size, e.g., a hundred-word
-    document with five instances of a search word is probably more relevant
-    than a thousand-word document with five instances.  Both ranking functions
-    take an integer <replaceable>normalization</replaceable> option that
-    specifies whether and how a document's length should impact its rank.
-    The integer option controls several behaviors, so it is a bit mask:
-    you can specify one or more behaviors using
-    <literal>|</literal> (for example, <literal>2|4</literal>).
+    由于较长的文档包含查询词的机会更大，因此考虑文档大小是合理的，例如，一篇 100 词、包含 5 次搜索词的文档可能比一篇 1000 词、包含 5 次的文档更相关。两个排名函数都接受一个整数 <replaceable>normalization</replaceable> 选项，用于指定文档长度是否以及如何影响其排名。该整数选项控制多种行为，因此它是一个位掩码：你可以使用 <literal>|</literal> 指定一种或多种行为（例如 <literal>2|4</literal>）。
 
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
@@ -919,8 +872,7 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
      </listitem>
     </itemizedlist>
 
-    If more than one flag bit is specified, the transformations are
-    applied in the order listed.
+    如果指定了多个标志位，则按列出的顺序应用这些转换。
    </para>
 
    <para>
@@ -1001,10 +953,7 @@ ts_headline(<optional> <replaceable class="parameter">config</replaceable> <type
    </para>
 
    <para>
-    If an <replaceable>options</replaceable> string is specified it must
-    consist of a comma-separated list of one or more
-    <replaceable>option</replaceable><literal>=</literal><replaceable>value</replaceable> pairs.
-    The available options are:
+    如果指定了 <replaceable>options</replaceable> 字符串，它必须由一个或多个 <replaceable>option</replaceable><literal>=</literal><replaceable>value</replaceable> 对组成的逗号分隔列表构成。可用的选项有：
 
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
@@ -1054,8 +1003,7 @@ ts_headline(<optional> <replaceable class="parameter">config</replaceable> <type
      </para>
     </warning>
 
-    These option names are recognized case-insensitively.
-    You must double-quote string values if they contain spaces or commas.
+    这些选项名称的识别不区分大小写。如果字符串值包含空格或逗号，必须使用双引号将其括起来。
    </para>
 
    <para>
@@ -1443,9 +1391,7 @@ SELECT ts_rewrite('a &amp; b'::tsquery, 'SELECT t,s FROM aliases');
        </para>
 
        <para>
-        Note that when multiple rewrite rules are applied in this way,
-        the order of application can be important; so in practice you will
-        want the source query to <literal>ORDER BY</literal> some ordering key.
+        请注意，当以这种方式应用多个重写规则时，应用顺序可能很重要；因此在实际中，你会希望源查询 <literal>ORDER BY</literal> 某个排序键。
        </para>
       </listitem>
      </varlistentry>
@@ -1600,11 +1546,10 @@ ts_stat(<replaceable class="parameter">sqlquery</replaceable> <type>text</type>,
 </synopsis>
 
    <para>
-    <replaceable>sqlquery</replaceable> is a text value containing an SQL
-    query which must return a single <type>tsvector</type> column.
-    <function>ts_stat</function> executes the query and returns statistics about
-    each distinct lexeme (word) contained in the <type>tsvector</type>
-    data.  The columns returned are
+    <replaceable>sqlquery</replaceable> 是一个文本值，包含一条 SQL
+    查询，该查询必须返回单个 <type>tsvector</type> 列。
+    <function>ts_stat</function> 执行该查询并返回关于 <type>tsvector</type>
+    数据中包含的每个不同词位（word）的统计信息。返回的列为
 
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
@@ -1626,8 +1571,7 @@ ts_stat(<replaceable class="parameter">sqlquery</replaceable> <type>text</type>,
      </listitem>
     </itemizedlist>
 
-    If <replaceable>weights</replaceable> is supplied, only occurrences
-    having one of those weights are counted.
+    如果提供了 <replaceable>weights</replaceable>，则只统计具有这些权重之一的出现次数。
    </para>
 
    <para>
@@ -1864,8 +1808,7 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
     </listitem>
     <listitem>
      <para>
-      <acronym>URL</acronym> locations can be canonicalized to make
-      equivalent URLs match:
+      <acronym>URL</acronym> 位置可以被规范化，以使等价的 URL 匹配：
 
       <itemizedlist  spacing="compact" mark="bullet">
        <listitem>
@@ -1901,8 +1844,8 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
   </para>
 
   <para>
-   A dictionary is a program that accepts a token as
-   input and returns:
+   词典是一个程序，它接受一个记号作为
+   输入并返回：
    <itemizedlist  spacing="compact" mark="bullet">
     <listitem>
      <para>
@@ -2217,8 +2160,8 @@ more sample word(s) : more indexed word(s)
    <title>同义词词典配置</title>
 
    <para>
-    To define a new thesaurus dictionary, use the <literal>thesaurus</literal>
-    template.  For example:
+    要定义一个新的同义词词典，请使用 <literal>thesaurus</literal>
+    模板。例如：
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY thesaurus_simple (
@@ -2228,7 +2171,7 @@ CREATE TEXT SEARCH DICTIONARY thesaurus_simple (
 );
 </programlisting>
 
-    Here:
+    这里：
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
@@ -2251,8 +2194,8 @@ CREATE TEXT SEARCH DICTIONARY thesaurus_simple (
      </listitem>
     </itemizedlist>
 
-    Now it is possible to bind the thesaurus dictionary <literal>thesaurus_simple</literal>
-    to the desired token types in a configuration, for example:
+    现在可以在配置中将同义词词典 <literal>thesaurus_simple</literal>
+    绑定到所需的记号类型，例如：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION russian
@@ -2698,8 +2641,8 @@ ts_debug(<optional> <replaceable class="parameter">config</replaceable> <type>re
   </para>
 
   <para>
-   <function>ts_debug</function> returns one row for each token identified in the text
-   by the parser.  The columns returned are
+   <function>ts_debug</function> 为解析器在文本中识别出的每个记号返回一行。
+   返回的列是
 
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
@@ -2770,9 +2713,9 @@ SELECT * FROM ts_debug('english', 'a fat  cat sat on a mat - it ate a fat rats')
   </para>
 
   <para>
-   For a more extensive demonstration, we
-   first create a <literal>public.english</literal> configuration and
-   Ispell dictionary for the English language:
+   为了进行更全面的演示，我们
+   首先为英语创建一个 <literal>public.english</literal> 配置
+   和 Ispell 词典：
   </para>
 
 <programlisting>
@@ -3279,8 +3222,7 @@ Parser: "pg_catalog.default"
   <title>限制</title>
 
   <para>
-   The current limitations of <productname>PostgreSQL</productname>'s
-   text search features are:
+   <productname>PostgreSQL</productname> 的全文检索功能目前的局限是：
    <itemizedlist  spacing="compact" mark="bullet">
     <listitem>
      <para>每个词位的长度必须小于 2 千字节</para>
