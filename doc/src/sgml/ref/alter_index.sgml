@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER INDEX</refname>
-  <refpurpose>change the definition of an index</refpurpose>
+  <refpurpose>更改索引的定义</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -35,14 +35,11 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER INDEX</command> changes the definition of an existing index.
-   There are several subforms described below. Note that the lock level required
-   may differ for each subform. An <literal>ACCESS EXCLUSIVE</literal> lock is held
-   unless explicitly noted. When multiple subcommands are listed, the lock
-   held will be the strictest one required from any subcommand.
+   <command>ALTER INDEX</command> 更改现有索引的定义。
+   下面描述了若干子形式。注意每个子形式所需的锁级别可能不同。除非特别说明，否则会持有 <literal>ACCESS EXCLUSIVE</literal> 锁。当列出多个子命令时，持有的锁将是任何子命令所需的最严格的锁。
 
   <variablelist>
 
@@ -50,15 +47,14 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>RENAME</literal></term>
     <listitem>
      <para>
-      The <literal>RENAME</literal> form changes the name of the index.
-      If the index is associated with a table constraint (either
-      <literal>UNIQUE</literal>, <literal>PRIMARY KEY</literal>,
-      or <literal>EXCLUDE</literal>), the constraint is renamed as well.
-      There is no effect on the stored data.
+      <literal>RENAME</literal> 形式更改索引的名称。
+      如果该索引与表约束（<literal>UNIQUE</literal>、<literal>PRIMARY KEY</literal>
+      或 <literal>EXCLUDE</literal>）相关联，则该约束也会被重命名。
+      对存储的数据没有影响。
      </para>
      <para>
-      Renaming an index acquires a <literal>SHARE UPDATE EXCLUSIVE</literal>
-      lock.
+      重命名索引会获取 <literal>SHARE UPDATE EXCLUSIVE</literal>
+      锁。
      </para>
     </listitem>
    </varlistentry>
@@ -67,21 +63,15 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>SET TABLESPACE</literal></term>
     <listitem>
      <para>
-      This form changes the index's tablespace to the specified tablespace and
-      moves the data file(s) associated with the index to the new tablespace.
-      To change the tablespace of an index, you must own the index and have
-      <literal>CREATE</literal> privilege on the new tablespace.
-      All indexes in the current database in a tablespace can be moved by using
-      the <literal>ALL IN TABLESPACE</literal> form, which will lock all
-      indexes to be moved and then move each one.  This form also supports
-      <literal>OWNED BY</literal>, which will only move indexes owned by the
-      roles specified.  If the <literal>NOWAIT</literal> option is specified
-      then the command will fail if it is unable to acquire all of the locks
-      required immediately.  Note that system catalogs will not be moved by
-      this command, use <command>ALTER DATABASE</command> or explicit
-      <command>ALTER INDEX</command> invocations instead if desired.
-      See also
-      <link linkend="sql-createtablespace"><command>CREATE TABLESPACE</command></link>.
+      此形式将索引的表空间更改为指定的表空间，并将与该索引关联的数据文件移动到新表空间。
+      要更改索引的表空间，你必须拥有该索引，并且对新表空间具有
+      <literal>CREATE</literal> 权限。
+      可以使用 <literal>ALL IN TABLESPACE</literal> 形式移动当前数据库中某个表空间内的所有索引，该形式将锁定所有要移动的索引，然后逐个移动。此形式还支持
+      <literal>OWNED BY</literal>，它只移动指定角色拥有的索引。如果指定了 <literal>NOWAIT</literal> 选项，
+      那么当命令无法立即获取所有需要的锁时将会失败。注意，此命令不会移动系统目录，如果需要，请改用 <command>ALTER DATABASE</command> 或显式调用
+      <command>ALTER INDEX</command>。
+      另请参阅
+      <link linkend="sql-createtablespace"><command>CREATE TABLESPACE</command></link>。
      </para>
     </listitem>
    </varlistentry>
@@ -90,17 +80,13 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>ATTACH PARTITION <replaceable class="parameter">index_name</replaceable></literal></term>
     <listitem>
      <para>
-      Causes the named index (possibly schema-qualified) to become attached
-      to the altered index.
-      The named index must be on a partition of the table containing the
-      index being altered, and have an equivalent definition.  An attached
-      index cannot be dropped by itself, and will automatically be dropped
-      if its parent index is dropped.
+      使指定的索引（可以带模式限定）附加到被修改的索引上。
+      指定的索引必须位于包含被修改索引的表的分区上，并且具有等价的定义。
+      已附加的索引不能单独删除，并且如果其父索引被删除，它将自动被删除。
      </para>
      <para>
-      If the named index is already attached to the altered index, the
-      command will attempt to validate the parent index if the parent is
-      currently invalid.
+      如果指定的索引已经附加到被修改的索引上，则当父索引当前无效时，
+      该命令将尝试验证父索引。
      </para>
     </listitem>
    </varlistentry>
@@ -110,10 +96,9 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>NO DEPENDS ON EXTENSION <replaceable class="parameter">extension_name</replaceable></literal></term>
     <listitem>
      <para>
-      This form marks the index as dependent on the extension, or no longer
-      dependent on that extension if <literal>NO</literal> is specified.
-      An index that's marked as dependent on an extension is automatically
-      dropped when the extension is dropped.
+      此形式将索引标记为依赖于该扩展，或者如果指定了 <literal>NO</literal>，则不再
+      依赖于该扩展。
+      标记为依赖于某个扩展的索引在该扩展被删除时会自动删除。
      </para>
     </listitem>
    </varlistentry>
@@ -122,14 +107,11 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>SET ( <replaceable class="parameter">storage_parameter</replaceable> [= <replaceable class="parameter">value</replaceable>] [, ... ] )</literal></term>
     <listitem>
      <para>
-      This form changes one or more index-method-specific storage parameters
-      for the index.  See
-      <link linkend="sql-createindex"><command>CREATE INDEX</command></link>
-      for details on the available parameters.  Note that the index contents
-      will not be modified immediately by this command; depending on the
-      parameter you might need to rebuild the index with
-      <link linkend="sql-reindex"><command>REINDEX</command></link>
-      to get the desired effects.
+      此形式更改索引的一个或多个特定于索引方法的存储参数。有关
+      可用参数的详细信息，请参见
+      <link linkend="sql-createindex"><command>CREATE INDEX</command></link>。请注意，该命令不会
+      立即修改索引内容；取决于参数，你可能需要使用
+      <link linkend="sql-reindex"><command>REINDEX</command></link> 重建索引才能获得所需的效果。
      </para>
     </listitem>
    </varlistentry>
@@ -138,9 +120,9 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>RESET ( <replaceable class="parameter">storage_parameter</replaceable> [, ... ] )</literal></term>
     <listitem>
      <para>
-      This form resets one or more index-method-specific storage parameters to
-      their defaults.  As with <literal>SET</literal>, a <literal>REINDEX</literal>
-      might be needed to update the index entirely.
+      此形式将一个或多个特定于索引方法的存储参数重置为其默认值。
+      与 <literal>SET</literal> 一样，可能需要 <literal>REINDEX</literal>
+      才能完全更新索引。
      </para>
     </listitem>
    </varlistentry>
@@ -149,17 +131,13 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
     <term><literal>ALTER [ COLUMN ] <replaceable class="parameter">column_number</replaceable> SET STATISTICS <replaceable class="parameter">integer</replaceable></literal></term>
     <listitem>
      <para>
-      This form sets the per-column statistics-gathering target for
-      subsequent <link linkend="sql-analyze"><command>ANALYZE</command></link> operations, though can
-      be used only on index columns that are defined as an expression.
-      Since expressions lack a unique name, we refer to them using the
-      ordinal number of the index column.
-      The target can be set in the range 0 to 10000; alternatively, set it
-      to -1 to revert to using the system default statistics
-      target (<xref linkend="guc-default-statistics-target"/>).
-      For more information on the use of statistics by the
-      <productname>PostgreSQL</productname> query planner, refer to
-      <xref linkend="planner-stats"/>.
+      此形式为后续的 <link linkend="sql-analyze"><command>ANALYZE</command></link> 操作设置按列的统计收集目标，
+      但只能用于定义为表达式的索引列。
+      由于表达式没有唯一名称，我们使用索引列的序号来引用它们。
+      目标可以设置在 0 到 10000 的范围内；或者，将其设置为 -1
+      以恢复使用系统默认的统计目标（<xref linkend="guc-default-statistics-target"/>）。
+      有关 <productname>PostgreSQL</productname> 查询规划器如何使用统计信息的更多信息，请参阅
+      <xref linkend="planner-stats"/>。
      </para>
     </listitem>
    </varlistentry>
@@ -170,7 +148,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
 
@@ -178,8 +156,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><literal>IF EXISTS</literal></term>
       <listitem>
        <para>
-        Do not throw an error if the index does not exist. A notice is issued
-        in this case.
+        如果索引不存在，则不抛出错误。在这种情况下会发出一个提示。
        </para>
       </listitem>
      </varlistentry>
@@ -188,8 +165,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">column_number</replaceable></term>
       <listitem>
        <para>
-        The ordinal number refers to the ordinal (left-to-right) position
-        of the index column.
+        序号指的是索引列的序号（从左到右）位置。
        </para>
       </listitem>
      </varlistentry>
@@ -198,8 +174,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name (possibly schema-qualified) of an existing index to
-        alter.
+        要修改的现有索引的名称（可能带有模式限定）。
        </para>
       </listitem>
      </varlistentry>
@@ -208,7 +183,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">new_name</replaceable></term>
       <listitem>
        <para>
-        The new name for the index.
+        索引的新名称。
        </para>
       </listitem>
      </varlistentry>
@@ -217,7 +192,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">tablespace_name</replaceable></term>
       <listitem>
        <para>
-        The tablespace to which the index will be moved.
+        索引将移动到的表空间。
        </para>
       </listitem>
      </varlistentry>
@@ -226,7 +201,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">extension_name</replaceable></term>
       <listitem>
        <para>
-        The name of the extension that the index is to depend on.
+        索引所依赖的扩展的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -235,7 +210,7 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">storage_parameter</replaceable></term>
       <listitem>
        <para>
-        The name of an index-method-specific storage parameter.
+        特定于索引方法的存储参数的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -244,8 +219,8 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
       <term><replaceable class="parameter">value</replaceable></term>
       <listitem>
        <para>
-        The new value for an index-method-specific storage parameter.
-        This might be a number or a word depending on the parameter.
+        特定于索引方法的存储参数的新值。
+        根据参数的不同，这可能是一个数字或一个词。
        </para>
       </listitem>
      </varlistentry>
@@ -254,53 +229,49 @@ ALTER INDEX ALL IN TABLESPACE <replaceable class="parameter">name</replaceable> 
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注释</title>
 
    <para>
-    These operations are also possible using
-    <link linkend="sql-altertable"><command>ALTER TABLE</command></link>.
-    <command>ALTER INDEX</command> is in fact just an alias for the forms
-    of <command>ALTER TABLE</command> that apply to indexes.
+    这些操作也可以使用
+    <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 来完成。
+    实际上，<command>ALTER INDEX</command> 只是适用于索引的
+    <command>ALTER TABLE</command> 形式的一个别名。
    </para>
 
    <para>
-    There was formerly an <command>ALTER INDEX OWNER</command> variant, but
-    this is now ignored (with a warning).  An index cannot have an owner
-    different from its table's owner.  Changing the table's owner
-    automatically changes the index as well.
+    以前有一个 <command>ALTER INDEX OWNER</command> 变体，但现在已被忽略（并给出一个警告）。索引的所有者不能与其表的所有者不同。更改表的所有者会自动更改索引的所有者。
    </para>
 
    <para>
-    Changing any part of a system catalog index is not permitted.
+    不允许更改系统目录索引的任何部分。
    </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
   <para>
-   To rename an existing index:
+   重命名现有索引：
 <programlisting>
 ALTER INDEX distributors RENAME TO suppliers;
 </programlisting>
   </para>
 
   <para>
-   To move an index to a different tablespace:
+   将索引移动到不同的表空间：
 <programlisting>
 ALTER INDEX distributors SET TABLESPACE fasttablespace;
 </programlisting>
   </para>
 
   <para>
-   To change an index's fill factor (assuming that the index method
-   supports it):
+   更改索引的填充因子（假定该索引方法支持）：
 <programlisting>
 ALTER INDEX distributors SET (fillfactor = 75);
 REINDEX INDEX distributors;
 </programlisting></para>
 
   <para>
-   Set the statistics-gathering target for an expression index:
+   为表达式索引设置统计信息收集目标：
 <programlisting>
 CREATE INDEX coord_idx ON measured (x, y, (z + t));
 ALTER INDEX coord_idx ALTER COLUMN 3 SET STATISTICS 1000;
@@ -309,17 +280,17 @@ ALTER INDEX coord_idx ALTER COLUMN 3 SET STATISTICS 1000;
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>ALTER INDEX</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>ALTER INDEX</command> 是一个 <productname>PostgreSQL</productname>
+   扩展。
   </para>
  </refsect1>
 
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createindex"/></member>
