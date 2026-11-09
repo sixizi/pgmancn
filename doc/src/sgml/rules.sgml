@@ -617,7 +617,7 @@ SELECT t1.a, t2.b, t1.ctid FROM t1, t2 WHERE t1.a = t2.a;
 </sect1>
 
 <sect1 id="rules-materializedviews">
-<title>Materialized Views</title>
+<title>物化视图</title>
 
 <indexterm zone="rules-materializedviews">
  <primary>rule</primary>
@@ -635,43 +635,36 @@ SELECT t1.a, t2.b, t1.ctid FROM t1, t2 WHERE t1.a = t2.a;
 </indexterm>
 
 <para>
-    Materialized views in <productname>PostgreSQL</productname> use the
-    rule system like views do, but persist the results in a table-like form.
-    The main differences between:
+    <productname>PostgreSQL</productname> 中的物化视图像视图一样使用规则系统，但会把结果以类似表的形式持久化保存。
+    以下两者之间的主要区别：
 
 <programlisting>
 CREATE MATERIALIZED VIEW mymatview AS SELECT * FROM mytab;
 </programlisting>
 
-    and:
+    与：
 
 <programlisting>
 CREATE TABLE mymatview AS SELECT * FROM mytab;
 </programlisting>
 
-    are that the materialized view cannot subsequently be directly updated
-    and that the query used to create the materialized view is stored in
-    exactly the same way that a view's query is stored, so that fresh data
-    can be generated for the materialized view with:
+    在于：物化视图之后不能被直接更新；并且用于创建物化视图的查询的存储方式与视图的查询完全相同，
+    因此可以用以下语句为物化视图生成新数据：
 
 <programlisting>
 REFRESH MATERIALIZED VIEW mymatview;
 </programlisting>
 
-    The information about a materialized view in the
-    <productname>PostgreSQL</productname> system catalogs is exactly
-    the same as it is for a table or view. So for the parser, a
-    materialized view is a relation, just like a table or a view.  When
-    a materialized view is referenced in a query, the data is returned
-    directly from the materialized view, like from a table; the rule is
-    only used for populating the materialized view.
+    <productname>PostgreSQL</productname> 系统目录中关于物化视图的信息与表或视图的信息完全相同。
+    因此对于解析器而言，物化视图就是一个关系，与表或视图一样。当查询中引用
+    物化视图时，数据直接从物化视图返回，就像从表中返回一样；规则
+    只用于填充物化视图。
 </para>
 
 <para>
-    While access to the data stored in a materialized view is often much
-    faster than accessing the underlying tables directly or through a view,
-    the data is not always current; yet sometimes current data is not needed.
-    Consider a table which records sales:
+    虽然访问物化视图中存储的数据通常比直接访问底层表或通过视图访问快得多，
+    但数据并不总是最新的；然而有时并不需要最新数据。
+    考虑一个记录销售情况的表：
 
 <programlisting>
 CREATE TABLE invoice (
@@ -682,9 +675,8 @@ CREATE TABLE invoice (
 );
 </programlisting>
 
-    If people want to be able to quickly graph historical sales data, they
-    might want to summarize, and they may not care about the incomplete data
-    for the current date:
+    如果人们希望能够快速绘制历史销售数据的图表，他们可能想要进行汇总，
+    并且可能并不关心当前日期的不完整数据：
 
 <programlisting>
 CREATE MATERIALIZED VIEW sales_summary AS
@@ -702,9 +694,8 @@ CREATE UNIQUE INDEX sales_summary_seller
   ON sales_summary (seller_no, invoice_date);
 </programlisting>
 
-    This materialized view might be useful for displaying a graph in the
-    dashboard created for salespeople.  A job could be scheduled to update
-    the statistics each night using this SQL statement:
+    这个物化视图可能有助于在为销售人员创建的仪表板中显示图表。
+    可以调度一个作业，每晚使用以下 SQL 语句更新统计信息：
 
 <programlisting>
 REFRESH MATERIALIZED VIEW sales_summary;
@@ -712,19 +703,16 @@ REFRESH MATERIALIZED VIEW sales_summary;
 </para>
 
 <para>
-    Another use for a materialized view is to allow faster access to data
-    brought across from a remote system through a foreign data wrapper.
-    A simple example using <literal>file_fdw</literal> is below, with timings,
-    but since this is using cache on the local system the performance
-    difference compared to access to a remote system would usually be greater
-    than shown here.  Notice we are also exploiting the ability to put an
-    index on the materialized view, whereas <literal>file_fdw</literal> does
-    not support indexes; this advantage might not apply for other sorts of
-    foreign data access.
+    物化视图的另一个用途是更快地访问通过外部数据包装器从远程系统
+    引入的数据。下面是一个使用 <literal>file_fdw</literal> 的简单示例，其中包含计时信息，
+    但由于这里使用的是本地系统上的缓存，与访问远程系统相比，性能差异
+    通常比此处显示的更大。请注意，我们还利用了在物化视图上创建
+    索引的能力，而 <literal>file_fdw</literal> 不支持索引；这一优势可能不适用于其他类型的
+    外部数据访问。
 </para>
 
 <para>
-    Setup:
+    设置：
 
 <programlisting>
 CREATE EXTENSION file_fdw;
@@ -739,7 +727,7 @@ CREATE INDEX wrd_trgm ON wrd USING gist (word gist_trgm_ops);
 VACUUM ANALYZE wrd;
 </programlisting>
 
-    Now let's spell-check a word.  Using <literal>file_fdw</literal> directly:
+    现在我们来对一个词进行拼写检查。直接使用 <literal>file_fdw</literal>：
 
 <programlisting>
 SELECT count(*) FROM words WHERE word = 'caterpiler';
@@ -750,7 +738,7 @@ SELECT count(*) FROM words WHERE word = 'caterpiler';
 (1 row)
 </programlisting>
 
-    With <command>EXPLAIN ANALYZE</command>, we see:
+    使用 <command>EXPLAIN ANALYZE</command>，我们看到：
 
 <programlisting>
  Aggregate  (cost=21763.99..21764.00 rows=1 width=0) (actual time=188.180..188.181 rows=1.00 loops=1)
@@ -763,7 +751,7 @@ SELECT count(*) FROM words WHERE word = 'caterpiler';
  Execution time: 188.273 ms
 </programlisting>
 
-    If the materialized view is used instead, the query is much faster:
+    如果改用物化视图，查询会快得多：
 
 <programlisting>
  Aggregate  (cost=4.44..4.45 rows=1 width=0) (actual time=0.042..0.042 rows=1.00 loops=1)
@@ -775,9 +763,7 @@ SELECT count(*) FROM words WHERE word = 'caterpiler';
  Execution time: 0.117 ms
 </programlisting>
 
-    Either way, the word is spelled wrong, so let's look for what we might
-    have wanted.  Again using <literal>file_fdw</literal> and
-    <literal>pg_trgm</literal>:
+    无论哪种方式，该词的拼写都是错误的，所以让我们查找一下可能想要的结果。再次使用 <literal>file_fdw</literal> 和 <literal>pg_trgm</literal>：
 
 <programlisting>
 SELECT word FROM words ORDER BY word &lt;-&gt; 'caterpiler' LIMIT 10;
@@ -809,7 +795,7 @@ SELECT word FROM words ORDER BY word &lt;-&gt; 'caterpiler' LIMIT 10;
  Execution time: 1431.679 ms
 </programlisting>
 
-    Using the materialized view:
+    使用物化视图：
 
 <programlisting>
  Limit  (cost=0.29..1.06 rows=10 width=10) (actual time=187.222..188.257 rows=10.00 loops=1)
@@ -820,8 +806,7 @@ SELECT word FROM words ORDER BY word &lt;-&gt; 'caterpiler' LIMIT 10;
  Execution time: 198.640 ms
 </programlisting>
 
-    If you can tolerate periodic update of the remote data to the local
-    database, the performance benefit can be substantial.
+    如果您能够容忍将远程数据定期更新到本地数据库，那么性能收益可能相当可观。
 </para>
 
 </sect1>
