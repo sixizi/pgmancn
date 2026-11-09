@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>TRUNCATE</refname>
-  <refpurpose>empty a table or set of tables</refpurpose>
+  <refpurpose>清空一个表或一组表</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -27,32 +27,25 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>TRUNCATE</command> quickly removes all rows from a set of
-   tables. It has the same effect as an unqualified
-   <command>DELETE</command> on each table, but since it does not actually
-   scan the tables it is faster. Furthermore, it reclaims disk space
-   immediately, rather than requiring a subsequent <command>VACUUM</command>
-   operation. This is most useful on large tables.
+   <command>TRUNCATE</command> 快速地从一组表中删除所有行。它与对每个表执行不带条件的 <command>DELETE</command> 效果相同，但由于它实际上并不扫描表，因此速度更快。此外，它会立即回收磁盘空间，而不需要随后执行 <command>VACUUM</command> 操作。这在大表上最为有用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of a table to truncate.
-      If <literal>ONLY</literal> is specified before the table name, only that table
-      is truncated.  If <literal>ONLY</literal> is not specified, the table and all
-      its descendant tables (if any) are truncated.  Optionally, <literal>*</literal>
-      can be specified after the table name to explicitly indicate that
-      descendant tables are included.
+      要截断的表的名称（可选模式限定）。
+      如果在表名之前指定了 <literal>ONLY</literal>，则只截断该表。
+      如果未指定 <literal>ONLY</literal>，则截断该表及其所有后代表（如果有）。
+      可选地，可以在表名之后指定 <literal>*</literal>，以明确表示包含后代表。
      </para>
     </listitem>
    </varlistentry>
@@ -61,8 +54,7 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
     <term><literal>RESTART IDENTITY</literal></term>
     <listitem>
      <para>
-      Automatically restart sequences owned by columns of
-      the truncated table(s).
+      自动重启被截断表的列所拥有的序列。
      </para>
     </listitem>
    </varlistentry>
@@ -71,7 +63,7 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
     <term><literal>CONTINUE IDENTITY</literal></term>
     <listitem>
      <para>
-      Do not change the values of sequences.  This is the default.
+      不要更改序列的值。这是默认值。
      </para>
     </listitem>
    </varlistentry>
@@ -80,9 +72,7 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
     <term><literal>CASCADE</literal></term>
     <listitem>
      <para>
-      Automatically truncate all tables that have foreign-key references
-      to any of the named tables, or to any tables added to the group
-      due to <literal>CASCADE</literal>.
+      自动截断所有对任意被指名表有外键引用、或者对由于 <literal>CASCADE</literal> 而被加入该组的表有外键引用的表。
      </para>
     </listitem>
    </varlistentry>
@@ -91,8 +81,7 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
     <term><literal>RESTRICT</literal></term>
     <listitem>
      <para>
-      Refuse to truncate if any of the tables have foreign-key references
-      from tables that are not listed in the command.  This is the default.
+      如果有任何表被未在命令中列出的表通过外键引用，则拒绝截断。这是默认值。
      </para>
     </listitem>
    </varlistentry>
@@ -100,90 +89,52 @@ TRUNCATE [ TABLE ] [ ONLY ] <replaceable class="parameter">name</replaceable> [ 
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   You must have the <literal>TRUNCATE</literal> privilege on a table
-   to truncate it.
+   你必须拥有表的 <literal>TRUNCATE</literal> 权限才能截断它。
   </para>
 
   <para>
-   <command>TRUNCATE</command> acquires an <literal>ACCESS EXCLUSIVE</literal> lock on each
-   table it operates on, which blocks all other concurrent operations
-   on the table.  When <literal>RESTART IDENTITY</literal> is specified, any
-   sequences that are to be restarted are likewise locked exclusively.
-   If concurrent access to a table is required, then
-   the <command>DELETE</command> command should be used instead.
+   <command>TRUNCATE</command> 会在它操作的每个表上获得一个 <literal>ACCESS EXCLUSIVE</literal> 锁，这会阻塞该表上所有其他并发操作。当指定了 <literal>RESTART IDENTITY</literal> 时，任何要被重启的序列也同样会被加上排他锁。如果需要并发访问某个表，那么应该改用 <command>DELETE</command> 命令。
   </para>
 
   <para>
-   <command>TRUNCATE</command> cannot be used on a table that has foreign-key
-   references from other tables, unless all such tables are also truncated
-   in the same command.  Checking validity in such cases would require table
-   scans, and the whole point is not to do one.  The <literal>CASCADE</literal>
-   option can be used to automatically include all dependent tables &mdash;
-   but be very careful when using this option, or else you might lose data you
-   did not intend to!
-   Note in particular that when the table to be truncated is a partition,
-   siblings partitions are left untouched, but cascading occurs to all
-   referencing tables and all their partitions with no distinction.
+   <command>TRUNCATE</command> 不能用于被其他表的外键引用的表，除非所有这样的表也在同一条命令中被截断。在这种情况下检查有效性将需要全表扫描，而这样做就失去了意义。<literal>CASCADE</literal> 选项可用于自动包含所有依赖表 &mdash;，但使用此选项时要非常小心，否则可能会丢失您不打算丢失的数据！
+  尤其要注意，当要截断的表是一个分区时，同级分区不受影响，但会无差别地级联到所有引用表及其所有分区。
   </para>
 
   <para>
-   <command>TRUNCATE</command> will not fire any <literal>ON DELETE</literal>
-   triggers that might exist for the tables.  But it will fire
-   <literal>ON TRUNCATE</literal> triggers.
-   If <literal>ON TRUNCATE</literal> triggers are defined for any of
-   the tables, then all <literal>BEFORE TRUNCATE</literal> triggers are
-   fired before any truncation happens, and all <literal>AFTER
-   TRUNCATE</literal> triggers are fired after the last truncation is
-   performed and any sequences are reset.
-   The triggers will fire in the order that the tables are
-   to be processed (first those listed in the command, and then any
-   that were added due to cascading).
+   <command>TRUNCATE</command> 不会触发这些表上可能存在的任何 <literal>ON DELETE</literal> 触发器。但它会触发 <literal>ON TRUNCATE</literal> 触发器。
+  如果为其中任何表定义了 <literal>ON TRUNCATE</literal> 触发器，那么所有 <literal>BEFORE TRUNCATE</literal> 触发器会在任何截断发生之前触发，而所有 <literal>AFTER
+   TRUNCATE</literal> 触发器会在最后一次截断执行完毕且所有序列被重置之后触发。
+  触发器将按照表被处理的顺序触发（首先是命令中列出的表，然后是因级联而添加的表）。
   </para>
 
   <para>
-   <command>TRUNCATE</command> is not MVCC-safe.  After truncation, the table will
-   appear empty to concurrent transactions, if they are using a snapshot
-   taken before the truncation occurred.
-   See <xref linkend="mvcc-caveats"/> for more details.
+   <command>TRUNCATE</command> 不是 MVCC 安全的。截断之后，如果并发事务使用的是在截断发生之前取得的快照，那么该表对它们来说将显示为空。
+  更多细节请参见 <xref linkend="mvcc-caveats"/>。
   </para>
 
   <para>
-   <command>TRUNCATE</command> is transaction-safe with respect to the data
-   in the tables: the truncation will be safely rolled back if the surrounding
-   transaction does not commit.
+   就表中的数据而言，<command>TRUNCATE</command> 是事务安全的：如果外围事务没有提交，截断将被安全地回滚。
   </para>
 
   <para>
-   When <literal>RESTART IDENTITY</literal> is specified, the implied
-   <command>ALTER SEQUENCE RESTART</command> operations are also done
-   transactionally; that is, they will be rolled back if the surrounding
-   transaction does not commit.  Be aware that if any additional
-   sequence operations are done on the restarted sequences before the
-   transaction rolls back, the effects of these operations on the sequences
-   will be rolled back, but not their effects on <function>currval()</function>;
-   that is, after the transaction <function>currval()</function> will continue to
-   reflect the last sequence value obtained inside the failed transaction,
-   even though the sequence itself may no longer be consistent with that.
-   This is similar to the usual behavior of <function>currval()</function> after
-   a failed transaction.
+   当指定 <literal>RESTART IDENTITY</literal> 时，隐含的 <command>ALTER SEQUENCE RESTART</command> 操作也会以事务方式执行；也就是说，如果外围事务没有提交，它们将被回滚。请注意，如果在事务回滚之前对重新启动的序列执行了任何额外的序列操作，这些操作对序列的影响将被回滚，但它们对 <function>currval()</function> 的影响不会被回滚；也就是说，在事务 <function>currval()</function> 之后，仍将反映在失败事务内部获得的最后一个序列值，即使序列本身可能不再与之保持一致。这类似于 <function>currval()</function> 在事务失败后的通常行为。
   </para>
 
   <para>
-   <command>TRUNCATE</command> can be used for foreign tables if
-   supported by the foreign data wrapper, for instance,
-   see <xref linkend="postgres-fdw"/>.
+   如果外部数据包装器支持，<command>TRUNCATE</command> 可用于外部表，例如，参见 <xref linkend="postgres-fdw"/>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Truncate the tables <literal>bigtable</literal> and
-   <literal>fattable</literal>:
+   截断表 <literal>bigtable</literal> 和
+   <literal>fattable</literal>：
 
 <programlisting>
 TRUNCATE bigtable, fattable;
@@ -191,7 +142,7 @@ TRUNCATE bigtable, fattable;
   </para>
 
   <para>
-   The same, and also reset any associated sequence generators:
+   同上，并且重置任何关联的序列生成器：
 
 <programlisting>
 TRUNCATE bigtable, fattable RESTART IDENTITY;
@@ -199,9 +150,7 @@ TRUNCATE bigtable, fattable RESTART IDENTITY;
   </para>
 
   <para>
-   Truncate the table <literal>othertable</literal>, and cascade to any tables
-   that reference <literal>othertable</literal> via foreign-key
-   constraints:
+   截断表 <literal>othertable</literal>，并级联到任何通过外键约束引用 <literal>othertable</literal> 的表：
 
 <programlisting>
 TRUNCATE othertable CASCADE;
@@ -209,22 +158,18 @@ TRUNCATE othertable CASCADE;
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   The SQL:2008 standard includes a <command>TRUNCATE</command> command
-   with the syntax <literal>TRUNCATE TABLE
-   <replaceable>tablename</replaceable></literal>.  The clauses
+   SQL:2008 标准包含一个 <command>TRUNCATE</command> 命令，其语法为 <literal>TRUNCATE TABLE
+   <replaceable>tablename</replaceable></literal>。子句
    <literal>CONTINUE IDENTITY</literal>/<literal>RESTART IDENTITY</literal>
-   also appear in that standard, but have slightly different though related
-   meanings.  Some of the concurrency behavior of this command is left
-   implementation-defined by the standard, so the above notes should be
-   considered and compared with other implementations if necessary.
+   也出现在该标准中，但含义略有不同，尽管彼此相关。该命令的某些并发行为被标准留作实现定义，因此如有必要，应将上述说明与其他实现加以考虑和比较。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-delete"/></member>
