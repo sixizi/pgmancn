@@ -64,23 +64,18 @@
  </sect1>
 
  <sect1 id="system-catalog-initial-data">
-  <title>System Catalog Initial Data</title>
+  <title>系统目录初始数据</title>
 
   <para>
-   Each catalog that has any manually-created initial data (some do not)
-   has a corresponding <literal>.dat</literal> file that contains its
-   initial data in an editable format.
+   每个具有手工创建的初始数据的目录（有些没有）都有一个对应的 <literal>.dat</literal> 文件，其中以可编辑的格式包含其初始数据。
   </para>
 
   <sect2 id="system-catalog-initial-data-format">
-   <title>Data File Format</title>
+   <title>数据文件格式</title>
 
    <para>
-    Each <literal>.dat</literal> file contains Perl data structure literals
-    that are simply eval'd to produce an in-memory data structure consisting
-    of an array of hash references, one per catalog row.
-    A slightly modified excerpt from <filename>pg_database.dat</filename>
-    will demonstrate the key features:
+    每个 <literal>.dat</literal> 文件都包含 Perl 数据结构字面量，这些字面量会被简单地 eval 求值，从而生成一个内存中的数据结构，该结构由一个哈希引用数组组成，每个目录行对应一个哈希引用。
+    下面是从 <filename>pg_database.dat</filename> 中稍作修改的摘录，用以演示关键特性：
    </para>
 
 <!-- The "slight modification" is the apostrophe in the description. -->
@@ -100,144 +95,122 @@
 ]]></programlisting>
 
    <para>
-    Points to note:
+    需要注意的几点：
    </para>
 
    <itemizedlist>
 
     <listitem>
      <para>
-      The overall file layout is: open square bracket, one or more sets of
-      curly braces each of which represents a catalog row, close square
-      bracket.  Write a comma after each closing curly brace.
+      文件的整体布局是：左方括号，一组或多组花括号（每组花括号代表一个目录行），右方括号。在每个右花括号之后写一个逗号。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Within each catalog row, write comma-separated
+      在每个系统目录行中，写入以逗号分隔的
       <replaceable>key</replaceable> <literal>=&gt;</literal>
-      <replaceable>value</replaceable> pairs.  The
-      allowed <replaceable>key</replaceable>s are the names of the catalog's
-      columns, plus the metadata keys <literal>oid</literal>,
-      <literal>oid_symbol</literal>,
-      <literal>array_type_oid</literal>, and <literal>descr</literal>.
-      (The use of <literal>oid</literal> and <literal>oid_symbol</literal>
-      is described in <xref linkend="system-catalog-oid-assignment"/> below,
-      while <literal>array_type_oid</literal> is described in
-      <xref linkend="system-catalog-auto-array-types"/>.
-      <literal>descr</literal> supplies a description string for the object,
-      which will be inserted into <structname>pg_description</structname>
-      or <structname>pg_shdescription</structname> as appropriate.)
-      While the metadata keys are optional, the catalog's defined columns
-      must all be provided, except when the catalog's <literal>.h</literal>
-      file specifies a default value for the column.
-      (In the example above, the <structfield>datdba</structfield> field has
-      been omitted because <filename>pg_database.h</filename> supplies a
-      suitable default value for it.)
+      <replaceable>value</replaceable> 对。允许的 <replaceable>key</replaceable> 是该目录列的名称，
+      外加元数据键 <literal>oid</literal>、
+      <literal>oid_symbol</literal>、
+      <literal>array_type_oid</literal> 和 <literal>descr</literal>。
+      （<literal>oid</literal> 和 <literal>oid_symbol</literal>
+      的用法在下面的 <xref linkend="system-catalog-oid-assignment"/> 中描述，
+      而 <literal>array_type_oid</literal> 在
+      <xref linkend="system-catalog-auto-array-types"/> 中描述。
+      <literal>descr</literal> 为该对象提供一个描述字符串，
+      它将视情况被插入到 <structname>pg_description</structname>
+      或 <structname>pg_shdescription</structname> 中。）
+      元数据键是可选的，但目录中定义的列
+      必须全部提供，除非该目录的 <literal>.h</literal>
+      文件为该列指定了默认值。
+      （在上面的示例中，省略了 <structfield>datdba</structfield> 字段，
+      因为 <filename>pg_database.h</filename> 为它提供了
+      合适的默认值。）
      </para>
     </listitem>
 
     <listitem>
      <para>
-      All values must be single-quoted.  Escape single quotes used within a
-      value with a backslash.  Backslashes meant as data can, but need not,
-      be doubled; this follows Perl's rules for simple quoted literals.
-      Note that backslashes appearing as data will be treated as escapes by
-      the bootstrap scanner, according to the same rules as for escape string
-      constants (see <xref linkend="sql-syntax-strings-escape"/>); for
-      example <literal>\t</literal> converts to a tab character.  If you
-      actually want a backslash in the final value, you will need to write
-      four of them: Perl strips two, leaving <literal>\\</literal> for the
-      bootstrap scanner to see.
+      所有值都必须用单引号括起。值内使用的单引号
+      要用反斜杠转义。作为数据使用的反斜杠可以双写，
+      但并非必须；这遵循 Perl 对简单引号字面量的规则。
+      注意，作为数据出现的反斜杠会被引导扫描器
+      当作转义处理，其规则与转义字符串常量相同
+      （参见 <xref linkend="sql-syntax-strings-escape"/>）；例如
+      <literal>\t</literal> 会转换为一个制表符。如果你
+      确实希望在最终值中有一个反斜杠，则需要写四个：
+      Perl 会去掉两个，留下 <literal>\\</literal> 供
+      引导扫描器看到。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Null values are represented by <literal>_null_</literal>.
-      (Note that there is no way to create a value that is just that
-      string.)
+      空值由 <literal>_null_</literal> 表示。
+      （注意，无法创建恰好就是该字符串的值。）
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Comments are preceded by <literal>#</literal>, and must be on their
-      own lines.
+      注释以 <literal>#</literal> 开头，并且必须
+      单独成行。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Field values that are OIDs of other catalog entries should be
-      represented by symbolic names rather than actual numeric OIDs.
-      (In the example above, <structfield>dattablespace</structfield>
-      contains such a reference.)
-      This is described in <xref linkend="system-catalog-oid-references"/>
-      below.
+      作为其他目录项 OID 的字段值应
+      使用符号名表示，而不是实际的数字 OID。
+      （在上面的示例中，<structfield>dattablespace</structfield>
+      包含这样一个引用。）
+      这在下面的 <xref linkend="system-catalog-oid-references"/>
+      中描述。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Since hashes are unordered data structures, field order and line
-      layout aren't semantically significant.  However, to maintain a
-      consistent appearance, we set a few rules that are applied by the
-      formatting script <filename>reformat_dat_file.pl</filename>:
+      由于哈希是无序的数据结构，字段顺序和行
+      布局在语义上并不重要。不过，为了保持
+      一致的外观，我们制定了几条由格式化脚本 <filename>reformat_dat_file.pl</filename> 应用的规则：
 
       <itemizedlist>
 
        <listitem>
         <para>
-         Within each pair of curly braces, the metadata
-         fields <literal>oid</literal>, <literal>oid_symbol</literal>,
-         <literal>array_type_oid</literal>, and <literal>descr</literal>
-         (if present) come first, in that order, then the catalog's own
-         fields appear in their defined order.
+         在每一对花括号内，元数据字段 <literal>oid</literal>、<literal>oid_symbol</literal>、<literal>array_type_oid</literal> 和 <literal>descr</literal>（如果存在）按该顺序排在最前面，然后是系统目录自身的字段，按其定义顺序出现。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         Newlines are inserted between fields as needed to limit line length
-         to 80 characters, if possible.  A newline is also inserted between
-         the metadata fields and the regular fields.
+         必要时会在字段之间插入换行，以便尽可能将行长限制在 80 个字符以内。在元数据字段与常规字段之间也会插入一个换行。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         If the catalog's <literal>.h</literal> file specifies a default
-         value for a column, and a data entry has that same
-         value, <filename>reformat_dat_file.pl</filename> will omit it from
-         the data file.  This keeps the data representation compact.
+         如果系统目录的 <literal>.h</literal> 文件为某一列指定了默认值，而某个数据项具有相同的值，则 <filename>reformat_dat_file.pl</filename> 会将其从数据文件中省略。这样可以保持数据表示紧凑。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         <filename>reformat_dat_file.pl</filename> preserves blank lines
-         and comment lines as-is.
+         <filename>reformat_dat_file.pl</filename> 会原样保留空行和注释行。
         </para>
        </listitem>
 
       </itemizedlist>
 
-      It's recommended to run <filename>reformat_dat_file.pl</filename>
-      before submitting catalog data patches.  For convenience, you can
-      simply change to <filename>src/include/catalog/</filename> and
-      run <literal>make reformat-dat-files</literal>.
+      建议在提交系统目录数据补丁之前运行 <filename>reformat_dat_file.pl</filename>。为方便起见，你可以直接切换到 <filename>src/include/catalog/</filename> 并运行 <literal>make reformat-dat-files</literal>。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      If you want to add a new method of making the data representation
-      smaller, you must implement it
-      in <filename>reformat_dat_file.pl</filename> and also
-      teach <function>Catalog::ParseData()</function> how to expand the
-      data back into the full representation.
+      如果你想添加一种使数据表示更小的新方法，必须在 <filename>reformat_dat_file.pl</filename> 中实现它，并让 <function>Catalog::ParseData()</function> 知道如何将数据展开回完整表示。
      </para>
     </listitem>
 
@@ -245,348 +218,183 @@
   </sect2>
 
   <sect2 id="system-catalog-oid-assignment">
-   <title>OID Assignment</title>
+   <title>OID 分配</title>
 
    <para>
-    A catalog row appearing in the initial data can be given a
-    manually-assigned OID by writing an <literal>oid
-    =&gt; <replaceable>nnnn</replaceable></literal> metadata field.
-    Furthermore, if an OID is assigned, a C macro for that OID can be
-    created by writing an <literal>oid_symbol
-    =&gt; <replaceable>name</replaceable></literal> metadata field.
+    出现在初始数据中的系统目录行可以通过编写 <literal>oid
+    =&gt; <replaceable>nnnn</replaceable></literal> 元数据字段来手动分配 OID。
+    此外，如果分配了 OID，还可以通过编写 <literal>oid_symbol
+    =&gt; <replaceable>name</replaceable></literal> 元数据字段为该 OID 创建一个 C 宏。
    </para>
 
    <para>
-    Pre-loaded catalog rows must have preassigned OIDs if there are OID
-    references to them in other pre-loaded rows.  A preassigned OID is
-    also needed if the row's OID must be referenced from C code.
-    If neither case applies, the <literal>oid</literal> metadata field can
-    be omitted, in which case the bootstrap code assigns an OID
-    automatically.
-    In practice we usually preassign OIDs for all or none of the pre-loaded
-    rows in a given catalog, even if only some of them are actually
-    cross-referenced.
+    如果其他预加载行中存在对某个预加载系统目录行的 OID 引用，则该行必须具有预先分配的 OID。如果该行的 OID 必须从 C 代码中引用，也需要预先分配 OID。
+    如果这两种情况都不适用，则可以省略 <literal>oid</literal> 元数据字段，此时引导代码会自动分配一个 OID。
+    在实践中，对于给定系统目录中的预加载行，我们通常要么全部预先分配 OID，要么全部不分配，即使其中只有一部分实际上被交叉引用。
    </para>
 
    <para>
-    Writing the actual numeric value of any OID in C code is considered
-    very bad form; always use a macro, instead.  Direct references
-    to <structname>pg_proc</structname> OIDs are common enough that there's
-    a special mechanism to create the necessary macros automatically;
-    see <filename>src/backend/utils/Gen_fmgrtab.pl</filename>.  Similarly
-    &mdash; but, for historical reasons, not done the same way &mdash;
-    there's an automatic method for creating macros
-    for <structname>pg_type</structname>
-    OIDs.  <literal>oid_symbol</literal> entries are therefore not
-    necessary in those two catalogs.  Likewise, macros for
-    the <structname>pg_class</structname> OIDs of system catalogs and
-    indexes are set up automatically.  For all other system catalogs, you
-    have to manually specify any macros you need
-    via <literal>oid_symbol</literal> entries.
+    在 C 代码中写出任何 OID 的实际数值被认为是非常糟糕的做法；请始终改用宏。对 <structname>pg_proc</structname> OID 的直接引用非常常见，因此有一种特殊机制可以自动创建所需的宏；参见 <filename>src/backend/utils/Gen_fmgrtab.pl</filename>。类似地，&mdash; 但出于历史原因并未采用同样的方式 &mdash;，有一种自动方法可以为 <structname>pg_type</structname> OID 创建宏。因此，这两个系统目录中不需要 <literal>oid_symbol</literal> 条目。同样，系统目录和索引的 <structname>pg_class</structname> OID 的宏也是自动设置的。对于所有其他系统目录，你必须通过 <literal>oid_symbol</literal> 条目手动指定所需的任何宏。
    </para>
 
    <para>
-    To find an available OID for a new pre-loaded row, run the
-    script <filename>src/include/catalog/unused_oids</filename>.
-    It prints inclusive ranges of unused OIDs (e.g., the output
-    line <literal>45-900</literal> means OIDs 45 through 900 have not been
-    allocated yet).  Currently, OIDs 1&ndash;9999 are reserved for manual
-    assignment; the <filename>unused_oids</filename> script simply looks
-    through the catalog headers and <filename>.dat</filename> files
-    to see which ones do not appear.  You can also use
-    the <filename>duplicate_oids</filename> script to check for mistakes.
-    (<filename>genbki.pl</filename> will assign OIDs for any rows that
-    didn't get one hand-assigned to them, and it will also detect duplicate
-    OIDs at compile time.)
+    要为新的预加载行找到一个可用的 OID，请运行脚本 <filename>src/include/catalog/unused_oids</filename>。
+    它会打印未使用 OID 的闭区间范围（例如，输出行 <literal>45-900</literal> 表示 OID 45 到 900 尚未被分配）。目前，OID 1&ndash;9999 保留供手动分配；<filename>unused_oids</filename> 脚本只是遍历系统目录头文件和 <filename>.dat</filename> 文件，查看哪些 OID 没有出现。你也可以使用 <filename>duplicate_oids</filename> 脚本检查错误。
+    （<filename>genbki.pl</filename> 会为任何未手动分配 OID 的行分配 OID，并且它还会在编译时检测重复的 OID。）
    </para>
 
    <para>
-    When choosing OIDs for a patch that is not expected to be committed
-    immediately, best practice is to use a group of more-or-less
-    consecutive OIDs starting with some random choice in the range
-    8000&mdash;9999.  This minimizes the risk of OID collisions with other
-    patches being developed concurrently.  To keep the 8000&mdash;9999
-    range free for development purposes, after a patch has been committed
-    to the master git repository its OIDs should be renumbered into
-    available space below that range.  Typically, this will be done
-    near the end of each development cycle, moving all OIDs consumed by
-    patches committed in that cycle at the same time.  The script
-    <filename>renumber_oids.pl</filename> can be used for this purpose.
-    If an uncommitted patch is found to have OID conflicts with some
-    recently-committed patch, <filename>renumber_oids.pl</filename> may
-    also be useful for recovering from that situation.
+    在为不期望立即提交的补丁选择 OID 时，最佳实践是使用一组大致连续的 OID，起始值在 8000&mdash;9999 范围内随机选取。这样可以最大限度地降低与其他同时开发的补丁发生 OID 冲突的风险。为了把 8000&mdash;9999 范围留作开发用途，在补丁提交到主 git 仓库之后，应将其 OID 重新编号到该范围以下的可用空间。通常，这会在每个开发周期接近结束时进行，同时把该周期内提交的补丁所占用的所有 OID 一并移动。可以使用脚本 <filename>renumber_oids.pl</filename> 来完成此目的。如果发现某个未提交的补丁与某个最近提交的补丁存在 OID 冲突，<filename>renumber_oids.pl</filename> 也可能有助于从该情形中恢复。
    </para>
 
    <para>
-    Because of this convention of possibly renumbering OIDs assigned by
-    patches, the OIDs assigned by a patch should not be considered stable
-    until the patch has been included in an official release.  We do not
-    change manually-assigned object OIDs once released, however, as that
-    would create assorted compatibility problems.
+    由于存在这种可能对补丁所分配的 OID 重新编号的约定，在补丁被纳入正式发布之前，不应认为该补丁所分配的 OID 是稳定的。不过，一旦发布，我们就不会更改手动分配的对象 OID，因为那会造成各种兼容性问题。
    </para>
 
    <para>
-    If <filename>genbki.pl</filename> needs to assign an OID to a catalog
-    entry that does not have a manually-assigned OID, it will use a value in
-    the range 10000&mdash;11999.  The server's OID counter is set to 10000
-    at the start of a bootstrap run, so that any objects created on-the-fly
-    during bootstrap processing also receive OIDs in this range.  (The
-    usual OID assignment mechanism takes care of preventing any conflicts.)
+    如果 <filename>genbki.pl</filename> 需要为某个没有手动分配 OID 的系统目录条目分配 OID，它将使用 10000&mdash;11999 范围内的值。服务器的 OID 计数器在引导运行开始时被设置为 10000，因此引导处理期间即时创建的任何对象也会获得该范围内的 OID。（通常的 OID 分配机制会负责防止任何冲突。）
    </para>
 
    <para>
-    Objects with OIDs below <symbol>FirstUnpinnedObjectId</symbol> (12000)
-    are considered <quote>pinned</quote>, preventing them from being
-    deleted.  (There are a small number of exceptions, which are
-    hard-wired into <function>IsPinnedObject()</function>.)
-    <application>initdb</application> forces the OID counter up
-    to <symbol>FirstUnpinnedObjectId</symbol> as soon as it's ready to
-    create unpinned objects.  Thus objects created during the later phases
-    of <application>initdb</application>, such as objects created while
-    running the <filename>information_schema.sql</filename> script, will
-    not be pinned, while all objects known
-    to <filename>genbki.pl</filename> will be.
+    OID 低于 <symbol>FirstUnpinnedObjectId</symbol>（12000）的对象被视为<quote>固定</quote>对象，从而防止它们被删除。（有少量例外，它们被硬编码在 <function>IsPinnedObject()</function> 中。）<application>initdb</application> 在准备好创建非固定对象时，会立即将 OID 计数器强制提升到 <symbol>FirstUnpinnedObjectId</symbol>。因此，在 <application>initdb</application> 的后续阶段创建的对象（例如运行 <filename>information_schema.sql</filename> 脚本时创建的对象）将不会被固定，而 <filename>genbki.pl</filename> 已知的所有对象都会被固定。
    </para>
 
    <para>
-    OIDs assigned during normal database operation are constrained to be
-    16384 or higher.  This ensures that the range 10000&mdash;16383 is free
-    for OIDs assigned automatically by <filename>genbki.pl</filename> or
-    during <application>initdb</application>.  These
-    automatically-assigned OIDs are not considered stable, and may change
-    from one installation to another.
+    在正常数据库操作期间分配的 OID 被限制为 16384 或更高。这确保了 10000&mdash;16383 范围可供 <filename>genbki.pl</filename> 自动分配的 OID 或在 <application>initdb</application> 期间分配的 OID 使用。这些自动分配的 OID 不被视为稳定的，并且可能因安装而异。
    </para>
   </sect2>
 
   <sect2 id="system-catalog-oid-references">
-   <title>OID Reference Lookup</title>
+   <title>OID 参考查找</title>
 
    <para>
-    In principle, cross-references from one initial catalog row to another
-    could be written just by writing the preassigned OID of the referenced
-    row in the referencing field.  However, that is against project
-    policy, because it is error-prone, hard to read, and subject to
-    breakage if a newly-assigned OID is renumbered.  Therefore
-    <filename>genbki.pl</filename> provides mechanisms to write
-    symbolic references instead.
-    The rules are as follows:
+    原则上，从一个初始系统目录行到另一个初始系统目录行的交叉引用，只需在引用字段中写入被引用行的预分配 OID 即可。然而，这违背项目策略，因为这种做法容易出错、难以阅读，而且如果新分配的 OID 被重新编号，就会失效。因此，<filename>genbki.pl</filename> 提供了改为书写符号引用的机制。规则如下：
    </para>
 
    <itemizedlist>
 
     <listitem>
      <para>
-      Use of symbolic references is enabled in a particular catalog column
-      by attaching <literal>BKI_LOOKUP(<replaceable>lookuprule</replaceable>)</literal>
-      to the column's definition, where <replaceable>lookuprule</replaceable>
-      is the name of the referenced catalog, e.g., <literal>pg_proc</literal>.
-      <literal>BKI_LOOKUP</literal> can be attached to columns of
-      type <type>Oid</type>, <type>regproc</type>, <type>oidvector</type>,
-      or <type>Oid[]</type>; in the latter two cases it implies performing a
-      lookup on each element of the array.
+      在特定系统目录列上附加 <literal>BKI_LOOKUP(<replaceable>lookuprule</replaceable>)</literal> 即可启用符号引用，其中 <replaceable>lookuprule</replaceable> 是被引用系统目录的名称，例如 <literal>pg_proc</literal>。<literal>BKI_LOOKUP</literal> 可以附加到类型为 <type>Oid</type>、<type>regproc</type>、<type>oidvector</type> 或 <type>Oid[]</type> 的列上；在后两种情况下，这意味着对数组的每个元素执行查找。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      It's also permissible to attach <literal>BKI_LOOKUP(encoding)</literal>
-      to integer columns to reference character set encodings, which are
-      not currently represented as catalog OIDs, but have a set of values
-      known to <filename>genbki.pl</filename>.
+      也允许将 <literal>BKI_LOOKUP(encoding)</literal> 附加到整数列上，以引用字符集编码，这些编码目前并不表示为系统目录 OID，但具有一组 <filename>genbki.pl</filename> 已知的值。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      In some catalog columns, it's allowed for entries to be zero instead
-      of a valid reference.  If this is allowed, write
-      <literal>BKI_LOOKUP_OPT</literal> instead
-      of <literal>BKI_LOOKUP</literal>.  Then you can
-      write <literal>0</literal> for an entry.  (If the column is
-      declared <type>regproc</type>, you can optionally
-      write <literal>-</literal> instead of <literal>0</literal>.)
-      Except for this special case, all entries in
-      a <literal>BKI_LOOKUP</literal> column must be symbolic references.
-      <filename>genbki.pl</filename> will warn about unrecognized names.
+      在某些系统目录列中，允许条目为零而不是有效引用。如果允许这样做，请写 <literal>BKI_LOOKUP_OPT</literal> 而不是 <literal>BKI_LOOKUP</literal>。然后你可以为某个条目写 <literal>0</literal>。（如果该列声明为 <type>regproc</type>，你可以选择写 <literal>-</literal> 而不是 <literal>0</literal>。）除这一特殊情况外，<literal>BKI_LOOKUP</literal> 列中的所有条目都必须是符号引用。<filename>genbki.pl</filename> 会对无法识别的名称发出警告。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Most kinds of catalog objects are simply referenced by their names.
-      Note that type names must exactly match the
-      referenced <structname>pg_type</structname>
-      entry's <structfield>typname</structfield>; you do not get to use
-      any aliases such as <literal>integer</literal>
-      for <literal>int4</literal>.
+      大多数种类的系统目录对象只需通过其名称引用。注意，类型名必须与被引用的 <structname>pg_type</structname> 条目的 <structfield>typname</structfield> 完全匹配；你不能为 <literal>int4</literal> 使用诸如 <literal>integer</literal> 之类的别名。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      A function can be represented by
-      its <structfield>proname</structfield>, if that is unique among
-      the <filename>pg_proc.dat</filename> entries (this works like regproc
-      input).  Otherwise, write it
-      as <replaceable>proname(argtypename,argtypename,...)</replaceable>,
-      like regprocedure.  The argument type names must be spelled exactly as
-      they are in the <filename>pg_proc.dat</filename> entry's
-      <structfield>proargtypes</structfield> field.  Do not insert any
-      spaces.
+      函数可以用其 <structfield>proname</structfield> 表示，前提是它在 <filename>pg_proc.dat</filename> 条目中是唯一的（这类似于 regproc 输入）。否则，将其写为 <replaceable>proname(argtypename,argtypename,...)</replaceable>，类似于 regprocedure。参数类型名必须与 <filename>pg_proc.dat</filename> 条目的 <structfield>proargtypes</structfield> 字段中的拼写完全一致。不要插入任何空格。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Operators are represented
-      by <replaceable>oprname(lefttype,righttype)</replaceable>,
-      writing the type names exactly as they appear in
-      the <filename>pg_operator.dat</filename>
-      entry's <structfield>oprleft</structfield>
-      and <structfield>oprright</structfield> fields.
-      (Write <literal>0</literal> for the omitted operand of a unary
-      operator.)
+      运算符用 <replaceable>oprname(lefttype,righttype)</replaceable> 表示，类型名要完全按照它们在 <filename>pg_operator.dat</filename> 条目的 <structfield>oprleft</structfield> 和 <structfield>oprright</structfield> 字段中出现的形式书写。（对于一元运算符省略的操作数，写 <literal>0</literal>。）
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The names of opclasses and opfamilies are only unique within an
-      access method, so they are represented
-      by <replaceable>access_method_name</replaceable><literal>/</literal><replaceable>object_name</replaceable>.
+      操作符类和操作符族的名称只在一种访问方法内唯一，因此它们用 <replaceable>access_method_name</replaceable><literal>/</literal><replaceable>object_name</replaceable> 表示。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      In none of these cases is there any provision for
-      schema-qualification; all objects created during bootstrap are
-      expected to be in the <literal>pg_catalog</literal> schema.
+      在所有这些情况中都没有提供模式限定的机制；在引导过程中创建的所有对象都应当位于 <literal>pg_catalog</literal> 模式中。
      </para>
     </listitem>
    </itemizedlist>
 
    <para>
-    <filename>genbki.pl</filename> resolves all symbolic references while it
-    runs, and puts simple numeric OIDs into the emitted BKI file.  There is
-    therefore no need for the bootstrap backend to deal with symbolic
-    references.
+    <filename>genbki.pl</filename> 在运行时解析所有符号引用，并把简单的数字 OID 放入生成的 BKI 文件中。因此，引导后端无需处理符号引用。
    </para>
 
    <para>
-    It's desirable to mark OID reference columns
-    with <literal>BKI_LOOKUP</literal> or <literal>BKI_LOOKUP_OPT</literal>
-    even if the catalog has no initial data that requires lookup.  This
-    allows <filename>genbki.pl</filename> to record the foreign key
-    relationships that exist in the system catalogs.  That information is
-    used in the regression tests to check for incorrect entries.  See also
-    the macros <literal>DECLARE_FOREIGN_KEY</literal>,
-    <literal>DECLARE_FOREIGN_KEY_OPT</literal>,
-    <literal>DECLARE_ARRAY_FOREIGN_KEY</literal>,
-    and <literal>DECLARE_ARRAY_FOREIGN_KEY_OPT</literal>, which are
-    used to declare foreign key relationships that are too complex
-    for <literal>BKI_LOOKUP</literal> (typically, multi-column foreign
-    keys).
+    最好用 <literal>BKI_LOOKUP</literal> 或 <literal>BKI_LOOKUP_OPT</literal> 标记 OID 引用列，即使该系统目录没有需要查找的初始数据。这使得 <filename>genbki.pl</filename> 能够记录系统目录中存在的那些外键关系。该信息在回归测试中用于检查不正确的条目。另请参阅宏 <literal>DECLARE_FOREIGN_KEY</literal>、<literal>DECLARE_FOREIGN_KEY_OPT</literal>、<literal>DECLARE_ARRAY_FOREIGN_KEY</literal> 和 <literal>DECLARE_ARRAY_FOREIGN_KEY_OPT</literal>，它们用于声明对 <literal>BKI_LOOKUP</literal> 来说过于复杂的外键关系（通常是多列外键）。
    </para>
   </sect2>
 
   <sect2 id="system-catalog-auto-array-types">
-   <title>Automatic Creation of Array Types</title>
+   <title>数组类型的自动创建</title>
 
    <para>
-    Most scalar data types should have a corresponding array type (that is,
-    a standard varlena array type whose element type is the scalar type, and
-    which is referenced by the <structfield>typarray</structfield> field of
-    the scalar type's <structname>pg_type</structname>
-    entry).  <filename>genbki.pl</filename> is able to generate
-    the <structname>pg_type</structname> entry for the array type
-    automatically in most cases.
+    大多数标量数据类型都应该有一个对应的数组类型（即一个标准的 varlena 数组类型，其元素类型就是该标量类型，并且由该标量类型的 <structname>pg_type</structname> 条目中的 <structfield>typarray</structfield> 字段引用）。在大多数情况下，<filename>genbki.pl</filename> 能够自动为该数组类型生成 <structname>pg_type</structname> 条目。
    </para>
 
    <para>
-    To use this facility, just write an <literal>array_type_oid
-    =&gt; <replaceable>nnnn</replaceable></literal> metadata field in the
-    scalar type's <structname>pg_type</structname> entry, specifying the OID
-    to use for the array type.  You may then omit
-    the <structfield>typarray</structfield> field, since it will be filled
-    automatically with that OID.
+    要使用这一机制，只需在标量类型的 <structname>pg_type</structname> 条目中写一个 <literal>array_type_oid
+    =&gt; <replaceable>nnnn</replaceable></literal> 元数据字段，指定要用于该数组类型的 OID。然后就可以省略 <structfield>typarray</structfield> 字段，因为它会自动填入该 OID。
    </para>
 
    <para>
-    The generated array type's name is the scalar type's name with an
-    underscore prepended.  The array entry's other fields are filled from
-    <literal>BKI_ARRAY_DEFAULT(<replaceable>value</replaceable>)</literal>
-    annotations in <filename>pg_type.h</filename>, or if there isn't one,
-    copied from the scalar type.  (There's also a special case
-    for <structfield>typalign</structfield>.)  Then
-    the <structfield>typelem</structfield>
-    and <structfield>typarray</structfield> fields of the two entries are
-    set to cross-reference each other.
+    生成的数组类型的名称是在标量类型名称前面加一个下划线。数组条目的其他字段由 <filename>pg_type.h</filename> 中的 <literal>BKI_ARRAY_DEFAULT(<replaceable>value</replaceable>)</literal> 注解填充，如果没有注解，则从标量类型复制。（对于 <structfield>typalign</structfield> 还有一种特殊情况。）然后，两个条目的 <structfield>typelem</structfield> 和 <structfield>typarray</structfield> 字段会被设置为相互交叉引用。
    </para>
   </sect2>
 
   <sect2 id="system-catalog-recipes">
-   <title>Recipes for Editing Data Files</title>
+   <title>编辑数据文件的方法</title>
 
    <para>
-    Here are some suggestions about the easiest ways to perform common tasks
-    when updating catalog data files.
+    下面给出一些建议，介绍在更新系统目录数据文件时执行常见任务的最简便方法。
    </para>
 
    <formalpara>
-    <title>Add a new column with a default to a catalog:</title>
+    <title>向系统目录添加一个带默认值的新列：</title>
     <para>
-     Add the column to the header file with
-     a <literal>BKI_DEFAULT(<replaceable>value</replaceable>)</literal>
-     annotation.  The data file need only be adjusted by adding the field
-     in existing rows where a non-default value is needed.
+     在头文件中添加该列，并加上 <literal>BKI_DEFAULT(<replaceable>value</replaceable>)</literal> 注解。数据文件只需在需要非默认值的现有行中添加该字段即可。
     </para>
    </formalpara>
 
    <formalpara>
-    <title>Add a default value to an existing column that doesn't have
-     one:</title>
+    <title>向没有默认值的现有列添加默认值：</title>
     <para>
-     Add a <literal>BKI_DEFAULT</literal> annotation to the header file,
-     then run <literal>make reformat-dat-files</literal> to remove
-     now-redundant field entries.
+     在头文件中添加 <literal>BKI_DEFAULT</literal> 注解，然后运行 <literal>make reformat-dat-files</literal> 以移除现已冗余的字段条目。
     </para>
    </formalpara>
 
    <formalpara>
-    <title>Remove a column, whether it has a default or not:</title>
+    <title>删除一列，无论其是否有默认值：</title>
     <para>
-     Remove the column from the header, then run <literal>make
-     reformat-dat-files</literal> to remove now-useless field entries.
+     从头文件中移除该列，然后运行 <literal>make
+     reformat-dat-files</literal> 以移除现已无用的字段条目。
     </para>
    </formalpara>
 
    <formalpara>
-    <title>Change or remove an existing default value:</title>
+    <title>更改或移除现有的默认值：</title>
     <para>
-     You cannot simply change the header file, since that will cause the
-     current data to be interpreted incorrectly.  First run <literal>make
-     expand-dat-files</literal> to rewrite the data files with all
-     default values inserted explicitly, then change or remove
-     the <literal>BKI_DEFAULT</literal> annotation, then run <literal>make
-     reformat-dat-files</literal> to remove superfluous fields again.
+     你不能简单地更改头文件，因为那会导致当前数据被错误地解释。首先运行 <literal>make
+     expand-dat-files</literal> 重写数据文件，显式插入所有默认值，然后更改或移除 <literal>BKI_DEFAULT</literal> 注解，再运行 <literal>make
+     reformat-dat-files</literal> 再次移除多余的字段。
     </para>
    </formalpara>
 
    <formalpara>
-    <title>Ad-hoc bulk editing:</title>
+    <title>临时批量编辑：</title>
     <para>
-     <filename>reformat_dat_file.pl</filename> can be adapted to perform
-     many kinds of bulk changes.  Look for its block comments showing where
-     one-off code can be inserted.  In the following example, we are going
-     to consolidate two Boolean fields in <structname>pg_proc</structname>
-     into a char field:
+     <filename>reformat_dat_file.pl</filename> 可以经过调整来执行多种批量更改。请查找其中的块注释，它们标明了可以插入一次性代码的位置。在下面的示例中，我们将把 <structname>pg_proc</structname> 中的两个布尔字段合并为一个 char 字段：
 
      <orderedlist>
       <listitem>
        <para>
-        Add the new column, with a default,
-        to <filename>pg_proc.h</filename>:
+        向 <filename>pg_proc.h</filename> 添加带默认值的新列：
 <programlisting>
 +    /* see PROKIND_ categories below */
 +    char        prokind BKI_DEFAULT(f);
@@ -596,8 +404,7 @@
 
       <listitem>
        <para>
-        Create a new script based on <filename>reformat_dat_file.pl</filename>
-        to insert appropriate values on-the-fly:
+        基于 <filename>reformat_dat_file.pl</filename> 创建一个新脚本，以便即时插入适当的值：
 <programlisting>
 -           # At this point we have the full row in memory as a hash
 -           # and can do any operations we want. As written, it only
@@ -620,22 +427,18 @@
 
       <listitem>
        <para>
-        Run the new script:
+        运行新脚本：
 <programlisting>
 $ cd src/include/catalog
 $ perl  rewrite_dat_with_prokind.pl  pg_proc.dat
 </programlisting>
-        At this point <filename>pg_proc.dat</filename> has all three
-        columns, <structfield>prokind</structfield>,
-        <structfield>proisagg</structfield>,
-        and <structfield>proiswindow</structfield>, though they will appear
-        only in rows where they have non-default values.
+        此时 <filename>pg_proc.dat</filename> 已拥有全部三列：<structfield>prokind</structfield>、<structfield>proisagg</structfield> 和 <structfield>proiswindow</structfield>，不过它们只会出现在具有非默认值的行中。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Remove the old columns from <filename>pg_proc.h</filename>:
+        从 <filename>pg_proc.h</filename> 中删除旧列：
 <programlisting>
 -    /* is it an aggregate? */
 -    bool        proisagg BKI_DEFAULT(f);
@@ -648,16 +451,14 @@ $ perl  rewrite_dat_with_prokind.pl  pg_proc.dat
 
       <listitem>
        <para>
-        Finally, run <literal>make reformat-dat-files</literal> to remove
-        the useless old entries from <filename>pg_proc.dat</filename>.
+        最后，运行 <literal>make reformat-dat-files</literal> 以从 <filename>pg_proc.dat</filename> 中删除无用的旧条目。
        </para>
       </listitem>
      </orderedlist>
 
-     For further examples of scripts used for bulk editing, see
-     <filename>convert_oid2name.pl</filename>
-     and <filename>remove_pg_type_oid_symbols.pl</filename> attached to this
-     message:
+     有关用于批量编辑的脚本的更多示例，请参阅
+     附加到本消息的 <filename>convert_oid2name.pl</filename>
+     和 <filename>remove_pg_type_oid_symbols.pl</filename>：
      <ulink url="https://www.postgresql.org/message-id/CAJVSVGVX8gXnPm+Xa=DxR7kFYprcQ1tNcCT5D0O3ShfnM6jehA@mail.gmail.com"></ulink>
     </para>
    </formalpara>
