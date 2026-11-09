@@ -5103,58 +5103,51 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
 
 
  <sect1 id="functions-matching">
-  <title>Pattern Matching</title>
+  <title>模式匹配</title>
 
   <indexterm zone="functions-matching">
    <primary>pattern matching</primary>
   </indexterm>
 
    <para>
-    There are three separate approaches to pattern matching provided
-    by <productname>PostgreSQL</productname>: the traditional
-    <acronym>SQL</acronym> <function>LIKE</function> operator, the
-    more recent <function>SIMILAR TO</function> operator (added in
-    SQL:1999), and <acronym>POSIX</acronym>-style regular
-    expressions.  Aside from the basic <quote>does this string match
-    this pattern?</quote> operators, functions are available to extract
-    or replace matching substrings and to split a string at matching
-    locations.
+    <productname>PostgreSQL</productname> 提供了三种独立的模式匹配方法：传统的
+    <acronym>SQL</acronym> <function>LIKE</function> 运算符、较新的 <function>SIMILAR TO</function> 运算符（在
+    SQL:1999 中加入）以及 <acronym>POSIX</acronym> 风格的正则
+    表达式。除了基本的<quote>此字符串是否匹配
+    此模式？</quote>运算符之外，还提供了一些函数，用于提取
+    或替换匹配的子串，以及在匹配位置拆分字符串。
    </para>
 
    <tip>
     <para>
-     If you have pattern matching needs that go beyond this,
-     consider writing a user-defined function in Perl or Tcl.
+     如果您的模式匹配需求超出了这些范围，
+     可以考虑用 Perl 或 Tcl 编写用户定义函数。
     </para>
    </tip>
 
    <caution>
     <para>
-     While most regular-expression searches can be executed very quickly,
-     regular expressions can be contrived that take arbitrary amounts of
-     time and memory to process.  Be wary of accepting regular-expression
-     search patterns from hostile sources.  If you must do so, it is
-     advisable to impose a statement timeout.
+     虽然大多数正则表达式搜索可以执行得非常快，
+     但也可以构造出需要任意多时间和内存来处理的正则表达式。
+     要警惕接受来自恶意来源的正则表达式
+     搜索模式。如果必须这样做，建议
+     设置语句超时。
     </para>
 
     <para>
-     Searches using <function>SIMILAR TO</function> patterns have the same
-     security hazards, since <function>SIMILAR TO</function> provides many
-     of the same capabilities as <acronym>POSIX</acronym>-style regular
-     expressions.
+     使用 <function>SIMILAR TO</function> 模式的搜索具有同样的
+     安全隐患，因为 <function>SIMILAR TO</function> 提供了许多
+     与 <acronym>POSIX</acronym> 风格正则表达式相同的能力。
     </para>
 
     <para>
-     <function>LIKE</function> searches, being much simpler than the other
-     two options, are safer to use with possibly-hostile pattern sources.
+     <function>LIKE</function> 搜索比其他两种选项简单得多，
+     因此在处理可能带有恶意的模式来源时使用起来更安全。
     </para>
    </caution>
 
    <para>
-    <function>SIMILAR TO</function> and <acronym>POSIX</acronym>-style regular
-    expressions do not support nondeterministic collations.  If required, use
-    <function>LIKE</function> or apply a different collation to the expression
-    to work around this limitation.
+    <function>SIMILAR TO</function> 和 <acronym>POSIX</acronym> 风格的正则表达式不支持非确定性排序规则。如有需要，可使用 <function>LIKE</function>，或对该表达式应用不同的排序规则来绕过此限制。
    </para>
 
   <sect2 id="functions-like">
@@ -5170,28 +5163,16 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
 </synopsis>
 
     <para>
-     The <function>LIKE</function> expression returns true if the
-     <replaceable>string</replaceable> matches the supplied
-     <replaceable>pattern</replaceable>.  (As
-     expected, the <function>NOT LIKE</function> expression returns
-     false if <function>LIKE</function> returns true, and vice versa.
-     An equivalent expression is
-     <literal>NOT (<replaceable>string</replaceable> LIKE
-      <replaceable>pattern</replaceable>)</literal>.)
+     如果 <replaceable>string</replaceable> 与提供的 <replaceable>pattern</replaceable> 匹配，则 <function>LIKE</function> 表达式返回真。（正如所料，如果 <function>LIKE</function> 返回真，则 <function>NOT LIKE</function> 表达式返回假，反之亦然。等价的表达式是 <literal>NOT (<replaceable>string</replaceable> LIKE
+      <replaceable>pattern</replaceable>)</literal>。）
     </para>
 
     <para>
-     If <replaceable>pattern</replaceable> does not contain percent
-     signs or underscores, then the pattern only represents the string
-     itself; in that case <function>LIKE</function> acts like the
-     equals operator.  An underscore (<literal>_</literal>) in
-     <replaceable>pattern</replaceable> stands for (matches) any single
-     character; a percent sign (<literal>%</literal>) matches any sequence
-     of zero or more characters.
+     如果 <replaceable>pattern</replaceable> 不包含百分号或下划线，则该模式仅表示字符串本身；在这种情况下，<function>LIKE</function> 的作用类似于等号运算符。<replaceable>pattern</replaceable> 中的下划线（<literal>_</literal>）代表（匹配）任意单个字符；百分号（<literal>%</literal>）匹配任意零个或多个字符的序列。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 'abc' LIKE 'abc'    <lineannotation>true</lineannotation>
 'abc' LIKE 'a%'     <lineannotation>true</lineannotation>
@@ -5201,129 +5182,83 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
    </para>
 
    <para>
-    <function>LIKE</function> pattern matching supports nondeterministic
-    collations (see <xref linkend="collation-nondeterministic"/>), such as
-    case-insensitive collations or collations that, say, ignore punctuation.
-    So with a case-insensitive collation, one could have:
+    <function>LIKE</function> 模式匹配支持非确定性排序规则（参见 <xref linkend="collation-nondeterministic"/>），例如不区分大小写的排序规则，或者比如忽略标点符号的排序规则。因此，在使用不区分大小写的排序规则时，可以有：
 <programlisting>
 'AbC' LIKE 'abc' COLLATE case_insensitive    <lineannotation>true</lineannotation>
 'AbC' LIKE 'a%' COLLATE case_insensitive     <lineannotation>true</lineannotation>
 </programlisting>
-    With collations that ignore certain characters or in general that consider
-    strings of different lengths equal, the semantics can become a bit more
-    complicated.  Consider these examples:
+    对于忽略某些字符、或一般而言将不同长度的字符串视为相等的排序规则，其语义可能会变得稍微复杂一些。考虑以下示例：
 <programlisting>
 '.foo.' LIKE 'foo' COLLATE ign_punct    <lineannotation>true</lineannotation>
 '.foo.' LIKE 'f_o' COLLATE ign_punct    <lineannotation>true</lineannotation>
 '.foo.' LIKE '_oo' COLLATE ign_punct    <lineannotation>false</lineannotation>
 </programlisting>
-    The way the matching works is that the pattern is partitioned into
-    sequences of wildcards and non-wildcard strings (wildcards being
-    <literal>_</literal> and <literal>%</literal>).  For example, the pattern
-    <literal>f_o</literal> is partitioned into <literal>f, _, o</literal>, the
-    pattern <literal>_oo</literal> is partitioned into <literal>_,
-    oo</literal>.  The input string matches the pattern if it can be
-    partitioned in such a way that the wildcards match one character or any
-    number of characters respectively and the non-wildcard partitions are
-    equal under the applicable collation.  So for example, <literal>'.foo.'
-    LIKE 'f_o' COLLATE ign_punct</literal> is true because one can partition
-    <literal>.foo.</literal> into <literal>.f, o, o.</literal>, and then
-    <literal>'.f' = 'f' COLLATE ign_punct</literal>, <literal>'o'</literal>
-    matches the <literal>_</literal> wildcard, and <literal>'o.' = 'o' COLLATE
-    ign_punct</literal>.  But <literal>'.foo.' LIKE '_oo' COLLATE
-    ign_punct</literal> is false because <literal>.foo.</literal> cannot be
-    partitioned in a way that the first character is any character and the
-    rest of the string compares equal to <literal>oo</literal>.  (Note that
-    the single-character wildcard always matches exactly one character,
-    independent of the collation.  So in this example, the
-    <literal>_</literal> would match <literal>.</literal>, but then the rest
-    of the input string won't match the rest of the pattern.)
+    匹配的工作方式是：模式被划分为通配符序列和非通配符字符串（通配符为 <literal>_</literal> 和 <literal>%</literal>）。例如，模式 <literal>f_o</literal> 被划分为 <literal>f, _, o</literal>，模式 <literal>_oo</literal> 被划分为 <literal>_,
+    oo</literal>。如果输入字符串能够以这样的方式划分——即通配符分别匹配一个字符或任意数量的字符，且非通配符部分在适用的排序规则下相等——则该输入字符串匹配该模式。因此，例如 <literal>'.foo.'
+    LIKE 'f_o' COLLATE ign_punct</literal> 为真，因为可以将 <literal>.foo.</literal> 划分为 <literal>.f, o, o.</literal>，然后 <literal>'.f' = 'f' COLLATE ign_punct</literal>、<literal>'o'</literal> 匹配 <literal>_</literal> 通配符，并且 <literal>'o.' = 'o' COLLATE
+    ign_punct</literal>。但 <literal>'.foo.' LIKE '_oo' COLLATE
+    ign_punct</literal> 为假，因为 <literal>.foo.</literal> 无法以这样的方式划分：第一个字符为任意字符，而字符串的其余部分与 <literal>oo</literal> 比较相等。（注意，单字符通配符始终恰好匹配一个字符，与排序规则无关。因此在此示例中，<literal>_</literal> 会匹配 <literal>.</literal>，但随后输入字符串的其余部分将无法匹配模式的其余部分。）
    </para>
 
    <para>
-    <function>LIKE</function> pattern matching always covers the entire
-    string.  Therefore, if it's desired to match a sequence anywhere within
-    a string, the pattern must start and end with a percent sign.
+    <function>LIKE</function> 模式匹配总是覆盖整个字符串。因此，如果希望在字符串中的任意位置匹配某个序列，模式必须以百分号开头和结尾。
    </para>
 
    <para>
-    To match a literal underscore or percent sign without matching
-    other characters, the respective character in
-    <replaceable>pattern</replaceable> must be
-    preceded by the escape character.  The default escape
-    character is the backslash but a different one can be selected by
-    using the <literal>ESCAPE</literal> clause.  To match the escape
-    character itself, write two escape characters.
+    要匹配字面意义上的下划线或百分号而不匹配其他字符，<replaceable>pattern</replaceable> 中的相应字符前面必须加上转义字符。默认的转义字符是反斜线，但也可以使用 <literal>ESCAPE</literal> 子句选择其他字符。要匹配转义字符本身，请写两个转义字符。
    </para>
 
    <note>
     <para>
-     If you have <xref linkend="guc-standard-conforming-strings"/> turned off,
-     any backslashes you write in literal string constants will need to be
-     doubled.  See <xref linkend="sql-syntax-strings"/> for more information.
+     如果关闭了 <xref linkend="guc-standard-conforming-strings"/>，那么在字面字符串常量中书写的任何反斜线都需要双写。更多信息请参见 <xref linkend="sql-syntax-strings"/>。
     </para>
    </note>
 
    <para>
-    It's also possible to select no escape character by writing
-    <literal>ESCAPE ''</literal>.  This effectively disables the
-    escape mechanism, which makes it impossible to turn off the
-    special meaning of underscore and percent signs in the pattern.
+    也可以通过写 <literal>ESCAPE ''</literal> 来选择不使用转义字符。这会有效地禁用转义机制，从而无法关闭模式中下划线和百分号的特殊含义。
    </para>
 
    <para>
-    According to the SQL standard, omitting <literal>ESCAPE</literal>
-    means there is no escape character (rather than defaulting to a
-    backslash), and a zero-length <literal>ESCAPE</literal> value is
-    disallowed.  <productname>PostgreSQL</productname>'s behavior in
-    this regard is therefore slightly nonstandard.
+    根据 SQL 标准，省略 <literal>ESCAPE</literal> 意味着没有转义字符（而不是默认为反斜线），并且不允许长度为零的 <literal>ESCAPE</literal> 值。因此，<productname>PostgreSQL</productname> 在这方面的行为略微不符合标准。
    </para>
 
    <para>
-    The key word <token>ILIKE</token> can be used instead of
-    <token>LIKE</token> to make the match case-insensitive according to the
-    active locale.  (But this does not support nondeterministic collations.)
-    This is not in the <acronym>SQL</acronym> standard but is a
-    <productname>PostgreSQL</productname> extension.
+    关键字 <token>ILIKE</token> 可以代替 <token>LIKE</token> 使用，以根据活动区域设置使匹配不区分大小写。（但它不支持非确定性排序规则。）这不在 <acronym>SQL</acronym> 标准中，而是 <productname>PostgreSQL</productname> 的扩展。
    </para>
 
    <para>
-    The operator <literal>~~</literal> is equivalent to
-    <function>LIKE</function>, and <literal>~~*</literal> corresponds to
-    <function>ILIKE</function>.  There are also
-    <literal>!~~</literal> and <literal>!~~*</literal> operators that
-    represent <function>NOT LIKE</function> and <function>NOT
-    ILIKE</function>, respectively.  All of these operators are
-    <productname>PostgreSQL</productname>-specific.  You may see these
-    operator names in <command>EXPLAIN</command> output and similar
-    places, since the parser actually translates <function>LIKE</function>
-    et al. to these operators.
+    运算符 <literal>~~</literal> 等价于
+    <function>LIKE</function>，而 <literal>~~*</literal> 对应于
+    <function>ILIKE</function>。此外还有
+    <literal>!~~</literal> 和 <literal>!~~*</literal> 运算符，分别
+    表示 <function>NOT LIKE</function> 和 <function>NOT
+    ILIKE</function>。所有这些运算符都是
+    <productname>PostgreSQL</productname> 特有的。你可能会在 <command>EXPLAIN</command> 输出及类似
+    位置看到这些运算符名称，因为解析器实际上会把 <function>LIKE</function>
+    等转换为这些运算符。
    </para>
 
    <para>
-    The phrases <function>LIKE</function>, <function>ILIKE</function>,
-    <function>NOT LIKE</function>, and <function>NOT ILIKE</function> are
-    generally treated as operators
-    in <productname>PostgreSQL</productname> syntax; for example they can
-    be used in <replaceable>expression</replaceable>
+    短语 <function>LIKE</function>、<function>ILIKE</function>、
+    <function>NOT LIKE</function> 和 <function>NOT ILIKE</function> 在
+    <productname>PostgreSQL</productname> 语法中通常被当作运算符
+    处理；例如它们可以用于 <replaceable>expression</replaceable>
     <replaceable>operator</replaceable> ANY
-    (<replaceable>subquery</replaceable>) constructs, although
-    an <literal>ESCAPE</literal> clause cannot be included there.  In some
-    obscure cases it may be necessary to use the underlying operator names
-    instead.
+    (<replaceable>subquery</replaceable>) 构造中，尽管
+    那里不能包含 <literal>ESCAPE</literal> 子句。在某些
+    晦涩的情况下，可能需要改用底层的运算符名称。
    </para>
 
    <para>
-    Also see the starts-with operator <literal>^@</literal> and the
-    corresponding <function>starts_with()</function> function, which are
-    useful in cases where simply matching the beginning of a string is
-    needed.
+    另请参阅 starts-with 运算符 <literal>^@</literal> 以及
+    对应的 <function>starts_with()</function> 函数，在仅需
+    匹配字符串开头的情况下它们很有用。
    </para>
   </sect2>
 
 
   <sect2 id="functions-similarto-regexp">
-   <title><function>SIMILAR TO</function> Regular Expressions</title>
+   <title><function>SIMILAR TO</function> POSIX 正则表达式</title>
 
    <indexterm>
     <primary>regular expression</primary>
@@ -5343,26 +5278,23 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
 </synopsis>
 
    <para>
-    The <function>SIMILAR TO</function> operator returns true or
-    false depending on whether its pattern matches the given string.
-    It is similar to <function>LIKE</function>, except that it
-    interprets the pattern using the SQL standard's definition of a
-    regular expression.  SQL regular expressions are a curious cross
-    between <function>LIKE</function> notation and common (POSIX) regular
-    expression notation.
+    <function>SIMILAR TO</function> 运算符根据其模式是否匹配给定字符串
+    返回真或假。它类似于 <function>LIKE</function>，不同之处在于它
+    使用 SQL 标准对正则表达式的定义来解释模式。
+    SQL 正则表达式是 <function>LIKE</function> 记法与常见（POSIX）正则
+    表达式记法之间一种奇特的混合体。
    </para>
 
    <para>
-    Like <function>LIKE</function>, the <function>SIMILAR TO</function>
-    operator succeeds only if its pattern matches the entire string;
-    this is unlike common regular expression behavior where the pattern
-    can match any part of the string.
-    Also like
-    <function>LIKE</function>, <function>SIMILAR TO</function> uses
-    <literal>_</literal> and <literal>%</literal> as wildcard characters denoting
-    any single character and any string, respectively (these are
-    comparable to <literal>.</literal> and <literal>.*</literal> in POSIX regular
-    expressions).
+    与 <function>LIKE</function> 一样，<function>SIMILAR TO</function>
+    运算符仅当其模式匹配整个字符串时才成功；
+    这与常见正则表达式的行为不同，后者模式
+    可以匹配字符串的任意部分。
+    同样与
+    <function>LIKE</function> 一样，<function>SIMILAR TO</function> 使用
+    <literal>_</literal> 和 <literal>%</literal> 作为通配符，分别表示
+    任意单个字符和任意字符串（它们可与 POSIX 正则
+    表达式中的 <literal>.</literal> 和 <literal>.*</literal> 相类比）。
    </para>
 
    <para>
@@ -5373,56 +5305,48 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
    <itemizedlist>
     <listitem>
      <para>
-      <literal>|</literal> denotes alternation (either of two alternatives).
+      <literal>|</literal> 表示选择（两个备选之一）。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>*</literal> denotes repetition of the previous item zero
-      or more times.
+      <literal>*</literal> 表示前一项重复零次或多次。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>+</literal> denotes repetition of the previous item one
-      or more times.
+      <literal>+</literal> 表示前一项重复一次或多次。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>?</literal> denotes repetition of the previous item zero
-      or one time.
+      <literal>?</literal> 表示前一项重复零次或一次。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>{</literal><replaceable>m</replaceable><literal>}</literal> denotes repetition
-      of the previous item exactly <replaceable>m</replaceable> times.
+      <literal>{</literal><replaceable>m</replaceable><literal>}</literal> 表示前一项恰好重复 <replaceable>m</replaceable> 次。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>{</literal><replaceable>m</replaceable><literal>,}</literal> denotes repetition
-      of the previous item <replaceable>m</replaceable> or more times.
+      <literal>{</literal><replaceable>m</replaceable><literal>,}</literal> 表示前一项重复 <replaceable>m</replaceable> 次或更多次。
      </para>
     </listitem>
     <listitem>
      <para>
       <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal>
-      denotes repetition of the previous item at least <replaceable>m</replaceable> and
-      not more than <replaceable>n</replaceable> times.
+      表示前一项至少重复 <replaceable>m</replaceable> 次，至多重复 <replaceable>n</replaceable> 次。
      </para>
     </listitem>
     <listitem>
      <para>
-      Parentheses <literal>()</literal> can be used to group items into
-      a single logical item.
+      圆括号 <literal>()</literal> 可用于将各项分组为一个逻辑项。
      </para>
     </listitem>
     <listitem>
      <para>
-      A bracket expression <literal>[...]</literal> specifies a character
-      class, just as in POSIX regular expressions.
+      方括号表达式 <literal>[...]</literal> 指定一个字符类，与 POSIX 正则表达式中相同。
      </para>
     </listitem>
    </itemizedlist>
@@ -5432,31 +5356,19 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
    </para>
 
    <para>
-    As with <function>LIKE</function>, a backslash disables the special
-    meaning of any of these metacharacters.  A different escape character
-    can be specified with <literal>ESCAPE</literal>, or the escape
-    capability can be disabled by writing <literal>ESCAPE ''</literal>.
+    与 <function>LIKE</function> 一样，反斜杠会禁用这些元字符中任何一个的特殊含义。可以用 <literal>ESCAPE</literal> 指定不同的转义字符，或者通过书写 <literal>ESCAPE ''</literal> 来禁用转义功能。
    </para>
 
    <para>
-    According to the SQL standard, omitting <literal>ESCAPE</literal>
-    means there is no escape character (rather than defaulting to a
-    backslash), and a zero-length <literal>ESCAPE</literal> value is
-    disallowed.  <productname>PostgreSQL</productname>'s behavior in
-    this regard is therefore slightly nonstandard.
+    根据 SQL 标准，省略 <literal>ESCAPE</literal> 意味着没有转义字符（而不是默认为反斜杠），并且不允许 <literal>ESCAPE</literal> 值为零长度。因此，<productname>PostgreSQL</productname> 在这方面的行为略微不符合标准。
    </para>
 
    <para>
-    Another nonstandard extension is that following the escape character
-    with a letter or digit provides access to the escape sequences
-    defined for POSIX regular expressions; see
-    <xref linkend="posix-character-entry-escapes-table"/>,
-    <xref linkend="posix-class-shorthand-escapes-table"/>, and
-    <xref linkend="posix-constraint-escapes-table"/> below.
+    另一个非标准扩展是：在转义字符后跟一个字母或数字，可以访问为 POSIX 正则表达式定义的转义序列；参见下面的 <xref linkend="posix-character-entry-escapes-table"/>、<xref linkend="posix-class-shorthand-escapes-table"/> 和 <xref linkend="posix-constraint-escapes-table"/>。
    </para>
 
    <para>
-    Some examples:
+    一些例子：
 <programlisting>
 'abc' SIMILAR TO 'abc'          <lineannotation>true</lineannotation>
 'abc' SIMILAR TO 'a'            <lineannotation>false</lineannotation>
@@ -5468,53 +5380,47 @@ cast(-44 as bit(12))           <lineannotation>111111010100</lineannotation>
    </para>
 
    <para>
-    The <function>substring</function> function with three parameters
-    provides extraction of a substring that matches an SQL
-    regular expression pattern.  The function can be written according
-    to standard SQL syntax:
+    带三个参数的 <function>substring</function> 函数
+    提供了提取与 SQL 正则表达式模式匹配的子串的功能。该函数可以按照
+    标准 SQL 语法书写：
 <synopsis>
 substring(<replaceable>string</replaceable> similar <replaceable>pattern</replaceable> escape <replaceable>escape-character</replaceable>)
 </synopsis>
-    or using the now obsolete SQL:1999 syntax:
+    或者使用现已过时的 SQL:1999 语法：
 <synopsis>
 substring(<replaceable>string</replaceable> from <replaceable>pattern</replaceable> for <replaceable>escape-character</replaceable>)
 </synopsis>
-    or as a plain three-argument function:
+    或者作为普通的三参数函数：
 <synopsis>
 substring(<replaceable>string</replaceable>, <replaceable>pattern</replaceable>, <replaceable>escape-character</replaceable>)
 </synopsis>
-    As with <literal>SIMILAR TO</literal>, the
-    specified pattern must match the entire data string, or else the
-    function fails and returns null.  To indicate the part of the
-    pattern for which the matching data sub-string is of interest,
-    the pattern should contain
-    two occurrences of the escape character followed by a double quote
-    (<literal>"</literal>). <!-- " font-lock sanity -->
-    The text matching the portion of the pattern
-    between these separators is returned when the match is successful.
+    与 <literal>SIMILAR TO</literal> 一样，
+    指定的模式必须匹配整个数据字符串，否则函数将失败并返回 null。为了指出
+    模式中与匹配数据子串相关的部分，
+    模式中应包含
+    两次转义字符后跟一个双引号
+    （<literal>"</literal>）。<!-- " font-lock sanity -->
+    当匹配成功时，将返回与这些分隔符之间的模式部分相匹配的文本。
    </para>
 
    <para>
-    The escape-double-quote separators actually
-    divide <function>substring</function>'s pattern into three independent
-    regular expressions; for example, a vertical bar (<literal>|</literal>)
-    in any of the three sections affects only that section.  Also, the first
-    and third of these regular expressions are defined to match the smallest
-    possible amount of text, not the largest, when there is any ambiguity
-    about how much of the data string matches which pattern.  (In POSIX
-    parlance, the first and third regular expressions are forced to be
-    non-greedy.)
+    转义双引号分隔符实际上将 <function>substring</function> 的模式
+    划分为三个独立的正则表达式；例如，三个部分中任意一个里的竖线（<literal>|</literal>）
+    只影响该部分。此外，当数据字符串中有多少内容匹配哪个模式存在任何歧义时，
+    这些正则表达式中的第一个和第三个被定义为匹配尽可能少的文本，
+    而不是尽可能多的文本。（用 POSIX
+    的说法，第一个和第三个正则表达式被强制为非贪婪的。）
    </para>
 
    <para>
-    As an extension to the SQL standard, <productname>PostgreSQL</productname>
-    allows there to be just one escape-double-quote separator, in which case
-    the third regular expression is taken as empty; or no separators, in which
-    case the first and third regular expressions are taken as empty.
+    作为对 SQL 标准的扩展，<productname>PostgreSQL</productname>
+    允许只有一个转义双引号分隔符，在这种情况下
+    第三个正则表达式被视为空；或者没有分隔符，在这种情况下
+    第一个和第三个正则表达式被视为空。
    </para>
 
    <para>
-    Some examples, with <literal>#&quot;</literal> delimiting the return string:
+    一些例子，其中 <literal>#&quot;</literal> 界定了返回字符串：
 <programlisting>
 substring('foobar' similar '%#"o_b#"%' escape '#')   <lineannotation>oob</lineannotation>
 substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</lineannotation>
@@ -5523,7 +5429,7 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
   </sect2>
 
   <sect2 id="functions-posix-regexp">
-   <title><acronym>POSIX</acronym> Regular Expressions</title>
+   <title><acronym>POSIX</acronym> 正则表达式</title>
 
    <indexterm zone="functions-posix-regexp">
     <primary>regular expression</primary>
@@ -5561,24 +5467,23 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
    </indexterm>
 
    <para>
-    <xref linkend="functions-posix-table"/> lists the available
-    operators for pattern matching using POSIX regular expressions.
+    <xref linkend="functions-posix-table"/> 列出了使用 POSIX 正则表达式进行模式匹配的可用运算符。
    </para>
 
    <table id="functions-posix-table">
-    <title>Regular Expression Match Operators</title>
+    <title>正则表达式匹配运算符</title>
 
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Operator
+        运算符
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example(s)
+        示例
        </para></entry>
       </row>
      </thead>
@@ -5590,7 +5495,7 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        String matches regular expression, case sensitively
+        字符串匹配正则表达式，区分大小写
        </para>
        <para>
         <literal>'thomas' ~ 't.*ma'</literal>
@@ -5604,7 +5509,7 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        String matches regular expression, case-insensitively
+        字符串匹配正则表达式，不区分大小写
        </para>
        <para>
         <literal>'thomas' ~* 'T.*ma'</literal>
@@ -5618,7 +5523,7 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        String does not match regular expression, case sensitively
+        字符串不匹配正则表达式，区分大小写
        </para>
        <para>
         <literal>'thomas' !~ 't.*max'</literal>
@@ -5632,7 +5537,7 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        String does not match regular expression, case-insensitively
+        字符串不匹配正则表达式，不区分大小写
        </para>
        <para>
         <literal>'thomas' !~* 'T.*ma'</literal>
@@ -5644,31 +5549,26 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
     </table>
 
     <para>
-     <acronym>POSIX</acronym> regular expressions provide a more
-     powerful means for pattern matching than the <function>LIKE</function> and
-     <function>SIMILAR TO</function> operators.
-     Many Unix tools such as <command>egrep</command>,
-     <command>sed</command>, or <command>awk</command> use a pattern
-     matching language that is similar to the one described here.
+     <acronym>POSIX</acronym> 正则表达式提供了一种比 <function>LIKE</function> 和
+     <function>SIMILAR TO</function> 运算符更强大的模式匹配手段。
+     许多 Unix 工具，例如 <command>egrep</command>、
+     <command>sed</command> 或 <command>awk</command>，都使用一种与此处所述相类似的
+     模式匹配语言。
     </para>
 
     <para>
-     A regular expression is a character sequence that is an
-     abbreviated definition of a set of strings (a <firstterm>regular
-     set</firstterm>).  A string is said to match a regular expression
-     if it is a member of the regular set described by the regular
-     expression.  As with <function>LIKE</function>, pattern characters
-     match string characters exactly unless they are special characters
-     in the regular expression language &mdash; but regular expressions use
-     different special characters than <function>LIKE</function> does.
-     Unlike <function>LIKE</function> patterns, a
-     regular expression is allowed to match anywhere within a string, unless
-     the regular expression is explicitly anchored to the beginning or
-     end of the string.
+     正则表达式是一个字符序列，它是对一组字符串（一个<firstterm>正则集合</firstterm>）的简略定义。
+     如果一个字符串是某个正则表达式所描述的正则集合的成员，则称该字符串
+     匹配该正则表达式。与 <function>LIKE</function> 一样，模式字符
+     与字符串字符精确匹配，除非它们是正则表达式语言中的特殊字符 &mdash;，
+     但正则表达式使用的特殊字符与 <function>LIKE</function> 不同。
+     与 <function>LIKE</function> 模式不同，正则表达式允许匹配字符串中的任意位置，除非
+     该正则表达式被显式地锚定到字符串的开头或
+     结尾。
     </para>
 
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 'abcd' ~ 'bc'     <lineannotation>true</lineannotation>
 'abcd' ~ 'a.c'    <lineannotation>true &mdash; dot matches any character</lineannotation>
@@ -5680,29 +5580,17 @@ substring('foobar' similar '#"o_b#"%' escape '#')    <lineannotation>NULL</linea
     </para>
 
     <para>
-     The <acronym>POSIX</acronym> pattern language is described in much
-     greater detail below.
+     <acronym>POSIX</acronym> 模式语言将在下文更详细地描述。
     </para>
 
     <para>
-     The <function>substring</function> function with two parameters,
+     带两个参数的 <function>substring</function> 函数
      <function>substring(<replaceable>string</replaceable> from
-     <replaceable>pattern</replaceable>)</function>, provides extraction of a
-     substring
-     that matches a POSIX regular expression pattern.  It returns null if
-     there is no match, otherwise the first portion of the text that matched the
-     pattern.  But if the pattern contains any parentheses, the portion
-     of the text that matched the first parenthesized subexpression (the
-     one whose left parenthesis comes first) is
-     returned.  You can put parentheses around the whole expression
-     if you want to use parentheses within it without triggering this
-     exception.  If you need parentheses in the pattern before the
-     subexpression you want to extract, see the non-capturing parentheses
-     described below.
+     <replaceable>pattern</replaceable>)</function> 提供了提取与 POSIX 正则表达式模式匹配的子串的功能。如果没有匹配，它返回 null，否则返回文本中与模式匹配的第一部分。但如果模式中包含任何括号，则返回与第一个带括号的子表达式（即左括号最先出现的那个）匹配的那部分文本。如果你希望在模式内部使用括号而又不想触发这一例外，可以把整个表达式用括号括起来。如果你需要在想要提取的子表达式之前使用括号，请参阅下文描述的非捕获括号。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 substring('foobar' from 'o.b')     <lineannotation>oob</lineannotation>
 substring('foobar' from 'o(.)b')   <lineannotation>o</lineannotation>
@@ -5710,28 +5598,22 @@ substring('foobar' from 'o(.)b')   <lineannotation>o</lineannotation>
    </para>
 
     <para>
-     The <function>regexp_count</function> function counts the number of
-     places where a POSIX regular expression pattern matches a string.
-     It has the syntax
+     <function>regexp_count</function> 函数统计 POSIX 正则表达式模式在字符串中匹配的位置数目。其语法为
      <function>regexp_count</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>
      <optional>, <replaceable>start</replaceable>
      <optional>, <replaceable>flags</replaceable>
-     </optional></optional>).
-     <replaceable>pattern</replaceable> is searched for
-     in <replaceable>string</replaceable>, normally from the beginning of
-     the string, but if the <replaceable>start</replaceable> parameter is
-     provided then beginning from that character index.
-     The <replaceable>flags</replaceable> parameter is an optional text
-     string containing zero or more single-letter flags that change the
-     function's behavior.  For example, including <literal>i</literal> in
-     <replaceable>flags</replaceable> specifies case-insensitive matching.
-     Supported flags are described in
-     <xref linkend="posix-embedded-options-table"/>.
+     </optional></optional>)。
+     在 <replaceable>string</replaceable> 中搜索
+     <replaceable>pattern</replaceable>，通常从字符串开头开始，但如果提供了 <replaceable>start</replaceable> 参数，则从该字符索引处开始。
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个改变函数行为的单字母标志。例如，在
+     <replaceable>flags</replaceable> 中包含 <literal>i</literal> 表示不区分大小写的匹配。
+     支持的标志在
+     <xref linkend="posix-embedded-options-table"/> 中描述。
     </para>
 
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 regexp_count('ABCABCAXYaxy', 'A.')          <lineannotation>3</lineannotation>
 regexp_count('ABCABCAXYaxy', 'A.', 1, 'i')  <lineannotation>4</lineannotation>
@@ -5739,10 +5621,7 @@ regexp_count('ABCABCAXYaxy', 'A.', 1, 'i')  <lineannotation>4</lineannotation>
     </para>
 
     <para>
-     The <function>regexp_instr</function> function returns the starting or
-     ending position of the <replaceable>N</replaceable>'th match of a
-     POSIX regular expression pattern to a string, or zero if there is no
-     such match.  It has the syntax
+     <function>regexp_instr</function> 函数返回 POSIX 正则表达式模式在字符串中第 <replaceable>N</replaceable> 次匹配的起始或结束位置，如果没有这样的匹配则返回零。其语法为
      <function>regexp_instr</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>
      <optional>, <replaceable>start</replaceable>
@@ -5750,35 +5629,20 @@ regexp_count('ABCABCAXYaxy', 'A.', 1, 'i')  <lineannotation>4</lineannotation>
      <optional>, <replaceable>endoption</replaceable>
      <optional>, <replaceable>flags</replaceable>
      <optional>, <replaceable>subexpr</replaceable>
-     </optional></optional></optional></optional></optional>).
-     <replaceable>pattern</replaceable> is searched for
-     in <replaceable>string</replaceable>, normally from the beginning of
-     the string, but if the <replaceable>start</replaceable> parameter is
-     provided then beginning from that character index.
-     If <replaceable>N</replaceable> is specified
-     then the <replaceable>N</replaceable>'th match of the pattern
-     is located, otherwise the first match is located.
-     If the <replaceable>endoption</replaceable> parameter is omitted or
-     specified as zero, the function returns the position of the first
-     character of the match.  Otherwise, <replaceable>endoption</replaceable>
-     must be one, and the function returns the position of the character
-     following the match.
-     The <replaceable>flags</replaceable> parameter is an optional text
-     string containing zero or more single-letter flags that change the
-     function's behavior.  Supported flags are described
-     in <xref linkend="posix-embedded-options-table"/>.
-     For a pattern containing parenthesized
-     subexpressions, <replaceable>subexpr</replaceable> is an integer
-     indicating which subexpression is of interest: the result identifies
-     the position of the substring matching that subexpression.
-     Subexpressions are numbered in the order of their leading parentheses.
-     When <replaceable>subexpr</replaceable> is omitted or zero, the result
-     identifies the position of the whole match regardless of
-     parenthesized subexpressions.
+     </optional></optional></optional></optional></optional>)。
+     在 <replaceable>string</replaceable> 中搜索 <replaceable>pattern</replaceable>，通常从字符串开头开始，但如果提供了 <replaceable>start</replaceable> 参数，则从该字符索引处开始。
+     如果指定了 <replaceable>N</replaceable>，则定位模式的第 <replaceable>N</replaceable> 次匹配，否则定位第一次匹配。
+     如果省略 <replaceable>endoption</replaceable> 参数或将其指定为零，函数返回匹配的第一个字符的位置。否则，<replaceable>endoption</replaceable>
+     必须为一，函数返回匹配之后的字符的位置。
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个改变函数行为的单字母标志。支持的标志在
+     <xref linkend="posix-embedded-options-table"/> 中描述。
+     对于包含带括号子表达式的模式，<replaceable>subexpr</replaceable> 是一个整数，指示所关注的子表达式：结果标识与该子表达式匹配的子串的位置。
+     子表达式按其前导括号的顺序编号。
+     当省略 <replaceable>subexpr</replaceable> 或为零时，结果标识整个匹配的位置，而不考虑带括号的子表达式。
     </para>
 
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 regexp_instr('number of your street, town zip, FR', '[^,]+', 1, 2)
                                    <lineannotation>23</lineannotation>
@@ -5788,24 +5652,18 @@ regexp_instr(string=>'ABCDEFGHI', pattern=>'(c..)(...)', start=>1, "N"=>1, endop
     </para>
 
     <para>
-     The <function>regexp_like</function> function checks whether a match
-     of a POSIX regular expression pattern occurs within a string,
-     returning boolean true or false.  It has the syntax
+     <function>regexp_like</function> 函数检查 POSIX 正则表达式模式的匹配是否出现在字符串中，返回布尔值 true 或 false。其语法为
      <function>regexp_like</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>
-     <optional>, <replaceable>flags</replaceable> </optional>).
-     The <replaceable>flags</replaceable> parameter is an optional text
-     string containing zero or more single-letter flags that change the
-     function's behavior.  Supported flags are described
-     in <xref linkend="posix-embedded-options-table"/>.
-     This function has the same results as the <literal>~</literal>
-     operator if no flags are specified.  If only the <literal>i</literal>
-     flag is specified, it has the same results as
-     the <literal>~*</literal> operator.
+     <optional>, <replaceable>flags</replaceable> </optional>)。
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个改变函数行为的单字母标志。支持的标志在
+     <xref linkend="posix-embedded-options-table"/> 中描述。
+     如果未指定标志，此函数与 <literal>~</literal> 运算符的结果相同。如果仅指定 <literal>i</literal>
+     标志，则其结果与 <literal>~*</literal> 运算符相同。
     </para>
 
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 regexp_like('Hello World', 'world')       <lineannotation>false</lineannotation>
 regexp_like('Hello World', 'world', 'i')  <lineannotation>true</lineannotation>
@@ -5813,29 +5671,11 @@ regexp_like('Hello World', 'world', 'i')  <lineannotation>true</lineannotation>
     </para>
 
     <para>
-     The <function>regexp_match</function> function returns a text array of
-     matching substring(s) within the first match of a POSIX
-     regular expression pattern to a string.  It has the syntax
-     <function>regexp_match</function>(<replaceable>string</replaceable>,
-     <replaceable>pattern</replaceable> <optional>, <replaceable>flags</replaceable> </optional>).
-     If there is no match, the result is <literal>NULL</literal>.
-     If a match is found, and the <replaceable>pattern</replaceable> contains no
-     parenthesized subexpressions, then the result is a single-element text
-     array containing the substring matching the whole pattern.
-     If a match is found, and the <replaceable>pattern</replaceable> contains
-     parenthesized subexpressions, then the result is a text array
-     whose <replaceable>n</replaceable>'th element is the substring matching
-     the <replaceable>n</replaceable>'th parenthesized subexpression of
-     the <replaceable>pattern</replaceable> (not counting <quote>non-capturing</quote>
-     parentheses; see below for details).
-     The <replaceable>flags</replaceable> parameter is an optional text string
-     containing zero or more single-letter flags that change the function's
-     behavior.  Supported flags are described
-     in <xref linkend="posix-embedded-options-table"/>.
+     <function>regexp_match</function> 函数返回一个文本数组，其中包含 POSIX 正则表达式模式与字符串的第一个匹配中的匹配子串。其语法为 <function>regexp_match</function>(<replaceable>string</replaceable>, <replaceable>pattern</replaceable> <optional>, <replaceable>flags</replaceable> </optional>)。如果没有匹配，结果为 <literal>NULL</literal>。如果找到匹配，且 <replaceable>pattern</replaceable> 不包含带括号的子表达式，则结果是一个单元素文本数组，其中包含匹配整个模式的子串。如果找到匹配，且 <replaceable>pattern</replaceable> 包含带括号的子表达式，则结果是一个文本数组，其第 <replaceable>n</replaceable> 个元素是与 <replaceable>pattern</replaceable> 的第 <replaceable>n</replaceable> 个带括号子表达式匹配的子串（不计 <quote>非捕获</quote> 括号；详见下文）。<replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个单字母标志，用于改变函数的行为。支持的标志在 <xref linkend="posix-embedded-options-table"/> 中描述。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 SELECT regexp_match('foobarbequebaz', 'bar.*que');
  regexp_match
@@ -5853,13 +5693,7 @@ SELECT regexp_match('foobarbequebaz', '(bar)(beque)');
 
     <tip>
      <para>
-      In the common case where you just want the whole matching substring
-      or <literal>NULL</literal> for no match, the best solution is to
-      use <function>regexp_substr()</function>.
-      However, <function>regexp_substr()</function> only exists
-      in <productname>PostgreSQL</productname> version 15 and up.  When
-      working in older versions, you can extract the first element
-      of <function>regexp_match()</function>'s result, for example:
+      在常见情况下，如果你只想要整个匹配的子串，或者在没有匹配时返回 <literal>NULL</literal>，最好的解决方案是使用 <function>regexp_substr()</function>。然而，<function>regexp_substr()</function> 仅存在于 <productname>PostgreSQL</productname> 版本 15 及更高版本中。在较旧版本中工作时，你可以提取 <function>regexp_match()</function> 结果的第一个元素，例如：
 <programlisting>
 SELECT (regexp_match('foobarbequebaz', 'bar.*que'))[1];
  regexp_match
@@ -5871,25 +5705,11 @@ SELECT (regexp_match('foobarbequebaz', 'bar.*que'))[1];
     </tip>
 
     <para>
-     The <function>regexp_matches</function> function returns a set of text arrays
-     of matching substring(s) within matches of a POSIX regular
-     expression pattern to a string.  It has the same syntax as
-     <function>regexp_match</function>.
-     This function returns no rows if there is no match, one row if there is
-     a match and the <literal>g</literal> flag is not given, or <replaceable>N</replaceable>
-     rows if there are <replaceable>N</replaceable> matches and the <literal>g</literal> flag
-     is given.  Each returned row is a text array containing the whole
-     matched substring or the substrings matching parenthesized
-     subexpressions of the <replaceable>pattern</replaceable>, just as described above
-     for <function>regexp_match</function>.
-     <function>regexp_matches</function> accepts all the flags shown
-     in <xref linkend="posix-embedded-options-table"/>, plus
-     the <literal>g</literal> flag which commands it to return all matches, not
-     just the first one.
+     <function>regexp_matches</function> 函数返回一组文本数组，其中包含 POSIX 正则表达式模式与字符串的各个匹配中的匹配子串。其语法与 <function>regexp_match</function> 相同。如果没有匹配，此函数不返回任何行；如果有匹配且未给出 <literal>g</literal> 标志，则返回一行；如果有 <replaceable>N</replaceable> 个匹配且给出了 <literal>g</literal> 标志，则返回 <replaceable>N</replaceable> 行。每个返回的行都是一个文本数组，包含整个匹配的子串或与 <replaceable>pattern</replaceable> 的带括号子表达式匹配的子串，正如上文对 <function>regexp_match</function> 的描述。<function>regexp_matches</function> 接受 <xref linkend="posix-embedded-options-table"/> 中所示的所有标志，外加 <literal>g</literal> 标志，该标志命令它返回所有匹配，而不仅仅是第一个匹配。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 SELECT regexp_matches('foo', 'not there');
  regexp_matches
@@ -5907,70 +5727,35 @@ SELECT regexp_matches('foobarbequebazilbarfbonk', '(b[^b]+)(b[^b]+)', 'g');
 
    <tip>
     <para>
-     In most cases <function>regexp_matches()</function> should be used with
-     the <literal>g</literal> flag, since if you only want the first match, it's
-     easier and more efficient to use <function>regexp_match()</function>.
-     However, <function>regexp_match()</function> only exists
-     in <productname>PostgreSQL</productname> version 10 and up.  When working in older
-     versions, a common trick is to place a <function>regexp_matches()</function>
-     call in a sub-select, for example:
+     大多数情况下，<function>regexp_matches()</function> 应与 <literal>g</literal> 标志一起使用，因为如果你只想要第一个匹配，使用 <function>regexp_match()</function> 更简单也更高效。不过，<function>regexp_match()</function> 只存在于 <productname>PostgreSQL</productname> 版本 10 及以上。在较旧的版本中工作时，一个常用的技巧是把 <function>regexp_matches()</function> 调用放在子查询中，例如：
 <programlisting>
 SELECT col1, (SELECT regexp_matches(col2, '(bar)(beque)')) FROM tab;
 </programlisting>
-     This produces a text array if there's a match, or <literal>NULL</literal> if
-     not, the same as <function>regexp_match()</function> would do.  Without the
-     sub-select, this query would produce no output at all for table rows
-     without a match, which is typically not the desired behavior.
+     如果有匹配，这会生成一个文本数组；如果没有匹配，则生成 <literal>NULL</literal>，与 <function>regexp_match()</function> 的行为相同。如果没有子查询，对于没有匹配的表行，这个查询根本不会产生任何输出，而这通常不是期望的行为。
     </para>
    </tip>
 
     <para>
-     The <function>regexp_replace</function> function provides substitution of
-     new text for substrings that match POSIX regular expression patterns.
-     It has the syntax
+     <function>regexp_replace</function> 函数提供用新文本替换匹配 POSIX 正则表达式模式的子串的功能。其语法为
      <function>regexp_replace</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>, <replaceable>replacement</replaceable>
      <optional>, <replaceable>flags</replaceable> </optional>)
-     or
+     或
      <function>regexp_replace</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>, <replaceable>replacement</replaceable>,
      <replaceable>start</replaceable>
      <optional>, <replaceable>N</replaceable>
-     <optional>, <replaceable>flags</replaceable> </optional></optional>).
-     The source <replaceable>string</replaceable> is returned unchanged if
-     there is no match to the <replaceable>pattern</replaceable>.  If there is a
-     match, the <replaceable>string</replaceable> is returned with the
-     <replaceable>replacement</replaceable> string substituted for the matching
-     substring.  The <replaceable>replacement</replaceable> string can contain
-     <literal>\</literal><replaceable>n</replaceable>, where <replaceable>n</replaceable> is 1
-     through 9, to indicate that the source substring matching the
-     <replaceable>n</replaceable>'th parenthesized subexpression of the pattern should be
-     inserted, and it can contain <literal>\&amp;</literal> to indicate that the
-     substring matching the entire pattern should be inserted.  Write
-     <literal>\\</literal> if you need to put a literal backslash in the replacement
-     text.
-     <replaceable>pattern</replaceable> is searched for
-     in <replaceable>string</replaceable>, normally from the beginning of
-     the string, but if the <replaceable>start</replaceable> parameter is
-     provided then beginning from that character index.
-     By default, only the first match of the pattern is replaced.
-     If <replaceable>N</replaceable> is specified and is greater than zero,
-     then the <replaceable>N</replaceable>'th match of the pattern
-     is replaced.
-     If the <literal>g</literal> flag is given, or
-     if <replaceable>N</replaceable> is specified and is zero, then all
-     matches at or after the <replaceable>start</replaceable> position are
-     replaced.  (The <literal>g</literal> flag is ignored
-     when <replaceable>N</replaceable> is specified.)
-     The <replaceable>flags</replaceable> parameter is an optional text
-     string containing zero or more single-letter flags that change the
-     function's behavior.  Supported flags (though
-     not <literal>g</literal>) are
-     described in <xref linkend="posix-embedded-options-table"/>.
+     <optional>, <replaceable>flags</replaceable> </optional></optional>)。
+     如果没有与 <replaceable>pattern</replaceable> 匹配的内容，则原样返回源 <replaceable>string</replaceable>。如果有匹配，则返回 <replaceable>string</replaceable>，其中匹配的子串被替换为 <replaceable>replacement</replaceable> 字符串。<replaceable>replacement</replaceable> 字符串可以包含 <literal>\</literal><replaceable>n</replaceable>，其中 <replaceable>n</replaceable> 为 1 到 9，表示应插入与模式的第 <replaceable>n</replaceable> 个括号子表达式匹配的源子串；它还可以包含 <literal>\&amp;</literal>，表示应插入与整个模式匹配的子串。如果需要在替换文本中放入字面反斜杠，请写 <literal>\\</literal>。
+     在 <replaceable>string</replaceable> 中搜索 <replaceable>pattern</replaceable>，通常从字符串开头开始，但如果提供了 <replaceable>start</replaceable> 参数，则从该字符索引处开始。
+     默认情况下，只替换模式的第一个匹配。
+     如果指定了 <replaceable>N</replaceable> 且大于零，则替换模式的第 <replaceable>N</replaceable> 个匹配。
+     如果给出了 <literal>g</literal> 标志，或者指定了 <replaceable>N</replaceable> 且为零，则替换 <replaceable>start</replaceable> 位置处及其之后的所有匹配。（指定 <replaceable>N</replaceable> 时，<literal>g</literal> 标志会被忽略。）
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个改变函数行为的单字母标志。支持的标志（尽管不是 <literal>g</literal>）在 <xref linkend="posix-embedded-options-table"/> 中描述。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 regexp_replace('foobarbaz', 'b..', 'X')
                                    <lineannotation>fooXbaz</lineannotation>
@@ -5986,32 +5771,28 @@ regexp_replace(string=>'A PostgreSQL function', pattern=>'a|e|i|o|u', replacemen
    </para>
 
     <para>
-     The <function>regexp_split_to_table</function> function splits a string using a POSIX
-     regular expression pattern as a delimiter.  It has the syntax
+     <function>regexp_split_to_table</function> 函数使用 POSIX 正则表达式模式作为分隔符来拆分字符串。其语法为
      <function>regexp_split_to_table</function>(<replaceable>string</replaceable>, <replaceable>pattern</replaceable>
-     <optional>, <replaceable>flags</replaceable> </optional>).
-     If there is no match to the <replaceable>pattern</replaceable>, the function returns the
-     <replaceable>string</replaceable>.  If there is at least one match, for each match it returns
-     the text from the end of the last match (or the beginning of the string)
-     to the beginning of the match.  When there are no more matches, it
-     returns the text from the end of the last match to the end of the string.
-     The <replaceable>flags</replaceable> parameter is an optional text string containing
-     zero or more single-letter flags that change the function's behavior.
-     <function>regexp_split_to_table</function> supports the flags described in
-     <xref linkend="posix-embedded-options-table"/>.
+     <optional>, <replaceable>flags</replaceable> </optional>)。
+     如果与 <replaceable>pattern</replaceable> 没有匹配，该函数返回 <replaceable>string</replaceable>。如果至少有一个匹配，则对于每个匹配，
+     它返回从上一个匹配的末尾（或字符串的开头）到该匹配开头的文本。
+     当没有更多匹配时，它返回从上一个匹配的末尾到字符串末尾的文本。
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，包含零个或多个单字母标志，
+     用于改变函数的行为。<function>regexp_split_to_table</function> 支持
+     <xref linkend="posix-embedded-options-table"/> 中描述的标志。
     </para>
 
     <para>
-     The <function>regexp_split_to_array</function> function behaves the same as
-     <function>regexp_split_to_table</function>, except that <function>regexp_split_to_array</function>
-     returns its result as an array of <type>text</type>.  It has the syntax
+     <function>regexp_split_to_array</function> 函数的行为与
+     <function>regexp_split_to_table</function> 相同，不同之处在于 <function>regexp_split_to_array</function>
+     将结果作为 <type>text</type> 的数组返回。其语法为
      <function>regexp_split_to_array</function>(<replaceable>string</replaceable>, <replaceable>pattern</replaceable>
-     <optional>, <replaceable>flags</replaceable> </optional>).
-     The parameters are the same as for <function>regexp_split_to_table</function>.
+     <optional>, <replaceable>flags</replaceable> </optional>)。
+     参数与 <function>regexp_split_to_table</function> 相同。
     </para>
 
    <para>
-    Some examples:
+    一些示例：
 <programlisting>
 SELECT foo FROM regexp_split_to_table('the quick brown fox jumps over the lazy dog', '\s+') AS foo;
   foo
@@ -6057,47 +5838,38 @@ SELECT foo FROM regexp_split_to_table('the quick brown fox', '\s*') AS foo;
    </para>
 
    <para>
-    As the last example demonstrates, the regexp split functions ignore
-    zero-length matches that occur at the start or end of the string
-    or immediately after a previous match.  This is contrary to the strict
-    definition of regexp matching that is implemented by
-    the other regexp functions, but is usually the most convenient behavior
-    in practice.  Other software systems such as Perl use similar definitions.
+    正如最后一个示例所示，正则表达式拆分函数会忽略出现在字符串开头或结尾、
+    或紧接在前一个匹配之后的零长度匹配。这与
+    其他正则表达式函数所实现的严格正则表达式匹配定义相反，但在实践中
+    通常是最方便的行为。其他软件系统（如 Perl）使用类似的定义。
    </para>
 
     <para>
-     The <function>regexp_substr</function> function returns the substring
-     that matches a POSIX regular expression pattern,
-     or <literal>NULL</literal> if there is no match.  It has the syntax
+     <function>regexp_substr</function> 函数返回匹配某个 POSIX 正则表达式模式的子串，如果没有匹配则返回 <literal>NULL</literal>。其语法为
      <function>regexp_substr</function>(<replaceable>string</replaceable>,
      <replaceable>pattern</replaceable>
      <optional>, <replaceable>start</replaceable>
      <optional>, <replaceable>N</replaceable>
      <optional>, <replaceable>flags</replaceable>
      <optional>, <replaceable>subexpr</replaceable>
-     </optional></optional></optional></optional>).
-     <replaceable>pattern</replaceable> is searched for
-     in <replaceable>string</replaceable>, normally from the beginning of
-     the string, but if the <replaceable>start</replaceable> parameter is
-     provided then beginning from that character index.
-     If <replaceable>N</replaceable> is specified
-     then the <replaceable>N</replaceable>'th match of the pattern
-     is returned, otherwise the first match is returned.
-     The <replaceable>flags</replaceable> parameter is an optional text
-     string containing zero or more single-letter flags that change the
-     function's behavior.  Supported flags are described
-     in <xref linkend="posix-embedded-options-table"/>.
-     For a pattern containing parenthesized
-     subexpressions, <replaceable>subexpr</replaceable> is an integer
-     indicating which subexpression is of interest: the result is the
-     substring matching that subexpression.
-     Subexpressions are numbered in the order of their leading parentheses.
-     When <replaceable>subexpr</replaceable> is omitted or zero, the result
-     is the whole match regardless of parenthesized subexpressions.
+     </optional></optional></optional></optional>)。
+     在 <replaceable>string</replaceable> 中搜索 <replaceable>pattern</replaceable>，通常从字符串开头开始搜索，
+     但如果提供了 <replaceable>start</replaceable> 参数，则从该字符索引处开始。
+     如果指定了 <replaceable>N</replaceable>，
+     则返回模式的第 <replaceable>N</replaceable> 个匹配，否则返回第一个匹配。
+     <replaceable>flags</replaceable> 参数是一个可选的文本字符串，
+     其中包含零个或多个改变函数行为的单字母标志。支持的标志
+     在 <xref linkend="posix-embedded-options-table"/> 中描述。
+     对于包含带括号子表达式的模式，<replaceable>subexpr</replaceable> 是一个整数，
+     指示所关注的是哪个子表达式：结果就是
+     匹配该子表达式的子串。
+     子表达式按其前导括号的顺序编号。
+     当省略 <replaceable>subexpr</replaceable> 或其值为零时，结果
+     是不论带括号子表达式的整个匹配。
     </para>
 
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 regexp_substr('number of your street, town zip, FR', '[^,]+', 1, 2)
                                    <lineannotation> town zip</lineannotation>
@@ -6109,786 +5881,616 @@ regexp_substr('ABCDEFGHI', '(c..)(...)', 1, 1, 'i', 2)
 <!-- derived from the re_syntax.n man page -->
 
    <sect3 id="posix-syntax-details">
-    <title>Regular Expression Details</title>
+    <title>正则表达式细节</title>
 
    <para>
-    <productname>PostgreSQL</productname>'s regular expressions are implemented
-    using a software package written by Henry Spencer.  Much of
-    the description of regular expressions below is copied verbatim from his
-    manual.
+    <productname>PostgreSQL</productname> 的正则表达式是使用 Henry Spencer 编写的
+    软件包实现的。下面关于正则表达式的描述
+    大部分逐字复制自他的手冊。
    </para>
 
    <para>
-    Regular expressions (<acronym>RE</acronym>s), as defined in
-    <acronym>POSIX</acronym> 1003.2, come in two forms:
-    <firstterm>extended</firstterm> <acronym>RE</acronym>s or <acronym>ERE</acronym>s
-    (roughly those of <command>egrep</command>), and
-    <firstterm>basic</firstterm> <acronym>RE</acronym>s or <acronym>BRE</acronym>s
-    (roughly those of <command>ed</command>).
-    <productname>PostgreSQL</productname> supports both forms, and
-    also implements some extensions
-    that are not in the POSIX standard, but have become widely used
-    due to their availability in programming languages such as Perl and Tcl.
-    <acronym>RE</acronym>s using these non-POSIX extensions are called
-    <firstterm>advanced</firstterm> <acronym>RE</acronym>s or <acronym>ARE</acronym>s
-    in this documentation.  AREs are almost an exact superset of EREs,
-    but BREs have several notational incompatibilities (as well as being
-    much more limited).
-    We first describe the ARE and ERE forms, noting features that apply
-    only to AREs, and then describe how BREs differ.
+    正则表达式（<acronym>RE</acronym>），如 <acronym>POSIX</acronym> 1003.2 中所定义，
+    有两种形式：<firstterm>扩展</firstterm> <acronym>RE</acronym> 或 <acronym>ERE</acronym>
+    （大致相当于 <command>egrep</command> 中的那些），以及
+    <firstterm>基本</firstterm> <acronym>RE</acronym> 或 <acronym>BRE</acronym>
+    （大致相当于 <command>ed</command> 中的那些）。
+    <productname>PostgreSQL</productname> 支持这两种形式，
+    并且还实现了一些
+    POSIX 标准中没有的扩展，但由于它们可在 Perl 和 Tcl 等编程语言中使用，
+    因而已被广泛使用。
+    使用这些非 POSIX 扩展的 <acronym>RE</acronym> 在本文档中称为
+    <firstterm>高级</firstterm> <acronym>RE</acronym> 或 <acronym>ARE</acronym>。ARE 几乎是 ERE 的精确超集，
+    但 BRE 在记法上有若干不兼容之处（而且功能要有限得多）。
+    我们首先描述 ARE 和 ERE 形式，指出仅适用于 ARE 的特性，
+    然后描述 BRE 的不同之处。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> always initially presumes that a regular
-     expression follows the ARE rules.  However, the more limited ERE or
-     BRE rules can be chosen by prepending an <firstterm>embedded option</firstterm>
-     to the RE pattern, as described in <xref linkend="posix-metasyntax"/>.
-     This can be useful for compatibility with applications that expect
-     exactly the <acronym>POSIX</acronym> 1003.2 rules.
+     <productname>PostgreSQL</productname> 总是首先假定一个正则表达式遵循 ARE 规则。不过，可以通过在 RE 模式前面加上一个<firstterm>嵌入选项</firstterm>来选择限制更多的 ERE 或 BRE 规则，如 <xref linkend="posix-metasyntax"/> 中所述。这对于与期望严格遵循 <acronym>POSIX</acronym> 1003.2 规则的应用程序保持兼容性会很有用。
     </para>
    </note>
 
    <para>
-    A regular expression is defined as one or more
-    <firstterm>branches</firstterm>, separated by
-    <literal>|</literal>.  It matches anything that matches one of the
-    branches.
+    正则表达式被定义为一个或多个<firstterm>分支</firstterm>，分支之间由 <literal>|</literal> 分隔。它匹配与其中任一分支匹配的任何内容。
    </para>
 
    <para>
-    A branch is zero or more <firstterm>quantified atoms</firstterm> or
-    <firstterm>constraints</firstterm>, concatenated.
-    It matches a match for the first, followed by a match for the second, etc.;
-    an empty branch matches the empty string.
+    一个分支是零个或多个<firstterm>量化的原子</firstterm>或<firstterm>约束</firstterm>的串联。它匹配第一个原子的匹配，接着是第二个原子的匹配，依此类推；空分支匹配空字符串。
    </para>
 
    <para>
-    A quantified atom is an <firstterm>atom</firstterm> possibly followed
-    by a single <firstterm>quantifier</firstterm>.
-    Without a quantifier, it matches a match for the atom.
-    With a quantifier, it can match some number of matches of the atom.
-    An <firstterm>atom</firstterm> can be any of the possibilities
-    shown in <xref linkend="posix-atoms-table"/>.
-    The possible quantifiers and their meanings are shown in
-    <xref linkend="posix-quantifiers-table"/>.
+    一个量化的原子是一个<firstterm>原子</firstterm>，其后可能跟一个<firstterm>量词</firstterm>。没有量词时，它匹配该原子的一个匹配。有量词时，它可以匹配该原子的若干次匹配。<firstterm>原子</firstterm>可以是 <xref linkend="posix-atoms-table"/> 中所示的任意一种可能形式。可用的量词及其含义如 <xref linkend="posix-quantifiers-table"/> 所示。
    </para>
 
    <para>
-    A <firstterm>constraint</firstterm> matches an empty string, but matches only when
-    specific conditions are met.  A constraint can be used where an atom
-    could be used, except it cannot be followed by a quantifier.
-    The simple constraints are shown in
-    <xref linkend="posix-constraints-table"/>;
-    some more constraints are described later.
+    一个<firstterm>约束</firstterm>匹配空字符串，但仅在满足特定条件时才匹配。约束可以用在原子可以使用的任何位置，只是它后面不能跟量词。简单的约束如 <xref linkend="posix-constraints-table"/> 所示；还有一些约束将在后面描述。
    </para>
 
 
    <table id="posix-atoms-table">
-    <title>Regular Expression Atoms</title>
+    <title>正则表达式原子</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Atom</entry>
-       <entry>Description</entry>
+       <entry>原子</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>(</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> (where <replaceable>re</replaceable> is any regular expression)
-       matches a match for
-       <replaceable>re</replaceable>, with the match noted for possible reporting </entry>
+       <entry> （其中 <replaceable>re</replaceable> 是任意正则表达式）匹配 <replaceable>re</replaceable> 的一个匹配项，并记录该匹配项以便报告 </entry>
        </row>
 
        <row>
        <entry> <literal>(?:</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> as above, but the match is not noted for reporting
-       (a <quote>non-capturing</quote> set of parentheses)
-       (AREs only) </entry>
+       <entry> 同上，但不记录该匹配项以供报告（即<quote>非捕获</quote>括号组）（仅限 ARE） </entry>
        </row>
 
        <row>
        <entry> <literal>.</literal> </entry>
-       <entry> matches any single character </entry>
+       <entry> 匹配任意单个字符 </entry>
        </row>
 
        <row>
        <entry> <literal>[</literal><replaceable>chars</replaceable><literal>]</literal> </entry>
-       <entry> a <firstterm>bracket expression</firstterm>,
-       matching any one of the <replaceable>chars</replaceable> (see
-       <xref linkend="posix-bracket-expressions"/> for more detail) </entry>
+       <entry> 一个<firstterm>方括号表达式</firstterm>，匹配 <replaceable>chars</replaceable> 中的任意一个（详见 <xref linkend="posix-bracket-expressions"/>） </entry>
        </row>
 
        <row>
        <entry> <literal>\</literal><replaceable>k</replaceable> </entry>
-       <entry> (where <replaceable>k</replaceable> is a non-alphanumeric character)
-       matches that character taken as an ordinary character,
-       e.g., <literal>\\</literal> matches a backslash character </entry>
+       <entry> （其中 <replaceable>k</replaceable> 是一个非字母数字字符）匹配作为普通字符的该字符，例如 <literal>\\</literal> 匹配一个反斜杠字符 </entry>
        </row>
 
        <row>
        <entry> <literal>\</literal><replaceable>c</replaceable> </entry>
-       <entry> where <replaceable>c</replaceable> is alphanumeric
-       (possibly followed by other characters)
-       is an <firstterm>escape</firstterm>, see <xref linkend="posix-escape-sequences"/>
-       (AREs only; in EREs and BREs, this matches <replaceable>c</replaceable>) </entry>
+       <entry> 其中 <replaceable>c</replaceable> 是字母数字（后面可能跟有其他字符）时，是一个<firstterm>转义</firstterm>，参见 <xref linkend="posix-escape-sequences"/>（仅限 ARE；在 ERE 和 BRE 中，它匹配 <replaceable>c</replaceable>） </entry>
        </row>
 
        <row>
        <entry> <literal>{</literal> </entry>
-       <entry> when followed by a character other than a digit,
-       matches the left-brace character <literal>{</literal>;
-       when followed by a digit, it is the beginning of a
-       <replaceable>bound</replaceable> (see below) </entry>
+       <entry> 当后面跟的不是数字字符时，匹配左花括号字符 <literal>{</literal>；当后面跟的是数字时，它就是一个 <replaceable>bound</replaceable> 的开头（见下文） </entry>
        </row>
 
        <row>
        <entry> <replaceable>x</replaceable> </entry>
-       <entry> where <replaceable>x</replaceable> is a single character with no other
-       significance, matches that character </entry>
+       <entry> 其中 <replaceable>x</replaceable> 是一个没有其他含义的单个字符，匹配该字符 </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    An RE cannot end with a backslash (<literal>\</literal>).
+    正则表达式不能以反斜杠（<literal>\</literal>）结尾。
    </para>
 
    <note>
     <para>
-     If you have <xref linkend="guc-standard-conforming-strings"/> turned off,
-     any backslashes you write in literal string constants will need to be
-     doubled.  See <xref linkend="sql-syntax-strings"/> for more information.
+     如果你关闭了 <xref linkend="guc-standard-conforming-strings"/>，那么在字面字符串常量中书写的任何反斜杠都需要双写。更多信息请参见 <xref linkend="sql-syntax-strings"/>。
     </para>
    </note>
 
    <table id="posix-quantifiers-table">
-    <title>Regular Expression Quantifiers</title>
+    <title>正则表达式量词</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Quantifier</entry>
-       <entry>Matches</entry>
+       <entry>量词</entry>
+       <entry>匹配</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>*</literal> </entry>
-       <entry> a sequence of 0 or more matches of the atom </entry>
+       <entry> 该原子 0 次或多次匹配构成的序列 </entry>
        </row>
 
        <row>
        <entry> <literal>+</literal> </entry>
-       <entry> a sequence of 1 or more matches of the atom </entry>
+       <entry> 该原子 1 次或多次匹配构成的序列 </entry>
        </row>
 
        <row>
        <entry> <literal>?</literal> </entry>
-       <entry> a sequence of 0 or 1 matches of the atom </entry>
+       <entry> 该原子 0 次或 1 次匹配构成的序列 </entry>
        </row>
 
        <row>
        <entry> <literal>{</literal><replaceable>m</replaceable><literal>}</literal> </entry>
-       <entry> a sequence of exactly <replaceable>m</replaceable> matches of the atom </entry>
+       <entry> 恰好 <replaceable>m</replaceable> 次该原子的匹配序列 </entry>
        </row>
 
        <row>
        <entry> <literal>{</literal><replaceable>m</replaceable><literal>,}</literal> </entry>
-       <entry> a sequence of <replaceable>m</replaceable> or more matches of the atom </entry>
+       <entry> <replaceable>m</replaceable> 次或更多次该原子的匹配序列 </entry>
        </row>
 
        <row>
        <entry>
        <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal> </entry>
-       <entry> a sequence of <replaceable>m</replaceable> through <replaceable>n</replaceable>
-       (inclusive) matches of the atom; <replaceable>m</replaceable> cannot exceed
-       <replaceable>n</replaceable> </entry>
+       <entry> <replaceable>m</replaceable> 到 <replaceable>n</replaceable> 次（含）该原子的匹配序列；<replaceable>m</replaceable> 不能超过 <replaceable>n</replaceable> </entry>
        </row>
 
        <row>
        <entry> <literal>*?</literal> </entry>
-       <entry> non-greedy version of <literal>*</literal> </entry>
+       <entry> <literal>*</literal> 的非贪婪版本 </entry>
        </row>
 
        <row>
        <entry> <literal>+?</literal> </entry>
-       <entry> non-greedy version of <literal>+</literal> </entry>
+       <entry> <literal>+</literal> 的非贪婪版本 </entry>
        </row>
 
        <row>
        <entry> <literal>??</literal> </entry>
-       <entry> non-greedy version of <literal>?</literal> </entry>
+       <entry> <literal>?</literal> 的非贪婪版本 </entry>
        </row>
 
        <row>
        <entry> <literal>{</literal><replaceable>m</replaceable><literal>}?</literal> </entry>
-       <entry> non-greedy version of <literal>{</literal><replaceable>m</replaceable><literal>}</literal> </entry>
+       <entry> <literal>{</literal><replaceable>m</replaceable><literal>}</literal> 的非贪婪版本 </entry>
        </row>
 
        <row>
        <entry> <literal>{</literal><replaceable>m</replaceable><literal>,}?</literal> </entry>
-       <entry> non-greedy version of <literal>{</literal><replaceable>m</replaceable><literal>,}</literal> </entry>
+       <entry> <literal>{</literal><replaceable>m</replaceable><literal>,}</literal> 的非贪婪版本 </entry>
        </row>
 
        <row>
        <entry>
        <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}?</literal> </entry>
-       <entry> non-greedy version of <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal> </entry>
+       <entry> <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal> 的非贪婪版本 </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    The forms using <literal>{</literal><replaceable>...</replaceable><literal>}</literal>
-    are known as <firstterm>bounds</firstterm>.
-    The numbers <replaceable>m</replaceable> and <replaceable>n</replaceable> within a bound are
-    unsigned decimal integers with permissible values from 0 to 255 inclusive.
+    使用 <literal>{</literal><replaceable>...</replaceable><literal>}</literal> 的形式
+    称为 <firstterm>界限</firstterm>（bound）。
+    界限中的数字 <replaceable>m</replaceable> 和 <replaceable>n</replaceable> 是
+    无符号十进制整数，允许的取值为 0 到 255（含两端）。
    </para>
 
     <para>
-     <firstterm>Non-greedy</firstterm> quantifiers (available in AREs only) match the
-     same possibilities as their corresponding normal (<firstterm>greedy</firstterm>)
-     counterparts, but prefer the smallest number rather than the largest
-     number of matches.
-     See <xref linkend="posix-matching-rules"/> for more detail.
+     <firstterm>非贪婪</firstterm>量词（仅在 ARE 中可用）匹配的
+     可能性与其对应的普通（<firstterm>贪婪</firstterm>）量词相同，
+     但倾向于选择最小匹配次数，而不是最大匹配次数。
+     详见 <xref linkend="posix-matching-rules"/>。
    </para>
 
    <note>
     <para>
-     A quantifier cannot immediately follow another quantifier, e.g.,
-     <literal>**</literal> is invalid.
-     A quantifier cannot
-     begin an expression or subexpression or follow
-     <literal>^</literal> or <literal>|</literal>.
+     量词不能紧跟在另一个量词之后，例如
+     <literal>**</literal> 是无效的。
+     量词不能
+     位于表达式或子表达式的开头，也不能跟在
+     <literal>^</literal> 或 <literal>|</literal> 之后。
     </para>
    </note>
 
    <table id="posix-constraints-table">
-    <title>Regular Expression Constraints</title>
+    <title>正则表达式约束</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Constraint</entry>
-       <entry>Description</entry>
+       <entry>约束</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>^</literal> </entry>
-       <entry> matches at the beginning of the string </entry>
+       <entry> 匹配字符串的开头 </entry>
        </row>
 
        <row>
        <entry> <literal>$</literal> </entry>
-       <entry> matches at the end of the string </entry>
+       <entry> 匹配字符串的末尾 </entry>
        </row>
 
        <row>
        <entry> <literal>(?=</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> <firstterm>positive lookahead</firstterm> matches at any point
-       where a substring matching <replaceable>re</replaceable> begins
-       (AREs only) </entry>
+       <entry> <firstterm>正向前瞻</firstterm>在匹配 <replaceable>re</replaceable> 的子串起始处的任意位置进行匹配
+       （仅限 ARE） </entry>
        </row>
 
        <row>
        <entry> <literal>(?!</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> <firstterm>negative lookahead</firstterm> matches at any point
-       where no substring matching <replaceable>re</replaceable> begins
-       (AREs only) </entry>
+       <entry> <firstterm>负向前瞻</firstterm>在任意不存在以匹配 <replaceable>re</replaceable> 的子串开始的位置匹配
+       （仅限 ARE） </entry>
        </row>
 
        <row>
        <entry> <literal>(?&lt;=</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> <firstterm>positive lookbehind</firstterm> matches at any point
-       where a substring matching <replaceable>re</replaceable> ends
-       (AREs only) </entry>
+       <entry> <firstterm>正向后顾</firstterm>在任意存在以匹配 <replaceable>re</replaceable> 的子串结束的位置匹配
+       （仅限 ARE） </entry>
        </row>
 
        <row>
        <entry> <literal>(?&lt;!</literal><replaceable>re</replaceable><literal>)</literal> </entry>
-       <entry> <firstterm>negative lookbehind</firstterm> matches at any point
-       where no substring matching <replaceable>re</replaceable> ends
-       (AREs only) </entry>
+       <entry> <firstterm>负向后顾</firstterm>在任意不存在以匹配 <replaceable>re</replaceable> 的子串结束的位置匹配
+       （仅限 ARE） </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    Lookahead and lookbehind constraints cannot contain <firstterm>back
-    references</firstterm> (see <xref linkend="posix-escape-sequences"/>),
-    and all parentheses within them are considered non-capturing.
+    前瞻和后顾约束不能包含<firstterm>反向引用</firstterm>（见 <xref linkend="posix-escape-sequences"/>），
+    并且其中的所有括号都被视为非捕获。
    </para>
    </sect3>
 
    <sect3 id="posix-bracket-expressions">
-    <title>Bracket Expressions</title>
+    <title>方括号表达式</title>
 
    <para>
-    A <firstterm>bracket expression</firstterm> is a list of
-    characters enclosed in <literal>[]</literal>.  It normally matches
-    any single character from the list (but see below).  If the list
-    begins with <literal>^</literal>, it matches any single character
-    <emphasis>not</emphasis> from the rest of the list.
-    If two characters
-    in the list are separated by <literal>-</literal>, this is
-    shorthand for the full range of characters between those two
-    (inclusive) in the collating sequence,
-    e.g., <literal>[0-9]</literal> in <acronym>ASCII</acronym> matches
-    any decimal digit.  It is illegal for two ranges to share an
-    endpoint, e.g.,  <literal>a-c-e</literal>.  Ranges are very
-    collating-sequence-dependent, so portable programs should avoid
-    relying on them.
+    <firstterm>方括号表达式</firstterm>是由 <literal>[]</literal> 括起来的字符列表。它通常匹配
+    列表中的任意单个字符（但见下文）。如果列表
+    以 <literal>^</literal> 开头，则它匹配<emphasis>不在</emphasis>列表其余部分中的任意单个字符。
+    如果列表中的两个字符
+    由 <literal>-</literal> 分隔，这是排序规则中这两个字符之间
+    （含两端）全部字符范围的简写，
+    例如，<acronym>ASCII</acronym> 中的 <literal>[0-9]</literal> 匹配
+    任意十进制数字。两个范围共用一个
+    端点是非法的，例如 <literal>a-c-e</literal>。范围非常
+    依赖于排序规则，因此可移植程序应避免
+    依赖它们。
    </para>
 
    <para>
-    To include a literal <literal>]</literal> in the list, make it the
-    first character (after <literal>^</literal>, if that is used).  To
-    include a literal <literal>-</literal>, make it the first or last
-    character, or the second endpoint of a range.  To use a literal
-    <literal>-</literal> as the first endpoint of a range, enclose it
-    in <literal>[.</literal> and <literal>.]</literal> to make it a
-    collating element (see below).  With the exception of these characters,
-    some combinations using <literal>[</literal>
-    (see next paragraphs), and escapes (AREs only), all other special
-    characters lose their special significance within a bracket expression.
-    In particular, <literal>\</literal> is not special when following
-    ERE or BRE rules, though it is special (as introducing an escape)
-    in AREs.
+    要在列表中包含字面量 <literal>]</literal>，请把它作为第一个字符（如果使用了 <literal>^</literal>，则放在其后）。要包含字面量 <literal>-</literal>，请把它作为第一个或最后一个字符，或作为范围的第二个端点。要把字面量 <literal>-</literal> 用作范围的第一个端点，请用 <literal>[.</literal> 和 <literal>.]</literal> 将其括起来，使其成为排序元素（见下文）。除这些字符、某些使用 <literal>[</literal> 的组合（见下段）以及转义（仅 ARE）之外，所有其他特殊字符在方括号表达式内都失去其特殊含义。特别地，按照 ERE 或 BRE 规则时 <literal>\</literal> 不是特殊的，尽管在 ARE 中它是特殊的（作为转义的引入）。
    </para>
 
    <para>
-    Within a bracket expression, a collating element (a character, a
-    multiple-character sequence that collates as if it were a single
-    character, or a collating-sequence name for either) enclosed in
-    <literal>[.</literal> and <literal>.]</literal> stands for the
-    sequence of characters of that collating element.  The sequence is
-    treated as a single element of the bracket expression's list.  This
-    allows a bracket
-    expression containing a multiple-character collating element to
-    match more than one character, e.g., if the collating sequence
-    includes a <literal>ch</literal> collating element, then the RE
-    <literal>[[.ch.]]*c</literal> matches the first five characters of
-    <literal>chchcc</literal>.
+    在方括号表达式内，用 <literal>[.</literal> 和 <literal>.]</literal> 括起来的排序元素（一个字符、一个排序时如同单个字符的多字符序列，或二者的排序序列名称）表示该排序元素的字符序列。该序列被视为方括号表达式列表中的单个元素。这允许包含多字符排序元素的方括号表达式匹配多于一个字符，例如，如果排序序列包含一个 <literal>ch</literal> 排序元素，那么正则表达式 <literal>[[.ch.]]*c</literal> 匹配 <literal>chchcc</literal> 的前五个字符。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> currently does not support multi-character collating
-     elements. This information describes possible future behavior.
+     <productname>PostgreSQL</productname> 目前不支持多字符排序元素。此信息描述的是未来可能的行为。
     </para>
    </note>
 
    <para>
-    Within a bracket expression, a collating element enclosed in
-    <literal>[=</literal> and <literal>=]</literal> is an <firstterm>equivalence
-    class</firstterm>, standing for the sequences of characters of all collating
-    elements equivalent to that one, including itself.  (If there are
-    no other equivalent collating elements, the treatment is as if the
-    enclosing delimiters were <literal>[.</literal> and
-    <literal>.]</literal>.)  For example, if <literal>o</literal> and
-    <literal>^</literal> are the members of an equivalence class, then
-    <literal>[[=o=]]</literal>, <literal>[[=^=]]</literal>, and
-    <literal>[o^]</literal> are all synonymous.  An equivalence class
-    cannot be an endpoint of a range.
+    在方括号表达式内，用 <literal>[=</literal> 和 <literal>=]</literal> 括起来的排序元素是一个<firstterm>等价类</firstterm>，表示所有与该排序元素等价的排序元素（包括其自身）的字符序列。（如果没有其他等价的排序元素，则视同用 <literal>[.</literal> 和 <literal>.]</literal> 括起来处理。）例如，如果 <literal>o</literal> 和 <literal>^</literal> 是某个等价类的成员，那么 <literal>[[=o=]]</literal>、<literal>[[=^=]]</literal> 和 <literal>[o^]</literal> 都是同义的。等价类不能作为范围的端点。
    </para>
 
    <para>
-    Within a bracket expression, the name of a character class
-    enclosed in <literal>[:</literal> and <literal>:]</literal> stands
-    for the list of all characters belonging to that class.  A character
-    class cannot be used as an endpoint of a range.
-    The <acronym>POSIX</acronym> standard defines these character class
-    names:
-    <literal>alnum</literal> (letters and numeric digits),
-    <literal>alpha</literal> (letters),
-    <literal>blank</literal> (space and tab),
-    <literal>cntrl</literal> (control characters),
-    <literal>digit</literal> (numeric digits),
-    <literal>graph</literal> (printable characters except space),
-    <literal>lower</literal> (lower-case letters),
-    <literal>print</literal> (printable characters including space),
-    <literal>punct</literal> (punctuation),
-    <literal>space</literal> (any white space),
-    <literal>upper</literal> (upper-case letters),
-    and <literal>xdigit</literal> (hexadecimal digits).
-    The behavior of these standard character classes is generally
-    consistent across platforms for characters in the 7-bit ASCII set.
-    Whether a given non-ASCII character is considered to belong to one
-    of these classes depends on the <firstterm>collation</firstterm>
-    that is used for the regular-expression function or operator
-    (see <xref linkend="collation"/>), or by default on the
-    database's <envar>LC_CTYPE</envar> locale setting (see
-    <xref linkend="locale"/>).  The classification of non-ASCII
-    characters can vary across platforms even in similarly-named
-    locales.  (But the <literal>C</literal> locale never considers any
-    non-ASCII characters to belong to any of these classes.)
-    In addition to these standard character
-    classes, <productname>PostgreSQL</productname> defines
-    the <literal>word</literal> character class, which is the same as
-    <literal>alnum</literal> plus the underscore (<literal>_</literal>)
-    character, and
-    the <literal>ascii</literal> character class, which contains exactly
-    the 7-bit ASCII set.
+    在方括号表达式内，用 <literal>[:</literal> 和 <literal>:]</literal> 括起来的字符类名称代表属于该类的所有字符的列表。字符类不能用作范围的端点。
+    <acronym>POSIX</acronym> 标准定义了以下字符类名称：
+    <literal>alnum</literal>（字母和数字）、
+    <literal>alpha</literal>（字母）、
+    <literal>blank</literal>（空格和制表符）、
+    <literal>cntrl</literal>（控制字符）、
+    <literal>digit</literal>（数字）、
+    <literal>graph</literal>（除空格外的可打印字符）、
+    <literal>lower</literal>（小写字母）、
+    <literal>print</literal>（包括空格在内的可打印字符）、
+    <literal>punct</literal>（标点符号）、
+    <literal>space</literal>（任意空白字符）、
+    <literal>upper</literal>（大写字母）
+    以及 <literal>xdigit</literal>（十六进制数字）。
+    对于 7 位 ASCII 字符集中的字符，这些标准字符类的行为在各平台上通常是一致的。
+    某个给定的非 ASCII 字符是否被视为属于这些类之一，取决于用于正则表达式函数或运算符的<firstterm>排序规则</firstterm>（见 <xref linkend="collation"/>），或者默认取决于数据库的 <envar>LC_CTYPE</envar> 区域设置（见 <xref linkend="locale"/>）。即使在名称相似的区域设置中，非 ASCII 字符的分类也可能因平台而异。（但 <literal>C</literal> 区域设置从不认为任何非 ASCII 字符属于这些类中的任何一个。）
+    除了这些标准字符类之外，<productname>PostgreSQL</productname> 还定义了 <literal>word</literal> 字符类，它等同于 <literal>alnum</literal> 加上下划线（<literal>_</literal>）字符，以及 <literal>ascii</literal> 字符类，它恰好包含 7 位 ASCII 字符集。
    </para>
 
    <para>
-    There are two special cases of bracket expressions:  the bracket
-    expressions <literal>[[:&lt;:]]</literal> and
-    <literal>[[:&gt;:]]</literal> are constraints,
-    matching empty strings at the beginning
-    and end of a word respectively.  A word is defined as a sequence
-    of word characters that is neither preceded nor followed by word
-    characters.  A word character is any character belonging to the
-    <literal>word</literal> character class, that is, any letter, digit,
-    or underscore.  This is an extension, compatible with but not
-    specified by <acronym>POSIX</acronym> 1003.2, and should be used with
-    caution in software intended to be portable to other systems.
-    The constraint escapes described below are usually preferable; they
-    are no more standard, but are easier to type.
+    方括号表达式有两种特殊情况：方括号表达式 <literal>[[:&lt;:]]</literal> 和
+    <literal>[[:&gt;:]]</literal> 是约束，
+    分别匹配单词开头和结尾处的空字符串。一个单词被定义为一段单词字符序列，其前后都不是单词字符。单词字符是任何属于
+    <literal>word</literal> 字符类的字符，即任何字母、数字
+    或下划线。这是一个扩展，与 <acronym>POSIX</acronym> 1003.2 兼容但并未由该标准规定，在打算移植到其他系统的软件中应谨慎使用。
+    下面描述的约束转义通常更可取；它们并不更具标准性，但
+    更容易输入。
    </para>
    </sect3>
 
    <sect3 id="posix-escape-sequences">
-    <title>Regular Expression Escapes</title>
+    <title>正则表达式转义</title>
 
    <para>
-    <firstterm>Escapes</firstterm> are special sequences beginning with <literal>\</literal>
-    followed by an alphanumeric character. Escapes come in several varieties:
-    character entry, class shorthands, constraint escapes, and back references.
-    A <literal>\</literal> followed by an alphanumeric character but not constituting
-    a valid escape is illegal in AREs.
-    In EREs, there are no escapes: outside a bracket expression,
-    a <literal>\</literal> followed by an alphanumeric character merely stands for
-    that character as an ordinary character, and inside a bracket expression,
-    <literal>\</literal> is an ordinary character.
-    (The latter is the one actual incompatibility between EREs and AREs.)
+    <firstterm>转义</firstterm>是以 <literal>\</literal> 开头后跟一个字母数字字符的特殊序列。转义有若干种：字符输入、类简写、约束转义和后向引用。在 ARE 中，<literal>\</literal> 后跟一个字母数字字符但不构成有效转义，是非法的。
+    在 ERE 中则没有转义：在方括号表达式之外，<literal>\</literal> 后跟一个字母数字字符仅仅表示该字符本身作为普通字符；而在方括号表达式之内，<literal>\</literal> 是普通字符。
+    （后者是 ERE 与 ARE 之间唯一实际的不兼容之处。）
    </para>
 
    <para>
-    <firstterm>Character-entry escapes</firstterm> exist to make it easier to specify
-    non-printing and other inconvenient characters in REs.  They are
-    shown in <xref linkend="posix-character-entry-escapes-table"/>.
+    <firstterm>字符输入转义</firstterm>的存在是为了更容易在 RE 中指定不可打印字符和其他不便表示的字符。它们展示在 <xref linkend="posix-character-entry-escapes-table"/> 中。
    </para>
 
    <para>
-    <firstterm>Class-shorthand escapes</firstterm> provide shorthands for certain
-    commonly-used character classes.  They are
-    shown in <xref linkend="posix-class-shorthand-escapes-table"/>.
+    <firstterm>类简写转义</firstterm>为某些常用字符类提供了简写形式。它们展示在 <xref linkend="posix-class-shorthand-escapes-table"/> 中。
    </para>
 
    <para>
-    A <firstterm>constraint escape</firstterm> is a constraint,
-    matching the empty string if specific conditions are met,
-    written as an escape.  They are
-    shown in <xref linkend="posix-constraint-escapes-table"/>.
+    <firstterm>约束转义</firstterm>是一种约束，在满足特定条件时匹配空字符串，以转义的形式书写。它们展示在 <xref linkend="posix-constraint-escapes-table"/> 中。
    </para>
 
    <para>
-    A <firstterm>back reference</firstterm> (<literal>\</literal><replaceable>n</replaceable>) matches the
-    same string matched by the previous parenthesized subexpression specified
-    by the number <replaceable>n</replaceable>
-    (see <xref linkend="posix-constraint-backref-table"/>).  For example,
-    <literal>([bc])\1</literal> matches <literal>bb</literal> or <literal>cc</literal>
-    but not <literal>bc</literal> or <literal>cb</literal>.
-    The subexpression must entirely precede the back reference in the RE.
-    Subexpressions are numbered in the order of their leading parentheses.
-    Non-capturing parentheses do not define subexpressions.
-    The back reference considers only the string characters matched by the
-    referenced subexpression, not any constraints contained in it.  For
-    example, <literal>(^\d)\1</literal> will match <literal>22</literal>.
+    <firstterm>后向引用</firstterm>（<literal>\</literal><replaceable>n</replaceable>）匹配由数字 <replaceable>n</replaceable> 指定的前一个带括号的子表达式所匹配的相同字符串
+    （参见 <xref linkend="posix-constraint-backref-table"/>）。例如，<literal>([bc])\1</literal> 匹配 <literal>bb</literal> 或 <literal>cc</literal>，
+    但不匹配 <literal>bc</literal> 或 <literal>cb</literal>。
+    该子表达式必须在 RE 中完全位于后向引用之前。
+    子表达式按其前导括号的顺序编号。
+    非捕获括号不定义子表达式。
+    后向引用只考虑被引用子表达式所匹配的字符串字符，而不考虑其中包含的任何约束。例如，
+    <literal>(^\d)\1</literal> 将匹配 <literal>22</literal>。
    </para>
 
    <table id="posix-character-entry-escapes-table">
-    <title>Regular Expression Character-Entry Escapes</title>
+    <title>正则表达式字符输入转义</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Escape</entry>
-       <entry>Description</entry>
+       <entry>转义</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>\a</literal> </entry>
-       <entry> alert (bell) character, as in C </entry>
+       <entry> 警报（响铃）字符，与 C 中相同 </entry>
        </row>
 
        <row>
        <entry> <literal>\b</literal> </entry>
-       <entry> backspace, as in C </entry>
+       <entry> 退格，与 C 中相同 </entry>
        </row>
 
        <row>
        <entry> <literal>\B</literal> </entry>
-       <entry> synonym for backslash (<literal>\</literal>) to help reduce the need for backslash
-       doubling </entry>
+       <entry> 反斜线（<literal>\</literal>）的同义词，用于减少反斜线双写的需要 </entry>
        </row>
 
        <row>
        <entry> <literal>\c</literal><replaceable>X</replaceable> </entry>
-       <entry> (where <replaceable>X</replaceable> is any character) the character whose
-       low-order 5 bits are the same as those of
-       <replaceable>X</replaceable>, and whose other bits are all zero </entry>
+       <entry> （其中 <replaceable>X</replaceable> 是任意字符）低 5 位与 <replaceable>X</replaceable> 的低 5 位相同、其余各位全为零的字符 </entry>
        </row>
 
        <row>
        <entry> <literal>\e</literal> </entry>
-       <entry> the character whose collating-sequence name
-       is <literal>ESC</literal>,
-       or failing that, the character with octal value <literal>033</literal> </entry>
+       <entry> 排序规则序列名称为 <literal>ESC</literal> 的字符，
+       或者如果不存在这样的字符，则为八进制值为 <literal>033</literal> 的字符 </entry>
        </row>
 
        <row>
        <entry> <literal>\f</literal> </entry>
-       <entry> form feed, as in C </entry>
+       <entry> 换页符，如同 C 中 </entry>
        </row>
 
        <row>
        <entry> <literal>\n</literal> </entry>
-       <entry> newline, as in C </entry>
+       <entry> 换行符，如同 C 中 </entry>
        </row>
 
        <row>
        <entry> <literal>\r</literal> </entry>
-       <entry> carriage return, as in C </entry>
+       <entry> 回车符，如同 C 中 </entry>
        </row>
 
        <row>
        <entry> <literal>\t</literal> </entry>
-       <entry> horizontal tab, as in C </entry>
+       <entry> 水平制表符，如同 C 中 </entry>
        </row>
 
        <row>
        <entry> <literal>\u</literal><replaceable>wxyz</replaceable> </entry>
-       <entry> (where <replaceable>wxyz</replaceable> is exactly four hexadecimal digits)
-       the character whose hexadecimal value is
-       <literal>0x</literal><replaceable>wxyz</replaceable>
+       <entry> （其中 <replaceable>wxyz</replaceable> 恰好是四位十六进制数字）
+       十六进制值为 <literal>0x</literal><replaceable>wxyz</replaceable> 的字符
        </entry>
        </row>
 
        <row>
        <entry> <literal>\U</literal><replaceable>stuvwxyz</replaceable> </entry>
-       <entry> (where <replaceable>stuvwxyz</replaceable> is exactly eight hexadecimal
-       digits)
-       the character whose hexadecimal value is
-       <literal>0x</literal><replaceable>stuvwxyz</replaceable>
+       <entry> （其中 <replaceable>stuvwxyz</replaceable> 恰好是八位十六进制数字）
+       十六进制值为 <literal>0x</literal><replaceable>stuvwxyz</replaceable> 的字符
        </entry>
        </row>
 
        <row>
        <entry> <literal>\v</literal> </entry>
-       <entry> vertical tab, as in C </entry>
+       <entry> 垂直制表符，与 C 中相同 </entry>
        </row>
 
        <row>
        <entry> <literal>\x</literal><replaceable>hhh</replaceable> </entry>
-       <entry> (where <replaceable>hhh</replaceable> is any sequence of hexadecimal
-       digits)
-       the character whose hexadecimal value is
-       <literal>0x</literal><replaceable>hhh</replaceable>
-       (a single character no matter how many hexadecimal digits are used)
+       <entry> （其中 <replaceable>hhh</replaceable> 是任意长度的十六进制数字序列）
+       十六进制值为 <literal>0x</literal><replaceable>hhh</replaceable> 的字符
+       （无论使用多少位十六进制数字，都表示单个字符）
        </entry>
        </row>
 
        <row>
        <entry> <literal>\0</literal> </entry>
-       <entry> the character whose value is <literal>0</literal> (the null byte)</entry>
+       <entry> 值为 <literal>0</literal> 的字符（空字节）</entry>
        </row>
 
        <row>
        <entry> <literal>\</literal><replaceable>xy</replaceable> </entry>
-       <entry> (where <replaceable>xy</replaceable> is exactly two octal digits,
-       and is not a <firstterm>back reference</firstterm>)
-       the character whose octal value is
-       <literal>0</literal><replaceable>xy</replaceable> </entry>
+       <entry> （其中 <replaceable>xy</replaceable> 恰好是两位八进制数字，
+       并且不是<firstterm>反向引用</firstterm>）
+       八进制值为 <literal>0</literal><replaceable>xy</replaceable> 的字符 </entry>
        </row>
 
        <row>
        <entry> <literal>\</literal><replaceable>xyz</replaceable> </entry>
-       <entry> (where <replaceable>xyz</replaceable> is exactly three octal digits,
-       and is not a <firstterm>back reference</firstterm>)
-       the character whose octal value is
-       <literal>0</literal><replaceable>xyz</replaceable> </entry>
+       <entry> （其中 <replaceable>xyz</replaceable> 恰好是三位八进制数字，
+       并且不是<firstterm>反向引用</firstterm>）
+       八进制值为 <literal>0</literal><replaceable>xyz</replaceable> 的字符 </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    Hexadecimal digits are <literal>0</literal>-<literal>9</literal>,
-    <literal>a</literal>-<literal>f</literal>, and <literal>A</literal>-<literal>F</literal>.
-    Octal digits are <literal>0</literal>-<literal>7</literal>.
+    十六进制数字是 <literal>0</literal>-<literal>9</literal>、
+    <literal>a</literal>-<literal>f</literal> 以及 <literal>A</literal>-<literal>F</literal>。
+    八进制数字是 <literal>0</literal>-<literal>7</literal>。
    </para>
 
    <para>
-    Numeric character-entry escapes specifying values outside the ASCII range
-    (0&ndash;127) have meanings dependent on the database encoding.  When the
-    encoding is UTF-8, escape values are equivalent to Unicode code points,
-    for example <literal>\u1234</literal> means the character <literal>U+1234</literal>.
-    For other multibyte encodings, character-entry escapes usually just
-    specify the concatenation of the byte values for the character.  If the
-    escape value does not correspond to any legal character in the database
-    encoding, no error will be raised, but it will never match any data.
+    指定 ASCII 范围（0&ndash;127）之外值的数字字符输入转义，其含义取决于数据库编码。当编码为 UTF-8 时，转义值等价于 Unicode 码点，例如 <literal>\u1234</literal> 表示字符 <literal>U+1234</literal>。对于其他多字节编码，字符输入转义通常只是指定该字符各字节值的拼接。如果转义值不对应数据库编码中的任何合法字符，不会报错，但它永远不会匹配任何数据。
    </para>
 
    <para>
-    The character-entry escapes are always taken as ordinary characters.
-    For example, <literal>\135</literal> is <literal>]</literal> in ASCII, but
-    <literal>\135</literal> does not terminate a bracket expression.
+    字符输入转义始终被视为普通字符。例如，<literal>\135</literal> 在 ASCII 中是 <literal>]</literal>，但 <literal>\135</literal> 不会终止方括号表达式。
    </para>
 
    <table id="posix-class-shorthand-escapes-table">
-    <title>Regular Expression Class-Shorthand Escapes</title>
+    <title>正则表达式类简写转义</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Escape</entry>
-       <entry>Description</entry>
+       <entry>转义</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>\d</literal> </entry>
-       <entry> matches any digit, like
-        <literal>[[:digit:]]</literal> </entry>
+       <entry> 匹配任意数字，类似于 <literal>[[:digit:]]</literal> </entry>
        </row>
 
        <row>
        <entry> <literal>\s</literal> </entry>
-       <entry> matches any whitespace character, like
-        <literal>[[:space:]]</literal> </entry>
+       <entry> 匹配任意空白字符，类似于 <literal>[[:space:]]</literal> </entry>
        </row>
 
        <row>
        <entry> <literal>\w</literal> </entry>
-       <entry> matches any word character, like
-        <literal>[[:word:]]</literal> </entry>
+       <entry> 匹配任意单词字符，类似于 <literal>[[:word:]]</literal> </entry>
        </row>
 
        <row>
        <entry> <literal>\D</literal> </entry>
-       <entry> matches any non-digit, like
-        <literal>[^[:digit:]]</literal> </entry>
+       <entry> 匹配任意非数字字符，类似于 <literal>[^[:digit:]]</literal> </entry>
        </row>
 
        <row>
        <entry> <literal>\S</literal> </entry>
-       <entry> matches any non-whitespace character, like
-        <literal>[^[:space:]]</literal> </entry>
+       <entry> 匹配任意非空白字符，类似于 <literal>[^[:space:]]</literal> </entry>
        </row>
 
        <row>
        <entry> <literal>\W</literal> </entry>
-       <entry> matches any non-word character, like
-        <literal>[^[:word:]]</literal> </entry>
+       <entry> 匹配任意非单词字符，类似于 <literal>[^[:word:]]</literal> </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    The class-shorthand escapes also work within bracket expressions,
-    although the definitions shown above are not quite syntactically
-    valid in that context.
-    For example, <literal>[a-c\d]</literal> is equivalent to
-    <literal>[a-c[:digit:]]</literal>.
+    类简写转义在方括号表达式内也同样有效，尽管上面给出的定义在该上下文中在语法上并不完全合法。例如，<literal>[a-c\d]</literal> 等价于 <literal>[a-c[:digit:]]</literal>。
    </para>
 
    <table id="posix-constraint-escapes-table">
-    <title>Regular Expression Constraint Escapes</title>
+    <title>正则表达式约束转义</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Escape</entry>
-       <entry>Description</entry>
+       <entry>转义</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>\A</literal> </entry>
-       <entry> matches only at the beginning of the string
-       (see <xref linkend="posix-matching-rules"/> for how this differs from
-       <literal>^</literal>) </entry>
+       <entry> 仅匹配字符串的开头（关于它与 <literal>^</literal> 的区别，参见 <xref linkend="posix-matching-rules"/>） </entry>
        </row>
 
        <row>
        <entry> <literal>\m</literal> </entry>
-       <entry> matches only at the beginning of a word </entry>
+       <entry> 仅匹配单词的开头 </entry>
        </row>
 
        <row>
        <entry> <literal>\M</literal> </entry>
-       <entry> matches only at the end of a word </entry>
+       <entry> 仅在一个词的末尾匹配 </entry>
        </row>
 
        <row>
        <entry> <literal>\y</literal> </entry>
-       <entry> matches only at the beginning or end of a word </entry>
+       <entry> 仅在一个词的开头或末尾匹配 </entry>
        </row>
 
        <row>
        <entry> <literal>\Y</literal> </entry>
-       <entry> matches only at a point that is not the beginning or end of a
-       word </entry>
+       <entry> 仅在一个不是词的开头或末尾的位置匹配 </entry>
        </row>
 
        <row>
        <entry> <literal>\Z</literal> </entry>
-       <entry> matches only at the end of the string
-       (see <xref linkend="posix-matching-rules"/> for how this differs from
-       <literal>$</literal>) </entry>
+       <entry> 仅在字符串末尾匹配
+       （关于它与 <literal>$</literal> 的区别，参见 <xref linkend="posix-matching-rules"/>） </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    A word is defined as in the specification of
-    <literal>[[:&lt;:]]</literal> and <literal>[[:&gt;:]]</literal> above.
-    Constraint escapes are illegal within bracket expressions.
+    词的定义如上面 <literal>[[:&lt;:]]</literal> 和 <literal>[[:&gt;:]]</literal> 的规范所述。
+    约束转义在方括号表达式内是非法的。
    </para>
 
    <table id="posix-constraint-backref-table">
-    <title>Regular Expression Back References</title>
+    <title>正则表达式反向引用</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Escape</entry>
-       <entry>Description</entry>
+       <entry>转义</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>\</literal><replaceable>m</replaceable> </entry>
-       <entry> (where <replaceable>m</replaceable> is a nonzero digit)
-       a back reference to the <replaceable>m</replaceable>'th subexpression </entry>
+       <entry> （其中 <replaceable>m</replaceable> 是一个非零数字）
+       对第 <replaceable>m</replaceable> 个子表达式的反向引用 </entry>
        </row>
 
        <row>
        <entry> <literal>\</literal><replaceable>mnn</replaceable> </entry>
-       <entry> (where <replaceable>m</replaceable> is a nonzero digit, and
-       <replaceable>nn</replaceable> is some more digits, and the decimal value
-       <replaceable>mnn</replaceable> is not greater than the number of closing capturing
-       parentheses seen so far)
-       a back reference to the <replaceable>mnn</replaceable>'th subexpression </entry>
+       <entry> （其中 <replaceable>m</replaceable> 是一个非零数字，<replaceable>nn</replaceable> 是更多一些数字，并且十进制值 <replaceable>mnn</replaceable> 不大于目前所见到的右捕获括号的数目）
+       对第 <replaceable>mnn</replaceable> 个子表达式的反向引用 </entry>
        </row>
       </tbody>
      </tgroup>
@@ -6896,139 +6498,127 @@ regexp_substr('ABCDEFGHI', '(c..)(...)', 1, 1, 'i', 2)
 
    <note>
     <para>
-     There is an inherent ambiguity between octal character-entry
-     escapes and back references, which is resolved by the following heuristics,
-     as hinted at above.
-     A leading zero always indicates an octal escape.
-     A single non-zero digit, not followed by another digit,
-     is always taken as a back reference.
-     A multi-digit sequence not starting with a zero is taken as a back
-     reference if it comes after a suitable subexpression
-     (i.e., the number is in the legal range for a back reference),
-     and otherwise is taken as octal.
+     八进制字符输入转义与反向引用之间存在固有的歧义，这通过下面的启发式规则来解决，正如上面所暗示的那样。
+     前导零总是表示八进制转义。
+     单个非零数字，后面不跟其他数字，总是被当作反向引用。
+     不以零开头的多位数字序列，如果出现在合适的子表达式之后（即该数字处于反向引用的合法范围内），则被当作反向引用，否则被当作八进制。
     </para>
    </note>
    </sect3>
 
    <sect3 id="posix-metasyntax">
-    <title>Regular Expression Metasyntax</title>
+    <title>正则表达式元语法</title>
 
    <para>
-    In addition to the main syntax described above, there are some special
-    forms and miscellaneous syntactic facilities available.
+    除了上文描述的主要语法之外，还有一些特殊形式和杂项语法设施可用。
    </para>
 
    <para>
-    An RE can begin with one of two special <firstterm>director</firstterm> prefixes.
-    If an RE begins with <literal>***:</literal>,
-    the rest of the RE is taken as an ARE.  (This normally has no effect in
-    <productname>PostgreSQL</productname>, since REs are assumed to be AREs;
-    but it does have an effect if ERE or BRE mode had been specified by
-    the <replaceable>flags</replaceable> parameter to a regex function.)
-    If an RE begins with <literal>***=</literal>,
-    the rest of the RE is taken to be a literal string,
-    with all characters considered ordinary characters.
+    一个 RE 可以以两种特殊的<firstterm>指示符</firstterm>前缀之一开头。
+    如果 RE 以 <literal>***:</literal> 开头，
+    则 RE 的其余部分被当作一个 ARE。（这通常在
+    <productname>PostgreSQL</productname> 中没有效果，因为 RE 被假定为 ARE；
+    但如果通过正则函数的 <replaceable>flags</replaceable> 参数指定了 ERE 或 BRE 模式，
+    它确实会有效果。）
+    如果 RE 以 <literal>***=</literal> 开头，
+    则 RE 的其余部分被当作一个字面字符串，
+    其中所有字符都被视为普通字符。
    </para>
 
    <para>
-    An ARE can begin with <firstterm>embedded options</firstterm>:
-    a sequence <literal>(?</literal><replaceable>xyz</replaceable><literal>)</literal>
-    (where <replaceable>xyz</replaceable> is one or more alphabetic characters)
-    specifies options affecting the rest of the RE.
-    These options override any previously determined options &mdash;
-    in particular, they can override the case-sensitivity behavior implied by
-    a regex operator, or the <replaceable>flags</replaceable> parameter to a regex
-    function.
-    The available option letters are
-    shown in <xref linkend="posix-embedded-options-table"/>.
-    Note that these same option letters are used in the <replaceable>flags</replaceable>
-    parameters of regex functions.
+    一个 ARE 可以以<firstterm>嵌入选项</firstterm>开头：
+    一个序列 <literal>(?</literal><replaceable>xyz</replaceable><literal>)</literal>
+    （其中 <replaceable>xyz</replaceable> 是一个或多个字母字符）
+    指定影响 RE 其余部分的选项。
+    这些选项会覆盖任何先前确定的选项 &mdash;
+    尤其是，它们可以覆盖由正则运算符隐含的大小写敏感行为，
+    或正则函数的 <replaceable>flags</replaceable> 参数。
+    可用的选项字母
+    显示在 <xref linkend="posix-embedded-options-table"/> 中。
+    注意，这些相同的选项字母也用于正则函数的 <replaceable>flags</replaceable>
+    参数中。
    </para>
 
    <table id="posix-embedded-options-table">
-    <title>ARE Embedded-Option Letters</title>
+    <title>ARE 嵌入选项字母</title>
 
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Option</entry>
-       <entry>Description</entry>
+       <entry>选项</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
       <tbody>
        <row>
        <entry> <literal>b</literal> </entry>
-       <entry> rest of RE is a BRE </entry>
+       <entry> RE 的剩余部分是 BRE </entry>
        </row>
 
        <row>
        <entry> <literal>c</literal> </entry>
-       <entry> case-sensitive matching (overrides operator type) </entry>
+       <entry> 区分大小写匹配（覆盖运算符类型） </entry>
        </row>
 
        <row>
        <entry> <literal>e</literal> </entry>
-       <entry> rest of RE is an ERE </entry>
+       <entry> RE 的剩余部分是 ERE </entry>
        </row>
 
        <row>
        <entry> <literal>i</literal> </entry>
-       <entry> case-insensitive matching (see
-       <xref linkend="posix-matching-rules"/>) (overrides operator type) </entry>
+       <entry> 不区分大小写匹配（参见
+       <xref linkend="posix-matching-rules"/>）（覆盖运算符类型） </entry>
        </row>
 
        <row>
        <entry> <literal>m</literal> </entry>
-       <entry> historical synonym for <literal>n</literal> </entry>
+       <entry> <literal>n</literal> 的历史同义词 </entry>
        </row>
 
        <row>
        <entry> <literal>n</literal> </entry>
-       <entry> newline-sensitive matching (see
-       <xref linkend="posix-matching-rules"/>) </entry>
+       <entry> 对换行敏感的匹配（参见
+       <xref linkend="posix-matching-rules"/>） </entry>
        </row>
 
        <row>
        <entry> <literal>p</literal> </entry>
-       <entry> partial newline-sensitive matching (see
-       <xref linkend="posix-matching-rules"/>) </entry>
+       <entry> 部分换行敏感匹配（参见 <xref linkend="posix-matching-rules"/>） </entry>
        </row>
 
        <row>
        <entry> <literal>q</literal> </entry>
-       <entry> rest of RE is a literal (<quote>quoted</quote>) string, all ordinary
-       characters </entry>
+       <entry> RE 的剩余部分是字面（<quote>引号</quote>）字符串，所有普通字符 </entry>
        </row>
 
        <row>
        <entry> <literal>s</literal> </entry>
-       <entry> non-newline-sensitive matching (default) </entry>
+       <entry> 非换行敏感匹配（默认） </entry>
        </row>
 
        <row>
        <entry> <literal>t</literal> </entry>
-       <entry> tight syntax (default; see below) </entry>
+       <entry> 紧凑语法（默认；见下文） </entry>
        </row>
 
        <row>
        <entry> <literal>w</literal> </entry>
-       <entry> inverse partial newline-sensitive (<quote>weird</quote>) matching
-       (see <xref linkend="posix-matching-rules"/>) </entry>
+       <entry> 反向部分换行敏感（<quote>怪异</quote>）匹配（参见 <xref linkend="posix-matching-rules"/>） </entry>
        </row>
 
        <row>
        <entry> <literal>x</literal> </entry>
-       <entry> expanded syntax (see below) </entry>
+       <entry> 扩展语法（见下文） </entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    Embedded options take effect at the <literal>)</literal> terminating the sequence.
-    They can appear only at the start of an ARE (after the
-    <literal>***:</literal> director if any).
+    嵌入选项在终止该序列的 <literal>)</literal> 处生效。
+    它们只能出现在 ARE 的开头（如果有 <literal>***:</literal> 指示符，则在其之后）。
    </para>
 
    <para>
@@ -7045,19 +6635,18 @@ regexp_substr('ABCDEFGHI', '(c..)(...)', 1, 1, 'i', 2)
     <itemizedlist>
      <listitem>
       <para>
-       a white-space character or <literal>#</literal> preceded by <literal>\</literal> is
-       retained
+       前面有 <literal>\</literal> 的空白字符或 <literal>#</literal> 会被保留
       </para>
      </listitem>
      <listitem>
       <para>
-       white space or <literal>#</literal> within a bracket expression is retained
+       方括号表达式内的空白或 <literal>#</literal> 会被保留
       </para>
      </listitem>
      <listitem>
       <para>
-       white space and comments cannot appear within multi-character symbols,
-       such as <literal>(?:</literal>
+       空白和注释不能出现在多字符符号内，
+       例如 <literal>(?:</literal>
       </para>
      </listitem>
     </itemizedlist>
@@ -7067,34 +6656,30 @@ regexp_substr('ABCDEFGHI', '(c..)(...)', 1, 1, 'i', 2)
    </para>
 
    <para>
-    Finally, in an ARE, outside bracket expressions, the sequence
+    最后，在 ARE 中，在方括号表达式之外，序列
     <literal>(?#</literal><replaceable>ttt</replaceable><literal>)</literal>
-    (where <replaceable>ttt</replaceable> is any text not containing a <literal>)</literal>)
-    is a comment, completely ignored.
-    Again, this is not allowed between the characters of
-    multi-character symbols, like <literal>(?:</literal>.
-    Such comments are more a historical artifact than a useful facility,
-    and their use is deprecated; use the expanded syntax instead.
+    （其中 <replaceable>ttt</replaceable> 是不包含 <literal>)</literal> 的任意文本）
+    是注释，会被完全忽略。
+    同样，这不允许出现在
+    多字符符号的字符之间，例如 <literal>(?:</literal>。
+    此类注释与其说是有用的功能，不如说是历史遗留物，
+    其使用已被废弃；请改用扩展语法。
    </para>
 
    <para>
-    <emphasis>None</emphasis> of these metasyntax extensions is available if
-    an initial <literal>***=</literal> director
-    has specified that the user's input be treated as a literal string
-    rather than as an RE.
+    如果开头的 <literal>***=</literal> 指示符已指定将用户输入
+    视为字面字符串而不是 RE，则这些元语法扩展
+    <emphasis>均不可用</emphasis>。
    </para>
    </sect3>
 
    <sect3 id="posix-matching-rules">
-    <title>Regular Expression Matching Rules</title>
+    <title>正则表达式匹配规则</title>
 
    <para>
-    In the event that an RE could match more than one substring of a given
-    string, the RE matches the one starting earliest in the string.
-    If the RE could match more than one substring starting at that point,
-    either the longest possible match or the shortest possible match will
-    be taken, depending on whether the RE is <firstterm>greedy</firstterm> or
-    <firstterm>non-greedy</firstterm>.
+    如果一个 RE 可以匹配给定字符串中的多个子串，则该 RE 匹配在字符串中起始位置最早的那个子串。
+    如果该 RE 可以匹配从该位置开始的多个子串，则根据该 RE 是<firstterm>贪婪</firstterm>还是<firstterm>非贪婪</firstterm>，
+    取尽可能长的匹配或尽可能短的匹配。
    </para>
 
    <para>
@@ -7102,263 +6687,219 @@ regexp_substr('ABCDEFGHI', '(c..)(...)', 1, 1, 'i', 2)
     <itemizedlist>
      <listitem>
       <para>
-       Most atoms, and all constraints, have no greediness attribute (because
-       they cannot match variable amounts of text anyway).
+       大多数原子以及所有约束都没有贪婪属性（因为它们无论如何都无法匹配可变数量的文本）。
       </para>
      </listitem>
      <listitem>
       <para>
-       Adding parentheses around an RE does not change its greediness.
+       在 RE 外围添加圆括号不会改变其贪婪性。
       </para>
      </listitem>
      <listitem>
       <para>
-       A quantified atom with a fixed-repetition quantifier
-       (<literal>{</literal><replaceable>m</replaceable><literal>}</literal>
-       or
-       <literal>{</literal><replaceable>m</replaceable><literal>}?</literal>)
-       has the same greediness (possibly none) as the atom itself.
+       带有固定重复量词
+       （<literal>{</literal><replaceable>m</replaceable><literal>}</literal>
+       或
+       <literal>{</literal><replaceable>m</replaceable><literal>}?</literal>）
+       的量化原子与原子本身具有相同的贪婪性（可能没有）。
       </para>
      </listitem>
      <listitem>
       <para>
-       A quantified atom with other normal quantifiers (including
-       <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal>
-       with <replaceable>m</replaceable> equal to <replaceable>n</replaceable>)
-       is greedy (prefers longest match).
+       带有其他普通量词（包括
+       <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}</literal>，
+       其中 <replaceable>m</replaceable> 等于 <replaceable>n</replaceable>）
+       的量化原子是贪婪的（偏好最长匹配）。
       </para>
      </listitem>
      <listitem>
       <para>
-       A quantified atom with a non-greedy quantifier (including
-       <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}?</literal>
-       with <replaceable>m</replaceable> equal to <replaceable>n</replaceable>)
-       is non-greedy (prefers shortest match).
+       带非贪婪量词的量化原子（包括 <literal>{</literal><replaceable>m</replaceable><literal>,</literal><replaceable>n</replaceable><literal>}?</literal>，其中 <replaceable>m</replaceable> 等于 <replaceable>n</replaceable>）是非贪婪的（偏好最短匹配）。
       </para>
      </listitem>
      <listitem>
       <para>
-       A branch &mdash; that is, an RE that has no top-level
-       <literal>|</literal> operator &mdash; has the same greediness as the first
-       quantified atom in it that has a greediness attribute.
+       分支 &mdash; 即不含顶层 <literal>|</literal> 运算符的 RE &mdash;，其贪婪性与其中第一个具有贪婪性属性的量化原子相同。
       </para>
      </listitem>
      <listitem>
       <para>
-       An RE consisting of two or more branches connected by the
-       <literal>|</literal> operator is always greedy.
+       由 <literal>|</literal> 运算符连接两个或多个分支构成的 RE 总是贪婪的。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    The above rules associate greediness attributes not only with individual
-    quantified atoms, but with branches and entire REs that contain quantified
-    atoms.  What that means is that the matching is done in such a way that
-    the branch, or whole RE, matches the longest or shortest possible
-    substring <emphasis>as a whole</emphasis>.  Once the length of the entire match
-    is determined, the part of it that matches any particular subexpression
-    is determined on the basis of the greediness attribute of that
-    subexpression, with subexpressions starting earlier in the RE taking
-    priority over ones starting later.
+    上述规则不仅把贪婪性属性与单个量化原子关联起来，也把它与包含量化原子的分支和整个 RE 关联起来。这意味着匹配是以这样的方式进行的：分支或整个 RE <emphasis>作为一个整体</emphasis>匹配尽可能最长或最短的子串。一旦确定了整个匹配的长度，其中与任一特定子表达式匹配的部分就根据该子表达式的贪婪性属性来确定，在 RE 中起始位置靠前的子表达式优先于起始位置靠后的子表达式。
    </para>
 
    <para>
-    An example of what this means:
+    一个说明这一点的例子：
 <screen>
 SELECT SUBSTRING('XY1234Z', 'Y*([0-9]{1,3})');
 <lineannotation>Result: </lineannotation><computeroutput>123</computeroutput>
 SELECT SUBSTRING('XY1234Z', 'Y*?([0-9]{1,3})');
 <lineannotation>Result: </lineannotation><computeroutput>1</computeroutput>
 </screen>
-    In the first case, the RE as a whole is greedy because <literal>Y*</literal>
-    is greedy.  It can match beginning at the <literal>Y</literal>, and it matches
-    the longest possible string starting there, i.e., <literal>Y123</literal>.
-    The output is the parenthesized part of that, or <literal>123</literal>.
-    In the second case, the RE as a whole is non-greedy because <literal>Y*?</literal>
-    is non-greedy.  It can match beginning at the <literal>Y</literal>, and it matches
-    the shortest possible string starting there, i.e., <literal>Y1</literal>.
-    The subexpression <literal>[0-9]{1,3}</literal> is greedy but it cannot change
-    the decision as to the overall match length; so it is forced to match
-    just <literal>1</literal>.
+在第一种情况下，整个 RE 是贪婪的，因为 <literal>Y*</literal> 是贪婪的。它可以从 <literal>Y</literal> 开始匹配，并匹配从那里开始的最长可能字符串，即 <literal>Y123</literal>。输出是其中带括号的部分，即 <literal>123</literal>。在第二种情况下，整个 RE 是非贪婪的，因为 <literal>Y*?</literal> 是非贪婪的。它可以从 <literal>Y</literal> 开始匹配，并匹配从那里开始的最短可能字符串，即 <literal>Y1</literal>。子表达式 <literal>[0-9]{1,3}</literal> 是贪婪的，但它无法改变关于整体匹配长度的决定；因此它被迫只匹配 <literal>1</literal>。
    </para>
 
    <para>
-    In short, when an RE contains both greedy and non-greedy subexpressions,
-    the total match length is either as long as possible or as short as
-    possible, according to the attribute assigned to the whole RE.  The
-    attributes assigned to the subexpressions only affect how much of that
-    match they are allowed to <quote>eat</quote> relative to each other.
+    简而言之，当一个 RE 同时包含贪婪和非贪婪的子表达式时，总匹配长度要么尽可能长，要么尽可能短，这取决于赋予整个 RE 的属性。赋予各子表达式的属性只影响它们相对于彼此被允许 <quote>吃掉</quote> 多少匹配内容。
    </para>
 
    <para>
-    The quantifiers <literal>{1,1}</literal> and <literal>{1,1}?</literal>
-    can be used to force greediness or non-greediness, respectively,
-    on a subexpression or a whole RE.
-    This is useful when you need the whole RE to have a greediness attribute
-    different from what's deduced from its elements.  As an example,
-    suppose that we are trying to separate a string containing some digits
-    into the digits and the parts before and after them.  We might try to
-    do that like this:
+    量词 <literal>{1,1}</literal> 和 <literal>{1,1}?</literal>
+    可分别用于对子表达式或整个 RE 强制贪婪或非贪婪。
+    当你需要整个 RE 具有与其各元素所推导出的贪婪性不同的贪婪属性时，
+    这很有用。例如，假设我们试图把一个包含一些数字的字符串
+    分成数字部分以及它们之前和之后的部分。我们可能会尝试
+    这样做：
 <screen>
 SELECT regexp_match('abc01234xyz', '(.*)(\d+)(.*)');
 <lineannotation>Result: </lineannotation><computeroutput>{abc0123,4,xyz}</computeroutput>
 </screen>
-    That didn't work: the first <literal>.*</literal> is greedy so
-    it <quote>eats</quote> as much as it can, leaving the <literal>\d+</literal> to
-    match at the last possible place, the last digit.  We might try to fix
-    that by making it non-greedy:
+    这样不行：第一个 <literal>.*</literal> 是贪婪的，所以
+    它会尽可能多地<quote>吃掉</quote>，留下 <literal>\d+</literal> 在
+    最后可能的位置（最后一个数字）进行匹配。我们也许可以尝试通过让它变为非贪婪来修正
+    这个问题：
 <screen>
 SELECT regexp_match('abc01234xyz', '(.*?)(\d+)(.*)');
 <lineannotation>Result: </lineannotation><computeroutput>{abc,0,""}</computeroutput>
 </screen>
-    That didn't work either, because now the RE as a whole is non-greedy
-    and so it ends the overall match as soon as possible.  We can get what
-    we want by forcing the RE as a whole to be greedy:
+    这样也不行，因为现在整个 RE 是非贪婪的，
+    所以它会尽快结束整体匹配。我们可以通过强制整个 RE 为贪婪
+    来得到我们想要的结果：
 <screen>
 SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
 <lineannotation>Result: </lineannotation><computeroutput>{abc,01234,xyz}</computeroutput>
 </screen>
-    Controlling the RE's overall greediness separately from its components'
-    greediness allows great flexibility in handling variable-length patterns.
+    将 RE 的整体贪婪性与各组件的贪婪性分开控制，
+    可以在处理可变长度模式时提供极大的灵活性。
    </para>
 
    <para>
-    When deciding what is a longer or shorter match,
-    match lengths are measured in characters, not collating elements.
-    An empty string is considered longer than no match at all.
-    For example:
+    在决定什么是更长或更短的匹配时，
+    匹配长度以字符为单位衡量，而不是排序元素。
+    空字符串被认为比完全不匹配更长。
+    例如：
     <literal>bb*</literal>
-    matches the three middle characters of <literal>abbbc</literal>;
+    匹配 <literal>abbbc</literal> 中间的三个字符；
     <literal>(week|wee)(night|knights)</literal>
-    matches all ten characters of <literal>weeknights</literal>;
-    when <literal>(.*).*</literal>
-    is matched against <literal>abc</literal> the parenthesized subexpression
-    matches all three characters; and when
-    <literal>(a*)*</literal> is matched against <literal>bc</literal>
-    both the whole RE and the parenthesized
-    subexpression match an empty string.
+    匹配 <literal>weeknights</literal> 的全部十个字符；
+    当 <literal>(.*).*</literal>
+    与 <literal>abc</literal> 匹配时，括号子表达式
+    匹配全部三个字符；而当
+    <literal>(a*)*</literal> 与 <literal>bc</literal> 匹配时，
+    整个 RE 和括号子表达式
+    都匹配空字符串。
    </para>
 
    <para>
-    If case-independent matching is specified,
-    the effect is much as if all case distinctions had vanished from the
-    alphabet.
-    When an alphabetic that exists in multiple cases appears as an
-    ordinary character outside a bracket expression, it is effectively
-    transformed into a bracket expression containing both cases,
-    e.g., <literal>x</literal> becomes <literal>[xX]</literal>.
-    When it appears inside a bracket expression, all case counterparts
-    of it are added to the bracket expression, e.g.,
-    <literal>[x]</literal> becomes <literal>[xX]</literal>
-    and <literal>[^x]</literal> becomes <literal>[^xX]</literal>.
+    如果指定了大小写无关匹配，
+    其效果就好像字母表中所有大小写区别都已消失。
+    当一个存在多种大小写形式的字母字符作为
+    普通字符出现在方括号表达式之外时，它实际上
+    会被转换为包含两种大小写形式的方括号表达式，
+    例如 <literal>x</literal> 变成 <literal>[xX]</literal>。
+    当它出现在方括号表达式内部时，它的所有大小写对应形式
+    都会被添加到该方括号表达式中，例如
+    <literal>[x]</literal> 变成 <literal>[xX]</literal>，
+    而 <literal>[^x]</literal> 变成 <literal>[^xX]</literal>。
    </para>
 
    <para>
-    If newline-sensitive matching is specified, <literal>.</literal>
-    and bracket expressions using <literal>^</literal>
-    will never match the newline character
-    (so that matches will not cross lines unless the RE
-    explicitly includes a newline)
-    and <literal>^</literal> and <literal>$</literal>
-    will match the empty string after and before a newline
-    respectively, in addition to matching at beginning and end of string
-    respectively.
-    But the ARE escapes <literal>\A</literal> and <literal>\Z</literal>
-    continue to match beginning or end of string <emphasis>only</emphasis>.
-    Also, the character class shorthands <literal>\D</literal>
-    and <literal>\W</literal> will match a newline regardless of this mode.
-    (Before <productname>PostgreSQL</productname> 14, they did not match
-    newlines when in newline-sensitive mode.
-    Write <literal>[^[:digit:]]</literal>
-    or <literal>[^[:word:]]</literal> to get the old behavior.)
+    如果指定了换行敏感匹配，则 <literal>.</literal>
+    和使用 <literal>^</literal> 的方括号表达式将永远不会匹配换行符
+    （因此除非正则表达式显式包含换行符，否则匹配不会跨行），
+    并且 <literal>^</literal> 和 <literal>$</literal>
+    除了分别在字符串开头和结尾匹配之外，
+    还将分别匹配换行符之后和之前的空字符串。
+    但 ARE 转义 <literal>\A</literal> 和 <literal>\Z</literal>
+    仍然<emphasis>只</emphasis>匹配字符串的开头或结尾。
+    此外，无论此模式如何，字符类简写 <literal>\D</literal>
+    和 <literal>\W</literal> 都将匹配换行符。
+    （在 <productname>PostgreSQL</productname> 14 之前，在换行敏感模式下它们不匹配
+    换行符。
+    请写 <literal>[^[:digit:]]</literal>
+    或 <literal>[^[:word:]]</literal> 以获得旧行为。）
    </para>
 
    <para>
-    If partial newline-sensitive matching is specified,
-    this affects <literal>.</literal> and bracket expressions
-    as with newline-sensitive matching, but not <literal>^</literal>
-    and <literal>$</literal>.
+    如果指定了部分换行敏感匹配，
+    这会像换行敏感匹配那样影响 <literal>.</literal> 和方括号表达式，
+    但不影响 <literal>^</literal>
+    和 <literal>$</literal>。
    </para>
 
    <para>
-    If inverse partial newline-sensitive matching is specified,
-    this affects <literal>^</literal> and <literal>$</literal>
-    as with newline-sensitive matching, but not <literal>.</literal>
-    and bracket expressions.
-    This isn't very useful but is provided for symmetry.
+    如果指定了反向部分换行敏感匹配，
+    这会像换行敏感匹配那样影响 <literal>^</literal> 和 <literal>$</literal>，
+    但不影响 <literal>.</literal>
+    和方括号表达式。
+    这不太有用，但为了对称而提供。
    </para>
    </sect3>
 
    <sect3 id="posix-limits-compatibility">
-    <title>Limits and Compatibility</title>
+    <title>限制与兼容性</title>
 
    <para>
-    No particular limit is imposed on the length of REs in this
-    implementation.  However,
-    programs intended to be highly portable should not employ REs longer
-    than 256 bytes,
-    as a POSIX-compliant implementation can refuse to accept such REs.
+    在此实现中，对正则表达式的长度没有施加任何特定的限制。但是，
+    打算具有高度可移植性的程序不应使用长度超过 256 字节的
+    正则表达式，
+    因为符合 POSIX 的实现可以拒绝接受这样的正则表达式。
    </para>
 
    <para>
-    The only feature of AREs that is actually incompatible with
-    POSIX EREs is that <literal>\</literal> does not lose its special
-    significance inside bracket expressions.
-    All other ARE features use syntax which is illegal or has
-    undefined or unspecified effects in POSIX EREs;
-    the <literal>***</literal> syntax of directors likewise is outside the POSIX
-    syntax for both BREs and EREs.
+    ARE 中唯一实际上与
+    POSIX ERE 不兼容的特性是，<literal>\</literal> 在方括号表达式内部
+    不会失去其特殊含义。
+    所有其他 ARE 特性使用的语法在 POSIX ERE 中是非法的，
+    或者具有未定义或未指定的效果；
+    同样，指示符的 <literal>***</literal> 语法也超出了 BRE 和 ERE 的 POSIX
+    语法范围。
    </para>
 
    <para>
-    Many of the ARE extensions are borrowed from Perl, but some have
-    been changed to clean them up, and a few Perl extensions are not present.
-    Incompatibilities of note include <literal>\b</literal>, <literal>\B</literal>,
-    the lack of special treatment for a trailing newline,
-    the addition of complemented bracket expressions to the things
-    affected by newline-sensitive matching,
-    the restrictions on parentheses and back references in lookahead/lookbehind
-    constraints, and the longest/shortest-match (rather than first-match)
-    matching semantics.
+    ARE 的许多扩展借自 Perl，但其中一些经过了修改以使其更整洁，还有少数 Perl 扩展并未提供。值得注意的不兼容之处包括 <literal>\b</literal>、<literal>\B</literal>，对末尾换行没有特殊处理，将补集方括号表达式也纳入受换行敏感匹配影响的对象，在前瞻/后顾约束中对圆括号和反向引用的限制，以及最长/最短匹配（而非首次匹配）的匹配语义。
    </para>
    </sect3>
 
    <sect3 id="posix-basic-regexes">
-    <title>Basic Regular Expressions</title>
+    <title>基本正则表达式</title>
 
    <para>
-    BREs differ from EREs in several respects.
-    In BREs, <literal>|</literal>, <literal>+</literal>, and <literal>?</literal>
-    are ordinary characters and there is no equivalent
-    for their functionality.
-    The delimiters for bounds are
-    <literal>\{</literal> and <literal>\}</literal>,
-    with <literal>{</literal> and <literal>}</literal>
-    by themselves ordinary characters.
-    The parentheses for nested subexpressions are
-    <literal>\(</literal> and <literal>\)</literal>,
-    with <literal>(</literal> and <literal>)</literal> by themselves ordinary characters.
-    <literal>^</literal> is an ordinary character except at the beginning of the
-    RE or the beginning of a parenthesized subexpression,
-    <literal>$</literal> is an ordinary character except at the end of the
-    RE or the end of a parenthesized subexpression,
-    and <literal>*</literal> is an ordinary character if it appears at the beginning
-    of the RE or the beginning of a parenthesized subexpression
-    (after a possible leading <literal>^</literal>).
-    Finally, single-digit back references are available, and
-    <literal>\&lt;</literal> and <literal>\&gt;</literal>
-    are synonyms for
-    <literal>[[:&lt;:]]</literal> and <literal>[[:&gt;:]]</literal>
-    respectively; no other escapes are available in BREs.
+    BRE 与 ERE 在若干方面有所不同。
+    在 BRE 中，<literal>|</literal>、<literal>+</literal> 和 <literal>?</literal>
+    是普通字符，其功能没有对应的替代形式。
+    边界的定界符是
+    <literal>\{</literal> 和 <literal>\}</literal>，
+    而 <literal>{</literal> 和 <literal>}</literal>
+    单独出现时是普通字符。
+    用于嵌套子表达式的圆括号是
+    <literal>\(</literal> 和 <literal>\)</literal>，
+    而 <literal>(</literal> 和 <literal>)</literal> 单独出现时是普通字符。
+    <literal>^</literal> 是普通字符，除非它出现在
+    RE 的开头或某个带圆括号的子表达式的开头；
+    <literal>$</literal> 是普通字符，除非它出现在
+    RE 的末尾或某个带圆括号的子表达式的末尾；
+    而 <literal>*</literal> 若出现在 RE 的开头
+    或某个带圆括号的子表达式的开头
+    （可能有一个前导的 <literal>^</literal>），则是普通字符。
+    最后，可以使用一位数字的反向引用，并且
+    <literal>\&lt;</literal> 和 <literal>\&gt;</literal>
+    分别是
+    <literal>[[:&lt;:]]</literal> 和 <literal>[[:&gt;:]]</literal>
+    的同义词；BRE 中没有其他转义可用。
    </para>
    </sect3>
 
 <!-- end re_syntax.n man page -->
 
    <sect3 id="posix-vs-xquery">
-   <title>Differences from SQL Standard and XQuery</title>
+   <title>与 SQL 标准和 XQuery 的差异</title>
 
    <indexterm zone="posix-vs-xquery">
     <primary>LIKE_REGEX</primary>
@@ -7404,12 +6945,12 @@ SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
     </para>
 
     <table id="functions-regexp-sql-table">
-     <title>Regular Expression Functions Equivalencies</title>
+     <title>正则表达式函数的等价关系</title>
 
      <tgroup cols="2">
       <thead>
        <row>
-        <entry>SQL standard</entry>
+        <entry>SQL 标准</entry>
         <entry><productname>PostgreSQL</productname></entry>
        </row>
       </thead>
@@ -7417,7 +6958,7 @@ SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
       <tbody>
        <row>
         <entry><literal><replaceable>string</replaceable> LIKE_REGEX <replaceable>pattern</replaceable></literal></entry>
-        <entry><literal>regexp_like(<replaceable>string</replaceable>, <replaceable>pattern</replaceable>)</literal> or <literal><replaceable>string</replaceable> ~ <replaceable>pattern</replaceable></literal></entry>
+        <entry><literal>regexp_like(<replaceable>string</replaceable>, <replaceable>pattern</replaceable>)</literal> 或 <literal><replaceable>string</replaceable> ~ <replaceable>pattern</replaceable></literal></entry>
        </row>
 
        <row>
@@ -7444,11 +6985,7 @@ SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
     </table>
 
     <para>
-     Regular expression functions similar to those provided by PostgreSQL are
-     also available in a number of other SQL implementations, whereas the
-     SQL-standard functions are not as widely implemented.  Some of the
-     details of the regular expression syntax will likely differ in each
-     implementation.
+     与 PostgreSQL 提供的正则表达式函数类似的功能在许多其他 SQL 实现中也可用，而 SQL 标准函数则没有那么广泛地被实现。正则表达式语法的某些细节很可能在各个实现中有所不同。
     </para>
 
     <para>
@@ -7460,76 +6997,47 @@ SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
      <itemizedlist>
       <listitem>
        <para>
-        XQuery character class subtraction is not supported.  An example of
-        this feature is using the following to match only English
-        consonants: <literal>[a-z-[aeiou]]</literal>.
+        不支持 XQuery 字符类相减。该特性的一个示例是使用以下内容仅匹配英文字母中的辅音：<literal>[a-z-[aeiou]]</literal>。
        </para>
       </listitem>
       <listitem>
        <para>
-        XQuery character class shorthands <literal>\c</literal>,
-        <literal>\C</literal>, <literal>\i</literal>,
-        and <literal>\I</literal> are not supported.
+        不支持 XQuery 字符类简写 <literal>\c</literal>、<literal>\C</literal>、<literal>\i</literal> 和 <literal>\I</literal>。
        </para>
       </listitem>
       <listitem>
        <para>
-        XQuery character class elements
-        using <literal>\p{UnicodeProperty}</literal> or the
-        inverse <literal>\P{UnicodeProperty}</literal> are not supported.
+        不支持使用 <literal>\p{UnicodeProperty}</literal> 或其反义形式 <literal>\P{UnicodeProperty}</literal> 的 XQuery 字符类元素。
        </para>
       </listitem>
       <listitem>
        <para>
-        POSIX interprets character classes such as <literal>\w</literal>
-        (see <xref linkend="posix-class-shorthand-escapes-table"/>)
-        according to the prevailing locale (which you can control by
-        attaching a <literal>COLLATE</literal> clause to the operator or
-        function).  XQuery specifies these classes by reference to Unicode
-        character properties, so equivalent behavior is obtained only with
-        a locale that follows the Unicode rules.
+        POSIX 会根据当前区域设置（你可以通过给运算符或函数附加 <literal>COLLATE</literal> 子句来控制它）来解释诸如 <literal>\w</literal> 这样的字符类（参见 <xref linkend="posix-class-shorthand-escapes-table"/>）。XQuery 通过引用 Unicode 字符属性来指定这些类，因此只有使用遵循 Unicode 规则的区域设置才能获得等价的行为。
        </para>
       </listitem>
       <listitem>
        <para>
-        The SQL standard (not XQuery itself) attempts to cater for more
-        variants of <quote>newline</quote> than POSIX does.  The
-        newline-sensitive matching options described above consider only
-        ASCII NL (<literal>\n</literal>) to be a newline, but SQL would have
-        us treat CR (<literal>\r</literal>), CRLF (<literal>\r\n</literal>)
-        (a Windows-style newline), and some Unicode-only characters like
-        LINE SEPARATOR (U+2028) as newlines as well.
-        Notably, <literal>.</literal> and <literal>\s</literal> should
-        count <literal>\r\n</literal> as one character not two according to
-        SQL.
+        SQL 标准（不是 XQuery 本身）试图比 POSIX 涵盖更多种类的 <quote>换行</quote>。上面描述的换行敏感匹配选项只把 ASCII NL（<literal>\n</literal>）视为换行，但 SQL 会要求我们把 CR（<literal>\r</literal>）、CRLF（<literal>\r\n</literal>）（Windows 风格的换行）以及一些仅 Unicode 的字符（如 LINE SEPARATOR（U+2028））也视为换行。值得注意的是，按照 SQL，<literal>.</literal> 和 <literal>\s</literal> 应把 <literal>\r\n</literal> 算作一个字符而不是两个。
        </para>
       </listitem>
       <listitem>
        <para>
-        Of the character-entry escapes described in
-        <xref linkend="posix-character-entry-escapes-table"/>,
-        XQuery supports only <literal>\n</literal>, <literal>\r</literal>,
-        and <literal>\t</literal>.
+        在 <xref linkend="posix-character-entry-escapes-table"/> 中描述的字符项转义中，XQuery 只支持 <literal>\n</literal>、<literal>\r</literal> 和 <literal>\t</literal>。
        </para>
       </listitem>
       <listitem>
        <para>
-        XQuery does not support
-        the <literal>[:<replaceable>name</replaceable>:]</literal> syntax
-        for character classes within bracket expressions.
+        XQuery 不支持括号表达式中字符类的 <literal>[:<replaceable>name</replaceable>:]</literal> 语法。
        </para>
       </listitem>
       <listitem>
        <para>
-        XQuery does not have lookahead or lookbehind constraints,
-        nor any of the constraint escapes described in
-        <xref linkend="posix-constraint-escapes-table"/>.
+        XQuery 没有前瞻或后顾约束，也没有 <xref linkend="posix-constraint-escapes-table"/> 中描述的任何约束转义。
        </para>
       </listitem>
       <listitem>
        <para>
-        The metasyntax forms described in <xref linkend="posix-metasyntax"/>
-        do not exist in XQuery.
+        <xref linkend="posix-metasyntax"/> 中描述的元语法形式在 XQuery 中不存在。
        </para>
       </listitem>
       <listitem>
@@ -7542,26 +7050,17 @@ SELECT regexp_match('abc01234xyz', '(?:(.*?)(\d+)(.*)){1,1}');
         <itemizedlist>
          <listitem>
           <para>
-           XQuery's <literal>s</literal> (allow dot to match newline)
-           and <literal>m</literal> (allow <literal>^</literal>
-           and <literal>$</literal> to match at newlines) flags provide
-           access to the same behaviors as
-           POSIX's <literal>n</literal>, <literal>p</literal>
-           and <literal>w</literal> flags, but they
-           do <emphasis>not</emphasis> match the behavior of
-           POSIX's <literal>s</literal> and <literal>m</literal> flags.
-           Note in particular that dot-matches-newline is the default
-           behavior in POSIX but not XQuery.
+           XQuery 的 <literal>s</literal>（允许点匹配换行）和 <literal>m</literal>（允许 <literal>^</literal> 和 <literal>$</literal> 在换行处匹配）标志提供了与 POSIX 的 <literal>n</literal>、<literal>p</literal> 和 <literal>w</literal> 标志相同行为的访问，但它们<emphasis>不</emphasis>匹配 POSIX 的 <literal>s</literal> 和 <literal>m</literal> 标志的行为。特别注意，点匹配换行在 POSIX 中是默认行为，而在 XQuery 中不是。
           </para>
          </listitem>
          <listitem>
           <para>
-           XQuery's <literal>x</literal> (ignore whitespace in pattern) flag
-           is noticeably different from POSIX's expanded-mode flag.
-           POSIX's <literal>x</literal> flag also
-           allows <literal>#</literal> to begin a comment in the pattern,
-           and POSIX will not ignore a whitespace character after a
-           backslash.
+           XQuery 的 <literal>x</literal>（忽略模式中的空白）标志
+           与 POSIX 的扩展模式标志明显不同。
+           POSIX 的 <literal>x</literal> 标志还
+           允许 <literal>#</literal> 在模式中开始注释，
+           并且 POSIX 不会忽略反斜杠之后的
+           空白字符。
           </para>
          </listitem>
         </itemizedlist>
