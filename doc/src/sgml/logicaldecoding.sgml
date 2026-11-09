@@ -1039,76 +1039,69 @@ commit_prepared_cb(...);  &lt;-- commit of the prepared transaction
   </sect1>
 
   <sect1 id="logicaldecoding-two-phase-commits">
-   <title>Two-phase Commit Support for Logical Decoding</title>
+   <title>逻辑解码的两阶段提交支持</title>
 
    <para>
-    With the basic output plugin callbacks (eg., <function>begin_cb</function>,
-    <function>change_cb</function>, <function>commit_cb</function> and
-    <function>message_cb</function>) two-phase commit commands like
-    <command>PREPARE TRANSACTION</command>, <command>COMMIT PREPARED</command>
-    and <command>ROLLBACK PREPARED</command> are not decoded. While the
-    <command>PREPARE TRANSACTION</command> is ignored,
-    <command>COMMIT PREPARED</command> is decoded as a <command>COMMIT</command>
-    and <command>ROLLBACK PREPARED</command> is decoded as a
-    <command>ROLLBACK</command>.
+    使用基本的输出插件回调（例如 <function>begin_cb</function>、
+    <function>change_cb</function>、<function>commit_cb</function> 和
+    <function>message_cb</function>）时，诸如
+    <command>PREPARE TRANSACTION</command>、<command>COMMIT PREPARED</command>
+    和 <command>ROLLBACK PREPARED</command> 这样的两阶段提交命令不会被解码。其中
+    <command>PREPARE TRANSACTION</command> 被忽略，
+    <command>COMMIT PREPARED</command> 被解码为一个 <command>COMMIT</command>，
+    <command>ROLLBACK PREPARED</command> 被解码为一个
+    <command>ROLLBACK</command>。
    </para>
 
    <para>
-    To support the streaming of two-phase commands, an output plugin needs to
-    provide additional callbacks. There are multiple two-phase commit callbacks
-    that are required, (<function>begin_prepare_cb</function>,
-    <function>prepare_cb</function>, <function>commit_prepared_cb</function>,
-    <function>rollback_prepared_cb</function> and
-    <function>stream_prepare_cb</function>) and an optional callback
-    (<function>filter_prepare_cb</function>).
+    为了支持两阶段命令的流式传输，输出插件需要
+    提供额外的回调。需要提供多个两阶段提交回调
+    （<function>begin_prepare_cb</function>、
+    <function>prepare_cb</function>、<function>commit_prepared_cb</function>、
+    <function>rollback_prepared_cb</function> 和
+    <function>stream_prepare_cb</function>）以及一个可选回调
+    （<function>filter_prepare_cb</function>）。
    </para>
 
    <para>
-    If the output plugin callbacks for decoding two-phase commit commands are
-    provided, then on <command>PREPARE TRANSACTION</command>, the changes of
-    that transaction are decoded, passed to the output plugin, and the
-    <function>prepare_cb</function> callback is invoked. This differs from the
-    basic decoding setup where changes are only passed to the output plugin
-    when a transaction is committed. The start of a prepared transaction is
-    indicated by the <function>begin_prepare_cb</function> callback.
+    如果提供了用于解码两阶段提交命令的输出插件回调，
+    那么在 <command>PREPARE TRANSACTION</command> 时，该事务的更改会被解码、
+    传递给输出插件，并调用
+    <function>prepare_cb</function> 回调。这与基本解码设置不同，
+    在基本解码设置中，只有在事务提交时更改才会传递给
+    输出插件。预备事务的开始由
+    <function>begin_prepare_cb</function> 回调指示。
    </para>
 
    <para>
-    When a prepared transaction is rolled back using the
-    <command>ROLLBACK PREPARED</command>, then the
-    <function>rollback_prepared_cb</function> callback is invoked and when the
-    prepared transaction is committed using <command>COMMIT PREPARED</command>,
-    then the <function>commit_prepared_cb</function> callback is invoked.
+    当使用 <command>ROLLBACK PREPARED</command> 回滚预备事务时，
+    会调用 <function>rollback_prepared_cb</function> 回调；而当
+    使用 <command>COMMIT PREPARED</command> 提交预备事务时，
+    会调用 <function>commit_prepared_cb</function> 回调。
    </para>
 
    <para>
-    Optionally the output plugin can define filtering rules via
-    <function>filter_prepare_cb</function> to decode only specific transaction
-    in two phases.  This can be achieved by pattern matching on the
-    <parameter>gid</parameter> or via lookups using the
-    <parameter>xid</parameter>.
+    输出插件可选地可以通过
+    <function>filter_prepare_cb</function> 定义过滤规则，以便仅对特定事务
+    进行两阶段解码。这可以通过对
+    <parameter>gid</parameter> 进行模式匹配，或通过使用
+    <parameter>xid</parameter> 进行查找来实现。
    </para>
 
    <para>
-    The users that want to decode prepared transactions need to be careful about
-    below mentioned points:
+    希望解码预备事务的用户需要注意以下几点：
 
     <itemizedlist>
      <listitem>
       <para>
-       If the prepared transaction has locked [user] catalog tables exclusively
-       then decoding prepare can block till the main transaction is committed.
+       如果预备事务以排他方式锁定了 [user] 系统目录表，那么解码预备事务可能会阻塞，直到主事务提交。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The logical replication solution that builds distributed two phase commit
-       using this feature can deadlock if the prepared transaction has locked
-       [user] catalog tables exclusively. To avoid this users must refrain from
-       having locks on catalog tables (e.g. explicit <command>LOCK</command> command)
-       in such transactions.
-       See <xref linkend="logicaldecoding-synchronous-caveats"/> for the details.
+       使用此特性构建分布式两阶段提交的逻辑复制解决方案，如果预备事务以排他方式锁定了 [user] 系统目录表，则可能发生死锁。为避免这种情况，用户必须避免在此类事务中对系统目录表加锁（例如显式 <command>LOCK</command> 命令）。
+       详情请参见 <xref linkend="logicaldecoding-synchronous-caveats"/>。
       </para>
      </listitem>
     </itemizedlist>
