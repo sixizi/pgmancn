@@ -1,21 +1,18 @@
 <!-- doc/src/sgml/array.sgml -->
 
 <sect1 id="arrays">
- <title>Arrays</title>
+ <title>数组</title>
 
  <indexterm>
   <primary>array</primary>
  </indexterm>
 
  <para>
-  <productname>PostgreSQL</productname> allows columns of a table to be
-  defined as variable-length multidimensional arrays. Arrays of any
-  built-in or user-defined base type, enum type, composite type, range type,
-  or domain can be created.
+  <productname>PostgreSQL</productname> 允许把表的列定义为可变长度的多维数组。可以创建任何内置或用户定义的基本类型、枚举类型、复合类型、范围类型或域的数组。
  </para>
 
  <sect2 id="arrays-declaration">
-  <title>Declaration of Array Types</title>
+  <title>数组类型的声明</title>
 
   <indexterm>
    <primary>array</primary>
@@ -23,7 +20,7 @@
   </indexterm>
 
  <para>
-  To illustrate the use of array types, we create this table:
+  为了说明数组类型的用法，我们创建这个表：
 <programlisting>
 CREATE TABLE sal_emp (
     name            text,
@@ -31,21 +28,11 @@ CREATE TABLE sal_emp (
     schedule        text[][]
 );
 </programlisting>
-  As shown, an array data type is named by appending square brackets
-  (<literal>[]</literal>) to the data type name of the array elements.  The
-  above command will create a table named
-  <structname>sal_emp</structname> with a column of type
-  <type>text</type> (<structfield>name</structfield>), a
-  one-dimensional array of type <type>integer</type>
-  (<structfield>pay_by_quarter</structfield>), which represents the
-  employee's salary by quarter, and a two-dimensional array of
-  <type>text</type> (<structfield>schedule</structfield>), which
-  represents the employee's weekly schedule.
+  如上所示，数组数据类型的名称是在数组元素的数据类型名后加上方括号（<literal>[]</literal>）来命名的。上述命令将创建一个名为 <structname>sal_emp</structname> 的表，其中包含一个类型为 <type>text</type>（<structfield>name</structfield>）的列、一个类型为 <type>integer</type>（<structfield>pay_by_quarter</structfield>）的一维数组（表示员工按季度的工资），以及一个 <type>text</type>（<structfield>schedule</structfield>）的二维数组（表示员工的每周日程安排）。
  </para>
 
  <para>
-  The syntax for <command>CREATE TABLE</command> allows the exact size of
-  arrays to be specified, for example:
+  <command>CREATE TABLE</command> 的语法允许指定数组的确切大小，例如：
 
 <programlisting>
 CREATE TABLE tictactoe (
@@ -53,39 +40,28 @@ CREATE TABLE tictactoe (
 );
 </programlisting>
 
-  However, the current implementation ignores any supplied array size
-  limits, i.e., the behavior is the same as for arrays of unspecified
-  length.
+  然而，当前的实现会忽略任何提供的数组大小限制，也就是说，其行为与未指定长度的数组相同。
  </para>
 
  <para>
-  The current implementation does not enforce the declared
-  number of dimensions either.  Arrays of a particular element type are
-  all considered to be of the same type, regardless of size or number
-  of dimensions.  So, declaring the array size or number of dimensions in
-  <command>CREATE TABLE</command> is simply documentation; it does not
-  affect run-time behavior.
+  当前的实现也不会强制所声明的维数。特定元素类型的所有数组都被视为同一类型，无论其大小或维数如何。因此，在 <command>CREATE TABLE</command> 中声明数组大小或维数只是文档说明；它不会影响运行时行为。
  </para>
 
  <para>
-  An alternative syntax, which conforms to the SQL standard by using
-  the keyword <literal>ARRAY</literal>, can be used for one-dimensional arrays.
-  <structfield>pay_by_quarter</structfield> could have been defined
-  as:
+  另一种符合 SQL 标准的语法使用关键字 <literal>ARRAY</literal>，可用于一维数组。<structfield>pay_by_quarter</structfield> 可以定义为：
 <programlisting>
     pay_by_quarter  integer ARRAY[4],
 </programlisting>
-  Or, if no array size is to be specified:
+  或者，如果不指定数组大小：
 <programlisting>
     pay_by_quarter  integer ARRAY,
 </programlisting>
-  As before, however, <productname>PostgreSQL</productname> does not enforce the
-  size restriction in any case.
+  然而，和之前一样，<productname>PostgreSQL</productname> 在任何情况下都不会强制实施大小限制。
  </para>
  </sect2>
 
  <sect2 id="arrays-input">
-  <title>Array Value Input</title>
+  <title>数组值输入</title>
 
   <indexterm>
    <primary>array</primary>
@@ -93,48 +69,28 @@ CREATE TABLE tictactoe (
   </indexterm>
 
   <para>
-   To write an array value as a literal constant, enclose the element
-   values within curly braces and separate them by commas.  (If you
-   know C, this is not unlike the C syntax for initializing
-   structures.)  You can put double quotes around any element value,
-   and must do so if it contains commas or curly braces.  (More
-   details appear below.)  Thus, the general format of an array
-   constant is the following:
+   要把数组值写成字面常量，请将元素值括在花括号中并用逗号分隔。（如果你了解 C，这与 C 中初始化结构体的语法颇为相似。）你可以用双引号括住任何元素值，并且当元素值包含逗号或花括号时必须这样做。（更多细节见下文。）因此，数组常量的一般格式如下：
 <synopsis>
 '{ <replaceable>val1</replaceable> <replaceable>delim</replaceable> <replaceable>val2</replaceable> <replaceable>delim</replaceable> ... }'
 </synopsis>
-   where <replaceable>delim</replaceable> is the delimiter character
-   for the type, as recorded in its <literal>pg_type</literal> entry.
-   Among the standard data types provided in the
-   <productname>PostgreSQL</productname> distribution, all use a comma
-   (<literal>,</literal>), except for type <type>box</type> which uses a semicolon
-   (<literal>;</literal>). Each <replaceable>val</replaceable> is
-   either a constant of the array element type, or a subarray. An example
-   of an array constant is:
+   其中 <replaceable>delim</replaceable> 是该类型的定界符字符，记录在其 <literal>pg_type</literal> 条目中。在 <productname>PostgreSQL</productname> 发行版提供的标准数据类型中，除类型 <type>box</type> 使用分号（<literal>;</literal>）外，其余都使用逗号（<literal>,</literal>）。每个 <replaceable>val</replaceable> 要么是数组元素类型的常量，要么是一个子数组。数组常量的一个例子是：
 <programlisting>
 '{{1,2,3},{4,5,6},{7,8,9}}'
 </programlisting>
-   This constant is a two-dimensional, 3-by-3 array consisting of
-   three subarrays of integers.
+   该常量是一个二维的 3×3 数组，由三个整数子数组组成。
   </para>
 
   <para>
-   To set an element of an array constant to NULL, write <literal>NULL</literal>
-   for the element value.  (Any upper- or lower-case variant of
-   <literal>NULL</literal> will do.)  If you want an actual string value
-   <quote>NULL</quote>, you must put double quotes around it.
+   要把数组常量中的某个元素设为 NULL，请将该元素值写为 <literal>NULL</literal>。（<literal>NULL</literal> 的任意大小写变体均可。）如果你想要一个实际的字符串值 <quote>NULL</quote>，必须在其两侧加上双引号。
   </para>
 
   <para>
-   (These kinds of array constants are actually only a special case of
-   the generic type constants discussed in <xref
-   linkend="sql-syntax-constants-generic"/>.  The constant is initially
-   treated as a string and passed to the array input conversion
-   routine.  An explicit type specification might be necessary.)
+   （这类数组常量实际上只是 <xref
+   linkend="sql-syntax-constants-generic"/> 中讨论的通用类型常量的一个特例。该常量最初被当作字符串处理，并传递给数组输入转换例程。可能需要显式指定类型。）
   </para>
 
   <para>
-   Now we can show some <command>INSERT</command> statements:
+   现在我们可以展示一些 <command>INSERT</command> 语句：
 
 <programlisting>
 INSERT INTO sal_emp
@@ -150,7 +106,7 @@ INSERT INTO sal_emp
   </para>
 
  <para>
-  The result of the previous two inserts looks like this:
+  前两次插入的结果如下所示：
 
 <programlisting>
 SELECT * FROM sal_emp;
@@ -163,8 +119,7 @@ SELECT * FROM sal_emp;
  </para>
 
  <para>
-  Multidimensional arrays must have matching extents for each
-  dimension. A mismatch causes an error, for example:
+  多维数组的每一维都必须具有匹配的范围。不匹配会导致错误，例如：
 
 <programlisting>
 INSERT INTO sal_emp
@@ -177,7 +132,7 @@ DETAIL:  Multidimensional arrays must have sub-arrays with matching dimensions.
  </para>
 
  <para>
-  The <literal>ARRAY</literal> constructor syntax can also be used:
+  也可以使用 <literal>ARRAY</literal> 构造器语法：
 <programlisting>
 INSERT INTO sal_emp
     VALUES ('Bill',
@@ -189,16 +144,12 @@ INSERT INTO sal_emp
     ARRAY[20000, 25000, 25000, 25000],
     ARRAY[['breakfast', 'consulting'], ['meeting', 'lunch']]);
 </programlisting>
-  Notice that the array elements are ordinary SQL constants or
-  expressions; for instance, string literals are single quoted, instead of
-  double quoted as they would be in an array literal.  The <literal>ARRAY</literal>
-  constructor syntax is discussed in more detail in
-  <xref linkend="sql-syntax-array-constructors"/>.
+  请注意，数组元素是普通的 SQL 常量或表达式；例如，字符串字面量使用单引号，而不是像在数组字面量中那样使用双引号。<literal>ARRAY</literal> 构造器语法在 <xref linkend="sql-syntax-array-constructors"/> 中有更详细的讨论。
  </para>
  </sect2>
 
  <sect2 id="arrays-accessing">
-  <title>Accessing Arrays</title>
+  <title>访问数组</title>
 
   <indexterm>
    <primary>array</primary>
@@ -206,10 +157,9 @@ INSERT INTO sal_emp
   </indexterm>
 
  <para>
-  Now, we can run some queries on the table.
-  First, we show how to access a single element of an array.
-  This query retrieves the names of the employees whose pay changed in
-  the second quarter:
+  现在，我们可以对该表执行一些查询。
+  首先，我们展示如何访问数组的单个元素。
+  下面的查询检索第二季度薪资发生变化的员工姓名：
 
 <programlisting>
 SELECT name FROM sal_emp WHERE pay_by_quarter[1] &lt;&gt; pay_by_quarter[2];
@@ -220,15 +170,14 @@ SELECT name FROM sal_emp WHERE pay_by_quarter[1] &lt;&gt; pay_by_quarter[2];
 (1 row)
 </programlisting>
 
-  The array subscript numbers are written within square brackets.
-  By default <productname>PostgreSQL</productname> uses a
-  one-based numbering convention for arrays, that is,
-  an array of <replaceable>n</replaceable> elements starts with <literal>array[1]</literal> and
-  ends with <literal>array[<replaceable>n</replaceable>]</literal>.
+  数组下标数字写在方括号内。
+  默认情况下，<productname>PostgreSQL</productname> 对数组采用从 1 开始的编号约定，也就是说，
+  一个包含 <replaceable>n</replaceable> 个元素的数组从 <literal>array[1]</literal> 开始，
+  到 <literal>array[<replaceable>n</replaceable>]</literal> 结束。
  </para>
 
  <para>
-  This query retrieves the third quarter pay of all employees:
+  下面的查询检索所有员工的第三季度薪资：
 
 <programlisting>
 SELECT pay_by_quarter[3] FROM sal_emp;
@@ -242,11 +191,9 @@ SELECT pay_by_quarter[3] FROM sal_emp;
  </para>
 
  <para>
-  We can also access arbitrary rectangular slices of an array, or
-  subarrays.  An array slice is denoted by writing
+  我们也可以访问数组的任意矩形切片，或子数组。数组切片通过为一个或多个数组维度写出
   <literal><replaceable>lower-bound</replaceable>:<replaceable>upper-bound</replaceable></literal>
-  for one or more array dimensions.  For example, this query retrieves the first
-  item on Bill's schedule for the first two days of the week:
+  来表示。例如，下面的查询检索 Bill 一周中前两天的日程安排的第一项：
 
 <programlisting>
 SELECT schedule[1:2][1:1] FROM sal_emp WHERE name = 'Bill';
@@ -257,11 +204,9 @@ SELECT schedule[1:2][1:1] FROM sal_emp WHERE name = 'Bill';
 (1 row)
 </programlisting>
 
-  If any dimension is written as a slice, i.e., contains a colon, then all
-  dimensions are treated as slices.  Any dimension that has only a single
-  number (no colon) is treated as being from 1
-  to the number specified.  For example, <literal>[2]</literal> is treated as
-  <literal>[1:2]</literal>, as in this example:
+  如果任何维度被写成切片形式，即包含冒号，那么所有维度都被当作切片处理。任何只有一个数字（没有冒号）的维度被当作从 1
+  到指定数字。例如，<literal>[2]</literal> 被当作
+  <literal>[1:2]</literal>，如下例所示：
 
 <programlisting>
 SELECT schedule[1:2][2] FROM sal_emp WHERE name = 'Bill';
@@ -272,15 +217,13 @@ SELECT schedule[1:2][2] FROM sal_emp WHERE name = 'Bill';
 (1 row)
 </programlisting>
 
-  To avoid confusion with the non-slice case, it's best to use slice syntax
-  for all dimensions, e.g., <literal>[1:2][1:1]</literal>, not <literal>[2][1:1]</literal>.
+  为避免与非切片情形混淆，最好对所有维度都使用切片语法，例如 <literal>[1:2][1:1]</literal>，而不是 <literal>[2][1:1]</literal>。
  </para>
 
  <para>
-  It is possible to omit the <replaceable>lower-bound</replaceable> and/or
-  <replaceable>upper-bound</replaceable> of a slice specifier; the missing
-  bound is replaced by the lower or upper limit of the array's subscripts.
-  For example:
+  可以省略切片说明符的 <replaceable>lower-bound</replaceable> 和/或
+  <replaceable>upper-bound</replaceable>；缺失的边界被替换为数组下标的下限或上限。
+  例如：
 
 <programlisting>
 SELECT schedule[:2][2:] FROM sal_emp WHERE name = 'Bill';
@@ -300,30 +243,24 @@ SELECT schedule[:][1:1] FROM sal_emp WHERE name = 'Bill';
  </para>
 
  <para>
-  An array subscript expression will return null if either the array itself or
-  any of the subscript expressions are null.  Also, null is returned if a
-  subscript is outside the array bounds (this case does not raise an error).
-  For example, if <literal>schedule</literal>
-  currently has the dimensions <literal>[1:3][1:2]</literal> then referencing
-  <literal>schedule[3][3]</literal> yields NULL.  Similarly, an array reference
-  with the wrong number of subscripts yields a null rather than an error.
+  如果数组本身或任何下标表达式为 null，则数组下标表达式将返回 null。此外，如果下标超出数组边界，也返回 null（这种情况不会报错）。
+  例如，如果 <literal>schedule</literal>
+  当前的维度为 <literal>[1:3][1:2]</literal>，那么引用
+  <literal>schedule[3][3]</literal> 会得到 NULL。同样，下标数量错误的数组引用
+  会得到 null 而不是报错。
  </para>
 
  <para>
-  An array slice expression likewise yields null if the array itself or
-  any of the subscript expressions are null.  However, in other
-  cases such as selecting an array slice that
-  is completely outside the current array bounds, a slice expression
-  yields an empty (zero-dimensional) array instead of null.  (This
-  does not match non-slice behavior and is done for historical reasons.)
-  If the requested slice partially overlaps the array bounds, then it
-  is silently reduced to just the overlapping region instead of
-  returning null.
+  如果数组本身或任何下标表达式为 null，数组切片表达式同样会得到 null。然而，在其他
+  情况下，例如选择一个完全超出当前数组边界的数组切片，切片表达式
+  会得到一个空（零维）数组而不是 null。（这与非切片行为不一致，是出于历史原因。）
+  如果请求的切片与数组边界部分重叠，则会静默地缩减为仅重叠的区域，而不是
+  返回 null。
  </para>
 
  <para>
-  The current dimensions of any array value can be retrieved with the
-  <function>array_dims</function> function:
+  任何数组值的当前维度都可以用
+  <function>array_dims</function> 函数获取：
 
 <programlisting>
 SELECT array_dims(schedule) FROM sal_emp WHERE name = 'Carol';
@@ -334,12 +271,10 @@ SELECT array_dims(schedule) FROM sal_emp WHERE name = 'Carol';
 (1 row)
 </programlisting>
 
-  <function>array_dims</function> produces a <type>text</type> result,
-  which is convenient for people to read but perhaps inconvenient
-  for programs.  Dimensions can also be retrieved with
-  <function>array_upper</function> and <function>array_lower</function>,
-  which return the upper and lower bound of a
-  specified array dimension, respectively:
+  <function>array_dims</function> 产生一个 <type>text</type> 结果，
+  这对人来说便于阅读，但对程序来说可能不方便。维度也可以用
+  <function>array_upper</function> 和 <function>array_lower</function> 获取，
+  它们分别返回指定数组维度的上限和下限：
 
 <programlisting>
 SELECT array_upper(schedule, 1) FROM sal_emp WHERE name = 'Carol';
@@ -350,8 +285,8 @@ SELECT array_upper(schedule, 1) FROM sal_emp WHERE name = 'Carol';
 (1 row)
 </programlisting>
 
- <function>array_length</function> will return the length of a specified
- array dimension:
+ <function>array_length</function> 将返回指定
+ 数组维度的长度：
 
 <programlisting>
 SELECT array_length(schedule, 1) FROM sal_emp WHERE name = 'Carol';
@@ -362,9 +297,8 @@ SELECT array_length(schedule, 1) FROM sal_emp WHERE name = 'Carol';
 (1 row)
 </programlisting>
 
- <function>cardinality</function> returns the total number of elements in an
- array across all dimensions.  It is effectively the number of rows a call to
- <function>unnest</function> would yield:
+ <function>cardinality</function> 返回数组在所有维度上的元素总数。它实际上就是调用
+ <function>unnest</function> 会产生的行数：
 
 <programlisting>
 SELECT cardinality(schedule) FROM sal_emp WHERE name = 'Carol';
@@ -378,7 +312,7 @@ SELECT cardinality(schedule) FROM sal_emp WHERE name = 'Carol';
  </sect2>
 
  <sect2 id="arrays-modifying">
-  <title>Modifying Arrays</title>
+  <title>修改数组</title>
 
   <indexterm>
    <primary>array</primary>
@@ -386,60 +320,47 @@ SELECT cardinality(schedule) FROM sal_emp WHERE name = 'Carol';
   </indexterm>
 
  <para>
-  An array value can be replaced completely:
+  数组值可以被完全替换：
 
 <programlisting>
 UPDATE sal_emp SET pay_by_quarter = '{25000,25000,27000,27000}'
     WHERE name = 'Carol';
 </programlisting>
 
-  or using the <literal>ARRAY</literal> expression syntax:
+  或者使用 <literal>ARRAY</literal> 表达式语法：
 
 <programlisting>
 UPDATE sal_emp SET pay_by_quarter = ARRAY[25000,25000,27000,27000]
     WHERE name = 'Carol';
 </programlisting>
 
-  An array can also be updated at a single element:
+  数组也可以在单个元素上更新：
 
 <programlisting>
 UPDATE sal_emp SET pay_by_quarter[4] = 15000
     WHERE name = 'Bill';
 </programlisting>
 
-  or updated in a slice:
+  或者在切片中更新：
 
 <programlisting>
 UPDATE sal_emp SET pay_by_quarter[1:2] = '{27000,27000}'
     WHERE name = 'Carol';
 </programlisting>
 
-  The slice syntaxes with omitted <replaceable>lower-bound</replaceable> and/or
-  <replaceable>upper-bound</replaceable> can be used too, but only when
-  updating an array value that is not NULL or zero-dimensional (otherwise,
-  there is no existing subscript limit to substitute).
+  省略 <replaceable>lower-bound</replaceable> 和/或 <replaceable>upper-bound</replaceable> 的切片语法也可以使用，但仅当更新一个不为 NULL 或不是零维的数组值时（否则没有现成的下标界限可供替换）。
  </para>
 
  <para>
-  A stored array value can be enlarged by assigning to elements not already
-  present.  Any positions between those previously present and the newly
-  assigned elements will be filled with nulls.  For example, if array
-  <literal>myarray</literal> currently has 4 elements, it will have six
-  elements after an update that assigns to <literal>myarray[6]</literal>;
-  <literal>myarray[5]</literal> will contain null.
-  Currently, enlargement in this fashion is only allowed for one-dimensional
-  arrays, not multidimensional arrays.
+  通过为尚不存在的元素赋值，可以扩大已存储的数组值。在先前存在的元素与新赋值的元素之间的任何位置都将用 null 填充。例如，如果数组 <literal>myarray</literal> 当前有 4 个元素，那么在赋值给 <literal>myarray[6]</literal> 的更新之后它将有六个元素；<literal>myarray[5]</literal> 将包含 null。目前，这种方式的扩大只允许用于一维数组，而不允许用于多维数组。
  </para>
 
  <para>
-  Subscripted assignment allows creation of arrays that do not use one-based
-  subscripts.  For example one might assign to <literal>myarray[-2:7]</literal> to
-  create an array with subscript values from -2 to 7.
+  带下标的赋值允许创建不使用从 1 开始的下标的数组。例如，可以赋值给 <literal>myarray[-2:7]</literal> 来创建一个下标值从 -2 到 7 的数组。
  </para>
 
  <para>
-  New array values can also be constructed using the concatenation operator,
-  <literal>||</literal>:
+  新的数组值也可以使用连接运算符 <literal>||</literal> 来构造：
 <programlisting>
 SELECT ARRAY[1,2] || ARRAY[3,4];
  ?column?
@@ -456,16 +377,11 @@ SELECT ARRAY[5,6] || ARRAY[[1,2],[3,4]];
  </para>
 
  <para>
-  The concatenation operator allows a single element to be pushed onto the
-  beginning or end of a one-dimensional array. It also accepts two
-  <replaceable>N</replaceable>-dimensional arrays, or an <replaceable>N</replaceable>-dimensional
-  and an <replaceable>N+1</replaceable>-dimensional array.
+  连接运算符允许将单个元素推入一维数组的开头或末尾。它也接受两个 <replaceable>N</replaceable> 维数组，或者一个 <replaceable>N</replaceable> 维数组和一个 <replaceable>N+1</replaceable> 维数组。
  </para>
 
  <para>
-  When a single element is pushed onto either the beginning or end of a
-  one-dimensional array, the result is an array with the same lower bound
-  subscript as the array operand. For example:
+  当将单个元素推入一维数组的开头或末尾时，结果是一个与数组操作数具有相同下界下标的数组。例如：
 <programlisting>
 SELECT array_dims(1 || '[0:1]={2,3}'::int[]);
  array_dims
@@ -482,10 +398,7 @@ SELECT array_dims(ARRAY[1,2] || 3);
  </para>
 
  <para>
-  When two arrays with an equal number of dimensions are concatenated, the
-  result retains the lower bound subscript of the left-hand operand's outer
-  dimension. The result is an array comprising every element of the left-hand
-  operand followed by every element of the right-hand operand. For example:
+  当两个维数相同的数组被连接时，结果保留左侧操作数外层维度的下界下标。结果是一个数组，它由左侧操作数的每个元素后跟右侧操作数的每个元素组成。例如：
 <programlisting>
 SELECT array_dims(ARRAY[1,2] || ARRAY[3,4,5]);
  array_dims
@@ -502,11 +415,7 @@ SELECT array_dims(ARRAY[[1,2],[3,4]] || ARRAY[[5,6],[7,8],[9,0]]);
  </para>
 
  <para>
-  When an <replaceable>N</replaceable>-dimensional array is pushed onto the beginning
-  or end of an <replaceable>N+1</replaceable>-dimensional array, the result is
-  analogous to the element-array case above. Each <replaceable>N</replaceable>-dimensional
-  sub-array is essentially an element of the <replaceable>N+1</replaceable>-dimensional
-  array's outer dimension. For example:
+  当一个 <replaceable>N</replaceable> 维数组被推入一个 <replaceable>N+1</replaceable> 维数组的开头或末尾时，结果与上面的元素-数组情形类似。每个 <replaceable>N</replaceable> 维子数组本质上是该 <replaceable>N+1</replaceable> 维数组外层维度的一个元素。例如：
 <programlisting>
 SELECT array_dims(ARRAY[1,2] || ARRAY[[3,4],[5,6]]);
  array_dims
@@ -517,11 +426,7 @@ SELECT array_dims(ARRAY[1,2] || ARRAY[[3,4],[5,6]]);
  </para>
 
  <para>
-  An array can also be constructed by using the functions
-  <function>array_prepend</function>, <function>array_append</function>,
-  or <function>array_cat</function>. The first two only support one-dimensional
-  arrays, but <function>array_cat</function> supports multidimensional arrays.
-  Some examples:
+  数组也可以通过使用函数 <function>array_prepend</function>、<function>array_append</function> 或 <function>array_cat</function> 来构造。前两个只支持一维数组，但 <function>array_cat</function> 支持多维数组。一些示例：
 
 <programlisting>
 SELECT array_prepend(1, ARRAY[2,3]);
@@ -596,7 +501,7 @@ SELECT array_append(ARRAY[1, 2], NULL);    -- this might have been meant
  </sect2>
 
  <sect2 id="arrays-searching">
-  <title>Searching in Arrays</title>
+  <title>在数组中搜索</title>
 
   <indexterm>
    <primary>array</primary>
@@ -604,9 +509,7 @@ SELECT array_append(ARRAY[1, 2], NULL);    -- this might have been meant
   </indexterm>
 
  <para>
-  To search for a value in an array, each value must be checked.
-  This can be done manually, if you know the size of the array.
-  For example:
+  要在数组中搜索某个值，必须检查每个值。如果你知道数组的大小，可以手动完成。例如：
 
 <programlisting>
 SELECT * FROM sal_emp WHERE pay_by_quarter[1] = 10000 OR
@@ -615,17 +518,13 @@ SELECT * FROM sal_emp WHERE pay_by_quarter[1] = 10000 OR
                             pay_by_quarter[4] = 10000;
 </programlisting>
 
-  However, this quickly becomes tedious for large arrays, and is not
-  helpful if the size of the array is unknown. An alternative method is
-  described in <xref linkend="functions-comparisons"/>. The above
-  query could be replaced by:
+  然而，对于大型数组，这会很快变得繁琐，而且在数组大小未知时也无济于事。另一种方法在 <xref linkend="functions-comparisons"/> 中描述。上面的查询可以替换为：
 
 <programlisting>
 SELECT * FROM sal_emp WHERE 10000 = ANY (pay_by_quarter);
 </programlisting>
 
-  In addition, you can find rows where the array has all values
-  equal to 10000 with:
+  此外，你可以用以下方法找出数组中所有值都等于 10000 的行：
 
 <programlisting>
 SELECT * FROM sal_emp WHERE 10000 = ALL (pay_by_quarter);
@@ -634,8 +533,8 @@ SELECT * FROM sal_emp WHERE 10000 = ALL (pay_by_quarter);
  </para>
 
  <para>
-  Alternatively, the <function>generate_subscripts</function> function can be used.
-  For example:
+  或者，也可以使用 <function>generate_subscripts</function> 函数。
+  例如：
 
 <programlisting>
 SELECT * FROM
@@ -645,28 +544,28 @@ SELECT * FROM
  WHERE pay_by_quarter[s] = 10000;
 </programlisting>
 
-  This function is described in <xref linkend="functions-srf-subscripts"/>.
+  该函数在 <xref linkend="functions-srf-subscripts"/> 中描述。
  </para>
 
  <para>
-  You can also search an array using the <literal>&amp;&amp;</literal> operator,
-  which checks whether the left operand overlaps with the right operand.
-  For instance:
+  你也可以使用 <literal>&amp;&amp;</literal> 运算符搜索数组，
+  它检查左操作数是否与右操作数重叠。
+  例如：
 
 <programlisting>
 SELECT * FROM sal_emp WHERE pay_by_quarter &amp;&amp; ARRAY[10000];
 </programlisting>
 
-  This and other array operators are further described in
-  <xref linkend="functions-array"/>.  It can be accelerated by an appropriate
-  index, as described in <xref linkend="indexes-types"/>.
+  该运算符及其他数组运算符在
+  <xref linkend="functions-array"/> 中有进一步描述。它可以通过适当的
+  索引来加速，如 <xref linkend="indexes-types"/> 所述。
  </para>
 
  <para>
-  You can also search for specific values in an array using the <function>array_position</function>
-  and <function>array_positions</function> functions. The former returns the subscript of
-  the first occurrence of a value in an array; the latter returns an array with the
-  subscripts of all occurrences of the value in the array.  For example:
+  你还可以使用 <function>array_position</function>
+  和 <function>array_positions</function> 函数在数组中搜索特定值。前者返回
+  某个值在数组中第一次出现的下标；后者返回一个数组，其中包含
+  该值在数组中所有出现位置的下标。例如：
 
 <programlisting>
 SELECT array_position(ARRAY['sun','mon','tue','wed','thu','fri','sat'], 'mon');
@@ -685,17 +584,17 @@ SELECT array_positions(ARRAY[1, 4, 3, 1, 3, 4, 2, 1], 1);
 
  <tip>
   <para>
-   Arrays are not sets; searching for specific array elements
-   can be a sign of database misdesign.  Consider
-   using a separate table with a row for each item that would be an
-   array element.  This will be easier to search, and is likely to
-   scale better for a large number of elements.
+   数组不是集合；搜索特定的数组元素
+  可能是数据库设计不当的迹象。考虑
+  使用单独的表，为每个本应作为
+  数组元素的项目使用一行。这样更易于搜索，并且对于
+  大量元素而言可能具有更好的可扩展性。
   </para>
  </tip>
  </sect2>
 
  <sect2 id="arrays-io">
-  <title>Array Input and Output Syntax</title>
+  <title>数组输入和输出语法</title>
 
   <indexterm>
    <primary>array</primary>
@@ -703,42 +602,26 @@ SELECT array_positions(ARRAY[1, 4, 3, 1, 3, 4, 2, 1], 1);
   </indexterm>
 
   <para>
-   The external text representation of an array value consists of items that
-   are interpreted according to the I/O conversion rules for the array's
-   element type, plus decoration that indicates the array structure.
-   The decoration consists of curly braces (<literal>{</literal> and <literal>}</literal>)
-   around the array value plus delimiter characters between adjacent items.
-   The delimiter character is usually a comma (<literal>,</literal>) but can be
-   something else: it is determined by the <literal>typdelim</literal> setting
-   for the array's element type.  Among the standard data types provided
-   in the <productname>PostgreSQL</productname> distribution, all use a comma,
-   except for type <type>box</type>, which uses a semicolon (<literal>;</literal>).
-   In a multidimensional array, each dimension (row, plane,
-   cube, etc.) gets its own level of curly braces, and delimiters
-   must be written between adjacent curly-braced entities of the same level.
+   数组值的外部文本表示由若干项组成，这些项
+  按照数组元素类型的 I/O 转换规则进行解释，
+  此外还有指示数组结构的修饰。
+  修饰包括包围数组值的花括号（<literal>{</literal> 和 <literal>}</literal>）
+  以及相邻项之间的分隔字符。
+  分隔字符通常是逗号（<literal>,</literal>），但也可以是
+  其他字符：它由数组元素类型的 <literal>typdelim</literal> 设置
+  决定。在 <productname>PostgreSQL</productname> 发行版提供的标准数据类型中，
+  除类型 <type>box</type> 使用分号（<literal>;</literal>）外，其余都使用逗号。
+  在多维数组中，每个维度（行、平面、
+  立方体等）都有自己的一层花括号，并且
+  必须在同一层的相邻花括号实体之间写入分隔符。
   </para>
 
   <para>
-   The array output routine will put double quotes around element values
-   if they are empty strings, contain curly braces, delimiter characters,
-   double quotes, backslashes, or white space, or match the word
-   <literal>NULL</literal>.  Double quotes and backslashes
-   embedded in element values will be backslash-escaped.  For numeric
-   data types it is safe to assume that double quotes will never appear, but
-   for textual data types one should be prepared to cope with either the presence
-   or absence of quotes.
+   如果元素值为空字符串、包含花括号、定界符字符、双引号、反斜杠或空白，或者与单词 <literal>NULL</literal> 匹配，数组输出例程就会在元素值两边加上双引号。嵌入在元素值中的双引号和反斜杠会被反斜杠转义。对于数字数据类型，可以放心地假定双引号永远不会出现，但对于文本数据类型，则应当准备好应对引号出现或不出现的情况。
   </para>
 
   <para>
-   By default, the lower bound index value of an array's dimensions is
-   set to one.  To represent arrays with other lower bounds, the array
-   subscript ranges can be specified explicitly before writing the
-   array contents.
-   This decoration consists of square brackets (<literal>[]</literal>)
-   around each array dimension's lower and upper bounds, with
-   a colon (<literal>:</literal>) delimiter character in between. The
-   array dimension decoration is followed by an equal sign (<literal>=</literal>).
-   For example:
+   默认情况下，数组各维度的下界索引值被设置为 1。要表示具有其他下界的数组，可以在书写数组内容之前显式指定数组下标范围。这种修饰由方括号（<literal>[]</literal>）构成，其中包含每个数组维度的下界和上界，中间用冒号（<literal>:</literal>）定界符分隔。数组维度修饰之后跟一个等号（<literal>=</literal>）。例如：
 <programlisting>
 SELECT f1[1][-2][3] AS e1, f1[1][-1][5] AS e2
  FROM (SELECT '[1:1][-2:-1][3:5]={{{1,2,3},{4,5,6}}}'::int[] AS f1) AS ss;
@@ -748,49 +631,26 @@ SELECT f1[1][-2][3] AS e1, f1[1][-1][5] AS e2
   1 |  6
 (1 row)
 </programlisting>
-   The array output routine will include explicit dimensions in its result
-   only when there are one or more lower bounds different from one.
+   只有当存在一个或多个不等于 1 的下界时，数组输出例程才会在其结果中包含显式维度。
   </para>
 
   <para>
-   If the value written for an element is <literal>NULL</literal> (in any case
-   variant), the element is taken to be NULL.  The presence of any quotes
-   or backslashes disables this and allows the literal string value
-   <quote>NULL</quote> to be entered.  Also, for backward compatibility with
-   pre-8.2 versions of <productname>PostgreSQL</productname>, the <xref
-   linkend="guc-array-nulls"/> configuration parameter can be turned
-   <literal>off</literal> to suppress recognition of <literal>NULL</literal> as a NULL.
+   如果为某个元素书写的值是 <literal>NULL</literal>（不区分大小写），则该元素被视为 NULL。任何引号或反斜杠的出现都会禁用这一行为，并允许输入字面字符串值 <quote>NULL</quote>。此外，为了向后兼容 8.2 之前的 <productname>PostgreSQL</productname> 版本，可以将 <xref
+   linkend="guc-array-nulls"/> 配置参数设为 <literal>off</literal>，以禁止将 <literal>NULL</literal> 识别为 NULL。
   </para>
 
   <para>
-   As shown previously, when writing an array value you can use double
-   quotes around any individual array element. You <emphasis>must</emphasis> do so
-   if the element value would otherwise confuse the array-value parser.
-   For example, elements containing curly braces, commas (or the data type's
-   delimiter character), double quotes, backslashes, or leading or trailing
-   whitespace must be double-quoted.  Empty strings and strings matching the
-   word <literal>NULL</literal> must be quoted, too.  To put a double
-   quote or backslash in a quoted array element value, precede it
-   with a backslash. Alternatively, you can avoid quotes and use
-   backslash-escaping to protect all data characters that would otherwise
-   be taken as array syntax.
+   如前所示，在书写数组值时，可以用双引号括住任何单个数组元素。如果元素值否则会使数组值解析器产生混淆，则<emphasis>必须</emphasis>这样做。例如，包含花括号、逗号（或数据类型的定界符字符）、双引号、反斜杠或前导或尾随空白的元素必须用双引号括起来。空字符串以及与单词 <literal>NULL</literal> 匹配的字符串也必须加引号。要在带引号的数组元素值中放入双引号或反斜杠，请在其前面加上反斜杠。或者，也可以避免使用引号，而使用反斜杠转义来保护所有否则会被视为数组语法的数据字符。
   </para>
 
   <para>
-   You can add whitespace before a left brace or after a right
-   brace. You can also add whitespace before or after any individual item
-   string. In all of these cases the whitespace will be ignored. However,
-   whitespace within double-quoted elements, or surrounded on both sides by
-   non-whitespace characters of an element, is not ignored.
+   你可以在左花括号之前或右花括号之后添加空白。你也可以在任何单个项字符串之前或之后添加空白。在所有这些情况下，空白都会被忽略。但是，双引号元素内的空白，或者两侧均被元素的非空白字符包围的空白，不会被忽略。
   </para>
 
  <tip>
   <para>
-   The <literal>ARRAY</literal> constructor syntax (see
-   <xref linkend="sql-syntax-array-constructors"/>) is often easier to work
-   with than the array-literal syntax when writing array values in SQL
-   commands. In <literal>ARRAY</literal>, individual element values are written the
-   same way they would be written when not members of an array.
+   在 SQL 命令中书写数组值时，<literal>ARRAY</literal> 构造器语法（见
+   <xref linkend="sql-syntax-array-constructors"/>）通常比数组字面量语法更易于使用。在 <literal>ARRAY</literal> 中，各个元素值的书写方式与它们不是数组成员时的书写方式相同。
   </para>
  </tip>
  </sect2>
