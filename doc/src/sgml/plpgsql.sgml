@@ -8,171 +8,133 @@
  </indexterm>
 
  <sect1 id="plpgsql-overview">
-  <title>Overview</title>
+  <title>概述</title>
 
  <para>
-  <application>PL/pgSQL</application> is a loadable procedural
-  language for the <productname>PostgreSQL</productname> database
-  system.  The design goals of <application>PL/pgSQL</application> were to create
-  a loadable procedural language that
+  <application>PL/pgSQL</application> 是 <productname>PostgreSQL</productname> 数据库系统的一种可加载过程语言。<application>PL/pgSQL</application> 的设计目标是创建一种可加载的过程语言，它
 
     <itemizedlist>
      <listitem>
       <para>
-       can be used to create functions, procedures, and triggers,
+       可用于创建函数、过程和触发器，
       </para>
      </listitem>
      <listitem>
       <para>
-       adds control structures to the <acronym>SQL</acronym> language,
+       为 <acronym>SQL</acronym> 语言增加了控制结构，
       </para>
      </listitem>
      <listitem>
       <para>
-       can perform complex computations,
+       可以执行复杂的计算，
       </para>
      </listitem>
      <listitem>
       <para>
-       inherits all user-defined types, functions, procedures, and operators,
+       继承所有用户定义的类型、函数、过程和运算符，
       </para>
      </listitem>
      <listitem>
       <para>
-       can be defined to be trusted by the server,
+       可以定义为被服务器信任，
       </para>
      </listitem>
      <listitem>
       <para>
-       is easy to use.
+       易于使用。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    Functions created with <application>PL/pgSQL</application> can be
-    used anywhere that built-in functions could be used.
-    For example, it is possible to
-    create complex conditional computation functions and later use
-    them to define operators or use them in index expressions.
+    用 <application>PL/pgSQL</application> 创建的函数可以在任何可以使用内置函数的地方使用。例如，可以创建复杂的条件计算函数，然后在定义运算符时使用它们，或在索引表达式中使用它们。
    </para>
 
    <para>
-    In <productname>PostgreSQL</productname> 9.0 and later,
-    <application>PL/pgSQL</application> is installed by default.
-    However it is still a loadable module, so especially security-conscious
-    administrators could choose to remove it.
+    在 <productname>PostgreSQL</productname> 9.0 及更高版本中，<application>PL/pgSQL</application> 默认安装。不过它仍然是一个可加载模块，因此特别注重安全的管理员可以选择将其移除。
    </para>
 
   <sect2 id="plpgsql-advantages">
-   <title>Advantages of Using <application>PL/pgSQL</application></title>
+   <title>使用 <application>PL/pgSQL</application> 的优点</title>
 
     <para>
-     <acronym>SQL</acronym> is the language <productname>PostgreSQL</productname>
-     and most other relational databases use as query language. It's
-     portable and easy to learn. But every <acronym>SQL</acronym>
-     statement must be executed individually by the database server.
+     <acronym>SQL</acronym> 是 <productname>PostgreSQL</productname> 和大多数其他关系数据库用作查询语言的语言。它可移植且易于学习。但是每条 <acronym>SQL</acronym> 语句都必须由数据库服务器单独执行。
     </para>
 
     <para>
-     That means that your client application must send each query to
-     the database server, wait for it to be processed, receive and
-     process the results, do some computation, then send further
-     queries to the server.  All this incurs interprocess
-     communication and will also incur network overhead if your client
-     is on a different machine than the database server.
+     这意味着你的客户端应用必须把每个查询发送到数据库服务器，等待其被处理，接收并处理结果，做一些计算，然后再向服务器发送更多查询。所有这些都会产生进程间通信开销，并且如果你的客户端与数据库服务器不在同一台机器上，还会产生网络开销。
     </para>
 
     <para>
-     With <application>PL/pgSQL</application> you can group a block of
-     computation and a series of queries <emphasis>inside</emphasis>
-     the database server, thus having the power of a procedural
-     language and the ease of use of SQL, but with considerable
-     savings of client/server communication overhead.
+     使用 <application>PL/pgSQL</application>，你可以把一块计算和一系列查询分组到数据库服务器<emphasis>内部</emphasis>，从而既拥有过程化语言的能力和 SQL 的易用性，又能大幅节省客户端/服务器通信开销。
     </para>
     <itemizedlist>
 
-     <listitem><para> Extra round trips between
-     client and server are eliminated </para></listitem>
+     <listitem><para> 消除了客户端与服务器之间额外的往返 </para></listitem>
 
-     <listitem><para> Intermediate results that the client does not
-     need do not have to be marshaled or transferred between server
-     and client </para></listitem>
+     <listitem><para> 客户端不需要的中间结果不必在服务器与客户端之间编组或传输 </para></listitem>
 
-     <listitem><para> Multiple rounds of query
-     parsing can be avoided </para></listitem>
+     <listitem><para> 可以避免多轮查询解析 </para></listitem>
 
     </itemizedlist>
-    <para> This can result in a considerable performance increase as
-    compared to an application that does not use stored functions.
+    <para> 与不使用存储函数的应用相比，这可以带来显著的性能提升。
     </para>
 
     <para>
-     Also, with <application>PL/pgSQL</application> you can use all
-     the data types, operators and functions of SQL.
+     此外，使用 <application>PL/pgSQL</application> 你可以使用 SQL 的所有数据类型、运算符和函数。
     </para>
   </sect2>
 
   <sect2 id="plpgsql-args-results">
-   <title>Supported Argument and Result Data Types</title>
+   <title>支持的参数和结果数据类型</title>
 
     <para>
-     Functions written in <application>PL/pgSQL</application> can accept
-     as arguments any scalar or array data type supported by the server,
-     and they can return a result of any of these types.  They can also
-     accept or return any composite type (row type) specified by name.
-     It is also possible to declare a <application>PL/pgSQL</application>
-     function as accepting <type>record</type>, which means that any
-     composite type will do as input, or
-     as returning <type>record</type>, which means that the result
-     is a row type whose columns are determined by specification in the
-     calling query, as discussed in <xref linkend="queries-tablefunctions"/>.
+     用 <application>PL/pgSQL</application> 编写的函数可以接受服务器支持的任何标量或数组数据类型
+     作为参数，并且可以返回这些类型中的任何一种结果。它们也可以
+     接受或返回按名称指定的任何复合类型（行类型）。
+     还可以将 <application>PL/pgSQL</application>
+     函数声明为接受 <type>record</type>，这意味着任何
+     复合类型都可以作为输入；或者
+     声明为返回 <type>record</type>，这意味着结果
+     是一个行类型，其列由
+     调用查询中的指定决定，如 <xref linkend="queries-tablefunctions"/> 中所述。
     </para>
 
     <para>
-     <application>PL/pgSQL</application> functions can be declared to accept a variable
-     number of arguments by using the <literal>VARIADIC</literal> marker.  This
-     works exactly the same way as for SQL functions, as discussed in
-     <xref linkend="xfunc-sql-variadic-functions"/>.
+     通过使用 <literal>VARIADIC</literal> 标记，可以将 <application>PL/pgSQL</application> 函数声明为接受可变
+     数量的参数。其工作方式与 SQL 函数完全相同，如
+     <xref linkend="xfunc-sql-variadic-functions"/> 中所述。
     </para>
 
     <para>
-     <application>PL/pgSQL</application> functions can also be declared to
-     accept and return the polymorphic types described in
-     <xref linkend="extend-types-polymorphic"/>, thus allowing the actual data
-     types handled by the function to vary from call to call.
-     Examples appear in <xref linkend="plpgsql-declaration-parameters"/>.
+     还可以将 <application>PL/pgSQL</application> 函数声明为
+     接受并返回 <xref linkend="extend-types-polymorphic"/> 中描述的多态类型，
+     从而允许函数处理的实际数据
+     类型在每次调用时有所不同。
+     示例见 <xref linkend="plpgsql-declaration-parameters"/>。
     </para>
 
     <para>
-     <application>PL/pgSQL</application> functions can also be declared to return
-     a <quote>set</quote> (or table) of any data type that can be returned as
-     a single instance.  Such a function generates its output by executing
-     <command>RETURN NEXT</command> for each desired element of the result
-     set, or by using <command>RETURN QUERY</command> to output the result of
-     evaluating a query.
+     还可以将 <application>PL/pgSQL</application> 函数声明为返回任何可作为
+     单个实例返回的数据类型的<quote>集合</quote>（或表）。这样的函数
+     通过对结果集的每个所需元素执行
+     <command>RETURN NEXT</command> 来生成输出，或者使用 <command>RETURN QUERY</command> 输出
+     求值查询的结果。
     </para>
 
     <para>
-     Finally, a <application>PL/pgSQL</application> function can be declared to return
-     <type>void</type> if it has no useful return value.  (Alternatively, it
-     could be written as a procedure in that case.)
+     最后，可以声明一个 <application>PL/pgSQL</application> 函数返回 <type>void</type>，如果它没有有用的返回值。（或者，在这种情况下也可以把它写成一个过程。）
     </para>
 
     <para>
-     <application>PL/pgSQL</application> functions can also be declared with output
-     parameters in place of an explicit specification of the return type.
-     This does not add any fundamental capability to the language, but
-     it is often convenient, especially for returning multiple values.
-     The <literal>RETURNS TABLE</literal> notation can also be used in place
-     of <literal>RETURNS SETOF</literal>.
+     <application>PL/pgSQL</application> 函数也可以声明输出参数，以代替显式指定返回类型。这不会给该语言增加任何基本能力，但通常很方便，特别是在返回多个值时。<literal>RETURNS TABLE</literal> 记法也可以用来代替 <literal>RETURNS SETOF</literal>。
     </para>
 
     <para>
-     Specific examples appear in
-     <xref linkend="plpgsql-declaration-parameters"/> and
-     <xref linkend="plpgsql-statements-returning"/>.
+     具体示例见
+    <xref linkend="plpgsql-declaration-parameters"/> 和
+    <xref linkend="plpgsql-statements-returning"/>。
     </para>
   </sect2>
  </sect1>
