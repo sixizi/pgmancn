@@ -540,44 +540,24 @@ HINT:  To initiate replication, you must manually create the replication slot, e
  </sect1>
 
  <sect1 id="logical-replication-failover">
-  <title>Logical Replication Failover</title>
+  <title>逻辑复制故障转移</title>
 
   <para>
-   To allow subscriber nodes to continue replicating data from the publisher
-   node even when the publisher node goes down, there must be a physical standby
-   corresponding to the publisher node. The logical slots on the primary server
-   corresponding to the subscriptions can be synchronized to the standby server by
-   specifying <literal>failover = true</literal> when creating subscriptions. See
-   <xref linkend="logicaldecoding-replication-slots-synchronization"/> for details.
-   Enabling the
-   <link linkend="sql-createsubscription-params-with-failover"><literal>failover</literal></link>
-   parameter ensures a seamless transition of those subscriptions after the
-   standby is promoted. They can continue subscribing to publications on the
-   new primary server.
+   为了让订阅节点在发布节点宕机时仍能继续从发布节点复制数据，必须有一个与发布节点对应的物理备用节点。在创建订阅时指定 <literal>failover = true</literal>，可以将主服务器上与订阅对应的逻辑槽同步到备用服务器。详情请参见 <xref linkend="logicaldecoding-replication-slots-synchronization"/>。启用 <link linkend="sql-createsubscription-params-with-failover"><literal>failover</literal></link> 参数可确保这些订阅在备用服务器提升后无缝过渡。它们可以继续订阅新主服务器上的发布。
   </para>
 
   <para>
-   Because the slot synchronization logic copies asynchronously, it is
-   necessary to confirm that replication slots have been synced to the standby
-   server before the failover happens. To ensure a successful failover, the
-   standby server must be ahead of the subscriber. This can be achieved by
-   configuring
-   <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link>.
+   由于槽同步逻辑是异步复制的，因此有必要在故障转移发生之前确认复制槽已同步到备用服务器。为确保故障转移成功，备用服务器必须领先于订阅者。这可以通过配置 <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link> 来实现。
   </para>
 
   <para>
-   To confirm that the standby server is indeed ready for failover for a given subscriber, follow these
-   steps to verify that all the logical replication slots required by that subscriber have been
-   synchronized to the standby server:
+   要确认备用服务器确实已为给定订阅者的故障转移做好准备，请按照以下步骤验证该订阅者所需的所有逻辑复制槽都已同步到备用服务器：
   </para>
 
   <procedure>
    <step performance="required">
     <para>
-     On the subscriber node, use the following SQL to identify which replication
-     slots should be synced to the standby that we plan to promote. This query
-     will return the relevant replication slots associated with the
-     failover-enabled subscriptions.
+     在订阅节点上，使用以下 SQL 确定哪些复制槽应同步到我们计划提升的备用服务器。此查询将返回与启用了故障转移的订阅相关联的相关复制槽。
 <programlisting>
 /* sub # */ SELECT
                array_agg(quote_literal(s.subslotname)) AS slots
@@ -592,15 +572,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
    </step>
    <step performance="required">
     <para>
-     On the subscriber node, use the following SQL to identify which table
-     synchronization slots should be synced to the standby that we plan to promote.
-     This query needs to be run on each database that includes the failover-enabled
-     subscription(s). Note that the table sync slot should be synced to the standby
-     server only if the table copy is finished
-     (See <xref linkend="catalog-pg-subscription-rel"/>).
-     We don't need to ensure that the table sync slots are synced in other scenarios
-     as they will either be dropped or re-created on the new primary server in those
-     cases.
+     在订阅节点上，使用以下 SQL 确定哪些表同步槽应同步到我们计划提升的备用服务器。此查询需要在每个包含启用了故障转移的订阅的数据库上运行。请注意，只有在表复制完成后，才应将表同步槽同步到备用服务器（参见 <xref linkend="catalog-pg-subscription-rel"/>）。在其他情况下，我们不需要确保表同步槽已同步，因为在那些情况下它们要么会被删除，要么会在新主服务器上重新创建。
 <programlisting>
 /* sub # */ SELECT
                array_agg(quote_literal(slot_name)) AS slots
@@ -618,8 +590,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
    </step>
    <step performance="required">
     <para>
-     Check that the logical replication slots identified above exist on
-     the standby server and are ready for failover.
+     检查上述标识的逻辑复制槽是否存在于备服务器上，并且已准备好进行故障转移。
 <programlisting>
 /* standby # */ SELECT slot_name, (synced AND NOT temporary AND invalidation_reason IS NULL) AS failover_ready
                FROM pg_replication_slots
@@ -637,32 +608,15 @@ HINT:  To initiate replication, you must manually create the replication slot, e
   </procedure>
 
   <para>
-   If all the slots are present on the standby server and the result
-   (<literal>failover_ready</literal>) of the above SQL query is true, then
-   existing subscriptions can continue subscribing to publications on the new
-   primary server.
+   如果所有槽都存在于备服务器上，并且上述 SQL 查询的结果（<literal>failover_ready</literal>）为 true，那么现有的订阅可以继续订阅新主服务器上的发布。
   </para>
 
   <para>
-   The first two steps in the above procedure are meant for a
-   <productname>PostgreSQL</productname> subscriber. It is recommended to run
-   these steps on each subscriber node, that will be served by the designated
-   standby after failover, to obtain the complete list of replication
-   slots. This list can then be verified in Step 3 to ensure failover readiness.
-   Non-<productname>PostgreSQL</productname> subscribers, on the other hand, may
-   use their own methods to identify the replication slots used by their
-   respective subscriptions.
+   上述过程中的前两个步骤适用于 <productname>PostgreSQL</productname> 订阅者。建议在故障转移后由指定备服务器提供服务的每个订阅者节点上运行这些步骤，以获得完整的复制槽列表。然后可以在步骤 3 中验证该列表，以确保已做好故障转移准备。另一方面，非 <productname>PostgreSQL</productname> 订阅者可以使用自己的方法来标识各自订阅所使用的复制槽。
   </para>
 
   <para>
-   In some cases, such as during a planned failover, it is necessary to confirm
-   that all subscribers, whether <productname>PostgreSQL</productname> or
-   non-<productname>PostgreSQL</productname>, will be able to continue
-   replication after failover to a given standby server. In such cases, use the
-   following SQL, instead of performing the first two steps above, to identify
-   which replication slots on the primary need to be synced to the standby that
-   is intended for promotion. This query returns the relevant replication slots
-   associated with all the failover-enabled subscriptions.
+   在某些情况下，例如在计划内故障转移期间，有必要确认所有订阅者（无论是 <productname>PostgreSQL</productname> 还是非 <productname>PostgreSQL</productname>）在故障转移到给定备服务器后都能继续复制。在这种情况下，请使用以下 SQL 来标识主服务器上哪些复制槽需要同步到计划提升的备服务器，而不是执行上面的前两个步骤。该查询返回与所有启用了故障转移的订阅相关联的相关复制槽。
   </para>
 
    <para>
