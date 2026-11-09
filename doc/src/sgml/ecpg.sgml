@@ -4119,52 +4119,45 @@ tup_deleted = 0 (type: 9)
  </sect1>
 
  <sect1 id="ecpg-errors">
-  <title>Error Handling</title>
+  <title>错误处理</title>
 
   <para>
-   This section describes how you can handle exceptional conditions
-   and warnings in an embedded SQL program.  There are two
-   nonexclusive facilities for this.
+   本节介绍如何在嵌入式 SQL 程序中处理异常情况和警告。有两种可以同时使用的方法。
 
    <itemizedlist>
     <listitem>
      <simpara>
-      Callbacks can be configured to handle warning and error
-      conditions using the <literal>WHENEVER</literal> command.
+      可以使用 <literal>WHENEVER</literal> 命令配置回调来处理警告和错误情况。
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      Detailed information about the error or warning can be obtained
-      from the <varname>sqlca</varname> variable.
+      可以从 <varname>sqlca</varname> 变量中获取有关错误或警告的详细信息。
      </simpara>
     </listitem>
    </itemizedlist>
   </para>
 
   <sect2 id="ecpg-whenever">
-   <title>Setting Callbacks</title>
+   <title>设置回调</title>
 
    <para>
-    One simple method to catch errors and warnings is to set a
-    specific action to be executed whenever a particular condition
-    occurs.  In general:
+    捕获错误和警告的一种简单方法是设置一个特定动作，每当出现特定情况时就执行该动作。一般来说：
 <programlisting>
 EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</replaceable>;
 </programlisting>
    </para>
 
    <para>
-    <replaceable>condition</replaceable> can be one of the following:
+    <replaceable>condition</replaceable> 可以是下列之一：
 
     <variablelist>
      <varlistentry id="ecpg-whenever-sqlerror">
       <term><literal>SQLERROR</literal></term>
       <listitem>
        <para>
-        The specified action is called whenever an error occurs during
-        the execution of an SQL statement.
+        每当执行 SQL 语句期间发生错误时，就会调用指定的动作。
        </para>
       </listitem>
      </varlistentry>
@@ -4173,8 +4166,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>SQLWARNING</literal></term>
       <listitem>
        <para>
-        The specified action is called whenever a warning occurs
-        during the execution of an SQL statement.
+        每当执行 SQL 语句期间发生警告时，就会调用指定的动作。
        </para>
       </listitem>
      </varlistentry>
@@ -4183,9 +4175,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>NOT FOUND</literal></term>
       <listitem>
        <para>
-        The specified action is called whenever an SQL statement
-        retrieves or affects zero rows.  (This condition is not an
-        error, but you might be interested in handling it specially.)
+        每当 SQL 语句检索或影响零行时，就会调用指定的动作。（这种情况不是错误，但你可能希望特别处理它。）
        </para>
       </listitem>
      </varlistentry>
@@ -4193,15 +4183,14 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
    </para>
 
    <para>
-    <replaceable>action</replaceable> can be one of the following:
+    <replaceable>action</replaceable> 可以是下列之一：
 
     <variablelist>
      <varlistentry id="ecpg-whenever-continue">
       <term><literal>CONTINUE</literal></term>
       <listitem>
        <para>
-        This effectively means that the condition is ignored.  This is
-        the default.
+        这实际上意味着忽略该条件。这是默认值。
        </para>
       </listitem>
      </varlistentry>
@@ -4211,8 +4200,8 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>GO TO <replaceable>label</replaceable></literal></term>
       <listitem>
        <para>
-        Jump to the specified label (using a C <literal>goto</literal>
-        statement).
+        跳转到指定的标签（使用 C 的 <literal>goto</literal>
+        语句）。
        </para>
       </listitem>
      </varlistentry>
@@ -4221,9 +4210,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>SQLPRINT</literal></term>
       <listitem>
        <para>
-        Print a message to standard error.  This is useful for simple
-        programs or during prototyping.  The details of the message
-        cannot be configured.
+        向标准错误输出打印一条消息。这对于简单程序或原型开发阶段很有用。该消息的细节无法配置。
        </para>
       </listitem>
      </varlistentry>
@@ -4232,8 +4219,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>STOP</literal></term>
       <listitem>
        <para>
-        Call <literal>exit(1)</literal>, which will terminate the
-        program.
+        调用 <literal>exit(1)</literal>，这将终止程序。
        </para>
       </listitem>
      </varlistentry>
@@ -4242,8 +4228,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>DO BREAK</literal></term>
       <listitem>
        <para>
-        Execute the C statement <literal>break</literal>.  This should
-        only be used in loops or <literal>switch</literal> statements.
+        执行 C 语句 <literal>break</literal>。只应在循环或 <literal>switch</literal> 语句中使用。
        </para>
       </listitem>
      </varlistentry>
@@ -4252,9 +4237,7 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>DO CONTINUE</literal></term>
       <listitem>
        <para>
-        Execute the C statement <literal>continue</literal>.  This should
-        only be used in loops statements.  if executed, will cause the flow
-        of control to return to the top of the loop.
+        执行 C 语句 <literal>continue</literal>。只应在循环语句中使用。如果执行，将使控制流返回到循环的顶部。
        </para>
       </listitem>
      </varlistentry>
@@ -4264,23 +4247,18 @@ EXEC SQL WHENEVER <replaceable>condition</replaceable> <replaceable>action</repl
       <term><literal>DO <replaceable>name</replaceable> (<replaceable>args</replaceable>)</literal></term>
       <listitem>
        <para>
-        Call the specified C functions with the specified arguments.  (This
-        use is different from the meaning of <literal>CALL</literal>
-        and <literal>DO</literal> in the normal PostgreSQL grammar.)
+        使用指定的参数调用指定的 C 函数。（这种用法与 <literal>CALL</literal>
+        和 <literal>DO</literal> 在普通 PostgreSQL 语法中的含义不同。）
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    The SQL standard only provides for the actions
-    <literal>CONTINUE</literal> and <literal>GOTO</literal> (and
-    <literal>GO TO</literal>).
+    SQL 标准只提供了 <literal>CONTINUE</literal> 和 <literal>GOTO</literal> 动作（以及 <literal>GO TO</literal>）。
    </para>
 
    <para>
-    Here is an example that you might want to use in a simple program.
-    It prints a simple message when a warning occurs and aborts the
-    program when an error happens:
+    下面是一个你可能想在简单程序中使用的例子。当出现警告时它打印一条简单的消息，当发生错误时它中止程序：
 <programlisting>
 EXEC SQL WHENEVER SQLWARNING SQLPRINT;
 EXEC SQL WHENEVER SQLERROR STOP;
@@ -4288,15 +4266,7 @@ EXEC SQL WHENEVER SQLERROR STOP;
    </para>
 
    <para>
-    The statement <literal>EXEC SQL WHENEVER</literal> is a directive
-    of the SQL preprocessor, not a C statement.  The error or warning
-    actions that it sets apply to all embedded SQL statements that
-    appear below the point where the handler is set, unless a
-    different action was set for the same condition between the first
-    <literal>EXEC SQL WHENEVER</literal> and the SQL statement causing
-    the condition, regardless of the flow of control in the C program.
-    So neither of the two following C program excerpts will have the
-    desired effect:
+    语句 <literal>EXEC SQL WHENEVER</literal> 是 SQL 预处理器的指示，而不是 C 语句。它所设置的错误或警告动作适用于出现在设置处理器位置之后的所有嵌入式 SQL 语句，除非在第一个 <literal>EXEC SQL WHENEVER</literal> 与引发该条件的 SQL 语句之间为同一条件设置了不同的动作，而不管 C 程序中的控制流如何。因此下面两段 C 程序片段都不会产生预期的效果：
 <programlisting>
 /*
  * WRONG
@@ -4338,10 +4308,7 @@ static void set_error_handler(void)
    <title>sqlca</title>
 
    <para>
-    For more powerful error handling, the embedded SQL interface
-    provides a global variable with the name <varname>sqlca</varname>
-    (SQL communication area)
-    that has the following structure:
+    为了进行更强大的错误处理，嵌入式 SQL 接口提供了一个名为 <varname>sqlca</varname>（SQL 通信区）的全局变量，其结构如下：
 <programlisting>
 struct
 {
@@ -4359,87 +4326,75 @@ struct
     char sqlstate[5];
 } sqlca;
 </programlisting>
-    (In a multithreaded program, every thread automatically gets its
-    own copy of <varname>sqlca</varname>.  This works similarly to the
-    handling of the standard C global variable
-    <varname>errno</varname>.)
+    （在多线程程序中，每个线程会自动获得自己的 <varname>sqlca</varname> 副本。这类似于标准 C 全局变量 <varname>errno</varname> 的处理方式。）
    </para>
 
    <para>
-    <varname>sqlca</varname> covers both warnings and errors.  If
-    multiple warnings or errors occur during the execution of a
-    statement, then <varname>sqlca</varname> will only contain
-    information about the last one.
+    <varname>sqlca</varname> 同时涵盖警告和错误。如果一条语句执行期间发生多个警告或错误，那么 <varname>sqlca</varname> 将只包含关于最后一个的信息。
    </para>
 
    <para>
-    If no error occurred in the last <acronym>SQL</acronym> statement,
-    <literal>sqlca.sqlcode</literal> will be 0 and
-    <literal>sqlca.sqlstate</literal> will be
-    <literal>"00000"</literal>.  If a warning or error occurred, then
-    <literal>sqlca.sqlcode</literal> will be negative and
-    <literal>sqlca.sqlstate</literal> will be different from
-    <literal>"00000"</literal>.  A positive
-    <literal>sqlca.sqlcode</literal> indicates a harmless condition,
-    such as that the last query returned zero rows.
-    <literal>sqlcode</literal> and <literal>sqlstate</literal> are two
-    different error code schemes; details appear below.
+    如果最后一条 <acronym>SQL</acronym> 语句没有发生错误，
+    则 <literal>sqlca.sqlcode</literal> 将为 0，
+    <literal>sqlca.sqlstate</literal> 将为
+    <literal>"00000"</literal>。如果发生了警告或错误，则
+    <literal>sqlca.sqlcode</literal> 将为负数，
+    <literal>sqlca.sqlstate</literal> 将不同于
+    <literal>"00000"</literal>。正的
+    <literal>sqlca.sqlcode</literal> 表示一种无害的状况，
+    例如最后一条查询返回了零行。
+    <literal>sqlcode</literal> 和 <literal>sqlstate</literal> 是两种
+    不同的错误码方案；详细信息见下文。
    </para>
 
    <para>
-    If the last SQL statement was successful, then
-    <literal>sqlca.sqlerrd[1]</literal> contains the OID of the
-    processed row, if applicable, and
-    <literal>sqlca.sqlerrd[2]</literal> contains the number of
-    processed or returned rows, if applicable to the command.
+    如果最后一条 SQL 语句执行成功，则在适用的情况下，
+    <literal>sqlca.sqlerrd[1]</literal> 包含所处理行的 OID，
+    并且在适用于该命令的情况下，
+    <literal>sqlca.sqlerrd[2]</literal> 包含已处理或返回的行数。
    </para>
 
    <para>
-    In case of an error or warning,
-    <literal>sqlca.sqlerrm.sqlerrmc</literal> will contain a string
-    that describes the error.  The field
-    <literal>sqlca.sqlerrm.sqlerrml</literal> contains the length of
-    the error message that is stored in
-    <literal>sqlca.sqlerrm.sqlerrmc</literal> (the result of
-    <function>strlen()</function>, not really interesting for a C
-    programmer).  Note that some messages are too long to fit in the
-    fixed-size <literal>sqlerrmc</literal> array; they will be truncated.
+    如果发生错误或警告，
+    <literal>sqlca.sqlerrm.sqlerrmc</literal> 将包含描述该错误的字符串。字段
+    <literal>sqlca.sqlerrm.sqlerrml</literal> 包含存储在
+    <literal>sqlca.sqlerrm.sqlerrmc</literal> 中的错误消息的长度（即
+    <function>strlen()</function> 的结果，对 C 程序员来说并不太有用）。请注意，某些消息太长，
+    无法放入固定大小的 <literal>sqlerrmc</literal> 数组中；它们将被截断。
    </para>
 
    <para>
-    In case of a warning, <literal>sqlca.sqlwarn[2]</literal> is set
-    to <literal>W</literal>.  (In all other cases, it is set to
-    something different from <literal>W</literal>.)  If
-    <literal>sqlca.sqlwarn[1]</literal> is set to
-    <literal>W</literal>, then a value was truncated when it was
-    stored in a host variable.  <literal>sqlca.sqlwarn[0]</literal> is
-    set to <literal>W</literal> if any of the other elements are set
-    to indicate a warning.
+    如果发生警告，<literal>sqlca.sqlwarn[2]</literal> 被
+    设置为 <literal>W</literal>。（在所有其他情况下，它被设置为
+    不同于 <literal>W</literal> 的值。）如果
+    <literal>sqlca.sqlwarn[1]</literal> 被设置为
+    <literal>W</literal>，则说明某个值在存储到宿主变量时被截断。如果其他任一元素被
+    设置为指示警告，则 <literal>sqlca.sqlwarn[0]</literal> 被
+    设置为 <literal>W</literal>。
    </para>
 
    <para>
-    The fields <structfield>sqlcaid</structfield>,
-    <structfield>sqlabc</structfield>,
-    <structfield>sqlerrp</structfield>, and the remaining elements of
-    <structfield>sqlerrd</structfield> and
-    <structfield>sqlwarn</structfield> currently contain no useful
-    information.
+    字段 <structfield>sqlcaid</structfield>、
+    <structfield>sqlabc</structfield>、
+    <structfield>sqlerrp</structfield> 以及
+    <structfield>sqlerrd</structfield> 和
+    <structfield>sqlwarn</structfield> 的其余元素目前不包含有用的
+    信息。
    </para>
 
    <para>
-    The structure <varname>sqlca</varname> is not defined in the SQL
-    standard, but is implemented in several other SQL database
-    systems.  The definitions are similar at the core, but if you want
-    to write portable applications, then you should investigate the
-    different implementations carefully.
+    结构 <varname>sqlca</varname> 未在 SQL
+    标准中定义，但已在若干其他 SQL 数据库
+    系统中实现。其核心定义是相似的，但如果你想要
+    编写可移植的应用程序，则应仔细研究
+    不同的实现。
    </para>
 
    <para>
-    Here is one example that combines the use of <literal>WHENEVER</literal>
-    and <varname>sqlca</varname>, printing out the contents
-    of <varname>sqlca</varname> when an error occurs.  This is perhaps
-    useful for debugging or prototyping applications, before
-    installing a more <quote>user-friendly</quote> error handler.
+    下面是一个示例，它结合使用 <literal>WHENEVER</literal>
+    和 <varname>sqlca</varname>，在发生错误时打印出 <varname>sqlca</varname>
+    的内容。在安装更<quote>用户友好</quote>的错误处理器之前，
+    这对调试或原型开发应用程序或许有用。
 
 <programlisting>
 EXEC SQL WHENEVER SQLERROR CALL print_sqlca();
@@ -4461,8 +4416,7 @@ print_sqlca()
 }
 </programlisting>
 
-    The result could look as follows (here an error due to a
-    misspelled table name):
+    结果可能如下所示（这里是由于表名拼写错误而导致的错误）：
 
 <screen>
 ==== sqlca ====
@@ -4478,66 +4432,60 @@ sqlstate: 42P01
   </sect2>
 
   <sect2 id="ecpg-sqlstate-sqlcode">
-   <title><literal>SQLSTATE</literal> vs. <literal>SQLCODE</literal></title>
+   <title><literal>SQLSTATE</literal> 与 <literal>SQLCODE</literal> 的对比</title>
 
    <para>
-    The fields <literal>sqlca.sqlstate</literal> and
-    <literal>sqlca.sqlcode</literal> are two different schemes that
-    provide error codes.  Both are derived from the SQL standard, but
-    <literal>SQLCODE</literal> has been marked deprecated in the SQL-92
-    edition of the standard and has been dropped in later editions.
-    Therefore, new applications are strongly encouraged to use
-    <literal>SQLSTATE</literal>.
+    字段 <literal>sqlca.sqlstate</literal> 和
+    <literal>sqlca.sqlcode</literal> 是两种提供错误码的不同方案。两者都源自
+    SQL 标准，但 <literal>SQLCODE</literal> 在标准的 SQL-92
+    版中已被标记为废弃，并在后续版本中被删除。
+    因此，强烈建议新应用程序使用
+    <literal>SQLSTATE</literal>。
    </para>
 
    <para>
-    <literal>SQLSTATE</literal> is a five-character array.  The five
-    characters contain digits or upper-case letters that represent
-    codes of various error and warning conditions.
-    <literal>SQLSTATE</literal> has a hierarchical scheme: the first
-    two characters indicate the general class of the condition, the
-    last three characters indicate a subclass of the general
-    condition.  A successful state is indicated by the code
-    <literal>00000</literal>.  The <literal>SQLSTATE</literal> codes are for
-    the most part defined in the SQL standard.  The
-    <productname>PostgreSQL</productname> server natively supports
-    <literal>SQLSTATE</literal> error codes; therefore a high degree
-    of consistency can be achieved by using this error code scheme
-    throughout all applications.  For further information see
-    <xref linkend="errcodes-appendix"/>.
+    <literal>SQLSTATE</literal> 是一个五字符数组。这五个
+    字符包含数字或大写字母，表示各种错误和警告状况的
+    代码。<literal>SQLSTATE</literal> 采用层次化方案：前
+    两个字符表示状况的一般类别，后
+    三个字符表示一般状况的子类。成功状态由代码
+    <literal>00000</literal> 表示。<literal>SQLSTATE</literal> 代码
+    大部分在 SQL 标准中定义。
+    <productname>PostgreSQL</productname> 服务器原生支持
+    <literal>SQLSTATE</literal> 错误码；因此，在所有应用程序中
+    使用这种错误码方案可以实现高度的
+    一致性。更多信息请参见
+    <xref linkend="errcodes-appendix"/>。
    </para>
 
    <para>
-    <literal>SQLCODE</literal>, the deprecated error code scheme, is a
-    simple integer.  A value of 0 indicates success, a positive value
-    indicates success with additional information, a negative value
-    indicates an error.  The SQL standard only defines the positive
-    value +100, which indicates that the last command returned or
-    affected zero rows, and no specific negative values.  Therefore,
-    this scheme can only achieve poor portability and does not have a
-    hierarchical code assignment.  Historically, the embedded SQL
-    processor for <productname>PostgreSQL</productname> has assigned
-    some specific <literal>SQLCODE</literal> values for its use, which
-    are listed below with their numeric value and their symbolic name.
-    Remember that these are not portable to other SQL implementations.
-    To simplify the porting of applications to the
-    <literal>SQLSTATE</literal> scheme, the corresponding
-    <literal>SQLSTATE</literal> is also listed.  There is, however, no
-    one-to-one or one-to-many mapping between the two schemes (indeed
-    it is many-to-many), so you should consult the global
-    <literal>SQLSTATE</literal> listing in <xref linkend="errcodes-appendix"/>
-    in each case.
+    <literal>SQLCODE</literal> 是已废弃的错误码方案，它是一个
+    简单的整数。值为 0 表示成功，正值
+    表示成功并附带额外信息，负值表示错误。
+    SQL 标准只定义了正值 +100，它表示最后一条命令返回或
+    影响了零行，而没有定义具体的负值。因此，
+    这种方案只能获得很差的移植性，而且没有
+    层次化的代码分配。历史上，<productname>PostgreSQL</productname> 的嵌入式 SQL
+    处理器为其使用分配了一些特定的 <literal>SQLCODE</literal> 值，
+    下面列出了它们的数值和符号名。
+    请记住，这些值不能移植到其他 SQL 实现。
+    为了简化应用程序向 <literal>SQLSTATE</literal> 方案的移植，
+    还列出了相应的 <literal>SQLSTATE</literal>。然而，
+    两种方案之间不存在一对一或一对多的映射（实际上
+    是多对多），因此每种情况下都应查阅
+    <xref linkend="errcodes-appendix"/> 中的全局
+    <literal>SQLSTATE</literal> 列表。
    </para>
 
    <para>
-    These are the assigned <literal>SQLCODE</literal> values:
+    这些是已赋值的 <literal>SQLCODE</literal> 值：
 
     <variablelist>
      <varlistentry id="ecpg-sqlstate-sqlcode-ecpg-no-error">
       <term>0 (<symbol>ECPG_NO_ERROR</symbol>)</term>
       <listitem>
        <para>
-        Indicates no error. (SQLSTATE 00000)
+        表示没有错误。（SQLSTATE 00000）
       </para>
      </listitem>
     </varlistentry>
@@ -4546,14 +4494,11 @@ sqlstate: 42P01
      <term>100 (<symbol>ECPG_NOT_FOUND</symbol>)</term>
      <listitem>
       <para>
-       This is a harmless condition indicating that the last command
-       retrieved or processed zero rows, or that you are at the end of
-       the cursor.  (SQLSTATE 02000)
+       这是一个无害的状态，表示最后一条命令检索或处理了零行，或者你已到达游标的末尾。（SQLSTATE 02000）
       </para>
 
       <para>
-       When processing a cursor in a loop, you could use this code as
-       a way to detect when to abort the loop, like this:
+       在循环中处理游标时，可以用下面这段代码来检测何时应中止循环，如下所示：
 <programlisting>
 while (1)
 {
@@ -4562,9 +4507,7 @@ while (1)
         break;
 }
 </programlisting>
-       But <literal>WHENEVER NOT FOUND DO BREAK</literal> effectively
-       does this internally, so there is usually no advantage in
-       writing this out explicitly.
+       但 <literal>WHENEVER NOT FOUND DO BREAK</literal> 实际上在内部就完成了这一工作，因此通常没有必要显式地写出这段代码。
       </para>
      </listitem>
     </varlistentry>
@@ -4573,9 +4516,8 @@ while (1)
       <term>-12 (<symbol>ECPG_OUT_OF_MEMORY</symbol>)</term>
       <listitem>
        <para>
-        Indicates that your virtual memory is exhausted.  The numeric
-        value is defined as <literal>-ENOMEM</literal>.  (SQLSTATE
-        YE001)
+        表示虚拟内存已耗尽。该数值定义为 <literal>-ENOMEM</literal>。（SQLSTATE
+        YE001）
       </para>
      </listitem>
     </varlistentry>
@@ -4584,10 +4526,7 @@ while (1)
      <term>-200 (<symbol>ECPG_UNSUPPORTED</symbol>)</term>
      <listitem>
       <para>
-       Indicates the preprocessor has generated something that the
-       library does not know about.  Perhaps you are running
-       incompatible versions of the preprocessor and the
-       library. (SQLSTATE YE002)
+       表示预处理器生成了库无法识别的内容。可能是你运行的预处理器与库的版本不兼容。（SQLSTATE YE002）
       </para>
      </listitem>
     </varlistentry>
@@ -4596,8 +4535,7 @@ while (1)
      <term>-201 (<symbol>ECPG_TOO_MANY_ARGUMENTS</symbol>)</term>
      <listitem>
       <para>
-       This means that the command specified more host variables than
-       the command expected.  (SQLSTATE 07001 or 07002)
+       这意味着命令指定的主机变量比命令预期的多。（SQLSTATE 07001 或 07002）
       </para>
      </listitem>
     </varlistentry>
@@ -4606,8 +4544,7 @@ while (1)
      <term>-202 (<symbol>ECPG_TOO_FEW_ARGUMENTS</symbol>)</term>
      <listitem>
       <para>
-       This means that the command specified fewer host variables than
-       the command expected.  (SQLSTATE 07001 or 07002)
+       这意味着命令指定的主机变量比命令预期的少。（SQLSTATE 07001 或 07002）
       </para>
      </listitem>
     </varlistentry>
@@ -4616,9 +4553,7 @@ while (1)
      <term>-203 (<symbol>ECPG_TOO_MANY_MATCHES</symbol>)</term>
      <listitem>
       <para>
-       This means a query has returned multiple rows but the statement
-       was only prepared to store one result row (for example, because
-       the specified variables are not arrays).  (SQLSTATE 21000)
+       这意味着查询返回了多行，但该语句只准备存储一行结果（例如，因为指定的变量不是数组）。（SQLSTATE 21000）
       </para>
      </listitem>
     </varlistentry>
@@ -4627,11 +4562,7 @@ while (1)
      <term>-204 (<symbol>ECPG_INT_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>int</type> and the datum in
-       the database is of a different type and contains a value that
-       cannot be interpreted as an <type>int</type>.  The library uses
-       <function>strtol()</function> for this conversion.  (SQLSTATE
-       42804)
+       主机变量的类型为 <type>int</type>，而数据库中的数据的类型不同，且包含一个无法解释为 <type>int</type> 的值。该库使用 <function>strtol()</function> 进行此转换。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4640,11 +4571,8 @@ while (1)
      <term>-205 (<symbol>ECPG_UINT_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>unsigned int</type> and the
-       datum in the database is of a different type and contains a
-       value that cannot be interpreted as an <type>unsigned
-       int</type>.  The library uses <function>strtoul()</function>
-       for this conversion.  (SQLSTATE 42804)
+       主机变量的类型为 <type>unsigned int</type>，而数据库中的数据的类型不同，且包含一个无法解释为 <type>unsigned
+       int</type> 的值。该库使用 <function>strtoul()</function> 进行此转换。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4653,11 +4581,7 @@ while (1)
      <term>-206 (<symbol>ECPG_FLOAT_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>float</type> and the datum
-       in the database is of another type and contains a value that
-       cannot be interpreted as a <type>float</type>.  The library
-       uses <function>strtod()</function> for this conversion.
-       (SQLSTATE 42804)
+       主机变量的类型为 <type>float</type>，而数据库中的数据的类型为另一种类型，且包含一个无法解释为 <type>float</type> 的值。该库使用 <function>strtod()</function> 进行此转换。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4666,10 +4590,7 @@ while (1)
      <term>-207 (<symbol>ECPG_NUMERIC_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>numeric</type> and the datum
-       in the database is of another type and contains a value that
-       cannot be interpreted as a <type>numeric</type> value.
-       (SQLSTATE 42804)
+       宿主变量的类型为 <type>numeric</type>，而数据库中的数据值属于另一种类型，且包含的值无法解释为 <type>numeric</type> 值。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4678,10 +4599,7 @@ while (1)
      <term>-208 (<symbol>ECPG_INTERVAL_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>interval</type> and the datum
-       in the database is of another type and contains a value that
-       cannot be interpreted as an <type>interval</type> value.
-       (SQLSTATE 42804)
+       宿主变量的类型为 <type>interval</type>，而数据库中的数据值属于另一种类型，且包含的值无法解释为 <type>interval</type> 值。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4690,10 +4608,7 @@ while (1)
      <term>-209 (<symbol>ECPG_DATE_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>date</type> and the datum in
-       the database is of another type and contains a value that
-       cannot be interpreted as a <type>date</type> value.
-       (SQLSTATE 42804)
+       宿主变量的类型为 <type>date</type>，而数据库中的数据值属于另一种类型，且包含的值无法解释为 <type>date</type> 值。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4702,10 +4617,7 @@ while (1)
      <term>-210 (<symbol>ECPG_TIMESTAMP_FORMAT</symbol>)</term>
      <listitem>
       <para>
-       The host variable is of type <type>timestamp</type> and the
-       datum in the database is of another type and contains a value
-       that cannot be interpreted as a <type>timestamp</type> value.
-       (SQLSTATE 42804)
+       宿主变量的类型为 <type>timestamp</type>，而数据库中的数据值属于另一种类型，且包含的值无法解释为 <type>timestamp</type> 值。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4714,9 +4626,7 @@ while (1)
      <term>-211 (<symbol>ECPG_CONVERT_BOOL</symbol>)</term>
      <listitem>
       <para>
-       This means the host variable is of type <type>bool</type> and
-       the datum in the database is neither <literal>'t'</literal> nor
-       <literal>'f'</literal>.  (SQLSTATE 42804)
+       这意味着宿主变量的类型为 <type>bool</type>，而数据库中的数据值既不是 <literal>'t'</literal> 也不是 <literal>'f'</literal>。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4725,10 +4635,7 @@ while (1)
      <term>-212 (<symbol>ECPG_EMPTY</symbol>)</term>
      <listitem>
       <para>
-       The statement sent to the <productname>PostgreSQL</productname>
-       server was empty.  (This cannot normally happen in an embedded
-       SQL program, so it might point to an internal error.)  (SQLSTATE
-       YE002)
+       发送到 <productname>PostgreSQL</productname> 服务器的语句为空。（这通常不会在嵌入式 SQL 程序中发生，因此可能指向内部错误。）（SQLSTATE YE002）
       </para>
      </listitem>
     </varlistentry>
@@ -4737,8 +4644,7 @@ while (1)
      <term>-213 (<symbol>ECPG_MISSING_INDICATOR</symbol>)</term>
      <listitem>
       <para>
-       A null value was returned and no null indicator variable was
-       supplied.  (SQLSTATE 22002)
+       返回了一个空值，但没有提供空值指示符变量。（SQLSTATE 22002）
       </para>
      </listitem>
     </varlistentry>
@@ -4747,8 +4653,7 @@ while (1)
      <term>-214 (<symbol>ECPG_NO_ARRAY</symbol>)</term>
      <listitem>
       <para>
-       An ordinary variable was used in a place that requires an
-       array.  (SQLSTATE 42804)
+       在需要数组的位置使用了普通变量。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4757,8 +4662,7 @@ while (1)
      <term>-215 (<symbol>ECPG_DATA_NOT_ARRAY</symbol>)</term>
      <listitem>
       <para>
-       The database returned an ordinary variable in a place that
-       requires array value.  (SQLSTATE 42804)
+       数据库在需要数组值的位置返回了普通变量。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4767,8 +4671,7 @@ while (1)
      <term>-216 (<symbol>ECPG_ARRAY_INSERT</symbol>)</term>
      <listitem>
       <para>
-       The value could not be inserted into the array.  (SQLSTATE
-       42804)
+       无法将该值插入到数组中。（SQLSTATE 42804）
       </para>
      </listitem>
     </varlistentry>
@@ -4777,8 +4680,7 @@ while (1)
      <term>-220 (<symbol>ECPG_NO_CONN</symbol>)</term>
      <listitem>
       <para>
-       The program tried to access a connection that does not exist.
-       (SQLSTATE 08003)
+       程序试图访问一个不存在的连接。（SQLSTATE 08003）
       </para>
      </listitem>
     </varlistentry>
@@ -4787,8 +4689,7 @@ while (1)
      <term>-221 (<symbol>ECPG_NOT_CONN</symbol>)</term>
      <listitem>
       <para>
-       The program tried to access a connection that does exist but is
-       not open.  (This is an internal error.)  (SQLSTATE YE002)
+       程序试图访问一个确实存在但未打开的连接。（这是内部错误。）（SQLSTATE YE002）
       </para>
      </listitem>
     </varlistentry>
@@ -4797,8 +4698,7 @@ while (1)
      <term>-230 (<symbol>ECPG_INVALID_STMT</symbol>)</term>
      <listitem>
       <para>
-       The statement you are trying to use has not been prepared.
-       (SQLSTATE 26000)
+       你尝试使用的语句尚未被预备。(SQLSTATE 26000)
       </para>
      </listitem>
     </varlistentry>
@@ -4807,8 +4707,7 @@ while (1)
      <term>-239 (<symbol>ECPG_INFORMIX_DUPLICATE_KEY</symbol>)</term>
      <listitem>
       <para>
-       Duplicate key error, violation of unique constraint (Informix
-       compatibility mode).  (SQLSTATE 23505)
+       重复键错误，违反了唯一约束（Informix 兼容模式）。(SQLSTATE 23505)
       </para>
      </listitem>
     </varlistentry>
@@ -4817,8 +4716,7 @@ while (1)
      <term>-240 (<symbol>ECPG_UNKNOWN_DESCRIPTOR</symbol>)</term>
      <listitem>
       <para>
-       The descriptor specified was not found.  The statement you are
-       trying to use has not been prepared.  (SQLSTATE 33000)
+       未找到指定的描述符。你尝试使用的语句尚未被预备。(SQLSTATE 33000)
       </para>
      </listitem>
     </varlistentry>
@@ -4827,8 +4725,7 @@ while (1)
      <term>-241 (<symbol>ECPG_INVALID_DESCRIPTOR_INDEX</symbol>)</term>
      <listitem>
       <para>
-       The descriptor index specified was out of range.  (SQLSTATE
-       07009)
+       指定的描述符索引超出范围。(SQLSTATE 07009)
       </para>
      </listitem>
     </varlistentry>
@@ -4837,8 +4734,7 @@ while (1)
      <term>-242 (<symbol>ECPG_UNKNOWN_DESCRIPTOR_ITEM</symbol>)</term>
      <listitem>
       <para>
-       An invalid descriptor item was requested.  (This is an internal
-       error.)  (SQLSTATE YE002)
+       请求了无效的描述符项。（这是一个内部错误。）(SQLSTATE YE002)
       </para>
      </listitem>
     </varlistentry>
@@ -4847,9 +4743,7 @@ while (1)
      <term>-243 (<symbol>ECPG_VAR_NOT_NUMERIC</symbol>)</term>
      <listitem>
       <para>
-       During the execution of a dynamic statement, the database
-       returned a numeric value and the host variable was not numeric.
-       (SQLSTATE 07006)
+       在执行动态语句期间，数据库返回了一个数值，而宿主变量不是数值类型。(SQLSTATE 07006)
       </para>
      </listitem>
     </varlistentry>
@@ -4858,9 +4752,7 @@ while (1)
      <term>-244 (<symbol>ECPG_VAR_NOT_CHAR</symbol>)</term>
      <listitem>
       <para>
-       During the execution of a dynamic statement, the database
-       returned a non-numeric value and the host variable was numeric.
-       (SQLSTATE 07006)
+       在动态语句执行期间，数据库返回了一个非数值，而宿主变量是数值类型。（SQLSTATE 07006）
       </para>
      </listitem>
     </varlistentry>
@@ -4869,8 +4761,7 @@ while (1)
      <term>-284 (<symbol>ECPG_INFORMIX_SUBSELECT_NOT_ONE</symbol>)</term>
      <listitem>
       <para>
-       A result of the subquery is not single row (Informix
-       compatibility mode).  (SQLSTATE 21000)
+       子查询的结果不是单行（Informix 兼容模式）。（SQLSTATE 21000）
       </para>
      </listitem>
     </varlistentry>
@@ -4879,9 +4770,7 @@ while (1)
      <term>-400 (<symbol>ECPG_PGSQL</symbol>)</term>
      <listitem>
       <para>
-       Some error caused by the <productname>PostgreSQL</productname>
-       server.  The message contains the error message from the
-       <productname>PostgreSQL</productname> server.
+       由 <productname>PostgreSQL</productname> 服务器引起的某些错误。该消息包含来自 <productname>PostgreSQL</productname> 服务器的错误消息。
       </para>
      </listitem>
     </varlistentry>
@@ -4890,9 +4779,7 @@ while (1)
      <term>-401 (<symbol>ECPG_TRANS</symbol>)</term>
      <listitem>
       <para>
-       The <productname>PostgreSQL</productname> server signaled that
-       we cannot start, commit, or rollback the transaction.
-       (SQLSTATE 08007)
+       <productname>PostgreSQL</productname> 服务器发出信号，表示我们无法启动、提交或回滚该事务。（SQLSTATE 08007）
       </para>
      </listitem>
     </varlistentry>
@@ -4901,8 +4788,7 @@ while (1)
      <term>-402 (<symbol>ECPG_CONNECT</symbol>)</term>
      <listitem>
       <para>
-       The connection attempt to the database did not succeed.
-       (SQLSTATE 08001)
+       尝试连接数据库未成功。（SQLSTATE 08001）
       </para>
      </listitem>
     </varlistentry>
@@ -4911,8 +4797,7 @@ while (1)
      <term>-403 (<symbol>ECPG_DUPLICATE_KEY</symbol>)</term>
      <listitem>
       <para>
-       Duplicate key error, violation of unique constraint.  (SQLSTATE
-       23505)
+       重复键错误，违反了唯一约束。（SQLSTATE 23505）
       </para>
      </listitem>
     </varlistentry>
@@ -4921,7 +4806,7 @@ while (1)
      <term>-404 (<symbol>ECPG_SUBSELECT_NOT_ONE</symbol>)</term>
      <listitem>
       <para>
-       A result for the subquery is not single row. (SQLSTATE 21000)
+       子查询的结果不是单行。(SQLSTATE 21000)
       </para>
      </listitem>
     </varlistentry>
@@ -4952,7 +4837,7 @@ while (1)
      <term>-602 (<symbol>ECPG_WARNING_UNKNOWN_PORTAL</symbol>)</term>
      <listitem>
       <para>
-       An invalid cursor name was specified. (SQLSTATE 34000)
+       指定了无效的游标名。(SQLSTATE 34000)
       </para>
      </listitem>
     </varlistentry>
@@ -4961,7 +4846,7 @@ while (1)
      <term>-603 (<symbol>ECPG_WARNING_IN_TRANSACTION</symbol>)</term>
      <listitem>
       <para>
-       Transaction is in progress. (SQLSTATE 25001)
+       事务正在进行中。(SQLSTATE 25001)
       </para>
      </listitem>
     </varlistentry>
@@ -4970,7 +4855,7 @@ while (1)
      <term>-604 (<symbol>ECPG_WARNING_NO_TRANSACTION</symbol>)</term>
      <listitem>
       <para>
-       There is no active (in-progress) transaction. (SQLSTATE 25P01)
+       没有活动（进行中）的事务。(SQLSTATE 25P01)
       </para>
      </listitem>
     </varlistentry>
@@ -4979,7 +4864,7 @@ while (1)
      <term>-605 (<symbol>ECPG_WARNING_PORTAL_EXISTS</symbol>)</term>
      <listitem>
       <para>
-       An existing cursor name was specified. (SQLSTATE 42P03)
+       指定了已存在的游标名。(SQLSTATE 42P03)
       </para>
      </listitem>
     </varlistentry>
