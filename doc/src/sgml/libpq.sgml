@@ -7822,66 +7822,56 @@ void PQinitSSL(int do_ssl);
  </sect1>
 
  <sect1 id="libpq-oauth">
-  <title>OAuth Support</title>
+  <title>OAuth 支持</title>
 
   <para>
-   <application>libpq</application> implements support for the OAuth v2 Device Authorization client flow,
-   documented in
-   <ulink url="https://datatracker.ietf.org/doc/html/rfc8628">RFC 8628</ulink>,
-   as an optional module. See the <link linkend="configure-option-with-libcurl">
-   installation documentation</link> for information on how to enable support
-   for Device Authorization as a builtin flow.
+   <application>libpq</application> 作为可选模块，实现了对 OAuth v2 设备授权客户端流程的支持，该流程记录于
+   <ulink url="https://datatracker.ietf.org/doc/html/rfc8628">RFC 8628</ulink>。
+   有关如何启用将设备授权作为内置流程的支持的信息，请参阅
+   <link linkend="configure-option-with-libcurl">
+   安装文档</link>。
   </para>
   <para>
-   When support is enabled and the optional module installed, <application>libpq</application>
-   will use the builtin flow by default if the server
-   <link linkend="auth-oauth">requests a bearer token</link> during
-   authentication. This flow can be utilized even if the system running the
-   client application does not have a usable web browser, for example when
-   running a client via <acronym>SSH</acronym>.
+   当支持已启用且可选模块已安装时，如果服务器在认证过程中
+   <link linkend="auth-oauth">请求持有者令牌</link>，<application>libpq</application>
+   将默认使用内置流程。即使运行客户端应用程序的系统没有可用的 Web 浏览器，
+   也可以使用此流程，例如通过 <acronym>SSH</acronym> 运行客户端时。
   </para>
   <para>
-   The builtin flow will, by default, print a URL to visit and a user code to
-   enter there:
+   默认情况下，内置流程会打印一个要访问的 URL 和一个要在该处输入的用户代码：
 <programlisting>
 $ psql 'dbname=postgres oauth_issuer=https://example.com oauth_client_id=...'
 Visit https://example.com/device and enter the code: ABCD-EFGH
 </programlisting>
-   (This prompt may be
-   <link linkend="libpq-oauth-authdata-prompt-oauth-device">customized</link>.)
-   The user will then log into their OAuth provider, which will ask whether
-   to allow libpq and the server to perform actions on their behalf. It is always
-   a good idea to carefully review the URL and permissions displayed, to ensure
-   they match expectations, before continuing. Permissions should not be given
-   to untrusted third parties.
+   （此提示可以
+   <link linkend="libpq-oauth-authdata-prompt-oauth-device">自定义</link>。）
+   然后用户将登录其 OAuth 提供方，该提供方会询问是否允许 libpq 和服务器代表其执行操作。
+   在继续之前，仔细检查所显示的 URL 和权限以确保它们符合预期，始终是个好主意。
+   不应将权限授予不受信任的第三方。
   </para>
   <para>
-   Client applications may implement their own flows to customize interaction
-   and integration with applications. See <xref linkend="libpq-oauth-authdata-hooks"/>
-   for more information on how add a custom flow to <application>libpq</application>.
+   客户端应用程序可以实现自己的流程，以自定义与应用程序的交互和集成。
+   有关如何向 <application>libpq</application> 添加自定义流程的更多信息，请参阅 <xref linkend="libpq-oauth-authdata-hooks"/>。
   </para>
   <para>
-   For an OAuth client flow to be usable, the connection string must at minimum
-   contain <xref linkend="libpq-connect-oauth-issuer"/> and
-   <xref linkend="libpq-connect-oauth-client-id"/>. (These settings are
-   determined by your organization's OAuth provider.) The builtin flow
-   additionally requires the OAuth authorization server to publish a device
-   authorization endpoint.
+   要使 OAuth 客户端流程可用，连接字符串至少必须包含
+   <xref linkend="libpq-connect-oauth-issuer"/> 和
+   <xref linkend="libpq-connect-oauth-client-id"/>。（这些设置由您所在组织的
+   OAuth 提供方决定。）内置流程还要求 OAuth 授权服务器发布设备授权端点。
   </para>
 
   <note>
    <para>
-    The builtin Device Authorization flow is not currently supported on Windows.
-    Custom client flows may still be implemented.
+    Windows 上目前不支持内置的设备授权流程。
+    自定义客户端流程仍可实现。
    </para>
   </note>
 
   <sect2 id="libpq-oauth-authdata-hooks">
-   <title>Authdata Hooks</title>
+   <title>Authdata 钩子</title>
 
    <para>
-    The behavior of the OAuth flow may be modified or replaced by a client using
-    the following hook API:
+    OAuth 流程的行为可以由客户端使用以下钩子 API 修改或替换：
 
     <variablelist>
      <varlistentry id="libpq-PQsetAuthDataHook">
@@ -7889,41 +7879,36 @@ Visit https://example.com/device and enter the code: ABCD-EFGH
 
       <listitem>
        <para>
-        Sets the <symbol>PGauthDataHook</symbol>, overriding
-        <application>libpq</application>'s handling of one or more aspects of
-        its OAuth client flow.
+        设置 <symbol>PGauthDataHook</symbol>，覆盖
+        <application>libpq</application> 对其 OAuth 客户端流程一个或多个方面的处理。
 <synopsis>
 void PQsetAuthDataHook(PQauthDataHook_type hook);
 </synopsis>
-        If <replaceable>hook</replaceable> is <literal>NULL</literal>, the
-        default handler will be reinstalled. Otherwise, the application passes
-        a pointer to a callback function with the signature:
+        如果 <replaceable>hook</replaceable> 为 <literal>NULL</literal>，则将重新安装默认处理函数。否则，应用程序传入
+        一个指向回调函数的指针，其签名为：
 <programlisting>
 int hook_fn(PGauthData type, PGconn *conn, void *data);
 </programlisting>
-        which <application>libpq</application> will call when an action is
-        required of the application. <replaceable>type</replaceable> describes
-        the request being made, <replaceable>conn</replaceable> is the
-        connection handle being authenticated, and <replaceable>data</replaceable>
-        points to request-specific metadata. The contents of this pointer are
-        determined by <replaceable>type</replaceable>; see
-        <xref linkend="libpq-oauth-authdata-hooks-types"/> for the supported
-        list.
+        当需要应用程序执行操作时，<application>libpq</application> 将调用该回调函数。<replaceable>type</replaceable> 描述
+        所发出的请求，<replaceable>conn</replaceable> 是
+        正在进行认证的连接句柄，<replaceable>data</replaceable>
+        指向请求特定的元数据。该指针的内容
+        由 <replaceable>type</replaceable> 决定；支持的
+        列表请参见
+        <xref linkend="libpq-oauth-authdata-hooks-types"/>。
        </para>
        <para>
-        Hooks can be chained together to allow cooperative and/or fallback
-        behavior. In general, a hook implementation should examine the incoming
-        <replaceable>type</replaceable> (and, potentially, the request metadata
-        and/or the settings for the particular <replaceable>conn</replaceable>
-        in use) to decide whether or not to handle a specific piece of authdata.
-        If not, it should delegate to the previous hook in the chain
-        (retrievable via <function>PQgetAuthDataHook</function>).
+        钩子可以链接在一起，以实现协作和/或回退
+        行为。通常，钩子实现应检查传入的
+        <replaceable>type</replaceable>（可能还有请求元数据
+        和/或所用特定 <replaceable>conn</replaceable>
+        的设置），以决定是否处理特定的 authdata。
+        如果不处理，则应委托给链中的前一个钩子
+        （可通过 <function>PQgetAuthDataHook</function> 获取）。
        </para>
        <para>
-        Success is indicated by returning an integer greater than zero.
-        Returning a negative integer signals an error condition and abandons the
-        connection attempt. (A zero value is reserved for the default
-        implementation.)
+        返回大于零的整数表示成功。
+        返回负整数表示错误状况，并放弃该连接尝试。（零值保留给默认实现。）
        </para>
       </listitem>
      </varlistentry>
@@ -7933,13 +7918,12 @@ int hook_fn(PGauthData type, PGconn *conn, void *data);
 
       <listitem>
        <para>
-        Retrieves the current value of <symbol>PGauthDataHook</symbol>.
+        获取 <symbol>PGauthDataHook</symbol> 的当前值。
 <synopsis>
 PQauthDataHook_type PQgetAuthDataHook(void);
 </synopsis>
-        At initialization time (before the first call to
-        <function>PQsetAuthDataHook</function>), this function will return
-        <symbol>PQdefaultAuthDataHook</symbol>.
+        在初始化时（首次调用 <function>PQsetAuthDataHook</function> 之前），此函数将返回
+        <symbol>PQdefaultAuthDataHook</symbol>。
        </para>
       </listitem>
      </varlistentry>
@@ -7947,10 +7931,10 @@ PQauthDataHook_type PQgetAuthDataHook(void);
    </para>
 
    <sect3 id="libpq-oauth-authdata-hooks-types">
-    <title>Hook Types</title>
+    <title>钩子类型</title>
     <para>
-     The following <symbol>PGauthData</symbol> types and their corresponding
-     <replaceable>data</replaceable> structures are defined:
+     定义了以下 <symbol>PGauthData</symbol> 类型及其对应的
+     <replaceable>data</replaceable> 结构：
 
      <variablelist>
       <varlistentry id="libpq-oauth-authdata-prompt-oauth-device">
@@ -7960,9 +7944,7 @@ PQauthDataHook_type PQgetAuthDataHook(void);
        </term>
        <listitem>
         <para>
-         Replaces the default user prompt during the builtin device
-         authorization client flow. <replaceable>data</replaceable> points to
-         an instance of <symbol>PGpromptOAuthDevice</symbol>:
+         在内置设备授权客户端流程中替换默认的用户提示。<replaceable>data</replaceable> 指向 <symbol>PGpromptOAuthDevice</symbol> 的一个实例：
 <synopsis>
 typedef struct _PGpromptOAuthDevice
 {
@@ -7975,32 +7957,14 @@ typedef struct _PGpromptOAuthDevice
 </synopsis>
         </para>
         <para>
-         The OAuth Device Authorization flow which
-         <link linkend="configure-option-with-libcurl">can be included</link>
-         in <application>libpq</application>
-         requires the end user to visit a URL with a browser, then enter a code
-         which permits <application>libpq</application> to connect to the server
-         on their behalf. The default prompt simply prints the
-         <literal>verification_uri</literal> and <literal>user_code</literal>
-         on standard error. Replacement implementations may display this
-         information using any preferred method, for example with a GUI.
+         OAuth 设备授权流程（可以<link linkend="configure-option-with-libcurl">包含</link>在 <application>libpq</application> 中）要求最终用户使用浏览器访问一个 URL，然后输入一个代码，该代码允许 <application>libpq</application> 代表他们连接到服务器。默认提示只是将 <literal>verification_uri</literal> 和 <literal>user_code</literal> 打印到标准错误。替换实现可以使用任何首选方法来显示此信息，例如使用 GUI。
         </para>
         <para>
-         This callback is only invoked during the builtin device
-         authorization flow. If the application installs a
-         <link linkend="libpq-oauth-authdata-oauth-bearer-token">custom OAuth
-         flow</link>, or <application>libpq</application> was not built with
-         support for the builtin flow, this authdata type will not be used.
+         此回调仅在内置设备授权流程期间被调用。如果应用程序安装了<link linkend="libpq-oauth-authdata-oauth-bearer-token">自定义 OAuth 流程</link>，或者 <application>libpq</application> 在构建时未包含对内置流程的支持，则不会使用此 authdata 类型。
         </para>
         <para>
-         If a non-NULL <structfield>verification_uri_complete</structfield> is
-         provided, it may optionally be used for non-textual verification (for
-         example, by displaying a QR code). The URL and user code should still
-         be displayed to the end user in this case, because the code will be
-         manually confirmed by the provider, and the URL lets users continue
-         even if they can't use the non-textual method. For more information,
-         see section 3.3.1 in
-         <ulink url="https://datatracker.ietf.org/doc/html/rfc8628#section-3.3.1">RFC 8628</ulink>.
+         如果提供了非 NULL 的 <structfield>verification_uri_complete</structfield>，则可以选择性地将其用于非文本验证（例如，通过显示二维码）。在这种情况下，仍应向最终用户显示 URL 和用户代码，因为代码将由提供商手动确认，而且即使用户无法使用非文本方法，URL 也能让他们继续操作。有关更多信息，请参阅
+         <ulink url="https://datatracker.ietf.org/doc/html/rfc8628#section-3.3.1">RFC 8628</ulink> 中的第 3.3.1 节。
         </para>
        </listitem>
       </varlistentry>
@@ -8012,16 +7976,10 @@ typedef struct _PGpromptOAuthDevice
        </term>
        <listitem>
         <para>
-         Adds a custom implementation of a flow, replacing the builtin flow if
-         it is <link linkend="configure-option-with-libcurl">installed</link>.
-         The hook should either directly return a Bearer token for the current
-         user/issuer/scope combination, if one is available without blocking, or
-         else set up an asynchronous callback to retrieve one.
+         添加流程的自定义实现，如果内置流程已<link linkend="configure-option-with-libcurl">安装</link>，则替换它。该钩子应直接为当前用户/签发者/作用域组合返回一个 Bearer 令牌（如果无需阻塞即可获得），否则设置一个异步回调来获取一个。
         </para>
         <para>
-         <replaceable>data</replaceable> points to an instance
-         of <symbol>PGoauthBearerRequest</symbol>, which should be filled in
-         by the implementation:
+         <replaceable>data</replaceable> 指向一个 <symbol>PGoauthBearerRequest</symbol> 的实例，该实例应由实现填充：
 <synopsis>
 typedef struct PGoauthBearerRequest
 {
@@ -8049,67 +8007,29 @@ typedef struct PGoauthBearerRequest
 </synopsis>
         </para>
         <para>
-         Two pieces of information are provided to the hook by
-         <application>libpq</application>:
-         <replaceable>openid_configuration</replaceable> contains the URL of an
-         OAuth discovery document describing the authorization server's
-         supported flows, and <replaceable>scope</replaceable> contains a
-         (possibly empty) space-separated list of OAuth scopes which are
-         required to access the server. Either or both may be
-         <literal>NULL</literal> to indicate that the information was not
-         discoverable. (In this case, implementations may be able to establish
-         the requirements using some other preconfigured knowledge, or they may
-         choose to fail.)
+         <application>libpq</application> 向钩子提供两条信息：
+         <replaceable>openid_configuration</replaceable> 包含一个 OAuth 发现文档的 URL，该文档描述授权服务器所支持的流程，而 <replaceable>scope</replaceable> 包含一个（可能为空的）以空格分隔的 OAuth 范围列表，这些范围是访问该服务器所必需的。其中任意一个或两者都可能为 <literal>NULL</literal>，以表示该信息无法被发现。（在这种情况下，实现或许能够使用某些其他预先配置的知识来确定需求，或者它们可能选择失败。）
         </para>
         <para>
-         The final output of the hook is <replaceable>token</replaceable>, which
-         must point to a valid Bearer token for use on the connection. (This
-         token should be issued by the
-         <xref linkend="libpq-connect-oauth-issuer"/> and hold the requested
-         scopes, or the connection will be rejected by the server's validator
-         module.) The allocated token string must remain valid until
-         <application>libpq</application> is finished connecting; the hook
-         should set a <replaceable>cleanup</replaceable> callback which will be
-         called when <application>libpq</application> no longer requires it.
+         该钩子的最终输出是 <replaceable>token</replaceable>，它必须指向一个用于该连接的有效 Bearer 令牌。（该令牌应由
+         <xref linkend="libpq-connect-oauth-issuer"/> 签发并持有所请求的范围，否则连接将被服务器的验证器模块拒绝。）所分配的令牌字符串必须保持有效，直到
+         <application>libpq</application> 完成连接；该钩子应设置一个 <replaceable>cleanup</replaceable> 回调，当 <application>libpq</application> 不再需要该令牌时，该回调将被调用。
         </para>
         <para>
-         If an implementation cannot immediately produce a
-         <replaceable>token</replaceable> during the initial call to the hook,
-         it should set the <replaceable>async</replaceable> callback to handle
-         nonblocking communication with the authorization server.
+         如果实现在初次调用该钩子时无法立即产生一个
+         <replaceable>token</replaceable>，它应设置 <replaceable>async</replaceable> 回调来处理与授权服务器的非阻塞通信。
          <footnote>
           <para>
-           Performing blocking operations during the
-           <symbol>PQAUTHDATA_OAUTH_BEARER_TOKEN</symbol> hook callback will
-           interfere with nonblocking connection APIs such as
-           <function>PQconnectPoll</function> and prevent concurrent connections
-           from making progress. Applications which only ever use the
-           synchronous connection primitives, such as
-           <function>PQconnectdb</function>, may synchronously retrieve a token
-           during the hook instead of implementing the
-           <replaceable>async</replaceable> callback, but they will necessarily
-           be limited to one connection at a time.
+           在 <symbol>PQAUTHDATA_OAUTH_BEARER_TOKEN</symbol> 钩子回调期间执行阻塞操作会干扰诸如
+           <function>PQconnectPoll</function> 之类的非阻塞连接 API，并阻止并发连接取得进展。只使用同步连接原语（例如
+           <function>PQconnectdb</function>）的应用程序可以在钩子期间同步获取令牌，而不必实现
+           <replaceable>async</replaceable> 回调，但它们必然会被限制为一次只能有一个连接。
           </para>
          </footnote>
-         This will be called to begin the flow immediately upon return from the
-         hook. When the callback cannot make further progress without blocking,
-         it should return either <symbol>PGRES_POLLING_READING</symbol> or
-         <symbol>PGRES_POLLING_WRITING</symbol> after setting
-         <literal>*altsock</literal> to the file descriptor that will be marked
-         ready to read/write when progress can be made again. (This descriptor
-         is then provided to the top-level polling loop via
-         <function>PQsocket()</function>.) Return <symbol>PGRES_POLLING_OK</symbol>
-         after setting <replaceable>token</replaceable> when the flow is
-         complete, or <symbol>PGRES_POLLING_FAILED</symbol> to indicate failure.
+         从钩子返回后，将立即调用它以开始流程。当回调在不阻塞的情况下无法继续推进时，它应先把 <literal>*altsock</literal> 设置为在能够再次取得进展时将被标记为可读/可写的文件描述符，然后返回 <symbol>PGRES_POLLING_READING</symbol> 或 <symbol>PGRES_POLLING_WRITING</symbol>。（该描述符随后通过 <function>PQsocket()</function> 提供给顶层轮询循环。）当流程完成时，在设置 <replaceable>token</replaceable> 后返回 <symbol>PGRES_POLLING_OK</symbol>，或返回 <symbol>PGRES_POLLING_FAILED</symbol> 表示失败。
         </para>
         <para>
-         Implementations may wish to store additional data for bookkeeping
-         across calls to the <replaceable>async</replaceable> and
-         <replaceable>cleanup</replaceable> callbacks. The
-         <replaceable>user</replaceable> pointer is provided for this purpose;
-         <application>libpq</application> will not touch its contents and the
-         application may use it at its convenience. (Remember to free any
-         allocations during token cleanup.)
+         实现可能希望在多次调用 <replaceable>async</replaceable> 和 <replaceable>cleanup</replaceable> 回调之间存储额外的簿记数据。为此提供了 <replaceable>user</replaceable> 指针；<application>libpq</application> 不会触碰其内容，应用程序可以按自己的方便使用它。（请记住在令牌清理期间释放所有分配的内存。）
         </para>
        </listitem>
       </varlistentry>
@@ -8119,44 +8039,38 @@ typedef struct PGoauthBearerRequest
   </sect2>
 
   <sect2 id="libpq-oauth-debugging">
-   <title>Debugging and Developer Settings</title>
+   <title>调试与开发者设置</title>
 
    <para>
-    A "dangerous debugging mode" may be enabled by setting the environment
-    variable <envar>PGOAUTHDEBUG=UNSAFE</envar>. This functionality is provided
-    for ease of local development and testing only. It does several things that
-    you will not want a production system to do:
+    通过设置环境变量 <envar>PGOAUTHDEBUG=UNSAFE</envar> 可以启用“危险调试模式”。此功能仅为方便本地开发和测试而提供。它会做几件你不希望生产系统做的事情：
 
     <itemizedlist spacing="compact">
      <listitem>
       <para>
-       permits the use of unencrypted HTTP during the OAuth provider exchange
+       允许在 OAuth 提供者交换期间使用未加密的 HTTP
       </para>
      </listitem>
      <listitem>
       <para>
-       allows the system's trusted CA list to be completely replaced using the
-       <envar>PGOAUTHCAFILE</envar> environment variable
+       允许使用 <envar>PGOAUTHCAFILE</envar> 环境变量完全替换系统的受信任 CA 列表
       </para>
      </listitem>
      <listitem>
       <para>
-       prints HTTP traffic (containing several critical secrets) to standard
-       error during the OAuth flow
+       在 OAuth 流程期间将 HTTP 流量（包含若干关键机密）打印到标准错误
       </para>
      </listitem>
      <listitem>
       <para>
-       permits the use of zero-second retry intervals, which can cause the
-       client to busy-loop and pointlessly consume CPU
+       允许使用零秒重试间隔，这可能导致客户端忙循环并毫无意义地消耗 CPU
       </para>
      </listitem>
     </itemizedlist>
    </para>
    <warning>
     <para>
-     Do not share the output of the OAuth flow traffic with third parties. It
-     contains secrets that can be used to attack your clients and servers.
+     不要与第三方分享 OAuth 流程流量的输出。其中包含可用于攻击你的客户端和服务器
+     的机密。
     </para>
    </warning>
   </sect2>
