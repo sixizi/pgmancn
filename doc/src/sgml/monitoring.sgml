@@ -23,7 +23,7 @@
   </para>
 
  <sect1 id="monitoring-ps">
-  <title>Standard Unix Tools</title>
+  <title>标准 Unix 工具</title>
 
   <indexterm zone="monitoring-ps">
    <primary>ps</primary>
@@ -31,9 +31,7 @@
   </indexterm>
 
   <para>
-   On most Unix platforms, <productname>PostgreSQL</productname> modifies its
-   command title as reported by <command>ps</command>, so that individual server
-   processes can readily be identified.  A sample display is
+   在大多数 Unix 平台上，<productname>PostgreSQL</productname> 会修改由 <command>ps</command> 报告的命令标题，以便可以容易地识别各个服务器进程。一个示例显示如下
 
 <screen>
 $ ps auxww | grep ^postgres
@@ -47,40 +45,17 @@ postgres  15606  0.0  0.0  58772  3052 ?        Ss   18:07   0:00 postgres: tgl 
 postgres  15610  0.0  0.0  58772  3056 ?        Ss   18:07   0:00 postgres: tgl regression [local] idle in transaction
 </screen>
 
-   (The appropriate invocation of <command>ps</command> varies across different
-   platforms, as do the details of what is shown.  This example is from a
-   recent Linux system.)  The first process listed here is the
-   primary server process.  The command arguments
-   shown for it are the same ones used when it was launched.  The next four
-   processes are background worker processes automatically launched by the
-   primary process.  (The <quote>autovacuum launcher</quote> process will not
-   be present if you have set the system not to run autovacuum.)
-   Each of the remaining
-   processes is a server process handling one client connection.  Each such
-   process sets its command line display in the form
+   （<command>ps</command> 的恰当调用方式因平台而异，所显示内容的细节也各不相同。此示例来自一个较新的 Linux 系统。）此处列出的第一个进程是主服务器进程。为它显示的命令参数与启动它时使用的参数相同。接下来的四个进程是由主进程自动启动的后台工作进程。（如果你已将系统设置为不运行自动清理，则不会出现 <quote>autovacuum launcher</quote> 进程。）其余每个进程都是处理一个客户端连接的服务器进程。每个这样的进程都按以下形式设置其命令行显示
 
 <screen>
 postgres: <replaceable>user</replaceable> <replaceable>database</replaceable> <replaceable>host</replaceable> <replaceable>activity</replaceable>
 </screen>
 
-  The user, database, and (client) host items remain the same for
-  the life of the client connection, but the activity indicator changes.
-  The activity can be <literal>idle</literal> (i.e., waiting for a client command),
-  <literal>idle in transaction</literal> (waiting for client inside a <command>BEGIN</command> block),
-  or a command type name such as <literal>SELECT</literal>.  Also,
-  <literal>waiting</literal> is appended if the server process is presently waiting
-  on a lock held by another session.  In the above example we can infer
-  that process 15606 is waiting for process 15610 to complete its transaction
-  and thereby release some lock.  (Process 15610 must be the blocker, because
-  there is no other active session.  In more complicated cases it would be
-  necessary to look into the
-  <link linkend="view-pg-locks"><structname>pg_locks</structname></link>
-  system view to determine who is blocking whom.)
+  用户、数据库和（客户端）主机这几项在客户端连接的整个生命周期内保持不变，但活动指示符会变化。活动可以是 <literal>idle</literal>（即正在等待客户端命令）、<literal>idle in transaction</literal>（正在 <command>BEGIN</command> 块内等待客户端），或者是一个命令类型名称，例如 <literal>SELECT</literal>。此外，如果服务器进程当前正在等待另一个会话持有的锁，则会追加 <literal>waiting</literal>。在上面的示例中，我们可以推断进程 15606 正在等待进程 15610 完成其事务，从而释放某个锁。（进程 15610 必定是阻塞者，因为没有其他活动会话。在更复杂的情况下，需要查看 <link linkend="view-pg-locks"><structname>pg_locks</structname></link> 系统视图来确定谁在阻塞谁。）
   </para>
 
   <para>
-   If <xref linkend="guc-cluster-name"/> has been configured the
-   cluster name will also be shown in <command>ps</command> output:
+   如果已配置 <xref linkend="guc-cluster-name"/>，则数据库集簇名称也会显示在 <command>ps</command> 输出中：
 <screen>
 $ psql -c 'SHOW cluster_name'
  cluster_name
@@ -95,23 +70,12 @@ postgres   27093  0.0  0.0  30096  2752 ?        Ss   11:34   0:00 postgres: ser
   </para>
 
   <para>
-   If you have turned off <xref linkend="guc-update-process-title"/> then the
-   activity indicator is not updated; the process title is set only once
-   when a new process is launched.  On some platforms this saves a measurable
-   amount of per-command overhead;  on others it's insignificant.
+   如果你关闭了 <xref linkend="guc-update-process-title"/>，则活动指示符不会更新；进程标题只在新进程启动时设置一次。在某些平台上，这可以节省可观的每条命令开销；在其他平台上则微不足道。
   </para>
 
   <tip>
   <para>
-  <productname>Solaris</productname> requires special handling. You must
-  use <command>/usr/ucb/ps</command>, rather than
-  <command>/bin/ps</command>. You also must use two <option>w</option>
-  flags, not just one. In addition, your original invocation of the
-  <command>postgres</command> command must have a shorter
-  <command>ps</command> status display than that provided by each
-  server process.  If you fail to do all three things, the <command>ps</command>
-  output for each server process will be the original <command>postgres</command>
-  command line.
+  <productname>Solaris</productname> 需要特殊处理。你必须使用 <command>/usr/ucb/ps</command>，而不是 <command>/bin/ps</command>。你还必须使用两个 <option>w</option> 标志，而不只是一个。此外，你最初调用 <command>postgres</command> 命令时的 <command>ps</command> 状态显示必须比每个服务器进程提供的更短。如果这三件事没有全部做到，那么每个服务器进程的 <command>ps</command> 输出将是原始的 <command>postgres</command> 命令行。
   </para>
   </tip>
  </sect1>
