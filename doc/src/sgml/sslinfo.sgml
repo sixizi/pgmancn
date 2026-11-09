@@ -1,32 +1,26 @@
 <!-- doc/src/sgml/sslinfo.sgml -->
 
 <sect1 id="sslinfo" xreflabel="sslinfo">
- <title>sslinfo &mdash; obtain client SSL information</title>
+ <title>sslinfo &mdash; 获取客户端 SSL 信息</title>
 
  <indexterm zone="sslinfo">
   <primary>sslinfo</primary>
  </indexterm>
 
  <para>
-  The <filename>sslinfo</filename> module provides information about the SSL
-  certificate that the current client provided when connecting to
-  <productname>PostgreSQL</productname>.  The module is useless (most functions
-  will return NULL) if the current connection does not use SSL.
+  <filename>sslinfo</filename> 模块提供有关当前客户端在连接到 <productname>PostgreSQL</productname> 时所提供的 SSL 证书的信息。如果当前连接不使用 SSL，则该模块没有用处（大多数函数将返回 NULL）。
  </para>
 
  <para>
-  Some of the information available through this module can also be obtained
-  using the built-in system view <link linkend="monitoring-pg-stat-ssl-view">
-  <structname>pg_stat_ssl</structname></link>.
+  通过此模块可获得的某些信息也可以使用内置系统视图 <link linkend="monitoring-pg-stat-ssl-view"><structname>pg_stat_ssl</structname></link> 获得。
  </para>
 
  <para>
-  This extension won't build at all unless the installation was
-  configured with <literal>--with-ssl=openssl</literal>.
+  除非安装时配置了 <literal>--with-ssl=openssl</literal>，否则此扩展根本无法构建。
  </para>
 
  <sect2 id="sslinfo-functions">
-  <title>Functions Provided</title>
+  <title>提供的函数</title>
 
   <variablelist>
    <varlistentry>
@@ -38,8 +32,7 @@
     </term>
     <listitem>
     <para>
-     Returns true if current connection to server uses SSL, and false
-     otherwise.
+     如果当前到服务器的连接使用 SSL 则返回真，否则返回假。
     </para>
     </listitem>
    </varlistentry>
@@ -53,8 +46,7 @@
     </term>
     <listitem>
     <para>
-     Returns the name of the protocol used for the SSL connection (e.g., TLSv1.0,
-     TLSv1.1, TLSv1.2 or TLSv1.3).
+     返回用于 SSL 连接的协议名称（例如 TLSv1.0、TLSv1.1、TLSv1.2 或 TLSv1.3）。
     </para>
     </listitem>
    </varlistentry>
@@ -68,8 +60,7 @@
     </term>
     <listitem>
     <para>
-     Returns the name of the cipher used for the SSL connection
-     (e.g., DHE-RSA-AES256-SHA).
+     返回用于 SSL 连接的加密算法名称（例如 DHE-RSA-AES256-SHA）。
     </para>
     </listitem>
    </varlistentry>
@@ -83,9 +74,7 @@
     </term>
     <listitem>
     <para>
-     Returns true if current client has presented a valid SSL client
-     certificate to the server, and false otherwise.  (The server
-     might or might not be configured to require a client certificate.)
+     如果当前客户端已向服务器出示有效的 SSL 客户端证书，则返回 true，否则返回 false。（服务器可能配置为要求客户端证书，也可能未配置。）
     </para>
     </listitem>
    </varlistentry>
@@ -99,17 +88,11 @@
     </term>
     <listitem>
     <para>
-     Returns serial number of current client certificate.  The combination of
-     certificate serial number and certificate issuer is guaranteed to
-     uniquely identify a certificate (but not its owner &mdash; the owner
-     ought to regularly change their keys, and get new certificates from the
-     issuer).
+     返回当前客户端证书的序列号。证书序列号与证书颁发者的组合可保证唯一标识一个证书（但不能标识其所有者 &mdash; 所有者应定期更换密钥，并从颁发者处获取新证书）。
     </para>
 
     <para>
-     So, if you run your own CA and allow only certificates from this CA to
-     be accepted by the server, the serial number is the most reliable (albeit
-     not very mnemonic) means to identify a user.
+     因此，如果你运行自己的 CA 并且只允许服务器接受来自该 CA 的证书，那么序列号是标识用户最可靠的手段（尽管不太容易记忆）。
     </para>
     </listitem>
    </varlistentry>
@@ -123,16 +106,11 @@
     </term>
     <listitem>
     <para>
-     Returns the full subject of the current client certificate, converting
-     character data into the current database encoding.  It is assumed that
-     if you use non-ASCII characters in the certificate names, your
-     database is able to represent these characters, too.  If your database
-     uses the SQL_ASCII encoding, non-ASCII characters in the name will be
-     represented as UTF-8 sequences.
+     返回当前客户端证书的完整主题，并将字符数据转换为当前数据库编码。这里假定，如果你在证书名称中使用了非 ASCII 字符，你的数据库也能够表示这些字符。如果你的数据库使用 SQL_ASCII 编码，名称中的非 ASCII 字符将表示为 UTF-8 序列。
     </para>
 
     <para>
-     The result looks like <literal>/CN=Somebody /C=Some country/O=Some organization</literal>.
+     结果看起来像 <literal>/CN=Somebody /C=Some country/O=Some organization</literal>。
     </para>
     </listitem>
    </varlistentry>
@@ -146,18 +124,13 @@
     </term>
     <listitem>
     <para>
-     Returns the full issuer name of the current client certificate, converting
-     character data into the current database encoding.  Encoding conversions
-     are handled the same as for <function>ssl_client_dn</function>.
+     返回当前客户端证书的完整颁发者名称，并将字符数据转换为当前数据库编码。编码转换的处理方式与 <function>ssl_client_dn</function> 相同。
     </para>
     <para>
-     The combination of the return value of this function with the
-     certificate serial number uniquely identifies the certificate.
+     将此函数的返回值与证书序列号结合起来，可以唯一标识该证书。
     </para>
     <para>
-     This function is really useful only if you have more than one trusted CA
-     certificate in your server's certificate authority file, or if this CA
-     has issued some intermediate certificate authority certificates.
+     仅当服务器的证书颁发机构文件中存在多个受信任的 CA 证书，或者该 CA 颁发过某些中间证书颁发机构证书时，此函数才真正有用。
     </para>
     </listitem>
    </varlistentry>
@@ -171,11 +144,7 @@
     </term>
     <listitem>
     <para>
-     This function returns the value of the specified field in the
-     certificate subject, or NULL if the field is not present.
-     Field names are string constants that are converted into ASN1 object
-     identifiers using the <productname>OpenSSL</productname> object
-     database.  The following values are acceptable:
+     此函数返回证书主体中指定字段的值，如果该字段不存在则返回 NULL。字段名是字符串常量，会使用 <productname>OpenSSL</productname> 对象数据库转换为 ASN1 对象标识符。以下值是可接受的：
     </para>
 <literallayout class="monospaced">
 commonName (alias CN)
@@ -201,12 +170,7 @@ role
 emailAddress
 </literallayout>
     <para>
-     All of these fields are optional, except <structfield>commonName</structfield>.
-     It depends
-     entirely on your CA's policy which of them would be included and which
-     wouldn't.  The meaning of these fields, however, is strictly defined by
-     the X.500 and X.509 standards, so you cannot just assign arbitrary
-     meaning to them.
+     除 <structfield>commonName</structfield> 之外，所有这些字段都是可选的。哪些字段会被包含、哪些不会，完全取决于你的 CA 的策略。不过，这些字段的含义由 X.500 和 X.509 标准严格定义，因此你不能随意赋予它们任意的含义。
     </para>
     </listitem>
    </varlistentry>
@@ -220,8 +184,7 @@ emailAddress
     </term>
     <listitem>
     <para>
-     Same as <function>ssl_client_dn_field</function>, but for the certificate issuer
-     rather than the certificate subject.
+     与 <function>ssl_client_dn_field</function> 相同，但针对的是证书颁发者而不是证书主体。
     </para>
     </listitem>
    </varlistentry>
@@ -235,8 +198,7 @@ emailAddress
     </term>
     <listitem>
     <para>
-     Provide information about extensions of client certificate: extension name,
-     extension value, and if it is a critical extension.
+     提供关于客户端证书扩展的信息：扩展名、扩展值，以及它是否为关键扩展。
     </para>
     </listitem>
    </varlistentry>
@@ -244,7 +206,7 @@ emailAddress
  </sect2>
 
  <sect2 id="sslinfo-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Victor Wagner <email>vitus@cryptocom.ru</email>, Cryptocom LTD
@@ -255,7 +217,7 @@ emailAddress
   </para>
 
   <para>
-   E-Mail of Cryptocom OpenSSL development group:
+   Cryptocom OpenSSL 开发组的电子邮件：
    <email>openssl@cryptocom.ru</email>
   </para>
  </sect2>
