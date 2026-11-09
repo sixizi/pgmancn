@@ -3734,82 +3734,59 @@ CREATE EVENT TRIGGER snitch ON ddl_command_start EXECUTE FUNCTION snitch();
   </sect1>
 
   <sect1 id="plpgsql-implementation">
-   <title><application>PL/pgSQL</application> under the Hood</title>
+   <title><application>PL/pgSQL</application> 底层原理</title>
 
    <para>
-    This section discusses some implementation details that are
-    frequently important for <application>PL/pgSQL</application> users to know.
+    本节讨论一些实现细节，这些细节对于 <application>PL/pgSQL</application> 用户来说常常是重要的、需要了解的。
    </para>
 
   <sect2 id="plpgsql-var-subst">
-   <title>Variable Substitution</title>
+   <title>变量替换</title>
 
    <para>
-    SQL statements and expressions within a <application>PL/pgSQL</application> function
-    can refer to variables and parameters of the function.  Behind the scenes,
-    <application>PL/pgSQL</application> substitutes query parameters for such references.
-    Query parameters will only be substituted in places where they are
-    syntactically permissible.  As an extreme case, consider
-    this example of poor programming style:
+    <application>PL/pgSQL</application> 函数中的 SQL 语句和表达式可以引用该函数的变量和参数。在幕后，
+    <application>PL/pgSQL</application> 会把这类引用替换为查询参数。
+    只有在语法允许的位置，查询参数才会被替换。作为一个极端的例子，请考虑
+    下面这个不良编程风格的示例：
 <programlisting>
 INSERT INTO foo (foo) VALUES (foo(foo));
 </programlisting>
-    The first occurrence of <literal>foo</literal> must syntactically be a table
-    name, so it will not be substituted, even if the function has a variable
-    named <literal>foo</literal>.  The second occurrence must be the name of a
-    column of that table, so it will not be substituted either.  Likewise
-    the third occurrence must be a function name, so it also will not be
-    substituted for.  Only the last occurrence is a candidate to be a
-    reference to a variable of the <application>PL/pgSQL</application>
-    function.
+    <literal>foo</literal> 的第一次出现从语法上必须是表名，因此即使函数有一个名为
+    <literal>foo</literal> 的变量，它也不会被替换。第二次出现必须是该表某一列的名称，
+    因此它也不会被替换。同样，第三次出现必须是函数名，因此它也不会被
+    替换。只有最后一次出现才可能是对 <application>PL/pgSQL</application>
+    函数变量的引用。
    </para>
 
    <para>
-    Another way to understand this is that variable substitution can only
-    insert data values into an SQL command; it cannot dynamically change which
-    database objects are referenced by the command.  (If you want to do
-    that, you must build a command string dynamically, as explained in
-    <xref linkend="plpgsql-statements-executing-dyn"/>.)
+    理解这一点的另一种方式是：变量替换只能把数据值插入到 SQL 命令中；
+    它不能动态地改变该命令所引用的数据库对象。（如果你想要做到这一点，
+    必须动态地构建命令字符串，如
+    <xref linkend="plpgsql-statements-executing-dyn"/> 中所述。）
    </para>
 
    <para>
-    Since the names of variables are syntactically no different from the names
-    of table columns, there can be ambiguity in statements that also refer to
-    tables: is a given name meant to refer to a table column, or a variable?
-    Let's change the previous example to
+    由于变量名在语法上与表列名没有区别，在同时引用表的语句中就可能出现
+    歧义：某个给定的名称是指表列，还是指变量？让我们把前面的示例改为
 <programlisting>
 INSERT INTO dest (col) SELECT foo + bar FROM src;
 </programlisting>
-    Here, <literal>dest</literal> and <literal>src</literal> must be table names, and
-    <literal>col</literal> must be a column of <literal>dest</literal>, but <literal>foo</literal>
-    and <literal>bar</literal> might reasonably be either variables of the function
-    or columns of <literal>src</literal>.
+    这里，<literal>dest</literal> 和 <literal>src</literal> 必须是表名，而
+    <literal>col</literal> 必须是 <literal>dest</literal> 的一列，但 <literal>foo</literal>
+    和 <literal>bar</literal> 既可能是该函数的变量，也可能是 <literal>src</literal> 的列，
+    两者都说得通。
    </para>
 
    <para>
-    By default, <application>PL/pgSQL</application> will report an error if a name
-    in an SQL statement could refer to either a variable or a table column.
-    You can fix such a problem by renaming the variable or column,
-    or by qualifying the ambiguous reference, or by telling
-    <application>PL/pgSQL</application> which interpretation to prefer.
+    默认情况下，如果 SQL 语句中的某个名称既可能指代变量也可能指代表列，<application>PL/pgSQL</application> 将报告错误。你可以通过重命名变量或列、或者限定有歧义的引用、或者告诉 <application>PL/pgSQL</application> 优先采用哪种解释来解决这类问题。
    </para>
 
    <para>
-    The simplest solution is to rename the variable or column.
-    A common coding rule is to use a
-    different naming convention for <application>PL/pgSQL</application>
-    variables than you use for column names.  For example,
-    if you consistently name function variables
-    <literal>v_<replaceable>something</replaceable></literal> while none of your
-    column names start with <literal>v_</literal>, no conflicts will occur.
+    最简单的解决办法是重命名变量或列。一条常见的编码规则是对 <application>PL/pgSQL</application> 变量采用与列名不同的命名约定。例如，如果你始终将函数变量命名为 <literal>v_<replaceable>something</replaceable></literal>，而没有任何列名以 <literal>v_</literal> 开头，就不会发生冲突。
    </para>
 
    <para>
-    Alternatively you can qualify ambiguous references to make them clear.
-    In the above example, <literal>src.foo</literal> would be an unambiguous reference
-    to the table column.  To create an unambiguous reference to a variable,
-    declare it in a labeled block and use the block's label
-    (see <xref linkend="plpgsql-structure"/>).  For example,
+    另一种办法是限定有歧义的引用，使其含义明确。在上面的例子中，<literal>src.foo</literal> 将是对表列的无歧义引用。要创建对变量的无歧义引用，可以在带标签的块中声明该变量，并使用该块的标签（参见 <xref linkend="plpgsql-structure"/>）。例如，
 <programlisting>
 &lt;&lt;block&gt;&gt;
 DECLARE
@@ -3818,21 +3795,11 @@ BEGIN
     foo := ...;
     INSERT INTO dest (col) SELECT block.foo + bar FROM src;
 </programlisting>
-    Here <literal>block.foo</literal> means the variable even if there is a column
-    <literal>foo</literal> in <literal>src</literal>.  Function parameters, as well as
-    special variables such as <literal>FOUND</literal>, can be qualified by the
-    function's name, because they are implicitly declared in an outer block
-    labeled with the function's name.
+    这里的 <literal>block.foo</literal> 表示该变量，即使 <literal>src</literal> 中存在名为 <literal>foo</literal> 的列也是如此。函数参数以及诸如 <literal>FOUND</literal> 之类的特殊变量可以用函数名来限定，因为它们隐式声明在以函数名作为标签的外层块中。
    </para>
 
    <para>
-    Sometimes it is impractical to fix all the ambiguous references in a
-    large body of <application>PL/pgSQL</application> code.  In such cases you can
-    specify that <application>PL/pgSQL</application> should resolve ambiguous references
-    as the variable (which is compatible with <application>PL/pgSQL</application>'s
-    behavior before <productname>PostgreSQL</productname> 9.0), or as the
-    table column (which is compatible with some other systems such as
-    <productname>Oracle</productname>).
+    有时，要修正大量 <application>PL/pgSQL</application> 代码中所有有歧义的引用并不现实。在这种情况下，你可以指定 <application>PL/pgSQL</application> 将歧义引用解析为变量（这与 <productname>PostgreSQL</productname> 9.0 之前 <application>PL/pgSQL</application> 的行为兼容），或者解析为表列（这与某些其他系统如 <productname>Oracle</productname> 兼容）。
    </para>
 
    <indexterm>
@@ -3840,29 +3807,17 @@ BEGIN
    </indexterm>
 
    <para>
-    To change this behavior on a system-wide basis, set the configuration
-    parameter <literal>plpgsql.variable_conflict</literal> to one of
-    <literal>error</literal>, <literal>use_variable</literal>, or
-    <literal>use_column</literal> (where <literal>error</literal> is the factory default).
-    This parameter affects subsequent compilations
-    of statements in <application>PL/pgSQL</application> functions, but not statements
-    already compiled in the current session.
-    Because changing this setting
-    can cause unexpected changes in the behavior of <application>PL/pgSQL</application>
-    functions, it can only be changed by a superuser.
+    要在整个系统范围内更改此行为，请将配置参数 <literal>plpgsql.variable_conflict</literal> 设置为 <literal>error</literal>、<literal>use_variable</literal> 或 <literal>use_column</literal> 之一（其中 <literal>error</literal> 是出厂默认值）。该参数会影响 <application>PL/pgSQL</application> 函数中语句的后续编译，但不会影响当前会话中已经编译的语句。由于更改此设置可能导致 <application>PL/pgSQL</application> 函数的行为发生意外变化，因此只有超级用户才能更改它。
    </para>
 
    <para>
-    You can also set the behavior on a function-by-function basis, by
-    inserting one of these special commands at the start of the function
-    text:
+    你也可以逐个函数地设置该行为，方法是在函数文本的开头插入这些特殊命令之一：
 <programlisting>
 #variable_conflict error
 #variable_conflict use_variable
 #variable_conflict use_column
 </programlisting>
-    These commands affect only the function they are written in, and override
-    the setting of <literal>plpgsql.variable_conflict</literal>.  An example is
+    这些命令只影响它们所在的函数，并会覆盖 <literal>plpgsql.variable_conflict</literal> 的设置。例如
 <programlisting>
 CREATE FUNCTION stamp_user(id int, comment text) RETURNS void AS $$
     #variable_conflict use_variable
@@ -3874,16 +3829,7 @@ CREATE FUNCTION stamp_user(id int, comment text) RETURNS void AS $$
     END;
 $$ LANGUAGE plpgsql;
 </programlisting>
-    In the <literal>UPDATE</literal> command, <literal>curtime</literal>, <literal>comment</literal>,
-    and <literal>id</literal> will refer to the function's variable and parameters
-    whether or not <literal>users</literal> has columns of those names.  Notice
-    that we had to qualify the reference to <literal>users.id</literal> in the
-    <literal>WHERE</literal> clause to make it refer to the table column.
-    But we did not have to qualify the reference to <literal>comment</literal>
-    as a target in the <literal>UPDATE</literal> list, because syntactically
-    that must be a column of <literal>users</literal>.  We could write the same
-    function without depending on the <literal>variable_conflict</literal> setting
-    in this way:
+    在 <literal>UPDATE</literal> 命令中，无论 <literal>users</literal> 是否具有这些名称的列，<literal>curtime</literal>、<literal>comment</literal> 和 <literal>id</literal> 都将引用该函数的变量和参数。请注意，我们必须在 <literal>WHERE</literal> 子句中限定对 <literal>users.id</literal> 的引用，使其引用表列。但我们不必在 <literal>UPDATE</literal> 列表中限定对 <literal>comment</literal> 的引用作为目标，因为从语法上讲，那必须是 <literal>users</literal> 的一列。我们可以用这种方式编写同样的函数，而不依赖于 <literal>variable_conflict</literal> 设置：
 <programlisting>
 CREATE FUNCTION stamp_user(id int, comment text) RETURNS void AS $$
     &lt;&lt;fn&gt;&gt;
@@ -3898,38 +3844,20 @@ $$ LANGUAGE plpgsql;
    </para>
 
    <para>
-    Variable substitution does not happen in a command string given
-    to <command>EXECUTE</command> or one of its variants.  If you need to
-    insert a varying value into such a command, do so as part of
-    constructing the string value, or use <literal>USING</literal>, as illustrated in
-    <xref linkend="plpgsql-statements-executing-dyn"/>.
+    在传递给 <command>EXECUTE</command> 或其某个变体的命令字符串中不会发生变量替换。如果你需要将变化的值插入到这样的命令中，请将其作为构造字符串值的一部分，或者使用 <literal>USING</literal>，如 <xref linkend="plpgsql-statements-executing-dyn"/> 所示。
    </para>
 
    <para>
-    Variable substitution currently works only in <command>SELECT</command>,
-    <command>INSERT</command>, <command>UPDATE</command>,
-    <command>DELETE</command>, <command>MERGE</command> and commands
-    containing one of these (such as <command>EXPLAIN</command> and
-    <command>CREATE TABLE ... AS SELECT</command>), because the main SQL
-    engine allows query parameters only in these commands.  To use a
-    non-constant name or value in other statement types (generically called
-    utility statements), you must construct the utility statement as a string
-    and <command>EXECUTE</command> it.
+    变量替换目前只在 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command>、<command>MERGE</command> 以及包含其中之一的命令（例如 <command>EXPLAIN</command> 和 <command>CREATE TABLE ... AS SELECT</command>）中有效，因为主 SQL 引擎只允许在这些命令中使用查询参数。要在其他语句类型（通常称为工具语句）中使用非常量名称或值，你必须将该工具语句构造为字符串并 <command>EXECUTE</command> 它。
    </para>
 
   </sect2>
 
   <sect2 id="plpgsql-plan-caching">
-   <title>Plan Caching</title>
+   <title>计划缓存</title>
 
    <para>
-    The <application>PL/pgSQL</application> interpreter parses the function's source
-    text and produces an internal binary instruction tree the first time the
-    function is called (within each session).  The instruction tree
-    fully translates the
-    <application>PL/pgSQL</application> statement structure, but individual
-    <acronym>SQL</acronym> expressions and <acronym>SQL</acronym> commands
-    used in the function are not translated immediately.
+    <application>PL/pgSQL</application> 解释器在函数第一次被调用时（在每个会话内）解析函数的源文本并生成内部二进制指令树。该指令树完整地翻译了 <application>PL/pgSQL</application> 语句结构，但函数中使用的各个 <acronym>SQL</acronym> 表达式和 <acronym>SQL</acronym> 命令不会立即被翻译。
    </para>
 
    <para>
@@ -3937,20 +3865,7 @@ $$ LANGUAGE plpgsql;
      <primary>preparing a query</primary>
      <secondary>in PL/pgSQL</secondary>
     </indexterm>
-    As each expression and <acronym>SQL</acronym> command is first
-    executed in the function, the <application>PL/pgSQL</application> interpreter
-    parses and analyzes the command to create a prepared statement,
-    using the <acronym>SPI</acronym> manager's
-    <function>SPI_prepare</function> function.
-    Subsequent visits to that expression or command
-    reuse the prepared statement.  Thus, a function with conditional code
-    paths that are seldom visited will never incur the overhead of
-    analyzing those commands that are never executed within the current
-    session.  A disadvantage is that errors
-    in a specific expression or command cannot be detected until that
-    part of the function is reached in execution.  (Trivial syntax
-    errors will be detected during the initial parsing pass, but
-    anything deeper will not be detected until execution.)
+    当函数中每个表达式和 <acronym>SQL</acronym> 命令首次被执行时，<application>PL/pgSQL</application> 解释器会解析并分析该命令，使用 <acronym>SPI</acronym> 管理器的 <function>SPI_prepare</function> 函数创建一个预备语句。之后对该表达式或命令的访问会重用这个预备语句。因此，带有很少被访问的条件代码路径的函数，永远不会承担分析那些在当前会话中从未执行的命令的开销。缺点是，在函数执行到相应部分之前，无法检测出特定表达式或命令中的错误。（简单的语法错误会在初始解析阶段被检测到，但更深层的错误要到执行时才会被发现。）
    </para>
 
    <para>
@@ -3971,50 +3886,23 @@ $$ LANGUAGE plpgsql;
    </para>
 
    <para>
-    Because <application>PL/pgSQL</application> saves prepared statements
-    and sometimes execution plans in this way,
-    SQL commands that appear directly in a
-    <application>PL/pgSQL</application> function must refer to the
-    same tables and columns on every execution; that is, you cannot use
-    a parameter as the name of a table or column in an SQL command.  To get
-    around this restriction, you can construct dynamic commands using
-    the <application>PL/pgSQL</application> <command>EXECUTE</command>
-    statement &mdash; at the price of performing new parse analysis and
-    constructing a new execution plan on every execution.
+    由于 <application>PL/pgSQL</application> 以这种方式保存预备语句，有时还保存执行计划，因此直接出现在 <application>PL/pgSQL</application> 函数中的 SQL 命令在每次执行时都必须引用相同的表和列；也就是说，你不能在 SQL 命令中使用参数作为表名或列名。要绕过这一限制，你可以使用 <application>PL/pgSQL</application> <command>EXECUTE</command> 语句 &mdash; 来构造动态命令，代价是每次执行时都要进行新的解析分析并构造新的执行计划。
    </para>
 
     <para>
-     The mutable nature of record variables presents another problem in this
-     connection.  When fields of a record variable are used in
-     expressions or statements, the data types of the fields must not
-     change from one call of the function to the next, since each
-     expression will be analyzed using the data type that is present
-     when the expression is first reached.  <command>EXECUTE</command> can be
-     used to get around this problem when necessary.
+     记录变量的可变性质在这个上下文中还带来另一个问题。当记录变量的字段被用于表达式或语句中时，字段的数据类型在函数的两次调用之间不能发生变化，因为每个表达式在第一次被处理到时都会使用当时存在的数据类型进行分析。必要时可以用 <command>EXECUTE</command> 来规避这个问题。
     </para>
 
     <para>
-     If the same function is used as a trigger for more than one table,
-     <application>PL/pgSQL</application> prepares and caches statements
-     independently for each such table &mdash; that is, there is a cache
-     for each trigger function and table combination, not just for each
-     function.  This alleviates some of the problems with varying
-     data types; for instance, a trigger function will be able to work
-     successfully with a column named <literal>key</literal> even if it happens
-     to have different types in different tables.
+     如果同一个函数被用作多个表的触发器，<application>PL/pgSQL</application> 会为每个这样的表分别准备并缓存语句 &mdash; 也就是说，每个触发器函数与表的组合都有一个缓存，而不只是每个函数一个缓存。这缓解了数据类型变化带来的一些问题；例如，即使名为 <literal>key</literal> 的列在不同的表中恰好具有不同的类型，触发器函数也能成功地处理它。
     </para>
 
     <para>
-     Likewise, functions having polymorphic argument types have a separate
-     statement cache for each combination of actual argument types they have
-     been invoked for, so that data type differences do not cause unexpected
-     failures.
+     同样，具有多态参数类型的函数，对于其被调用的每一种实际参数类型组合，都有各自独立的语句缓存，因此数据类型差异不会导致意外的失败。
     </para>
 
    <para>
-    Statement caching can sometimes have surprising effects on the
-    interpretation of time-sensitive values.  For example there
-    is a difference between what these two functions do:
+    语句缓存有时会对时间敏感值的解释产生令人意外的效果。例如，下面这两个函数所做的并不相同：
 
 <programlisting>
 CREATE FUNCTION logfunc1(logtxt text) RETURNS void AS $$
@@ -4024,7 +3912,7 @@ CREATE FUNCTION logfunc1(logtxt text) RETURNS void AS $$
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-     and:
+以及：
 
 <programlisting>
 CREATE FUNCTION logfunc2(logtxt text) RETURNS void AS $$
@@ -4039,35 +3927,11 @@ $$ LANGUAGE plpgsql;
     </para>
 
     <para>
-     In the case of <function>logfunc1</function>, the
-     <productname>PostgreSQL</productname> main parser knows when
-     analyzing the <command>INSERT</command> that the
-     string <literal>'now'</literal> should be interpreted as
-     <type>timestamp</type>, because the target column of
-     <classname>logtable</classname> is of that type. Thus,
-     <literal>'now'</literal> will be converted to a <type>timestamp</type>
-     constant when the
-     <command>INSERT</command> is analyzed, and then used in all
-     invocations of <function>logfunc1</function> during the lifetime
-     of the session. Needless to say, this isn't what the programmer
-     wanted.  A better idea is to use the <literal>now()</literal> or
-     <literal>current_timestamp</literal> function.
+     在 <function>logfunc1</function> 的情况下，<productname>PostgreSQL</productname> 主解析器在分析 <command>INSERT</command> 时就知道字符串 <literal>'now'</literal> 应被解释为 <type>timestamp</type>，因为 <classname>logtable</classname> 的目标列就是该类型。因此，当分析 <command>INSERT</command> 时，<literal>'now'</literal> 会被转换为 <type>timestamp</type> 常量，然后在该会话的整个生命周期内，所有对 <function>logfunc1</function> 的调用都会使用它。不用说，这并不是程序员想要的结果。更好的做法是使用 <literal>now()</literal> 或 <literal>current_timestamp</literal> 函数。
     </para>
 
     <para>
-     In the case of <function>logfunc2</function>, the
-     <productname>PostgreSQL</productname> main parser does not know
-     what type <literal>'now'</literal> should become and therefore
-     it returns a data value of type <type>text</type> containing the string
-     <literal>now</literal>. During the ensuing assignment
-     to the local variable <varname>curtime</varname>, the
-     <application>PL/pgSQL</application> interpreter casts this
-     string to the <type>timestamp</type> type by calling the
-     <function>textout</function> and <function>timestamp_in</function>
-     functions for the conversion.  So, the computed time stamp is updated
-     on each execution as the programmer expects.  Even though this
-     happens to work as expected, it's not terribly efficient, so
-     use of the <literal>now()</literal> function would still be a better idea.
+     对于 <function>logfunc2</function> 的情况，<productname>PostgreSQL</productname> 主解析器不知道 <literal>'now'</literal> 应该变成什么类型，因此它返回一个类型为 <type>text</type> 的数据值，其中包含字符串 <literal>now</literal>。在随后赋值给局部变量 <varname>curtime</varname> 的过程中，<application>PL/pgSQL</application> 解释器通过调用 <function>textout</function> 和 <function>timestamp_in</function> 函数进行转换，将这个字符串转换为 <type>timestamp</type> 类型。因此，计算出的时间戳在每次执行时都会按程序员的预期进行更新。尽管这恰好能按预期工作，但效率并不高，所以使用 <literal>now()</literal> 函数仍然是更好的选择。
     </para>
 
   </sect2>
