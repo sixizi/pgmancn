@@ -1,76 +1,49 @@
 <!-- doc/src/sgml/lo.sgml -->
 
 <sect1 id="lo" xreflabel="lo">
- <title>lo &mdash; manage large objects</title>
+ <title>lo &mdash; 管理大对象</title>
 
  <indexterm zone="lo">
   <primary>lo</primary>
  </indexterm>
 
  <para>
-  The <filename>lo</filename> module provides support for managing Large Objects
-  (also called LOs or BLOBs).  This includes a data type <type>lo</type>
-  and a trigger <function>lo_manage</function>.
+  <filename>lo</filename> 模块提供对管理大对象（也称为 LO 或 BLOB）的支持。这包括一个数据类型 <type>lo</type> 和一个触发器 <function>lo_manage</function>。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  此模块被视为<quote>可信</quote>，也就是说，它可以由在当前数据库上具有 <literal>CREATE</literal> 权限的非超级用户安装。
  </para>
 
  <sect2 id="lo-rationale">
-  <title>Rationale</title>
+  <title>理由</title>
 
   <para>
-   One of the problems with the JDBC driver (and this affects the ODBC driver
-   also), is that the specification assumes that references to BLOBs (Binary
-   Large OBjects) are stored within a table, and if that entry is changed, the
-   associated BLOB is deleted from the database.
+   JDBC 驱动程序（这也影响 ODBC 驱动程序）的问题之一是，规范假定对 BLOB（二进制大对象）的引用存储在表中，并且如果该条目被更改，则关联的 BLOB 会从数据库中删除。
   </para>
 
   <para>
-   As <productname>PostgreSQL</productname> stands, this doesn't occur.  Large objects
-   are treated as objects in their own right; a table entry can reference a
-   large object by OID, but there can be multiple table entries referencing
-   the same large object OID, so the system doesn't delete the large object
-   just because you change or remove one such entry.
+   就 <productname>PostgreSQL</productname> 目前的情况而言，这并不会发生。大对象被视为独立的对象；表条目可以通过 OID 引用一个大对象，但可以有多个表条目引用同一个大对象 OID，因此系统不会仅仅因为您更改或删除了其中一个条目就删除该大对象。
   </para>
 
   <para>
-   Now this is fine for <productname>PostgreSQL</productname>-specific applications, but
-   standard code using JDBC or ODBC won't delete the objects, resulting in
-   orphan objects &mdash; objects that are not referenced by anything, and
-   simply occupy disk space.
+   现在这对于 <productname>PostgreSQL</productname> 特定的应用来说没有问题，但使用 JDBC 或 ODBC 的标准代码不会删除这些对象，从而产生孤儿对象 &mdash; 即不被任何东西引用的对象，只是白白占用磁盘空间。
   </para>
 
   <para>
-   The <filename>lo</filename> module allows fixing this by attaching a trigger
-   to tables that contain LO reference columns.  The trigger essentially just
-   does a <function>lo_unlink</function> whenever you delete or modify a value
-   referencing a large object.  When you use this trigger, you are assuming
-   that there is only one database reference to any large object that is
-   referenced in a trigger-controlled column!
+   <filename>lo</filename> 模块通过给包含 LO 引用列的表附加触发器来解决这个问题。该触发器本质上就是在你删除或修改引用某个大对象的值时执行一次 <function>lo_unlink</function>。使用此触发器时，你是在假设：在触发器控制的列中被引用的任何大对象，在数据库中只有一个引用！
   </para>
 
   <para>
-   The module also provides a data type <type>lo</type>, which is really just
-   a <glossterm linkend="glossary-domain">domain</glossterm> over
-   the <type>oid</type> type.  This is useful for differentiating
-   database columns that hold large object references from those that are
-   OIDs of other things.  You don't have to use the <type>lo</type> type to
-   use the trigger, but it may be convenient to use it to keep track of which
-   columns in your database represent large objects that you are managing with
-   the trigger.  It is also rumored that the ODBC driver gets confused if you
-   don't use <type>lo</type> for BLOB columns.
+   该模块还提供了一种数据类型 <type>lo</type>，它实际上只是一个 <glossterm linkend="glossary-domain">域</glossterm> ，位于 <type>oid</type> 类型之上。这对于区分保存大对象引用的数据库列与保存其他事物 OID 的列很有用。你不必为了使用触发器而使用 <type>lo</type> 类型，但用它来跟踪数据库中的哪些列代表你正用触发器管理的大对象可能会很方便。也有传言说，如果你不为 BLOB 列使用 <type>lo</type>，ODBC 驱动程序会感到困惑。
   </para>
  </sect2>
 
  <sect2 id="lo-how-to-use">
-  <title>How to Use It</title>
+  <title>如何使用它</title>
 
   <para>
-   Here's a simple example of usage:
+   下面是一个简单的使用示例：
   </para>
 
 <programlisting>
@@ -81,52 +54,40 @@ CREATE TRIGGER t_raster BEFORE UPDATE OR DELETE ON image
 </programlisting>
 
   <para>
-   For each column that will contain unique references to large objects,
-   create a <literal>BEFORE UPDATE OR DELETE</literal> trigger, and give the column
-   name as the sole trigger argument.  You can also restrict the trigger
-   to only execute on updates to the column by using <literal>BEFORE UPDATE
-   OF</literal> <replaceable class="parameter">column_name</replaceable>.
-   If you need multiple <type>lo</type>
-   columns in the same table, create a separate trigger for each one,
-   remembering to give a different name to each trigger on the same table.
+   对于每个将包含对大型对象的唯一引用的列，创建一个 <literal>BEFORE UPDATE OR DELETE</literal> 触发器，并把列名作为唯一的触发器参数。你还可以通过使用 <literal>BEFORE UPDATE
+   OF</literal> <replaceable class="parameter">column_name</replaceable> 将触发器限制为仅在该列被更新时执行。如果在同一个表中需要多个 <type>lo</type> 列，请为每一列分别创建一个触发器，并记住为同一个表上的每个触发器指定不同的名称。
   </para>
  </sect2>
 
  <sect2 id="lo-limitations">
-  <title>Limitations</title>
+  <title>限制</title>
 
   <itemizedlist>
    <listitem>
     <para>
-     Dropping a table will still orphan any objects it contains, as the trigger
-     is not executed.  You can avoid this by preceding the <command>DROP
-     TABLE</command> with <command>DELETE FROM <replaceable>table</replaceable></command>.
+     删除表仍然会使其包含的任何对象成为孤立对象，因为触发器不会被执行。你可以通过在 <command>DROP
+     TABLE</command> 之前加上 <command>DELETE FROM <replaceable>table</replaceable></command> 来避免这种情况。
     </para>
 
     <para>
-     <command>TRUNCATE</command> has the same hazard.
+     <command>TRUNCATE</command> 也有同样的风险。
     </para>
 
     <para>
-     If you already have, or suspect you have, orphaned large objects, see the
-     <xref linkend="vacuumlo"/> module to help
-     you clean them up.  It's a good idea to run <application>vacuumlo</application>
-     occasionally as a back-stop to the <function>lo_manage</function> trigger.
+     如果你已经存在或怀疑存在孤立的大型对象，请参阅 <xref linkend="vacuumlo"/> 模块来帮助清理它们。偶尔运行 <application>vacuumlo</application> 作为 <function>lo_manage</function> 触发器的兜底是个好主意。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Some frontends may create their own tables, and will not create the
-     associated trigger(s).  Also, users may not remember (or know) to create
-     the triggers.
+     一些前端可能会创建它们自己的表，而不会创建关联的触发器。此外，用户可能不记得（或不知道）创建触发器。
     </para>
    </listitem>
   </itemizedlist>
  </sect2>
 
  <sect2 id="lo-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Peter Mount <email>peter@retep.org.uk</email>
