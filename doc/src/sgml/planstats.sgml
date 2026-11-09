@@ -537,66 +537,51 @@ EXPLAIN (ANALYZE, TIMING OFF, BUFFERS OFF) SELECT * FROM t WHERE a &lt;= 49 AND 
  </sect1>
 
  <sect1 id="planner-stats-security">
-  <title>Planner Statistics and Security</title>
+  <title>规划器统计信息与安全</title>
 
   <para>
-   Access to the table <structname>pg_statistic</structname> is restricted to
-   superusers, so that ordinary users cannot learn about the contents of the
-   tables of other users from it.  Some selectivity estimation functions will
-   use a user-provided operator (either the operator appearing in the query or
-   a related operator) to analyze the stored statistics.  For example, in order
-   to determine whether a stored most common value is applicable, the
-   selectivity estimator will have to run the appropriate <literal>=</literal>
-   operator to compare the constant in the query to the stored value.
-   Thus the data in <structname>pg_statistic</structname> is potentially
-   passed to user-defined operators.  An appropriately crafted operator can
-   intentionally leak the passed operands (for example, by logging them
-   or writing them to a different table), or accidentally leak them by showing
-   their values in error messages, in either case possibly exposing data from
-   <structname>pg_statistic</structname> to a user who should not be able to
-   see it.
+   对表 <structname>pg_statistic</structname> 的访问仅限于
+   超级用户，这样普通用户就无法从中了解到其他用户的表的内容。
+   某些选择率估算函数会使用用户提供的运算符（可能是查询中出现的运算符，
+   也可能是相关的运算符）来分析已存储的统计信息。例如，为了
+   判断某个已存储的最常见值是否适用，选择率估算器必须运行相应的 <literal>=</literal>
+   运算符，将查询中的常量与已存储的值进行比较。
+   因此，<structname>pg_statistic</structname> 中的数据有可能被传递给用户定义的运算符。
+   一个精心构造的运算符可以故意泄露传入的操作数（例如，通过记录它们
+   或将它们写入另一个表），或者通过错误消息显示其值而意外泄露它们，
+   无论哪种情况，都可能把 <structname>pg_statistic</structname> 中的数据暴露给本不应看到它的用户。
   </para>
 
   <para>
-   In order to prevent this, the following applies to all built-in selectivity
-   estimation functions.  When planning a query, in order to be able to use
-   stored statistics, the current user must either
-   have <literal>SELECT</literal> privilege on the table or the involved
-   columns, or the operator used must be <literal>LEAKPROOF</literal> (more
-   accurately, the function that the operator is based on).  If not, then the
-   selectivity estimator will behave as if no statistics are available, and
-   the planner will proceed with default or fall-back assumptions.
-   The <xref linkend="app-psql"/> program's
+   为了防止这种情况，以下规则适用于所有内置的选择率估算函数。
+   在规划查询时，为了能够使用已存储的统计信息，当前用户必须
+   对表或所涉及的列具有 <literal>SELECT</literal> 权限，或者所使用的运算符必须是 <literal>LEAKPROOF</literal>
+   （更准确地说，是该运算符所基于的函数）。否则，
+   选择率估算器将表现得如同没有可用的统计信息一样，
+   规划器将继续采用默认或后备假设。
+   <xref linkend="app-psql"/> 程序的
    <command><link linkend="app-psql-meta-command-do-lc">\do+</link></command>
-   meta-command is useful to determine which operators are marked as leakproof.
+   元命令可用于确定哪些运算符被标记为防泄露。
   </para>
 
   <para>
-   If a user does not have the required privilege on the table or columns,
-   then in many cases the query will ultimately receive a permission-denied
-   error, in which case this mechanism is invisible in practice.  But if the
-   user is reading from a security-barrier view, then the planner might wish
-   to check the statistics of an underlying table that is otherwise
-   inaccessible to the user.  In that case, the operator should be leakproof
-   or the statistics will not be used.  There is no direct feedback about
-   that, except that the plan might be suboptimal.  If one suspects that this
-   is the case, one could try running the query as a more privileged user,
-   to see if a different plan results.
+   如果用户对表或列没有所需的权限，
+   那么在许多情况下，查询最终会收到权限被拒绝的错误，
+   在这种情况下，该机制在实践中是不可见的。但如果
+   用户正在从安全屏障视图中读取数据，那么规划器可能希望
+   检查某个底层表的统计信息，而该表对用户本来是不可访问的。
+   在这种情况下，运算符应当是防泄露的，否则统计信息将不会被使用。
+   对此没有直接的反馈，只是执行计划可能不是最优的。如果怀疑
+   属于这种情况，可以尝试以权限更高的用户身份运行该查询，
+   看看是否会得到不同的执行计划。
   </para>
 
   <para>
-   This restriction applies only to cases where the planner would need to
-   execute a user-defined operator on one or more values
-   from <structname>pg_statistic</structname>.  Thus the planner is permitted
-   to use generic statistical information, such as the fraction of null values
-   or the number of distinct values in a column, regardless of access
-   privileges.
+   此限制仅适用于查询规划器需要对来自 <structname>pg_statistic</structname> 的一个或多个值执行用户定义运算符的情况。因此，无论访问权限如何，查询规划器都可以使用通用统计信息，例如空值所占比例或列中不同值的数量。
   </para>
 
   <para>
-   Selectivity estimation functions contained in third-party extensions that
-   potentially operate on statistics with user-defined operators should follow
-   the same security rules.  Consult the PostgreSQL source code for guidance.
+   第三方扩展中包含的选择率估算函数可能会使用用户定义运算符对统计信息进行操作，这些函数应遵循相同的安全规则。请参阅 PostgreSQL 源代码以获取指导。
   </para>
  </sect1>
 </chapter>
