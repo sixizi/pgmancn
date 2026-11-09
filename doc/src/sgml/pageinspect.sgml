@@ -1,20 +1,18 @@
 <!-- doc/src/sgml/pageinspect.sgml -->
 
 <sect1 id="pageinspect" xreflabel="pageinspect">
- <title>pageinspect &mdash; low-level inspection of database pages</title>
+ <title>pageinspect &mdash; 数据库页面的底层检查</title>
 
  <indexterm zone="pageinspect">
   <primary>pageinspect</primary>
  </indexterm>
 
  <para>
-  The <filename>pageinspect</filename> module provides functions that allow you to
-  inspect the contents of database pages at a low level, which is useful for
-  debugging purposes.  All of these functions may be used only by superusers.
+  <filename>pageinspect</filename> 模块提供的函数允许你在底层检查数据库页面的内容，这对于调试目的很有用。所有这些函数只能由超级用户使用。
  </para>
 
  <sect2 id="pageinspect-general-funcs">
-  <title>General Functions</title>
+  <title>通用函数</title>
 
   <variablelist>
    <varlistentry>
@@ -27,15 +25,7 @@
 
     <listitem>
      <para>
-      <function>get_raw_page</function> reads the specified block of the named
-      relation and returns a copy as a <type>bytea</type> value.  This allows a
-      single time-consistent copy of the block to be obtained.
-      <replaceable>fork</replaceable> should be <literal>'main'</literal> for
-      the main data fork, <literal>'fsm'</literal> for the
-      <link linkend="storage-fsm">free space map</link>,
-      <literal>'vm'</literal> for the
-      <link linkend="storage-vm">visibility map</link>, or
-      <literal>'init'</literal> for the initialization fork.
+      <function>get_raw_page</function> 读取指定关系的指定块，并以 <type>bytea</type> 值的形式返回副本。这样可以获得该块的一个时间一致的副本。<replaceable>fork</replaceable> 对于主数据分支应为 <literal>'main'</literal>，对于<link linkend="storage-fsm">空闲空间映射</link>应为 <literal>'fsm'</literal>，对于<link linkend="storage-vm">可见性映射</link>应为 <literal>'vm'</literal>，对于初始化分支应为 <literal>'init'</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -47,8 +37,7 @@
 
     <listitem>
      <para>
-      A shorthand version of <function>get_raw_page</function>, for reading
-      from the main fork.  Equivalent to
+      <function>get_raw_page</function> 的简写版本，用于从主分支读取。等价于
       <literal>get_raw_page(relname, 'main', blkno)</literal>
      </para>
     </listitem>
@@ -64,29 +53,23 @@
 
     <listitem>
      <para>
-      <function>page_header</function> shows fields that are common to all
-      <productname>PostgreSQL</productname> heap and index pages.
+      <function>page_header</function> 显示了所有 <productname>PostgreSQL</productname> 堆页和索引页共有的字段。
      </para>
 
      <para>
-      A page image obtained with <function>get_raw_page</function> should be
-      passed as argument.  For example:
+      应把用 <function>get_raw_page</function> 获得的页面映像作为参数传入。例如：
 <screen>
 test=# SELECT * FROM page_header(get_raw_page('pg_class', 0));
     lsn    | checksum | flags  | lower | upper | special | pagesize | version | prune_xid
 -----------+----------+--------+-------+-------+---------+----------+---------+-----------
  0/24A1B50 |        0 |      1 |   232 |   368 |    8192 |     8192 |       4 |         0
 </screen>
-      The returned columns correspond to the fields in the
-      <structname>PageHeaderData</structname> struct.
-      See <filename>src/include/storage/bufpage.h</filename> for details.
+      返回的列对应于 <structname>PageHeaderData</structname> 结构体中的字段。
+      详情请见 <filename>src/include/storage/bufpage.h</filename>。
      </para>
 
      <para>
-      The <structfield>checksum</structfield> field is the checksum stored in
-      the page, which might be incorrect if the page is somehow corrupted.  If
-      data checksums are disabled for this instance, then the value stored
-      is meaningless.
+      <structfield>checksum</structfield> 字段是存储在页面中的校验和，如果页面以某种方式损坏，该值可能不正确。如果此实例禁用了数据校验和，那么存储的值没有意义。
      </para>
     </listitem>
    </varlistentry>
@@ -101,28 +84,22 @@ test=# SELECT * FROM page_header(get_raw_page('pg_class', 0));
 
     <listitem>
      <para>
-      <function>page_checksum</function> computes the checksum for the page, as if
-      it was located at the given block.
+      <function>page_checksum</function> 计算该页面的校验和，就好像它位于给定的块中一样。
      </para>
 
      <para>
-      A page image obtained with <function>get_raw_page</function> should be
-      passed as argument.  For example:
+      使用 <function>get_raw_page</function> 获取的页面映像应作为参数传入。例如：
 <screen>
 test=# SELECT page_checksum(get_raw_page('pg_class', 0), 0);
  page_checksum
 ---------------
          13443
 </screen>
-      Note that the checksum depends on the block number, so matching block
-      numbers should be passed (except when doing esoteric debugging).
+      请注意，校验和取决于块号，因此应传入匹配的块号（除非进行非常规调试）。
      </para>
 
      <para>
-      The checksum computed with this function can be compared with
-      the <structfield>checksum</structfield> result field of the
-      function <function>page_header</function>.  If data checksums are
-      enabled for this instance, then the two values should be equal.
+      使用此函数计算出的校验和可以与函数 <function>page_header</function> 的 <structfield>checksum</structfield> 结果字段进行比较。如果为此实例启用了数据校验和，那么这两个值应当相等。
      </para>
     </listitem>
    </varlistentry>
@@ -137,19 +114,14 @@ test=# SELECT page_checksum(get_raw_page('pg_class', 0), 0);
 
     <listitem>
      <para>
-      <function>fsm_page_contents</function> shows the internal node structure
-      of an <acronym>FSM</acronym> page.  For example:
+      <function>fsm_page_contents</function> 显示 <acronym>FSM</acronym> 页面的内部节点结构。例如：
 <screen>
 test=# SELECT fsm_page_contents(get_raw_page('pg_class', 'fsm', 0));
 </screen>
-      The output is a multiline string, with one line per node in the binary
-      tree within the page.  Only those nodes that are not zero are printed.
-      The so-called "next" pointer, which points to the next slot to be
-      returned from the page, is also printed.
+      输出是一个多行字符串，页面内二叉树的每个节点占一行。只打印非零的节点。还会打印所谓的“next”指针，它指向该页面中下一个要返回的槽位。
      </para>
      <para>
-      See <filename>src/backend/storage/freespace/README</filename> for more
-      information on the structure of an <acronym>FSM</acronym> page.
+      有关 <acronym>FSM</acronym> 页面结构的更多信息，请参见 <filename>src/backend/storage/freespace/README</filename>。
      </para>
     </listitem>
    </varlistentry>
@@ -157,7 +129,7 @@ test=# SELECT fsm_page_contents(get_raw_page('pg_class', 'fsm', 0));
  </sect2>
 
  <sect2 id="pageinspect-heap-funcs">
-  <title>Heap Functions</title>
+  <title>堆函数</title>
 
   <variablelist>
    <varlistentry>
@@ -170,26 +142,17 @@ test=# SELECT fsm_page_contents(get_raw_page('pg_class', 'fsm', 0));
 
     <listitem>
      <para>
-      <function>heap_page_items</function> shows all line pointers on a heap
-      page.  For those line pointers that are in use, tuple headers as well
-      as tuple raw data are also shown. All tuples are shown, whether or not
-      the tuples were visible to an MVCC snapshot at the time the raw page
-      was copied.
+      <function>heap_page_items</function> 显示堆页面上的所有行指针。对于其中正在使用的行指针，还会显示元组头以及元组原始数据。所有元组都会显示，无论这些元组在复制原始页面时对 MVCC 快照是否可见。
      </para>
      <para>
-      A heap page image obtained with <function>get_raw_page</function> should
-      be passed as argument.  For example:
+      通过 <function>get_raw_page</function> 获得的堆页面映像应作为参数传入。例如：
 <screen>
 test=# SELECT * FROM heap_page_items(get_raw_page('pg_class', 0));
 </screen>
-      See <filename>src/include/storage/itemid.h</filename> and
-      <filename>src/include/access/htup_details.h</filename> for explanations of the fields
-      returned.
+      有关返回字段的说明，请参见 <filename>src/include/storage/itemid.h</filename> 和 <filename>src/include/access/htup_details.h</filename>。
      </para>
      <para>
-      The <function>heap_tuple_infomask_flags</function> function can be
-      used to unpack the flag bits of <structfield>t_infomask</structfield>
-      and <structfield>t_infomask2</structfield> for heap tuples.
+      <function>heap_tuple_infomask_flags</function> 函数可用于解包堆元组的 <structfield>t_infomask</structfield> 和 <structfield>t_infomask2</structfield> 的标志位。
      </para>
     </listitem>
    </varlistentry>
@@ -203,18 +166,14 @@ test=# SELECT * FROM heap_page_items(get_raw_page('pg_class', 0));
     </term>
     <listitem>
      <para>
-      <function>tuple_data_split</function> splits tuple data into attributes
-      in the same way as backend internals.
+      <function>tuple_data_split</function> 按照与后端内部相同的方式将元组数据拆分为属性。
 <screen>
 test=# SELECT tuple_data_split('pg_class'::regclass, t_data, t_infomask, t_infomask2, t_bits) FROM heap_page_items(get_raw_page('pg_class', 0));
 </screen>
-      This function should be called with the same arguments as the return
-      attributes of <function>heap_page_items</function>.
+      调用此函数时应使用与 <function>heap_page_items</function> 的返回属性相同的参数。
      </para>
      <para>
-      If <parameter>do_detoast</parameter> is <literal>true</literal>,
-      attributes will be detoasted as needed. Default value is
-      <literal>false</literal>.
+      如果 <parameter>do_detoast</parameter> 为 <literal>true</literal>，则属性将按需解压。默认值为 <literal>false</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -235,8 +194,7 @@ test=# SELECT tuple_data_split('pg_class'::regclass, t_data, t_infomask, t_infom
       <literal>false</literal> by default.
      </para>
      <para>
-      A heap page image obtained with <function>get_raw_page</function> should
-      be passed as argument.  For example:
+      应把用 <function>get_raw_page</function> 获得的堆页面映像作为参数传入。例如：
 <screen>
 test=# SELECT * FROM heap_page_item_attrs(get_raw_page('pg_class', 0), 'pg_class'::regclass);
 </screen>
@@ -253,29 +211,20 @@ test=# SELECT * FROM heap_page_item_attrs(get_raw_page('pg_class', 0), 'pg_class
     </term>
     <listitem>
      <para>
-      <function>heap_tuple_infomask_flags</function> decodes the
-      <structfield>t_infomask</structfield> and
-      <structfield>t_infomask2</structfield> returned by
-      <function>heap_page_items</function> into a human-readable
-      set of arrays made of flag names, with one column for all
-      the flags and one column for combined flags. For example:
+      <function>heap_tuple_infomask_flags</function> 把 <function>heap_page_items</function> 返回的 <structfield>t_infomask</structfield> 和 <structfield>t_infomask2</structfield> 解码成一组人类可读的、由标志名构成的数组，其中一列包含所有标志，一列包含组合标志。例如：
 <screen>
 test=# SELECT t_ctid, raw_flags, combined_flags
          FROM heap_page_items(get_raw_page('pg_class', 0)),
            LATERAL heap_tuple_infomask_flags(t_infomask, t_infomask2)
          WHERE t_infomask IS NOT NULL OR t_infomask2 IS NOT NULL;
 </screen>
-      This function should be called with the same arguments as the return
-      attributes of <function>heap_page_items</function>.
+      调用该函数时应使用与 <function>heap_page_items</function> 的返回属性相同的参数。
      </para>
      <para>
-      Combined flags are displayed for source-level macros that take into
-      account the value of more than one raw bit, such as
-      <literal>HEAP_XMIN_FROZEN</literal>.
+      对于考虑多个原始位取值的源代码级宏，会显示组合标志，例如 <literal>HEAP_XMIN_FROZEN</literal>。
      </para>
      <para>
-      See <filename>src/include/access/htup_details.h</filename> for
-      explanations of the flag names returned.
+      有关返回的标志名称的说明，请参见 <filename>src/include/access/htup_details.h</filename>。
      </para>
     </listitem>
    </varlistentry>
@@ -283,7 +232,7 @@ test=# SELECT t_ctid, raw_flags, combined_flags
  </sect2>
 
  <sect2 id="pageinspect-b-tree-funcs">
-  <title>B-Tree Functions</title>
+  <title>B-Tree 函数</title>
 
   <variablelist>
    <varlistentry>
@@ -296,8 +245,7 @@ test=# SELECT t_ctid, raw_flags, combined_flags
 
     <listitem>
      <para>
-      <function>bt_metap</function> returns information about a B-tree
-      index's metapage.  For example:
+      <function>bt_metap</function> 返回有关 B-tree 索引元页的信息。例如：
 <screen>
 test=# SELECT * FROM bt_metap('pg_cast_oid_index');
 -[ RECORD 1 ]-------------+-------
@@ -325,8 +273,7 @@ allequalimage             | f
 
     <listitem>
      <para>
-      <function>bt_page_stats</function> returns summary information about
-      a data page of a B-tree index.  For example:
+      <function>bt_page_stats</function> 返回 B-tree 索引数据页的摘要信息。例如：
 <screen>
 test=# SELECT * FROM bt_page_stats('pg_cast_oid_index', 1);
 -[ RECORD 1 ]-+-----
@@ -356,13 +303,7 @@ btpo_flags    | 3
 
     <listitem>
      <para>
-      <function>bt_multi_page_stats</function> returns the same information
-      as <function>bt_page_stats</function>, but does so for each page of the
-      range of pages beginning at <parameter>blkno</parameter> and extending
-      for <parameter>blk_count</parameter> pages.
-      If <parameter>blk_count</parameter> is negative, all pages
-      from <parameter>blkno</parameter> to the end of the index are reported
-      on.  For example:
+      <function>bt_multi_page_stats</function> 返回与 <function>bt_page_stats</function> 相同的信息，但会针对从 <parameter>blkno</parameter> 开始、延伸 <parameter>blk_count</parameter> 页的页范围中的每一页分别返回。如果 <parameter>blk_count</parameter> 为负数，则报告从 <parameter>blkno</parameter> 到索引末尾的所有页。例如：
 <screen>
 test=# SELECT * FROM bt_multi_page_stats('pg_proc_oid_index', 5, 2);
 -[ RECORD 1 ]-+-----
@@ -404,8 +345,7 @@ btpo_flags    | 1
 
     <listitem>
      <para>
-      <function>bt_page_items</function> returns detailed information about
-      all of the items on a B-tree index page.  For example:
+      <function>bt_page_items</function> 返回 B-tree 索引页上所有条目的详细信息。例如：
 <screen>
 test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2] AS some_tids
         FROM bt_page_items('tenk2_hundred', 5);
@@ -426,50 +366,16 @@ test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2
          13 | (16,8292) |     616 | f     | f    | 2f 00 00 00 00 00 00 00 | f    | (4,17) | {"(4,17)","(4,21)"}
 (13 rows)
 </screen>
-      This is a B-tree leaf page.  All tuples that point to the table
-      happen to be posting list tuples (all of which store a total of
-      100 6 byte TIDs).  There is also a <quote>high key</quote> tuple
-      at <literal>itemoffset</literal> number 1.
-      <structfield>ctid</structfield> is used to store encoded
-      information about each tuple in this example, though leaf page
-      tuples often store a heap TID directly in the
-      <structfield>ctid</structfield> field instead.
-      <structfield>tids</structfield> is the list of TIDs stored as a
-      posting list.
+      这是一个 B-tree 叶子页。指向该表的所有元组恰好都是 posting list 元组（它们总共存储 100 个 6 字节的 TID）。在 <literal>itemoffset</literal> 编号 1 处还有一个<quote>high key</quote>元组。在此示例中，<structfield>ctid</structfield> 用于存储每个元组的编码信息，不过叶子页元组通常直接在 <structfield>ctid</structfield> 字段中存储堆 TID。<structfield>tids</structfield> 是以 posting list 形式存储的 TID 列表。
      </para>
      <para>
-      In an internal page (not shown), the block number part of
-      <structfield>ctid</structfield> is a <quote>downlink</quote>,
-      which is a block number of another page in the index itself.
-      The offset part (the second number) of
-      <structfield>ctid</structfield> stores encoded information about
-      the tuple, such as the number of columns present (suffix
-      truncation may have removed unneeded suffix columns).  Truncated
-      columns are treated as having the value <quote>minus
-       infinity</quote>.
+      在内部页（未展示）中，<structfield>ctid</structfield> 的块号部分是<quote>downlink</quote>，即索引自身中另一个页的块号。<structfield>ctid</structfield> 的偏移量部分（第二个数字）存储关于该元组的编码信息，例如存在的列数（后缀截断可能已移除不需要的后缀列）。被截断的列被视为具有<quote>负无穷</quote>值。
      </para>
      <para>
-      <structfield>htid</structfield> shows a heap TID for the tuple,
-      regardless of the underlying tuple representation.  This value
-      may match <structfield>ctid</structfield>, or may be decoded
-      from the alternative representations used by posting list tuples
-      and tuples from internal pages.  Tuples in internal pages
-      usually have the implementation level heap TID column truncated
-      away, which is represented as a NULL
-      <structfield>htid</structfield> value.
+      <structfield>htid</structfield> 显示该元组的堆 TID，无论底层元组表示形式如何。该值可能与 <structfield>ctid</structfield> 匹配，也可能是从 posting list 元组和内部页元组所使用的替代表示形式解码得到的。内部页中的元组通常会截断实现层面的堆 TID 列，这表示为 NULL 的 <structfield>htid</structfield> 值。
      </para>
      <para>
-      Note that the first item on any non-rightmost page (any page with
-      a non-zero value in the <structfield>btpo_next</structfield> field) is the
-      page's <quote>high key</quote>, meaning its <structfield>data</structfield>
-      serves as an upper bound on all items appearing on the page, while
-      its <structfield>ctid</structfield> field does not point to
-      another block.  Also, on internal pages, the first real data
-      item (the first item that is not a high key) reliably has every
-      column truncated away, leaving no actual value in its
-      <structfield>data</structfield> field.  Such an item does have a
-      valid downlink in its <structfield>ctid</structfield> field,
-      however.
+      请注意，任何非最右侧页（即在 <structfield>btpo_next</structfield> 字段中具有非零值的任何页）上的第一个项是该页的 <quote>high key</quote>，这意味着它的 <structfield>data</structfield> 充当该页上出现的所有项的上界，而它的 <structfield>ctid</structfield> 字段不指向另一个块。此外，在内部页上，第一个真实数据项（第一个不是 high key 的项）的每一列都可靠地被截断，其 <structfield>data</structfield> 字段中不留下任何实际值。不过，这样的项在其 <structfield>ctid</structfield> 字段中确实有一个有效的向下链接。
      </para>
      <para>
       For more details about the structure of B-tree indexes, see
@@ -490,10 +396,7 @@ test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2
 
     <listitem>
      <para>
-      It is also possible to pass a page to <function>bt_page_items</function>
-      as a <type>bytea</type> value.  A page image obtained
-      with <function>get_raw_page</function> should be passed as argument.  So
-      the last example could also be rewritten like this:
+      也可以将页作为 <type>bytea</type> 值传递给 <function>bt_page_items</function>。应传入用 <function>get_raw_page</function> 获得的页镜像作为参数。因此，上一个示例也可以改写如下：
 <screen>
 test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2] AS some_tids
         FROM bt_page_items(get_raw_page('tenk2_hundred', 5));
@@ -514,7 +417,7 @@ test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2
          13 | (16,8292) |     616 | f     | f    | 2f 00 00 00 00 00 00 00 | f    | (4,17) | {"(4,17)","(4,21)"}
 (13 rows)
 </screen>
-      All the other details are the same as explained in the previous item.
+      其他所有细节与上一项中说明的相同。
      </para>
     </listitem>
    </varlistentry>
@@ -522,7 +425,7 @@ test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2
  </sect2>
 
  <sect2 id="pageinspect-brin-funcs">
-  <title>BRIN Functions</title>
+  <title>BRIN 函数</title>
 
   <variablelist>
    <varlistentry>
@@ -535,9 +438,7 @@ test=# SELECT itemoffset, ctid, itemlen, nulls, vars, data, dead, htid, tids[0:2
 
     <listitem>
      <para>
-      <function>brin_page_type</function> returns the page type of the given
-      <acronym>BRIN</acronym> index page, or throws an error if the page is
-      not a valid <acronym>BRIN</acronym> page.  For example:
+      <function>brin_page_type</function> 返回给定 <acronym>BRIN</acronym> 索引页的页类型，如果该页不是有效的 <acronym>BRIN</acronym> 页则抛出错误。例如：
 <screen>
 test=# SELECT brin_page_type(get_raw_page('brinidx', 0));
  brin_page_type
@@ -558,8 +459,7 @@ test=# SELECT brin_page_type(get_raw_page('brinidx', 0));
 
     <listitem>
      <para>
-      <function>brin_metapage_info</function> returns assorted information
-      about a <acronym>BRIN</acronym> index metapage.  For example:
+      <function>brin_metapage_info</function> 返回有关 <acronym>BRIN</acronym> 索引元页的各种信息。例如：
 <screen>
 test=# SELECT * FROM brin_metapage_info(get_raw_page('brinidx', 0));
    magic    | version | pagesperrange | lastrevmappage
@@ -580,9 +480,7 @@ test=# SELECT * FROM brin_metapage_info(get_raw_page('brinidx', 0));
 
     <listitem>
      <para>
-      <function>brin_revmap_data</function> returns the list of tuple
-      identifiers in a <acronym>BRIN</acronym> index range map page.
-      For example:
+      <function>brin_revmap_data</function> 返回 <acronym>BRIN</acronym> 索引范围映射页中的元组标识符列表。例如：
 <screen>
 test=# SELECT * FROM brin_revmap_data(get_raw_page('brinidx', 2)) LIMIT 5;
   pages
@@ -607,8 +505,7 @@ test=# SELECT * FROM brin_revmap_data(get_raw_page('brinidx', 2)) LIMIT 5;
 
     <listitem>
      <para>
-      <function>brin_page_items</function> returns the data stored in the
-      <acronym>BRIN</acronym> data page.  For example:
+      <function>brin_page_items</function> 返回存储在 <acronym>BRIN</acronym> 数据页中的数据。例如：
 <screen>
 test=# SELECT * FROM brin_page_items(get_raw_page('brinidx', 5),
                                      'brinidx')
@@ -622,9 +519,7 @@ test=# SELECT * FROM brin_page_items(get_raw_page('brinidx', 5),
         139 |      8 |      1 | t        | f        | f           | f     |
         139 |      8 |      2 | f        | f        | f           | f     | {177 .. 264}
 </screen>
-      The returned columns correspond to the fields in the
-      <structname>BrinMemTuple</structname> and <structname>BrinValues</structname> structs.
-      See <filename>src/include/access/brin_tuple.h</filename> for details.
+      返回的列对应于 <structname>BrinMemTuple</structname> 和 <structname>BrinValues</structname> 结构体中的字段。详情请参见 <filename>src/include/access/brin_tuple.h</filename>。
      </para>
     </listitem>
    </varlistentry>
@@ -632,7 +527,7 @@ test=# SELECT * FROM brin_page_items(get_raw_page('brinidx', 5),
  </sect2>
 
  <sect2 id="pageinspect-gin-funcs">
-  <title>GIN Functions</title>
+  <title>GIN 函数</title>
 
   <variablelist>
    <varlistentry>
@@ -645,8 +540,7 @@ test=# SELECT * FROM brin_page_items(get_raw_page('brinidx', 5),
 
     <listitem>
      <para>
-      <function>gin_metapage_info</function> returns information about
-      a <acronym>GIN</acronym> index metapage.  For example:
+      <function>gin_metapage_info</function> 返回关于 <acronym>GIN</acronym> 索引元页的信息。例如：
 <screen>
 test=# SELECT * FROM gin_metapage_info(get_raw_page('gin_index', 0));
 -[ RECORD 1 ]----+-----------
@@ -675,9 +569,7 @@ version          | 2
 
     <listitem>
      <para>
-      <function>gin_page_opaque_info</function> returns information about
-      a <acronym>GIN</acronym> index opaque area, like the page type.
-      For example:
+      <function>gin_page_opaque_info</function> 返回关于 <acronym>GIN</acronym> 索引不透明区域的信息，例如页类型。例如：
 <screen>
 test=# SELECT * FROM gin_page_opaque_info(get_raw_page('gin_index', 2));
  rightlink | maxoff |         flags
@@ -699,8 +591,7 @@ test=# SELECT * FROM gin_page_opaque_info(get_raw_page('gin_index', 2));
 
     <listitem>
      <para>
-      <function>gin_leafpage_items</function> returns information about
-      the data stored in a compressed <acronym>GIN</acronym> leaf page.  For example:
+      <function>gin_leafpage_items</function> 返回关于存储在压缩的 <acronym>GIN</acronym> 叶子页中的数据的信息。例如：
 <screen>
 test=# SELECT first_tid, nbytes, tids[0:5] AS some_tids
         FROM gin_leafpage_items(get_raw_page('gin_test_idx', 2));
@@ -722,7 +613,7 @@ test=# SELECT first_tid, nbytes, tids[0:5] AS some_tids
  </sect2>
 
  <sect2 id="pageinspect-gist-funcs">
-  <title>GiST Functions</title>
+  <title>GiST 函数</title>
 
   <variablelist>
    <varlistentry>
@@ -735,10 +626,7 @@ test=# SELECT first_tid, nbytes, tids[0:5] AS some_tids
 
     <listitem>
      <para>
-      <function>gist_page_opaque_info</function> returns information from
-      a <acronym>GiST</acronym> index page's opaque area, such as the NSN,
-      rightlink and page type.
-      For example:
+      <function>gist_page_opaque_info</function> 从 <acronym>GiST</acronym> 索引页的不透明区域返回信息，例如 NSN、rightlink 和页类型。例如：
 <screen>
 test=# SELECT * FROM gist_page_opaque_info(get_raw_page('test_gist_idx', 2));
  lsn | nsn | rightlink | flags
@@ -760,8 +648,7 @@ test=# SELECT * FROM gist_page_opaque_info(get_raw_page('test_gist_idx', 2));
 
     <listitem>
      <para>
-      <function>gist_page_items</function> returns information about
-      the data stored in a page of a <acronym>GiST</acronym> index.  For example:
+      <function>gist_page_items</function> 返回 <acronym>GiST</acronym> 索引中某一页所存储数据的信息。例如：
 <screen>
 test=# SELECT * FROM gist_page_items(get_raw_page('test_gist_idx', 0), 'test_gist_idx');
  itemoffset |   ctid    | itemlen | dead |             keys
@@ -788,10 +675,7 @@ test=# SELECT * FROM gist_page_items(get_raw_page('test_gist_idx', 0), 'test_gis
 
     <listitem>
      <para>
-      Same as <function>gist_page_items</function>, but returns the key data
-      as a raw <type>bytea</type> blob.  Since it does not attempt to decode
-      the key, it does not need to know which index is involved.  For
-      example:
+      与 <function>gist_page_items</function> 相同，但以原始 <type>bytea</type> 二进制大对象的形式返回键数据。由于它不尝试解码键，因此不需要知道涉及的是哪个索引。例如：
 <screen>
 test=# SELECT * FROM gist_page_items_bytea(get_raw_page('test_gist_idx', 0));
  itemoffset |   ctid    | itemlen | dead |                                      key_data
@@ -812,7 +696,7 @@ test=# SELECT * FROM gist_page_items_bytea(get_raw_page('test_gist_idx', 0));
  </sect2>
 
  <sect2 id="pageinspect-hash-funcs">
-  <title>Hash Functions</title>
+  <title>哈希函数</title>
 
   <variablelist>
    <varlistentry>
@@ -825,8 +709,7 @@ test=# SELECT * FROM gist_page_items_bytea(get_raw_page('test_gist_idx', 0));
 
     <listitem>
      <para>
-      <function>hash_page_type</function> returns page type of
-      the given <acronym>HASH</acronym> index page.  For example:
+      <function>hash_page_type</function> 返回给定 <acronym>HASH</acronym> 索引页的页类型。例如：
 <screen>
 test=# SELECT hash_page_type(get_raw_page('con_hash_index', 0));
  hash_page_type
@@ -847,9 +730,7 @@ test=# SELECT hash_page_type(get_raw_page('con_hash_index', 0));
 
     <listitem>
      <para>
-      <function>hash_page_stats</function> returns information about
-      a bucket or overflow page of a <acronym>HASH</acronym> index.
-      For example:
+      <function>hash_page_stats</function> 返回关于 <acronym>HASH</acronym> 索引的桶或溢出页的信息。例如：
 <screen>
 test=# SELECT * FROM hash_page_stats(get_raw_page('con_hash_index', 1));
 -[ RECORD 1 ]---+-----------
@@ -877,9 +758,7 @@ hasho_page_id   | 65408
 
     <listitem>
      <para>
-      <function>hash_page_items</function> returns information about
-      the data stored in a bucket or overflow page of a <acronym>HASH</acronym>
-      index page.  For example:
+      <function>hash_page_items</function> 返回关于存储在 <acronym>HASH</acronym> 索引页的桶或溢出页中的数据的信 息。例如：
 <screen>
 test=# SELECT * FROM hash_page_items(get_raw_page('con_hash_index', 1)) LIMIT 5;
  itemoffset |   ctid    |    data
@@ -904,9 +783,7 @@ test=# SELECT * FROM hash_page_items(get_raw_page('con_hash_index', 1)) LIMIT 5;
 
     <listitem>
      <para>
-      <function>hash_bitmap_info</function> shows the status of a bit
-      in the bitmap page for a particular overflow page of <acronym>HASH</acronym>
-      index. For example:
+      <function>hash_bitmap_info</function> 显示 <acronym>HASH</acronym> 索引某个特定溢出页的位图页中某一位的状态。例如：
 <screen>
 test=# SELECT * FROM hash_bitmap_info('con_hash_index', 2052);
  bitmapblkno | bitmapbit | bitstatus
@@ -927,8 +804,7 @@ test=# SELECT * FROM hash_bitmap_info('con_hash_index', 2052);
 
     <listitem>
      <para>
-      <function>hash_metapage_info</function> returns information stored
-      in the meta page of a <acronym>HASH</acronym> index.  For example:
+      <function>hash_metapage_info</function> 返回存储在 <acronym>HASH</acronym> 索引的元页中的信息。例如：
 <screen>
 test=# SELECT magic, version, ntuples, ffactor, bsize, bmsize, bmshift,
 test-#     maxbucket, highmask, lowmask, ovflpoint, firstfree, nmaps, procid,
