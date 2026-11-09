@@ -1,45 +1,31 @@
 <!-- doc/src/sgml/auto-explain.sgml -->
 
 <sect1 id="auto-explain" xreflabel="auto_explain">
- <title>auto_explain &mdash; log execution plans of slow queries</title>
+ <title>auto_explain &mdash; 记录慢查询的执行计划</title>
 
  <indexterm zone="auto-explain">
   <primary>auto_explain</primary>
  </indexterm>
 
  <para>
-  The <filename>auto_explain</filename> module provides a means for
-  logging execution plans of slow statements automatically, without
-  having to run <xref linkend="sql-explain"/>
-  by hand.  This is especially helpful for tracking down un-optimized queries
-  in large applications.
+  <filename>auto_explain</filename> 模块提供了一种自动记录慢语句执行计划的方法，而无需手动运行 <xref linkend="sql-explain"/>。这对于在大型应用中追踪未优化的查询尤其有用。
  </para>
 
  <para>
-  The module provides no SQL-accessible functions.  To use it, simply
-  load it into the server.  You can load it into an individual session:
+  该模块不提供任何可通过 SQL 访问的函数。要使用它，只需将其加载到服务器中。你可以将其加载到单个会话中：
 
 <programlisting>
 LOAD 'auto_explain';
 </programlisting>
 
-  (You must be superuser to do that.)  More typical usage is to preload
-  it into some or all sessions by including <literal>auto_explain</literal> in
-  <xref linkend="guc-session-preload-libraries"/> or
-  <xref linkend="guc-shared-preload-libraries"/> in
-  <filename>postgresql.conf</filename>.  Then you can track unexpectedly slow queries
-  no matter when they happen.  Of course there is a price in overhead for
-  that.
+  （你必须具有超级用户身份才能这样做。）更典型的用法是通过在 <filename>postgresql.conf</filename> 中的 <xref linkend="guc-session-preload-libraries"/> 或 <xref linkend="guc-shared-preload-libraries"/> 里包含 <literal>auto_explain</literal>，将其预加载到部分或全部会话中。这样无论意外缓慢的查询何时发生，你都可以追踪它们。当然，这会带来额外的开销。
  </para>
 
  <sect2 id="auto-explain-configuration-parameters">
-  <title>Configuration Parameters</title>
+  <title>配置参数</title>
 
  <para>
-  There are several configuration parameters that control the behavior of
-  <filename>auto_explain</filename>.  Note that the default behavior is
-  to do nothing, so you must set at least
-  <varname>auto_explain.log_min_duration</varname> if you want any results.
+  有若干配置参数控制 <filename>auto_explain</filename> 的行为。请注意，默认行为是什么都不做，因此如果你希望得到任何结果，至少必须设置 <varname>auto_explain.log_min_duration</varname>。
  </para>
 
   <variablelist>
@@ -47,18 +33,12 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_min_duration</varname> (<type>integer</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_min_duration</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_min_duration</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_min_duration</varname> is the minimum statement
-      execution time, in milliseconds, that will cause the statement's plan to
-      be logged. Setting this to <literal>0</literal> logs all plans.
-      <literal>-1</literal> (the default) disables logging of plans. For
-      example, if you set it to <literal>250ms</literal> then all statements
-      that run 250ms or longer will be logged. Only superusers can change this
-      setting.
+      <varname>auto_explain.log_min_duration</varname> 是导致语句的计划被记录的最小语句执行时间（以毫秒为单位）。将其设置为 <literal>0</literal> 会记录所有计划。<literal>-1</literal>（默认值）会禁用计划记录。例如，如果将其设置为 <literal>250ms</literal>，那么所有运行时间达到 250ms 或更长的语句都会被记录。只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -67,17 +47,12 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_parameter_max_length</varname> (<type>integer</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_parameter_max_length</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_parameter_max_length</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_parameter_max_length</varname> controls the
-      logging of query parameter values. A value of <literal>-1</literal> (the
-      default) logs the parameter values in full. <literal>0</literal> disables
-      logging of parameter values. A value greater than zero truncates each
-      parameter value to that many bytes. Only superusers can change this
-      setting.
+      <varname>auto_explain.log_parameter_max_length</varname> 控制查询参数值的记录。值为 <literal>-1</literal>（默认值）时会完整记录参数值。<literal>0</literal> 会禁用参数值的记录。大于零的值会将每个参数值截断为该字节数。只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -86,23 +61,16 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_analyze</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_analyze</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_analyze</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_analyze</varname> causes <command>EXPLAIN ANALYZE</command>
-      output, rather than just <command>EXPLAIN</command> output, to be printed
-      when an execution plan is logged. This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_analyze</varname> 使得在记录执行计划时，会打印 <command>EXPLAIN ANALYZE</command> 输出，而不仅仅是 <command>EXPLAIN</command> 输出。此参数默认关闭。只有超级用户才能更改此设置。
      </para>
      <note>
       <para>
-       When this parameter is on, per-plan-node timing occurs for all
-       statements executed, whether or not they run long enough to actually
-       get logged.  This can have an extremely negative impact on performance.
-       Turning off <varname>auto_explain.log_timing</varname> ameliorates the
-       performance cost, at the price of obtaining less information.
+       当此参数开启时，所有已执行的语句都会产生按计划节点的计时，无论它们的运行时间是否长到足以真正被记录。这可能对性能产生极其负面的影响。关闭 <varname>auto_explain.log_timing</varname> 可以减轻性能开销，代价是获得的信息更少。
       </para>
      </note>
     </listitem>
@@ -112,18 +80,15 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_buffers</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_buffers</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_buffers</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_buffers</varname> controls whether buffer
-      usage statistics are printed when an execution plan is logged; it's
-      equivalent to the <literal>BUFFERS</literal> option of <command>EXPLAIN</command>.
-      This parameter has no effect
-      unless <varname>auto_explain.log_analyze</varname> is enabled.
-      This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_buffers</varname> 控制是否在记录执行计划时打印缓冲区使用统计信息；它等价于 <literal>BUFFERS</literal> 选项（即 <command>EXPLAIN</command> 的选项）。
+      除非启用了 <varname>auto_explain.log_analyze</varname>，否则此参数不起作用。
+      此参数默认关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -132,18 +97,15 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_wal</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_wal</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_wal</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_wal</varname> controls whether WAL
-      usage statistics are printed when an execution plan is logged; it's
-      equivalent to the <literal>WAL</literal> option of <command>EXPLAIN</command>.
-      This parameter has no effect
-      unless <varname>auto_explain.log_analyze</varname> is enabled.
-      This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_wal</varname> 控制是否在记录执行计划时打印 WAL 使用统计信息；它等价于 <literal>WAL</literal> 选项（即 <command>EXPLAIN</command> 的选项）。
+      除非启用了 <varname>auto_explain.log_analyze</varname>，否则此参数不起作用。
+      此参数默认关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -152,22 +114,16 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_timing</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_timing</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_timing</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_timing</varname> controls whether per-node
-      timing information is printed when an execution plan is logged; it's
-      equivalent to the <literal>TIMING</literal> option of <command>EXPLAIN</command>.
-      The overhead of repeatedly reading the system clock can slow down
-      queries significantly on some systems, so it may be useful to set this
-      parameter to off when only actual row counts, and not exact times, are
-      needed.
-      This parameter has no effect
-      unless <varname>auto_explain.log_analyze</varname> is enabled.
-      This parameter is on by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_timing</varname> 控制是否在记录执行计划时打印每个节点的计时信息；它等价于 <literal>TIMING</literal> 选项（即 <command>EXPLAIN</command> 的选项）。
+      在某些系统上，反复读取系统时钟的开销会显著拖慢查询速度，因此当只需要实际的行数而不需要精确的时间时，将此参数设置为 off 可能很有用。
+      除非启用了 <varname>auto_explain.log_analyze</varname>，否则此参数不起作用。
+      此参数默认开启。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -176,17 +132,16 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_triggers</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_triggers</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_triggers</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_triggers</varname> causes trigger
-      execution statistics to be included when an execution plan is logged.
-      This parameter has no effect
-      unless <varname>auto_explain.log_analyze</varname> is enabled.
-      This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_triggers</varname> 使得在记录执行计划时包含触发器
+      执行统计信息。
+      除非启用了 <varname>auto_explain.log_analyze</varname>，否则此参数无效。
+      此参数默认为关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -195,16 +150,15 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_verbose</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_verbose</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_verbose</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_verbose</varname> controls whether verbose
-      details are printed when an execution plan is logged; it's
-      equivalent to the <literal>VERBOSE</literal> option of <command>EXPLAIN</command>.
-      This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_verbose</varname> 控制在记录执行计划时是否打印
+      详细细节；它等价于 <command>EXPLAIN</command> 的 <literal>VERBOSE</literal> 选项。
+      此参数默认为关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -213,16 +167,16 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_settings</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_settings</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_settings</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_settings</varname> controls whether information
-      about modified configuration options is printed when an execution plan is logged.
-      Only options affecting query planning with value different from the built-in
-      default value are included in the output.  This parameter is off by default.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_settings</varname> 控制在记录执行计划时是否打印
+      有关已修改配置选项的信息。
+      输出中只包含影响查询规划且值与内置
+      默认值不同的选项。此参数默认为关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -231,16 +185,16 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_format</varname> (<type>enum</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_format</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_format</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_format</varname> selects the
-      <command>EXPLAIN</command> output format to be used.
-      The allowed values are <literal>text</literal>, <literal>xml</literal>,
-      <literal>json</literal>, and <literal>yaml</literal>.  The default is text.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_format</varname> 选择要使用的
+      <command>EXPLAIN</command> 输出格式。
+      允许的值为 <literal>text</literal>、<literal>xml</literal>、
+      <literal>json</literal> 和 <literal>yaml</literal>。默认值为 text。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -249,19 +203,18 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_level</varname> (<type>enum</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_level</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_level</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_level</varname> selects the log level at which
-      auto_explain will log the query plan.
-      Valid values are <literal>DEBUG5</literal>, <literal>DEBUG4</literal>,
-      <literal>DEBUG3</literal>, <literal>DEBUG2</literal>,
-      <literal>DEBUG1</literal>, <literal>INFO</literal>,
-      <literal>NOTICE</literal>, <literal>WARNING</literal>,
-      and <literal>LOG</literal>. The default is <literal>LOG</literal>.
-      Only superusers can change this setting.
+      <varname>auto_explain.log_level</varname> 选择 auto_explain 记录查询计划时所使用的日志级别。
+      有效值为 <literal>DEBUG5</literal>、<literal>DEBUG4</literal>、
+      <literal>DEBUG3</literal>、<literal>DEBUG2</literal>、
+      <literal>DEBUG1</literal>、<literal>INFO</literal>、
+      <literal>NOTICE</literal>、<literal>WARNING</literal>
+      和 <literal>LOG</literal>。默认值为 <literal>LOG</literal>。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -270,15 +223,14 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.log_nested_statements</varname> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>auto_explain.log_nested_statements</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.log_nested_statements</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.log_nested_statements</varname> causes nested
-      statements (statements executed inside a function) to be considered
-      for logging.  When it is off, only top-level query plans are logged. This
-      parameter is off by default. Only superusers can change this setting.
+      <varname>auto_explain.log_nested_statements</varname> 使得嵌套语句（在函数内部执行的语句）也被考虑记录到日志中。
+      当它关闭时，只记录顶层查询计划。此参数默认关闭。
+      只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
@@ -287,25 +239,24 @@ LOAD 'auto_explain';
     <term>
      <varname>auto_explain.sample_rate</varname> (<type>real</type>)
      <indexterm>
-      <primary><varname>auto_explain.sample_rate</varname> configuration parameter</primary>
+      <primary><varname>auto_explain.sample_rate</varname> 配置参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      <varname>auto_explain.sample_rate</varname> causes auto_explain to only
-      explain a fraction of the statements in each session.  The default is 1,
-      meaning explain all the queries.  In case of nested statements, either all
-      will be explained or none. Only superusers can change this setting.
+      <varname>auto_explain.sample_rate</varname> 使 auto_explain 仅解释
+      每个会话中的一部分语句。默认值为 1，表示解释所有查询。对于嵌套语句，要么全部
+      解释，要么都不解释。只有超级用户才能更改此设置。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   In ordinary usage, these parameters are set
-   in <filename>postgresql.conf</filename>, although superusers can alter them
-   on-the-fly within their own sessions.
-   Typical usage might be:
+   在通常用法中，这些参数在
+   <filename>postgresql.conf</filename> 中设置，不过超级用户可以在自己的会话中
+   即时更改它们。
+   典型用法可能如下：
   </para>
 
 <programlisting>
@@ -317,7 +268,7 @@ auto_explain.log_min_duration = '3s'
  </sect2>
 
  <sect2 id="auto-explain-example">
-  <title>Example</title>
+  <title>示例</title>
 
 <programlisting>
 postgres=# LOAD 'auto_explain';
@@ -329,7 +280,7 @@ postgres=# SELECT count(*)
 </programlisting>
 
   <para>
-   This might produce log output such as:
+   这可能会产生如下日志输出：
   </para>
 
 <screen><![CDATA[
@@ -349,7 +300,7 @@ LOG:  duration: 3.651 ms  plan:
  </sect2>
 
  <sect2 id="auto-explain-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Takahiro Itagaki <email>itagaki.takahiro@oss.ntt.co.jp</email>
