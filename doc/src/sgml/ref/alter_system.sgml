@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER SYSTEM</refname>
-  <refpurpose>change a server configuration parameter</refpurpose>
+  <refpurpose>更改服务器配置参数</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -29,49 +29,31 @@ ALTER SYSTEM RESET ALL
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER SYSTEM</command> is used for changing server configuration
-   parameters across the entire database cluster.  It can be more convenient
-   than the traditional method of manually editing
-   the <filename>postgresql.conf</filename> file.
-   <command>ALTER SYSTEM</command> writes the given parameter setting to
-   the <filename>postgresql.auto.conf</filename> file, which is read in
-   addition to <filename>postgresql.conf</filename>.
-   Setting a parameter to <literal>DEFAULT</literal>, or using the
-   <command>RESET</command> variant, removes that configuration entry from the
-   <filename>postgresql.auto.conf</filename> file. Use <literal>RESET
-   ALL</literal> to remove all such configuration entries.
+   <command>ALTER SYSTEM</command> 用于在整个数据库集簇范围内更改服务器配置参数。它比手动编辑 <filename>postgresql.conf</filename> 文件的传统方法更方便。<command>ALTER SYSTEM</command> 会把给定的参数设置写入 <filename>postgresql.auto.conf</filename> 文件，该文件会在 <filename>postgresql.conf</filename> 之外被额外读取。将参数设置为 <literal>DEFAULT</literal>，或使用 <command>RESET</command> 变体，会从 <filename>postgresql.auto.conf</filename> 文件中移除该配置项。使用 <literal>RESET
+   ALL</literal> 可移除所有此类配置项。
   </para>
 
   <para>
-   Values set with <command>ALTER SYSTEM</command> will be effective after
-   the next server configuration reload, or after the next server restart
-   in the case of parameters that can only be changed at server start.
-   A server configuration reload can be commanded by calling the SQL
-   function <function>pg_reload_conf()</function>, running <literal>pg_ctl reload</literal>,
-   or sending a <systemitem>SIGHUP</systemitem> signal to the main server process.
+   用 <command>ALTER SYSTEM</command> 设置的值将在下一次服务器配置重载后生效；对于只能在服务器启动时更改的参数，则在下一次服务器重启后生效。可以通过调用 SQL 函数 <function>pg_reload_conf()</function>、运行 <literal>pg_ctl reload</literal>，或向主服务器进程发送 <systemitem>SIGHUP</systemitem> 信号来命令服务器重载配置。
   </para>
 
   <para>
-   Only superusers and users granted <literal>ALTER SYSTEM</literal> privilege
-   on a parameter can change it using <command>ALTER SYSTEM</command>.  Also, since
-   this command acts directly on the file system and cannot be rolled back,
-   it is not allowed inside a transaction block or function.
+   只有超级用户以及被授予某个参数上 <literal>ALTER SYSTEM</literal> 权限的用户才能使用 <command>ALTER SYSTEM</command> 更改该参数。此外，由于此命令直接作用于文件系统且无法回滚，因此不允许在事务块或函数内使用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">configuration_parameter</replaceable></term>
     <listitem>
      <para>
-      Name of a settable configuration parameter.  Available parameters are
-      documented in <xref linkend="runtime-config"/>.
+      可设置配置参数的名称。可用参数在 <xref linkend="runtime-config"/> 中有文档说明。
      </para>
     </listitem>
    </varlistentry>
@@ -80,19 +62,11 @@ ALTER SYSTEM RESET ALL
     <term><replaceable class="parameter">value</replaceable></term>
     <listitem>
      <para>
-      New value of the parameter.  Values can be specified as string
-      constants, identifiers, numbers, or comma-separated lists of
-      these, as appropriate for the particular parameter.
-      Values that are neither numbers nor valid identifiers must be quoted.
-      <literal>DEFAULT</literal> can be written to specify removing the
-      parameter and its value from <filename>postgresql.auto.conf</filename>.
+      参数的新值。值可以根据特定参数的适用情况，指定为字符串常量、标识符、数字或这些内容的逗号分隔列表。既不是数字也不是合法标识符的值必须加引号。可以写 <literal>DEFAULT</literal> 来指定从 <filename>postgresql.auto.conf</filename> 中移除该参数及其值。
      </para>
 
      <para>
-      For some list-accepting parameters, quoted values will produce
-      double-quoted output to preserve whitespace and commas; for others,
-      double-quotes must be used inside single-quoted strings to get
-      this effect.
+      对于某些接受列表的参数，带引号的值会产生双引号输出，以保留空白和逗号；对于其他参数，必须在单引号字符串内使用双引号才能获得此效果。
      </para>
     </listitem>
    </varlistentry>
@@ -100,56 +74,48 @@ ALTER SYSTEM RESET ALL
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   This command can't be used to set <xref linkend="guc-data-directory"/>,
-   <xref linkend="guc-allow-alter-system"/>,
-   nor parameters that are not allowed in <filename>postgresql.conf</filename>
-   (e.g., <link linkend="runtime-config-preset">preset options</link>).
+   此命令不能用于设置 <xref linkend="guc-data-directory"/>、<xref linkend="guc-allow-alter-system"/>，也不能用于设置 <filename>postgresql.conf</filename> 中不允许的参数（例如，<link linkend="runtime-config-preset">预设选项</link>）。
   </para>
 
   <para>
-   See <xref linkend="config-setting"/> for other ways to set the parameters.
+   有关设置参数的其他方式，请参见 <xref linkend="config-setting"/>。
   </para>
 
   <para>
-   <literal>ALTER SYSTEM</literal> can be disabled by setting
-   <xref linkend="guc-allow-alter-system"/> to <literal>off</literal>, but this
-   is not a security mechanism (as explained in detail in the documentation for
-   this parameter).
+   <literal>ALTER SYSTEM</literal> 可以通过将 <xref linkend="guc-allow-alter-system"/> 设置为 <literal>off</literal> 来禁用，但这并不是一种安全机制（有关此参数的详细说明请参阅该参数的文档）。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Set the <literal>wal_level</literal>:
+   设置 <literal>wal_level</literal>：
 <programlisting>
 ALTER SYSTEM SET wal_level = replica;
 </programlisting>
   </para>
 
   <para>
-   Undo that, restoring whatever setting was effective
-   in <filename>postgresql.conf</filename>:
+   撤销该操作，恢复在 <filename>postgresql.conf</filename> 中原本生效的设置：
 <programlisting>
 ALTER SYSTEM RESET wal_level;
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   The <command>ALTER SYSTEM</command> statement is a
-   <productname>PostgreSQL</productname> extension.
+   <command>ALTER SYSTEM</command> 语句是 <productname>PostgreSQL</productname> 的扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-set"/></member>
