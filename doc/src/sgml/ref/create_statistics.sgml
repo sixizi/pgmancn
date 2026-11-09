@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE STATISTICS</refname>
-  <refpurpose>define extended statistics</refpurpose>
+  <refpurpose>定义扩展统计信息</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -34,39 +34,24 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
  </refsynopsisdiv>
 
  <refsect1 id="sql-createstatistics-description">
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE STATISTICS</command> will create a new extended statistics
-   object tracking data about the specified table, foreign table or
-   materialized view.  The statistics object will be created in the current
-   database and will be owned by the user issuing the command.
+   <command>CREATE STATISTICS</command> 将创建一个新的扩展统计对象，用于跟踪有关指定表、外部表或物化视图的数据。该统计对象将在当前数据库中创建，其所有者将是发出该命令的用户。
   </para>
 
   <para>
-   The <command>CREATE STATISTICS</command> command has two basic forms. The
-   first form allows univariate statistics for a single expression to be
-   collected, providing benefits similar to an expression index without the
-   overhead of index maintenance.  This form does not allow the statistics
-   kind to be specified, since the various statistics kinds refer only to
-   multivariate statistics.  The second form of the command allows
-   multivariate statistics on multiple columns and/or expressions to be
-   collected, optionally specifying which statistics kinds to include.  This
-   form will also automatically cause univariate statistics to be collected on
-   any expressions included in the list.
+   <command>CREATE STATISTICS</command> 命令有两种基本形式。第一种形式允许收集针对单个表达式的单变量统计信息，其带来的好处类似于表达式索引，但没有索引维护的开销。这种形式不允许指定统计种类，因为各种统计种类仅适用于多变量统计信息。该命令的第二种形式允许收集针对多个列和/或表达式的多变量统计信息，并可选择指定要包含哪些统计种类。这种形式还会自动对列表中包含的任何表达式收集单变量统计信息。
   </para>
 
   <para>
-   If a schema name is given (for example, <literal>CREATE STATISTICS
-   myschema.mystat ...</literal>) then the statistics object is created in the
-   specified schema.  Otherwise it is created in the current schema.
-   If given, the name of the statistics object must be distinct from the name
-   of any other statistics object in the same schema.
+   如果给定了模式名（例如，<literal>CREATE STATISTICS
+   myschema.mystat ...</literal>），则该统计对象将在指定的模式中创建。否则它将在当前模式中创建。如果给定了名称，则该统计对象的名称必须与同一模式中任何其他统计对象的名称不同。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
 
@@ -74,11 +59,8 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><literal>IF NOT EXISTS</literal></term>
     <listitem>
      <para>
-      Do not throw an error if a statistics object with the same name already
-      exists.  A notice is issued in this case.  Note that only the name of
-      the statistics object is considered here, not the details of its
-      definition.
-      Statistics name is required when <literal>IF NOT EXISTS</literal> is specified.
+      如果同名统计对象已经存在，不要抛出错误。此时会发出一个提示。注意这里只考虑统计对象的名称，而不考虑其定义的细节。
+      当指定 <literal>IF NOT EXISTS</literal> 时，统计名称是必需的。
      </para>
     </listitem>
    </varlistentry>
@@ -87,11 +69,8 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><replaceable class="parameter">statistics_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the statistics object to be
-      created.
-      If the name is omitted, <productname>PostgreSQL</productname> chooses a
-      suitable name based on the parent table's name and the defined column
-      name(s) and/or expression(s).
+      要创建的统计对象的名称（可选带模式限定）。
+      如果省略名称，<productname>PostgreSQL</productname> 会根据父表的名称以及已定义的列名和/或表达式选择一个合适的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -100,18 +79,12 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><replaceable class="parameter">statistics_kind</replaceable></term>
     <listitem>
      <para>
-      A multivariate statistics kind to be computed in this statistics object.
-      Currently supported kinds are
-      <literal>ndistinct</literal>, which enables n-distinct statistics,
-      <literal>dependencies</literal>, which enables functional
-      dependency statistics, and <literal>mcv</literal> which enables
-      most-common values lists.
-      If this clause is omitted, all supported statistics kinds are
-      included in the statistics object. Univariate expression statistics are
-      built automatically if the statistics definition includes any complex
-      expressions rather than just simple column references.
-      For more information, see <xref linkend="planner-stats-extended"/>
-      and <xref linkend="multivariate-statistics-examples"/>.
+      要在此统计对象中计算的多变量统计种类。目前支持的种类有
+      <literal>ndistinct</literal>（启用 n-distinct 统计）、
+      <literal>dependencies</literal>（启用函数依赖统计）以及 <literal>mcv</literal>（启用最常见值列表）。
+      如果省略此子句，则所有支持的统计种类都会包含在统计对象中。如果统计定义包含任何复杂表达式而不只是简单的列引用，则会自动构建单变量表达式统计。
+      更多信息请参见 <xref linkend="planner-stats-extended"/>
+      和 <xref linkend="multivariate-statistics-examples"/>。
      </para>
     </listitem>
    </varlistentry>
@@ -120,10 +93,8 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><replaceable class="parameter">column_name</replaceable></term>
     <listitem>
      <para>
-      The name of a table column to be covered by the computed statistics.
-      This is only allowed when building multivariate statistics.  At least
-      two column names or expressions must be specified, and their order is
-      not significant.
+      要由所计算统计覆盖的表列的名称。
+      仅当构建多变量统计时才允许使用。必须至少指定两个列名或表达式，且它们的顺序无关紧要。
      </para>
     </listitem>
    </varlistentry>
@@ -132,11 +103,7 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><replaceable class="parameter">expression</replaceable></term>
     <listitem>
      <para>
-      An expression to be covered by the computed statistics.  This may be
-      used to build univariate statistics on a single expression, or as part
-      of a list of multiple column names and/or expressions to build
-      multivariate statistics.  In the latter case, separate univariate
-      statistics are built automatically for each expression in the list.
+      要由所计算统计覆盖的表达式。这可用于在单个表达式上构建单变量统计，也可作为多个列名和/或表达式列表的一部分来构建多变量统计。在后一种情况下，会为列表中的每个表达式自动构建单独的单变量统计。
      </para>
     </listitem>
    </varlistentry>
@@ -145,10 +112,8 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
     <term><replaceable class="parameter">table_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the table containing the
-      column(s) the statistics are computed on;  see <xref
-      linkend="sql-analyze"/> for an explanation of the handling of
-      inheritance and partitions.
+      包含要计算统计的列的表名（可选带模式限定）；有关继承和分区的处理说明，请参见 <xref
+      linkend="sql-analyze"/>。
      </para>
     </listitem>
    </varlistentry>
@@ -157,36 +122,26 @@ CREATE STATISTICS [ [ IF NOT EXISTS ] <replaceable class="parameter">statistics_
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注意事项</title>
 
   <para>
-   You must be the owner of a table to create a statistics object
-   reading it.  Once created, however, the ownership of the statistics
-   object is independent of the underlying table(s).
+   要创建读取某个表的统计信息对象，你必须是该表的所有者。不过，一旦创建完成，统计信息对象的所有权就与底层的表相互独立了。
   </para>
 
   <para>
-   Expression statistics are per-expression and are similar to creating an
-   index on the expression, except that they avoid the overhead of index
-   maintenance. Expression statistics are built automatically for each
-   expression in the statistics object definition.
+   表达式统计信息是按表达式进行的，类似于在表达式上创建索引，区别在于它避免了索引维护的开销。表达式统计信息会为统计信息对象定义中的每个表达式自动构建。
   </para>
 
   <para>
-   Extended statistics are not currently used by the planner for selectivity
-   estimations made for table joins.  This limitation will likely be removed
-   in a future version of <productname>PostgreSQL</productname>.
+   目前，查询规划器在为表连接做选择率估算时不会使用扩展统计信息。这一限制很可能会在 <productname>PostgreSQL</productname> 的未来版本中移除。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createstatistics-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Create table <structname>t1</structname> with two functionally dependent columns, i.e.,
-   knowledge of a value in the first column is sufficient for determining the
-   value in the other column. Then functional dependency statistics are built
-   on those columns:
+   创建一个包含两个函数依赖列的表 <structname>t1</structname>，也就是说，知道第一列中的值就足以确定另一列中的值。然后在这些列上构建函数依赖统计信息：
 
 <programlisting>
 CREATE TABLE t1 (
@@ -210,17 +165,12 @@ ANALYZE t1;
 EXPLAIN ANALYZE SELECT * FROM t1 WHERE (a = 1) AND (b = 0);
 </programlisting>
 
-   Without functional-dependency statistics, the planner would assume
-   that the two <literal>WHERE</literal> conditions are independent, and would
-   multiply their selectivities together to arrive at a much-too-small
-   row count estimate.
-   With such statistics, the planner recognizes that the <literal>WHERE</literal>
-   conditions are redundant and does not underestimate the row count.
+   如果没有函数依赖统计信息，规划器会假定这两个 <literal>WHERE</literal> 条件相互独立，并把它们的选择率相乘，从而得出一个过小的行数估计值。
+   有了这类统计信息，规划器就能识别出这些 <literal>WHERE</literal> 条件是冗余的，从而不会低估行数。
   </para>
 
   <para>
-   Create table <structname>t2</structname> with two perfectly correlated columns
-   (containing identical data), and an MCV list on those columns:
+   创建表 <structname>t2</structname>，其中包含两个完全相关的列（含有相同的数据），并在这些列上创建一个 MCV 列表：
 
 <programlisting>
 CREATE TABLE t2 (
@@ -242,20 +192,11 @@ EXPLAIN ANALYZE SELECT * FROM t2 WHERE (a = 1) AND (b = 1);
 EXPLAIN ANALYZE SELECT * FROM t2 WHERE (a = 1) AND (b = 2);
 </programlisting>
 
-   The MCV list gives the planner more detailed information about the
-   specific values that commonly appear in the table, as well as an upper
-   bound on the selectivities of combinations of values that do not appear
-   in the table, allowing it to generate better estimates in both cases.
+   MCV 列表为规划器提供了关于表中经常出现的特定值的更详细信息，同时也给出了表中未出现的值组合的选择率上界，使规划器在两种情况下都能生成更好的估计。
   </para>
 
   <para>
-   Create table <structname>t3</structname> with a single timestamp column,
-   and run queries using expressions on that column.  Without extended
-   statistics, the planner has no information about the data distribution for
-   the expressions, and uses default estimates.  The planner also does not
-   realize that the value of the date truncated to the month is fully
-   determined by the value of the date truncated to the day. Then expression
-   and ndistinct statistics are built on those two expressions:
+   创建包含单个 timestamp 列的表 <structname>t3</structname>，并使用该列上的表达式运行查询。如果没有扩展统计信息，规划器就没有关于这些表达式的数据分布信息，因而使用默认估计值。规划器也无法意识到，截断到月的日期值完全由截断到日的日期值决定。然后在这两个表达式上构建表达式统计信息和 ndistinct 统计信息：
 
 <programlisting>
 CREATE TABLE t3 (
@@ -297,35 +238,21 @@ EXPLAIN ANALYZE SELECT date_trunc('month', a), date_trunc('day', a)
    FROM t3 GROUP BY 1, 2;
 </programlisting>
 
-   Without expression and ndistinct statistics, the planner has no information
-   about the number of distinct values for the expressions, and has to rely
-   on default estimates. The equality and range conditions are assumed to have
-   0.5% selectivity, and the number of distinct values in the expression is
-   assumed to be the same as for the column (i.e. unique). This results in a
-   significant underestimate of the row count in the first two queries. Moreover,
-   the planner has no information about the relationship between the expressions,
-   so it assumes the two <literal>WHERE</literal> and <literal>GROUP BY</literal>
-   conditions are independent, and multiplies their selectivities together to
-   arrive at a severe overestimate of the group count in the aggregate query.
-   This is further exacerbated by the lack of accurate statistics for the
-   expressions, forcing the planner to use a default ndistinct estimate for the
-   expression derived from ndistinct for the column. With such statistics, the
-   planner recognizes that the conditions are correlated, and arrives at much
-   more accurate estimates.
+   如果没有表达式统计信息和 ndistinct 统计信息，规划器就没有关于这些表达式不同值数量的信息，只能依赖默认估计值。等值和范围条件被假定为具有 0.5% 的选择率，而表达式中的不同值数量被假定为与该列相同（即唯一）。这导致前两个查询中的行数被严重低估。此外，规划器没有关于这些表达式之间关系的信息，因此它假定两个 <literal>WHERE</literal> 和 <literal>GROUP BY</literal> 条件是相互独立的，并将它们的选择率相乘，从而在聚合查询中严重高估了分组数量。由于缺乏针对这些表达式的准确统计信息，规划器不得不对由该列的 ndistinct 推导出的表达式使用默认的 ndistinct 估计值，这进一步加剧了问题。有了这样的统计信息，规划器就能识别出这些条件是相关的，并得出准确得多的估计值。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>CREATE STATISTICS</command> command in the SQL standard.
+   SQL 标准中没有 <command>CREATE STATISTICS</command> 命令。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterstatistics"/></member>
