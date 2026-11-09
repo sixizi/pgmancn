@@ -1905,12 +1905,12 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
    <para>
     <indexterm><primary>libpq-fe.h</primary></indexterm>
     <indexterm><primary>libpq-int.h</primary></indexterm>
-    <application>libpq</application> application programmers should be careful to
-    maintain the <structname>PGconn</structname> abstraction.  Use the accessor
-    functions described below to get at the contents of <structname>PGconn</structname>.
-    Reference to internal <structname>PGconn</structname> fields using
-    <filename>libpq-int.h</filename> is not recommended because they are subject to change
-    in the future.
+    <application>libpq</application> 应用程序员应当注意维护
+    <structname>PGconn</structname> 抽象。请使用下文描述的访问
+    函数来获取 <structname>PGconn</structname> 的内容。
+    不建议对 <structname>PGconn</structname> 的内部字段使用
+    <filename>libpq-int.h</filename> 进行引用，因为这些字段将来
+    可能会发生变化。
    </para>
   </tip>
 
@@ -3009,11 +3009,8 @@ ExecStatusType PQresultStatus(const PGresult *res);
        </para>
 
        <para>
-        A result of status <symbol>PGRES_NONFATAL_ERROR</symbol> will
-        never be returned directly by <xref linkend="libpq-PQexec"/> or other
-        query execution functions; results of this kind are instead passed
-        to the notice processor (see <xref
-        linkend="libpq-notice-processing"/>).
+        状态为 <symbol>PGRES_NONFATAL_ERROR</symbol> 的结果永远不会由 <xref linkend="libpq-PQexec"/> 或其他查询执行函数直接返回；这类结果会被传递给通知处理器（参见 <xref
+        linkend="libpq-notice-processing"/>）。
        </para>
       </listitem>
      </varlistentry>
@@ -4147,17 +4144,15 @@ int PQsendDescribePrepared(PGconn *conn, const char *stmtName);
 
      <listitem>
       <para>
-       Submits a request to obtain information about the specified
-       portal, without waiting for completion.
+       提交一个请求以获取指定门户的信息，而不等待其完成。
 <synopsis>
 int PQsendDescribePortal(PGconn *conn, const char *portalName);
 </synopsis>
 
-       This is an asynchronous version of <xref linkend="libpq-PQdescribePortal"/>:
-       it returns 1 if it was able to dispatch the request, and 0 if not.
-       After a successful call, call <xref linkend="libpq-PQgetResult"/> to
-       obtain the results.  The function's parameters are handled
-       identically to <xref linkend="libpq-PQdescribePortal"/>.
+       这是 <xref linkend="libpq-PQdescribePortal"/> 的异步版本：
+       如果能够派发该请求则返回 1，否则返回 0。
+       成功调用之后，请调用 <xref linkend="libpq-PQgetResult"/> 来
+       获取结果。该函数的参数处理方式与 <xref linkend="libpq-PQdescribePortal"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4167,17 +4162,15 @@ int PQsendDescribePortal(PGconn *conn, const char *portalName);
 
      <listitem>
       <para>
-       Submits a request to close the specified prepared statement, without
-       waiting for completion.
+       提交一个请求以关闭指定的预备语句，而不等待其完成。
 <synopsis>
 int PQsendClosePrepared(PGconn *conn, const char *stmtName);
 </synopsis>
 
-       This is an asynchronous version of <xref linkend="libpq-PQclosePrepared"/>:
-       it returns 1 if it was able to dispatch the request, and 0 if not.
-       After a successful call, call <xref linkend="libpq-PQgetResult"/> to
-       obtain the results.  The function's parameters are handled
-       identically to <xref linkend="libpq-PQclosePrepared"/>.
+       这是 <xref linkend="libpq-PQclosePrepared"/> 的异步版本：
+       如果能够派发该请求则返回 1，否则返回 0。
+       成功调用之后，请调用 <xref linkend="libpq-PQgetResult"/> 来
+       获取结果。该函数的参数处理方式与 <xref linkend="libpq-PQclosePrepared"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4187,17 +4180,15 @@ int PQsendClosePrepared(PGconn *conn, const char *stmtName);
 
      <listitem>
       <para>
-       Submits a request to close specified portal, without waiting for
-       completion.
+       提交一个请求以关闭指定的门户，而不等待其完成。
 <synopsis>
 int PQsendClosePortal(PGconn *conn, const char *portalName);
 </synopsis>
 
-       This is an asynchronous version of <xref linkend="libpq-PQclosePortal"/>:
-       it returns 1 if it was able to dispatch the request, and 0 if not.
-       After a successful call, call <xref linkend="libpq-PQgetResult"/> to
-       obtain the results.  The function's parameters are handled
-       identically to <xref linkend="libpq-PQclosePortal"/>.
+       这是 <xref linkend="libpq-PQclosePortal"/> 的异步版本：
+       如果能够派发该请求则返回 1，否则返回 0。
+       成功调用之后，请调用 <xref linkend="libpq-PQgetResult"/> 来
+       获取结果。该函数的参数处理方式与 <xref linkend="libpq-PQclosePortal"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4324,19 +4315,16 @@ int PQisBusy(PGconn *conn);
   </para>
 
   <para>
-   A typical application using these functions will have a main loop that
-   uses <function>select()</function> or <function>poll()</function> to wait for
-   all the conditions that it must respond to.  One of the conditions
-   will be input available from the server, which in terms of
-   <function>select()</function> means readable data on the file
-   descriptor identified by <xref linkend="libpq-PQsocket"/>.  When the main
-   loop detects input ready, it should call
-   <xref linkend="libpq-PQconsumeInput"/> to read the input.  It can then
-   call <xref linkend="libpq-PQisBusy"/>, followed by
-   <xref linkend="libpq-PQgetResult"/> if <xref linkend="libpq-PQisBusy"/>
-   returns false (0).  It can also call <function>PQnotifies</function>
-   to detect <command>NOTIFY</command> messages (see <xref
-   linkend="libpq-notify"/>).
+   使用这些函数的典型应用程序会有一个主循环，用 <function>select()</function>
+   或 <function>poll()</function> 等待其必须响应的所有条件。其中一个条件是
+   服务器输入可用；用 <function>select()</function> 的术语来说，就是由
+   <xref linkend="libpq-PQsocket"/> 标识的文件描述符上存在可读数据。主循环检测到
+   输入就绪后，应调用 <xref linkend="libpq-PQconsumeInput"/> 读取输入。
+    随后可调用 <xref linkend="libpq-PQisBusy"/>；在调用
+    <xref linkend="libpq-PQgetResult"/> 前，应确认
+    <xref linkend="libpq-PQisBusy"/> 返回 false（0）。应用程序还可以调用
+   <function>PQnotifies</function> 检测 <command>NOTIFY</command> 消息
+   （参见 <xref linkend="libpq-notify"/>）。
   </para>
 
   <para>
@@ -4699,7 +4687,7 @@ int PQsendPipelineSync(PGconn *conn);
 
      <listitem>
       <para>
-       Sends a request for the server to flush its output buffer.
+       向服务器发送一个请求，要求其刷新输出缓冲区。
 <synopsis>
 int PQsendFlushRequest(PGconn *conn);
 </synopsis>
@@ -6884,10 +6872,9 @@ myEventProc(PGEventId evtId, void *evtInfo, void *passThrough)
       <indexterm>
        <primary><envar>PGHOSTADDR</envar></primary>
       </indexterm>
-      <envar>PGHOSTADDR</envar> behaves the same as the <xref
-      linkend="libpq-connect-hostaddr"/> connection parameter.
-      This can be set instead of or in addition to <envar>PGHOST</envar>
-      to avoid DNS lookup overhead.
+      <envar>PGHOSTADDR</envar> 的行为与
+      <xref linkend="libpq-connect-hostaddr"/> 连接参数相同。
+      可以用它替代 <envar>PGHOST</envar>，也可以与该变量一起设置，以避免 DNS 查找开销。
      </para>
     </listitem>
 
@@ -7564,8 +7551,8 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
   </para>
 
   <para>
-   For instructions on creating certificates, see <xref
-   linkend="ssl-certificate-creation"/>.
+   有关创建证书的说明，请参见 <xref
+   linkend="ssl-certificate-creation"/>。
   </para>
  </sect2>
 
