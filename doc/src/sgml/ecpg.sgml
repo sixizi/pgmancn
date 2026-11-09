@@ -5261,56 +5261,30 @@ main(void)
   <title><acronym>C++</acronym> Applications</title>
 
   <para>
-   ECPG has some limited support for C++ applications.  This section
-   describes some caveats.
+   ECPG 对 C++ 应用程序提供了一些有限的支持。本节介绍一些注意事项。
   </para>
 
   <para>
-   The <command>ecpg</command> preprocessor takes an input file
-   written in C (or something like C) and embedded SQL commands,
-   converts the embedded SQL commands into C language chunks, and
-   finally generates a <filename>.c</filename> file.  The header file
-   declarations of the library functions used by the C language chunks
-   that <command>ecpg</command> generates are wrapped
-   in <literal>extern "C" { ... }</literal> blocks when used under
-   C++, so they should work seamlessly in C++.
+   <command>ecpg</command> 预处理器接收一个用 C（或类似 C 的语言）编写的、包含嵌入式 SQL 命令的输入文件，把嵌入式 SQL 命令转换成 C 语言代码块，最后生成一个 <filename>.c</filename> 文件。<command>ecpg</command> 生成的 C 语言代码块所使用的库函数的头文件声明，在 C++ 下使用时会被包裹在 <literal>extern "C" { ... }</literal> 块中，因此它们应当能在 C++ 中无缝工作。
   </para>
 
   <para>
-   In general, however, the <command>ecpg</command> preprocessor only
-   understands C; it does not handle the special syntax and reserved
-   words of the C++ language.  So, some embedded SQL code written in
-   C++ application code that uses complicated features specific to C++
-   might fail to be preprocessed correctly or might not work as
-   expected.
+   不过，一般而言，<command>ecpg</command> 预处理器只理解 C；它不处理 C++ 语言的特殊语法和保留字。因此，在 C++ 应用程序代码中编写的、使用了 C++ 特有复杂特性的某些嵌入式 SQL 代码，可能无法被正确地预处理，或者可能无法按预期工作。
   </para>
 
   <para>
-   A safe way to use the embedded SQL code in a C++ application is
-   hiding the ECPG calls in a C module, which the C++ application code
-   calls into to access the database, and linking that together with
-   the rest of the C++ code.  See <xref linkend="ecpg-cpp-and-c"/>
-   about that.
+   在 C++ 应用程序中使用嵌入式 SQL 代码的一种安全方式，是把 ECPG 调用隐藏在一个 C 模块中，由 C++ 应用程序代码调用该模块来访问数据库，并将它与其余的 C++ 代码链接在一起。关于这一点，请参见 <xref linkend="ecpg-cpp-and-c"/>。
   </para>
 
   <sect2 id="ecpg-cpp-scope">
-   <title>Scope for Host Variables</title>
+   <title>宿主变量的作用域</title>
 
    <para>
-    The <command>ecpg</command> preprocessor understands the scope of
-    variables in C.  In the C language, this is rather simple because
-    the scopes of variables is based on their code blocks.  In C++,
-    however, the class member variables are referenced in a different
-    code block from the declared position, so
-    the <command>ecpg</command> preprocessor will not understand the
-    scope of the class member variables.
+    <command>ecpg</command> 预处理器能够理解 C 语言中变量的作用域。在 C 语言中，这一点相当简单，因为变量的作用域基于其代码块。然而在 C++ 中，类成员变量是在与声明位置不同的代码块中被引用的，因此 <command>ecpg</command> 预处理器无法理解类成员变量的作用域。
    </para>
 
    <para>
-    For example, in the following case, the <command>ecpg</command>
-    preprocessor cannot find any declaration for the
-    variable <literal>dbname</literal> in the <literal>test</literal>
-    method, so an error will occur.
+    例如，在下面的情形中，<command>ecpg</command> 预处理器在 <literal>test</literal> 方法中找不到变量 <literal>dbname</literal> 的任何声明，因此会出错。
 
 <programlisting>
 class TestCpp
@@ -5343,7 +5317,7 @@ TestCpp::~TestCpp()
 }
 </programlisting>
 
-    This code will result in an error like this:
+    这段代码将导致如下所示的错误：
 <screen>
 <userinput>ecpg test_cpp.pgc</userinput>
 test_cpp.pgc:28: ERROR: variable "dbname" is not declared
@@ -5351,10 +5325,7 @@ test_cpp.pgc:28: ERROR: variable "dbname" is not declared
    </para>
 
    <para>
-    To avoid this scope issue, the <literal>test</literal> method
-    could be modified to use a local variable as intermediate storage.
-    But this approach is only a poor workaround, because it uglifies
-    the code and reduces performance.
+    为避免这一作用域问题，可以修改 <literal>test</literal> 方法，改用局部变量作为中间存储。但这种方法只是一种拙劣的变通方案，因为它会使代码变得丑陋，并降低性能。
 
 <programlisting>
 void TestCpp::test()
@@ -5373,32 +5344,21 @@ void TestCpp::test()
   </sect2>
 
   <sect2 id="ecpg-cpp-and-c">
-   <title>C++ Application Development with External C Module</title>
+   <title>使用外部 C 模块进行 C++ 应用程序开发</title>
 
    <para>
-    If you understand these technical limitations of
-    the <command>ecpg</command> preprocessor in C++, you might come to
-    the conclusion that linking C objects and C++ objects at the link
-    stage to enable C++ applications to use ECPG features could be
-    better than writing some embedded SQL commands in C++ code
-    directly.  This section describes a way to separate some embedded
-    SQL commands from C++ application code with a simple example.  In
-    this example, the application is implemented in C++, while C and
-    ECPG is used to connect to the PostgreSQL server.
+    如果你了解了 <command>ecpg</command> 预处理器在 C++ 中的这些技术限制，你可能会得出这样的结论：在链接阶段将 C 对象和 C++ 对象链接起来，使 C++ 应用程序能够使用 ECPG 特性，可能比直接在 C++ 代码中编写一些嵌入式 SQL 命令更好。本节通过一个简单的示例，介绍一种将部分嵌入式 SQL 命令与 C++ 应用程序代码分离的方法。在这个示例中，应用程序用 C++ 实现，而使用 C 和 ECPG 来连接 PostgreSQL 服务器。
    </para>
 
    <para>
-    Three kinds of files have to be created: a C file
-    (<filename>*.pgc</filename>), a header file, and a C++ file:
+    必须创建三种文件：一个 C 文件（<filename>*.pgc</filename>）、一个头文件和一个 C++ 文件：
 
     <variablelist>
      <varlistentry id="ecpg-cpp-and-c-test-mod-pgc">
       <term><filename>test_mod.pgc</filename></term>
       <listitem>
        <para>
-        A sub-routine module to execute SQL commands embedded in C.
-        It is going to be converted
-        into <filename>test_mod.c</filename> by the preprocessor.
+        一个用于执行嵌入在 C 中的 SQL 命令的子程序模块。它将被预处理器转换成 <filename>test_mod.c</filename>。
 
 <programlisting>
 #include "test_mod.h"
@@ -5436,11 +5396,7 @@ db_disconnect()
       <term><filename>test_mod.h</filename></term>
       <listitem>
        <para>
-        A header file with declarations of the functions in the C
-        module (<filename>test_mod.pgc</filename>).  It is included by
-        <filename>test_cpp.cpp</filename>.  This file has to have an
-        <literal>extern "C"</literal> block around the declarations,
-        because it will be linked from the C++ module.
+        一个头文件，包含 C 模块（<filename>test_mod.pgc</filename>）中函数的声明。它被 <filename>test_cpp.cpp</filename> 包含。该文件必须在声明周围有一个 <literal>extern "C"</literal> 块，因为它将从 C++ 模块链接。
 
 <programlisting>
 #ifdef __cplusplus
@@ -5463,9 +5419,7 @@ void db_disconnect();
       <term><filename>test_cpp.cpp</filename></term>
       <listitem>
        <para>
-        The main code for the application, including
-        the <function>main</function> routine, and in this example a
-        C++ class.
+        应用程序的主要代码，包括 <function>main</function> 例程，在本例中还有一个 C++ 类。
 
 <programlisting>
 #include "test_mod.h"
@@ -5510,11 +5464,7 @@ main(void)
    </para>
 
    <para>
-    To build the application, proceed as follows.  Convert
-    <filename>test_mod.pgc</filename> into <filename>test_mod.c</filename> by
-    running <command>ecpg</command>, and generate
-    <filename>test_mod.o</filename> by compiling
-    <filename>test_mod.c</filename> with the C compiler:
+    要构建应用程序，请按如下步骤操作。通过运行 <command>ecpg</command> 将 <filename>test_mod.pgc</filename> 转换为 <filename>test_mod.c</filename>，并用 C 编译器编译 <filename>test_mod.c</filename> 生成 <filename>test_mod.o</filename>：
 <programlisting>
 ecpg -o test_mod.c test_mod.pgc
 cc -c test_mod.c -o test_mod.o
@@ -5522,17 +5472,14 @@ cc -c test_mod.c -o test_mod.o
    </para>
 
    <para>
-    Next, generate <filename>test_cpp.o</filename> by compiling
-    <filename>test_cpp.cpp</filename> with the C++ compiler:
+    接下来，用 C++ 编译器编译 <filename>test_cpp.cpp</filename> 生成 <filename>test_cpp.o</filename>：
 <programlisting>
 c++ -c test_cpp.cpp -o test_cpp.o
 </programlisting>
    </para>
 
    <para>
-    Finally, link these object files, <filename>test_cpp.o</filename>
-    and <filename>test_mod.o</filename>, into one executable, using the C++
-    compiler driver:
+    最后，使用 C++ 编译器驱动程序将这些目标文件 <filename>test_cpp.o</filename> 和 <filename>test_mod.o</filename> 链接成一个可执行文件：
 <programlisting>
 c++ test_cpp.o test_mod.o -lecpg -o test_cpp
 </programlisting>
