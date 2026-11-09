@@ -12,7 +12,7 @@
   </para>
 
  <sect1 id="using-explain">
-  <title>Using <command>EXPLAIN</command></title>
+  <title>使用 <command>EXPLAIN</command></title>
 
    <indexterm zone="using-explain">
     <primary>EXPLAIN</primary>
@@ -23,62 +23,31 @@
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> devises a <firstterm>query
-    plan</firstterm> for each query it receives.  Choosing the right
-    plan to match the query structure and the properties of the data
-    is absolutely critical for good performance, so the system includes
-    a complex <firstterm>planner</firstterm> that tries to choose good plans.
-    You can use the <link linkend="sql-explain"><command>EXPLAIN</command></link> command
-    to see what query plan the planner creates for any query.
-    Plan-reading is an art that requires some experience to master,
-    but this section attempts to cover the basics.
+    <productname>PostgreSQL</productname> 会为它收到的每个查询设计一个<firstterm>查询计划</firstterm>。选择与查询结构和数据属性相匹配的正确计划对于获得良好性能绝对至关重要，因此系统包含了一个复杂的<firstterm>规划器</firstterm>来尝试选择好的计划。你可以使用 <link linkend="sql-explain"><command>EXPLAIN</command></link> 命令来查看规划器为任何查询创建的查询计划。阅读计划是一门需要一些经验才能掌握的艺术，但本节试图涵盖基础知识。
    </para>
 
    <para>
-    Examples in this section are drawn from the regression test database
-    after doing a <command>VACUUM ANALYZE</command>, using v18 development sources.
-    You should be able to get similar results if you try the examples
-    yourself, but your estimated costs and row counts might vary slightly
-    because <command>ANALYZE</command>'s statistics are random samples rather
-    than exact, and because costs are inherently somewhat platform-dependent.
+    本节中的示例取自执行 <command>VACUUM ANALYZE</command> 之后的回归测试数据库，使用的是 v18 开发源码。如果你自己尝试这些示例，应该能够得到类似的结果，但你的估算代价和行数可能会略有不同，因为 <command>ANALYZE</command> 的统计信息是随机样本而非精确值，而且代价本身就多少依赖于平台。
    </para>
 
    <para>
-    The examples use <command>EXPLAIN</command>'s default <quote>text</quote> output
-    format, which is compact and convenient for humans to read.
-    If you want to feed <command>EXPLAIN</command>'s output to a program for further
-    analysis, you should use one of its machine-readable output formats
-    (XML, JSON, or YAML) instead.
+    这些示例使用 <command>EXPLAIN</command> 的默认 <quote>text</quote> 输出格式，这种格式紧凑且便于人类阅读。如果你想把 <command>EXPLAIN</command> 的输出交给程序做进一步分析，则应该改用其机器可读的输出格式之一（XML、JSON 或 YAML）。
    </para>
 
   <sect2 id="using-explain-basics">
-   <title><command>EXPLAIN</command> Basics</title>
+   <title><command>EXPLAIN</command> 基础</title>
 
    <para>
-    The structure of a query plan is a tree of <firstterm>plan nodes</firstterm>.
-    Nodes at the bottom level of the tree are scan nodes: they return raw rows
-    from a table.  There are different types of scan nodes for different
-    table access methods: sequential scans, index scans, and bitmap index
-    scans.  There are also non-table row sources, such as <literal>VALUES</literal>
-    clauses and set-returning functions in <literal>FROM</literal>, which have their
-    own scan node types.
-    If the query requires joining, aggregation, sorting, or other
-    operations on the raw rows, then there will be additional nodes
-    above the scan nodes to perform these operations.  Again,
-    there is usually more than one possible way to do these operations,
-    so different node types can appear here too.  The output
-    of <command>EXPLAIN</command> has one line for each node in the plan
-    tree, showing the basic node type plus the cost estimates that the planner
-    made for the execution of that plan node.  Additional lines might appear,
-    indented from the node's summary line,
-    to show additional properties of the node.
-    The very first line (the summary line for the topmost
-    node) has the estimated total execution cost for the plan; it is this
-    number that the planner seeks to minimize.
+    查询计划的结构是一棵<firstterm>计划节点</firstterm>树。
+    树底层的节点是扫描节点：它们从表中返回原始行。
+    针对不同的表访问方法，存在不同类型的扫描节点：顺序扫描、索引扫描和位图索引扫描。
+    还有一些非表的行来源，例如 <literal>VALUES</literal> 子句和 <literal>FROM</literal> 中的集合返回函数，它们有自己的扫描节点类型。
+    如果查询需要对原始行进行连接、聚集、排序或其他操作，那么在扫描节点之上还会有额外的节点来执行这些操作。同样，执行这些操作通常有多种可能的方式，因此这里也可能出现不同的节点类型。<command>EXPLAIN</command> 的输出为计划树中的每个节点各显示一行，其中给出基本节点类型以及规划器对该计划节点执行情况所做的代价估算。还可能出现一些附加行，它们相对于节点的摘要行缩进，用于显示该节点的附加属性。
+    最上面的第一行（最顶层节点的摘要行）给出了该计划的估计总执行代价；规划器力求最小化的正是这个数字。
    </para>
 
    <para>
-    Here is a trivial example, just to show what the output looks like:
+    下面是一个简单的例子，只是为了展示输出是什么样子：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1;
@@ -98,68 +67,44 @@ EXPLAIN SELECT * FROM tenk1;
     <itemizedlist>
      <listitem>
       <para>
-       Estimated start-up cost.  This is the time expended before the output
-       phase can begin, e.g., time to do the sorting in a sort node.
+       估计的启动代价。这是在输出阶段能够开始之前所耗费的时间，例如在排序节点中执行排序的时间。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Estimated total cost.  This is stated on the assumption that the plan
-       node is run to completion, i.e., all available rows are retrieved.
-       In practice a node's parent node might stop short of reading all
-       available rows (see the <literal>LIMIT</literal> example below).
+       估计的总代价。这是基于计划节点运行至完成这一假设给出的，即检索出所有可用的行。在实践中，节点的父节点可能会提前停止读取所有可用的行（参见下面的 <literal>LIMIT</literal> 示例）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Estimated number of rows output by this plan node.  Again, the node
-       is assumed to be run to completion.
+       此计划节点输出的估计行数。同样，这里假设该节点运行至完成。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Estimated average width of rows output by this plan node (in bytes).
+       此计划节点输出的行的估计平均宽度（以字节为单位）。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    The costs are measured in arbitrary units determined by the planner's
-    cost parameters (see <xref linkend="runtime-config-query-constants"/>).
-    Traditional practice is to measure the costs in units of disk page
-    fetches; that is, <xref linkend="guc-seq-page-cost"/> is conventionally
-    set to <literal>1.0</literal> and the other cost parameters are set relative
-    to that.  The examples in this section are run with the default cost
-    parameters.
+    代价以任意单位计量，具体由规划器的代价参数决定（见 <xref linkend="runtime-config-query-constants"/>）。传统做法是以磁盘页面读取次数为单位来计量代价；也就是说，<xref linkend="guc-seq-page-cost"/> 按惯例被设置为 <literal>1.0</literal>，其他代价参数则相对于它来设置。本节中的示例均使用默认代价参数运行。
    </para>
 
    <para>
-    It's important to understand that the cost of an upper-level node includes
-    the cost of all its child nodes.  It's also important to realize that
-    the cost only reflects things that the planner cares about.
-    In particular, the cost does not consider the time spent to convert
-    output values to text form or to transmit them to the client, which
-    could be important factors in the real elapsed time; but the planner
-    ignores those costs because it cannot change them by altering the
-    plan.  (Every correct plan will output the same row set, we trust.)
+    重要的是要理解，上层节点的代价包含其所有子节点的代价。同样重要的是要认识到，代价只反映规划器所关心的内容。特别是，代价并不考虑把输出值转换为文本形式或把它们发送给客户端所花费的时间，而这些可能是实际耗时中的重要因素；但规划器忽略这些代价，因为它无法通过改变计划来改变它们。（我们相信，每个正确的计划都会输出相同的行集。）
    </para>
 
    <para>
-    The <literal>rows</literal> value is a little tricky because it is
-    not the number of rows processed or scanned by the
-    plan node, but rather the number emitted by the node.  This is often
-    less than the number scanned, as a result of filtering by any
-    <literal>WHERE</literal>-clause conditions that are being applied at the node.
-    Ideally the top-level rows estimate will approximate the number of rows
-    actually returned, updated, or deleted by the query.
+    <literal>rows</literal> 值有点微妙，因为它不是计划节点处理或扫描的行数，而是该节点输出的行数。由于节点上应用了任何 <literal>WHERE</literal> 子句条件进行过滤，这个值通常小于扫描的行数。理想情况下，顶层的行数估计值应接近查询实际返回、更新或删除的行数。
    </para>
 
    <para>
-    Returning to our example:
+    回到我们的示例：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1;
@@ -171,22 +116,17 @@ EXPLAIN SELECT * FROM tenk1;
    </para>
 
    <para>
-    These numbers are derived very straightforwardly.  If you do:
+    这些数字的推导非常直接。如果你执行：
 
 <programlisting>
 SELECT relpages, reltuples FROM pg_class WHERE relname = 'tenk1';
 </programlisting>
 
-    you will find that <classname>tenk1</classname> has 345 disk
-    pages and 10000 rows.  The estimated cost is computed as (disk pages read *
-    <xref linkend="guc-seq-page-cost"/>) + (rows scanned *
-    <xref linkend="guc-cpu-tuple-cost"/>).  By default,
-    <varname>seq_page_cost</varname> is 1.0 and <varname>cpu_tuple_cost</varname> is 0.01,
-    so the estimated cost is (345 * 1.0) + (10000 * 0.01) = 445.
+    你会发现 <classname>tenk1</classname> 有 345 个磁盘页面和 10000 行。估计代价按（读取的磁盘页面数 * <xref linkend="guc-seq-page-cost"/>）+（扫描的行数 * <xref linkend="guc-cpu-tuple-cost"/>）计算。默认情况下，<varname>seq_page_cost</varname> 为 1.0，<varname>cpu_tuple_cost</varname> 为 0.01，因此估计代价为 (345 * 1.0) + (10000 * 0.01) = 445。
    </para>
 
    <para>
-    Now let's modify the query to add a <literal>WHERE</literal> condition:
+    现在让我们修改查询，添加一个 <literal>WHERE</literal> 条件：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 7000;
@@ -197,30 +137,27 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 7000;
    Filter: (unique1 &lt; 7000)
 </screen>
 
-    Notice that the <command>EXPLAIN</command> output shows the <literal>WHERE</literal>
-    clause being applied as a <quote>filter</quote> condition attached to the Seq
-    Scan plan node.  This means that
-    the plan node checks the condition for each row it scans, and outputs
-    only the ones that pass the condition.
-    The estimate of output rows has been reduced because of the
-    <literal>WHERE</literal> clause.
-    However, the scan will still have to visit all 10000 rows, so the cost
-    hasn't decreased; in fact it has gone up a bit (by 10000 * <xref
-    linkend="guc-cpu-operator-cost"/>, to be exact) to reflect the extra CPU
-    time spent checking the <literal>WHERE</literal> condition.
+    请注意，<command>EXPLAIN</command> 输出显示 <literal>WHERE</literal> 子句被作为附加到 Seq
+    Scan 计划节点上的 <quote>过滤</quote> 条件应用。这意味着
+    该计划节点会为它扫描的每一行检查该条件，并且只输出
+    通过该条件的行。
+    由于 <literal>WHERE</literal> 子句，输出行数的估计值减少了。
+    不过，扫描仍然必须访问全部 10000 行，因此代价
+    并没有降低；实际上它略有上升（确切地说，上升了 10000 * <xref
+    linkend="guc-cpu-operator-cost"/>），以反映检查 <literal>WHERE</literal> 条件所花费的额外 CPU
+    时间。
    </para>
 
    <para>
-    The actual number of rows this query would select is 7000, but the <literal>rows</literal>
-    estimate is only approximate.  If you try to duplicate this experiment,
-    you may well get a slightly different estimate; moreover, it can
-    change after each <command>ANALYZE</command> command, because the
-    statistics produced by <command>ANALYZE</command> are taken from a
-    randomized sample of the table.
+    这个查询实际会选择 7000 行，但 <literal>rows</literal>
+    的估计值只是近似值。如果你尝试重复这个实验，
+    很可能会得到略有不同的估计值；此外，每次 <command>ANALYZE</command> 命令之后它都可能
+    变化，因为 <command>ANALYZE</command> 生成的统计信息取自
+    表的随机样本。
    </para>
 
    <para>
-    Now, let's make the condition more restrictive:
+    现在，让我们把条件变得更严格：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100;
@@ -233,21 +170,18 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100;
          Index Cond: (unique1 &lt; 100)
 </screen>
 
-    Here the planner has decided to use a two-step plan: the child plan
-    node visits an index to find the locations of rows matching the index
-    condition, and then the upper plan node actually fetches those rows
-    from the table itself.  Fetching rows separately is much more
-    expensive than reading them sequentially, but because not all the pages
-    of the table have to be visited, this is still cheaper than a sequential
-    scan.  (The reason for using two plan levels is that the upper plan
-    node sorts the row locations identified by the index into physical order
-    before reading them, to minimize the cost of separate fetches.
-    The <quote>bitmap</quote> mentioned in the node names is the mechanism that
-    does the sorting.)
+    这里规划器决定使用两步计划：子计划
+    节点访问索引以找出匹配索引条件的行的位置，然后上层计划节点
+    实际从表中取出这些行。单独取行比
+    顺序读取要昂贵得多，但由于不必访问表的所有
+    页面，这仍然比顺序扫描便宜。（使用两个计划层级的
+    原因是，上层计划节点在读取之前会把索引标识的行位置
+    按物理顺序排序，以最小化单独取行的代价。
+    节点名称中提到的 <quote>位图</quote> 就是执行这种排序的机制。）
    </para>
 
    <para>
-    Now let's add another condition to the <literal>WHERE</literal> clause:
+    现在让我们向 <literal>WHERE</literal> 子句添加另一个条件：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND stringu1 = 'xxx';
@@ -261,17 +195,17 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND stringu1 = 'xxx';
          Index Cond: (unique1 &lt; 100)
 </screen>
 
-    The added condition <literal>stringu1 = 'xxx'</literal> reduces the
-    output row count estimate, but not the cost because we still have to visit
-    the same set of rows.  That's because the <literal>stringu1</literal> clause
-    cannot be applied as an index condition, since this index is only on
-    the <literal>unique1</literal> column.  Instead it is applied as a filter on
-    the rows retrieved using the index.  Thus the cost has actually gone up
-    slightly to reflect this extra checking.
+    添加的条件 <literal>stringu1 = 'xxx'</literal> 降低了
+    输出行数的估计值，但没有降低代价，因为我们仍然必须访问
+    同一组行。这是因为 <literal>stringu1</literal> 子句
+    不能作为索引条件应用，因为该索引只建立在
+    <literal>unique1</literal> 列上。相反，它被作为对
+    使用索引检索到的行的过滤条件应用。因此，代价实际上略有上升，
+    以反映这种额外的检查。
    </para>
 
    <para>
-    In some cases the planner will prefer a <quote>simple</quote> index scan plan:
+    在某些情况下，规划器会倾向于使用<quote>简单</quote>索引扫描计划：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 = 42;
@@ -282,22 +216,11 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 = 42;
    Index Cond: (unique1 = 42)
 </screen>
 
-    In this type of plan the table rows are fetched in index order, which
-    makes them even more expensive to read, but there are so few that the
-    extra cost of sorting the row locations is not worth it.  You'll most
-    often see this plan type for queries that fetch just a single row.  It's
-    also often used for queries that have an <literal>ORDER BY</literal> condition
-    that matches the index order, because then no extra sorting step is needed
-    to satisfy the <literal>ORDER BY</literal>.  In this example, adding
-    <literal>ORDER BY unique1</literal> would use the same plan because the
-    index already implicitly provides the requested ordering.
+    在这类计划中，表行按索引顺序被读取，这使得读取它们的开销更高，但由于行数很少，对行位置进行排序的额外开销并不值得。你最常见到这种计划类型的情形是只取回单行的查询。它也常用于带有与索引顺序匹配的 <literal>ORDER BY</literal> 条件的查询，因为这样就不需要额外的排序步骤来满足 <literal>ORDER BY</literal>。在本例中，加上 <literal>ORDER BY unique1</literal> 会使用相同的计划，因为索引已经隐式提供了所请求的排序。
    </para>
 
    <para>
-     The planner may implement an <literal>ORDER BY</literal> clause in several
-     ways.  The above example shows that such an ordering clause may be
-     implemented implicitly.  The planner may also add an explicit
-     <literal>Sort</literal> step:
+     规划器可以用多种方式实现 <literal>ORDER BY</literal> 子句。上面的例子表明，这样的排序子句可以隐式实现。规划器也可以添加一个显式的 <literal>Sort</literal> 步骤：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 ORDER BY unique1;
@@ -309,9 +232,7 @@ EXPLAIN SELECT * FROM tenk1 ORDER BY unique1;
    ->  Seq Scan on tenk1  (cost=0.00..445.00 rows=10000 width=244)
 </screen>
 
-    If a part of the plan guarantees an ordering on a prefix of the
-    required sort keys, then the planner may instead decide to use an
-    <literal>Incremental Sort</literal> step:
+    如果计划的一部分保证了所需排序键前缀上的顺序，那么规划器可能改为决定使用 <literal>Incremental Sort</literal> 步骤：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 ORDER BY hundred, ten LIMIT 100;
@@ -325,18 +246,11 @@ EXPLAIN SELECT * FROM tenk1 ORDER BY hundred, ten LIMIT 100;
          -&gt;  Index Scan using tenk1_hundred on tenk1  (cost=0.29..1574.20 rows=10000 width=244)
 </screen>
 
-    Compared to regular sorts, sorting incrementally allows returning tuples
-    before the entire result set has been sorted, which particularly enables
-    optimizations with <literal>LIMIT</literal> queries.  It may also reduce
-    memory usage and the likelihood of spilling sorts to disk, but it comes at
-    the cost of the increased overhead of splitting the result set into multiple
-    sorting batches.
+    与常规排序相比，增量排序允许在整个结果集排序完成之前就返回元组，这特别有利于对 <literal>LIMIT</literal> 查询进行优化。它还可能减少内存使用以及排序溢出到磁盘的可能性，但代价是将结果集拆分成多个排序批次所带来的额外开销增加。
    </para>
 
    <para>
-    If there are separate indexes on several of the columns referenced
-    in <literal>WHERE</literal>, the planner might choose to use an AND or OR
-    combination of the indexes:
+    如果 <literal>WHERE</literal> 中引用的若干列上分别建有索引，规划器可能会选择使用索引的 AND 或 OR 组合：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000;
@@ -352,14 +266,11 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000;
                Index Cond: (unique2 &gt; 9000)
 </screen>
 
-    But this requires visiting both indexes, so it's not necessarily a win
-    compared to using just one index and treating the other condition as
-    a filter.  If you vary the ranges involved you'll see the plan change
-    accordingly.
+    但这需要访问两个索引，因此与只使用一个索引并把另一个条件当作过滤条件相比，未必更划算。如果你改变所涉及的范围，就会看到计划相应地发生变化。
    </para>
 
    <para>
-    Here is an example showing the effects of <literal>LIMIT</literal>:
+    下面是一个展示 <literal>LIMIT</literal> 效果的例子：
 
 <screen>
 EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000 LIMIT 2;
@@ -374,20 +285,11 @@ EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000 LIMIT 2
    </para>
 
    <para>
-    This is the same query as above, but we added a <literal>LIMIT</literal> so that
-    not all the rows need be retrieved, and the planner changed its mind about
-    what to do.  Notice that the total cost and row count of the Index Scan
-    node are shown as if it were run to completion.  However, the Limit node
-    is expected to stop after retrieving only a fifth of those rows, so its
-    total cost is only a fifth as much, and that's the actual estimated cost
-    of the query.  This plan is preferred over adding a Limit node to the
-    previous plan because the Limit could not avoid paying the startup cost
-    of the bitmap scan, so the total cost would be something over 25 units
-    with that approach.
+    这是与上面相同的查询，但我们添加了一个 <literal>LIMIT</literal>，这样就不需要检索所有行，并且规划器改变了它的想法。请注意，Index Scan 节点的总成本和行数显示为好像它被完整执行了一样。然而，Limit 节点预计在只检索了这些行的五分之一后就停止，因此它的总成本只有五分之一，而这才是查询的实际估计成本。这个计划比在之前的计划上添加 Limit 节点更受青睐，因为 Limit 无法避免支付位图扫描的启动成本，所以采用那种方法的总成本会超过 25 个单位。
    </para>
 
    <para>
-    Let's try joining two tables, using the columns we have been discussing:
+    让我们尝试连接两个表，使用我们一直在讨论的列：
 
 <screen>
 EXPLAIN SELECT *
@@ -407,36 +309,11 @@ WHERE t1.unique1 &lt; 10 AND t1.unique2 = t2.unique2;
    </para>
 
    <para>
-    In this plan, we have a nested-loop join node with two table scans as
-    inputs, or children.  The indentation of the node summary lines reflects
-    the plan tree structure.  The join's first, or <quote>outer</quote>, child
-    is a bitmap scan similar to those we saw before.  Its cost and row count
-    are the same as we'd get from <literal>SELECT ... WHERE unique1 &lt; 10</literal>
-    because we are
-    applying the <literal>WHERE</literal> clause <literal>unique1 &lt; 10</literal>
-    at that node.
-    The <literal>t1.unique2 = t2.unique2</literal> clause is not relevant yet,
-    so it doesn't affect the row count of the outer scan.  The nested-loop
-    join node will run its second,
-    or <quote>inner</quote> child once for each row obtained from the outer child.
-    Column values from the current outer row can be plugged into the inner
-    scan; here, the <literal>t1.unique2</literal> value from the outer row is available,
-    so we get a plan and costs similar to what we saw above for a simple
-    <literal>SELECT ... WHERE t2.unique2 = <replaceable>constant</replaceable></literal> case.
-    (The estimated cost is actually a bit lower than what was seen above,
-    as a result of caching that's expected to occur during the repeated
-    index scans on <literal>t2</literal>.)  The
-    costs of the loop node are then set on the basis of the cost of the outer
-    scan, plus one repetition of the inner scan for each outer row (10 * 7.90,
-    here), plus a little CPU time for join processing.
+    在这个计划中，我们有一个嵌套循环连接节点，它有两个表扫描作为输入，或者说子节点。节点摘要行的缩进反映了计划树结构。该连接的第一个子节点（即<quote>外层</quote>子节点）是一个位图扫描，与我们之前看到的类似。它的成本和行数与我们从 <literal>SELECT ... WHERE unique1 &lt; 10</literal> 得到的相同，因为我们在该节点应用了 <literal>WHERE</literal> 子句 <literal>unique1 &lt; 10</literal>。<literal>t1.unique2 = t2.unique2</literal> 子句此时还不相关，因此它不影响外层扫描的行数。嵌套循环连接节点将针对从外层子节点获得的每一行运行其第二个子节点（即<quote>内层</quote>子节点）一次。当前外层行的列值可以传入内层扫描；在这里，外层行的 <literal>t1.unique2</literal> 值可用，因此我们得到的计划和成本与上面看到的简单 <literal>SELECT ... WHERE t2.unique2 = <replaceable>constant</replaceable></literal> 情况类似。（由于在 <literal>t2</literal> 上重复进行索引扫描期间预期会发生缓存，估计成本实际上比上面看到的略低。）然后，循环节点的成本基于外层扫描的成本，加上针对每个外层行重复一次内层扫描（此处为 10 * 7.90），再加上用于连接处理的一点 CPU 时间。
    </para>
 
    <para>
-    In this example the join's output row count is the same as the product
-    of the two scans' row counts, but that's not true in all cases because
-    there can be additional <literal>WHERE</literal> clauses that mention both tables
-    and so can only be applied at the join point, not to either input scan.
-    Here's an example:
+    在这个例子中，连接输出的行数与两个扫描行数的乘积相同，但并非所有情况都如此，因为可能存在额外的 <literal>WHERE</literal> 子句同时提及两个表，因而只能在连接点应用，而不能应用于任何一个输入扫描。下面是一个例子：
 
 <screen>
 EXPLAIN SELECT *
@@ -456,35 +333,19 @@ WHERE t1.unique1 &lt; 10 AND t2.unique2 &lt; 10 AND t1.hundred &lt; t2.hundred;
                Index Cond: (unique2 &lt; 10)
 </screen>
 
-    The condition <literal>t1.hundred &lt; t2.hundred</literal> can't be
-    tested in the <literal>tenk2_unique2</literal> index, so it's applied at the
-    join node.  This reduces the estimated output row count of the join node,
-    but does not change either input scan.
+    条件 <literal>t1.hundred &lt; t2.hundred</literal> 无法在 <literal>tenk2_unique2</literal> 索引中测试，因此它在连接节点处应用。这会减少连接节点的估计输出行数，但不会改变任何一个输入扫描。
    </para>
 
    <para>
-    Notice that here the planner has chosen to <quote>materialize</quote> the inner
-    relation of the join, by putting a Materialize plan node atop it.  This
-    means that the <literal>t2</literal> index scan will be done just once, even
-    though the nested-loop join node needs to read that data ten times, once
-    for each row from the outer relation.  The Materialize node saves the data
-    in memory as it's read, and then returns the data from memory on each
-    subsequent pass.
+    注意，这里规划器选择将连接的内层关系<quote>物化</quote>，即在其上放置一个 Materialize 计划节点。这意味着 <literal>t2</literal> 索引扫描只会执行一次，尽管嵌套循环连接节点需要读取该数据十次，外层关系的每一行一次。Materialize 节点在读取数据时将其保存在内存中，然后在后续每次遍历时从内存返回数据。
    </para>
 
    <para>
-    When dealing with outer joins, you might see join plan nodes with both
-    <quote>Join Filter</quote> and plain <quote>Filter</quote> conditions attached.
-    Join Filter conditions come from the outer join's <literal>ON</literal> clause,
-    so a row that fails the Join Filter condition could still get emitted as
-    a null-extended row.  But a plain Filter condition is applied after the
-    outer-join rules and so acts to remove rows unconditionally.  In an inner
-    join there is no semantic difference between these types of filters.
+    在处理外连接时，你可能会看到连接计划节点同时附加了 <quote>Join Filter</quote> 和普通 <quote>Filter</quote> 条件。Join Filter 条件来自外连接的 <literal>ON</literal> 子句，因此未通过 Join Filter 条件的行仍可能作为空值扩展行输出。但普通 Filter 条件在外连接规则之后应用，因此会无条件地移除行。在内连接中，这两类过滤器在语义上没有区别。
    </para>
 
    <para>
-    If we change the query's selectivity a bit, we might get a very different
-    join plan:
+    如果我们稍微改变查询的选择性，可能会得到非常不同的连接计划：
 
 <screen>
 EXPLAIN SELECT *
@@ -505,17 +366,11 @@ WHERE t1.unique1 &lt; 100 AND t1.unique2 = t2.unique2;
    </para>
 
    <para>
-    Here, the planner has chosen to use a hash join, in which rows of one
-    table are entered into an in-memory hash table, after which the other
-    table is scanned and the hash table is probed for matches to each row.
-    Again note how the indentation reflects the plan structure: the bitmap
-    scan on <literal>tenk1</literal> is the input to the Hash node, which constructs
-    the hash table.  That's then returned to the Hash Join node, which reads
-    rows from its outer child plan and searches the hash table for each one.
+    这里，规划器选择使用哈希连接，其中一张表的行被放入内存哈希表，然后扫描另一张表，并为每一行在哈希表中探查匹配项。再次注意缩进如何反映计划结构：对 <literal>tenk1</literal> 的位图扫描是 Hash 节点的输入，该节点构建哈希表。然后哈希表被返回给 Hash Join 节点，该节点从其外层子计划读取行，并为每一行搜索哈希表。
    </para>
 
    <para>
-    Another possible type of join is a merge join, illustrated here:
+    另一种可能的连接类型是合并连接，如下所示：
 
 <screen>
 EXPLAIN SELECT *
@@ -533,21 +388,12 @@ WHERE t1.unique1 &lt; 100 AND t1.unique2 = t2.unique2;
    </para>
 
    <para>
-    Merge join requires its input data to be sorted on the join keys.  In this
-    example each input is sorted by using an index scan to visit the rows
-    in the correct order; but a sequential scan and sort could also be used.
-    (Sequential-scan-and-sort frequently beats an index scan for sorting many rows,
-    because of the nonsequential disk access required by the index scan.)
+    合并连接要求其输入数据按连接键排序。在本例中，每个输入都通过索引扫描按正确顺序访问行来进行排序；但也可以使用顺序扫描加排序。(对于排序许多行，顺序扫描加排序常常胜过索引扫描，因为索引扫描需要非顺序的磁盘访问。)
    </para>
 
    <para>
-    One way to look at variant plans is to force the planner to disregard
-    whatever strategy it thought was the cheapest, using the enable/disable
-    flags described in <xref linkend="runtime-config-query-enable"/>.
-    (This is a crude tool, but useful.  See
-    also <xref linkend="explicit-joins"/>.)
-    For example, if we're unconvinced that merge join is the best join
-    type for the previous example, we could try
+    查看变体计划的一种方法是，使用 <xref linkend="runtime-config-query-enable"/> 中描述的启用/禁用标志，强制规划器忽略它认为最廉价的策略。(这是一个粗糙的工具，但很有用。另请参阅 <xref linkend="explicit-joins"/>。)
+    例如，如果我们不相信合并连接是上一个示例的最佳连接类型，可以尝试
 
 <screen>
 SET enable_mergejoin = off;
@@ -568,20 +414,13 @@ WHERE t1.unique1 &lt; 100 AND t1.unique2 = t2.unique2;
                      Index Cond: (unique1 &lt; 100)
 </screen>
 
-    which shows that the planner thinks that hash join would be nearly 50%
-    more expensive than merge join for this case.
-    Of course, the next question is whether it's right about that.
-    We can investigate that using <command>EXPLAIN ANALYZE</command>, as
-    discussed <link linkend="using-explain-analyze">below</link>.
+    这表明规划器认为对于这种情况，哈希连接的开销比合并连接高出近 50%。
+    当然，接下来的问题是它这样判断是否正确。
+    我们可以使用 <command>EXPLAIN ANALYZE</command> 来调查这一点，正如 <link linkend="using-explain-analyze">下文</link> 所讨论的那样。
    </para>
 
    <para>
-    When using the enable/disable flags to disable plan node types, many of
-    the flags only discourage the use of the corresponding plan node and don't
-    outright disallow the planner's ability to use the plan node type.  This
-    is by design so that the planner still maintains the ability to form a
-    plan for a given query.  When the resulting plan contains a disabled node,
-    the <command>EXPLAIN</command> output will indicate this fact.
+    当使用启用/禁用标志来禁用计划节点类型时，许多标志只是不鼓励使用相应的计划节点，而并不会完全禁止规划器使用该计划节点类型的能力。这是有意设计的，以便规划器仍然保持为给定查询构造计划的能力。当生成的计划包含被禁用的节点时，<command>EXPLAIN</command> 输出会指出这一事实。
 
 <screen>
 SET enable_seqscan = off;
@@ -595,19 +434,14 @@ EXPLAIN SELECT * FROM unit;
    </para>
 
    <para>
-    Because the <literal>unit</literal> table has no indexes, there is no
-    other means to read the table data, so the sequential scan is the only
-    option available to the query planner.
+    由于 <literal>unit</literal> 表没有索引，因此没有其他方式可以读取表数据，所以顺序扫描是查询规划器唯一可用的选项。
    </para>
 
    <para>
     <indexterm>
      <primary>subplan</primary>
     </indexterm>
-    Some query plans involve <firstterm>subplans</firstterm>, which arise
-    from sub-<literal>SELECT</literal>s in the original query.  Such
-    queries can sometimes be transformed into ordinary join plans, but
-    when they cannot be, we get plans like:
+    有些查询计划涉及<firstterm>子计划</firstterm>，它们源自原始查询中的子 <literal>SELECT</literal>。这类查询有时可以转换为普通的连接计划，但当无法转换时，我们会得到类似这样的计划：
 
 <screen>
 EXPLAIN VERBOSE SELECT unique1
@@ -625,15 +459,9 @@ WHERE t.ten &lt; ALL (SELECT o.ten FROM onek o WHERE o.four = t.four);
            Filter: (o.four = t.four)
 </screen>
 
-    This rather artificial example serves to illustrate a couple of
-    points: values from the outer plan level can be passed down into a
-    subplan (here, <literal>t.four</literal> is passed down) and the
-    results of the sub-select are available to the outer plan.  Those
-    result values are shown by <command>EXPLAIN</command> with notations
-    like
-    <literal>(<replaceable>subplan_name</replaceable>).col<replaceable>N</replaceable></literal>,
-    which refers to the <replaceable>N</replaceable>'th output column of
-    the sub-<literal>SELECT</literal>.
+    这个相当人为的示例用来说明几点：来自外层计划层次的值可以向下传递到子计划中(这里传递下去的是 <literal>t.four</literal>)，并且子查询的结果可供外层计划使用。这些结果值由 <command>EXPLAIN</command> 以类似
+    <literal>(<replaceable>subplan_name</replaceable>).col<replaceable>N</replaceable></literal>
+    的记号显示，它指的是子 <literal>SELECT</literal> 的第 <replaceable>N</replaceable> 个输出列。
    </para>
 
    <para>
@@ -641,10 +469,7 @@ WHERE t.ten &lt; ALL (SELECT o.ten FROM onek o WHERE o.four = t.four);
      <primary>subplan</primary>
      <secondary>hashed</secondary>
     </indexterm>
-    In the example above, the <literal>ALL</literal> operator runs the
-    subplan again for each row of the outer query (which accounts for the
-    high estimated cost).  Some queries can use a <firstterm>hashed
-    subplan</firstterm> to avoid that:
+    在上面的例子中，<literal>ALL</literal> 运算符会为外部查询的每一行重新运行子计划（这正是估计成本很高的原因）。有些查询可以使用<firstterm>哈希子计划</firstterm>来避免这种情况：
 
 <screen>
 EXPLAIN SELECT *
@@ -660,21 +485,14 @@ WHERE t.unique1 NOT IN (SELECT o.unique1 FROM onek o);
 (4 rows)
 </screen>
 
-    Here, the subplan is run a single time and its output is loaded into
-    an in-memory hash table, which is then probed by the
-    outer <literal>ANY</literal> operator.  This requires that the
-    sub-<literal>SELECT</literal> not reference any variables of the outer
-    query, and that the <literal>ANY</literal>'s comparison operator be
-    amenable to hashing.
+    这里，子计划只运行一次，其输出被载入内存中的哈希表，然后由外层的 <literal>ANY</literal> 运算符对其进行探测。这要求子 <literal>SELECT</literal> 不引用外部查询的任何变量，并且 <literal>ANY</literal> 的比较运算符支持哈希。
    </para>
 
    <para>
     <indexterm>
      <primary>initplan</primary>
     </indexterm>
-    If, in addition to not referencing any variables of the outer query,
-    the sub-<literal>SELECT</literal> cannot return more than one row,
-    it may instead be implemented as an <firstterm>initplan</firstterm>:
+    如果除了不引用外部查询的任何变量之外，子 <literal>SELECT</literal> 还不能返回多于一行，那么它可能被实现为<firstterm>初始化计划</firstterm>：
 
 <screen>
 EXPLAIN VERBOSE SELECT unique1
@@ -690,12 +508,7 @@ FROM tenk1 t1 WHERE t1.ten = (SELECT (random() * 10)::integer);
            Output: ((random() * '10'::double precision))::integer
 </screen>
 
-    An initplan is run only once per execution of the outer plan, and its
-    results are saved for re-use in later rows of the outer plan.  So in
-    this example <literal>random()</literal> is evaluated only once and
-    all the values of <literal>t1.ten</literal> are compared to the same
-    randomly-chosen integer.  That's quite different from what would
-    happen without the sub-<literal>SELECT</literal> construct.
+    初始化计划在外层计划的每次执行中只运行一次，其结果会被保存下来，供外层计划的后续行重复使用。因此在这个例子中，<literal>random()</literal> 只被求值一次，<literal>t1.ten</literal> 的所有值都与同一个随机选择的整数进行比较。这与没有子 <literal>SELECT</literal> 构造时会发生的情况大不相同。
    </para>
 
   </sect2>
@@ -704,12 +517,7 @@ FROM tenk1 t1 WHERE t1.ten = (SELECT (random() * 10)::integer);
    <title><command>EXPLAIN ANALYZE</command></title>
 
    <para>
-    It is possible to check the accuracy of the planner's estimates
-    by using <command>EXPLAIN</command>'s <literal>ANALYZE</literal> option.  With this
-    option, <command>EXPLAIN</command> actually executes the query, and then displays
-    the true row counts and true run time accumulated within each plan node,
-    along with the same estimates that a plain <command>EXPLAIN</command>
-    shows.  For example, we might get a result like this:
+    可以通过使用 <command>EXPLAIN</command> 的 <literal>ANALYZE</literal> 选项来检查规划器估计值的准确性。使用该选项时，<command>EXPLAIN</command> 会实际执行查询，然后显示每个计划节点内累积的真实行数和真实运行时间，以及普通 <command>EXPLAIN</command> 所显示的相同估计值。例如，我们可能得到这样的结果：
 
 <screen>
 EXPLAIN ANALYZE SELECT *
@@ -738,31 +546,15 @@ WHERE t1.unique1 &lt; 10 AND t1.unique2 = t2.unique2;
  Execution Time: 0.073 ms
 </screen>
 
-    Note that the <quote>actual time</quote> values are in milliseconds of
-    real time, whereas the <literal>cost</literal> estimates are expressed in
-    arbitrary units; so they are unlikely to match up.
-    The thing that's usually most important to look for is whether the
-    estimated row counts are reasonably close to reality.  In this example
-    the estimates were all dead-on, but that's quite unusual in practice.
+    注意，<quote>实际时间</quote>值是以毫秒为单位的真实时间，而 <literal>cost</literal> 估计值以任意单位表示；因此它们不太可能吻合。通常最需要关注的是估计行数是否与实际行数相当接近。在这个例子中，所有估计值都完全准确，但这在实践中相当罕见。
    </para>
 
    <para>
-    In some query plans, it is possible for a subplan node to be executed more
-    than once.  For example, the inner index scan will be executed once per
-    outer row in the above nested-loop plan.  In such cases, the
-    <literal>loops</literal> value reports the
-    total number of executions of the node, and the actual time and rows
-    values shown are averages per-execution.  This is done to make the numbers
-    comparable with the way that the cost estimates are shown.  Multiply by
-    the <literal>loops</literal> value to get the total time actually spent in
-    the node.  In the above example, we spent a total of 0.030 milliseconds
-    executing the index scans on <literal>tenk2</literal>.
+    在某些查询计划中，子计划节点可能会被执行多次。例如，在上面的嵌套循环计划中，内层索引扫描将对外层每一行执行一次。在这种情况下，<literal>loops</literal> 值报告该节点的总执行次数，而显示的 actual time 和 rows 值是每次执行的平均值。这样做是为了使这些数字与代价估算的显示方式具有可比性。乘以 <literal>loops</literal> 值即可得到该节点实际花费的总时间。在上面的示例中，我们在 <literal>tenk2</literal> 上执行索引扫描总共花费了 0.030 毫秒。
    </para>
 
    <para>
-    In some cases <command>EXPLAIN ANALYZE</command> shows additional execution
-    statistics beyond the plan node execution times and row counts.
-    For example, Sort and Hash nodes provide extra information:
+    在某些情况下，<command>EXPLAIN ANALYZE</command> 会显示除计划节点执行时间和行数之外的额外执行统计信息。例如，Sort 和 Hash 节点会提供额外信息：
 
 <screen>
 EXPLAIN ANALYZE SELECT *
@@ -797,19 +589,11 @@ WHERE t1.unique1 &lt; 100 AND t1.unique2 = t2.unique2 ORDER BY t1.fivethous;
  Execution Time: 3.036 ms
 </screen>
 
-    The Sort node shows the sort method used (in particular, whether the sort
-    was in-memory or on-disk) and the amount of memory or disk space needed.
-    The Hash node shows the number of hash buckets and batches as well as the
-    peak amount of memory used for the hash table.  (If the number of batches
-    exceeds one, there will also be disk space usage involved, but that is not
-    shown.)
+Sort 节点显示所使用的排序方法（特别是排序是在内存中还是在磁盘上进行）以及所需的内存或磁盘空间量。Hash 节点显示哈希桶数和批次数，以及哈希表使用的内存峰值量。（如果批次数超过 1，还会涉及磁盘空间的使用，但不会显示出来。）
    </para>
 
    <para>
-    Index Scan nodes (as well as Bitmap Index Scan and Index-Only Scan nodes)
-    show an <quote>Index Searches</quote> line that reports the total number
-    of searches across <emphasis>all</emphasis> node
-    executions/<literal>loops</literal>:
+    Index Scan 节点（以及 Bitmap Index Scan 和 Index-Only Scan 节点）会显示一行 <quote>Index Searches</quote>，报告<emphasis>所有</emphasis>节点执行次数/<literal>loops</literal> 中的搜索总数：
 
 <screen>
 EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE thousand IN (1, 500, 700, 999);
@@ -827,12 +611,7 @@ EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE thousand IN (1, 500, 700, 999);
  Execution Time: 0.034 ms
 </screen>
 
-    Here we see a Bitmap Index Scan node that needed 4 separate index
-    searches.  The scan had to search the index from the
-    <structname>tenk1_thous_tenthous</structname> index root page once per
-    <type>integer</type> value from the predicate's <literal>IN</literal>
-    construct.  However, the number of index searches often won't have such a
-    simple correspondence to the query predicate:
+这里我们看到一个 Bitmap Index Scan 节点，它需要 4 次单独的索引搜索。该扫描必须针对谓词的 <literal>IN</literal> 构造中的每个 <type>integer</type> 值，从 <structname>tenk1_thous_tenthous</structname> 索引根页面开始搜索索引一次。然而，索引搜索的次数通常不会与查询谓词有如此简单的对应关系：
 
 <screen>
 EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE thousand IN (1, 2, 3, 4);
@@ -850,17 +629,11 @@ EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE thousand IN (1, 2, 3, 4);
  Execution Time: 0.026 ms
 </screen>
 
-    This variant of our <literal>IN</literal> query performed only 1 index
-    search.  It spent less time traversing the index (compared to the original
-    query) because its <literal>IN</literal> construct uses values matching
-    index tuples stored next to each other, on the same
-    <structname>tenk1_thous_tenthous</structname> index leaf page.
+我们的 <literal>IN</literal> 查询的这个变体只执行了 1 次索引搜索。与原始查询相比，它花在遍历索引上的时间更少，因为它的 <literal>IN</literal> 构造所使用的值所匹配的索引元组彼此相邻地存储在同一个 <structname>tenk1_thous_tenthous</structname> 索引叶子页面上。
    </para>
 
    <para>
-    The <quote>Index Searches</quote> line is also useful with B-tree index
-    scans that apply the <firstterm>skip scan</firstterm> optimization to
-    more efficiently traverse through an index:
+    <quote>Index Searches</quote> 行对于应用 <firstterm>skip scan</firstterm> 优化以更高效地遍历索引的 B-tree 索引扫描也很有用：
 <screen>
 EXPLAIN ANALYZE SELECT four, unique1 FROM tenk1 WHERE four BETWEEN 1 AND 3 AND unique1 = 42;
                                                               QUERY PLAN
@@ -874,24 +647,11 @@ EXPLAIN ANALYZE SELECT four, unique1 FROM tenk1 WHERE four BETWEEN 1 AND 3 AND u
  Execution Time: 0.012 ms
 </screen>
 
-    Here we see an Index-Only Scan node using
-    <structname>tenk1_four_unique1_idx</structname>, a multi-column index on the
-    <structname>tenk1</structname> table's <structfield>four</structfield> and
-    <structfield>unique1</structfield> columns.  The scan performs 3 searches
-    that each read a single index leaf page:
-    <quote><literal>four = 1 AND unique1 = 42</literal></quote>,
-    <quote><literal>four = 2 AND unique1 = 42</literal></quote>, and
-    <quote><literal>four = 3 AND unique1 = 42</literal></quote>.  This index
-    is generally a good target for skip scan, since, as discussed in
-    <xref linkend="indexes-multicolumn"/>, its leading column (the
-    <structfield>four</structfield> column) contains only 4 distinct values,
-    while its second/final column (the <structfield>unique1</structfield>
-    column) contains many distinct values.
+    这里我们看到一个 Index-Only Scan 节点，它使用了 <structname>tenk1_four_unique1_idx</structname>，这是 <structname>tenk1</structname> 表上针对 <structfield>four</structfield> 和 <structfield>unique1</structfield> 列的多列索引。该扫描执行了 3 次搜索，每次读取一个索引叶子页：<quote><literal>four = 1 AND unique1 = 42</literal></quote>、<quote><literal>four = 2 AND unique1 = 42</literal></quote> 和 <quote><literal>four = 3 AND unique1 = 42</literal></quote>。这个索引通常是 skip scan 的良好目标，因为正如 <xref linkend="indexes-multicolumn"/> 中所讨论的，它的前导列（<structfield>four</structfield> 列）只包含 4 个不同的值，而它的第二列/最后一列（<structfield>unique1</structfield> 列）包含许多不同的值。
    </para>
 
    <para>
-    Another type of extra information is the number of rows removed by a
-    filter condition:
+    另一类额外信息是被过滤条件移除的行数：
 
 <screen>
 EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE ten &lt; 7;
@@ -906,16 +666,11 @@ EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE ten &lt; 7;
  Execution Time: 2.145 ms
 </screen>
 
-    These counts can be particularly valuable for filter conditions applied at
-    join nodes.  The <quote>Rows Removed</quote> line only appears when at least
-    one scanned row, or potential join pair in the case of a join node,
-    is rejected by the filter condition.
+    这些计数对于在连接节点上应用的过滤条件尤其有价值。<quote>Rows Removed</quote> 行仅在至少有一行被扫描的行（对于连接节点则是可能的连接对）被过滤条件拒绝时才会出现。
    </para>
 
    <para>
-    A case similar to filter conditions occurs with <quote>lossy</quote>
-    index scans.  For example, consider this search for polygons containing a
-    specific point:
+    与过滤条件类似的情况出现在<quote>有损</quote>索引扫描中。例如，考虑下面这个查找包含特定点的多边形的搜索：
 
 <screen>
 EXPLAIN ANALYZE SELECT * FROM polygon_tbl WHERE f1 @&gt; polygon '(0.5,2.0)';
@@ -930,10 +685,7 @@ EXPLAIN ANALYZE SELECT * FROM polygon_tbl WHERE f1 @&gt; polygon '(0.5,2.0)';
  Execution Time: 0.033 ms
 </screen>
 
-    The planner thinks (quite correctly) that this sample table is too small
-    to bother with an index scan, so we have a plain sequential scan in which
-    all the rows got rejected by the filter condition.  But if we force an
-    index scan to be used, we see:
+    规划器认为（非常正确）这个示例表太小，不值得使用索引扫描，因此我们得到的是一个普通的顺序扫描，其中所有行都被过滤条件拒绝。但如果我们强制使用索引扫描，就会看到：
 
 <screen>
 SET enable_seqscan TO off;
@@ -951,22 +703,11 @@ EXPLAIN ANALYZE SELECT * FROM polygon_tbl WHERE f1 @&gt; polygon '(0.5,2.0)';
  Execution Time: 0.098 ms
 </screen>
 
-    Here we can see that the index returned one candidate row, which was
-    then rejected by a recheck of the index condition.  This happens because a
-    GiST index is <quote>lossy</quote> for polygon containment tests: it actually
-    returns the rows with polygons that overlap the target, and then we have
-    to do the exact containment test on those rows.
+    这里我们可以看到，索引返回了一个候选行，随后该行被索引条件的重新检查所拒绝。发生这种情况是因为 GiST 索引在多边形包含性测试中是<quote>有损</quote>的：它实际上返回的是多边形与目标重叠的行，然后我们必须对这些行执行精确的包含性测试。
    </para>
 
    <para>
-    <command>EXPLAIN</command> has a <literal>BUFFERS</literal> option which
-    provides additional detail about I/O operations performed during the
-    planning and execution of the given query.  The buffer numbers displayed
-    show the count of the non-distinct buffers hit, read, dirtied, and written
-    for the given node and all of its child nodes.  The
-    <literal>ANALYZE</literal> option implicitly enables the
-    <literal>BUFFERS</literal> option.  If this
-    is undesired, <literal>BUFFERS</literal> may be explicitly disabled:
+    <command>EXPLAIN</command> 有一个 <literal>BUFFERS</literal> 选项，它提供关于在给定查询的规划和执行期间所执行的 I/O 操作的额外细节。显示的缓冲区编号展示了给定节点及其所有子节点命中的、读取的、弄脏的和写入的非去重缓冲区数量。<literal>ANALYZE</literal> 选项会隐式启用 <literal>BUFFERS</literal> 选项。如果不希望如此，可以显式禁用 <literal>BUFFERS</literal>：
 
 <screen>
 EXPLAIN (ANALYZE, BUFFERS OFF) SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000;
@@ -989,12 +730,7 @@ EXPLAIN (ANALYZE, BUFFERS OFF) SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND un
    </para>
 
    <para>
-    Keep in mind that because <command>EXPLAIN ANALYZE</command> actually
-    runs the query, any side-effects will happen as usual, even though
-    whatever results the query might output are discarded in favor of
-    printing the <command>EXPLAIN</command> data.  If you want to analyze a
-    data-modifying query without changing your tables, you can
-    roll the command back afterwards, for example:
+    请记住，由于 <command>EXPLAIN ANALYZE</command> 实际上会执行该查询，因此任何副作用都会照常发生，即使查询可能输出的任何结果都会被丢弃，转而打印 <command>EXPLAIN</command> 数据。如果你想在不改动表的情况下分析一条会修改数据的查询，可以在事后回滚该命令，例如：
 
 <screen>
 BEGIN;
@@ -1020,26 +756,11 @@ ROLLBACK;
    </para>
 
    <para>
-    As seen in this example, when the query is an <command>INSERT</command>,
-    <command>UPDATE</command>, <command>DELETE</command>, or
-    <command>MERGE</command> command, the actual work of
-    applying the table changes is done by a top-level Insert, Update,
-    Delete, or Merge plan node.  The plan nodes underneath this node perform
-    the work of locating the old rows and/or computing the new data.
-    So above, we see the same sort of bitmap table scan we've seen already,
-    and its output is fed to an Update node that stores the updated rows.
-    It's worth noting that although the data-modifying node can take a
-    considerable amount of run time (here, it's consuming the lion's share
-    of the time), the planner does not currently add anything to the cost
-    estimates to account for that work.  That's because the work to be done is
-    the same for every correct query plan, so it doesn't affect planning
-    decisions.
+    如本例所示，当查询是一条 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command> 命令时，应用表更改的实际工作由一个顶层的 Insert、Update、Delete 或 Merge 计划节点完成。该节点之下的计划节点负责定位旧行和/或计算新数据。因此在上面的例子中，我们看到的是已经见过的同一种位图表扫描，其输出被送入一个 Update 节点，由该节点存储更新后的行。值得注意的是，尽管修改数据的节点可能占用相当多的运行时间（在这里，它消耗了绝大部分时间），但规划器目前并不会为此项工作增加任何代价估算。这是因为对于每一个正确的查询计划，要完成的工作都是相同的，所以它不会影响规划决策。
    </para>
 
    <para>
-    When an <command>UPDATE</command>, <command>DELETE</command>, or
-    <command>MERGE</command> command affects a partitioned table or
-    inheritance hierarchy, the output might look like this:
+    当一条 <command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command> 命令影响分区表或继承层次时，输出可能如下所示：
 
 <screen>
 EXPLAIN UPDATE gtest_parent SET f1 = CURRENT_DATE WHERE f2 = 101;
@@ -1059,84 +780,42 @@ EXPLAIN UPDATE gtest_parent SET f1 = CURRENT_DATE WHERE f2 = 101;
                Filter: (f2 = 101)
 </screen>
 
-    In this example the Update node needs to consider three child tables,
-    but not the originally-mentioned partitioned table (since that never
-    stores any data).  So there are three input
-    scanning subplans, one per table.  For clarity, the Update node is
-    annotated to show the specific target tables that will be updated, in the
-    same order as the corresponding subplans.
+    在这个例子中，Update 节点需要考虑三个子表，但不包括最初提到的那个分区表（因为它从不存储任何数据）。因此有三个输入扫描子计划，每个表一个。为清晰起见，Update 节点被标注出来，以显示将要更新的具体目标表，其顺序与相应的子计划一致。
    </para>
 
    <para>
-    The <literal>Planning time</literal> shown by <command>EXPLAIN
-    ANALYZE</command> is the time it took to generate the query plan from the
-    parsed query and optimize it. It does not include parsing or rewriting.
+    <command>EXPLAIN
+    ANALYZE</command> 所显示的 <literal>Planning time</literal> 是根据解析后的查询生成查询计划并对其进行优化所花费的时间。它不包括解析或重写。
    </para>
 
    <para>
-    The <literal>Execution time</literal> shown by <command>EXPLAIN
-    ANALYZE</command> includes executor start-up and shut-down time, as well
-    as the time to run any triggers that are fired, but it does not include
-    parsing, rewriting, or planning time.
-    Time spent executing <literal>BEFORE</literal> triggers, if any, is included in
-    the time for the related Insert, Update, or Delete node; but time
-    spent executing <literal>AFTER</literal> triggers is not counted there because
-    <literal>AFTER</literal> triggers are fired after completion of the whole plan.
-    The total time spent in each trigger
-    (either <literal>BEFORE</literal> or <literal>AFTER</literal>) is also shown separately.
-    Note that deferred constraint triggers will not be executed
-    until end of transaction and are thus not considered at all by
-    <command>EXPLAIN ANALYZE</command>.
+    <command>EXPLAIN
+    ANALYZE</command> 显示的 <literal>Execution time</literal> 包括执行器的启动和关闭时间，以及运行所触发的任何触发器的时间，但不包括解析、重写或规划时间。
+    执行 <literal>BEFORE</literal> 触发器所花费的时间（如果有）计入相关 Insert、Update 或 Delete 节点的时间；但执行 <literal>AFTER</literal> 触发器所花费的时间不计入其中，因为 <literal>AFTER</literal> 触发器是在整个计划完成后才触发的。
+    每个触发器（<literal>BEFORE</literal> 或 <literal>AFTER</literal>）所花费的总时间也会单独显示。
+    请注意，延迟约束触发器要到事务结束时才会被执行，因此 <command>EXPLAIN ANALYZE</command> 完全不考虑它们。
    </para>
 
    <para>
-    The time shown for the top-level node does not include any time needed
-    to convert the query's output data into displayable form or to send it
-    to the client.  While <command>EXPLAIN ANALYZE</command> will never
-    send the data to the client, it can be told to convert the query's
-    output data to displayable form and measure the time needed for that,
-    by specifying the <literal>SERIALIZE</literal> option.  That time will
-    be shown separately, and it's also included in the
-    total <literal>Execution time</literal>.
+    顶层节点所显示的时间不包括将查询的输出数据转换为可显示形式或将其发送到客户端所需的任何时间。虽然 <command>EXPLAIN ANALYZE</command> 从不会把数据发送给客户端，但可以通过指定 <literal>SERIALIZE</literal> 选项让它把查询的输出数据转换为可显示形式并测量所需的时间。该时间将单独显示，并且也包含在总的 <literal>Execution time</literal> 中。
    </para>
 
   </sect2>
 
   <sect2 id="using-explain-caveats">
-   <title>Caveats</title>
+   <title>注意事项</title>
 
    <para>
-    There are two significant ways in which run times measured by
-    <command>EXPLAIN ANALYZE</command> can deviate from normal execution of
-    the same query.  First, since no output rows are delivered to the client,
-    network transmission costs are not included.  I/O conversion costs are
-    not included either unless <literal>SERIALIZE</literal> is specified.
-    Second, the measurement overhead added by <command>EXPLAIN
-    ANALYZE</command> can be significant, especially on machines with slow
-    <function>gettimeofday()</function> operating-system calls. You can use the
-    <xref linkend="pgtesttiming"/> tool to measure the overhead of timing
-    on your system.
+    <command>EXPLAIN ANALYZE</command> 测量的运行时间可能在两个重要方面偏离同一查询的正常执行。首先，由于没有输出行传递给客户端，因此不包括网络传输开销。除非指定了 <literal>SERIALIZE</literal>，否则也不包括 I/O 转换开销。其次，<command>EXPLAIN
+    ANALYZE</command> 增加的测量开销可能相当可观，尤其是在 <function>gettimeofday()</function> 操作系统调用较慢的机器上。你可以使用 <xref linkend="pgtesttiming"/> 工具来测量你系统上计时的开销。
    </para>
 
    <para>
-    <command>EXPLAIN</command> results should not be extrapolated to situations
-    much different from the one you are actually testing; for example,
-    results on a toy-sized table cannot be assumed to apply to large tables.
-    The planner's cost estimates are not linear and so it might choose
-    a different plan for a larger or smaller table.  An extreme example
-    is that on a table that only occupies one disk page, you'll nearly
-    always get a sequential scan plan whether indexes are available or not.
-    The planner realizes that it's going to take one disk page read to
-    process the table in any case, so there's no value in expending additional
-    page reads to look at an index.  (We saw this happening in the
-    <literal>polygon_tbl</literal> example above.)
+    不应把 <command>EXPLAIN</command> 的结果外推到与你实际测试的情况差别很大的场景；例如，不能假定玩具大小的表上的结果适用于大型表。规划器的代价估算不是线性的，因此它可能会为更大或更小的表选择不同的计划。一个极端的例子是，对于只占用一个磁盘页的表，无论是否有索引可用，你几乎总是会得到顺序扫描计划。规划器意识到无论如何处理该表都需要读取一个磁盘页，因此花费额外的页读取去查看索引没有价值。（我们在上面的 <literal>polygon_tbl</literal> 示例中看到了这种情况。）
    </para>
 
    <para>
-    There are cases in which the actual and estimated values won't match up
-    well, but nothing is really wrong.  One such case occurs when
-    plan node execution is stopped short by a <literal>LIMIT</literal> or similar
-    effect.  For example, in the <literal>LIMIT</literal> query we used before,
+    有些情况下实际值和估计值不能很好地吻合，但并没有什么真正的问题。一种这样的情况是计划节点的执行被 <literal>LIMIT</literal> 或类似效果提前终止。例如，在我们之前使用的 <literal>LIMIT</literal> 查询中，
 
 <screen>
 EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000 LIMIT 2;
@@ -1155,46 +834,20 @@ EXPLAIN ANALYZE SELECT * FROM tenk1 WHERE unique1 &lt; 100 AND unique2 &gt; 9000
  Execution Time: 0.086 ms
 </screen>
 
-    the estimated cost and row count for the Index Scan node are shown as
-    though it were run to completion.  But in reality the Limit node stopped
-    requesting rows after it got two, so the actual row count is only 2 and
-    the run time is less than the cost estimate would suggest.  This is not
-    an estimation error, only a discrepancy in the way the estimates and true
-    values are displayed.
+    Index Scan 节点的估计代价和行数显示得就好像它被完整执行了一样。但实际上 Limit 节点在得到两行之后就停止请求行了，所以实际行数只有 2，运行时间也比代价估计所暗示的要短。这不是估计错误，只是估计值和真实值的显示方式存在差异。
    </para>
 
    <para>
-    Merge joins also have measurement artifacts that can confuse the unwary.
-    A merge join will stop reading one input if it's exhausted the other input
-    and the next key value in the one input is greater than the last key value
-    of the other input; in such a case there can be no more matches and so no
-    need to scan the rest of the first input.  This results in not reading all
-    of one child, with results like those mentioned for <literal>LIMIT</literal>.
-    Also, if the outer (first) child contains rows with duplicate key values,
-    the inner (second) child is backed up and rescanned for the portion of its
-    rows matching that key value.  <command>EXPLAIN ANALYZE</command> counts these
-    repeated emissions of the same inner rows as if they were real additional
-    rows.  When there are many outer duplicates, the reported actual row count
-    for the inner child plan node can be significantly larger than the number
-    of rows that are actually in the inner relation.
+    合并连接也有测量上的假象，可能会让粗心的人感到困惑。如果合并连接已经耗尽了其中一个输入，并且该输入中的下一个键值大于另一个输入的最后一个键值，它就会停止读取该输入；在这种情况下不可能再有匹配，因此无需扫描第一个输入的剩余部分。这导致不会读取某个子节点的全部内容，结果就像 <literal>LIMIT</literal> 所提到的那样。此外，如果外层（第一个）子节点包含具有重复键值的行，内层（第二个）子节点会被回退并重新扫描其匹配该键值的那部分行。<command>EXPLAIN ANALYZE</command> 会把这些重复发出的相同内层行计为真实的额外行。当外层有许多重复值时，内层子计划节点报告的实际行数可能显著大于内层关系中实际存在的行数。
    </para>
 
    <para>
-    BitmapAnd and BitmapOr nodes always report their actual row counts as zero,
-    due to implementation limitations.
+    BitmapAnd 和 BitmapOr 节点由于实现上的限制，总是将其实际行数报告为零。
    </para>
 
    <para>
-    Normally, <command>EXPLAIN</command> will display every plan node
-    created by the planner.  However, there are cases where the executor
-    can determine that certain nodes need not be executed because they
-    cannot produce any rows, based on parameter values that were not
-    available at planning time.  (Currently this can only happen for child
-    nodes of an Append or MergeAppend node that is scanning a partitioned
-    table.)  When this happens, those plan nodes are omitted from
-    the <command>EXPLAIN</command> output and a <literal>Subplans
-    Removed: <replaceable>N</replaceable></literal> annotation appears
-    instead.
+    通常，<command>EXPLAIN</command> 会显示规划器创建的每一个计划节点。然而，在某些情况下，执行器可以根据规划时不可用的参数值确定某些节点不需要执行，因为它们无法产生任何行。（目前这只会发生在正在扫描分区表的 Append 或 MergeAppend 节点的子节点上。）发生这种情况时，这些计划节点会从 <command>EXPLAIN</command> 输出中省略，并改为出现一个 <literal>Subplans
+    Removed: <replaceable>N</replaceable></literal> 注解。
    </para>
   </sect2>
 
