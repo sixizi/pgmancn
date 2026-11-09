@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import argparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pgtrans as P  # noqa: E402
@@ -82,7 +83,22 @@ def should_report(unit, plain, text):
 
 
 def main():
-    files = R.book_order()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--files", nargs="*", default=None)
+    parser.add_argument("--all", action="store_true")
+    args = parser.parse_args()
+
+    if args.files:
+        files = args.files
+    elif args.all:
+        files = sorted(
+            os.path.relpath(os.path.join(root, name), SGM)
+            for root, _, names in os.walk(SGM)
+            for name in names
+            if name.endswith(".sgml")
+        )
+    else:
+        files = R.book_order()
     report = {"files": 0, "placeholder_leaks": [], "english": [], "cjk_ratio": 0.0}
     total_plain = total_cjk = 0
     for rel in files:
