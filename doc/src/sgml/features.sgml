@@ -113,7 +113,7 @@
   </sect1>
 
   <sect1 id="xml-limits-conformance">
-   <title>XML Limits and Conformance to SQL/XML</title>
+   <title>XML 限制与对 SQL/XML 的符合性</title>
 
    <indexterm>
     <primary>SQL/XML</primary>
@@ -121,153 +121,125 @@
    </indexterm>
 
    <para>
-    Significant revisions to the XML-related specifications in ISO/IEC 9075-14
-    (SQL/XML) were introduced with SQL:2006.
-    <productname>PostgreSQL</productname>'s implementation of the XML data
-    type and related functions largely follows the earlier 2003 edition,
-    with some borrowing from later editions.  In particular:
+    ISO/IEC 9075-14（SQL/XML）中 XML 相关规范的重大修订随 SQL:2006 引入。
+    <productname>PostgreSQL</productname> 对 XML 数据类型及相关函数的实现大体遵循较早的 2003 版，
+    并部分借鉴了后续版本。具体而言：
     <itemizedlist>
      <listitem>
       <para>
-       Where the current standard provides a family of XML data types
-       to hold <quote>document</quote> or <quote>content</quote> in
-       untyped or XML Schema-typed variants, and a type
-       <type>XML(SEQUENCE)</type> to hold arbitrary pieces of XML content,
-       <productname>PostgreSQL</productname> provides the single
-       <type>xml</type> type, which can hold <quote>document</quote> or
-       <quote>content</quote>.  There is no equivalent of the
-       standard's <quote>sequence</quote> type.
+       当前标准提供了一族 XML 数据类型，用于以无类型或 XML Schema 类型化变体
+       保存 <quote>文档</quote> 或 <quote>内容</quote>，并提供一个类型
+       <type>XML(SEQUENCE)</type> 用于保存任意 XML 内容片段，
+       而 <productname>PostgreSQL</productname> 提供单一的
+       <type>xml</type> 类型，可保存 <quote>文档</quote> 或
+       <quote>内容</quote>。标准中的 <quote>序列</quote> 类型没有对应物。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <productname>PostgreSQL</productname> provides two functions
-       introduced in SQL:2006, but in variants that use the XPath 1.0
-       language, rather than XML Query as specified for them in the
-       standard.
+       <productname>PostgreSQL</productname> 提供了 SQL:2006 中引入的两个函数，但其变体使用 XPath 1.0
+       语言，而不是标准中为它们指定的 XML Query。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <productname>PostgreSQL</productname> does not support the
-       <literal>RETURNING CONTENT</literal> or <literal>RETURNING SEQUENCE</literal>
-       clauses, functions which are defined to have these in the specification
-       are implicitly returning content.
+       <productname>PostgreSQL</productname> 不支持
+       <literal>RETURNING CONTENT</literal> 或 <literal>RETURNING SEQUENCE</literal>
+       子句；规范中定义具有这些子句的函数会隐式返回内容。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    This section presents some of the resulting differences you may encounter.
+    本节介绍您可能遇到的一些由此产生的差异。
    </para>
 
    <sect2 id="functions-xml-limits-xpath1">
-    <title>Queries Are Restricted to XPath 1.0</title>
+    <title>查询被限制为 XPath 1.0</title>
 
     <para>
-     The <productname>PostgreSQL</productname>-specific functions
-     <function>xpath()</function> and <function>xpath_exists()</function>
-     query XML documents using the XPath language.
-     <productname>PostgreSQL</productname> also provides XPath-only variants
-     of the standard functions <function>XMLEXISTS</function> and
-     <function>XMLTABLE</function>, which officially use
-     the XQuery language. For all of these functions,
-     <productname>PostgreSQL</productname> relies on the
-     <application>libxml2</application> library, which provides only XPath 1.0.
+     <productname>PostgreSQL</productname> 特有的函数
+     <function>xpath()</function> 和 <function>xpath_exists()</function>
+     使用 XPath 语言查询 XML 文档。
+     <productname>PostgreSQL</productname> 还提供了标准函数 <function>XMLEXISTS</function> 和
+     <function>XMLTABLE</function> 的仅 XPath 变体，
+     这些标准函数正式使用
+     XQuery 语言。对于所有这些函数，
+     <productname>PostgreSQL</productname> 依赖于
+     <application>libxml2</application> 库，而该库只提供 XPath 1.0。
     </para>
 
     <para>
-     There is a strong connection between the XQuery language and XPath
-     versions 2.0 and later: any expression that is syntactically valid and
-     executes successfully in both produces the same result (with a minor
-     exception for expressions containing numeric character references or
-     predefined entity references, which XQuery replaces with the
-     corresponding character while XPath leaves them alone).  But there is
-     no such connection between these languages and XPath 1.0; it was an
-     earlier language and differs in many respects.
+     XQuery 语言与 XPath 2.0 及更高版本之间存在紧密的联系：任何在两者中
+     语法上有效且能成功执行的表达式都会产生相同的结果（有一个小例外，
+     即包含数字字符引用或预定义实体引用的表达式，XQuery 会将其替换为
+     相应的字符，而 XPath 则保持原样）。但这些语言与 XPath 1.0 之间
+     没有这样的联系；XPath 1.0 是一种更早的语言，在许多方面都有所不同。
     </para>
 
     <para>
-     There are two categories of limitation to keep in mind: the restriction
-     from XQuery to XPath for the functions specified in the SQL standard, and
-     the restriction of XPath to version 1.0 for both the standard and the
-     <productname>PostgreSQL</productname>-specific functions.
+     需要记住两类限制：一是对于 SQL 标准中指定的函数，从 XQuery 到
+     XPath 的限制；二是对于标准函数和 <productname>PostgreSQL</productname> 特有函数，XPath 被限制为
+     1.0 版本。
     </para>
 
     <sect3 id="functions-xml-limits-xpath1-xquery-restriction">
-     <title>Restriction of XQuery to XPath</title>
+     <title>XQuery 对 XPath 的限制</title>
 
      <para>
-      Features of XQuery beyond those of XPath include:
+      XQuery 超出 XPath 的特性包括：
 
       <itemizedlist>
        <listitem>
         <para>
-         XQuery expressions can construct and return new XML nodes, in
-         addition to all possible XPath values.  XPath can create and return
-         values of the atomic types (numbers, strings, and so on) but can
-         only return XML nodes that were already present in documents
-         supplied as input to the expression.
+         XQuery 表达式除了可以返回所有可能的 XPath 值之外，还可以构造并返回新的 XML 节点。XPath 可以创建并返回原子类型的值（数字、字符串等），但只能返回那些已经存在于作为该表达式输入提供的文档中的 XML 节点。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         XQuery has control constructs for iteration, sorting, and grouping.
+         XQuery 具有用于迭代、排序和分组的控制结构。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         XQuery allows declaration and use of local functions.
+         XQuery 允许声明和使用局部函数。
         </para>
        </listitem>
       </itemizedlist>
      </para>
 
      <para>
-      Recent XPath versions begin to offer capabilities overlapping with
-      these (such as functional-style <function>for-each</function> and
-      <function>sort</function>, anonymous functions, and
-      <function>parse-xml</function> to create a node from a string),
-      but such features were not available before XPath 3.0.
+      较新的 XPath 版本开始提供与这些能力重叠的功能（例如函数式的 <function>for-each</function> 和
+      <function>sort</function>、匿名函数，以及用于从字符串创建节点的
+      <function>parse-xml</function>），但在 XPath 3.0 之前并不具备此类特性。
      </para>
     </sect3>
 
     <sect3 id="xml-xpath-1-specifics">
-     <title>Restriction of XPath to 1.0</title>
+     <title>将 XPath 限制为 1.0</title>
 
      <para>
-      For developers familiar with XQuery and XPath 2.0 or later, XPath 1.0
-      presents a number of differences to contend with:
+      对于熟悉 XQuery 和 XPath 2.0 或更高版本的开发者来说，XPath 1.0
+      有许多差异需要应对：
 
       <itemizedlist>
        <listitem>
         <para>
-         The fundamental type of an XQuery/XPath expression, the
-         <type>sequence</type>, which can contain XML nodes, atomic values,
-         or both, does not exist in XPath 1.0. A 1.0 expression can only
-         produce a node-set (containing zero or more XML nodes), or a single
-         atomic value.
+         XQuery/XPath 表达式的基本类型 <type>sequence</type> 可以包含 XML 节点、原子值或两者兼有，它在 XPath 1.0 中并不存在。1.0 表达式只能产生节点集（包含零个或多个 XML 节点），或单个原子值。
         </para>
        </listitem>
 
        <listitem>
         <para>
-          Unlike an XQuery/XPath sequence, which can contain any desired
-          items in any desired order, an XPath 1.0 node-set has no
-          guaranteed order and, like any set, does not allow multiple
-          appearances of the same item.
+          与 XQuery/XPath 序列不同（序列可以按任意期望的顺序包含任意期望的项），XPath 1.0 节点集不保证顺序，并且像任何集合一样，不允许同一项多次出现。
          <note>
           <para>
-           The <application>libxml2</application> library does seem to
-           always return node-sets to <productname>PostgreSQL</productname>
-           with their members in the same relative order they had in the
-           input document.  Its documentation does not commit to this
-           behavior, and an XPath 1.0 expression cannot control it.
+           <application>libxml2</application> 库似乎总是向 <productname>PostgreSQL</productname> 返回节点集，其成员的相对顺序与它们在输入文档中的顺序相同。其文档并未承诺这一行为，而且 XPath 1.0 表达式无法控制它。
           </para>
          </note>
         </para>
@@ -275,135 +247,74 @@
 
        <listitem>
         <para>
-         While XQuery/XPath provides all of the types defined in XML Schema
-         and many operators and functions over those types, XPath 1.0 has only
-         node-sets and the three atomic types <type>boolean</type>,
-         <type>double</type>, and <type>string</type>.
+         尽管 XQuery/XPath 提供了 XML Schema 中定义的所有类型以及针对这些类型的许多运算符和函数，但 XPath 1.0 只有节点集和三种原子类型 <type>boolean</type>、<type>double</type> 和 <type>string</type>。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         XPath 1.0 has no conditional operator. An XQuery/XPath expression
-         such as <literal>if ( hat ) then hat/@size else "no hat"</literal>
-         has no XPath 1.0 equivalent.
+         XPath 1.0 没有条件运算符。诸如 <literal>if ( hat ) then hat/@size else "no hat"</literal> 这样的 XQuery/XPath 表达式没有对应的 XPath 1.0 等价形式。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         XPath 1.0 has no ordering comparison operator for strings. Both
-         <literal>"cat" &lt; "dog"</literal> and
-         <literal>"cat" &gt; "dog"</literal> are false, because each is a
-         numeric comparison of two <literal>NaN</literal>s. In contrast,
-         <literal>=</literal> and <literal>!=</literal> do compare the strings
-         as strings.
+         XPath 1.0 没有用于字符串的顺序比较运算符。<literal>"cat" &lt; "dog"</literal> 和 <literal>"cat" &gt; "dog"</literal> 都为假，因为二者都是对两个 <literal>NaN</literal> 进行数值比较。相比之下，<literal>=</literal> 和 <literal>!=</literal> 确实按字符串来比较字符串。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         XPath 1.0 blurs the distinction between
-         <firstterm>value comparisons</firstterm> and
-         <firstterm>general comparisons</firstterm> as XQuery/XPath define
-         them.  Both <literal>sale/@hatsize = 7</literal> and
-         <literal>sale/@customer = "alice"</literal> are existentially
-         quantified comparisons, true if there is
-         any <literal>sale</literal> with the given value for the
-         attribute, but <literal>sale/@taxable = false()</literal> is a
-         value comparison to the
-         <firstterm>effective boolean value</firstterm> of a whole node-set.
-         It is true only if no <literal>sale</literal> has
-         a <literal>taxable</literal> attribute at all.
+         XPath 1.0 模糊了 XQuery/XPath 所定义的<firstterm>值比较</firstterm>与<firstterm>一般比较</firstterm>之间的区别。<literal>sale/@hatsize = 7</literal> 和 <literal>sale/@customer = "alice"</literal> 都是存在量化比较，只要存在任何 <literal>sale</literal> 具有该属性的给定值，结果即为真；但 <literal>sale/@taxable = false()</literal> 是与整个节点集的<firstterm>有效布尔值</firstterm>进行的值比较。仅当没有任何 <literal>sale</literal> 具有 <literal>taxable</literal> 属性时，它才为真。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         In the XQuery/XPath data model, a <firstterm>document
-         node</firstterm> can have either document form (i.e., exactly one
-         top-level element, with only comments and processing instructions
-         outside of it) or content form (with those constraints
-         relaxed). Its equivalent in XPath 1.0, the
-         <firstterm>root node</firstterm>, can only be in document form.
-         This is part of the reason an <type>xml</type> value passed as the
-         context item to any <productname>PostgreSQL</productname>
-         XPath-based function must be in document form.
+         在 XQuery/XPath 数据模型中，<firstterm>文档节点</firstterm>可以采用文档形式（即恰好一个顶层元素，其外只能有注释和处理指令）或内容形式（这些约束被放宽）。它在 XPath 1.0 中的对应物——<firstterm>根节点</firstterm>——只能采用文档形式。这也是为什么作为上下文项传递给任何基于 XPath 的 <productname>PostgreSQL</productname> 函数的 <type>xml</type> 值必须采用文档形式的部分原因。
         </para>
        </listitem>
       </itemizedlist>
      </para>
 
      <para>
-      The differences highlighted here are not all of them. In XQuery and
-      the 2.0 and later versions of XPath, there is an XPath 1.0 compatibility
-      mode, and the W3C lists of
-      <ulink url='https://www.w3.org/TR/2010/REC-xpath-functions-20101214/#xpath1-compatibility'>function library changes</ulink>
-      and
-      <ulink url='https://www.w3.org/TR/xpath20/#id-backwards-compatibility'>language changes</ulink>
-      applied in that mode offer a more complete (but still not exhaustive)
-      account of the differences.  The compatibility mode cannot make the
-      later languages exactly equivalent to XPath 1.0.
+      此处强调的差异并非全部。在 XQuery 以及 XPath 2.0 及更高版本中，存在一种 XPath 1.0 兼容模式，W3C 列出的在该模式下应用的<ulink url='https://www.w3.org/TR/2010/REC-xpath-functions-20101214/#xpath1-compatibility'>函数库变更</ulink>和<ulink url='https://www.w3.org/TR/xpath20/#id-backwards-compatibility'>语言变更</ulink>提供了更完整（但仍非详尽）的差异说明。兼容模式无法使这些较晚的语言与 XPath 1.0 完全等价。
      </para>
     </sect3>
 
     <sect3 id="functions-xml-limits-casts">
-     <title>Mappings between SQL and XML Data Types and Values</title>
+     <title>SQL 与 XML 数据类型和值之间的映射</title>
 
      <para>
-      In SQL:2006 and later, both directions of conversion between standard SQL
-      data types and the XML Schema types are specified precisely. However, the
-      rules are expressed using the types and semantics of XQuery/XPath, and
-      have no direct application to the different data model of XPath 1.0.
+      在 SQL:2006 及更高版本中，标准 SQL 数据类型与 XML Schema 类型之间两个方向的转换都有精确规定。然而，这些规则是用 XQuery/XPath 的类型和语义表述的，并不能直接适用于 XPath 1.0 的不同数据模型。
      </para>
 
      <para>
-      When <productname>PostgreSQL</productname> maps SQL data values to XML
-      (as in <function>xmlelement</function>), or XML to SQL (as in the output
-      columns of <function>xmltable</function>), except for a few cases
-      treated specially, <productname>PostgreSQL</productname> simply assumes
-      that the XML data type's XPath 1.0 string form will be valid as the
-      text-input form of the SQL datatype, and conversely. This rule has the
-      virtue of simplicity while producing, for many data types, results similar
-      to the mappings specified in the standard.
+      当 <productname>PostgreSQL</productname> 把 SQL 数据值映射为 XML（如 <function>xmlelement</function> 中那样），或把 XML 映射为 SQL（如 <function>xmltable</function> 的输出列中那样）时，除少数特殊处理的情况外，<productname>PostgreSQL</productname> 只是假定 XML 数据类型的 XPath 1.0 字符串形式可以作为 SQL 数据类型的文本输入形式，反之亦然。这条规则具有简单性的优点，同时对许多数据类型产生的结果与标准中指定的映射相似。
      </para>
 
      <para>
-      Where interoperability with other systems is a concern, for some data
-      types, it may be necessary to use data type formatting functions (such
-      as those in <xref linkend="functions-formatting"/>) explicitly to
-      produce the standard mappings.
+      在需要关注与其他系统的互操作性时，对于某些数据类型，可能有必要显式使用数据类型格式化函数（例如 <xref linkend="functions-formatting"/> 中的那些）来产生标准映射。
      </para>
     </sect3>
    </sect2>
 
    <sect2 id="functions-xml-limits-postgresql">
-    <title>Incidental Limits of the Implementation</title>
+    <title>实现的附带限制</title>
 
     <para>
-     This section concerns limits that are not inherent in the
-     <application>libxml2</application> library, but apply to the current
-     implementation in <productname>PostgreSQL</productname>.
+     本节涉及的限制并非 <application>libxml2</application> 库本身固有的，而是适用于 <productname>PostgreSQL</productname> 中的当前实现。
     </para>
 
     <sect3 id="functions-xml-limits-postgresql-by-value-only">
-     <title>Only <literal>BY VALUE</literal> Passing Mechanism Is Supported</title>
+     <title>仅支持 <literal>BY VALUE</literal> 传递机制</title>
 
      <para>
-      The SQL standard defines two <firstterm>passing mechanisms</firstterm>
-      that apply when passing an XML argument from SQL to an XML function or
-      receiving a result: <literal>BY REF</literal>, in which a particular XML
-      value retains its node identity, and <literal>BY VALUE</literal>, in which
-      the content of the XML is passed but node identity is not preserved. A
-      mechanism can be specified before a list of parameters, as the default
-      mechanism for all of them, or after any parameter, to override the
-      default.
+      SQL 标准定义了两种<firstterm>传递机制</firstterm>，适用于从 SQL 向 XML 函数传递 XML 参数或接收结果时：<literal>BY REF</literal>，其中特定的 XML 值保留其节点标识；以及 <literal>BY VALUE</literal>，其中传递 XML 的内容但不保留节点标识。可以在参数列表之前指定一种机制，作为所有参数的默认机制，也可以在任何参数之后指定，以覆盖默认机制。
      </para>
 
      <para>
-      To illustrate the difference, if
-      <replaceable>x</replaceable> is an XML value, these two queries in
-      an SQL:2006 environment would produce true and false, respectively:
+      为了说明差异，如果 <replaceable>x</replaceable> 是一个 XML 值，那么在 SQL:2006 环境中，下面这两个查询将分别产生 true 和 false：
 
 <programlisting>
 SELECT XMLQUERY('$a is $b' PASSING BY REF <replaceable>x</replaceable> AS a, <replaceable>x</replaceable> AS b NULL ON EMPTY);
@@ -412,39 +323,24 @@ SELECT XMLQUERY('$a is $b' PASSING BY VALUE <replaceable>x</replaceable> AS a, <
      </para>
 
      <para>
-      <productname>PostgreSQL</productname> will accept
-      <literal>BY VALUE</literal> or <literal>BY REF</literal> in an
-      <function>XMLEXISTS</function> or <function>XMLTABLE</function>
-      construct, but it ignores them.  The <type>xml</type> data type holds
-      a character-string serialized representation, so there is no node
-      identity to preserve, and passing is always effectively <literal>BY
-      VALUE</literal>.
+      <productname>PostgreSQL</productname> 会在 <function>XMLEXISTS</function> 或 <function>XMLTABLE</function> 构造中接受 <literal>BY VALUE</literal> 或 <literal>BY REF</literal>，但会忽略它们。<type>xml</type> 数据类型保存的是字符序列化的表示形式，因此没有需要保留的节点标识，传递时实际上始终是 <literal>BY
+      VALUE</literal>。
      </para>
     </sect3>
 
     <sect3 id="functions-xml-limits-postgresql-named-parameters">
-     <title>Cannot Pass Named Parameters to Queries</title>
+     <title>无法向查询传递命名参数</title>
 
      <para>
-      The XPath-based functions support passing one parameter to serve as the
-      XPath expression's context item, but do not support passing additional
-      values to be available to the expression as named parameters.
+      基于 XPath 的函数支持传递一个参数作为 XPath 表达式的上下文项，但不支持传递额外的值以便表达式将其作为命名参数使用。
      </para>
     </sect3>
 
     <sect3 id="functions-xml-limits-postgresql-no-xml-sequence">
-     <title>No <type>XML(SEQUENCE)</type> Type</title>
+     <title>没有 <type>XML(SEQUENCE)</type> 类型</title>
 
      <para>
-      The <productname>PostgreSQL</productname> <type>xml</type> data type
-      can only hold a value in <literal>DOCUMENT</literal>
-      or <literal>CONTENT</literal> form.  An XQuery/XPath expression
-      context item must be a single XML node or atomic value, but XPath 1.0
-      further restricts it to be only an XML node, and has no node type
-      allowing <literal>CONTENT</literal>.  The upshot is that a
-      well-formed <literal>DOCUMENT</literal> is the only form of XML value
-      that <productname>PostgreSQL</productname> can supply as an XPath
-      context item.
+      <productname>PostgreSQL</productname> <type>xml</type> 数据类型只能保存 <literal>DOCUMENT</literal> 或 <literal>CONTENT</literal> 形式的值。XQuery/XPath 表达式的上下文项必须是单个 XML 节点或原子值，但 XPath 1.0 进一步将其限制为只能是 XML 节点，并且没有允许 <literal>CONTENT</literal> 的节点类型。其结果是，格式良好的 <literal>DOCUMENT</literal> 是 <productname>PostgreSQL</productname> 能够作为 XPath 上下文项提供的唯一 XML 值形式。
      </para>
     </sect3>
    </sect2>
