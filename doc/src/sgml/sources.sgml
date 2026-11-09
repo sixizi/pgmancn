@@ -688,58 +688,39 @@ BETTER: unrecognized node type: 42
   </sect1>
 
   <sect1 id="source-conventions">
-   <title>Miscellaneous Coding Conventions</title>
+   <title>其他编码约定</title>
 
    <simplesect id="source-conventions-c-standard">
-    <title>C Standard</title>
+    <title>C 标准</title>
     <para>
-     Code in <productname>PostgreSQL</productname> should only rely on language
-     features available in the C99 standard. That means a conforming
-     C99 compiler has to be able to compile postgres, at least aside
-     from a few platform dependent pieces.
+     <productname>PostgreSQL</productname> 中的代码应只依赖 C99 标准中可用的语言特性。这意味着符合标准的 C99 编译器必须能够编译 postgres，至少除少数与平台相关的部分之外是如此。
     </para>
     <para>
-     A few features included in the C99 standard are, at this time, not
-     permitted to be used in core <productname>PostgreSQL</productname>
-     code. This currently includes variable length arrays, intermingled
-     declarations and code, <literal>//</literal> comments, universal
-     character names. Reasons for that include portability and historical
-     practices.
+     目前，C99 标准中包含的少数特性不允许在核心 <productname>PostgreSQL</productname> 代码中使用。当前包括变长数组、声明与代码混杂、<literal>//</literal> 注释、通用字符名。其原因包括可移植性和历史惯例。
     </para>
     <para>
-     Features from later revisions of the C standard or compiler specific
-     features can be used, if a fallback is provided.
+     如果提供了回退方案，则可以使用 C 标准后续修订版中的特性或编译器特定的特性。
     </para>
     <para>
-     For example <literal>_Static_assert()</literal> and
-     <literal>__builtin_constant_p</literal> are currently used, even though
-     they are from newer revisions of the C standard and a
-     <productname>GCC</productname> extension respectively. If not available
-     we respectively fall back to using a C99 compatible replacement that
-     performs the same checks, but emits rather cryptic messages and do not
-     use <literal>__builtin_constant_p</literal>.
+     例如，目前使用了 <literal>_Static_assert()</literal> 和 <literal>__builtin_constant_p</literal>，尽管它们分别来自 C 标准较新的修订版和 <productname>GCC</productname> 扩展。如果不可用，我们分别回退到使用执行相同检查的 C99 兼容替代方案，但会输出相当晦涩的消息，并且不使用 <literal>__builtin_constant_p</literal>。
     </para>
    </simplesect>
 
    <simplesect id="source-conventions-macros-inline">
-    <title>Function-Like Macros and Inline Functions</title>
+    <title>类函数宏与内联函数</title>
     <para>
-     Both macros with arguments and <literal>static inline</literal>
-     functions may be used. The latter are preferable if there are
-     multiple-evaluation hazards when written as a macro, as e.g., the
-     case with
-<programlisting>
+     带参数的宏和 <literal>static inline</literal>
+     函数都可以使用。如果写成宏会有多重求值风险（例如
+     <programlisting>
 #define Max(x, y)       ((x) > (y) ? (x) : (y))
 </programlisting>
-     or when the macro would be very long. In other cases it's only
-     possible to use macros, or at least easier.  For example because
-     expressions of various types need to be passed to the macro.
+     的情况），或者宏会非常长，那么后者更可取。在其他情况下，
+     只能使用宏，或者至少更容易。例如，因为需要把各种类型的
+     表达式传递给宏。
     </para>
     <para>
-     When the definition of an inline function references symbols
-     (i.e., variables, functions) that are only available as part of the
-     backend, the function may not be visible when included from frontend
-     code.
+     当内联函数的定义引用了仅作为后端一部分才可用的符号
+     （即变量、函数）时，从前端代码包含该函数时它可能不可见。
 <programlisting>
 #ifndef FRONTEND
 static inline MemoryContext
@@ -752,37 +733,29 @@ MemoryContextSwitchTo(MemoryContext context)
 }
 #endif   /* FRONTEND */
 </programlisting>
-     In this example <literal>CurrentMemoryContext</literal>, which is only
-     available in the backend, is referenced and the function thus
-     hidden with a <literal>#ifndef FRONTEND</literal>. This rule
-     exists because some compilers emit references to symbols
-     contained in inline functions even if the function is not used.
+     在此示例中引用了仅在后端可用的 <literal>CurrentMemoryContext</literal>，
+     因此该函数用 <literal>#ifndef FRONTEND</literal> 隐藏。存在这条规则
+     是因为某些编译器即使函数未被使用，也会发出对内联函数中
+     所含符号的引用。
     </para>
    </simplesect>
 
    <simplesect id="source-conventions-signal-handlers">
-    <title>Writing Signal Handlers</title>
+    <title>编写信号处理器</title>
     <para>
-     To be suitable to run inside a signal handler code has to be
-     written very carefully. The fundamental problem is that, unless
-     blocked, a signal handler can interrupt code at any time. If code
-     inside the signal handler uses the same state as code outside
-     chaos may ensue. As an example consider what happens if a signal
-     handler tries to acquire a lock that's already held in the
-     interrupted code.
+     要适合在信号处理器内运行，代码必须非常小心地编写。根本问题在于，
+     除非被阻塞，信号处理器可以在任何时候中断代码。如果信号处理器内的
+     代码与被中断的代码使用相同的状态，就可能造成混乱。举例来说，
+     考虑一下如果信号处理器试图获取一个已被被中断代码持有的锁会发生什么。
     </para>
     <para>
-     Barring special arrangements code in signal handlers may only
-     call async-signal safe functions (as defined in POSIX) and access
-     variables of type <literal>volatile sig_atomic_t</literal>. A few
-     functions in <command>postgres</command> are also deemed signal safe, importantly
-     <function>SetLatch()</function>.
+     除非有特殊安排，信号处理器中的代码只能调用异步信号安全的函数
+     （如 POSIX 所定义）并访问 <literal>volatile sig_atomic_t</literal> 类型的变量。<command>postgres</command>
+     中有少数函数也被视为信号安全的，重要的是
+     <function>SetLatch()</function>。
     </para>
     <para>
-     In most cases signal handlers should do nothing more than note
-     that a signal has arrived, and wake up code running outside of
-     the handler using a latch. An example of such a handler is the
-     following:
+     大多数情况下，信号处理器除了记录信号已经到达之外不应做其他事情，并使用 latch 唤醒在处理器之外运行的代码。此类处理器的一个例子如下：
 <programlisting>
 static void
 handle_sighup(SIGNAL_ARGS)
@@ -795,18 +768,15 @@ handle_sighup(SIGNAL_ARGS)
    </simplesect>
 
    <simplesect id="source-conventions-function-pointers">
-    <title>Calling Function Pointers</title>
+    <title>调用函数指针</title>
 
     <para>
-     For clarity, it is preferred to explicitly dereference a function pointer
-     when calling the pointed-to function if the pointer is a simple variable,
-     for example:
+     为清晰起见，如果函数指针是一个简单变量，在调用所指向的函数时最好显式解引用该指针，例如：
 <programlisting>
 (*emit_log_hook) (edata);
 </programlisting>
-     (even though <literal>emit_log_hook(edata)</literal> would also work).
-     When the function pointer is part of a structure, then the extra
-     punctuation can and usually should be omitted, for example:
+     （尽管 <literal>emit_log_hook(edata)</literal> 也可以工作）。
+     当函数指针是结构体的一部分时，则可以且通常应当省略额外的标点符号，例如：
 <programlisting>
 paramInfo->paramFetch(paramInfo, paramId);
 </programlisting>
