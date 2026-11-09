@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>pg_checksums</refname>
-  <refpurpose>enable, disable or check data checksums in a <productname>PostgreSQL</productname> database cluster</refpurpose>
+  <refpurpose>在 <productname>PostgreSQL</productname> 数据库集簇中启用、禁用或检查数据校验和</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -34,30 +34,21 @@ PostgreSQL documentation
  </refsynopsisdiv>
 
  <refsect1 id="r1-app-pgchecksums-1">
-  <title>Description</title>
+  <title>描述</title>
   <para>
-   <application>pg_checksums</application> checks, enables or disables data
-   checksums in a <productname>PostgreSQL</productname> cluster.  The server
-   must be shut down cleanly before running
-   <application>pg_checksums</application>. When verifying checksums, the exit
-   status is zero if there are no checksum errors, and nonzero if at least one
-   checksum failure is detected. When enabling or disabling checksums, the
-   exit status is nonzero if the operation failed.
+   <application>pg_checksums</application> 会检查、启用或禁用 <productname>PostgreSQL</productname> 集簇中的数据校验和。在运行 <application>pg_checksums</application> 之前，服务器必须被干净地关闭。在验证校验和时，如果没有校验和错误，退出状态为零；如果检测到至少一个校验和失败，则退出状态非零。在启用或禁用校验和时，如果操作失败，则退出状态非零。
   </para>
 
   <para>
-   When verifying checksums, every file in the cluster is scanned. When
-   enabling checksums, each relation file block with a changed checksum is
-   rewritten in-place.
-   Disabling checksums only updates the file <filename>pg_control</filename>.
+   在验证校验和时，会扫描集簇中的每个文件。在启用校验和时，每个校验和发生更改的关系文件块都会被就地重写。禁用校验和只会更新文件 <filename>pg_control</filename>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Options</title>
+  <title>选项</title>
 
    <para>
-    The following command-line options are available:
+    以下命令行选项可用：
 
     <variablelist>
      <varlistentry>
@@ -65,7 +56,7 @@ PostgreSQL documentation
       <term><option>--pgdata=<replaceable>directory</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the directory where the database cluster is stored.
+        指定数据库集簇所在的目录。
        </para>
       </listitem>
      </varlistentry>
@@ -75,8 +66,7 @@ PostgreSQL documentation
       <term><option>--check</option></term>
       <listitem>
        <para>
-        Checks checksums. This is the default mode if nothing else is
-        specified.
+        检查校验和。如果没有指定其他模式，这是默认模式。
        </para>
       </listitem>
      </varlistentry>
@@ -86,7 +76,7 @@ PostgreSQL documentation
       <term><option>--disable</option></term>
       <listitem>
        <para>
-        Disables checksums.
+        禁用校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -96,7 +86,7 @@ PostgreSQL documentation
       <term><option>--enable</option></term>
       <listitem>
        <para>
-        Enables checksums.
+        启用校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -106,8 +96,7 @@ PostgreSQL documentation
       <term><option>--filenode=<replaceable>filenode</replaceable></option></term>
       <listitem>
        <para>
-        Only validate checksums in the relation with filenode
-        <replaceable>filenode</replaceable>.
+        仅验证文件节点为 <replaceable>filenode</replaceable> 的关系中的校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -117,13 +106,10 @@ PostgreSQL documentation
       <term><option>--no-sync</option></term>
       <listitem>
        <para>
-        By default, <command>pg_checksums</command> will wait for all files
-        to be written safely to disk.  This option causes
-        <command>pg_checksums</command> to return without waiting, which is
-        faster, but means that a subsequent operating system crash can leave
-        the updated data directory corrupt.  Generally, this option is useful
-        for testing but should not be used on a production installation.
-        This option has no effect when using <literal>--check</literal>.
+        默认情况下，<command>pg_checksums</command> 会等待所有文件安全写入磁盘。此选项使
+        <command>pg_checksums</command> 不等待即返回，速度更快，但这意味着后续的操作系统崩溃可能
+        使更新后的数据目录损坏。通常，此选项对测试有用，但不应在生产
+        安装中使用。使用 <literal>--check</literal> 时此选项无效。
        </para>
       </listitem>
      </varlistentry>
@@ -133,8 +119,7 @@ PostgreSQL documentation
       <term><option>--progress</option></term>
       <listitem>
        <para>
-        Enable progress reporting. Turning this on will deliver a progress
-        report while checking or enabling checksums.
+        启用进度报告。开启此项后，在检查或启用校验和期间将提供进度报告。
        </para>
       </listitem>
      </varlistentry>
@@ -143,20 +128,13 @@ PostgreSQL documentation
       <term><option>--sync-method=<replaceable>method</replaceable></option></term>
       <listitem>
        <para>
-        When set to <literal>fsync</literal>, which is the default,
-        <command>pg_checksums</command> will recursively open and synchronize
-        all files in the data directory.  The search for files will follow
-        symbolic links for the WAL directory and each configured tablespace.
+        当设置为 <literal>fsync</literal>（默认值）时，<command>pg_checksums</command> 将递归地打开并同步数据目录中的所有文件。文件搜索将遵循 WAL 目录和每个已配置表空间的符号链接。
        </para>
        <para>
-        On Linux, <literal>syncfs</literal> may be used instead to ask the
-        operating system to synchronize the whole file systems that contain the
-        data directory, the WAL files, and each tablespace.  See
-        <xref linkend="guc-recovery-init-sync-method"/> for information about
-        the caveats to be aware of when using <literal>syncfs</literal>.
+        在 Linux 上，可以改用 <literal>syncfs</literal> 来要求操作系统同步包含数据目录、WAL 文件和每个表空间的整个文件系统。有关使用 <literal>syncfs</literal> 时需要注意的事项，请参见 <xref linkend="guc-recovery-init-sync-method"/>。
        </para>
        <para>
-        This option has no effect when <option>--no-sync</option> is used.
+        使用 <option>--no-sync</option> 时此选项无效。
        </para>
       </listitem>
      </varlistentry>
@@ -166,7 +144,7 @@ PostgreSQL documentation
       <term><option>--verbose</option></term>
       <listitem>
        <para>
-        Enable verbose output. Lists all checked files.
+        启用详细输出。列出所有已检查的文件。
        </para>
       </listitem>
      </varlistentry>
@@ -176,7 +154,7 @@ PostgreSQL documentation
        <term><option>--version</option></term>
        <listitem>
        <para>
-        Print the <application>pg_checksums</application> version and exit.
+        打印 <application>pg_checksums</application> 版本并退出。
        </para>
        </listitem>
      </varlistentry>
@@ -186,8 +164,7 @@ PostgreSQL documentation
       <term><option>--help</option></term>
        <listitem>
         <para>
-         Show help about <application>pg_checksums</application> command line
-         arguments, and exit.
+         显示关于 <application>pg_checksums</application> 命令行参数的帮助信息，然后退出。
         </para>
        </listitem>
       </varlistentry>
@@ -196,7 +173,7 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1>
-  <title>Environment</title>
+  <title>环境</title>
 
   <variablelist>
    <varlistentry>
@@ -204,8 +181,7 @@ PostgreSQL documentation
 
     <listitem>
      <para>
-      Specifies the directory where the database cluster is
-      stored; can be overridden using the <option>-D</option> option.
+      指定数据库集簇的存储目录；可以用 <option>-D</option> 选项覆盖。
      </para>
     </listitem>
    </varlistentry>
@@ -214,9 +190,7 @@ PostgreSQL documentation
     <term><envar>PG_COLOR</envar></term>
     <listitem>
      <para>
-      Specifies whether to use color in diagnostic messages. Possible values
-      are <literal>always</literal>, <literal>auto</literal> and
-      <literal>never</literal>.
+      指定是否在诊断消息中使用颜色。可能的值为 <literal>always</literal>、<literal>auto</literal> 和 <literal>never</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -224,28 +198,15 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注解</title>
   <para>
-   Enabling checksums in a large cluster can potentially take a long time.
-   During this operation, the cluster or other programs that write to the
-   data directory must not be started or else data loss may occur.
+   在大型集簇中启用校验和可能会耗费很长时间。在此操作期间，不得启动该集簇或其他会写入数据目录的程序，否则可能发生数据丢失。
   </para>
   <para>
-   When using a replication setup with tools which perform direct copies
-   of relation file blocks (for example <xref linkend="app-pgrewind"/>),
-   enabling or disabling checksums can lead to page corruptions in the
-   shape of incorrect checksums if the operation is not done consistently
-   across all nodes. When enabling or disabling checksums in a replication
-   setup, it is thus recommended to stop all the clusters before switching
-   them all consistently. Destroying all standbys, performing the operation
-   on the primary and finally recreating the standbys from scratch is also
-   safe.
+   当使用对关系文件块执行直接拷贝的工具（例如 <xref linkend="app-pgrewind"/>）的复制设置时，如果该操作未在所有节点上一致地完成，则启用或禁用校验和可能导致页面损坏，其表现为校验和不正确。因此，在复制设置中启用或禁用校验和时，建议先停止所有数据库集簇，然后再一致地切换它们。销毁所有备库、在主库上执行该操作并最终从头重新创建备库也是安全的。
   </para>
   <para>
-   If <application>pg_checksums</application> is aborted or killed while
-   enabling or disabling checksums, the cluster's data checksum configuration
-   remains unchanged, and <application>pg_checksums</application> can be
-   re-run to perform the same operation.
+   如果在启用或禁用校验和时 <application>pg_checksums</application> 被中止或杀死，则集簇的数据校验和配置保持不变，并且可以重新运行 <application>pg_checksums</application> 来执行相同的操作。
   </para>
  </refsect1>
 </refentry>
