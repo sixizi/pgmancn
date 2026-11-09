@@ -74,57 +74,44 @@
  </sect1>
 
  <sect1 id="jit-decision">
-  <title>When to <acronym>JIT</acronym>?</title>
+  <title>何时使用 <acronym>JIT</acronym>？</title>
 
   <para>
-   <acronym>JIT</acronym> compilation is beneficial primarily for long-running
-   CPU-bound queries. Frequently these will be analytical queries.  For short
-   queries the added overhead of performing <acronym>JIT</acronym> compilation
-   will often be higher than the time it can save.
+   <acronym>JIT</acronym> 编译主要对长时间运行的 CPU 密集型查询有益。这类查询通常是分析型查询。对于短查询，执行 <acronym>JIT</acronym> 编译所增加的额外开销往往高于它所能节省的时间。
   </para>
 
   <para>
-   To determine whether <acronym>JIT</acronym> compilation should be used,
-   the total estimated cost of a query (see
-   <xref linkend="planner-stats-details"/> and
-   <xref linkend="runtime-config-query-constants"/>) is used.
-   The estimated cost of the query will be compared with the setting of <xref
-   linkend="guc-jit-above-cost"/>. If the cost is higher,
-   <acronym>JIT</acronym> compilation will be performed.
-   Two further decisions are then needed.
-   Firstly, if the estimated cost is more
-   than the setting of <xref linkend="guc-jit-inline-above-cost"/>, short
-   functions and operators used in the query will be inlined.
-   Secondly, if the estimated cost is more than the setting of <xref
-   linkend="guc-jit-optimize-above-cost"/>, expensive optimizations are
-   applied to improve the generated code.
-   Each of these options increases the <acronym>JIT</acronym> compilation
-   overhead, but can reduce query execution time considerably.
+   要判断是否应使用 <acronym>JIT</acronym> 编译，会使用查询的总估计代价（参见
+   <xref linkend="planner-stats-details"/> 和
+   <xref linkend="runtime-config-query-constants"/>）。
+   查询的估计代价将与 <xref
+   linkend="guc-jit-above-cost"/> 的设置进行比较。如果代价更高，
+   就会执行 <acronym>JIT</acronym> 编译。
+   随后还需要做两个决定。
+   首先，如果估计代价高于 <xref linkend="guc-jit-inline-above-cost"/> 的设置，
+   查询中使用的短函数和运算符将被内联。
+   其次，如果估计代价高于 <xref
+   linkend="guc-jit-optimize-above-cost"/> 的设置，
+   就会应用开销较大的优化来改进生成的代码。
+   这些选项中的每一个都会增加 <acronym>JIT</acronym> 编译开销，但可以显著减少查询执行时间。
   </para>
 
   <para>
-   These cost-based decisions will be made at plan time, not execution
-   time. This means that when prepared statements are in use, and a generic
-   plan is used (see <xref linkend="sql-prepare"/>), the values of the
-   configuration parameters in effect at prepare time control the decisions,
-   not the settings at execution time.
+   这些基于代价的决定将在计划时做出，而不是在执行时。这意味着当使用预备语句并且使用通用计划时（参见 <xref linkend="sql-prepare"/>），控制这些决定的是在准备时生效的配置参数值，而不是执行时的设置。
   </para>
 
   <note>
    <para>
-    If <xref linkend="guc-jit"/> is set to <literal>off</literal>, or if no
-    <acronym>JIT</acronym> implementation is available (for example because
-    the server was compiled without <literal>--with-llvm</literal>),
-    <acronym>JIT</acronym> will not be performed, even if it would be
-    beneficial based on the above criteria.  Setting <xref linkend="guc-jit"/>
-    to <literal>off</literal> has effects at both plan and execution time.
+    如果 <xref linkend="guc-jit"/> 被设置为 <literal>off</literal>，或者没有可用的
+    <acronym>JIT</acronym> 实现（例如因为服务器在编译时未包含 <literal>--with-llvm</literal>），
+    则不会执行 <acronym>JIT</acronym>，即使根据上述标准它会有益。将 <xref linkend="guc-jit"/>
+    设置为 <literal>off</literal> 会在计划时和执行时都产生影响。
    </para>
   </note>
 
   <para>
-   <xref linkend="sql-explain"/> can be used to see whether
-   <acronym>JIT</acronym> is used or not.  As an example, here is a query that
-   is not using <acronym>JIT</acronym>:
+   <xref linkend="sql-explain"/> 可用于查看是否使用了
+   <acronym>JIT</acronym>。例如，下面是一个未使用 <acronym>JIT</acronym> 的查询：
 <screen>
 =# EXPLAIN ANALYZE SELECT SUM(relpages) FROM pg_class;
                                                  QUERY PLAN
@@ -136,10 +123,9 @@
  Planning Time: 0.116 ms
  Execution Time: 0.365 ms
 </screen>
-   Given the cost of the plan, it is entirely reasonable that no
-   <acronym>JIT</acronym> was used; the cost of <acronym>JIT</acronym> would
-   have been bigger than the potential savings. Adjusting the cost limits
-   will lead to <acronym>JIT</acronym> use:
+   考虑到该计划的代价，完全不使用
+   <acronym>JIT</acronym> 是完全合理的；<acronym>JIT</acronym> 的代价
+   会大于潜在的节省。调整代价限制将导致使用 <acronym>JIT</acronym>：
 <screen>
 =# SET jit_above_cost = 10;
 SET
@@ -157,11 +143,11 @@ SET
    Timing: Generation 1.259 ms (Deform 0.000 ms), Inlining 0.000 ms, Optimization 0.797 ms, Emission 5.048 ms, Total 7.104 ms
  Execution Time: 7.416 ms
 </screen>
-   As visible here, <acronym>JIT</acronym> was used, but inlining and
-   expensive optimization were not. If <xref
-   linkend="guc-jit-inline-above-cost"/> or <xref
-   linkend="guc-jit-optimize-above-cost"/> were also lowered,
-   that would change.
+   如此处所示，使用了 <acronym>JIT</acronym>，但没有进行内联和
+   开销较大的优化。如果 <xref
+   linkend="guc-jit-inline-above-cost"/> 或 <xref
+   linkend="guc-jit-optimize-above-cost"/> 也被调低，
+   情况就会改变。
   </para>
  </sect1>
 
