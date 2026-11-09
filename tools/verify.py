@@ -18,6 +18,7 @@ CODE_UNIT_WORDS = {
     "hour", "hours", "min", "mins", "minute", "minutes",
     "sec", "secs", "second", "seconds", "ago",
 }
+URL_RE = re.compile(r"https?://\S+", re.IGNORECASE)
 
 
 def has_ancestor(node, names):
@@ -39,6 +40,8 @@ def section_id(node):
 
 def is_code_like(plain):
     compact = re.sub(r"\s+", " ", plain.strip().strip(";:,"))
+    if URL_RE.fullmatch(compact):
+        return True
     tokens = re.findall(r"[A-Za-z][A-Za-z0-9_-]*", compact)
     if not tokens:
         return True
@@ -50,10 +53,26 @@ def is_code_like(plain):
     )
 
 
-def should_report(unit, plain):
+def is_author_section(node, text):
+    while node is not None and node.tag != "refsect1":
+        node = node.parent
+    if node is None:
+        return False
+    title = next((child for child in node.children if child.tag == "title"), None)
+    if title is None:
+        return False
+    title_text = re.sub(r"<[^>]+>", "", text[title.inner_start:title.inner_end]).strip()
+    return title_text == "作者"
+
+
+def should_report(unit, plain, text):
     if CJK_RE.search(plain):
         return False
     if section_id(unit.node).lower().endswith(("-author", "-authors")):
+        return False
+    if 'role="func_signature"' in unit.node.raw_open:
+        return False
+    if is_author_section(unit.node, text):
         return False
     if has_ancestor(unit.node, {"biblioentry"}):
         return False
@@ -80,7 +99,7 @@ def main():
             en = len(re.findall(r"[A-Za-z]{3,}", plain))
             total_cjk += cjk
             total_plain += len(plain)
-            if en >= 5 and should_report(u, plain):
+            if en >= 5 and should_report(u, plain, t):
                 report["english"].append({"file": rel, "sec": u.section, "text": plain.strip()[:120]})
     report["cjk_ratio"] = round(total_cjk / max(total_plain, 1), 3)
     json.dump(report, open(os.path.join(R.ROOT, "tools", "verify.json"), "w", encoding="utf-8"),
