@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>REVOKE</refname>
-  <refpurpose>remove access privileges</refpurpose>
+  <refpurpose>移除访问权限</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -141,119 +141,55 @@ REVOKE [ { ADMIN | INHERIT | SET } OPTION FOR ]
  </refsynopsisdiv>
 
  <refsect1 id="sql-revoke-description">
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   The <command>REVOKE</command> command revokes previously granted
-   privileges from one or more roles.  The key word
-   <literal>PUBLIC</literal> refers to the implicitly defined group of
-   all roles.
+   <command>REVOKE</command> 命令从一个或多个角色收回先前授予的权限。关键字 <literal>PUBLIC</literal> 指代隐式定义的所有角色组成的组。
   </para>
 
   <para>
-   See the description of the <link linkend="sql-grant"><command>GRANT</command></link> command for
-   the meaning of the privilege types.
+   有关权限类型的含义，请参见 <link linkend="sql-grant"><command>GRANT</command></link> 命令的描述。
   </para>
 
   <para>
-   Note that any particular role will have the sum
-   of privileges granted directly to it, privileges granted to any role it
-   is presently a member of, and privileges granted to
-   <literal>PUBLIC</literal>.  Thus, for example, revoking <literal>SELECT</literal> privilege
-   from <literal>PUBLIC</literal> does not necessarily mean that all roles
-   have lost <literal>SELECT</literal> privilege on the object: those who have it granted
-   directly or via another role will still have it.  Similarly, revoking
-   <literal>SELECT</literal> from a user might not prevent that user from using
-   <literal>SELECT</literal> if <literal>PUBLIC</literal> or another membership
-   role still has <literal>SELECT</literal> rights.
+   注意，任何特定角色拥有的权限是直接授予它的权限、授予它当前所属的任何角色的权限以及授予 <literal>PUBLIC</literal> 的权限之和。因此，例如从 <literal>PUBLIC</literal> 收回 <literal>SELECT</literal> 权限并不一定意味着所有角色都失去了对该对象的 <literal>SELECT</literal> 权限：那些被直接授予或通过其他角色获得该权限的角色仍然拥有它。同样，如果 <literal>PUBLIC</literal> 或其他成员角色仍然拥有 <literal>SELECT</literal> 权限，那么从某个用户收回 <literal>SELECT</literal> 可能并不能阻止该用户使用 <literal>SELECT</literal>。
   </para>
 
   <para>
-   If <literal>GRANT OPTION FOR</literal> is specified, only the grant
-   option for the privilege is revoked, not the privilege itself.
-   Otherwise, both the privilege and the grant option are revoked.
+   如果指定了 <literal>GRANT OPTION FOR</literal>，则只收回该权限的授予选项，而不收回权限本身。否则，权限和授予选项都会被收回。
   </para>
 
   <para>
-   If a user holds a privilege with grant option and has granted it to
-   other users then the privileges held by those other users are
-   called dependent privileges. If the privilege or the grant option
-   held by the first user is being revoked and dependent privileges
-   exist, those dependent privileges are also revoked if
-   <literal>CASCADE</literal> is specified; if it is not, the revoke action
-   will fail.  This recursive revocation only affects privileges that
-   were granted through a chain of users that is traceable to the user
-   that is the subject of this <literal>REVOKE</literal> command.
-   Thus, the affected users might effectively keep the privilege if it
-   was also granted through other users.
+   如果一个用户持有带授予选项的权限并且已将其授予其他用户，那么这些其他用户所持有的权限被称为依赖权限。如果第一个用户持有的该权限或授予选项正被收回并且存在依赖权限，那么在指定了 <literal>CASCADE</literal> 的情况下这些依赖权限也会被收回；如果没有指定，则收回操作将失败。这种递归收回只影响通过可追溯到作为此 <literal>REVOKE</literal> 命令主体的用户的那条用户链所授予的权限。因此，如果该权限也通过其他用户授予过，受影响的用户实际上可能仍然保留该权限。
   </para>
 
   <para>
-   When revoking privileges on a table, the corresponding column privileges
-   (if any) are automatically revoked on each column of the table, as well.
-   On the other hand, if a role has been granted privileges on a table, then
-   revoking the same privileges from individual columns will have no effect.
+   在收回表上的权限时，表每一列上相应的列权限（如果有）也会被自动收回。另一方面，如果某个角色已被授予了表上的权限，那么从各列收回相同的权限将不会产生任何效果。
   </para>
 
   <para>
-   When revoking membership in a role, <literal>GRANT OPTION</literal> is instead
-   called <literal>ADMIN OPTION</literal>, but the behavior is similar.
-   Note that, in releases prior to <productname>PostgreSQL</productname> 16,
-   dependent privileges were not tracked for grants of role membership,
-   and thus <literal>CASCADE</literal> had no effect for role membership.
-   This is no longer the case.
-   Note also that this form of the command does not
-   allow the noise word <literal>GROUP</literal>
-   in <replaceable class="parameter">role_specification</replaceable>.
+   在收回角色中的成员资格时，<literal>GRANT OPTION</literal> 改为被称为 <literal>ADMIN OPTION</literal>，但行为类似。请注意，在 <productname>PostgreSQL</productname> 16 之前的版本中，对于角色成员资格的授予并不跟踪依赖权限，因此 <literal>CASCADE</literal> 对角色成员资格没有效果。现在情况已不再如此。另请注意，这种形式的命令不允许在 <replaceable class="parameter">role_specification</replaceable> 中使用噪声词 <literal>GROUP</literal>。
   </para>
 
   <para>
-   Just as <literal>ADMIN OPTION</literal> can be removed from an existing
-   role grant, it is also possible to revoke <literal>INHERIT OPTION</literal>
-   or <literal>SET OPTION</literal>.  This is equivalent to setting the value
-   of the corresponding option to <literal>FALSE</literal>.
+   正如可以从现有的角色授予中移除 <literal>ADMIN OPTION</literal> 一样，也可以收回 <literal>INHERIT OPTION</literal> 或 <literal>SET OPTION</literal>。这等价于将相应选项的值设置为 <literal>FALSE</literal>。
   </para>
  </refsect1>
 
  <refsect1 id="sql-revoke-notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   A user can only revoke privileges that were granted directly by
-   that user.  If, for example, user A has granted a privilege with
-   grant option to user B, and user B has in turn granted it to user
-   C, then user A cannot revoke the privilege directly from C.
-   Instead, user A could revoke the grant option from user B and use
-   the <literal>CASCADE</literal> option so that the privilege is
-   in turn revoked from user C.  For another example, if both A and B
-   have granted the same privilege to C, A can revoke their own grant
-   but not B's grant, so C will still effectively have the privilege.
+   用户只能收回由该用户直接授予的权限。例如，如果用户 A 将带有授予选项的权限授予了用户 B，而用户 B 又将其授予了用户 C，那么用户 A 不能直接从 C 收回该权限。相反，用户 A 可以从用户 B 收回授予选项并使用 <literal>CASCADE</literal> 选项，从而使该权限依次从用户 C 收回。再举一个例子，如果 A 和 B 都将相同的权限授予了 C，则 A 可以收回自己做出的授予，但不能收回 B 的授予，因此 C 实际上仍将拥有该权限。
   </para>
 
    <para>
-    When a non-owner of an object attempts to <command>REVOKE</command> privileges
-    on the object, the command will fail outright if the user has no
-    privileges whatsoever on the object.  As long as some privilege is
-    available, the command will proceed, but it will revoke only those
-    privileges for which the user has grant options.  The <command>REVOKE ALL
-    PRIVILEGES</command> forms will issue a warning message if no grant options are
-    held, while the other forms will issue a warning if grant options for
-    any of the privileges specifically named in the command are not held.
-    (In principle these statements apply to the object owner as well, but
-    since the owner is always treated as holding all grant options, the
-    cases can never occur.)
+    当对象的非属主尝试对该对象执行 <command>REVOKE</command> 权限操作时，如果用户对该对象没有任何权限，该命令将直接失败。只要用户拥有某些权限，命令就会继续执行，但只会撤销用户对其持有授予选项的那些权限。<command>REVOKE ALL
+    PRIVILEGES</command> 形式在没有持有任何授予选项时会发出警告消息，而其他形式在未持有命令中明确指定的任何权限的授予选项时会发出警告。（原则上这些说明也适用于对象属主，但由于属主始终被视为持有所有授予选项，因此这些情况永远不会发生。）
    </para>
 
    <para>
-    If a superuser chooses to issue a <command>GRANT</command> or <command>REVOKE</command>
-    command, the command is performed as though it were issued by the
-    owner of the affected object.  (Since roles do not have owners, in the
-    case of a <command>GRANT</command> of role membership, the command is
-    performed as though it were issued by the bootstrap superuser.)
-    Since all privileges ultimately come
-    from the object owner (possibly indirectly via chains of grant options),
-    it is possible for a superuser to revoke all privileges, but this might
-    require use of <literal>CASCADE</literal> as stated above.
+    如果超级用户选择发出 <command>GRANT</command> 或 <command>REVOKE</command> 命令，该命令会按照由受影响对象的属主发出的方式来执行。（由于角色没有属主，在 <command>GRANT</command> 角色成员关系的情况下，该命令会按照由引导超级用户发出的方式来执行。）由于所有权限最终都来自对象属主（可能通过授予选项链间接而来），超级用户有可能撤销所有权限，但这可能需要如上所述使用 <literal>CASCADE</literal>。
    </para>
 
    <para>
@@ -272,27 +208,19 @@ REVOKE [ { ADMIN | INHERIT | SET } OPTION FOR ]
    </para>
 
    <para>
-    If the role executing <command>REVOKE</command> holds privileges
-    indirectly via more than one role membership path, it is unspecified
-    which containing role will be used to perform the command.  In such cases
-    it is best practice to use <command>SET ROLE</command> to become the specific
-    role you want to do the <command>REVOKE</command> as.  Failure to do so might
-    lead to revoking privileges other than the ones you intended, or not
-    revoking anything at all.
+    如果执行 <command>REVOKE</command> 的角色通过多条角色成员关系路径间接持有权限，则未指定将使用哪个包含角色来执行该命令。在这种情况下，最佳实践是使用 <command>SET ROLE</command> 切换到你想以其身份执行 <command>REVOKE</command> 的特定角色。否则可能会导致撤销并非你本意的权限，或者根本不撤销任何权限。
    </para>
 
    <para>
-    See <xref linkend="ddl-priv"/> for more information about specific
-    privilege types, as well as how to inspect objects' privileges.
+    有关特定权限类型以及如何检查对象权限的更多信息，请参见 <xref linkend="ddl-priv"/>。
    </para>
  </refsect1>
 
  <refsect1 id="sql-revoke-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Revoke insert privilege for the public on table
-   <literal>films</literal>:
+   撤销 public 在表 <literal>films</literal> 上的插入权限：
 
 <programlisting>
 REVOKE INSERT ON films FROM PUBLIC;
@@ -300,19 +228,17 @@ REVOKE INSERT ON films FROM PUBLIC;
   </para>
 
   <para>
-   Revoke all privileges from user <literal>manuel</literal> on view
-   <literal>kinds</literal>:
+   撤销用户 <literal>manuel</literal> 在视图 <literal>kinds</literal> 上的所有权限：
 
 <programlisting>
 REVOKE ALL PRIVILEGES ON kinds FROM manuel;
 </programlisting>
 
-   Note that this actually means <quote>revoke all privileges that I
-   granted</quote>.
+   注意，这实际上意味着<quote>撤销我所授予的所有权限</quote>。
   </para>
 
   <para>
-   Revoke membership in role <literal>admins</literal> from user <literal>joe</literal>:
+   撤销用户 <literal>joe</literal> 在角色 <literal>admins</literal> 中的成员资格：
 
 <programlisting>
 REVOKE admins FROM joe;
@@ -320,19 +246,17 @@ REVOKE admins FROM joe;
  </refsect1>
 
  <refsect1 id="sql-revoke-compatibility">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
    <para>
-    The compatibility notes of the <link linkend="sql-grant"><command>GRANT</command></link> command
-    apply analogously to <command>REVOKE</command>.
-    The keyword <literal>RESTRICT</literal> or <literal>CASCADE</literal>
-    is required according to the standard, but <productname>PostgreSQL</productname>
-    assumes <literal>RESTRICT</literal> by default.
+    <link linkend="sql-grant"><command>GRANT</command></link> 命令的兼容性说明同样适用于 <command>REVOKE</command>。
+    按照标准要求，需要使用关键字 <literal>RESTRICT</literal> 或 <literal>CASCADE</literal>，但 <productname>PostgreSQL</productname>
+    默认假定为 <literal>RESTRICT</literal>。
    </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-grant"/></member>
