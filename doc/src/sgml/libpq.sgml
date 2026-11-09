@@ -45,47 +45,21 @@
  </para>
 
  <sect1 id="libpq-connect">
-  <title>Database Connection Control Functions</title>
+  <title>数据库连接控制函数</title>
 
   <para>
-   The following functions deal with making a connection to a
-   <productname>PostgreSQL</productname> backend server.  An
-   application program can have several backend connections open at
-   one time.  (One reason to do that is to access more than one
-   database.)  Each connection is represented by a
-   <structname>PGconn</structname><indexterm><primary>PGconn</primary></indexterm> object, which
-   is obtained from the function <xref linkend="libpq-PQconnectdb"/>,
-   <xref linkend="libpq-PQconnectdbParams"/>, or
-   <xref linkend="libpq-PQsetdbLogin"/>.  Note that these functions will always
-   return a non-null object pointer, unless perhaps there is too
-   little memory even to allocate the <structname>PGconn</structname> object.
-   The <xref linkend="libpq-PQstatus"/> function should be called to check
-   the return value for a successful connection before queries are sent
-   via the connection object.
+   以下函数用于建立到 <productname>PostgreSQL</productname> 后端服务器的连接。一个应用程序可以同时打开多个后端连接。（这样做的一个原因是要访问多个数据库。）每个连接由一个 <structname>PGconn</structname><indexterm><primary>PGconn</primary></indexterm> 对象表示，该对象通过函数 <xref linkend="libpq-PQconnectdb"/>、<xref linkend="libpq-PQconnectdbParams"/> 或 <xref linkend="libpq-PQsetdbLogin"/> 获得。注意，这些函数总是返回非空的对象指针，除非内存少到连分配 <structname>PGconn</structname> 对象都不够。在通过连接对象发送查询之前，应调用 <xref linkend="libpq-PQstatus"/> 函数检查返回值以确认连接成功。
 
    <warning>
     <para>
-     If untrusted users have access to a database that has not adopted a
-     <link linkend="ddl-schemas-patterns">secure schema usage pattern</link>,
-     begin each session by removing publicly-writable schemas from
-     <varname>search_path</varname>.  One can set parameter key
-     word <literal>options</literal> to
-     value <literal>-csearch_path=</literal>.  Alternately, one can
-     issue <literal>PQexec(<replaceable>conn</replaceable>, "SELECT
-     pg_catalog.set_config('search_path', '', false)")</literal> after
-     connecting.  This consideration is not specific
-     to <application>libpq</application>; it applies to every interface for
-     executing arbitrary SQL commands.
+     如果不受信任的用户可以访问尚未采用<link linkend="ddl-schemas-patterns">安全模式使用模式</link>的数据库，那么在每个会话开始时，都要从 <varname>search_path</varname> 中移除可公开写入的模式。可以将参数关键字 <literal>options</literal> 设置为值 <literal>-csearch_path=</literal>。另一种做法是在连接之后发出 <literal>PQexec(<replaceable>conn</replaceable>, "SELECT
+     pg_catalog.set_config('search_path', '', false)")</literal>。这一考虑并非 <application>libpq</application> 所特有；它适用于每一个用于执行任意 SQL 命令的接口。
     </para>
    </warning>
 
    <warning>
     <para>
-     On Unix, forking a process with open libpq connections can lead to
-     unpredictable results because the parent and child processes share
-     the same sockets and operating system resources.  For this reason,
-     such usage is not recommended, though doing an <function>exec</function> from
-     the child process to load a new executable is safe.
+     在 Unix 上，对带有已打开的 libpq 连接的进程执行 fork 可能导致不可预测的结果，因为父进程和子进程共享相同的套接字和操作系统资源。因此，不推荐这种用法，不过在子进程中执行 <function>exec</function> 以加载新的可执行文件是安全的。
     </para>
    </warning>
 
@@ -94,7 +68,7 @@
      <term><function>PQconnectdbParams</function><indexterm><primary>PQconnectdbParams</primary></indexterm></term>
      <listitem>
       <para>
-       Makes a new connection to the database server.
+       建立到数据库服务器的新连接。
 
 <synopsis>
 PGconn *PQconnectdbParams(const char * const *keywords,
@@ -104,70 +78,27 @@ PGconn *PQconnectdbParams(const char * const *keywords,
       </para>
 
       <para>
-       This function opens a new database connection using the parameters taken
-       from two <symbol>NULL</symbol>-terminated arrays. The first,
-       <literal>keywords</literal>, is defined as an array of strings, each one
-       being a key word. The second, <literal>values</literal>, gives the value
-       for each key word. Unlike <xref linkend="libpq-PQsetdbLogin"/> below, the parameter
-       set can be extended without changing the function signature, so use of
-       this function (or its nonblocking analogs <xref linkend="libpq-PQconnectStartParams"/>
-       and <function>PQconnectPoll</function>) is preferred for new application
-       programming.
+       此函数使用取自两个以 <symbol>NULL</symbol> 结尾的数组的参数打开一个新的数据库连接。第一个数组 <literal>keywords</literal> 定义为字符串数组，其中每个字符串都是一个关键字。第二个数组 <literal>values</literal> 给出每个关键字的值。与下面的 <xref linkend="libpq-PQsetdbLogin"/> 不同，参数集可以在不改变函数签名的情况下扩展，因此新的应用程序编程应优先使用此函数（或其非阻塞版本 <xref linkend="libpq-PQconnectStartParams"/> 和 <function>PQconnectPoll</function>）。
       </para>
 
       <para>
-       The currently recognized parameter key words are listed in
-       <xref linkend="libpq-paramkeywords"/>.
+       当前可识别的参数关键字列于 <xref linkend="libpq-paramkeywords"/>。
       </para>
 
       <para>
-       The passed arrays can be empty to use all default parameters, or can
-       contain one or more parameter settings. They must be matched in length.
-       Processing will stop at the first <symbol>NULL</symbol> entry
-       in the <literal>keywords</literal> array.
-       Also, if the <literal>values</literal> entry associated with a
-       non-<symbol>NULL</symbol> <literal>keywords</literal> entry is
-       <symbol>NULL</symbol> or an empty string, that entry is ignored and
-       processing continues with the next pair of array entries.
+       传入的数组可以为空，以使用所有默认参数，也可以包含一个或多个参数设置。它们的长度必须匹配。处理将在 <literal>keywords</literal> 数组中的第一个 <symbol>NULL</symbol> 项处停止。此外，如果与非 <symbol>NULL</symbol> 的 <literal>keywords</literal> 项相关联的 <literal>values</literal> 项为 <symbol>NULL</symbol> 或空字符串，则忽略该项，并继续处理下一对数组项。
       </para>
 
       <para>
-       When <literal>expand_dbname</literal> is non-zero, the value for
-       the first <parameter>dbname</parameter> key word is checked to see
-       if it is a <firstterm>connection string</firstterm>.  If so, it
-       is <quote>expanded</quote> into the individual connection
-       parameters extracted from the string.  The value is considered to
-       be a connection string, rather than just a database name, if it
-       contains an equal sign (<literal>=</literal>) or it begins with a
-       URI scheme designator.  (More details on connection string formats
-       appear in <xref linkend="libpq-connstring"/>.)  Only the first
-       occurrence of <parameter>dbname</parameter> is treated in this way;
-       any subsequent <parameter>dbname</parameter> parameter is processed
-       as a plain database name.
+       当 <literal>expand_dbname</literal> 非零时，会检查第一个 <parameter>dbname</parameter> 关键字的值，看它是否为<firstterm>连接字符串</firstterm>。如果是，则将其<quote>展开</quote>为从该字符串中提取的各个连接参数。如果该值包含等号（<literal>=</literal>）或以 URI 方案指示符开头，则将其视为连接字符串，而不仅仅是数据库名。（有关连接字符串格式的更多细节见 <xref linkend="libpq-connstring"/>。）只有第一个出现的 <parameter>dbname</parameter> 会以这种方式处理；任何后续的 <parameter>dbname</parameter> 参数都作为普通数据库名处理。
       </para>
 
       <para>
-       In general the parameter arrays are processed from start to end.
-       If any key word is repeated, the last value (that is
-       not <symbol>NULL</symbol> or empty) is used.  This rule applies in
-       particular when a key word found in a connection string conflicts
-       with one appearing in the <literal>keywords</literal> array.  Thus,
-       the programmer may determine whether array entries can override or
-       be overridden by values taken from a connection string.  Array
-       entries appearing before an expanded <parameter>dbname</parameter>
-       entry can be overridden by fields of the connection string, and in
-       turn those fields are overridden by array entries appearing
-       after <parameter>dbname</parameter> (but, again, only if those
-       entries supply non-empty values).
+       通常，参数数组会从头到尾依次处理。如果任何关键字重复出现，则使用最后一个值（即不是 <symbol>NULL</symbol> 或空的值）。这条规则尤其适用于连接字符串中出现的关键字与 <literal>keywords</literal> 数组中出现的同名关键字冲突的情况。因此，程序员可以决定数组条目能否覆盖从连接字符串中取得的值，或者是否会被这些值覆盖。出现在展开的 <parameter>dbname</parameter> 条目之前的数组条目可以被连接字符串的字段覆盖，而这些字段又会被出现在 <parameter>dbname</parameter> 之后的数组条目覆盖（但同样，仅当这些条目提供非空值时）。
       </para>
 
       <para>
-       After processing all the array entries and any expanded connection
-       string, any connection parameters that remain unset are filled with
-       default values.  If an unset parameter's corresponding environment
-       variable (see <xref linkend="libpq-envars"/>) is set, its value is
-       used.  If the environment variable is not set either, then the
-       parameter's built-in default value is used.
+       在处理完所有数组条目以及任何展开的连接字符串之后，所有仍未设置的连接参数都会用默认值填充。如果某个未设置参数对应的环境变量（参见 <xref linkend="libpq-envars"/>）已设置，则使用其值。如果该环境变量也未设置，则使用该参数的内置默认值。
       </para>
 
      </listitem>
@@ -177,7 +108,7 @@ PGconn *PQconnectdbParams(const char * const *keywords,
      <term><function>PQconnectdb</function><indexterm><primary>PQconnectdb</primary></indexterm></term>
      <listitem>
       <para>
-       Makes a new connection to the database server.
+       与数据库服务器建立一个新连接。
 
 <synopsis>
 PGconn *PQconnectdb(const char *conninfo);
@@ -185,15 +116,11 @@ PGconn *PQconnectdb(const char *conninfo);
       </para>
 
       <para>
-       This function opens a new database connection using the parameters taken
-       from the string <literal>conninfo</literal>.
+       该函数使用从字符串 <literal>conninfo</literal> 中获取的参数打开一个新的数据库连接。
       </para>
 
       <para>
-       The passed string can be empty to use all default parameters, or it can
-       contain one or more parameter settings separated by whitespace,
-       or it can contain a <acronym>URI</acronym>.
-       See <xref linkend="libpq-connstring"/> for details.
+       传入的字符串可以为空，以使用所有默认参数；也可以包含一个或多个由空白分隔的参数设置；还可以包含一个 <acronym>URI</acronym>。详情请参见 <xref linkend="libpq-connstring"/>。
      </para>
 
 
@@ -204,7 +131,7 @@ PGconn *PQconnectdb(const char *conninfo);
      <term><function>PQsetdbLogin</function><indexterm><primary>PQsetdbLogin</primary></indexterm></term>
      <listitem>
       <para>
-       Makes a new connection to the database server.
+       建立到数据库服务器的新连接。
 <synopsis>
 PGconn *PQsetdbLogin(const char *pghost,
                      const char *pgport,
@@ -217,23 +144,16 @@ PGconn *PQsetdbLogin(const char *pghost,
        </para>
 
        <para>
-        This is the predecessor of <xref linkend="libpq-PQconnectdb"/> with a fixed
-        set of parameters.  It has the same functionality except that the
-        missing parameters will always take on default values.  Write <symbol>NULL</symbol> or an
-        empty string for any one of the fixed parameters that is to be defaulted.
+        它是 <xref linkend="libpq-PQconnectdb"/> 的前身，使用一组固定的参数。除缺失的参数将始终采用默认值外，其功能相同。对于任何应取默认值的固定参数，请写 <symbol>NULL</symbol> 或空字符串。
       </para>
 
       <para>
-        If the <parameter>dbName</parameter> contains
-        an <symbol>=</symbol> sign or has a valid connection <acronym>URI</acronym> prefix, it
-        is taken as a <parameter>conninfo</parameter> string in exactly the same way as
-        if it had been passed to <xref linkend="libpq-PQconnectdb"/>, and the remaining
-        parameters are then applied as specified for <xref linkend="libpq-PQconnectdbParams"/>.
+        如果 <parameter>dbName</parameter> 中包含
+        一个 <symbol>=</symbol> 符号，或者带有合法的连接 <acronym>URI</acronym> 前缀，那么它会被当作一个 <parameter>conninfo</parameter> 字符串，处理方式与将其传给 <xref linkend="libpq-PQconnectdb"/> 时完全相同，随后其余参数会按照 <xref linkend="libpq-PQconnectdbParams"/> 的规定应用。
       </para>
 
       <para>
-        <literal>pgtty</literal> is no longer used and any value passed will
-        be ignored.
+        <literal>pgtty</literal> 已不再使用，传入的任何值都将被忽略。
       </para>
      </listitem>
     </varlistentry>
@@ -242,7 +162,7 @@ PGconn *PQsetdbLogin(const char *pghost,
      <term><function>PQsetdb</function><indexterm><primary>PQsetdb</primary></indexterm></term>
      <listitem>
       <para>
-   Makes a new connection to the database server.
+   建立到数据库服务器的新连接。
 <synopsis>
 PGconn *PQsetdb(char *pghost,
                 char *pgport,
@@ -253,9 +173,7 @@ PGconn *PQsetdb(char *pghost,
      </para>
 
      <para>
-      This is a macro that calls <xref linkend="libpq-PQsetdbLogin"/> with null pointers
-      for the <parameter>login</parameter> and <parameter>pwd</parameter> parameters.  It is provided
-      for backward compatibility with very old programs.
+      这是一个宏，它调用 <xref linkend="libpq-PQsetdbLogin"/>，并将 <parameter>login</parameter> 和 <parameter>pwd</parameter> 参数设为空指针。提供它是为了向后兼容非常旧的程序。
      </para>
      </listitem>
     </varlistentry>
@@ -266,8 +184,8 @@ PGconn *PQsetdb(char *pghost,
      <term id="libpq-PQconnectPoll"><function>PQconnectPoll</function><indexterm><primary>PQconnectPoll</primary></indexterm></term>
      <listitem>
       <para>
-       <indexterm><primary>nonblocking connection</primary></indexterm>
-       Make a connection to the database server in a nonblocking manner.
+       <indexterm><primary>非阻塞连接</primary></indexterm>
+       以非阻塞方式建立到数据库服务器的连接。
 
 <synopsis>
 PGconn *PQconnectStartParams(const char * const *keywords,
@@ -281,114 +199,96 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
       </para>
 
       <para>
-       These three functions are used to open a connection to a database server such
-       that your application's thread of execution is not blocked on remote I/O
-       whilst doing so. The point of this approach is that the waits for I/O to
-       complete can occur in the application's main loop, rather than down inside
-       <xref linkend="libpq-PQconnectdbParams"/> or <xref linkend="libpq-PQconnectdb"/>, and so the
-       application can manage this operation in parallel with other activities.
+       这三个函数用于打开到数据库服务器的连接，使得应用程序的执行线程在此过程中不会阻塞在远程 I/O 上。这种做法的要点在于，等待 I/O 完成的过程可以发生在应用程序的主循环中，而不是在 <xref linkend="libpq-PQconnectdbParams"/> 或 <xref linkend="libpq-PQconnectdb"/> 内部，因此应用程序可以与其他活动并行地管理这一操作。
       </para>
 
       <para>
-       With <xref linkend="libpq-PQconnectStartParams"/>, the database connection is made
-       using the parameters taken from the <literal>keywords</literal> and
-       <literal>values</literal> arrays, and controlled by <literal>expand_dbname</literal>,
-       as described above for <xref linkend="libpq-PQconnectdbParams"/>.
+       使用 <xref linkend="libpq-PQconnectStartParams"/> 时，数据库连接是使用从 <literal>keywords</literal> 和
+      <literal>values</literal> 数组中取得的参数建立的，并由 <literal>expand_dbname</literal> 控制，
+      与上文针对 <xref linkend="libpq-PQconnectdbParams"/> 所述相同。
       </para>
 
       <para>
-       With <function>PQconnectStart</function>, the database connection is made
-       using the parameters taken from the string <literal>conninfo</literal> as
-       described above for <xref linkend="libpq-PQconnectdb"/>.
+       使用 <function>PQconnectStart</function> 时，数据库连接是
+      使用从字符串 <literal>conninfo</literal> 中取得的参数建立的，
+      与上文针对 <xref linkend="libpq-PQconnectdb"/> 所述相同。
       </para>
 
       <para>
-       Neither <xref linkend="libpq-PQconnectStartParams"/> nor <function>PQconnectStart</function>
-       nor <function>PQconnectPoll</function> will block, so long as a number of
-       restrictions are met:
+       只要满足若干限制，<xref linkend="libpq-PQconnectStartParams"/>、<function>PQconnectStart</function>
+      以及 <function>PQconnectPoll</function> 都不会阻塞：
        <itemizedlist>
         <listitem>
          <para>
-          The <literal>hostaddr</literal> parameter must be used appropriately
-          to prevent DNS queries from being made.  See the documentation of
-          this parameter in <xref linkend="libpq-paramkeywords"/> for details.
+          必须适当地使用 <literal>hostaddr</literal> 参数
+          以防止进行 DNS 查询。详情请参阅
+          <xref linkend="libpq-paramkeywords"/> 中关于该参数的文档。
          </para>
         </listitem>
 
         <listitem>
          <para>
-          If you call <xref linkend="libpq-PQtrace"/>, ensure that the stream object
-          into which you trace will not block.
+          如果调用了 <xref linkend="libpq-PQtrace"/>，请确保
+          用于跟踪的输出流对象不会阻塞。
          </para>
         </listitem>
 
         <listitem>
          <para>
-          You must ensure that the socket is in the appropriate state
-          before calling <function>PQconnectPoll</function>, as described below.
+          在调用 <function>PQconnectPoll</function> 之前，你必须确保套接字处于适当的状态，如下所述。
          </para>
         </listitem>
        </itemizedlist>
       </para>
 
       <para>
-       To begin a nonblocking connection request,
-       call <function>PQconnectStart</function>
-       or <xref linkend="libpq-PQconnectStartParams"/>.  If the result is null,
-       then <application>libpq</application> has been unable to allocate a
-       new <structname>PGconn</structname> structure.  Otherwise, a
-       valid <structname>PGconn</structname> pointer is returned (though not
-       yet representing a valid connection to the database).  Next
-       call <literal>PQstatus(conn)</literal>.  If the result
-       is <symbol>CONNECTION_BAD</symbol>, the connection attempt has already
-       failed, typically because of invalid connection parameters.
+       要开始一个非阻塞连接请求，请调用 <function>PQconnectStart</function>
+      或 <xref linkend="libpq-PQconnectStartParams"/>。如果结果为 null，
+      则说明 <application>libpq</application> 无法分配
+      新的 <structname>PGconn</structname> 结构。否则，会返回一个
+      有效的 <structname>PGconn</structname> 指针（尽管它尚未表示一个有效的数据库连接）。接下来
+      调用 <literal>PQstatus(conn)</literal>。如果结果为 <symbol>CONNECTION_BAD</symbol>，则连接尝试已经
+      失败，通常是由于连接参数无效。
       </para>
 
       <para>
-       If <function>PQconnectStart</function>
-       or <xref linkend="libpq-PQconnectStartParams"/> succeeds, the next stage
-       is to poll <application>libpq</application> so that it can proceed with
-       the connection sequence.
-       Use <function>PQsocket(conn)</function> to obtain the descriptor of the
-       socket underlying the database connection.
-       (Caution: do not assume that the socket remains the same
-       across <function>PQconnectPoll</function> calls.)
-       Loop thus: If <function>PQconnectPoll(conn)</function> last returned
-       <symbol>PGRES_POLLING_READING</symbol>, wait until the socket is ready to
-       read (as indicated by <function>select()</function>, <function>poll()</function>, or
-       similar system function).  Note that <function>PQsocketPoll</function>
-       can help reduce boilerplate by abstracting the setup of
-       <function>select(2)</function> or <function>poll(2)</function> if it is
-       available on your system.
-       Then call <function>PQconnectPoll(conn)</function> again.
-       Conversely, if <function>PQconnectPoll(conn)</function> last returned
-       <symbol>PGRES_POLLING_WRITING</symbol>, wait until the socket is ready
-       to write, then call <function>PQconnectPoll(conn)</function> again.
-       On the first iteration, i.e., if you have yet to call
-       <function>PQconnectPoll</function>, behave as if it last returned
-       <symbol>PGRES_POLLING_WRITING</symbol>.  Continue this loop until
-       <function>PQconnectPoll(conn)</function> returns
-       <symbol>PGRES_POLLING_FAILED</symbol>, indicating the connection procedure
-       has failed, or <symbol>PGRES_POLLING_OK</symbol>, indicating the connection
-       has been successfully made.
+       如果 <function>PQconnectStart</function>
+      或 <xref linkend="libpq-PQconnectStartParams"/> 成功，下一阶段
+      是轮询 <application>libpq</application>，以便它能够继续执行
+      连接序列。
+      使用 <function>PQsocket(conn)</function> 获取数据库连接底层套接字的描述符。
+      （注意：不要假设该套接字在多次 <function>PQconnectPoll</function> 调用之间保持不变。）
+      如此循环：如果 <function>PQconnectPoll(conn)</function> 上次返回
+      <symbol>PGRES_POLLING_READING</symbol>，则等待该套接字变为可读
+      （由 <function>select()</function>、<function>poll()</function> 或
+      类似的系统函数指示）。请注意，如果你的系统上可用 <function>PQsocketPoll</function>，
+      它可以通过抽象 <function>select(2)</function> 或 <function>poll(2)</function> 的设置
+      来帮助减少样板代码。
+      然后再次调用 <function>PQconnectPoll(conn)</function>。
+      反之，如果 <function>PQconnectPoll(conn)</function> 上次返回
+      <symbol>PGRES_POLLING_WRITING</symbol>，则等待该套接字变为可写，然后再次调用 <function>PQconnectPoll(conn)</function>。
+      在第一次迭代时，即如果你尚未调用
+      <function>PQconnectPoll</function>，则按它上次返回
+      <symbol>PGRES_POLLING_WRITING</symbol> 来处理。继续此循环，直到
+      <function>PQconnectPoll(conn)</function> 返回
+      <symbol>PGRES_POLLING_FAILED</symbol>（表示连接过程已失败）或 <symbol>PGRES_POLLING_OK</symbol>（表示连接
+      已成功建立）。
       </para>
 
       <para>
-       At any time during connection, the status of the connection can be
-       checked by calling <xref linkend="libpq-PQstatus"/>. If this call returns <symbol>CONNECTION_BAD</symbol>, then the
-       connection procedure has failed; if the call returns <symbol>CONNECTION_OK</symbol>, then the
-       connection is ready.  Both of these states are equally detectable
-       from the return value of <function>PQconnectPoll</function>, described above. Other states might also occur
-       during (and only during) an asynchronous connection procedure. These
-       indicate the current stage of the connection procedure and might be useful
-       to provide feedback to the user for example. These statuses are:
+       在连接过程中的任何时候，都可以通过调用 <xref linkend="libpq-PQstatus"/> 来检查连接的状态。如果该调用返回 <symbol>CONNECTION_BAD</symbol>，则
+      连接过程已失败；如果该调用返回 <symbol>CONNECTION_OK</symbol>，则
+      连接已就绪。这两种状态同样可以从
+      上文所述的 <function>PQconnectPoll</function> 返回值中检测到。在（且仅在）异步连接过程中还可能
+      出现其他状态。这些状态表示连接过程的当前阶段，例如可能有助于
+      向用户提供反馈。这些状态包括：
 
        <variablelist>
         <varlistentry id="libpq-connection-started">
          <term><symbol>CONNECTION_STARTED</symbol></term>
          <listitem>
           <para>
-           Waiting for connection to be made.
+           等待建立连接。
           </para>
          </listitem>
         </varlistentry>
@@ -397,7 +297,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_MADE</symbol></term>
          <listitem>
           <para>
-           Connection OK; waiting to send.
+           连接正常；等待发送。
           </para>
          </listitem>
         </varlistentry>
@@ -406,7 +306,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_AWAITING_RESPONSE</symbol></term>
          <listitem>
           <para>
-           Waiting for a response from the server.
+           正在等待服务器的响应。
           </para>
          </listitem>
         </varlistentry>
@@ -415,7 +315,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_AUTH_OK</symbol></term>
          <listitem>
           <para>
-           Received authentication; waiting for backend start-up to finish.
+           已收到认证；正在等待后端启动完成。
           </para>
          </listitem>
         </varlistentry>
@@ -424,7 +324,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_SSL_STARTUP</symbol></term>
          <listitem>
           <para>
-           Negotiating SSL encryption.
+           正在协商 SSL 加密。
           </para>
          </listitem>
         </varlistentry>
@@ -433,7 +333,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_GSS_STARTUP</symbol></term>
          <listitem>
           <para>
-           Negotiating GSS encryption.
+           正在协商 GSS 加密。
           </para>
          </listitem>
         </varlistentry>
@@ -442,7 +342,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_CHECK_WRITABLE</symbol></term>
          <listitem>
           <para>
-           Checking if connection is able to handle write transactions.
+           正在检查该连接是否能够处理写事务。
           </para>
          </listitem>
         </varlistentry>
@@ -451,7 +351,7 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_CHECK_STANDBY</symbol></term>
          <listitem>
           <para>
-           Checking if connection is to a server in standby mode.
+           正在检查该连接是否指向处于备用模式的服务器。
           </para>
          </listitem>
         </varlistentry>
@@ -460,16 +360,13 @@ PostgresPollingStatusType PQconnectPoll(PGconn *conn);
          <term><symbol>CONNECTION_CONSUME</symbol></term>
          <listitem>
           <para>
-           Consuming any remaining response messages on connection.
+           消费连接上任何剩余的响应消息。
           </para>
          </listitem>
         </varlistentry>
        </variablelist>
 
-       Note that, although these constants will remain (in order to maintain
-       compatibility), an application should never rely upon these occurring in a
-       particular order, or at all, or on the status always being one of these
-       documented values. An application might do something like this:
+       请注意，尽管这些常量会保留下来（为了保持兼容性），但应用程序绝不应依赖它们以特定顺序出现，也不应依赖它们一定出现，或依赖状态值始终是这些文档中记录的值之一。应用程序可能会做类似这样的事情：
 <programlisting>
 switch(PQstatus(conn))
 {
@@ -490,21 +387,11 @@ switch(PQstatus(conn))
       </para>
 
       <para>
-       The <literal>connect_timeout</literal> connection parameter is ignored
-       when using <function>PQconnectPoll</function>; it is the application's
-       responsibility to decide whether an excessive amount of time has elapsed.
-       Otherwise, <function>PQconnectStart</function> followed by a
-       <function>PQconnectPoll</function> loop is equivalent to
-       <xref linkend="libpq-PQconnectdb"/>.
+       在使用 <function>PQconnectPoll</function> 时会忽略 <literal>connect_timeout</literal> 连接参数；判断是否已经耗费了过多的时间是应用程序的责任。否则，<function>PQconnectStart</function> 后跟一个 <function>PQconnectPoll</function> 循环等价于 <xref linkend="libpq-PQconnectdb"/>。
       </para>
 
       <para>
-       Note that when <function>PQconnectStart</function>
-       or <xref linkend="libpq-PQconnectStartParams"/> returns a non-null
-       pointer, you must call <xref linkend="libpq-PQfinish"/> when you are
-       finished with it, in order to dispose of the structure and any
-       associated memory blocks.  This must be done even if the connection
-       attempt fails or is abandoned.
+       请注意，当 <function>PQconnectStart</function> 或 <xref linkend="libpq-PQconnectStartParams"/> 返回非空指针时，你在用完它之后必须调用 <xref linkend="libpq-PQfinish"/>，以便释放该结构以及任何关联的内存块。即使连接尝试失败或被放弃，也必须这样做。
       </para>
      </listitem>
     </varlistentry>
@@ -513,12 +400,9 @@ switch(PQstatus(conn))
      <term><function>PQsocketPoll</function><indexterm><primary>PQsocketPoll</primary></indexterm></term>
      <listitem>
       <para>
-       <indexterm><primary>nonblocking connection</primary></indexterm>
-       Poll a connection's underlying socket descriptor retrieved with
-       <xref linkend="libpq-PQsocket"/>.
-       The primary use of this function is iterating through the connection
-       sequence described in the documentation of
-       <xref linkend="libpq-PQconnectStartParams"/>.
+       <indexterm><primary>非阻塞连接</primary></indexterm>
+       轮询用 <xref linkend="libpq-PQsocket"/> 获取的连接底层套接字描述符。
+       该函数的主要用途是遍历 <xref linkend="libpq-PQconnectStartParams"/> 文档中描述的连接过程。
 <synopsis>
 typedef int64_t pg_usec_time_t;
 
@@ -528,47 +412,38 @@ int PQsocketPoll(int sock, int forRead, int forWrite,
       </para>
 
       <para>
-       This function performs polling of a file descriptor, optionally with
-       a timeout.
-       If <parameter>forRead</parameter> is nonzero, the
-       function will terminate when the socket is ready for
-       reading. If <parameter>forWrite</parameter> is nonzero,
-       the function will terminate when the
-       socket is ready for writing.
+       此函数对一个文件描述符执行轮询，可选带超时。
+       如果 <parameter>forRead</parameter> 非零，
+       该函数将在套接字可读时终止。如果 <parameter>forWrite</parameter> 非零，
+       该函数将在套接字可写时终止。
       </para>
 
       <para>
-       The timeout is specified by <parameter>end_time</parameter>, which
-       is the time to stop waiting expressed as a number of microseconds since
-       the Unix epoch (that is, <type>time_t</type> times 1 million).
-       Timeout is infinite if <parameter>end_time</parameter>
-       is <literal>-1</literal>.  Timeout is immediate (no blocking) if
-       <parameter>end_time</parameter> is <literal>0</literal> (or indeed, any
-       time before now).  Timeout values can be calculated conveniently by
-       adding the desired number of microseconds to the result of
-       <xref linkend="libpq-PQgetCurrentTimeUSec"/>.
-       Note that the underlying system calls may have less than microsecond
-       precision, so that the actual delay may be imprecise.
+       超时由 <parameter>end_time</parameter> 指定，它表示停止等待的时间，
+       以自 Unix 纪元起的微秒数表示（即 <type>time_t</type> 乘以 100 万）。
+       如果 <parameter>end_time</parameter> 为 <literal>-1</literal>，则超时为无限。
+       如果 <parameter>end_time</parameter> 为 <literal>0</literal>（或者实际上是当前时间之前的任意时间），
+       则超时为立即（不阻塞）。超时值可以方便地通过将所需的微秒数
+       加到 <xref linkend="libpq-PQgetCurrentTimeUSec"/> 的结果上来计算。
+       请注意，底层系统调用可能具有低于微秒的精度，
+       因此实际延迟可能不精确。
       </para>
 
       <para>
-       The function returns a value greater than <literal>0</literal> if the
-       specified condition is met, <literal>0</literal> if a timeout occurred,
-       or <literal>-1</literal> if an error occurred. The error can be
-       retrieved by checking the <literal>errno(3)</literal> value. In the
-       event both <parameter>forRead</parameter>
-       and <parameter>forWrite</parameter> are zero, the function immediately
-       returns a timeout indication.
+       如果满足指定条件，该函数返回大于 <literal>0</literal> 的值；
+       如果发生超时，返回 <literal>0</literal>；
+       如果发生错误，返回 <literal>-1</literal>。可以通过检查 <literal>errno(3)</literal> 值来获取错误。
+       如果 <parameter>forRead</parameter>
+       和 <parameter>forWrite</parameter> 均为零，该函数会立即返回超时指示。
       </para>
 
       <para>
-       <function>PQsocketPoll</function> is implemented using either
-       <function>poll(2)</function> or <function>select(2)</function>,
-       depending on platform.  See <literal>POLLIN</literal>
-       and <literal>POLLOUT</literal> from <function>poll(2)</function>,
-       or <parameter>readfds</parameter> and
-       <parameter>writefds</parameter> from <function>select(2)</function>,
-       for more information.
+       <function>PQsocketPoll</function> 的实现使用
+       <function>poll(2)</function> 或 <function>select(2)</function>，
+       具体取决于平台。有关更多信息，请参见 <function>poll(2)</function> 中的 <literal>POLLIN</literal>
+       和 <literal>POLLOUT</literal>，
+       或 <function>select(2)</function> 中的 <parameter>readfds</parameter> 和
+       <parameter>writefds</parameter>。
       </para>
      </listitem>
     </varlistentry>
@@ -577,7 +452,7 @@ int PQsocketPoll(int sock, int forRead, int forWrite,
      <term><function>PQconndefaults</function><indexterm><primary>PQconndefaults</primary></indexterm></term>
      <listitem>
       <para>
-       Returns the default connection options.
+       返回默认连接选项。
 <synopsis>
 PQconninfoOption *PQconndefaults(void);
 
@@ -599,22 +474,11 @@ typedef struct
       </para>
 
       <para>
-       Returns a connection options array.  This can be used to determine
-       all possible <xref linkend="libpq-PQconnectdb"/> options and their
-       current default values.  The return value points to an array of
-       <structname>PQconninfoOption</structname> structures, which ends
-       with an entry having a null <structfield>keyword</structfield> pointer.  The
-       null pointer is returned if memory could not be allocated. Note that
-       the current default values (<structfield>val</structfield> fields)
-       will depend on environment variables and other context.  A
-       missing or invalid service file will be silently ignored.  Callers
-       must treat the connection options data as read-only.
+       返回一个连接选项数组。这可用于确定所有可能的 <xref linkend="libpq-PQconnectdb"/> 选项及其当前默认值。返回值指向一个 <structname>PQconninfoOption</structname> 结构数组，该数组以一个 <structfield>keyword</structfield> 指针为空的条目结尾。如果无法分配内存，则返回空指针。请注意，当前的默认值（<structfield>val</structfield> 字段）将取决于环境变量和其他上下文。缺失或无效的服务文件将被静默忽略。调用者必须将连接选项数据视为只读。
       </para>
 
       <para>
-       After processing the options array, free it by passing it to
-       <xref linkend="libpq-PQconninfoFree"/>.  If this is not done, a small amount of memory
-       is leaked for each call to <xref linkend="libpq-PQconndefaults"/>.
+       处理完选项数组后，将其传递给 <xref linkend="libpq-PQconninfoFree"/> 以释放它。如果不这样做，每次调用 <xref linkend="libpq-PQconndefaults"/> 都会泄漏少量内存。
       </para>
 
      </listitem>
@@ -624,20 +488,14 @@ typedef struct
      <term><function>PQconninfo</function><indexterm><primary>PQconninfo</primary></indexterm></term>
      <listitem>
       <para>
-       Returns the connection options used by a live connection.
+       返回活动连接所使用的连接选项。
 <synopsis>
 PQconninfoOption *PQconninfo(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       Returns a connection options array.  This can be used to determine
-       all possible <xref linkend="libpq-PQconnectdb"/> options and the
-       values that were used to connect to the server. The return
-       value points to an array of <structname>PQconninfoOption</structname>
-       structures, which ends with an entry having a null <structfield>keyword</structfield>
-       pointer. All notes above for <xref linkend="libpq-PQconndefaults"/> also
-       apply to the result of <xref linkend="libpq-PQconninfo"/>.
+       返回一个连接选项数组。这可用于确定所有可能的 <xref linkend="libpq-PQconnectdb"/> 选项以及用于连接到服务器的值。返回值指向一个 <structname>PQconninfoOption</structname> 结构数组，该数组以一个 <structfield>keyword</structfield> 指针为空的条目结尾。上面针对 <xref linkend="libpq-PQconndefaults"/> 的所有说明同样适用于 <xref linkend="libpq-PQconninfo"/> 的结果。
       </para>
 
      </listitem>
@@ -648,7 +506,7 @@ PQconninfoOption *PQconninfo(PGconn *conn);
      <term><function>PQconninfoParse</function><indexterm><primary>PQconninfoParse</primary></indexterm></term>
      <listitem>
       <para>
-       Returns parsed connection options from the provided connection string.
+       从提供的连接字符串中返回解析后的连接选项。
 
 <synopsis>
 PQconninfoOption *PQconninfoParse(const char *conninfo, char **errmsg);
@@ -656,36 +514,19 @@ PQconninfoOption *PQconninfoParse(const char *conninfo, char **errmsg);
       </para>
 
       <para>
-       Parses a connection string and returns the resulting options as an
-       array; or returns <symbol>NULL</symbol> if there is a problem with the connection
-       string.  This function can be used to extract
-       the <xref linkend="libpq-PQconnectdb"/> options in the provided
-       connection string.  The return value points to an array of
-       <structname>PQconninfoOption</structname> structures, which ends
-       with an entry having a null <structfield>keyword</structfield> pointer.
+       解析一个连接字符串，并将结果选项以数组形式返回；如果连接字符串有问题，则返回 <symbol>NULL</symbol>。此函数可用于提取所提供的连接字符串中的 <xref linkend="libpq-PQconnectdb"/> 选项。返回值指向一个 <structname>PQconninfoOption</structname> 结构数组，该数组以一个 <structfield>keyword</structfield> 指针为空的条目结尾。
       </para>
 
       <para>
-       All legal options will be present in the result array, but the
-       <literal>PQconninfoOption</literal> for any option not present
-       in the connection string will have <literal>val</literal> set to
-       <literal>NULL</literal>; default values are not inserted.
+       所有合法选项都会出现在结果数组中，但对于连接字符串中未出现的任何选项，其 <literal>PQconninfoOption</literal> 的 <literal>val</literal> 将被设置为 <literal>NULL</literal>；不会插入默认值。
       </para>
 
       <para>
-       If <literal>errmsg</literal> is not <symbol>NULL</symbol>, then <literal>*errmsg</literal> is set
-       to <symbol>NULL</symbol> on success, else to a <function>malloc</function>'d error string explaining
-       the problem.  (It is also possible for <literal>*errmsg</literal> to be
-       set to <symbol>NULL</symbol> and the function to return <symbol>NULL</symbol>;
-       this indicates an out-of-memory condition.)
+       如果 <literal>errmsg</literal> 不是 <symbol>NULL</symbol>，则成功时 <literal>*errmsg</literal> 被设置为 <symbol>NULL</symbol>，否则被设置为一个经 <function>malloc</function> 分配的错误字符串，用于说明问题。（也可能出现 <literal>*errmsg</literal> 被设置为 <symbol>NULL</symbol> 且函数返回 <symbol>NULL</symbol> 的情况；这表示内存不足。）
       </para>
 
       <para>
-       After processing the options array, free it by passing it to
-       <xref linkend="libpq-PQconninfoFree"/>.  If this is not done, some memory
-       is leaked for each call to <xref linkend="libpq-PQconninfoParse"/>.
-       Conversely, if an error occurs and <literal>errmsg</literal> is not <symbol>NULL</symbol>,
-       be sure to free the error string using <xref linkend="libpq-PQfreemem"/>.
+       处理完选项数组后，将其传给 <xref linkend="libpq-PQconninfoFree"/> 以释放。如果不这样做，每次调用 <xref linkend="libpq-PQconninfoParse"/> 都会泄漏一些内存。反之，如果发生错误且 <literal>errmsg</literal> 不是 <symbol>NULL</symbol>，务必使用 <xref linkend="libpq-PQfreemem"/> 释放该错误字符串。
       </para>
 
    </listitem>
@@ -695,19 +536,14 @@ PQconninfoOption *PQconninfoParse(const char *conninfo, char **errmsg);
      <term><function>PQfinish</function><indexterm><primary>PQfinish</primary></indexterm></term>
      <listitem>
       <para>
-       Closes  the  connection to the server.  Also frees
-       memory used by the <structname>PGconn</structname> object.
+       关闭到服务器的连接。同时释放 <structname>PGconn</structname> 对象所使用的内存。
 <synopsis>
 void PQfinish(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       Note that even if the server connection attempt fails (as
-       indicated by <xref linkend="libpq-PQstatus"/>), the application should call <xref linkend="libpq-PQfinish"/>
-       to free the memory used by the <structname>PGconn</structname> object.
-       The <structname>PGconn</structname> pointer must not be used again after
-       <xref linkend="libpq-PQfinish"/> has been called.
+       注意，即使服务器连接尝试失败（如 <xref linkend="libpq-PQstatus"/> 所示），应用程序也应该调用 <xref linkend="libpq-PQfinish"/> 来释放 <structname>PGconn</structname> 对象所使用的内存。在调用 <xref linkend="libpq-PQfinish"/> 之后，不得再次使用 <structname>PGconn</structname> 指针。
       </para>
      </listitem>
     </varlistentry>
@@ -716,18 +552,14 @@ void PQfinish(PGconn *conn);
      <term><function>PQreset</function><indexterm><primary>PQreset</primary></indexterm></term>
      <listitem>
       <para>
-       Resets the communication channel to the server.
+       重置与服务器的通信通道。
 <synopsis>
 void PQreset(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       This function will close the connection
-       to the server and attempt to establish a new
-       connection, using all the same
-       parameters previously used.  This might be useful for
-       error recovery if a working connection is lost.
+       该函数将关闭到服务器的连接，并尝试使用之前用过的所有相同参数建立一个新的连接。如果某个可用的连接丢失了，这对于错误恢复可能很有用。
       </para>
      </listitem>
     </varlistentry>
@@ -737,7 +569,7 @@ void PQreset(PGconn *conn);
      <term><function>PQresetPoll</function><indexterm><primary>PQresetPoll</primary></indexterm></term>
      <listitem>
       <para>
-       Reset the communication channel to the server, in a nonblocking manner.
+       以非阻塞方式重置与服务器的通信通道。
 
 <synopsis>
 int PQresetStart(PGconn *conn);
@@ -747,21 +579,11 @@ PostgresPollingStatusType PQresetPoll(PGconn *conn);
       </para>
 
       <para>
-       These functions will close the connection to the server and attempt to
-       establish a new connection, using all the same
-       parameters previously used. This can be useful for error recovery if a
-       working connection is lost. They differ from <xref linkend="libpq-PQreset"/> (above) in that they
-       act in a nonblocking manner. These functions suffer from the same
-       restrictions as <xref linkend="libpq-PQconnectStartParams"/>, <function>PQconnectStart</function>
-       and <function>PQconnectPoll</function>.
+       这些函数将关闭与服务器的连接，并尝试使用之前用过的所有相同参数建立一条新连接。如果一条可用的连接丢失，这对于错误恢复很有用。它们与（上面的）<xref linkend="libpq-PQreset"/> 不同之处在于它们以非阻塞方式工作。这些函数受到与 <xref linkend="libpq-PQconnectStartParams"/>、<function>PQconnectStart</function> 和 <function>PQconnectPoll</function> 相同的限制。
       </para>
 
       <para>
-       To initiate a connection reset, call
-       <xref linkend="libpq-PQresetStart"/>. If it returns 0, the reset has
-       failed. If it returns 1, poll the reset using
-       <function>PQresetPoll</function> in exactly the same way as you
-       would create the connection using <function>PQconnectPoll</function>.
+       要发起连接重置，请调用 <xref linkend="libpq-PQresetStart"/>。如果它返回 0，则重置失败。如果它返回 1，则使用 <function>PQresetPoll</function> 轮询重置，方式与使用 <function>PQconnectPoll</function> 创建连接完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -770,12 +592,7 @@ PostgresPollingStatusType PQresetPoll(PGconn *conn);
      <term><function>PQpingParams</function><indexterm><primary>PQpingParams</primary></indexterm></term>
      <listitem>
       <para>
-       <xref linkend="libpq-PQpingParams"/> reports the status of the
-       server.  It accepts connection parameters identical to those of
-       <xref linkend="libpq-PQconnectdbParams"/>, described above.  It is not
-       necessary to supply correct user name, password, or database name
-       values to obtain the server status; however, if incorrect values
-       are provided, the server will log a failed connection attempt.
+       <xref linkend="libpq-PQpingParams"/> 报告服务器的状态。它接受的连接参数与上面描述的 <xref linkend="libpq-PQconnectdbParams"/> 相同。要获取服务器状态，不必提供正确的用户名、口令或数据库名值；但是，如果提供了不正确的值，服务器将记录一次失败的连接尝试。
 
 <synopsis>
 PGPing PQpingParams(const char * const *keywords,
@@ -783,14 +600,14 @@ PGPing PQpingParams(const char * const *keywords,
                     int expand_dbname);
 </synopsis>
 
-       The function returns one of the following values:
+       该函数返回下列值之一：
 
        <variablelist>
         <varlistentry id="libpq-PQpingParams-PQPING_OK">
          <term><literal>PQPING_OK</literal></term>
          <listitem>
           <para>
-           The server is running and appears to be accepting connections.
+           服务器正在运行，并且似乎正在接受连接。
           </para>
          </listitem>
         </varlistentry>
@@ -799,8 +616,7 @@ PGPing PQpingParams(const char * const *keywords,
          <term><literal>PQPING_REJECT</literal></term>
          <listitem>
           <para>
-           The server is running but is in a state that disallows connections
-           (startup, shutdown, or crash recovery).
+           服务器正在运行，但处于不允许连接的状态（启动、关闭或崩溃恢复）。
           </para>
          </listitem>
         </varlistentry>
@@ -809,11 +625,7 @@ PGPing PQpingParams(const char * const *keywords,
          <term><literal>PQPING_NO_RESPONSE</literal></term>
          <listitem>
           <para>
-           The server could not be contacted.  This might indicate that the
-           server is not running, or that there is something wrong with the
-           given connection parameters (for example, wrong port number), or
-           that there is a network connectivity problem (for example, a
-           firewall blocking the connection request).
+           无法联系到服务器。这可能表明服务器未运行，或者给定的连接参数有问题（例如端口号错误），或者存在网络连接问题（例如防火墙阻止了连接请求）。
           </para>
          </listitem>
         </varlistentry>
@@ -822,9 +634,7 @@ PGPing PQpingParams(const char * const *keywords,
          <term><literal>PQPING_NO_ATTEMPT</literal></term>
          <listitem>
           <para>
-           No attempt was made to contact the server, because the supplied
-           parameters were obviously incorrect or there was some client-side
-           problem (for example, out of memory).
+           未尝试联系服务器，因为提供的参数明显不正确，或者存在某些客户端侧的问题（例如内存不足）。
           </para>
          </listitem>
         </varlistentry>
@@ -839,12 +649,7 @@ PGPing PQpingParams(const char * const *keywords,
      <term><function>PQping</function><indexterm><primary>PQping</primary></indexterm></term>
      <listitem>
       <para>
-       <xref linkend="libpq-PQping"/> reports the status of the
-       server.  It accepts connection parameters identical to those of
-       <xref linkend="libpq-PQconnectdb"/>, described above.  It is not
-       necessary to supply correct user name, password, or database name
-       values to obtain the server status; however, if incorrect values
-       are provided, the server will log a failed connection attempt.
+       <xref linkend="libpq-PQping"/> 报告服务器的状态。它接受的连接参数与上文所述的 <xref linkend="libpq-PQconnectdb"/> 相同。要获取服务器状态，不必提供正确的用户名、密码或数据库名值；不过，如果提供的值不正确，服务器将记录一次失败的连接尝试。
 
 <synopsis>
 PGPing PQping(const char *conninfo);
@@ -852,7 +657,7 @@ PGPing PQping(const char *conninfo);
       </para>
 
       <para>
-       The return values are the same as for <xref linkend="libpq-PQpingParams"/>.
+       返回值与 <xref linkend="libpq-PQpingParams"/> 相同。
       </para>
 
      </listitem>
@@ -862,51 +667,29 @@ PGPing PQping(const char *conninfo);
      <term><function>PQsetSSLKeyPassHook_OpenSSL</function><indexterm><primary>PQsetSSLKeyPassHook_OpenSSL</primary></indexterm></term>
      <listitem>
       <para>
-       <function>PQsetSSLKeyPassHook_OpenSSL</function> lets an application override
-       <application>libpq</application>'s <link linkend="libpq-ssl-clientcert">default
-       handling of encrypted client certificate key files</link> using
-       <xref linkend="libpq-connect-sslpassword"/> or interactive prompting.
+       <function>PQsetSSLKeyPassHook_OpenSSL</function> 允许应用程序覆盖 <application>libpq</application> 的 <link linkend="libpq-ssl-clientcert">默认处理加密客户端证书密钥文件的方式</link>，即使用 <xref linkend="libpq-connect-sslpassword"/> 或交互式提示。
 
 <synopsis>
 void PQsetSSLKeyPassHook_OpenSSL(PQsslKeyPassHook_OpenSSL_type hook);
 </synopsis>
 
-       The application passes a pointer to a callback function with signature:
+应用程序传入一个指向回调函数的指针，其签名为：
 <programlisting>
 int callback_fn(char *buf, int size, PGconn *conn);
 </programlisting>
-       which <application>libpq</application> will then call
-       <emphasis>instead of</emphasis> its default
-       <function>PQdefaultSSLKeyPassHook_OpenSSL</function> handler. The
-       callback should determine the password for the key and copy it to
-       result-buffer <parameter>buf</parameter> of size
-       <parameter>size</parameter>. The string in <parameter>buf</parameter>
-       must be null-terminated. The callback must return the length of the
-       password stored in <parameter>buf</parameter> excluding the null
-       terminator. On failure, the callback should set
-       <literal>buf[0] = '\0'</literal> and return 0. See
-       <function>PQdefaultSSLKeyPassHook_OpenSSL</function> in
-       <application>libpq</application>'s source code for an example.
+随后 <application>libpq</application> 将<emphasis>代替</emphasis>其默认的 <function>PQdefaultSSLKeyPassHook_OpenSSL</function> 处理程序调用该回调。回调应确定密钥的密码并将其复制到大小为 <parameter>size</parameter> 的结果缓冲区 <parameter>buf</parameter> 中。<parameter>buf</parameter> 中的字符串必须以空字符结尾。回调必须返回存储在 <parameter>buf</parameter> 中的密码长度，不包括空终止符。失败时，回调应设置 <literal>buf[0] = '\0'</literal> 并返回 0。有关示例，请参见 <application>libpq</application> 源代码中的 <function>PQdefaultSSLKeyPassHook_OpenSSL</function>。
       </para>
 
       <para>
-       If the user specified an explicit key location,
-       its path will be in <literal>conn->sslkey</literal> when the callback
-       is invoked. This will be empty if the default key path is being used.
-       For keys that are engine specifiers, it is up to engine implementations
-       whether they use the <productname>OpenSSL</productname> password
-       callback or define their own handling.
+       如果用户指定了显式密钥位置，则调用回调时其路径将位于 <literal>conn->sslkey</literal> 中。如果使用默认密钥路径，则此路径为空。对于作为引擎说明符的密钥，引擎实现是否使用 <productname>OpenSSL</productname> 密码回调或定义自己的处理方式，由引擎实现决定。
       </para>
 
       <para>
-       The app callback may choose to delegate unhandled cases to
-       <function>PQdefaultSSLKeyPassHook_OpenSSL</function>,
-       or call it first and try something else if it returns 0, or completely override it.
+       应用程序回调可以选择将未处理的情况委托给 <function>PQdefaultSSLKeyPassHook_OpenSSL</function>，或者先调用它，如果返回 0 再尝试其他方法，或者完全覆盖它。
       </para>
 
       <para>
-       The callback <emphasis>must not</emphasis> escape normal flow control with exceptions,
-       <function>longjmp(...)</function>, etc. It must return normally.
+       回调<emphasis>不得</emphasis>通过异常、<function>longjmp(...)</function> 等逃避正常流程控制。它必须正常返回。
       </para>
 
      </listitem>
@@ -916,9 +699,7 @@ int callback_fn(char *buf, int size, PGconn *conn);
      <term><function>PQgetSSLKeyPassHook_OpenSSL</function><indexterm><primary>PQgetSSLKeyPassHook_OpenSSL</primary></indexterm></term>
      <listitem>
       <para>
-       <function>PQgetSSLKeyPassHook_OpenSSL</function> returns the current
-       client certificate key password hook, or <literal>NULL</literal>
-       if none has been set.
+       <function>PQgetSSLKeyPassHook_OpenSSL</function> 返回当前的客户端证书密钥口令钩子，如果未设置则返回 <literal>NULL</literal>。
 
 <synopsis>
 PQsslKeyPassHook_OpenSSL_type PQgetSSLKeyPassHook_OpenSSL(void);
@@ -932,7 +713,7 @@ PQsslKeyPassHook_OpenSSL_type PQgetSSLKeyPassHook_OpenSSL(void);
   </para>
 
   <sect2 id="libpq-connstring">
-   <title>Connection Strings</title>
+   <title>连接串</title>
 
    <indexterm zone="libpq-connstring">
     <primary><literal>conninfo</literal></primary>
@@ -943,48 +724,34 @@ PQsslKeyPassHook_OpenSSL_type PQgetSSLKeyPassHook_OpenSSL(void);
    </indexterm>
 
    <para>
-    Several <application>libpq</application> functions parse a user-specified string to obtain
-    connection parameters.  There are two accepted formats for these strings:
-    plain keyword/value strings
-    and URIs.  URIs generally follow
-    <ulink url="https://datatracker.ietf.org/doc/html/rfc3986">RFC
-    3986</ulink>, except that multi-host connection strings are allowed
-    as further described below.
+    有若干个 <application>libpq</application> 函数会解析用户指定的字符串以获取连接参数。这些字符串有两种可接受的格式：纯关键字/值字符串和 URI。URI 通常遵循 <ulink url="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</ulink>，但如下文进一步所述，允许多主机连接串。
    </para>
 
    <sect3 id="libpq-connstring-keyword-value">
-    <title>Keyword/Value Connection Strings</title>
+    <title>关键字/值连接串</title>
 
    <para>
-    In the keyword/value format, each parameter setting is in the form
-    <replaceable>keyword</replaceable> <literal>=</literal>
-    <replaceable>value</replaceable>, with space(s) between settings.
-    Spaces around a setting's equal sign are
-    optional. To write an empty value, or a value containing spaces, surround it
-    with single quotes, for example <literal>keyword = 'a value'</literal>.
-    Single quotes and backslashes within
-    a value must be escaped with a backslash, i.e., <literal>\'</literal> and
-    <literal>\\</literal>.
+    在关键字/值格式中，每个参数设置的形式为 <replaceable>keyword</replaceable> <literal>=</literal> <replaceable>value</replaceable>，各设置之间以空格分隔。设置中等号两边的空格是可选的。要写入空值或包含空格的值，请用单引号将其括起来，例如 <literal>keyword = 'a value'</literal>。值中的单引号和反斜杠必须用反斜杠转义，即 <literal>\'</literal> 和 <literal>\\</literal>。
    </para>
 
    <para>
-    Example:
+    示例：
 <programlisting>
 host=localhost port=5432 dbname=mydb connect_timeout=10
 </programlisting>
    </para>
 
    <para>
-    The recognized parameter key words are listed in <xref
-    linkend="libpq-paramkeywords"/>.
+    可识别的参数关键字列在 <xref
+    linkend="libpq-paramkeywords"/> 中。
    </para>
    </sect3>
 
    <sect3 id="libpq-connstring-uris">
-    <title>Connection URIs</title>
+    <title>连接 URI</title>
 
    <para>
-   The general form for a connection <acronym>URI</acronym> is:
+   连接 <acronym>URI</acronym> 的一般形式为：
 <synopsis>
 postgresql://<optional><replaceable>userspec</replaceable>@</optional><optional><replaceable>hostspec</replaceable></optional><optional>/<replaceable>dbname</replaceable></optional><optional>?<replaceable>paramspec</replaceable></optional>
 
@@ -1003,10 +770,10 @@ postgresql://<optional><replaceable>userspec</replaceable>@</optional><optional>
    </para>
 
    <para>
-    The <acronym>URI</acronym> scheme designator can be either
-    <literal>postgresql://</literal> or <literal>postgres://</literal>.  Each
-    of the remaining <acronym>URI</acronym> parts is optional.  The
-    following examples illustrate valid <acronym>URI</acronym> syntax:
+    <acronym>URI</acronym> 方案指示符可以是
+    <literal>postgresql://</literal> 或 <literal>postgres://</literal>。其余
+    <acronym>URI</acronym> 各部分都是可选的。
+    以下示例说明了有效的 <acronym>URI</acronym> 语法：
 <programlisting>
 postgresql://
 postgresql://localhost
@@ -1017,49 +784,46 @@ postgresql://user:secret@localhost
 postgresql://other@localhost/otherdb?connect_timeout=10&amp;application_name=myapp
 postgresql://host1:123,host2:456/somedb?target_session_attrs=any&amp;application_name=myapp
 </programlisting>
-    Values that would normally appear in the hierarchical part of
-    the <acronym>URI</acronym> can alternatively be given as named
-    parameters.  For example:
+    通常出现在 <acronym>URI</acronym> 层次部分中的值也可以
+    作为命名参数给出。例如：
 <programlisting>
 postgresql:///mydb?host=localhost&amp;port=5433
 </programlisting>
-    All named parameters must match key words listed in
-    <xref linkend="libpq-paramkeywords"/>, except that for compatibility
-    with JDBC connection <acronym>URI</acronym>s, instances
-    of <literal>ssl=true</literal> are translated into
-    <literal>sslmode=require</literal>.
+    所有命名参数都必须与
+    <xref linkend="libpq-paramkeywords"/> 中列出的关键字匹配，但为了与
+    JDBC 连接 <acronym>URI</acronym> 兼容，
+    <literal>ssl=true</literal> 的实例会被转换为
+    <literal>sslmode=require</literal>。
    </para>
 
    <para>
-    The connection <acronym>URI</acronym> needs to be encoded with <ulink
-    url="https://datatracker.ietf.org/doc/html/rfc3986#section-2.1">percent-encoding</ulink>
-    if it includes symbols with special meaning in any of its parts.  Here is
-    an example where the equal sign (<literal>=</literal>) is replaced with
-    <literal>%3D</literal> and the space character with
-    <literal>%20</literal>:
+    如果连接 <acronym>URI</acronym> 的任何部分包含具有特殊含义的符号，
+    则需要使用 <ulink
+    url="https://datatracker.ietf.org/doc/html/rfc3986#section-2.1">百分号编码</ulink>
+    对其进行编码。下面是一个示例，其中等号（<literal>=</literal>）被替换为
+    <literal>%3D</literal>，空格字符被替换为
+    <literal>%20</literal>：
 <programlisting>
 postgresql://user@localhost:5433/mydb?options=-c%20synchronous_commit%3Doff
 </programlisting>
    </para>
 
    <para>
-    The host part may be either a host name or an IP address.  To specify an
-    IPv6 address, enclose it in square brackets:
+    主机部分可以是主机名或 IP 地址。要指定 IPv6 地址，请将其括在方括号中：
 <synopsis>
 postgresql://[2001:db8::1234]/database
 </synopsis>
    </para>
 
    <para>
-    The host part is interpreted as described for the parameter <xref
-    linkend="libpq-connect-host"/>.  In particular, a Unix-domain socket
-    connection is chosen if the host part is either empty or looks like an
-    absolute path name,
-    otherwise a TCP/IP connection is initiated.  Note, however, that the
-    slash is a reserved character in the hierarchical part of the URI.  So, to
-    specify a non-standard Unix-domain socket directory, either omit the host
-    part of the URI and specify the host as a named parameter, or
-    percent-encode the path in the host part of the URI:
+    主机部分的解释如参数 <xref
+    linkend="libpq-connect-host"/> 所述。特别地，如果主机部分为空或看起来像
+    绝对路径名，则选择 Unix 域套接字连接，
+    否则发起 TCP/IP 连接。但请注意，
+    斜杠是 URI 层次部分中的保留字符。因此，要
+    指定非标准的 Unix 域套接字目录，可以省略 URI 的
+    主机部分并将主机指定为命名参数，或者
+    对 URI 主机部分中的路径进行百分号编码：
 <programlisting>
 postgresql:///dbname?host=/var/lib/postgresql
 postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
@@ -1067,91 +831,64 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
    </para>
 
    <para>
-    It is possible to specify multiple host components, each with an optional
-    port component, in a single URI.  A URI of the form
+    可以在单个 URI 中指定多个主机组件，每个组件都可带有
+    可选的端口组件。形如
     <literal>postgresql://host1:port1,host2:port2,host3:port3/</literal>
-    is equivalent to a connection string of the form
-    <literal>host=host1,host2,host3 port=port1,port2,port3</literal>.
-    As further described below, each
-    host will be tried in turn until a connection is successfully established.
+    的 URI 等价于形如
+    <literal>host=host1,host2,host3 port=port1,port2,port3</literal> 的连接串。
+    如下文进一步所述，将依次尝试每个
+    主机，直到成功建立连接。
    </para>
    </sect3>
 
    <sect3 id="libpq-multiple-hosts">
-     <title>Specifying Multiple Hosts</title>
+     <title>指定多个主机</title>
 
      <para>
-       It is possible to specify multiple hosts to connect to, so that they are
-       tried in the given order. In the Keyword/Value format, the <literal>host</literal>,
-       <literal>hostaddr</literal>, and <literal>port</literal> options accept comma-separated
-       lists of values. The same number of elements must be given in each
-       option that is specified, such
-       that e.g., the first <literal>hostaddr</literal> corresponds to the first host name,
-       the second <literal>hostaddr</literal> corresponds to the second host name, and so
-       forth. As an exception, if only one <literal>port</literal> is specified, it
-       applies to all the hosts.
+       可以指定多个要连接的主机，以便按给定顺序
+       尝试它们。在关键字/值格式中，<literal>host</literal>、
+       <literal>hostaddr</literal> 和 <literal>port</literal> 选项接受以逗号分隔的
+       值列表。每个指定的选项中必须给出相同数量的
+       元素，例如，第一个 <literal>hostaddr</literal> 对应第一个主机名，
+       第二个 <literal>hostaddr</literal> 对应第二个主机名，依此类推。
+       作为例外，如果只指定了一个 <literal>port</literal>，
+       则它适用于所有主机。
      </para>
 
      <para>
-       In the connection URI format, you can list multiple <literal>host:port</literal> pairs
-       separated by commas in the <literal>host</literal> component of the URI.
+       在连接 URI 格式中，可以在 URI 的 <literal>host</literal> 组件中
+       列出多个以逗号分隔的 <literal>host:port</literal> 对。
      </para>
 
      <para>
-       In either format, a single host name can translate to multiple network
-       addresses. A common example of this is a host that has both an IPv4 and
-       an IPv6 address.
+       在任一格式中，单个主机名都可以解析为多个网络地址。常见的例子是一台同时具有 IPv4 和 IPv6 地址的主机。
      </para>
 
      <para>
-       When multiple hosts are specified, or when a single host name is
-       translated to multiple addresses,  all the hosts and addresses will be
-       tried in order, until one succeeds. If none of the hosts can be reached,
-       the connection fails. If a connection is established successfully, but
-       authentication fails, the remaining hosts in the list are not tried.
+       当指定了多个主机，或单个主机名被解析为多个地址时，将按顺序尝试所有主机和地址，直到有一个成功。如果所有主机都无法访问，则连接失败。如果连接成功建立但身份验证失败，则不会尝试列表中的其余主机。
      </para>
 
      <para>
-       If a password file is used, you can have different passwords for
-       different hosts. All the other connection options are the same for every
-       host in the list; it is not possible to e.g., specify different
-       usernames for different hosts.
+       如果使用了密码文件，你可以为不同的主机设置不同的密码。列表中每个主机的所有其他连接选项都相同；例如，无法为不同的主机指定不同的用户名。
      </para>
    </sect3>
   </sect2>
 
   <sect2 id="libpq-paramkeywords">
-   <title>Parameter Key Words</title>
+   <title>参数关键字</title>
 
    <para>
-    The currently recognized parameter key words are:
+    当前可识别的参数关键字有：
 
     <variablelist>
      <varlistentry id="libpq-connect-host" xreflabel="host">
       <term><literal>host</literal></term>
       <listitem>
        <para>
-        Name of host to connect to.<indexterm><primary>host
-        name</primary></indexterm> If a host name looks like an absolute path
-        name, it specifies Unix-domain communication rather than TCP/IP
-        communication; the value is the name of the directory in which the
-        socket file is stored.  (On Unix, an absolute path name begins with a
-        slash.  On Windows, paths starting with drive letters are also
-        recognized.)  If the host name starts with <literal>@</literal>, it is
-        taken as a Unix-domain socket in the abstract namespace (currently
-        supported on Linux and Windows).
-        The default behavior when <literal>host</literal> is not
-        specified, or is empty, is to connect to a Unix-domain
-        socket<indexterm><primary>Unix domain socket</primary></indexterm> in
-        <filename>/tmp</filename> (or whatever socket directory was specified
-        when <productname>PostgreSQL</productname> was built).  On Windows,
-        the default is to connect to <literal>localhost</literal>.
+        要连接的主机名。<indexterm><primary>主机名</primary></indexterm> 如果主机名看起来像绝对路径名，则它指定的是 Unix 域通信而非 TCP/IP 通信；该值是存放套接字文件的目录名。（在 Unix 上，绝对路径名以斜杠开头。在 Windows 上，以驱动器号开头的路径也会被识别。）如果主机名以 <literal>@</literal> 开头，则它被视为抽象命名空间中的 Unix 域套接字（目前 Linux 和 Windows 支持）。未指定 <literal>host</literal> 或其为空时的默认行为是连接到 <filename>/tmp</filename> 中的 Unix 域套接字<indexterm><primary>Unix 域套接字</primary></indexterm>（或构建 <productname>PostgreSQL</productname> 时指定的任何套接字目录）。在 Windows 上，默认是连接到 <literal>localhost</literal>。
        </para>
        <para>
-        A comma-separated list of host names is also accepted, in which case
-        each host name in the list is tried in order; an empty item in the
-        list selects the default behavior as explained above. See
-        <xref linkend="libpq-multiple-hosts"/> for details.
+        也可以接受以逗号分隔的主机名列表，此时将按顺序尝试列表中的每个主机名；列表中的空项将选择如上所述的默认行为。详情请参见 <xref linkend="libpq-multiple-hosts"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -1160,73 +897,36 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>hostaddr</literal></term>
       <listitem>
        <para>
-        Numeric IP address of host to connect to.  This should be in the
-        standard IPv4 address format, e.g., <literal>172.28.40.9</literal>.  If
-        your machine supports IPv6, you can also use those addresses.
-        TCP/IP communication is
-        always used when a nonempty string is specified for this parameter.
-        If this parameter is not specified, the value of <literal>host</literal>
-        will be looked up to find the corresponding IP address &mdash; or, if
-        <literal>host</literal> specifies an IP address, that value will be
-        used directly.
+        要连接的主机的数字 IP 地址。这应采用标准 IPv4 地址格式，例如 <literal>172.28.40.9</literal>。如果你的机器支持 IPv6，也可以使用这些地址。当为此参数指定非空字符串时，始终使用 TCP/IP 通信。如果未指定此参数，将查找 <literal>host</literal> 的值以找到对应的 IP 地址 &mdash;，或者，如果 <literal>host</literal> 指定了 IP 地址，则直接使用该值。
        </para>
 
        <para>
-        Using <literal>hostaddr</literal> allows the
-        application to avoid a host name look-up, which might be important
-        in applications with time constraints. However, a host name is
-        required for GSSAPI or SSPI authentication
-        methods, as well as for <literal>verify-full</literal> SSL
-        certificate verification.  The following rules are used:
+        使用 <literal>hostaddr</literal> 可以让应用程序避免主机名查找，这在有时间限制的应用程序中可能很重要。但是，GSSAPI 或 SSPI 认证方法以及 <literal>verify-full</literal> SSL 证书验证都需要主机名。使用以下规则：
         <itemizedlist>
          <listitem>
           <para>
-           If <literal>host</literal> is specified
-           without <literal>hostaddr</literal>, a host name lookup occurs.
-           (When using <function>PQconnectPoll</function>, the lookup occurs
-           when <function>PQconnectPoll</function> first considers this host
-           name, and it may cause <function>PQconnectPoll</function> to block
-           for a significant amount of time.)
+           如果指定了 <literal>host</literal> 而未指定 <literal>hostaddr</literal>，则会发生主机名查找。（使用 <function>PQconnectPoll</function> 时，查找会在 <function>PQconnectPoll</function> 首次考虑此主机名时发生，并且可能导致 <function>PQconnectPoll</function> 阻塞相当长的时间。）
           </para>
          </listitem>
          <listitem>
           <para>
-           If <literal>hostaddr</literal> is specified without <literal>host</literal>,
-           the value for <literal>hostaddr</literal> gives the server network address.
-           The connection attempt will fail if the authentication
-           method requires a host name.
+           如果指定了 <literal>hostaddr</literal> 而未指定 <literal>host</literal>，则 <literal>hostaddr</literal> 的值给出服务器网络地址。如果认证方法需要主机名，则连接尝试将失败。
           </para>
          </listitem>
          <listitem>
           <para>
-           If both <literal>host</literal> and <literal>hostaddr</literal> are specified,
-           the value for <literal>hostaddr</literal> gives the server network address.
-           The value for <literal>host</literal> is ignored unless the
-           authentication method requires it, in which case it will be
-           used as the host name.
+           如果同时指定了 <literal>host</literal> 和 <literal>hostaddr</literal>，则 <literal>hostaddr</literal> 的值给出服务器网络地址。除非认证方法需要，否则 <literal>host</literal> 的值将被忽略；在需要的情况下，它将被用作主机名。
           </para>
          </listitem>
         </itemizedlist>
-        Note that authentication is likely to fail if <literal>host</literal>
-        is not the name of the server at network address <literal>hostaddr</literal>.
-        Also, when both <literal>host</literal> and <literal>hostaddr</literal>
-        are specified, <literal>host</literal>
-        is used to identify the connection in a password file (see
-        <xref linkend="libpq-pgpass"/>).
+        注意，如果 <literal>host</literal> 不是网络地址 <literal>hostaddr</literal> 处的服务器名称，认证很可能会失败。此外，当同时指定 <literal>host</literal> 和 <literal>hostaddr</literal> 时，将使用 <literal>host</literal> 在密码文件中标识该连接（参见 <xref linkend="libpq-pgpass"/>）。
        </para>
 
        <para>
-        A comma-separated list of <literal>hostaddr</literal> values is also
-        accepted, in which case each host in the list is tried in order.
-        An empty item in the list causes the corresponding host name to be
-        used, or the default host name if that is empty as well. See
-        <xref linkend="libpq-multiple-hosts"/> for details.
+        也接受以逗号分隔的 <literal>hostaddr</literal> 值列表，此时将按顺序尝试列表中的每个主机。列表中的空项会导致使用相应的主机名，如果该主机名也为空，则使用默认主机名。详情请参见 <xref linkend="libpq-multiple-hosts"/>。
        </para>
        <para>
-        Without either a host name or host address,
-        <application>libpq</application> will connect using a local
-        Unix-domain socket; or on Windows, it will attempt to connect to
-        <literal>localhost</literal>.
+        如果既没有主机名也没有主机地址，<application>libpq</application> 将使用本地 Unix 域套接字进行连接；在 Windows 上，它将尝试连接到 <literal>localhost</literal>。
        </para>
        </listitem>
       </varlistentry>
@@ -1235,16 +935,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
        <term><literal>port</literal></term>
        <listitem>
        <para>
-        Port number to connect to at the server host, or socket file
-        name extension for Unix-domain
-        connections.<indexterm><primary>port</primary></indexterm>
-        If multiple hosts were given in the <literal>host</literal> or
-        <literal>hostaddr</literal> parameters, this parameter may specify a
-        comma-separated list of ports of the same length as the host list, or
-        it may specify a single port number to be used for all hosts.
-        An empty string, or an empty item in a comma-separated list,
-        specifies the default port number established
-        when <productname>PostgreSQL</productname> was built.
+        要连接到的服务器主机上的端口号，或用于 Unix 域连接的套接字文件名扩展。<indexterm><primary>port</primary></indexterm> 如果在 <literal>host</literal> 或 <literal>hostaddr</literal> 参数中给出了多个主机，此参数可以指定一个与主机列表长度相同的逗号分隔的端口列表，也可以指定一个用于所有主机的单一端口号。空字符串，或逗号分隔列表中的空项，指定在构建 <productname>PostgreSQL</productname> 时建立的默认端口号。
        </para>
       </listitem>
      </varlistentry>
@@ -1253,10 +944,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>dbname</literal></term>
       <listitem>
       <para>
-       The database name.  Defaults to be the same as the user name.
-       In certain contexts, the value is checked for extended
-       formats; see <xref linkend="libpq-connstring"/> for more details on
-       those.
+       数据库名。默认与用户名相同。在某些上下文中，会检查该值是否为扩展格式；有关这些格式的更多细节，请参见 <xref linkend="libpq-connstring"/>。
       </para>
       </listitem>
      </varlistentry>
@@ -1265,9 +953,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>user</literal></term>
       <listitem>
       <para>
-       <productname>PostgreSQL</productname> user name to connect as.
-       Defaults to be the same as the operating system name of the user
-       running the application.
+       要以其身份连接的 <productname>PostgreSQL</productname> 用户名。默认与运行该应用程序的用户的操作系统名称相同。
       </para>
       </listitem>
      </varlistentry>
@@ -1276,7 +962,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>password</literal></term>
       <listitem>
       <para>
-       Password to be used if the server demands password authentication.
+       如果服务器要求密码认证，则使用此密码。
       </para>
       </listitem>
      </varlistentry>
@@ -1285,11 +971,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>passfile</literal></term>
       <listitem>
       <para>
-       Specifies the name of the file used to store passwords
-       (see <xref linkend="libpq-pgpass"/>).
-       Defaults to <filename>~/.pgpass</filename>, or
-       <filename>%APPDATA%\postgresql\pgpass.conf</filename> on Microsoft Windows.
-       (No error is reported if this file does not exist.)
+       指定用于存储密码的文件名（见 <xref linkend="libpq-pgpass"/>）。默认为 <filename>~/.pgpass</filename>，在 Microsoft Windows 上为 <filename>%APPDATA%\postgresql\pgpass.conf</filename>。（如果该文件不存在，不会报告错误。）
       </para>
       </listitem>
      </varlistentry>
@@ -1298,37 +980,23 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>require_auth</literal></term>
       <listitem>
       <para>
-        Specifies the authentication method that the client requires from the
-        server. If the server does not use the required method to authenticate
-        the client, or if the authentication handshake is not fully completed by
-        the server, the connection will fail. A comma-separated list of methods
-        may also be provided, of which the server must use exactly one in order
-        for the connection to succeed. By default, any authentication method is
-        accepted, and the server is free to skip authentication altogether.
+        指定客户端要求服务器使用的认证方法。如果服务器未使用所要求的方法对客户端进行认证，或者服务器未完全完成认证握手，连接将失败。也可以提供以逗号分隔的方法列表，服务器必须恰好使用其中一种方法才能使连接成功。默认情况下，接受任何认证方法，服务器可以完全跳过认证。
       </para>
       <para>
-        Methods may be negated with the addition of a <literal>!</literal>
-        prefix, in which case the server must <emphasis>not</emphasis> attempt
-        the listed method; any other method is accepted, and the server is free
-        not to authenticate the client at all. If a comma-separated list is
-        provided, the server may not attempt <emphasis>any</emphasis> of the
-        listed negated methods. Negated and non-negated forms may not be
-        combined in the same setting.
+        方法可以通过添加 <literal>!</literal> 前缀来取反，此时服务器<emphasis>不得</emphasis>尝试所列出的方法；任何其他方法都可接受，并且服务器可以完全不对客户端进行认证。如果提供了逗号分隔的列表，服务器不得尝试所列出的<emphasis>任何</emphasis>取反方法。取反形式和非取反形式不能在同一设置中组合使用。
       </para>
       <para>
-        As a final special case, the <literal>none</literal> method requires the
-        server not to use an authentication challenge. (It may also be negated,
-        to require some form of authentication.)
+        作为最后一种特殊情况，<literal>none</literal> 方法要求服务器不使用认证质询。（它也可以被取反，以要求某种形式的认证。）
       </para>
       <para>
-        The following methods may be specified:
+        可以指定以下方法：
 
         <variablelist>
          <varlistentry>
           <term><literal>password</literal></term>
           <listitem>
            <para>
-            The server must request plaintext password authentication.
+            服务器必须请求明文密码认证。
            </para>
           </listitem>
          </varlistentry>
@@ -1337,15 +1005,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>md5</literal></term>
           <listitem>
            <para>
-            The server must request MD5 hashed password authentication.
+            服务器必须请求 MD5 哈希密码认证。
            </para>
            <warning>
             <para>
-             Support for MD5-encrypted passwords is deprecated and will be
-             removed in a future release of
-             <productname>PostgreSQL</productname>.  Refer to
-             <xref linkend="auth-password"/> for details about migrating to
-             another password type.
+             对 MD5 加密密码的支持已废弃，并将在 <productname>PostgreSQL</productname> 的未来版本中移除。有关迁移到其他密码类型的详细信息，请参阅 <xref linkend="auth-password"/>。
             </para>
            </warning>
           </listitem>
@@ -1355,10 +1019,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>gss</literal></term>
           <listitem>
            <para>
-            The server must either request a Kerberos handshake via
-            <acronym>GSSAPI</acronym> or establish a
-            <acronym>GSS</acronym>-encrypted channel (see also
-            <xref linkend="libpq-connect-gssencmode" />).
+            服务器必须通过 <acronym>GSSAPI</acronym> 请求 Kerberos 握手，或建立 <acronym>GSS</acronym> 加密通道（另请参阅 <xref linkend="libpq-connect-gssencmode" />）。
            </para>
           </listitem>
          </varlistentry>
@@ -1367,8 +1028,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>sspi</literal></term>
           <listitem>
            <para>
-            The server must request Windows <acronym>SSPI</acronym>
-            authentication.
+            服务器必须请求 Windows <acronym>SSPI</acronym> 认证。
            </para>
           </listitem>
          </varlistentry>
@@ -1377,8 +1037,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>scram-sha-256</literal></term>
           <listitem>
            <para>
-            The server must successfully complete a SCRAM-SHA-256 authentication
-            exchange with the client.
+            服务器必须与客户端成功完成 SCRAM-SHA-256 认证交换。
            </para>
           </listitem>
          </varlistentry>
@@ -1387,7 +1046,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>oauth</literal></term>
           <listitem>
            <para>
-            The server must request an OAuth bearer token from the client.
+            服务器必须向客户端请求 OAuth 持有者令牌。
            </para>
           </listitem>
          </varlistentry>
@@ -1396,9 +1055,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>none</literal></term>
           <listitem>
            <para>
-            The server must not prompt the client for an authentication
-            exchange. (This does not prohibit client certificate authentication
-            via TLS, nor GSS authentication via its encrypted transport.)
+            服务器不得提示客户端进行认证交换。（这并不禁止通过 TLS 进行客户端证书认证，也不禁止通过其加密传输进行 GSS 认证。）
            </para>
           </listitem>
          </varlistentry>
@@ -1411,20 +1068,10 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>channel_binding</literal></term>
       <listitem>
       <para>
-        This option controls the client's use of channel binding. A setting
-        of <literal>require</literal> means that the connection must employ
-        channel binding, <literal>prefer</literal> means that the client will
-        choose channel binding if available, and <literal>disable</literal>
-        prevents the use of channel binding. The default
-        is <literal>prefer</literal> if
-        <productname>PostgreSQL</productname> is compiled with SSL support;
-        otherwise the default is <literal>disable</literal>.
+        此选项控制客户端对通道绑定的使用。设置为 <literal>require</literal> 表示连接必须使用通道绑定，<literal>prefer</literal> 表示客户端在可用时会选择通道绑定，而 <literal>disable</literal> 则阻止使用通道绑定。如果 <productname>PostgreSQL</productname> 在编译时带有 SSL 支持，默认值为 <literal>prefer</literal>；否则默认值为 <literal>disable</literal>。
       </para>
       <para>
-        Channel binding is a method for the server to authenticate itself to
-        the client. It is only supported over SSL connections
-        with <productname>PostgreSQL</productname> 11 or later servers using
-        the <literal>SCRAM</literal> authentication method.
+        通道绑定是一种供服务器向客户端认证自身的方法。它仅在使用 <literal>SCRAM</literal> 认证方法的 <productname>PostgreSQL</productname> 11 或更高版本服务器的 SSL 连接上受支持。
       </para>
       </listitem>
      </varlistentry>
@@ -1433,14 +1080,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>connect_timeout</literal></term>
       <listitem>
       <para>
-       Maximum time to wait while connecting, in seconds (write as a decimal integer,
-       e.g., <literal>10</literal>).  Zero, negative, or not specified means
-       wait indefinitely.
-       This timeout applies separately to each host name or IP address.
-       For example, if you specify two hosts and <literal>connect_timeout</literal>
-       is 5, each host will time out if no connection is made within 5
-       seconds, so the total time spent waiting for a connection might be
-       up to 10 seconds.
+       连接时等待的最长时间，以秒为单位（写为十进制整数，例如 <literal>10</literal>）。零、负数或未指定表示无限期等待。此超时分别应用于每个主机名或 IP 地址。例如，如果您指定了两个主机且 <literal>connect_timeout</literal> 为 5，则每个主机在 5 秒内未建立连接就会超时，因此等待连接的总时间可能长达 10 秒。
       </para>
       </listitem>
      </varlistentry>
@@ -1449,13 +1089,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>client_encoding</literal></term>
       <listitem>
       <para>
-       This sets the <varname>client_encoding</varname>
-       configuration parameter for this connection.  In addition to
-       the values accepted by the corresponding server option, you
-       can use <literal>auto</literal> to determine the right
-       encoding from the current locale in the client
-       (<envar>LC_CTYPE</envar> environment variable on Unix
-       systems).
+       这会设置此连接的 <varname>client_encoding</varname> 配置参数。除了相应服务器选项所接受的值之外，您还可以使用 <literal>auto</literal> 根据客户端当前的区域设置（在 Unix 系统上是 <envar>LC_CTYPE</envar> 环境变量）确定正确的编码。
       </para>
       </listitem>
      </varlistentry>
@@ -1464,15 +1098,12 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>options</literal></term>
       <listitem>
        <para>
-        Specifies command-line options to send to the server at connection
-        start.  For example, setting this to <literal>-c geqo=off</literal>
-        or <literal>--geqo=off</literal> sets the session's value of the
-        <varname>geqo</varname> parameter to <literal>off</literal>.
-        Spaces within this string are considered to
-        separate command-line arguments, unless escaped with a backslash
-        (<literal>\</literal>); write <literal>\\</literal> to represent a literal
-        backslash.  For a detailed discussion of the available
-        options, consult <xref linkend="runtime-config"/>.
+        指定在连接启动时发送给服务器的命令行选项。例如，将其设置为 <literal>-c geqo=off</literal>
+        或 <literal>--geqo=off</literal> 会将会话的
+        <varname>geqo</varname> 参数值设置为 <literal>off</literal>。
+        此字符串中的空格被视为分隔命令行参数，除非使用反斜杠
+        （<literal>\</literal>）进行转义；要表示字面反斜杠，请写 <literal>\\</literal>。有关可用
+        选项的详细讨论，请参阅 <xref linkend="runtime-config"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -1481,8 +1112,8 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>application_name</literal></term>
       <listitem>
        <para>
-        Specifies a value for the <xref linkend="guc-application-name"/>
-        configuration parameter.
+        为 <xref linkend="guc-application-name"/>
+        配置参数指定一个值。
        </para>
       </listitem>
      </varlistentry>
@@ -1491,14 +1122,13 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>fallback_application_name</literal></term>
       <listitem>
        <para>
-        Specifies a fallback value for the <xref
-        linkend="guc-application-name"/> configuration parameter.
-        This value will be used if no value has been given for
-        <literal>application_name</literal> via a connection parameter or the
-        <envar>PGAPPNAME</envar> environment variable.  Specifying
-        a fallback name is useful in generic utility programs that
-        wish to set a default application name but allow it to be
-        overridden by the user.
+        为 <xref
+        linkend="guc-application-name"/> 配置参数指定一个回退值。
+        如果未通过连接参数或
+        <envar>PGAPPNAME</envar> 环境变量为 <literal>application_name</literal> 提供值，则将使用此值。指定
+        回退名称对于通用工具程序很有用，这些程序
+        希望设置默认应用程序名称，但允许用户
+        覆盖它。
        </para>
       </listitem>
      </varlistentry>
@@ -1507,10 +1137,9 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>keepalives</literal></term>
       <listitem>
        <para>
-        Controls whether client-side TCP keepalives are used. The default
-        value is 1, meaning on, but you can change this to 0, meaning off,
-        if keepalives are not wanted.  This parameter is ignored for
-        connections made via a Unix-domain socket.
+        控制是否使用客户端 TCP 保活。默认
+        值为 1，表示开启，但如果不需要保活，可以将其改为 0，表示关闭。
+        对于通过 Unix 域套接字建立的连接，此参数会被忽略。
        </para>
       </listitem>
      </varlistentry>
@@ -1519,13 +1148,13 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>keepalives_idle</literal></term>
       <listitem>
        <para>
-        Controls the number of seconds of inactivity after which TCP should
-        send a keepalive message to the server.  A value of zero uses the
-        system default. This parameter is ignored for connections made via a
-        Unix-domain socket, or if keepalives are disabled.
-        It is only supported on systems where <symbol>TCP_KEEPIDLE</symbol> or
-        an equivalent socket option is available, and on Windows; on other
-        systems, it has no effect.
+        控制空闲多少秒后 TCP 应向服务器
+        发送保活消息。值为零表示使用
+        系统默认值。对于通过 Unix 域套接字建立的连接，或者如果保活已禁用，
+        此参数会被忽略。
+        它仅在提供 <symbol>TCP_KEEPIDLE</symbol> 或
+        等效套接字选项的系统以及 Windows 上受支持；在其他
+        系统上，它不起作用。
        </para>
       </listitem>
      </varlistentry>
@@ -1534,13 +1163,12 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>keepalives_interval</literal></term>
       <listitem>
        <para>
-        Controls the number of seconds after which a TCP keepalive message
-        that is not acknowledged by the server should be retransmitted.  A
-        value of zero uses the system default. This parameter is ignored for
-        connections made via a Unix-domain socket, or if keepalives are disabled.
-        It is only supported on systems where <symbol>TCP_KEEPINTVL</symbol> or
-        an equivalent socket option is available, and on Windows; on other
-        systems, it has no effect.
+        控制服务器未确认的 TCP 保活消息在多少秒后
+        应重新传输。值为零表示使用系统默认值。对于通过
+        Unix 域套接字建立的连接，或者如果保活已禁用，此参数会被忽略。
+        它仅在提供 <symbol>TCP_KEEPINTVL</symbol> 或
+        等效套接字选项的系统以及 Windows 上受支持；在其他
+        系统上，它不起作用。
        </para>
       </listitem>
      </varlistentry>
@@ -1549,13 +1177,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>keepalives_count</literal></term>
       <listitem>
        <para>
-        Controls the number of TCP keepalives that can be lost before the
-        client's connection to the server is considered dead.  A value of
-        zero uses the system default. This parameter is ignored for
-        connections made via a Unix-domain socket, or if keepalives are disabled.
-        It is only supported on systems where <symbol>TCP_KEEPCNT</symbol> or
-        an equivalent socket option is available; on other systems, it has no
-        effect.
+        控制客户端的服务器连接在被认为已死亡之前可以丢失多少个 TCP 保活消息。值为零时使用系统默认值。对于通过 Unix 域套接字建立的连接，或者如果保活功能被禁用，此参数将被忽略。仅在提供 <symbol>TCP_KEEPCNT</symbol> 或等效套接字选项的系统上受支持；在其他系统上，它没有任何效果。
        </para>
       </listitem>
      </varlistentry>
@@ -1564,12 +1186,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>tcp_user_timeout</literal></term>
       <listitem>
        <para>
-        Controls the number of milliseconds that transmitted data may
-        remain unacknowledged before a connection is forcibly closed.
-        A value of zero uses the system default. This parameter is
-        ignored for connections made via a Unix-domain socket.
-        It is only supported on systems where <symbol>TCP_USER_TIMEOUT</symbol>
-        is available; on other systems, it has no effect.
+        控制已传输的数据在被强制关闭连接之前可以保持未确认状态的毫秒数。值为零时使用系统默认值。对于通过 Unix 域套接字建立的连接，此参数将被忽略。仅在提供 <symbol>TCP_USER_TIMEOUT</symbol> 的系统上受支持；在其他系统上，它没有任何效果。
        </para>
       </listitem>
      </varlistentry>
@@ -1578,16 +1195,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>replication</literal></term>
       <listitem>
       <para>
-       This option determines whether the connection should use the
-       replication protocol instead of the normal protocol.  This is what
-       PostgreSQL replication connections as well as tools such as
-       <application>pg_basebackup</application> use internally, but it can
-       also be used by third-party applications.  For a description of the
-       replication protocol, consult <xref linkend="protocol-replication"/>.
+       此选项决定连接应使用复制协议而不是普通协议。PostgreSQL 复制连接以及 <application>pg_basebackup</application> 等工具在内部使用的正是这种协议，但第三方应用程序也可以使用它。有关复制协议的描述，请参阅 <xref linkend="protocol-replication"/>。
       </para>
 
       <para>
-       The following values, which are case-insensitive, are supported:
+       支持以下值（不区分大小写）：
        <variablelist>
         <varlistentry>
          <term>
@@ -1596,7 +1208,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
          </term>
          <listitem>
           <para>
-           The connection goes into physical replication mode.
+           连接进入物理复制模式。
           </para>
          </listitem>
         </varlistentry>
@@ -1605,8 +1217,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
          <term><literal>database</literal></term>
          <listitem>
           <para>
-           The connection goes into logical replication mode, connecting to
-           the database specified in the <literal>dbname</literal> parameter.
+           连接进入逻辑复制模式，连接到 <literal>dbname</literal> 参数中指定的数据库。
           </para>
          </listitem>
         </varlistentry>
@@ -1618,7 +1229,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
          </term>
          <listitem>
           <para>
-           The connection is a regular one, which is the default behavior.
+           该连接是常规连接，这是默认行为。
           </para>
          </listitem>
         </varlistentry>
@@ -1626,8 +1237,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       </para>
 
       <para>
-       In physical or logical replication mode, only the simple query protocol
-       can be used.
+       在物理复制或逻辑复制模式下，只能使用简单查询协议。
       </para>
       </listitem>
      </varlistentry>
@@ -1636,31 +1246,23 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>gssencmode</literal></term>
       <listitem>
        <para>
-        This option determines whether or with what priority a secure
-        <acronym>GSS</acronym> TCP/IP connection will be negotiated with the
-        server. There are three modes:
+        此选项决定是否与服务器协商安全的 <acronym>GSS</acronym> TCP/IP 连接，以及以何种优先级协商。共有三种模式：
 
         <variablelist>
          <varlistentry>
           <term><literal>disable</literal></term>
           <listitem>
            <para>
-            only try a non-<acronym>GSSAPI</acronym>-encrypted connection
+            只尝试非 <acronym>GSSAPI</acronym> 加密的连接
            </para>
           </listitem>
          </varlistentry>
 
          <varlistentry>
-          <term><literal>prefer</literal> (default)</term>
+          <term><literal>prefer</literal>（默认）</term>
           <listitem>
            <para>
-            if there are <acronym>GSSAPI</acronym> credentials present (i.e.,
-            in a credentials cache), first try
-            a <acronym>GSSAPI</acronym>-encrypted connection; if that fails or
-            there are no credentials, try a
-            non-<acronym>GSSAPI</acronym>-encrypted connection.  This is the
-            default when <productname>PostgreSQL</productname> has been
-            compiled with <acronym>GSSAPI</acronym> support.
+            如果存在 <acronym>GSSAPI</acronym> 凭据（即位于凭据缓存中），先尝试 <acronym>GSSAPI</acronym> 加密的连接；如果失败或没有凭据，则尝试非 <acronym>GSSAPI</acronym> 加密的连接。当 <productname>PostgreSQL</productname> 在编译时包含 <acronym>GSSAPI</acronym> 支持时，这是默认行为。
            </para>
           </listitem>
          </varlistentry>
@@ -1669,7 +1271,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>require</literal></term>
           <listitem>
            <para>
-            only try a <acronym>GSSAPI</acronym>-encrypted connection
+            仅尝试 <acronym>GSSAPI</acronym> 加密连接
            </para>
           </listitem>
          </varlistentry>
@@ -1677,13 +1279,13 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
        </para>
 
        <para>
-        <literal>gssencmode</literal> is ignored for Unix domain socket
-        communication.  If <productname>PostgreSQL</productname> is compiled
-        without GSSAPI support, using the <literal>require</literal> option
-        will cause an error, while <literal>prefer</literal> will be accepted
-        but <application>libpq</application> will not actually attempt
-        a <acronym>GSSAPI</acronym>-encrypted
-        connection.<indexterm><primary>GSSAPI</primary><secondary sortas="libpq">with
+        <literal>gssencmode</literal> 在 Unix 域套接字
+        通信中被忽略。如果 <productname>PostgreSQL</productname> 编译时
+        没有 GSSAPI 支持，使用 <literal>require</literal> 选项
+        将导致错误，而 <literal>prefer</literal> 会被接受，
+        但 <application>libpq</application> 实际上不会尝试
+        <acronym>GSSAPI</acronym> 加密
+        连接。<indexterm><primary>GSSAPI</primary><secondary sortas="libpq">与
         libpq</secondary></indexterm>
        </para>
       </listitem>
@@ -1693,16 +1295,15 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslmode</literal></term>
       <listitem>
        <para>
-        This option determines whether or with what priority a secure
-        <acronym>SSL</acronym> TCP/IP connection will be negotiated with the
-        server. There are six modes:
+        此选项决定是否以及以何种优先级与服务器协商安全的
+        <acronym>SSL</acronym> TCP/IP 连接。共有六种模式：
 
         <variablelist>
          <varlistentry>
           <term><literal>disable</literal></term>
           <listitem>
            <para>
-            only try a non-<acronym>SSL</acronym> connection
+            仅尝试非 <acronym>SSL</acronym> 连接
            </para>
           </listitem>
          </varlistentry>
@@ -1711,18 +1312,18 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>allow</literal></term>
           <listitem>
            <para>
-            first try a non-<acronym>SSL</acronym> connection; if that
-            fails, try an <acronym>SSL</acronym> connection
+            首先尝试非 <acronym>SSL</acronym> 连接；如果
+            失败，则尝试 <acronym>SSL</acronym> 连接
            </para>
           </listitem>
          </varlistentry>
 
          <varlistentry>
-          <term><literal>prefer</literal> (default)</term>
+          <term><literal>prefer</literal>（默认）</term>
           <listitem>
            <para>
-            first try an <acronym>SSL</acronym> connection; if that fails,
-            try a non-<acronym>SSL</acronym> connection
+            首先尝试 <acronym>SSL</acronym> 连接；如果失败，
+            则尝试非 <acronym>SSL</acronym> 连接
            </para>
           </listitem>
          </varlistentry>
@@ -1731,9 +1332,8 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>require</literal></term>
           <listitem>
            <para>
-            only try an <acronym>SSL</acronym> connection. If a root CA
-            file is present, verify the certificate in the same way as
-            if <literal>verify-ca</literal> was specified
+            只尝试 <acronym>SSL</acronym> 连接。如果存在根 CA
+            文件，则按照指定了 <literal>verify-ca</literal> 时的相同方式验证证书
            </para>
           </listitem>
          </varlistentry>
@@ -1742,9 +1342,9 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>verify-ca</literal></term>
           <listitem>
            <para>
-            only try an <acronym>SSL</acronym> connection, and verify that
-            the server certificate is issued by a trusted
-            certificate authority (<acronym>CA</acronym>)
+            只尝试 <acronym>SSL</acronym> 连接，并验证
+            服务器证书是否由受信任的
+            证书颁发机构（<acronym>CA</acronym>）签发
            </para>
           </listitem>
          </varlistentry>
@@ -1753,40 +1353,31 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>verify-full</literal></term>
           <listitem>
            <para>
-            only try an <acronym>SSL</acronym> connection, verify that the
-            server certificate is issued by a
-            trusted <acronym>CA</acronym> and that the requested server host name
-            matches that in the certificate
+            只尝试 <acronym>SSL</acronym> 连接，验证
+            服务器证书是否由受信任的 <acronym>CA</acronym> 签发，
+            以及请求的服务器主机名
+            是否与证书中的主机名匹配
            </para>
           </listitem>
          </varlistentry>
         </variablelist>
 
-        See <xref linkend="libpq-ssl"/> for a detailed description of how
-        these options work.
+        有关这些选项工作方式的详细说明，请参见 <xref linkend="libpq-ssl"/>。
        </para>
 
        <para>
-        <literal>sslmode</literal> is ignored for Unix domain socket
-        communication.
-        If <productname>PostgreSQL</productname> is compiled without SSL support,
-        using options <literal>require</literal>, <literal>verify-ca</literal>, or
-        <literal>verify-full</literal> will cause an error, while
-        options <literal>allow</literal> and <literal>prefer</literal> will be
-        accepted but <application>libpq</application> will not actually attempt
-        an <acronym>SSL</acronym>
-        connection.<indexterm><primary>SSL</primary><secondary
+        对于 Unix 域套接字通信，<literal>sslmode</literal> 会被忽略。
+        如果 <productname>PostgreSQL</productname> 在编译时未支持 SSL，
+        使用选项 <literal>require</literal>、<literal>verify-ca</literal> 或
+        <literal>verify-full</literal> 将导致错误，而
+        选项 <literal>allow</literal> 和 <literal>prefer</literal> 会被接受，但 <application>libpq</application> 实际上不会尝试
+        <acronym>SSL</acronym>
+        连接。<indexterm><primary>SSL</primary><secondary
         sortas="libpq">with libpq</secondary></indexterm>
        </para>
 
        <para>
-        Note that if <acronym>GSSAPI</acronym> encryption is possible,
-        that will be used in preference to <acronym>SSL</acronym>
-        encryption, regardless of the value of <literal>sslmode</literal>.
-        To force use of <acronym>SSL</acronym> encryption in an
-        environment that has working <acronym>GSSAPI</acronym>
-        infrastructure (such as a Kerberos server), also set
-        <literal>gssencmode</literal> to <literal>disable</literal>.
+        请注意，如果可以使用 <acronym>GSSAPI</acronym> 加密，则会优先使用它而不是 <acronym>SSL</acronym> 加密，无论 <literal>sslmode</literal> 的值如何。要在具有可用的 <acronym>GSSAPI</acronym> 基础设施（例如 Kerberos 服务器）的环境中强制使用 <acronym>SSL</acronym> 加密，还需将 <literal>gssencmode</literal> 设置为 <literal>disable</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -1795,20 +1386,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>requiressl</literal></term>
       <listitem>
        <para>
-        This option is deprecated in favor of the <literal>sslmode</literal>
-        setting.
+        此选项已废弃，请改用 <literal>sslmode</literal> 设置。
        </para>
 
        <para>
-        If set to 1, an <acronym>SSL</acronym> connection to the server
-        is required (this is equivalent to <literal>sslmode</literal>
-        <literal>require</literal>).  <application>libpq</application> will then refuse
-        to connect if the server does not accept an
-        <acronym>SSL</acronym> connection.  If set to 0 (default),
-        <application>libpq</application> will negotiate the connection type with
-        the server (equivalent to <literal>sslmode</literal>
-        <literal>prefer</literal>).  This option is only available if
-        <productname>PostgreSQL</productname> is compiled with SSL support.
+        如果设置为 1，则要求与服务器建立 <acronym>SSL</acronym> 连接（这等价于 <literal>sslmode</literal> <literal>require</literal>）。此时如果服务器不接受 <acronym>SSL</acronym> 连接，<application>libpq</application> 将拒绝连接。如果设置为 0（默认值），<application>libpq</application> 将与服务器协商连接类型（等价于 <literal>sslmode</literal> <literal>prefer</literal>）。仅当 <productname>PostgreSQL</productname> 在编译时包含 SSL 支持时，此选项才可用。
        </para>
       </listitem>
      </varlistentry>
@@ -1817,18 +1399,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslnegotiation</literal></term>
       <listitem>
        <para>
-        This option controls how SSL encryption is negotiated with the server,
-        if SSL is used. In the default <literal>postgres</literal> mode, the
-        client first asks the server if SSL is supported. In
-        <literal>direct</literal> mode, the client starts the standard SSL
-        handshake directly after establishing the TCP/IP connection. Traditional
-        <productname>PostgreSQL</productname> protocol negotiation is the most
-        flexible with different server configurations. If the server is known
-        to support direct <acronym>SSL</acronym> connections then the latter
-        requires one fewer round trip reducing connection latency and also
-        allows the use of protocol agnostic SSL network tools. The direct SSL
-        option was introduced in <productname>PostgreSQL</productname> version
-        17.
+        此选项控制在使用 SSL 时如何与服务器协商 SSL 加密。在默认的 <literal>postgres</literal> 模式下，客户端首先询问服务器是否支持 SSL。在 <literal>direct</literal> 模式下，客户端在建立 TCP/IP 连接后直接开始标准的 SSL 握手。传统的 <productname>PostgreSQL</productname> 协议协商在面对不同的服务器配置时最为灵活。如果已知服务器支持直接的 <acronym>SSL</acronym> 连接，那么后者少一次往返，从而降低连接延迟，并且还允许使用与协议无关的 SSL 网络工具。直接 SSL 选项在 <productname>PostgreSQL</productname> 版本 17 中引入。
        </para>
 
         <variablelist>
@@ -1836,8 +1407,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>postgres</literal></term>
           <listitem>
            <para>
-             perform <productname>PostgreSQL</productname> protocol
-             negotiation. This is the default if the option is not provided.
+             执行 <productname>PostgreSQL</productname> 协议协商。如果未提供该选项，则此为默认值。
            </para>
           </listitem>
          </varlistentry>
@@ -1846,12 +1416,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>direct</literal></term>
           <listitem>
            <para>
-            start SSL handshake directly after establishing the TCP/IP
-            connection.  This is only allowed with
-            <literal>sslmode=require</literal> or higher, because the weaker
-            settings could lead to unintended fallback to plaintext
-            authentication when the server does not support direct SSL
-            handshake.
+            在建立 TCP/IP 连接后直接开始 SSL 握手。仅允许在 <literal>sslmode=require</literal> 或更高版本中使用，因为较弱的设置可能在服务器不支持直接 SSL 握手时导致意外回退到明文认证。
            </para>
           </listitem>
          </varlistentry>
@@ -1863,26 +1428,15 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslcompression</literal></term>
       <listitem>
        <para>
-        If set to 1, data sent over SSL connections will be compressed.  If
-        set to 0, compression will be disabled.  The default is 0.  This
-        parameter is ignored if a connection without SSL is made.
+        如果设置为 1，通过 SSL 连接发送的数据将被压缩。如果设置为 0，压缩将被禁用。默认值为 0。如果建立的是不使用 SSL 的连接，则忽略此参数。
        </para>
 
        <para>
-        SSL compression is nowadays considered insecure and its use is no
-        longer recommended.  <productname>OpenSSL</productname> 1.1.0 disabled
-        compression by default, and many operating system distributions
-        disabled it in prior versions as well, so setting this parameter to on
-        will not have any effect if the server does not accept compression.
-        <productname>PostgreSQL</productname> 14 disabled compression
-        completely in the backend.
+        如今 SSL 压缩被认为是不安全的，不再推荐使用。<productname>OpenSSL</productname> 1.1.0 默认禁用了压缩，许多操作系统发行版在更早的版本中也已禁用它，因此如果服务器不接受压缩，将此参数设置为 on 不会有任何效果。<productname>PostgreSQL</productname> 14 在后端中完全禁用了压缩。
        </para>
 
        <para>
-        If security is not a primary concern, compression can improve
-        throughput if the network is the bottleneck.  Disabling compression
-        can improve response time and throughput if CPU performance is the
-        limiting factor.
+        如果安全性不是首要考虑，当网络是瓶颈时，压缩可以提高吞吐量。如果 CPU 性能是限制因素，禁用压缩可以改善响应时间和吞吐量。
        </para>
       </listitem>
      </varlistentry>
@@ -1891,10 +1445,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslcert</literal></term>
       <listitem>
        <para>
-        This parameter specifies the file name of the client SSL
-        certificate, replacing the default
-        <filename>~/.postgresql/postgresql.crt</filename>.
-        This parameter is ignored if an SSL connection is not made.
+        此参数指定客户端 SSL 证书的文件名，替换默认的 <filename>~/.postgresql/postgresql.crt</filename>。如果未建立 SSL 连接，则忽略此参数。
        </para>
       </listitem>
      </varlistentry>
@@ -1903,15 +1454,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslkey</literal></term>
       <listitem>
        <para>
-        This parameter specifies the location for the secret key used for
-        the client certificate. It can either specify a file name that will
-        be used instead of the default
-        <filename>~/.postgresql/postgresql.key</filename>, or it can specify a key
-        obtained from an external <quote>engine</quote> (engines are
-        <productname>OpenSSL</productname> loadable modules).  An external engine
-        specification should consist of a colon-separated engine name and
-        an engine-specific key identifier.  This parameter is ignored if an
-        SSL connection is not made.
+        此参数指定用于客户端证书的密钥的位置。它可以指定一个文件名，用来替代默认的 <filename>~/.postgresql/postgresql.key</filename>；也可以指定从外部<quote>引擎</quote>获取的密钥（引擎是 <productname>OpenSSL</productname> 可加载模块）。外部引擎的指定应由以冒号分隔的引擎名称和引擎特定的密钥标识符组成。如果未建立 SSL 连接，则忽略此参数。
        </para>
       </listitem>
      </varlistentry>
@@ -1920,20 +1463,10 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslkeylogfile</literal></term>
       <listitem>
        <para>
-        This parameter specifies the location where <application>libpq</application>
-        will log keys used in this SSL context.  This is useful for debugging
-        <productname>PostgreSQL</productname> protocol interactions or client
-        connections using network inspection tools like
-        <productname>Wireshark</productname>.  This parameter is ignored if an
-        SSL connection is not made, or if <productname>LibreSSL</productname>
-        is used (<productname>LibreSSL</productname> does not support key
-        logging).  Keys are logged using the <productname>NSS</productname>
-        format.
+        此参数指定 <application>libpq</application> 记录此 SSL 上下文中使用的密钥的位置。这对于调试 <productname>PostgreSQL</productname> 协议交互，或使用 <productname>Wireshark</productname> 之类的网络检查工具调试客户端连接很有用。如果未建立 SSL 连接，或使用了 <productname>LibreSSL</productname>（<productname>LibreSSL</productname> 不支持密钥记录），则忽略此参数。密钥使用 <productname>NSS</productname> 格式记录。
         <warning>
          <para>
-          Key logging will expose potentially sensitive information in the
-          keylog file.  Keylog files should be handled with the same care as
-          <xref linkend="libpq-connect-sslkey" /> files.
+          密钥记录会在密钥日志文件中暴露潜在的敏感信息。密钥日志文件应当像 <xref linkend="libpq-connect-sslkey" /> 文件一样谨慎处理。
          </para>
         </warning>
        </para>
@@ -1944,30 +1477,16 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslpassword</literal></term>
       <listitem>
        <para>
-        This parameter specifies the password for the secret key specified in
-        <literal>sslkey</literal>, allowing client certificate private keys
-        to be stored in encrypted form on disk even when interactive passphrase
-        input is not practical.
+        此参数指定 <literal>sslkey</literal> 中所指定密钥的口令，使得客户端证书私钥可以加密形式存储在磁盘上，即使在交互式输入口令短语不可行时也是如此。
        </para>
        <para>
-        Specifying this parameter with any non-empty value suppresses the
-        <literal>Enter PEM pass phrase:</literal>
-        prompt that <productname>OpenSSL</productname> will emit by default
-        when an encrypted client certificate key is provided to
-        <application>libpq</application>.
+        为此参数指定任何非空值都会抑制 <productname>OpenSSL</productname> 在向 <application>libpq</application> 提供加密的客户端证书密钥时默认发出的 <literal>Enter PEM pass phrase:</literal> 提示。
        </para>
        <para>
-        If the key is not encrypted this parameter is ignored. The parameter
-        has no effect on keys specified by <productname>OpenSSL</productname>
-        engines unless the engine uses the <productname>OpenSSL</productname>
-        password callback mechanism for prompts.
+        如果密钥未加密，则忽略此参数。此参数对由 <productname>OpenSSL</productname> 引擎指定的密钥没有影响，除非该引擎使用 <productname>OpenSSL</productname> 口令回调机制进行提示。
        </para>
        <para>
-        There is no environment variable equivalent to this option, and no
-        facility for looking it up in <filename>.pgpass</filename>. It can be
-        used in a service file connection definition. Users with
-        more sophisticated uses should consider using <productname>OpenSSL</productname> engines and
-        tools like PKCS#11 or USB crypto offload devices.
+        没有与此选项等价的环境变量，也没有在 <filename>.pgpass</filename> 中查找它的机制。它可以用在服务文件连接定义中。有更复杂用途的用户应考虑使用 <productname>OpenSSL</productname> 引擎以及 PKCS#11 或 USB 加密卸载设备之类的工具。
        </para>
       </listitem>
      </varlistentry>
@@ -1976,28 +1495,24 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslcertmode</literal></term>
       <listitem>
        <para>
-        This option determines whether a client certificate may be sent to the
-        server, and whether the server is required to request one. There are
-        three modes:
+        此选项决定是否可以向服务器发送客户端证书，以及是否要求服务器请求客户端证书。共有三种模式：
 
         <variablelist>
          <varlistentry>
           <term><literal>disable</literal></term>
           <listitem>
            <para>
-            A client certificate is never sent, even if one is available
-            (default location or provided via
-            <xref linkend="libpq-connect-sslcert" />).
+            即使有可用的客户端证书（默认位置或通过
+            <xref linkend="libpq-connect-sslcert" /> 提供），也绝不发送客户端证书。
            </para>
           </listitem>
          </varlistentry>
 
          <varlistentry>
-          <term><literal>allow</literal> (default)</term>
+          <term><literal>allow</literal>（默认）</term>
           <listitem>
            <para>
-            A certificate may be sent, if the server requests one and the
-            client has one to send.
+            如果服务器请求证书且客户端有证书可发送，则可能会发送证书。
            </para>
           </listitem>
          </varlistentry>
@@ -2006,9 +1521,8 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>require</literal></term>
           <listitem>
            <para>
-            The server <emphasis>must</emphasis> request a certificate. The
-            connection will fail if the client does not send a certificate and
-            the server successfully authenticates the client anyway.
+            服务器<emphasis>必须</emphasis>请求证书。如果客户端不发送证书，
+            而服务器仍然成功认证了客户端，则连接将失败。
            </para>
           </listitem>
          </varlistentry>
@@ -2017,12 +1531,9 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
 
        <note>
         <para>
-         <literal>sslcertmode=require</literal> doesn't add any additional
-         security, since there is no guarantee that the server is validating
-         the certificate correctly; PostgreSQL servers generally request TLS
-         certificates from clients whether they validate them or not. The
-         option may be useful when troubleshooting more complicated TLS
-         setups.
+         <literal>sslcertmode=require</literal> 不会增加任何额外的安全性，因为无法保证服务器会正确地验证证书；
+         PostgreSQL 服务器通常会向客户端请求 TLS 证书，无论它们是否验证这些证书。
+        在排查较复杂的 TLS 配置问题时，该选项可能会有用。
         </para>
        </note>
       </listitem>
@@ -2032,34 +1543,19 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslrootcert</literal></term>
       <listitem>
        <para>
-        This parameter specifies the name of a file containing SSL
-        certificate authority (<acronym>CA</acronym>) certificate(s).
-        If the file exists, the server's certificate will be verified
-        to be signed by one of these authorities.  The default is
-        <filename>~/.postgresql/root.crt</filename>.
+        此参数指定包含 SSL 证书颁发机构（<acronym>CA</acronym>）证书的文件的名称。
+        如果该文件存在，将验证服务器证书是否由这些机构之一签名。
+        默认值为 <filename>~/.postgresql/root.crt</filename>。
        </para>
        <para>
-        The special value <literal>system</literal> may be specified instead, in
-        which case the trusted CA roots from the SSL implementation will be loaded. The exact
-        locations of these root certificates differ by SSL implementation and
-        platform. For <productname>OpenSSL</productname> in particular, the
-        locations may be further modified by the <envar>SSL_CERT_DIR</envar>
-        and <envar>SSL_CERT_FILE</envar> environment variables.
+        也可以改为指定特殊值 <literal>system</literal>，此时将加载 SSL 实现中的受信任 CA 根证书。这些根证书的确切位置因 SSL 实现和平台而异。特别是对于 <productname>OpenSSL</productname>，这些位置还可能被 <envar>SSL_CERT_DIR</envar> 和 <envar>SSL_CERT_FILE</envar> 环境变量进一步修改。
        </para>
        <note>
         <para>
-         When using <literal>sslrootcert=system</literal>, the default
-         <literal>sslmode</literal> is changed to <literal>verify-full</literal>,
-         and any weaker setting will result in an error. In most cases it is
-         trivial for anyone to obtain a certificate trusted by the system for a
-         hostname they control, rendering <literal>verify-ca</literal> and all
-         weaker modes useless.
+         使用 <literal>sslrootcert=system</literal> 时，默认的 <literal>sslmode</literal> 会改为 <literal>verify-full</literal>，任何更弱的设置都会导致错误。在大多数情况下，任何人都可以轻易地为其控制的主机名获得由系统信任的证书，从而使 <literal>verify-ca</literal> 及所有更弱的模式变得毫无用处。
         </para>
         <para>
-         The magic <literal>system</literal> value will take precedence over a
-         local certificate file with the same name. If for some reason you find
-         yourself in this situation, use an alternative path like
-         <literal>sslrootcert=./system</literal> instead.
+         魔法值 <literal>system</literal> 将优先于同名的本地证书文件。如果由于某种原因你发现自己处于这种情况，请改用其他路径，例如 <literal>sslrootcert=./system</literal>。
         </para>
        </note>
       </listitem>
@@ -2069,14 +1565,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslcrl</literal></term>
       <listitem>
        <para>
-        This parameter specifies the file name of the SSL server certificate
-        revocation list (CRL).  Certificates listed in this file, if it
-        exists, will be rejected while attempting to authenticate the
-        server's certificate.  If neither
-        <xref linkend="libpq-connect-sslcrl"/> nor
-        <xref linkend="libpq-connect-sslcrldir"/> is set, this setting is
-        taken as
-        <filename>~/.postgresql/root.crl</filename>.
+        此参数指定 SSL 服务器证书吊销列表（CRL）的文件名。如果该文件存在，其中列出的证书在尝试认证服务器证书时将被拒绝。如果 <xref linkend="libpq-connect-sslcrl"/> 和 <xref linkend="libpq-connect-sslcrldir"/> 都未设置，则此设置被视为 <filename>~/.postgresql/root.crl</filename>。
        </para>
       </listitem>
      </varlistentry>
@@ -2085,22 +1574,15 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslcrldir</literal></term>
       <listitem>
        <para>
-        This parameter specifies the directory name of the SSL server certificate
-        revocation list (CRL).  Certificates listed in the files in this
-        directory, if it exists, will be rejected while attempting to
-        authenticate the server's certificate.
+        此参数指定 SSL 服务器证书吊销列表（CRL）的目录名。如果该目录存在，其中各文件中列出的证书在尝试认证服务器证书时将被拒绝。
        </para>
 
        <para>
-        The directory needs to be prepared with the
-        <productname>OpenSSL</productname> command
-        <literal>openssl rehash</literal> or <literal>c_rehash</literal>.  See
-        its documentation for details.
+        该目录需要使用 <productname>OpenSSL</productname> 命令 <literal>openssl rehash</literal> 或 <literal>c_rehash</literal> 来准备。详情请参阅其文档。
        </para>
 
        <para>
-        Both <literal>sslcrl</literal> and <literal>sslcrldir</literal> can be
-        specified together.
+        <literal>sslcrl</literal> 和 <literal>sslcrldir</literal> 可以同时指定。
        </para>
       </listitem>
      </varlistentry>
@@ -2109,20 +1591,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>sslsni</literal><indexterm><primary>Server Name Indication</primary></indexterm></term>
       <listitem>
        <para>
-        If set to 1 (default), libpq sets the TLS extension <quote>Server Name
-        Indication</quote> (<acronym>SNI</acronym>) on SSL-enabled connections.
-        By setting this parameter to 0, this is turned off.
+        如果设置为 1（默认值），libpq 会在启用了 SSL 的连接上设置 TLS 扩展 <quote>Server Name Indication</quote>（<acronym>SNI</acronym>）。将此参数设置为 0 即可关闭该行为。
        </para>
 
        <para>
-        The Server Name Indication can be used by SSL-aware proxies to route
-        connections without having to decrypt the SSL stream.  (Note that
-        unless the proxy is aware of the PostgreSQL protocol handshake this
-        would require setting <literal>sslnegotiation</literal>
-        to <literal>direct</literal>.)
-        However, <acronym>SNI</acronym> makes the destination host name appear
-        in cleartext in the network traffic, so it might be undesirable in
-        some cases.
+        感知 SSL 的代理可以利用 Server Name Indication 来路由连接，而无需解密 SSL 数据流。（注意，除非代理能够识别 PostgreSQL 协议握手，否则这需要把 <literal>sslnegotiation</literal> 设置为 <literal>direct</literal>。）然而，<acronym>SNI</acronym> 会使目标主机名以明文形式出现在网络流量中，因此在某些情况下可能并不合适。
        </para>
       </listitem>
      </varlistentry>
@@ -2131,21 +1604,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>requirepeer</literal></term>
       <listitem>
        <para>
-        This parameter specifies the operating-system user name of the
-        server, for example <literal>requirepeer=postgres</literal>.
-        When making a Unix-domain socket connection, if this
-        parameter is set, the client checks at the beginning of the
-        connection that the server process is running under the specified
-        user name; if it is not, the connection is aborted with an error.
-        This parameter can be used to provide server authentication similar
-        to that available with SSL certificates on TCP/IP connections.
-        (Note that if the Unix-domain socket is in
-        <filename>/tmp</filename> or another publicly writable location,
-        any user could start a server listening there.  Use this parameter
-        to ensure that you are connected to a server run by a trusted user.)
-        This option is only supported on platforms for which the
-        <literal>peer</literal> authentication method is implemented; see
-        <xref linkend="auth-peer"/>.
+        此参数指定服务器的操作系统用户名，例如 <literal>requirepeer=postgres</literal>。在建立 Unix 域套接字连接时，如果设置了此参数，客户端会在连接开始时检查服务器进程是否以指定的用户名运行；如果不是，则连接会因错误而中止。此参数可用于提供类似于 TCP/IP 连接上 SSL 证书所提供的服务器认证。（注意，如果 Unix 域套接字位于 <filename>/tmp</filename> 或其他公开可写的位置，任何用户都可以在那里启动服务器进行监听。请使用此参数来确保你连接的是由可信用户运行的服务器。）此选项仅在实现了 <literal>peer</literal> 认证方法的平台上受支持；参见 <xref linkend="auth-peer"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -2154,14 +1613,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>ssl_min_protocol_version</literal></term>
       <listitem>
        <para>
-        This parameter specifies the minimum SSL/TLS protocol version to allow
-        for the connection. Valid values are <literal>TLSv1</literal>,
-        <literal>TLSv1.1</literal>, <literal>TLSv1.2</literal> and
-        <literal>TLSv1.3</literal>. The supported protocols depend on the
-        version of <productname>OpenSSL</productname> used, older versions
-        not supporting the most modern protocol versions. If not specified,
-        the default is <literal>TLSv1.2</literal>, which satisfies industry
-        best practices as of this writing.
+        此参数指定连接所允许的最低 SSL/TLS 协议版本。有效值为 <literal>TLSv1</literal>、<literal>TLSv1.1</literal>、<literal>TLSv1.2</literal> 和 <literal>TLSv1.3</literal>。受支持的协议取决于所使用的 <productname>OpenSSL</productname> 版本，较旧的版本不支持最新的协议版本。如果未指定，默认为 <literal>TLSv1.2</literal>，就本文撰写时而言，这符合业界最佳实践。
        </para>
       </listitem>
      </varlistentry>
@@ -2170,16 +1622,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>ssl_max_protocol_version</literal></term>
       <listitem>
        <para>
-        This parameter specifies the maximum SSL/TLS protocol version to allow
-        for the connection. Valid values are <literal>TLSv1</literal>,
-        <literal>TLSv1.1</literal>, <literal>TLSv1.2</literal> and
-        <literal>TLSv1.3</literal>. The supported protocols depend on the
-        version of <productname>OpenSSL</productname> used, older versions
-        not supporting the most modern protocol versions. If not set, this
-        parameter is ignored and the connection will use the maximum bound
-        defined by the backend, if set. Setting the maximum protocol version
-        is mainly useful for testing or if some component has issues working
-        with a newer protocol.
+        此参数指定连接允许的最大 SSL/TLS 协议版本。有效值为 <literal>TLSv1</literal>、<literal>TLSv1.1</literal>、<literal>TLSv1.2</literal> 和 <literal>TLSv1.3</literal>。支持的协议取决于所使用的 <productname>OpenSSL</productname> 版本，较旧的版本不支持最新的协议版本。如果未设置，则忽略此参数，连接将使用后端定义的最大上限（如果已设置）。设置最大协议版本主要用于测试，或者某些组件在使用较新协议时出现问题的情况。
        </para>
       </listitem>
      </varlistentry>
@@ -2188,20 +1631,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>min_protocol_version</literal></term>
       <listitem>
        <para>
-        Specifies the minimum protocol version to allow for the connection.
-        The default is to allow any version of the
-        <productname>PostgreSQL</productname> protocol supported by libpq,
-        which currently means <literal>3.0</literal>. If the server
-        does not support at least this protocol version the connection will be
-        closed.
+        指定连接允许的最小协议版本。默认允许 libpq 支持的 <productname>PostgreSQL</productname> 协议的任何版本，目前即 <literal>3.0</literal>。如果服务器至少不支持此协议版本，连接将被关闭。
        </para>
 
        <para>
-        The current supported values are
-        <literal>3.0</literal>, <literal>3.2</literal>,
-        and <literal>latest</literal>. The <literal>latest</literal> value is
-        equivalent to the latest protocol version supported by the libpq
-        version being used, which is currently <literal>3.2</literal>.
+        当前支持的值为 <literal>3.0</literal>、<literal>3.2</literal> 和 <literal>latest</literal>。<literal>latest</literal> 值等价于所使用的 libpq 版本支持的最新协议版本，目前为 <literal>3.2</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2210,24 +1644,11 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>max_protocol_version</literal></term>
       <listitem>
        <para>
-        Specifies the protocol version to request from the server.
-        The default is to use version <literal>3.0</literal> of the
-        <productname>PostgreSQL</productname> protocol, unless the connection
-        string specifies a feature that relies on a higher protocol version,
-        in which case the latest version supported by libpq is used. If the
-        server does not support the protocol version requested by the client,
-        the connection is automatically downgraded to a lower minor protocol
-        version that the server supports. After the connection attempt has
-        completed you can use <xref linkend="libpq-PQfullProtocolVersion"/> to
-        find out which exact protocol version was negotiated.
+        指定向服务器请求的协议版本。默认使用 <productname>PostgreSQL</productname> 协议的版本 <literal>3.0</literal>，除非连接字符串指定了依赖更高协议版本的功能，此时将使用 libpq 支持的最新版本。如果服务器不支持客户端请求的协议版本，连接会自动降级到服务器支持的较低次要协议版本。连接尝试完成后，可以使用 <xref linkend="libpq-PQfullProtocolVersion"/> 查明协商确定的确切协议版本。
        </para>
 
        <para>
-        The current supported values are
-        <literal>3.0</literal>, <literal>3.2</literal>,
-        and <literal>latest</literal>. The <literal>latest</literal> value is
-        equivalent to the latest protocol version supported by the libpq
-        version being used, which is currently <literal>3.2</literal>.
+        当前支持的值为 <literal>3.0</literal>、<literal>3.2</literal> 和 <literal>latest</literal>。<literal>latest</literal> 值等价于所使用的 libpq 版本支持的最新协议版本，目前为 <literal>3.2</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2236,19 +1657,17 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>krbsrvname</literal></term>
       <listitem>
        <para>
-        Kerberos service name to use when authenticating with GSSAPI.
-        This must match the service name specified in the server
-        configuration for Kerberos authentication to succeed. (See also
-        <xref linkend="gssapi-auth"/>.)
-        The default value is normally <literal>postgres</literal>,
-        but that can be changed when
-        building <productname>PostgreSQL</productname> via
-        the <option>--with-krb-srvnam</option> option
-        of <application>configure</application>.
-        In most environments, this parameter never needs to be changed.
-        Some Kerberos implementations might require a different service name,
-        such as Microsoft Active Directory which requires the service name
-        to be in upper case (<literal>POSTGRES</literal>).
+        使用 GSSAPI 进行身份验证时要使用的 Kerberos 服务名。
+        该名称必须与服务器配置中指定的服务名一致，Kerberos 身份验证才能成功。（另请参见
+        <xref linkend="gssapi-auth"/>。）
+        默认值通常是 <literal>postgres</literal>，
+        但在构建 <productname>PostgreSQL</productname> 时可以通过
+        <application>configure</application> 的 <option>--with-krb-srvnam</option> 选项
+        更改该值。
+        在大多数环境中，此参数永远不需要更改。
+        某些 Kerberos 实现可能需要不同的服务名，
+        例如 Microsoft Active Directory 要求服务名
+        必须为大写（<literal>POSTGRES</literal>）。
        </para>
       </listitem>
      </varlistentry>
@@ -2257,11 +1676,10 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>gsslib</literal></term>
       <listitem>
        <para>
-        GSS library to use for GSSAPI authentication.
-        Currently this is disregarded except on Windows builds that include
-        both GSSAPI and SSPI support.  In that case, set
-        this to <literal>gssapi</literal> to cause libpq to use the GSSAPI
-        library for authentication instead of the default SSPI.
+        用于 GSSAPI 身份验证的 GSS 库。
+        目前，除非是在同时包含 GSSAPI 和 SSPI 支持的 Windows 构建中，否则此参数会被忽略。
+        在这种情况下，将其设置为 <literal>gssapi</literal>，
+        使 libpq 使用 GSSAPI 库进行身份验证，而不是默认的 SSPI。
        </para>
       </listitem>
      </varlistentry>
@@ -2270,10 +1688,9 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>gssdelegation</literal></term>
       <listitem>
        <para>
-        Forward (delegate) GSS credentials to the server.  The default is
-        <literal>0</literal> which means credentials will not be forwarded
-        to the server.  Set this to <literal>1</literal> to have credentials
-        forwarded when possible.
+        将 GSS 凭据转发（委托）给服务器。默认值为
+        <literal>0</literal>，表示不会将凭据转发给服务器。
+        将其设置为 <literal>1</literal> 可在可能时转发凭据。
        </para>
       </listitem>
      </varlistentry>
@@ -2282,12 +1699,10 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>scram_client_key</literal></term>
       <listitem>
        <para>
-        The base64-encoded SCRAM client key.  This can be used by foreign-data
-        wrappers or similar middleware to enable pass-through SCRAM
-        authentication. See <xref
-        linkend="postgres-fdw-options-connection-management"/> for one such
-        implementation.  It is not meant to be specified directly by users or
-        client applications.
+        base64 编码的 SCRAM 客户端密钥。外部数据包装器或类似中间件可以用它来启用透传 SCRAM
+        身份验证。有关一种此类实现，请参见 <xref
+        linkend="postgres-fdw-options-connection-management"/>。它不应由用户或
+        客户端应用程序直接指定。
        </para>
       </listitem>
      </varlistentry>
@@ -2296,12 +1711,10 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>scram_server_key</literal></term>
       <listitem>
        <para>
-        The base64-encoded SCRAM server key.  This can be used by foreign-data
-        wrappers or similar middleware to enable pass-through SCRAM
-        authentication. See <xref
-        linkend="postgres-fdw-options-connection-management"/> for one such
-        implementation.  It is not meant to be specified directly by users or
-        client applications.
+        base64 编码的 SCRAM 服务器密钥。外部数据包装器或类似中间件可以用它来启用透传 SCRAM
+        身份验证。有关一种此类实现，请参见 <xref
+        linkend="postgres-fdw-options-connection-management"/>。它不应由用户或
+        客户端应用程序直接指定。
        </para>
       </listitem>
      </varlistentry>
@@ -2310,10 +1723,9 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>service</literal></term>
       <listitem>
        <para>
-        Service name to use for additional parameters.  It specifies a service
-        name in <filename>pg_service.conf</filename> that holds additional connection parameters.
-        This allows applications to specify only a service name so connection parameters
-        can be centrally maintained. See <xref linkend="libpq-pgservice"/>.
+        用于附加参数的服务名。它指定 <filename>pg_service.conf</filename> 中一个
+        保存附加连接参数的服务名。
+        这样应用程序只需指定服务名，连接参数即可集中维护。参见 <xref linkend="libpq-pgservice"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -2322,17 +1734,14 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>target_session_attrs</literal></term>
       <listitem>
        <para>
-        This option determines whether the session must have certain
-        properties to be acceptable.  It's typically used in combination
-        with multiple host names to select the first acceptable alternative
-        among several hosts.  There are six modes:
+        此选项决定会话必须具有某些属性才可被接受。它通常与多个主机名组合使用，以便从若干主机中选择第一个可接受的备选主机。共有六种模式：
 
         <variablelist>
          <varlistentry>
-          <term><literal>any</literal> (default)</term>
+          <term><literal>any</literal>（默认）</term>
           <listitem>
            <para>
-            any successful connection is acceptable
+            任何成功的连接都可接受
            </para>
           </listitem>
          </varlistentry>
@@ -2341,10 +1750,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>read-write</literal></term>
           <listitem>
            <para>
-            session must accept read-write transactions by default (that
-            is, the server must not be in hot standby mode and
-            the <varname>default_transaction_read_only</varname> parameter
-            must be <literal>off</literal>)
+            会话在默认情况下必须接受读写事务（也就是说，服务器必须不处于热备模式，并且 <varname>default_transaction_read_only</varname> 参数必须为 <literal>off</literal>）
            </para>
           </listitem>
          </varlistentry>
@@ -2353,8 +1759,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>read-only</literal></term>
           <listitem>
            <para>
-            session must not accept read-write transactions by default (the
-            converse)
+            会话在默认情况下必须不接受读写事务（与上一项相反）
            </para>
           </listitem>
          </varlistentry>
@@ -2363,7 +1768,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>primary</literal></term>
           <listitem>
            <para>
-            server must not be in hot standby mode
+            服务器必须不处于热备模式
            </para>
           </listitem>
          </varlistentry>
@@ -2372,7 +1777,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>standby</literal></term>
           <listitem>
            <para>
-            server must be in hot standby mode
+            服务器必须处于热备模式
            </para>
           </listitem>
          </varlistentry>
@@ -2381,9 +1786,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>prefer-standby</literal></term>
           <listitem>
            <para>
-            first try to find a standby server, but if none of the listed
-            hosts is a standby server, try again in <literal>any</literal>
-            mode
+            首先尝试查找一个备用服务器，但如果所列主机中没有任何一个是备用服务器，则以 <literal>any</literal> 模式重试
            </para>
           </listitem>
          </varlistentry>
@@ -2396,23 +1799,15 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>load_balance_hosts</literal></term>
       <listitem>
        <para>
-        Controls the order in which the client tries to connect to the available
-        hosts and addresses. Once a connection attempt is successful no other
-        hosts and addresses will be tried. This parameter is typically used in
-        combination with multiple host names or a DNS record that returns
-        multiple IPs. This parameter can be used in combination with
+        控制客户端尝试连接可用主机和地址的顺序。一旦某次连接尝试成功，就不会再尝试其他主机和地址。此参数通常与多个主机名或返回多个 IP 的 DNS 记录配合使用。此参数可与
         <xref linkend="libpq-connect-target-session-attrs"/>
-        to, for example, load balance over standby servers only. Once successfully
-        connected, subsequent queries on the returned connection will all be
-        sent to the same server. There are currently two modes:
+        结合使用，例如仅在备用服务器之间进行负载均衡。一旦成功连接，返回的连接上的后续查询都将发送到同一台服务器。目前有两种模式：
         <variablelist>
          <varlistentry>
-          <term><literal>disable</literal> (default)</term>
+          <term><literal>disable</literal>（默认）</term>
           <listitem>
            <para>
-            No load balancing across hosts is performed.  Hosts are tried in
-            the order in which they are provided and addresses are tried in
-            the order they are received from DNS or a hosts file.
+            不跨主机执行负载均衡。主机按提供顺序尝试，地址按从 DNS 或 hosts 文件接收到的顺序尝试。
            </para>
           </listitem>
          </varlistentry>
@@ -2421,30 +1816,13 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
           <term><literal>random</literal></term>
           <listitem>
            <para>
-            Hosts and addresses are tried in random order. This value is mostly
-            useful when opening multiple connections at the same time, possibly
-            from different machines. This way connections can be load balanced
-            across multiple <productname>PostgreSQL</productname> servers.
+            主机和地址按随机顺序尝试。此值在同时打开多个连接（可能来自不同机器）时最为有用。这样连接就可以在多个 <productname>PostgreSQL</productname> 服务器之间进行负载均衡。
            </para>
            <para>
-            While random load balancing, due to its random nature, will almost
-            never result in a completely uniform distribution, it statistically
-            gets quite close. One important aspect here is that this algorithm
-            uses two levels of random choices: First the hosts
-            will be resolved in random order. Then secondly, before resolving
-            the next host, all resolved addresses for the current host will be
-            tried in random order. This behaviour can skew the amount of
-            connections each node gets greatly in certain cases, for instance
-            when some hosts resolve to more addresses than others. But such a
-            skew can also be used on purpose, e.g. to increase the number of
-            connections a larger server gets by providing its hostname multiple
-            times in the host string.
+            虽然随机负载均衡由于其随机性几乎永远不会产生完全均匀的分布，但从统计上看它已经相当接近。这里的一个重要方面是，该算法使用了两级随机选择：首先，主机将以随机顺序被解析。其次，在解析下一个主机之前，当前主机解析出的所有地址将以随机顺序被尝试。在某些情况下，这种行为会极大地扭曲每个节点获得的连接数量，例如当某些主机解析出的地址比其他主机多时。但这种偏斜也可以被有意利用，例如通过在主机字符串中多次提供某台较大服务器的主机名，来增加它获得的连接数量。
            </para>
            <para>
-            When using this value it's recommended to also configure a reasonable
-            value for <xref linkend="libpq-connect-connect-timeout"/>. Because then,
-            if one of the nodes that are used for load balancing is not responding,
-            a new node will be tried.
+            使用该值时，建议同时为 <xref linkend="libpq-connect-connect-timeout"/> 配置一个合理的值。因为这样一来，如果用于负载均衡的某个节点没有响应，就会尝试一个新的节点。
            </para>
           </listitem>
          </varlistentry>
@@ -2457,34 +1835,14 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>oauth_issuer</literal></term>
       <listitem>
        <para>
-        The HTTPS URL of a trusted issuer to contact if the server requests an
-        OAuth token for the connection. This parameter is required for all OAuth
-        connections; it should exactly match the <literal>issuer</literal>
-        setting in <link linkend="auth-oauth">the server's HBA configuration</link>.
+        当服务器为连接请求 OAuth 令牌时要联系的可信签发者的 HTTPS URL。所有 OAuth 连接都需要此参数；它应当与 <link linkend="auth-oauth">服务器的 HBA 配置</link>中的 <literal>issuer</literal> 设置完全匹配。
        </para>
        <para>
-        As part of the standard authentication handshake, <application>libpq</application>
-        will ask the server for a <emphasis>discovery document:</emphasis> a URL
-        providing a set of OAuth configuration parameters. The server must
-        provide a URL that is directly constructed from the components of the
-        <literal>oauth_issuer</literal>, and this value must exactly match the
-        issuer identifier that is declared in the discovery document itself, or
-        the connection will fail. This is required to prevent a class of
-        <ulink url="https://mailarchive.ietf.org/arch/msg/oauth/JIVxFBGsJBVtm7ljwJhPUm3Fr-w/">
-        "mix-up attacks"</ulink> on OAuth clients.
+        作为标准认证握手的一部分，<application>libpq</application> 会向服务器索取一份<emphasis>发现文档：</emphasis>一个提供一组 OAuth 配置参数的 URL。服务器必须提供一个直接由 <literal>oauth_issuer</literal> 的各个组成部分构造而成的 URL，并且该值必须与发现文档自身中声明的签发者标识符完全匹配，否则连接将失败。这是必需的，用以防止针对 OAuth 客户端的一类<ulink url="https://mailarchive.ietf.org/arch/msg/oauth/JIVxFBGsJBVtm7ljwJhPUm3Fr-w/">
+        “混淆攻击”</ulink>。
        </para>
        <para>
-        You may also explicitly set <literal>oauth_issuer</literal> to the
-        <literal>/.well-known/</literal> URI used for OAuth discovery. In this
-        case, if the server asks for a different URL, the connection will fail,
-        but a <link linkend="libpq-oauth-authdata-hooks">custom OAuth flow</link>
-        may be able to speed up the standard handshake by using previously
-        cached tokens. (In this case, it is recommended that
-        <xref linkend="libpq-connect-oauth-scope"/> be set as well, since the
-        client will not have a chance to ask the server for a correct scope
-        setting, and the default scopes for a token may not be sufficient to
-        connect.) <application>libpq</application> currently supports the
-        following well-known endpoints:
+        你也可以显式地将 <literal>oauth_issuer</literal> 设置为用于 OAuth 发现的 <literal>/.well-known/</literal> URI。在这种情况下，如果服务器要求使用不同的 URL，连接将会失败，但<link linkend="libpq-oauth-authdata-hooks">自定义 OAuth 流程</link>或许能够通过使用先前缓存的令牌来加速标准握手。（在这种情况下，建议同时设置 <xref linkend="libpq-connect-oauth-scope"/>，因为客户端将没有机会向服务器询问正确的 scope 设置，而令牌的默认 scope 可能不足以建立连接。）<application>libpq</application> 目前支持以下众所周知的端点：
         <itemizedlist spacing="compact">
          <listitem><para><literal>/.well-known/openid-configuration</literal></para></listitem>
          <listitem><para><literal>/.well-known/oauth-authorization-server</literal></para></listitem>
@@ -2492,10 +1850,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
        </para>
        <warning>
         <para>
-         Issuers are highly privileged during the OAuth connection handshake. As
-         a rule of thumb, if you would not trust the operator of a URL to handle
-         access to your servers, or to impersonate you directly, that URL should
-         not be trusted as an <literal>oauth_issuer</literal>.
+         在 OAuth 连接握手期间，签发者拥有很高的权限。经验法则是，如果你不信任某个 URL 的运营者能够处理对你服务器的访问，或者不信任其不会直接冒充你，那么就不应将该 URL 作为 <literal>oauth_issuer</literal> 来信任。
         </para>
        </warning>
       </listitem>
@@ -2505,12 +1860,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>oauth_client_id</literal></term>
       <listitem>
        <para>
-        An OAuth 2.0 client identifier, as issued by the authorization server.
-        If the <productname>PostgreSQL</productname> server
-        <link linkend="auth-oauth">requests an OAuth token</link> for the
-        connection (and if no <link linkend="libpq-oauth-authdata-hooks">custom
-        OAuth hook</link> is installed to provide one), then this parameter must
-        be set; otherwise, the connection will fail.
+        由授权服务器签发的 OAuth 2.0 客户端标识符。如果 <productname>PostgreSQL</productname> 服务器为连接<link linkend="auth-oauth">请求 OAuth 令牌</link>（并且没有安装<link linkend="libpq-oauth-authdata-hooks">自定义 OAuth 钩子</link>来提供令牌），则必须设置此参数；否则连接将失败。
        </para>
       </listitem>
      </varlistentry>
@@ -2519,10 +1869,7 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>oauth_client_secret</literal></term>
       <listitem>
        <para>
-        The client password, if any, to use when contacting the OAuth
-        authorization server. Whether this parameter is required or not is
-        determined by the OAuth provider; "public" clients generally do not use
-        a secret, whereas "confidential" clients generally do.
+        联系 OAuth 授权服务器时使用的客户端密码（如果有）。此参数是否为必需由 OAuth 提供方决定；“公共”客户端通常不使用密钥，而“机密”客户端通常使用。
        </para>
       </listitem>
      </varlistentry>
@@ -2531,24 +1878,13 @@ postgresql://%2Fvar%2Flib%2Fpostgresql/dbname
       <term><literal>oauth_scope</literal></term>
       <listitem>
        <para>
-        The scope of the access request sent to the authorization server,
-        specified as a (possibly empty) space-separated list of OAuth scope
-        identifiers. This parameter is optional and intended for advanced usage.
+        发送给授权服务器的访问请求的 scope，指定为以空格分隔的 OAuth scope 标识符列表（可以为空）。此参数是可选的，面向高级用法。
        </para>
        <para>
-        Usually the client will obtain appropriate scope settings from the
-        <productname>PostgreSQL</productname> server. If this parameter is used,
-        the server's requested scope list will be ignored. This can prevent a
-        less-trusted server from requesting inappropriate access scopes from the
-        end user. However, if the client's scope setting does not contain the
-        server's required scopes, the server is likely to reject the issued
-        token, and the connection will fail.
+        通常客户端会从 <productname>PostgreSQL</productname> 服务器获取合适的 scope 设置。如果使用了此参数，服务器请求的 scope 列表将被忽略。这可以防止不太受信任的服务器向最终用户请求不适当的访问 scope。但是，如果客户端的 scope 设置不包含服务器所需的 scope，服务器很可能会拒绝签发的令牌，连接将会失败。
        </para>
        <para>
-        The meaning of an empty scope list is provider-dependent. An OAuth
-        authorization server may choose to issue a token with "default scope",
-        whatever that happens to be, or it may reject the token request
-        entirely.
+        空作用域列表的含义取决于提供方。OAuth 授权服务器可以选择签发带有“默认作用域”的令牌（无论该默认作用域具体是什么），也可以完全拒绝该令牌请求。
        </para>
       </listitem>
      </varlistentry>
