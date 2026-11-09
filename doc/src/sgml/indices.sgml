@@ -508,7 +508,7 @@ CREATE UNIQUE INDEX <replaceable>name</replaceable> ON <replaceable>table</repla
 
 
  <sect1 id="indexes-expressional">
-  <title>Indexes on Expressions</title>
+  <title>表达式上的索引</title>
 
   <indexterm zone="indexes-expressional">
    <primary>index</primary>
@@ -516,62 +516,41 @@ CREATE UNIQUE INDEX <replaceable>name</replaceable> ON <replaceable>table</repla
   </indexterm>
 
   <para>
-   An index column need not be just a column of the underlying table,
-   but can be a function or scalar expression computed from one or
-   more columns of the table.  This feature is useful to obtain fast
-   access to tables based on the results of computations.
+   索引列不必只是底层表的一列，而可以是从表的一列或多列计算出来的函数或标量表达式。此特性有助于基于计算结果对表进行快速访问。
   </para>
 
   <para>
-   For example, a common way to do case-insensitive comparisons is to
-   use the <function>lower</function> function:
+   例如，进行不区分大小写比较的一种常见方式是使用 <function>lower</function> 函数：
 <programlisting>
 SELECT * FROM test1 WHERE lower(col1) = 'value';
 </programlisting>
-   This query can use an index if one has been
-   defined on the result of the <literal>lower(col1)</literal>
-   function:
+   如果已经在 <literal>lower(col1)</literal> 函数的结果上定义了索引，那么此查询就可以使用该索引：
 <programlisting>
 CREATE INDEX test1_lower_col1_idx ON test1 (lower(col1));
 </programlisting>
   </para>
 
   <para>
-   If we were to declare this index <literal>UNIQUE</literal>, it would prevent
-   creation of rows whose <literal>col1</literal> values differ only in case,
-   as well as rows whose <literal>col1</literal> values are actually identical.
-   Thus, indexes on expressions can be used to enforce constraints that
-   are not definable as simple unique constraints.
+   如果我们把这个索引声明为 <literal>UNIQUE</literal>，它就会阻止创建 <literal>col1</literal> 值仅大小写不同的行，以及 <literal>col1</literal> 值实际相同的行。因此，表达式上的索引可用于强制实施无法定义为简单唯一约束的约束。
   </para>
 
   <para>
-   As another example, if one often does queries like:
+   再举一个例子，如果经常执行这样的查询：
 <programlisting>
 SELECT * FROM people WHERE (first_name || ' ' || last_name) = 'John Smith';
 </programlisting>
-   then it might be worth creating an index like this:
+   那么可能值得创建这样的索引：
 <programlisting>
 CREATE INDEX people_names ON people ((first_name || ' ' || last_name));
 </programlisting>
   </para>
 
   <para>
-   The syntax of the <command>CREATE INDEX</command> command normally requires
-   writing parentheses around index expressions, as shown in the second
-   example.  The parentheses can be omitted when the expression is just
-   a function call, as in the first example.
+   <command>CREATE INDEX</command> 命令的语法通常要求在索引表达式两边写上括号，如第二个示例所示。当表达式只是一个函数调用时，可以省略括号，如第一个示例所示。
   </para>
 
   <para>
-   Index expressions are relatively expensive to maintain, because the
-   derived expression(s) must be computed for each row insertion
-   and <link linkend="storage-hot">non-HOT update</link>. However, the index expressions are
-   <emphasis>not</emphasis> recomputed during an indexed search, since they are
-   already stored in the index.  In both examples above, the system
-   sees the query as just <literal>WHERE indexedcolumn = 'constant'</literal>
-   and so the speed of the search is equivalent to any other simple index
-   query.  Thus, indexes on expressions are useful when retrieval speed
-   is more important than insertion and update speed.
+   索引表达式的维护代价相对较高，因为每次插入行以及进行<link linkend="storage-hot">非 HOT 更新</link>时都必须计算派生表达式。不过，在通过索引进行搜索时<emphasis>不会</emphasis>重新计算索引表达式，因为它们已经存储在索引中。在上面的两个例子中，系统都将查询视为 <literal>WHERE indexedcolumn = 'constant'</literal>，因此搜索速度与任何其他简单的索引查询相当。因此，当检索速度比插入和更新速度更重要时，表达式上的索引就很有用。
   </para>
  </sect1>
 
