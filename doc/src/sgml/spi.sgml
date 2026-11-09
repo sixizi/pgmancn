@@ -4227,7 +4227,7 @@ HeapTupleHeader SPI_returntuple(HeapTuple <parameter>row</parameter>, TupleDesc 
 
  <refnamediv>
   <refname>SPI_modifytuple</refname>
-  <refpurpose>create a row by replacing selected fields of a given row</refpurpose>
+  <refpurpose>通过替换给定行的选定字段来创建一行</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -4238,33 +4238,26 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <function>SPI_modifytuple</function> creates a new row by
-   substituting new values for selected columns, copying the original
-   row's columns at other positions.  The input row is not modified.
-   The new row is returned in the upper executor context.
+   <function>SPI_modifytuple</function> 通过为选定列替换新值、并在其他位置复制原始行的列来创建新行。输入行不会被修改。新行在上层执行器上下文中返回。
   </para>
 
   <para>
-   This function can only be used while connected to SPI.
-   Otherwise, it returns NULL and sets <varname>SPI_result</varname> to
-   <symbol>SPI_ERROR_UNCONNECTED</symbol>.
+   该函数只能在连接到 SPI 时使用。否则，它返回 NULL 并将 <varname>SPI_result</varname> 设置为 <symbol>SPI_ERROR_UNCONNECTED</symbol>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Arguments</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>Relation <parameter>rel</parameter></literal></term>
     <listitem>
      <para>
-      Used only as the source of the row descriptor for the row.
-      (Passing a relation rather than a row descriptor is a
-      misfeature.)
+      仅用作该行的行描述符的来源。（传入关系而不是行描述符是一种设计缺陷。）
      </para>
     </listitem>
    </varlistentry>
@@ -4273,7 +4266,7 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
     <term><literal>HeapTuple <parameter>row</parameter></literal></term>
     <listitem>
      <para>
-      row to be modified
+      要修改的行
      </para>
     </listitem>
    </varlistentry>
@@ -4282,7 +4275,7 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
     <term><literal>int <parameter>ncols</parameter></literal></term>
     <listitem>
      <para>
-      number of columns to be changed
+      要修改的列数
      </para>
     </listitem>
    </varlistentry>
@@ -4291,8 +4284,7 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
     <term><literal>int * <parameter>colnum</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>ncols</parameter>, containing the numbers
-      of the columns that are to be changed (column numbers start at 1)
+      长度为 <parameter>ncols</parameter> 的数组，包含要修改的列的编号（列编号从 1 开始）
      </para>
     </listitem>
    </varlistentry>
@@ -4301,8 +4293,7 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
     <term><literal>Datum * <parameter>values</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>ncols</parameter>, containing the
-      new values for the specified columns
+      长度为 <parameter>ncols</parameter> 的数组，包含指定列的新值
      </para>
     </listitem>
    </varlistentry>
@@ -4311,20 +4302,11 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
     <term><literal>const char * <parameter>nulls</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>ncols</parameter>, describing which
-      new values are null
+      长度为 <parameter>ncols</parameter> 的数组，描述哪些新值为空
      </para>
 
      <para>
-      If <parameter>nulls</parameter> is <symbol>NULL</symbol> then
-      <function>SPI_modifytuple</function> assumes that no new values
-      are null.  Otherwise, each entry of the <parameter>nulls</parameter>
-      array should be <literal>'&nbsp;'</literal> if the corresponding new value is
-      non-null, or <literal>'n'</literal> if the corresponding new value is
-      null.  (In the latter case, the actual value in the corresponding
-      <parameter>values</parameter> entry doesn't matter.)  Note that
-      <parameter>nulls</parameter> is not a text string, just an array: it
-      does not need a <literal>'\0'</literal> terminator.
+      如果 <parameter>nulls</parameter> 为 <symbol>NULL</symbol>，则 <function>SPI_modifytuple</function> 假定没有新值为空。否则，<parameter>nulls</parameter> 数组的每个元素在对应的新值非空时应为 <literal>'&nbsp;'</literal>，在对应的新值为空时应为 <literal>'n'</literal>。（在后一种情况下，对应的 <parameter>values</parameter> 元素中的实际值无关紧要。）注意 <parameter>nulls</parameter> 不是文本字符串，而只是一个数组：它不需要 <literal>'\0'</literal> 终止符。
      </para>
     </listitem>
    </varlistentry>
@@ -4332,25 +4314,23 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
  </refsect1>
 
  <refsect1>
-  <title>Return Value</title>
+  <title>返回值</title>
 
   <para>
-   new row with modifications, allocated in the upper executor
-   context, or <symbol>NULL</symbol> on error
-   (see <varname>SPI_result</varname> for an error indication)
+   带有修改的新行，分配在上层执行器上下文中；出错时为 <symbol>NULL</symbol>
+   （错误指示参见 <varname>SPI_result</varname>）
   </para>
 
   <para>
-   On error, <varname>SPI_result</varname> is set as follows:
+   出错时，<varname>SPI_result</varname> 按如下方式设置：
    <variablelist>
     <varlistentry>
      <term><symbol>SPI_ERROR_ARGUMENT</symbol></term>
      <listitem>
       <para>
-       if <parameter>rel</parameter> is <symbol>NULL</symbol>, or if
-       <parameter>row</parameter> is <symbol>NULL</symbol>, or if <parameter>ncols</parameter>
-       is less than or equal to 0, or if <parameter>colnum</parameter> is
-       <symbol>NULL</symbol>, or if <parameter>values</parameter> is <symbol>NULL</symbol>.
+       如果 <parameter>rel</parameter> 为 <symbol>NULL</symbol>，或者 <parameter>row</parameter> 为 <symbol>NULL</symbol>，或者 <parameter>ncols</parameter>
+       小于等于 0，或者 <parameter>colnum</parameter> 为
+       <symbol>NULL</symbol>，或者 <parameter>values</parameter> 为 <symbol>NULL</symbol>。
       </para>
      </listitem>
     </varlistentry>
@@ -4359,9 +4339,8 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
      <term><symbol>SPI_ERROR_NOATTRIBUTE</symbol></term>
      <listitem>
       <para>
-       if <parameter>colnum</parameter> contains an invalid column number (less
-       than or equal to 0 or greater than the number of columns in
-       <parameter>row</parameter>)
+       如果 <parameter>colnum</parameter> 包含无效的列号（小于等于 0
+       或大于 <parameter>row</parameter> 中的列数）
       </para>
      </listitem>
     </varlistentry>
@@ -4370,7 +4349,7 @@ HeapTuple SPI_modifytuple(Relation <parameter>rel</parameter>, HeapTuple <parame
      <term><symbol>SPI_ERROR_UNCONNECTED</symbol></term>
      <listitem>
       <para>
-       if SPI is not active
+       如果 SPI 未激活
       </para>
      </listitem>
     </varlistentry>
