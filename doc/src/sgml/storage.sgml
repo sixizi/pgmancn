@@ -735,24 +735,20 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 
 <sect1 id="storage-hot">
 
- <title>Heap-Only Tuples (<acronym>HOT</acronym>)</title>
+ <title>仅堆元组（<acronym>HOT</acronym>）</title>
 
  <para>
-  To allow for high concurrency, <productname>PostgreSQL</productname>
-  uses <link linkend="mvcc-intro">multiversion concurrency
-  control</link> (<acronym>MVCC</acronym>) to store rows.  However,
-  <acronym>MVCC</acronym> has some downsides for update queries.
-  Specifically, updates require new versions of rows to be added to
-  tables.  This can also require new index entries for each updated row,
-  and removal of old versions of rows and their index entries can be
-  expensive.
+  为了支持高并发，<productname>PostgreSQL</productname>
+  使用<link linkend="mvcc-intro">多版本并发控制</link>（<acronym>MVCC</acronym>）来存储行。然而，
+  <acronym>MVCC</acronym> 对于更新查询有一些缺点。
+  具体来说，更新需要向表中添加新的行版本。这还可能需要为每个被更新的行添加新的索引项，
+  并且删除旧的行版本及其索引项可能开销很大。
  </para>
 
  <para>
-  To help reduce the overhead of updates,
-  <productname>PostgreSQL</productname> has an optimization called
-  heap-only tuples (<acronym>HOT</acronym>).  This optimization is
-  possible when:
+  为了帮助减少更新的开销，
+  <productname>PostgreSQL</productname> 提供了一种称为仅堆元组（<acronym>HOT</acronym>）的优化。当满足以下条件时，
+  可以使用这种优化：
 
   <itemizedlist>
    <listitem>
@@ -765,48 +761,33 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
    </listitem>
    <listitem>
     <para>
-     There is sufficient free space on the page containing the old row
-     for the updated row.
+     包含旧行的页面上有足够的空闲空间
+     来容纳更新后的行。
     </para>
    </listitem>
   </itemizedlist>
 
-  In such cases, heap-only tuples provide two optimizations:
+  在这种情况下，仅堆元组提供了两种优化：
 
   <itemizedlist>
    <listitem>
     <para>
-     New index entries are not needed to represent updated rows, however,
-     summary indexes may still need to be updated.
+     表示更新后的行不需要新的索引项，但是，汇总索引可能仍然需要更新。
     </para>
    </listitem>
    <listitem>
     <para>
-     When a row is updated multiple times, row versions other than the oldest
-     and the newest can be completely removed during normal operation,
-     including <command>SELECT</command>s, instead of requiring periodic vacuum
-     operations.  (Indexes always refer to the
-     <link linkend="storage-page-layout">page item identifier</link> of the
-     original row version. The tuple data associated with that row version
-     is removed, and its item identifier is converted to a redirect that
-     points to the oldest version that may still be visible to some concurrent
-     transaction. Intermediate row versions that are no longer visible to
-     anyone are completely removed, and the associated page item identifiers
-     are made available for reuse.)
+     当一行被多次更新时，除最旧和最新的行版本之外的其他行版本可以在正常操作期间被完全移除，包括 <command>SELECT</command>，而不需要周期性的 vacuum 操作。（索引总是指向原始行版本的 <link linkend="storage-page-layout">页项标识符</link>。与该行版本关联的元组数据被移除，其项标识符被转换为一个重定向，指向可能仍对某些并发事务可见的最旧版本。不再对任何人可见的中间行版本被完全移除，相关的页项标识符可供重用。）
     </para>
    </listitem>
   </itemizedlist>
  </para>
 
  <para>
-  You can increase the likelihood of sufficient page space for
-  <acronym>HOT</acronym> updates by decreasing a table's <link
-  linkend="reloption-fillfactor"><literal>fillfactor</literal></link>.  If you
-  don't, <acronym>HOT</acronym> updates will still happen because new rows
-  will naturally migrate to new pages and existing pages with sufficient free
-  space for new row versions.  The system view <link
+  你可以通过降低表的 <link
+  linkend="reloption-fillfactor"><literal>fillfactor</literal></link> 来增加为 <acronym>HOT</acronym> 更新提供足够页面空间的可能性。如果不这样做，<acronym>HOT</acronym> 更新仍然会发生，因为新行会自然地迁移到新页面以及具有足够空闲空间容纳新行版本的现有页面。系统视图 <link
   linkend="monitoring-pg-stat-all-tables-view">pg_stat_all_tables</link>
-  allows monitoring of the occurrence of HOT and non-HOT updates.
+  允许监控 HOT 更新和非 HOT 更新的发生情况。
  </para>
 </sect1>
 
