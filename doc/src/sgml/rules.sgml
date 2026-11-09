@@ -1705,7 +1705,7 @@ CREATE VIEW phone_number WITH (security_barrier) AS
 </sect1>
 
 <sect1 id="rules-triggers">
-<title>Rules Versus Triggers</title>
+<title>规则与触发器</title>
 
 <indexterm zone="rules-triggers">
  <primary>rule</primary>
@@ -1718,41 +1718,22 @@ CREATE VIEW phone_number WITH (security_barrier) AS
 </indexterm>
 
 <para>
-    Many things that can be done using triggers can also be
-    implemented using the <productname>PostgreSQL</productname>
-    rule system.  One of the things that cannot be implemented by
-    rules are some kinds of constraints, especially foreign keys. It is possible
-    to place a qualified rule that rewrites a command to <literal>NOTHING</literal>
-    if the value of a column does not appear in another table.
-    But then the data is silently thrown away and that's
-    not a good idea. If checks for valid values are required,
-    and in the case of an invalid value an error message should
-    be generated, it must be done by a trigger.
+    许多可以用触发器完成的事情也可以用 <productname>PostgreSQL</productname>
+    规则系统来实现。规则无法实现的事情之一就是某些类型的约束，尤其是外键。可以放置一条带条件的规则，当某列的值没有出现在另一张表中时，把命令改写为 <literal>NOTHING</literal>。
+    但这样数据会被悄悄地丢弃，这不是个好主意。如果需要检查有效值，并且在值无效时生成错误消息，那就必须由触发器来完成。
 </para>
 
 <para>
-    In this chapter, we focused on using rules to update views. All of
-    the update rule examples in this chapter can also be implemented
-    using <literal>INSTEAD OF</literal> triggers on the views.  Writing such
-    triggers is often easier than writing rules, particularly if complex
-    logic is required to perform the update.
+    本章我们重点讨论了使用规则来更新视图。本章中所有的更新规则示例也可以用视图上的 <literal>INSTEAD OF</literal> 触发器来实现。编写这样的触发器通常比编写规则更容易，特别是在执行更新需要复杂逻辑时。
 </para>
 
 <para>
-    For the things that can be implemented by both, which is best
-    depends on the usage of the database.
-    A trigger is fired once for each affected row. A rule modifies
-    the query or generates an additional query. So if many
-    rows are affected in one statement, a rule issuing one extra
-    command is likely to be faster than a trigger that is
-    called for every single row and must re-determine what to do
-    many times.  However, the trigger approach is conceptually far
-    simpler than the rule approach, and is easier for novices to get right.
+    对于两者都能实现的事情，哪种最好取决于数据库的使用方式。
+    触发器对每个受影响的行触发一次。规则修改查询或生成一个额外的查询。因此，如果一条语句影响许多行，那么发出一个额外命令的规则可能比针对每一行都被调用、并且必须多次重新确定该做什么的触发器更快。然而，触发器方法在概念上比规则方法简单得多，新手也更容易做对。
 </para>
 
 <para>
-    Here we show an example of how the choice of rules versus triggers
-    plays out in one situation.  There are two tables:
+    下面我们展示一个例子，说明在某种情况下规则与触发器的选择会带来怎样的结果。有两个表：
 
 <programlisting>
 CREATE TABLE computer (
@@ -1766,19 +1747,13 @@ CREATE TABLE software (
 );
 </programlisting>
 
-    Both tables have many thousands of rows and the indexes on
-    <structfield>hostname</structfield> are unique.  The rule or trigger should
-    implement a constraint that deletes rows from <literal>software</literal>
-    that reference a deleted computer.  The trigger would use this command:
+    两个表都有数千行，并且 <structfield>hostname</structfield> 上的索引是唯一的。规则或触发器应实现一个约束：从 <literal>software</literal> 中删除引用了已删除计算机的行。触发器将使用以下命令：
 
 <programlisting>
 DELETE FROM software WHERE hostname = $1;
 </programlisting>
 
-    Since the trigger is called for each individual row deleted from
-    <literal>computer</literal>, it can prepare and save the plan for this
-    command and pass the <structfield>hostname</structfield> value in the
-    parameter.  The rule would be written as:
+    由于从 <literal>computer</literal> 中删除每一行时都会调用触发器，因此它可以准备并保存该命令的计划，并在参数中传入 <structfield>hostname</structfield> 值。而规则会写成：
 
 <programlisting>
 CREATE RULE computer_del AS ON DELETE TO computer
@@ -1787,23 +1762,20 @@ CREATE RULE computer_del AS ON DELETE TO computer
    </para>
 
    <para>
-    Now we look at different types of deletes. In the case of a:
+    现在我们来看不同类型的删除。对于如下情况：
 
 <programlisting>
 DELETE FROM computer WHERE hostname = 'mypc.local.net';
 </programlisting>
 
-    the table <literal>computer</literal> is scanned by index (fast), and the
-    command issued by the trigger would also use an index scan (also fast).
-    The extra command from the rule would be:
+    表 <literal>computer</literal> 通过索引扫描（很快），触发器发出的命令也会使用索引扫描（同样很快）。规则产生的额外命令将是：
 
 <programlisting>
 DELETE FROM software WHERE computer.hostname = 'mypc.local.net'
                        AND software.hostname = computer.hostname;
 </programlisting>
 
-    Since there are appropriate indexes set up, the planner
-    will create a plan of
+    由于建立了合适的索引，规划器将创建一个如下计划
 
 <literallayout class="monospaced">
 Nestloop
@@ -1811,29 +1783,25 @@ Nestloop
   -&gt;  Index Scan using soft_hostidx on software
 </literallayout>
 
-    So there would be not that much difference in speed between
-    the trigger and the rule implementation.
+    因此，触发器实现与规则实现在速度上不会有太大差别。
    </para>
 
    <para>
-    With the next delete we want to get rid of all the 2000 computers
-    where the <structfield>hostname</structfield> starts with
-    <literal>old</literal>. There are two possible commands to do that. One
-    is:
+    接下来的删除操作中，我们想删除所有 <structfield>hostname</structfield> 以 <literal>old</literal> 开头的 2000 台计算机。有两种可能的命令可以做到这一点。一种是：
 
 <programlisting>
 DELETE FROM computer WHERE hostname &gt;= 'old'
                        AND hostname &lt;  'ole'
 </programlisting>
 
-    The command added by the rule will be:
+    由规则添加的命令将是：
 
 <programlisting>
 DELETE FROM software WHERE computer.hostname &gt;= 'old' AND computer.hostname &lt; 'ole'
                        AND software.hostname = computer.hostname;
 </programlisting>
 
-    with the plan
+    其计划为
 
 <literallayout class="monospaced">
 Hash Join
@@ -1842,14 +1810,13 @@ Hash Join
     -&gt;  Index Scan using comp_hostidx on computer
 </literallayout>
 
-    The other possible command is:
+    另一种可能的命令是：
 
 <programlisting>
 DELETE FROM computer WHERE hostname ~ '^old';
 </programlisting>
 
-    which results in the following executing plan for the command
-    added by the rule:
+    这导致由规则添加的命令具有以下执行计划：
 
 <literallayout class="monospaced">
 Nestloop
@@ -1857,40 +1824,24 @@ Nestloop
   -&gt;  Index Scan using soft_hostidx on software
 </literallayout>
 
-    This shows, that the planner does not realize that the
-    qualification for <structfield>hostname</structfield> in
-    <literal>computer</literal> could also be used for an index scan on
-    <literal>software</literal> when there are multiple qualification
-    expressions combined with <literal>AND</literal>, which is what it does
-    in the regular-expression version of the command. The trigger will
-    get invoked once for each of the 2000 old computers that have to be
-    deleted, and that will result in one index scan over
-    <literal>computer</literal> and 2000 index scans over
-    <literal>software</literal>. The rule implementation will do it with two
-    commands that use indexes.  And it depends on the overall size of
-    the table <literal>software</literal> whether the rule will still be faster in the
-    sequential scan situation. 2000 command executions from the trigger over the SPI
-    manager take some time, even if all the index blocks will soon be in the cache.
+    这表明，当有多个限定表达式与 <literal>AND</literal> 组合时，规划器没有意识到 <literal>computer</literal> 中针对 <structfield>hostname</structfield> 的限定条件也可以用于对 <literal>software</literal> 的索引扫描，而在该命令的正则表达式版本中它正是这样做的。触发器将为每台必须删除的 2000 台旧计算机调用一次，这将导致对 <literal>computer</literal> 的一次索引扫描和对 <literal>software</literal> 的 2000 次索引扫描。规则实现将用两条使用索引的命令来完成。而规则在顺序扫描情况下是否仍然更快，取决于表 <literal>software</literal> 的整体大小。通过 SPI 管理器从触发器执行 2000 条命令需要一些时间，即使所有索引块很快就会进入缓存。
 </para>
 
 <para>
-    The last command we look at is:
+    我们最后查看的命令是：
 
 <programlisting>
 DELETE FROM computer WHERE manufacturer = 'bim';
 </programlisting>
 
-    Again this could result in many rows to be deleted from
-    <literal>computer</literal>. So the trigger will again run many commands
-    through the executor.  The command generated by the rule will be:
+    同样，这可能导致从 <literal>computer</literal> 中删除许多行。因此触发器将再次通过执行器运行许多命令。由规则生成的命令将是：
 
 <programlisting>
 DELETE FROM software WHERE computer.manufacturer = 'bim'
                        AND software.hostname = computer.hostname;
 </programlisting>
 
-    The plan for that command will again be the nested loop over two
-    index scans, only using a different index on <literal>computer</literal>:
+    该命令的计划将再次是对两个索引扫描的嵌套循环，只是对 <literal>computer</literal> 使用了不同的索引：
 
 <programlisting>
 Nestloop
@@ -1898,15 +1849,11 @@ Nestloop
   -&gt;  Index Scan using soft_hostidx on software
 </programlisting>
 
-    In any of these cases, the extra commands from the rule system
-    will be more or less independent from the number of affected rows
-    in a command.
+    在这些情况中的任何一种下，来自规则系统的额外命令或多或少都与命令中受影响的行数无关。
 </para>
 
 <para>
-    The summary is, rules will only be significantly slower than
-    triggers if their actions result in large and badly qualified
-    joins, a situation where the planner fails.
+    总结是，只有当规则的动作导致大型且限定不佳的连接（即规划器失败的情形）时，规则才会明显比触发器慢。
 </para>
 </sect1>
 
