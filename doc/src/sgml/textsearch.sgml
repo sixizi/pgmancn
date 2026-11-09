@@ -471,25 +471,17 @@ LIMIT 10;
  </sect1>
 
  <sect1 id="textsearch-controls">
-  <title>Controlling Text Search</title>
+  <title>控制文本检索</title>
 
   <para>
-   To implement full text searching there must be a function to create a
-   <type>tsvector</type> from a document and a <type>tsquery</type> from a
-   user query. Also, we need to return results in a useful order, so we need
-   a function that compares documents with respect to their relevance to
-   the query. It's also important to be able to display the results nicely.
-   <productname>PostgreSQL</productname> provides support for all of these
-   functions.
+   要实现全文检索，必须有一个函数来从文档创建 <type>tsvector</type>，以及从用户查询创建 <type>tsquery</type>。此外，我们需要以有用的顺序返回结果，因此需要一个根据文档与查询的相关性来比较文档的函数。能够良好地显示结果也很重要。<productname>PostgreSQL</productname> 为所有这些功能提供支持。
   </para>
 
   <sect2 id="textsearch-parsing-documents">
-   <title>Parsing Documents</title>
+   <title>解析文档</title>
 
    <para>
-    <productname>PostgreSQL</productname> provides the
-    function <function>to_tsvector</function> for converting a document to
-    the <type>tsvector</type> data type.
+    <productname>PostgreSQL</productname> 提供了函数 <function>to_tsvector</function>，用于将文档转换为 <type>tsvector</type> 数据类型。
    </para>
 
    <indexterm>
@@ -501,12 +493,7 @@ to_tsvector(<optional> <replaceable class="parameter">config</replaceable> <type
 </synopsis>
 
    <para>
-    <function>to_tsvector</function> parses a textual document into tokens,
-    reduces the tokens to lexemes, and returns a <type>tsvector</type> which
-    lists the lexemes together with their positions in the document.
-    The document is processed according to the specified or default
-    text search configuration.
-    Here is a simple example:
+    <function>to_tsvector</function> 将文本文档解析为记号，将记号归约为词素，并返回一个 <type>tsvector</type>，其中列出这些词素及其在文档中的位置。文档按照指定的或默认的文本检索配置进行处理。下面是一个简单的例子：
 
 <screen>
 SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
@@ -517,11 +504,7 @@ SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
    </para>
 
    <para>
-    In the example above we see that the resulting <type>tsvector</type> does not
-    contain the words <literal>a</literal>, <literal>on</literal>, or
-    <literal>it</literal>, the word <literal>rats</literal> became
-    <literal>rat</literal>, and the punctuation sign <literal>-</literal> was
-    ignored.
+    在上面的例子中，我们看到结果 <type>tsvector</type> 不包含单词 <literal>a</literal>、<literal>on</literal> 或 <literal>it</literal>，单词 <literal>rats</literal> 变成了 <literal>rat</literal>，而标点符号 <literal>-</literal> 被忽略了。
    </para>
 
    <para>
@@ -553,13 +536,7 @@ SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
    </para>
 
    <para>
-    The function <function>setweight</function> can be used to label the
-    entries of a <type>tsvector</type> with a given <firstterm>weight</firstterm>,
-    where a weight is one of the letters <literal>A</literal>, <literal>B</literal>,
-    <literal>C</literal>, or <literal>D</literal>.
-    This is typically used to mark entries coming from
-    different parts of a document, such as title versus body.  Later, this
-    information can be used for ranking of search results.
+    函数 <function>setweight</function> 可用于为 <type>tsvector</type> 的条目赋予给定的<firstterm>权重</firstterm>，其中权重是字母 <literal>A</literal>、<literal>B</literal>、<literal>C</literal> 或 <literal>D</literal> 之一。这通常用于标记来自文档不同部分的条目，例如标题与正文。之后，此信息可用于对搜索结果进行排序。
    </para>
 
    <para>
@@ -588,21 +565,10 @@ UPDATE tt SET ti =
   </sect2>
 
   <sect2 id="textsearch-parsing-queries">
-   <title>Parsing Queries</title>
+   <title>解析查询</title>
 
    <para>
-    <productname>PostgreSQL</productname> provides the
-    functions <function>to_tsquery</function>,
-    <function>plainto_tsquery</function>,
-    <function>phraseto_tsquery</function> and
-    <function>websearch_to_tsquery</function>
-    for converting a query to the <type>tsquery</type> data type.
-    <function>to_tsquery</function> offers access to more features
-    than either <function>plainto_tsquery</function> or
-    <function>phraseto_tsquery</function>, but it is less forgiving about its
-    input. <function>websearch_to_tsquery</function> is a simplified version
-    of <function>to_tsquery</function> with an alternative syntax, similar
-    to the one used by web search engines.
+    <productname>PostgreSQL</productname> 提供了函数 <function>to_tsquery</function>、<function>plainto_tsquery</function>、<function>phraseto_tsquery</function> 和 <function>websearch_to_tsquery</function>，用于将查询转换为 <type>tsquery</type> 数据类型。<function>to_tsquery</function> 提供的功能比 <function>plainto_tsquery</function> 或 <function>phraseto_tsquery</function> 都多，但它对输入的要求也更严格。<function>websearch_to_tsquery</function> 是 <function>to_tsquery</function> 的简化版本，采用另一种语法，类似于 Web 搜索引擎所使用的语法。
    </para>
 
    <indexterm>
@@ -660,11 +626,8 @@ SELECT to_tsquery('supern:*A &amp; star:A*B');
    </para>
 
    <para>
-    <function>to_tsquery</function> can also accept single-quoted
-    phrases.  This is primarily useful when the configuration includes a
-    thesaurus dictionary that may trigger on such phrases.
-    In the example below, a thesaurus contains the rule <literal>supernovae
-    stars : sn</literal>:
+    <function>to_tsquery</function> 也可以接受单引号括起来的短语。当配置中包含可能对此类短语触发的同义词词典时，这特别有用。在下面的示例中，同义词词典包含规则 <literal>supernovae
+    stars : sn</literal>：
 
 <screen>
 SELECT to_tsquery('''supernovae stars'' &amp; !crab');
@@ -673,9 +636,7 @@ SELECT to_tsquery('''supernovae stars'' &amp; !crab');
  'sn' &amp; !'crab'
 </screen>
 
-    Without quotes, <function>to_tsquery</function> will generate a syntax
-    error for tokens that are not separated by an AND, OR, or FOLLOWED BY
-    operator.
+    如果不加引号，对于未用 AND、OR 或 FOLLOWED BY 运算符分隔的词元，<function>to_tsquery</function> 将产生语法错误。
    </para>
 
    <indexterm>
@@ -687,15 +648,11 @@ plainto_tsquery(<optional> <replaceable class="parameter">config</replaceable> <
 </synopsis>
 
    <para>
-    <function>plainto_tsquery</function> transforms the unformatted text
-    <replaceable>querytext</replaceable> to a <type>tsquery</type> value.
-    The text is parsed and normalized much as for <function>to_tsvector</function>,
-    then the <literal>&amp;</literal> (AND) <type>tsquery</type> operator is
-    inserted between surviving words.
+    <function>plainto_tsquery</function> 将未格式化的文本 <replaceable>querytext</replaceable> 转换为 <type>tsquery</type> 值。文本的解析和规范化方式与 <function>to_tsvector</function> 大致相同，然后在保留下来的词之间插入 <literal>&amp;</literal>（AND）<type>tsquery</type> 运算符。
    </para>
 
    <para>
-    Example:
+    示例：
 
 <screen>
 SELECT plainto_tsquery('english', 'The Fat Rats');
@@ -704,9 +661,7 @@ SELECT plainto_tsquery('english', 'The Fat Rats');
  'fat' &amp; 'rat'
 </screen>
 
-    Note that <function>plainto_tsquery</function> will not
-    recognize <type>tsquery</type> operators, weight labels,
-    or prefix-match labels in its input:
+    请注意，<function>plainto_tsquery</function> 不会识别其输入中的 <type>tsquery</type> 运算符、权重标签或前缀匹配标签：
 
 <screen>
 SELECT plainto_tsquery('english', 'The Fat &amp; Rats:C');
@@ -715,7 +670,7 @@ SELECT plainto_tsquery('english', 'The Fat &amp; Rats:C');
  'fat' &amp; 'rat' &amp; 'c'
 </screen>
 
-    Here, all the input punctuation was discarded.
+    这里，输入中的所有标点都被丢弃了。
    </para>
 
    <indexterm>
@@ -727,19 +682,11 @@ phraseto_tsquery(<optional> <replaceable class="parameter">config</replaceable> 
 </synopsis>
 
    <para>
-    <function>phraseto_tsquery</function> behaves much like
-    <function>plainto_tsquery</function>, except that it inserts
-    the <literal>&lt;-&gt;</literal> (FOLLOWED BY) operator between
-    surviving words instead of the <literal>&amp;</literal> (AND) operator.
-    Also, stop words are not simply discarded, but are accounted for by
-    inserting <literal>&lt;<replaceable>N</replaceable>&gt;</literal> operators rather
-    than <literal>&lt;-&gt;</literal> operators.  This function is useful
-    when searching for exact lexeme sequences, since the FOLLOWED BY
-    operators check lexeme order not just the presence of all the lexemes.
+    <function>phraseto_tsquery</function> 的行为与 <function>plainto_tsquery</function> 非常相似，不同之处在于它在保留下来的词之间插入 <literal>&lt;-&gt;</literal>（FOLLOWED BY）运算符，而不是 <literal>&amp;</literal>（AND）运算符。此外，停用词不会被简单地丢弃，而是通过插入 <literal>&lt;<replaceable>N</replaceable>&gt;</literal> 运算符而不是 <literal>&lt;-&gt;</literal> 运算符来计入。当搜索精确的词位序列时，该函数很有用，因为 FOLLOWED BY 运算符检查的是词位顺序，而不仅仅是所有词位是否都存在。
    </para>
 
    <para>
-    Example:
+    示例：
 
 <screen>
 SELECT phraseto_tsquery('english', 'The Fat Rats');
@@ -748,10 +695,7 @@ SELECT phraseto_tsquery('english', 'The Fat Rats');
  'fat' &lt;-&gt; 'rat'
 </screen>
 
-    Like <function>plainto_tsquery</function>, the
-    <function>phraseto_tsquery</function> function will not
-    recognize <type>tsquery</type> operators, weight labels,
-    or prefix-match labels in its input:
+    与 <function>plainto_tsquery</function> 一样，<function>phraseto_tsquery</function> 函数不会识别其输入中的 <type>tsquery</type> 运算符、权重标签或前缀匹配标签：
 
 <screen>
 SELECT phraseto_tsquery('english', 'The Fat &amp; Rats:C');
@@ -778,28 +722,22 @@ websearch_to_tsquery(<optional> <replaceable class="parameter">config</replaceab
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
        <para>
-        <literal>unquoted text</literal>: text not inside quote marks will be
-        converted to terms separated by <literal>&amp;</literal> operators, as
-        if processed by <function>plainto_tsquery</function>.
+        <literal>unquoted text</literal>：不在引号内的文本将被转换为由 <literal>&amp;</literal> 运算符分隔的词项，就如同经过 <function>plainto_tsquery</function> 处理一样。
       </para>
      </listitem>
      <listitem>
        <para>
-        <literal>"quoted text"</literal>: text inside quote marks will be
-        converted to terms separated by <literal>&lt;-&gt;</literal>
-        operators, as if processed by <function>phraseto_tsquery</function>.
+        <literal>"quoted text"</literal>：引号内的文本将被转换为由 <literal>&lt;-&gt;</literal> 运算符分隔的词项，就如同经过 <function>phraseto_tsquery</function> 处理一样。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>OR</literal>: the word <quote>or</quote> will be converted to
-       the <literal>|</literal> operator.
+       <literal>OR</literal>：单词 <quote>or</quote> 将被转换为 <literal>|</literal> 运算符。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>-</literal>: a dash will be converted to
-       the <literal>!</literal> operator.
+       <literal>-</literal>：破折号将被转换为 <literal>!</literal> 运算符。
       </para>
      </listitem>
     </itemizedlist>
@@ -813,7 +751,7 @@ websearch_to_tsquery(<optional> <replaceable class="parameter">config</replaceab
    </para>
 
    <para>
-    Examples:
+    示例：
 <screen>
 SELECT websearch_to_tsquery('english', 'The fat rats');
  websearch_to_tsquery
@@ -849,21 +787,17 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
   </sect2>
 
   <sect2 id="textsearch-ranking">
-   <title>Ranking Search Results</title>
+   <title>搜索结果排名</title>
 
    <para>
-    Ranking attempts to measure how relevant documents are to a particular
-    query, so that when there are many matches the most relevant ones can be
-    shown first.  <productname>PostgreSQL</productname> provides two
-    predefined ranking functions, which take into account lexical, proximity,
-    and structural information; that is, they consider how often the query
-    terms appear in the document, how close together the terms are in the
-    document, and how important is the part of the document where they occur.
-    However, the concept of relevancy is vague and very application-specific.
-    Different applications might require additional information for ranking,
-    e.g., document modification time.  The built-in ranking functions are only
-    examples.  You can write your own ranking functions and/or combine their
-    results with additional factors to fit your specific needs.
+    排名试图衡量文档与特定查询的相关程度，这样当匹配项很多时，最相关的那些可以
+    优先显示。<productname>PostgreSQL</productname> 提供了两个
+    预定义的排名函数，它们会考虑词法、邻近度和结构信息；也就是说，它们会考虑
+    查询词在文档中出现的频率、这些词在文档中的彼此距离，以及它们出现的位置在
+    文档中的重要程度。不过，相关性的概念是模糊的，而且非常依赖于具体应用。
+    不同的应用可能需要额外的信息来进行排名，例如文档的修改时间。内置的排名
+    函数只是示例。你可以编写自己的排名函数，和/或将它们的结果与其他因素
+    结合起来，以满足你的特定需求。
    </para>
 
    <para>
@@ -883,7 +817,7 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
 
       <listitem>
        <para>
-        Ranks vectors based on the frequency of their matching lexemes.
+        根据匹配词位的频率对向量进行排名。
        </para>
       </listitem>
      </varlistentry>
@@ -900,13 +834,7 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
 
       <listitem>
        <para>
-        This function computes the <firstterm>cover density</firstterm>
-        ranking for the given document vector and query, as described in
-        Clarke, Cormack, and Tudhope's "Relevance Ranking for One to Three
-        Term Queries" in the journal "Information Processing and Management",
-        1999.  Cover density is similar to <function>ts_rank</function> ranking
-        except that the proximity of matching lexemes to each other is
-        taken into consideration.
+        此函数为给定的文档向量和查询计算 <firstterm>覆盖密度</firstterm> 排名，如 Clarke、Cormack 和 Tudhope 于 1999 年在《Information Processing and Management》期刊上发表的 "Relevance Ranking for One to Three Term Queries" 中所述。覆盖密度与 <function>ts_rank</function> 排名类似，不同之处在于它考虑了相互匹配的词位之间的邻近程度。
        </para>
 
        <para>
@@ -926,26 +854,19 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
    </para>
 
    <para>
-    For both these functions,
-    the optional <replaceable class="parameter">weights</replaceable>
-    argument offers the ability to weigh word instances more or less
-    heavily depending on how they are labeled.  The weight arrays specify
-    how heavily to weigh each category of word, in the order:
+    对于这两个函数，可选的 <replaceable class="parameter">weights</replaceable> 参数提供了根据单词实例的标记方式对其赋予更多或更少权重的功能。权重数组按以下顺序指定每个类别单词的权重：
 
 <synopsis>
 {D-weight, C-weight, B-weight, A-weight}
 </synopsis>
 
-    If no <replaceable class="parameter">weights</replaceable> are provided,
-    then these defaults are used:
+    如果未提供 <replaceable class="parameter">weights</replaceable>，则使用以下默认值：
 
 <programlisting>
 {0.1, 0.2, 0.4, 1.0}
 </programlisting>
 
-    Typically weights are used to mark words from special areas of the
-    document, like the title or an initial abstract, so they can be
-    treated with more or less importance than words in the document body.
+    通常，权重用于标记文档中特殊区域（如标题或开头的摘要）中的单词，以便可以比文档正文中的单词给予更高或更低的重要性。
    </para>
 
    <para>
@@ -962,39 +883,38 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
-       0 (the default) ignores the document length
+       0（默认值）忽略文档长度
       </para>
      </listitem>
      <listitem>
       <para>
-       1 divides the rank by 1 + the logarithm of the document length
+       1 将排名除以 1 + 文档长度的对数
       </para>
      </listitem>
      <listitem>
       <para>
-       2 divides the rank by the document length
+       2 将排名除以文档长度
       </para>
      </listitem>
      <listitem>
       <para>
-       4 divides the rank by the mean harmonic distance between extents
-       (this is implemented only by <function>ts_rank_cd</function>)
+       4 用范围之间的平均调和距离来除排名值
+       （仅由 <function>ts_rank_cd</function> 实现）
       </para>
      </listitem>
      <listitem>
       <para>
-       8 divides the rank by the number of unique words in document
+       8 用文档中唯一词的数量来除排名值
       </para>
      </listitem>
      <listitem>
       <para>
-       16 divides the rank by 1 + the logarithm of the number
-       of unique words in document
+       16 用 1 + 文档中唯一词数量的对数来除排名值
       </para>
      </listitem>
      <listitem>
       <para>
-       32 divides the rank by itself + 1
+       32 用排名值自身 + 1 来除排名值
       </para>
      </listitem>
     </itemizedlist>
@@ -1004,16 +924,13 @@ SELECT websearch_to_tsquery('english', '""" )( dummy \\ query &lt;-&gt;');
    </para>
 
    <para>
-    It is important to note that the ranking functions do not use any global
-    information, so it is impossible to produce a fair normalization to 1% or
-    100% as sometimes desired.  Normalization option 32
-    (<literal>rank/(rank+1)</literal>) can be applied to scale all ranks
-    into the range zero to one, but of course this is just a cosmetic change;
-    it will not affect the ordering of the search results.
+    需要注意的是，排名函数不使用任何全局信息，因此无法像有时期望的那样产生归一化到 1% 或 100% 的公平结果。归一化选项 32
+    （<literal>rank/(rank+1)</literal>）可用于将所有排名值缩放到零到一的范围内，但这当然只是表面上的改变；
+    它不会影响搜索结果的排序。
    </para>
 
    <para>
-    Here is an example that selects only the ten highest-ranked matches:
+    下面是一个只选择排名最高的十个匹配项的示例：
 
 <screen>
 SELECT title, ts_rank_cd(textsearch, query) AS rank
@@ -1035,7 +952,7 @@ LIMIT 10;
  Weak Lensing Distorts the Universe            | 0.818218
 </screen>
 
-    This is the same example using normalized ranking:
+    这是使用归一化排名的同一个示例：
 
 <screen>
 SELECT title, ts_rank_cd(textsearch, query, 32 /* rank/(rank+1) */ ) AS rank
@@ -1059,23 +976,16 @@ LIMIT 10;
    </para>
 
    <para>
-    Ranking can be expensive since it requires consulting the
-    <type>tsvector</type> of each matching document, which can be I/O bound and
-    therefore slow. Unfortunately, it is almost impossible to avoid since
-    practical queries often result in large numbers of matches.
+    排名可能代价高昂，因为它需要查阅每个匹配文档的 <type>tsvector</type>，这可能是 I/O 密集型的，因而速度较慢。不幸的是，这几乎无法避免，因为实际查询往往会产生大量匹配。
    </para>
 
   </sect2>
 
   <sect2 id="textsearch-headline">
-   <title>Highlighting Results</title>
+   <title>高亮结果</title>
 
    <para>
-    To present search results it is ideal to show a part of each document and
-    how it is related to the query. Usually, search engines show fragments of
-    the document with marked search terms.  <productname>PostgreSQL</productname>
-    provides a function <function>ts_headline</function> that
-    implements this functionality.
+    为了呈现搜索结果，理想的做法是显示每个文档的一部分内容以及它与查询的关联方式。通常，搜索引擎会显示文档片段并标记搜索词。<productname>PostgreSQL</productname> 提供了一个函数 <function>ts_headline</function> 来实现此功能。
    </para>
 
    <indexterm>
@@ -1087,16 +997,7 @@ ts_headline(<optional> <replaceable class="parameter">config</replaceable> <type
 </synopsis>
 
    <para>
-    <function>ts_headline</function> accepts a document along
-    with a query, and returns an excerpt from
-    the document in which terms from the query are highlighted.
-    Specifically, the function will use the query to select relevant
-    text fragments, and then highlight all words that appear in the query,
-    even if those word positions do not match the query's restrictions.  The
-    configuration to be used to parse the document can be specified by
-    <replaceable>config</replaceable>; if <replaceable>config</replaceable>
-    is omitted, the
-    <varname>default_text_search_config</varname> configuration is used.
+    <function>ts_headline</function> 接受一个文档以及一个查询，并返回该文档中查询词被高亮显示的摘录。具体来说，该函数将使用查询来选择相关的文本片段，然后高亮显示查询中出现的所有词，即使这些词的位置与查询的限制不匹配。用于解析文档的配置可以通过 <replaceable>config</replaceable> 指定；如果省略 <replaceable>config</replaceable>，则使用 <varname>default_text_search_config</varname> 配置。
    </para>
 
    <para>
@@ -1108,66 +1009,48 @@ ts_headline(<optional> <replaceable class="parameter">config</replaceable> <type
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
-       <literal>MaxWords</literal>, <literal>MinWords</literal> (integers):
-       these numbers determine the longest and shortest headlines to output.
-       The default values are 35 and 15.
+       <literal>MaxWords</literal>、<literal>MinWords</literal>（整数）：
+       这两个数字决定输出的标题的最长和最短长度。
+       默认值为 35 和 15。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>ShortWord</literal> (integer): words of this length or less
-       will be dropped at the start and end of a headline, unless they are
-       query terms.  The default value of three eliminates common English
-       articles.
+       <literal>ShortWord</literal>（整数）：长度小于或等于该值的词
+       将在标题的开头和结尾被丢弃，除非它们是查询词。默认值 3 会消除常见的英语冠词。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>HighlightAll</literal> (boolean): if
-       <literal>true</literal> the whole document will be used as the
-       headline, ignoring the preceding three parameters.  The default
-       is <literal>false</literal>.
+       <literal>HighlightAll</literal> (boolean)：如果为
+       <literal>true</literal>，整个文档将被用作标题，忽略前面三个参数。默认值为
+       <literal>false</literal>。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>MaxFragments</literal> (integer): maximum number of text
-       fragments to display.  The default value of zero selects a
-       non-fragment-based headline generation method.  A value greater
-       than zero selects fragment-based headline generation (see below).
+       <literal>MaxFragments</literal> (integer)：要显示的文本片段的最大数量。默认值零选择非基于片段的标题生成方法。大于零的值选择基于片段的标题生成（见下文）。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>StartSel</literal>, <literal>StopSel</literal> (strings):
-       the strings with which to delimit query words appearing in the
-       document, to distinguish them from other excerpted words.  The
-       default values are <quote><literal>&lt;b&gt;</literal></quote> and
-       <quote><literal>&lt;/b&gt;</literal></quote>, which can be suitable
-       for HTML output (but see the warning below).
+       <literal>StartSel</literal>、<literal>StopSel</literal> (strings)：
+       用于界定文档中出现的查询词的字符串，以便将它们与其他摘录词区分开。默认值为 <quote><literal>&lt;b&gt;</literal></quote> 和
+       <quote><literal>&lt;/b&gt;</literal></quote>，它们适合 HTML 输出（但请参见下面的警告）。
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>FragmentDelimiter</literal> (string): When more than one
-       fragment is displayed, the fragments will be separated by this string.
-       The default is <quote><literal> ... </literal></quote>.
+       <literal>FragmentDelimiter</literal> (string)：当显示多个片段时，片段之间将用此字符串分隔。默认值为 <quote><literal> ... </literal></quote>。
       </para>
      </listitem>
     </itemizedlist>
 
     <warning>
-     <title>Warning: Cross-site Scripting (XSS) Safety</title>
+     <title>警告：跨站脚本（XSS）安全性</title>
      <para>
-      The output from <function>ts_headline</function> is not guaranteed to
-      be safe for direct inclusion in web pages. When
-      <literal>HighlightAll</literal> is <literal>false</literal> (the
-      default), some simple XML tags are removed from the document, but this
-      is not guaranteed to remove all HTML markup. Therefore, this does not
-      provide an effective defense against attacks such as cross-site
-      scripting (XSS) attacks, when working with untrusted input. To guard
-      against such attacks, all HTML markup should be removed from the input
-      document, or an HTML sanitizer should be used on the output.
+      <function>ts_headline</function> 的输出不保证可以安全地直接包含在网页中。当
+      <literal>HighlightAll</literal> 为 <literal>false</literal>（默认值）时，会从文档中移除一些简单的 XML 标签，但这并不保证能移除所有 HTML 标记。因此，在处理不可信输入时，这并不能提供针对跨站脚本（XSS）攻击等攻击的有效防御。为了防范此类攻击，应从输入文档中移除所有 HTML 标记，或对输出使用 HTML 清理器。
      </para>
     </warning>
 
@@ -1176,26 +1059,13 @@ ts_headline(<optional> <replaceable class="parameter">config</replaceable> <type
    </para>
 
    <para>
-    In non-fragment-based headline
-    generation, <function>ts_headline</function> locates matches for the
-    given <replaceable class="parameter">query</replaceable> and chooses a
-    single one to display, preferring matches that have more query words
-    within the allowed headline length.
-    In fragment-based headline generation, <function>ts_headline</function>
-    locates the query matches and splits each match
-    into <quote>fragments</quote> of no more than <literal>MaxWords</literal>
-    words each, preferring fragments with more query words, and when
-    possible <quote>stretching</quote> fragments to include surrounding
-    words.  The fragment-based mode is thus more useful when the query
-    matches span large sections of the document, or when it's desirable to
-    display multiple matches.
-    In either mode, if no query matches can be identified, then a single
-    fragment of the first <literal>MinWords</literal> words in the document
-    will be displayed.
+    在基于非片段的标题生成中，<function>ts_headline</function> 会为给定的 <replaceable class="parameter">query</replaceable> 定位匹配项，并选择其中一个来显示，优先选择在允许的标题长度内包含更多查询词的匹配项。
+    在基于片段的标题生成中，<function>ts_headline</function> 会定位查询匹配项，并将每个匹配项拆分成每个不超过 <literal>MaxWords</literal> 个词的<quote>片段</quote>，优先选择包含更多查询词的片段，并在可能的情况下<quote>扩展</quote>片段以包含周围的词。因此，当查询匹配项跨越文档的大部分内容，或者希望显示多个匹配项时，基于片段的模式更为有用。
+    在任一模式下，如果无法识别出任何查询匹配项，则将显示文档中前 <literal>MinWords</literal> 个词组成的单个片段。
    </para>
 
    <para>
-    For example:
+    例如：
 
 <screen>
 SELECT ts_headline('english',
@@ -1225,9 +1095,7 @@ occurrences to display in the result.',
    </para>
 
    <para>
-    <function>ts_headline</function> uses the original document, not a
-    <type>tsvector</type> summary, so it can be slow and should be used with
-    care.
+    <function>ts_headline</function> 使用原始文档，而不是 <type>tsvector</type> 摘要，因此可能较慢，应谨慎使用。
    </para>
 
   </sect2>
