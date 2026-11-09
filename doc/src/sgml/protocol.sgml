@@ -6414,106 +6414,63 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
  </sect1>
 
  <sect1 id="protocol-changes">
-  <title>Summary of Changes since Protocol 2.0</title>
+  <title>自协议 2.0 以来的变更摘要</title>
 
   <para>
-   This section provides a quick checklist of changes, for the benefit of
-   developers trying to update existing client libraries to protocol 3.0.
+   本节提供一份简明的变更清单，供试图将现有客户端库更新到协议 3.0 的开发者参考。
   </para>
 
   <para>
-   The initial startup packet uses a flexible list-of-strings format
-   instead of a fixed format.  Notice that session default values for run-time
-   parameters can now be specified directly in the startup packet.  (Actually,
-   you could do that before using the <literal>options</literal> field, but given the
-   limited width of <literal>options</literal> and the lack of any way to quote
-   whitespace in the values, it wasn't a very safe technique.)
+   初始启动包使用灵活的字符串列表格式，而不是固定格式。请注意，现在可以直接在启动包中指定运行时参数的会话默认值。（实际上，以前也可以通过 <literal>options</literal> 字段做到这一点，但鉴于 <literal>options</literal> 的宽度有限，而且无法在值中对空白字符进行引用，这并不是一种很安全的技术。）
   </para>
 
   <para>
-   All messages now have a length count immediately following the message type
-   byte (except for startup packets, which have no type byte).  Also note that
-   PasswordMessage now has a type byte.
+   现在所有消息在消息类型字节之后都紧跟一个长度计数（启动包除外，它没有类型字节）。另请注意，PasswordMessage 现在也有一个类型字节。
   </para>
 
   <para>
-   ErrorResponse and NoticeResponse ('<literal>E</literal>' and '<literal>N</literal>')
-   messages now contain multiple fields, from which the client code can
-   assemble an error message of the desired level of verbosity.  Note that
-   individual fields will typically not end with a newline, whereas the single
-   string sent in the older protocol always did.
+   ErrorResponse 和 NoticeResponse（'<literal>E</literal>' 和 '<literal>N</literal>'）消息现在包含多个字段，客户端代码可以从中组装出所需详细程度的错误消息。请注意，各个字段通常不会以换行符结尾，而旧协议中发送的单个字符串则总是以换行符结尾。
   </para>
 
   <para>
-   The ReadyForQuery ('<literal>Z</literal>') message includes a transaction status
-   indicator.
+   ReadyForQuery（'<literal>Z</literal>'）消息包含一个事务状态指示符。
   </para>
 
   <para>
-   The distinction between BinaryRow and DataRow message types is gone; the
-   single DataRow message type serves for returning data in all formats.
-   Note that the layout of DataRow has changed to make it easier to parse.
-   Also, the representation of binary values has changed: it is no longer
-   directly tied to the server's internal representation.
+   BinaryRow 和 DataRow 消息类型之间的区别已经消失；单一的 DataRow 消息类型用于以所有格式返回数据。请注意，DataRow 的布局已经改变，以便于解析。此外，二进制值的表示方式也已改变：它不再直接与服务器的内部表示绑定。
   </para>
 
   <para>
-   There is a new <quote>extended query</quote> sub-protocol, which adds the frontend
-   message types Parse, Bind, Execute, Describe, Close, Flush, and Sync, and the
-   backend message types ParseComplete, BindComplete, PortalSuspended,
-   ParameterDescription, NoData, and CloseComplete.  Existing clients do not
-   have to concern themselves with this sub-protocol, but making use of it
-   might allow improvements in performance or functionality.
+   新增了一种<quote>扩展查询</quote>子协议，它增加了前端消息类型 Parse、Bind、Execute、Describe、Close、Flush 和 Sync，以及后端消息类型 ParseComplete、BindComplete、PortalSuspended、ParameterDescription、NoData 和 CloseComplete。现有客户端不必关心这个子协议，但利用它可能会带来性能或功能上的改进。
   </para>
 
   <para>
-   <command>COPY</command> data is now encapsulated into CopyData and CopyDone messages.  There
-   is a well-defined way to recover from errors during <command>COPY</command>.  The special
-   <quote><literal>\.</literal></quote> last line is not needed anymore, and is not sent
-   during <command>COPY OUT</command>.
-   (It is still recognized as a terminator during text-mode <command>COPY
-   IN</command>, but not in CSV mode.  The text-mode behavior is
-   deprecated and may eventually be removed.)  Binary <command>COPY</command> is supported.
-   The CopyInResponse and CopyOutResponse messages include fields indicating
-   the number of columns and the format of each column.
+   <command>COPY</command> 数据现在被封装到 CopyData 和 CopyDone 消息中。有一种定义明确的方式可以从 <command>COPY</command> 期间的错误中恢复。特殊的<quote><literal>\.</literal></quote>最后一行不再需要，并且在 <command>COPY OUT</command> 期间不会发送。（在文本模式的 <command>COPY
+   IN</command> 中它仍被识别为终止符，但在 CSV 模式下不会。文本模式的行为已被废弃，最终可能会被移除。）支持二进制 <command>COPY</command>。CopyInResponse 和 CopyOutResponse 消息包含指示列数和每列格式的字段。
   </para>
 
   <para>
-   The layout of FunctionCall and FunctionCallResponse messages has changed.
-   FunctionCall can now support passing NULL arguments to functions.  It also
-   can handle passing parameters and retrieving results in either text or
-   binary format.  There is no longer any reason to consider FunctionCall a
-   potential security hole, since it does not offer direct access to internal
-   server data representations.
+   FunctionCall 和 FunctionCallResponse 消息的布局已经改变。FunctionCall 现在支持向函数传递 NULL 参数。它还可以处理以文本或二进制格式传递参数和获取结果。不再有任何理由认为 FunctionCall 是潜在的安全漏洞，因为它不提供对服务器内部数据表示的直接访问。
   </para>
 
   <para>
-   The backend sends ParameterStatus ('<literal>S</literal>') messages during connection
-   startup for all parameters it considers interesting to the client library.
-   Subsequently, a ParameterStatus message is sent whenever the active value
-   changes for any of these parameters.
+   在连接启动期间，后端会为它认为客户端库感兴趣的所有参数发送 ParameterStatus（'<literal>S</literal>'）消息。随后，只要这些参数中任何一个的活动值发生变化，就会发送 ParameterStatus 消息。
   </para>
 
   <para>
-   The RowDescription ('<literal>T</literal>') message carries new table OID and column
-   number fields for each column of the described row.  It also shows the format
-   code for each column.
+   RowDescription（'<literal>T</literal>'）消息为所描述行的每一列携带新的表 OID 和列号字段。它还显示每一列的格式代码。
   </para>
 
   <para>
-   The CursorResponse ('<literal>P</literal>') message is no longer generated by
-   the backend.
+   CursorResponse（'<literal>P</literal>'）消息不再由后端生成。
   </para>
 
   <para>
-   The NotificationResponse ('<literal>A</literal>') message has an additional string
-   field, which can carry a <quote>payload</quote> string passed
-   from the <command>NOTIFY</command> event sender.
+   NotificationResponse（'<literal>A</literal>'）消息新增了一个字符串字段，可用于携带由 <command>NOTIFY</command> 事件发送方传入的<quote>载荷</quote>字符串。
   </para>
 
   <para>
-   The EmptyQueryResponse ('<literal>I</literal>') message used to include an empty
-   string parameter; this has been removed.
+   EmptyQueryResponse（'<literal>I</literal>'）消息过去会包含一个空字符串参数；该参数已被移除。
   </para>
  </sect1>
 </chapter>
