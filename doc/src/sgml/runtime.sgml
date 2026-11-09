@@ -1510,7 +1510,7 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
  </sect1>
 
  <sect1 id="ssl-tcp">
-  <title>Secure TCP/IP Connections with SSL</title>
+  <title>使用 SSL 建立安全的 TCP/IP 连接</title>
 
   <indexterm zone="ssl-tcp">
    <primary>SSL</primary>
@@ -1518,27 +1518,15 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> has native support for using
-   <acronym>SSL</acronym> connections to encrypt client/server communications
-   for increased security. This requires that
-   <productname>OpenSSL</productname> is installed on both client and
-   server systems and that support in <productname>PostgreSQL</productname> is
-   enabled at build time (see <xref linkend="installation"/>).
+   <productname>PostgreSQL</productname> 原生支持使用 <acronym>SSL</acronym> 连接来加密客户端/服务器通信，以提高安全性。这要求客户端和服务器系统上都安装了 <productname>OpenSSL</productname>，并且在构建时启用了 <productname>PostgreSQL</productname> 中的支持（参见 <xref linkend="installation"/>）。
   </para>
 
   <para>
-   The terms <acronym>SSL</acronym> and <acronym>TLS</acronym> are often used
-   interchangeably to mean a secure encrypted connection using a
-   <acronym>TLS</acronym> protocol. <acronym>SSL</acronym> protocols are the
-   precursors to <acronym>TLS</acronym> protocols, and the term
-   <acronym>SSL</acronym> is still used for encrypted connections even though
-   <acronym>SSL</acronym> protocols are no longer supported.
-   <acronym>SSL</acronym> is used interchangeably with <acronym>TLS</acronym>
-   in <productname>PostgreSQL</productname>.
+   术语 <acronym>SSL</acronym> 和 <acronym>TLS</acronym> 经常被互换使用，表示使用 <acronym>TLS</acronym> 协议的安全加密连接。<acronym>SSL</acronym> 协议是 <acronym>TLS</acronym> 协议的前身，尽管 <acronym>SSL</acronym> 协议已不再受支持，术语 <acronym>SSL</acronym> 仍被用于加密连接。在 <productname>PostgreSQL</productname> 中，<acronym>SSL</acronym> 与 <acronym>TLS</acronym> 互换使用。
 
   </para>
   <sect2 id="ssl-setup">
-   <title>Basic Setup</title>
+   <title>基本设置</title>
 
   <para>
    With <acronym>SSL</acronym> support compiled in, the
@@ -1555,32 +1543,15 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </para>
 
   <para>
-   To start in <acronym>SSL</acronym> mode, files containing the server certificate
-   and private key must exist.  By default, these files are expected to be
-   named <filename>server.crt</filename> and <filename>server.key</filename>, respectively, in
-   the server's data directory, but other names and locations can be specified
-   using the configuration parameters <xref linkend="guc-ssl-cert-file"/>
-   and <xref linkend="guc-ssl-key-file"/>.
+   要以 <acronym>SSL</acronym> 模式启动，必须存在包含服务器证书和私钥的文件。默认情况下，这些文件应分别命名为服务器数据目录中的 <filename>server.crt</filename> 和 <filename>server.key</filename>，但也可以使用配置参数 <xref linkend="guc-ssl-cert-file"/> 和 <xref linkend="guc-ssl-key-file"/> 指定其他名称和位置。
   </para>
 
   <para>
-   On Unix systems, the permissions on <filename>server.key</filename> must
-   disallow any access to world or group; achieve this by the command
-   <command>chmod 0600 server.key</command>.  Alternatively, the file can be
-   owned by root and have group read access (that is, <literal>0640</literal>
-   permissions).  That setup is intended for installations where certificate
-   and key files are managed by the operating system.  The user under which
-   the <productname>PostgreSQL</productname> server runs should then be made a
-   member of the group that has access to those certificate and key files.
+   在 Unix 系统上，<filename>server.key</filename> 的权限必须禁止任何对 world 或 group 的访问；可通过命令 <command>chmod 0600 server.key</command> 实现。另一种方式是，该文件可以由 root 拥有并具有组读权限（即 <literal>0640</literal> 权限）。这种设置适用于证书和密钥文件由操作系统管理的安装环境。此时，应将运行 <productname>PostgreSQL</productname> 服务器的用户添加为有权访问这些证书和密钥文件的组的成员。
   </para>
 
   <para>
-    If the data directory allows group read access then certificate files may
-    need to be located outside of the data directory in order to conform to the
-    security requirements outlined above.  Generally, group access is enabled
-    to allow an unprivileged user to backup the database, and in that case the
-    backup software will not be able to read the certificate files and will
-    likely error.
+    如果数据目录允许组读访问，那么为了符合上述安全要求，证书文件可能需要放在数据目录之外。通常，启用组访问是为了让非特权用户能够备份数据库，而在这种情况下，备份软件将无法读取证书文件，并且很可能会报错。
   </para>
 
   <para>
@@ -1595,148 +1566,111 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </para>
 
   <para>
-   The first certificate in <filename>server.crt</filename> must be the
-   server's certificate because it must match the server's private key.
-   The certificates of <quote>intermediate</quote> certificate authorities
-   can also be appended to the file.  Doing this avoids the necessity of
-   storing intermediate certificates on clients, assuming the root and
-   intermediate certificates were created with <literal>v3_ca</literal>
-   extensions.  (This sets the certificate's basic constraint of
-   <literal>CA</literal> to <literal>true</literal>.)
-   This allows easier expiration of intermediate certificates.
+   <filename>server.crt</filename> 中的第一个证书必须是服务器的证书，因为它必须与服务器的私钥匹配。<quote>中间</quote>证书颁发机构的证书也可以追加到该文件中。这样做可以避免在客户端上存储中间证书，前提是根证书和中间证书是使用 <literal>v3_ca</literal> 扩展创建的。（这会将证书的基本约束 <literal>CA</literal> 设置为 <literal>true</literal>。）这样可以更容易地让中间证书过期。
   </para>
 
   <para>
-   It is not necessary to add the root certificate to
-   <filename>server.crt</filename>.  Instead, clients must have the root
-   certificate of the server's certificate chain.
+   不必将根证书添加到 <filename>server.crt</filename> 中。相反，客户端必须拥有服务器证书链的根证书。
   </para>
   </sect2>
 
   <sect2 id="ssl-openssl-config">
-   <title>OpenSSL Configuration</title>
+   <title>OpenSSL 配置</title>
 
   <para>
-   <productname>PostgreSQL</productname> reads the system-wide
-   <productname>OpenSSL</productname> configuration file. By default, this
-   file is named <filename>openssl.cnf</filename> and is located in the
-   directory reported by <literal>openssl version -d</literal>.
-   This default can be overridden by setting environment variable
-   <envar>OPENSSL_CONF</envar> to the name of the desired configuration file.
+   <productname>PostgreSQL</productname> 读取系统范围的
+   <productname>OpenSSL</productname> 配置文件。默认情况下，该
+   文件名为 <filename>openssl.cnf</filename>，位于
+   <literal>openssl version -d</literal> 所报告的目录中。
+   可以通过将环境变量
+   <envar>OPENSSL_CONF</envar> 设置为所需配置文件的名称来覆盖此默认值。
   </para>
 
   <para>
-   <productname>OpenSSL</productname> supports a wide range of ciphers
-   and authentication algorithms, of varying strength.  While a list of
-   ciphers can be specified in the <productname>OpenSSL</productname>
-   configuration file, you can specify ciphers specifically for use by
-   the database server by modifying <xref linkend="guc-ssl-ciphers"/> in
-   <filename>postgresql.conf</filename>.
+   <productname>OpenSSL</productname> 支持各种强度的多种密码
+   和身份验证算法。虽然可以在 <productname>OpenSSL</productname>
+   配置文件中指定密码列表，但您可以通过修改
+   <filename>postgresql.conf</filename> 中的 <xref linkend="guc-ssl-ciphers"/> 来专门指定供
+   数据库服务器使用的密码。
   </para>
 
   <note>
    <para>
-    It is possible to have authentication without encryption overhead by
-    using <literal>NULL-SHA</literal> or <literal>NULL-MD5</literal> ciphers.  However,
-    a man-in-the-middle could read and pass communications between client
-    and server.  Also, encryption overhead is minimal compared to the
-    overhead of authentication.  For these reasons NULL ciphers are not
-    recommended.
+    通过使用 <literal>NULL-SHA</literal> 或 <literal>NULL-MD5</literal> 密码，可以在没有加密开销的情况下
+    进行身份验证。但是，
+    中间人可以读取并传递客户端
+    与服务器之间的通信。此外，与身份验证的开销相比，加密开销是最小的。
+    由于这些原因，不建议使用 NULL 密码。
    </para>
   </note>
   </sect2>
 
   <sect2 id="ssl-client-certificates">
-   <title>Using Client Certificates</title>
+   <title>使用客户端证书</title>
 
   <para>
-   To require the client to supply a trusted certificate,
-   place certificates of the root certificate authorities
-   (<acronym>CA</acronym>s) you trust in a file in the data
-   directory, set the parameter <xref linkend="guc-ssl-ca-file"/> in
-   <filename>postgresql.conf</filename> to the new file name, and add the
-   authentication option <literal>clientcert=verify-ca</literal> or
-   <literal>clientcert=verify-full</literal> to the appropriate
-   <literal>hostssl</literal> line(s) in <filename>pg_hba.conf</filename>.
-   A certificate will then be requested from the client during SSL
-   connection startup.  (See <xref linkend="libpq-ssl"/> for a description
-   of how to set up certificates on the client.)
+   要要求客户端提供受信任的证书，
+   请将您信任的根证书颁发机构
+   （<acronym>CA</acronym>）的证书放入数据目录中的某个文件，将
+   <filename>postgresql.conf</filename> 中的参数 <xref linkend="guc-ssl-ca-file"/> 设置为新的文件名，并将
+   身份验证选项 <literal>clientcert=verify-ca</literal> 或
+   <literal>clientcert=verify-full</literal> 添加到 <filename>pg_hba.conf</filename> 中相应的
+   <literal>hostssl</literal> 行。
+   然后在 SSL 连接启动期间将向客户端请求证书。
+   （有关如何在客户端设置证书的说明，请参见 <xref linkend="libpq-ssl"/>。）
   </para>
 
   <para>
-   For a <literal>hostssl</literal> entry with
-   <literal>clientcert=verify-ca</literal>, the server will verify
-   that the client's certificate is signed by one of the trusted
-   certificate authorities. If <literal>clientcert=verify-full</literal>
-   is specified, the server will not only verify the certificate
-   chain, but it will also check whether the username or its mapping
-   matches the <literal>cn</literal> (Common Name) of the provided certificate.
-   Note that certificate chain validation is always ensured when the
-   <literal>cert</literal> authentication method is used
-   (see <xref linkend="auth-cert"/>).
+   对于带有
+   <literal>clientcert=verify-ca</literal> 的 <literal>hostssl</literal> 条目，服务器将验证
+   客户端证书是否由某个受信任的
+   证书颁发机构签发。如果指定了 <literal>clientcert=verify-full</literal>，
+   服务器不仅会验证证书
+   链，还会检查用户名或其映射
+   是否与所提供证书的 <literal>cn</literal>（Common Name）匹配。
+   请注意，使用
+   <literal>cert</literal> 身份验证方法时，始终会确保证书链验证
+   （参见 <xref linkend="auth-cert"/>）。
   </para>
 
   <para>
-   Intermediate certificates that chain up to existing root certificates
-   can also appear in the <xref linkend="guc-ssl-ca-file"/> file if
-   you wish to avoid storing them on clients (assuming the root and
-   intermediate certificates were created with <literal>v3_ca</literal>
-   extensions).  Certificate Revocation List (CRL) entries are also
-   checked if the parameter <xref linkend="guc-ssl-crl-file"/> or
-   <xref linkend="guc-ssl-crl-dir"/> is set.
+   如果希望避免在客户端上存储中间证书，那么链接到现有根证书的中间证书也可以出现在 <xref linkend="guc-ssl-ca-file"/> 文件中（前提是根证书和中间证书是使用 <literal>v3_ca</literal> 扩展创建的）。如果设置了参数 <xref linkend="guc-ssl-crl-file"/> 或 <xref linkend="guc-ssl-crl-dir"/>，还会检查证书吊销列表（CRL）条目。
   </para>
 
   <para>
-   The <literal>clientcert</literal> authentication option is available for
-   all authentication methods, but only in <filename>pg_hba.conf</filename> lines
-   specified as <literal>hostssl</literal>.  When <literal>clientcert</literal> is
-   not specified, the server verifies the client certificate against its CA
-   file only if a client certificate is presented and the CA is configured.
+   <literal>clientcert</literal> 认证选项对所有认证方法都可用，但仅限于指定为 <literal>hostssl</literal> 的 <filename>pg_hba.conf</filename> 行。当未指定 <literal>clientcert</literal> 时，只有在客户端出示了客户端证书且配置了 CA 的情况下，服务器才会根据其 CA 文件验证客户端证书。
   </para>
 
   <para>
-   There are two approaches to enforce that users provide a certificate during login.
+   有两种方法可以强制用户在登录时提供证书。
   </para>
 
   <para>
-   The first approach makes use of the <literal>cert</literal> authentication
-   method for <literal>hostssl</literal> entries in <filename>pg_hba.conf</filename>,
-   such that the certificate itself is used for authentication while also
-   providing ssl connection security. See <xref linkend="auth-cert"/> for details.
-   (It is not necessary to specify any <literal>clientcert</literal> options
-   explicitly when using the <literal>cert</literal> authentication method.)
-   In this case, the <literal>cn</literal> (Common Name) provided in
-   the certificate is checked against the user name or an applicable mapping.
+   第一种方法对 <filename>pg_hba.conf</filename> 中的 <literal>hostssl</literal> 条目使用 <literal>cert</literal> 认证方法，这样证书本身用于认证，同时也提供 SSL 连接安全性。详情请参见 <xref linkend="auth-cert"/>。（使用 <literal>cert</literal> 认证方法时，不必显式指定任何 <literal>clientcert</literal> 选项。）在这种情况下，会检查证书中提供的 <literal>cn</literal>（Common Name）是否与用户名或适用的映射相匹配。
   </para>
 
   <para>
-   The second approach combines any authentication method for <literal>hostssl</literal>
-   entries with the verification of client certificates by setting the
-   <literal>clientcert</literal> authentication option to <literal>verify-ca</literal>
-   or <literal>verify-full</literal>. The former option only enforces that
-   the certificate is valid, while the latter also ensures that the
-   <literal>cn</literal> (Common Name) in the certificate matches
-   the user name or an applicable mapping.
+   第二种方法通过将 <literal>clientcert</literal> 认证选项设置为 <literal>verify-ca</literal> 或 <literal>verify-full</literal>，将 <literal>hostssl</literal> 条目的任意认证方法与客户端证书验证相结合。前一个选项仅强制要求证书有效，而后一个选项还确保证书中的 <literal>cn</literal>（Common Name）与用户名或适用的映射相匹配。
   </para>
   </sect2>
 
   <sect2 id="ssl-server-files">
-   <title>SSL Server File Usage</title>
+   <title>SSL 服务器文件用法</title>
 
    <para>
-    <xref linkend="ssl-file-usage"/> summarizes the files that are
-    relevant to the SSL setup on the server.  (The shown file names are default
-    names.  The locally configured names could be different.)
+    <xref linkend="ssl-file-usage"/> 概述了与服务器上 SSL 设置相关的
+    文件。（显示的文件名是默认名称。本地配置的名称可能
+    不同。）
    </para>
 
   <table id="ssl-file-usage">
-   <title>SSL Server File Usage</title>
+   <title>SSL 服务器文件用法</title>
    <tgroup cols="3">
     <thead>
      <row>
-      <entry>File</entry>
-      <entry>Contents</entry>
-      <entry>Effect</entry>
+      <entry>文件</entry>
+      <entry>内容</entry>
+      <entry>作用</entry>
      </row>
     </thead>
 
@@ -1744,28 +1678,26 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
 
      <row>
       <entry><xref linkend="guc-ssl-cert-file"/> (<filename>$PGDATA/server.crt</filename>)</entry>
-      <entry>server certificate</entry>
-      <entry>sent to client to indicate server's identity</entry>
+      <entry>服务器证书</entry>
+      <entry>发送给客户端以表明服务器身份</entry>
      </row>
 
      <row>
       <entry><xref linkend="guc-ssl-key-file"/> (<filename>$PGDATA/server.key</filename>)</entry>
-      <entry>server private key</entry>
-      <entry>proves server certificate was sent by the owner; does not indicate
-      certificate owner is trustworthy</entry>
+      <entry>服务器私钥</entry>
+      <entry>证明服务器证书是由其所有者发送的；并不表示证书所有者是可信的</entry>
      </row>
 
      <row>
       <entry><xref linkend="guc-ssl-ca-file"/></entry>
-      <entry>trusted certificate authorities</entry>
-      <entry>checks that client certificate is
-      signed by a trusted certificate authority</entry>
+      <entry>受信任的证书颁发机构</entry>
+      <entry>检查客户端证书是否由受信任的证书颁发机构签名</entry>
      </row>
 
      <row>
       <entry><xref linkend="guc-ssl-crl-file"/></entry>
-      <entry>certificates revoked by certificate authorities</entry>
-      <entry>client certificate must not be on this list</entry>
+      <entry>被证书颁发机构吊销的证书</entry>
+      <entry>客户端证书不能在此列表中</entry>
      </row>
 
     </tbody>
@@ -1773,70 +1705,56 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </table>
 
    <para>
-    The server reads these files at server start and whenever the server
-    configuration is reloaded.  On <systemitem class="osname">Windows</systemitem>
-    systems, they are also re-read whenever a new backend process is spawned
-    for a new client connection.
+    服务器在服务器启动时以及每当重新加载服务器配置时读取这些文件。在 <systemitem class="osname">Windows</systemitem>
+    系统上，每当为新客户端连接派生出新的后端进程时，也会重新读取这些文件。
    </para>
 
    <para>
-    If an error in these files is detected at server start, the server will
-    refuse to start.  But if an error is detected during a configuration
-    reload, the files are ignored and the old SSL configuration continues to
-    be used.  On <systemitem class="osname">Windows</systemitem> systems, if an error in
-    these files is detected at backend start, that backend will be unable to
-    establish an SSL connection.  In all these cases, the error condition is
-    reported in the server log.
+    如果在服务器启动时检测到这些文件中有错误，服务器将拒绝启动。但如果在配置
+    重新加载期间检测到错误，则会忽略这些文件，并继续使用旧的 SSL 配置。在
+    <systemitem class="osname">Windows</systemitem> 系统上，如果后端启动时检测到这些文件中有错误，该后端将无法建立
+    SSL 连接。在所有这些情况下，错误状况都会报告到服务器日志中。
    </para>
   </sect2>
 
   <sect2 id="ssl-certificate-creation">
-   <title>Creating Certificates</title>
+   <title>创建证书</title>
 
    <para>
-     To create a simple self-signed certificate for the server, valid for 365
-     days, use the following <productname>OpenSSL</productname> command,
-     replacing <replaceable>dbhost.yourdomain.com</replaceable> with the
-     server's host name:
+     要为服务器创建一个简单的自签名证书（有效期为 365 天），请使用以下
+     <productname>OpenSSL</productname> 命令，并将 <replaceable>dbhost.yourdomain.com</replaceable> 替换为
+     服务器的主机名：
 <programlisting>
 openssl req -new -x509 -days 365 -nodes -text -out server.crt \
   -keyout server.key -subj "/CN=<replaceable>dbhost.yourdomain.com</replaceable>"
 </programlisting>
-    Then do:
+    然后执行：
 <programlisting>
 chmod og-rwx server.key
 </programlisting>
-    because the server will reject the file if its permissions are more
-    liberal than this.
-    For more details on how to create your server private key and
-    certificate, refer to the <productname>OpenSSL</productname> documentation.
+    因为如果该文件的权限比这更宽松，服务器将拒绝该文件。
+    有关如何创建服务器私钥和证书的更多细节，请参阅 <productname>OpenSSL</productname> 文档。
    </para>
 
    <para>
-    While a self-signed certificate can be used for testing, a certificate
-    signed by a certificate authority (<acronym>CA</acronym>) (usually an
-    enterprise-wide root <acronym>CA</acronym>) should be used in production.
+    虽然自签名证书可用于测试，但在生产环境中应使用由证书颁发机构
+    （<acronym>CA</acronym>）签名的证书（通常是企业范围的根 <acronym>CA</acronym>）。
    </para>
 
    <para>
-    To create a server certificate whose identity can be validated
-    by clients, first create a certificate signing request
-    (<acronym>CSR</acronym>) and a public/private key file:
+    要创建其身份可被客户端验证的服务器证书，首先创建一个证书签名请求（<acronym>CSR</acronym>）和一个公钥/私钥文件：
 <programlisting>
 openssl req -new -nodes -text -out root.csr \
   -keyout root.key -subj "/CN=<replaceable>root.yourdomain.com</replaceable>"
 chmod og-rwx root.key
 </programlisting>
-    Then, sign the request with the key to create a root certificate
-    authority (using the default <productname>OpenSSL</productname>
-    configuration file location on <productname>Linux</productname>):
+    然后，用该密钥对请求进行签名，以创建根证书颁发机构（使用 <productname>Linux</productname> 上的默认 <productname>OpenSSL</productname> 配置文件位置）：
 <programlisting>
 openssl x509 -req -in root.csr -text -days 3650 \
   -extfile /etc/ssl/openssl.cnf -extensions v3_ca \
   -signkey root.key -out root.crt
 </programlisting>
-    Finally, create a server certificate signed by the new root certificate
-    authority:
+    最后，创建一个由新的根证书颁发机构签名的服务器证书：
 <programlisting>
 openssl req -new -nodes -text -out server.csr \
   -keyout server.key -subj "/CN=<replaceable>dbhost.yourdomain.com</replaceable>"
@@ -1846,17 +1764,11 @@ openssl x509 -req -in server.csr -text -days 365 \
   -CA root.crt -CAkey root.key -CAcreateserial \
   -out server.crt
 </programlisting>
-    <filename>server.crt</filename> and <filename>server.key</filename>
-    should be stored on the server, and <filename>root.crt</filename> should
-    be stored on the client so the client can verify that the server's leaf
-    certificate was signed by its trusted root certificate.
-    <filename>root.key</filename> should be stored offline for use in
-    creating future certificates.
+    <filename>server.crt</filename> 和 <filename>server.key</filename> 应存储在服务器上，<filename>root.crt</filename> 应存储在客户端上，以便客户端能够验证服务器的叶子证书是由其受信任的根证书签名的。<filename>root.key</filename> 应离线存储，用于创建未来的证书。
    </para>
 
    <para>
-    It is also possible to create a chain of trust that includes
-    intermediate certificates:
+    也可以创建包含中间证书的信任链：
 <programlisting>
 # root
 openssl req -new -nodes -text -out root.csr \
@@ -1883,15 +1795,7 @@ openssl x509 -req -in server.csr -text -days 365 \
   -CA intermediate.crt -CAkey intermediate.key -CAcreateserial \
   -out server.crt
 </programlisting>
-    <filename>server.crt</filename> and
-    <filename>intermediate.crt</filename> should be concatenated
-    into a certificate file bundle and stored on the server.
-    <filename>server.key</filename> should also be stored on the server.
-    <filename>root.crt</filename> should be stored on the client so
-    the client can verify that the server's leaf certificate was signed
-    by a chain of certificates linked to its trusted root certificate.
-    <filename>root.key</filename> and <filename>intermediate.key</filename>
-    should be stored offline for use in creating future certificates.
+    <filename>server.crt</filename> 和 <filename>intermediate.crt</filename> 应拼接成一个证书文件包并存储在服务器上。<filename>server.key</filename> 也应存储在服务器上。<filename>root.crt</filename> 应存储在客户端上，以便客户端能够验证服务器的叶子证书是由一条链接到其受信任根证书的证书链签名的。<filename>root.key</filename> 和 <filename>intermediate.key</filename> 应离线存储，用于创建未来的证书。
    </para>
   </sect2>
 
