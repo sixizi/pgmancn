@@ -344,7 +344,7 @@ SELECT DISTINCT city
 
 
   <sect1 id="tutorial-join">
-   <title>Joins Between Tables</title>
+   <title>表之间的连接</title>
 
    <indexterm zone="tutorial-join">
     <primary>join</primary>
@@ -365,9 +365,7 @@ SELECT DISTINCT city
     <structfield>name</structfield> column of all rows in the <structname>cities</structname>
     table, and select the pairs of rows where these values match.<footnote>
      <para>
-      This  is only a conceptual model.  The join is usually performed
-      in a more efficient manner than actually comparing each possible
-      pair of rows, but this is invisible to the user.
+      这只是一个概念模型。连接通常以比实际逐对比较所有可能行更高效的方式执行，但对用户来说这是不可见的。
      </para>
     </footnote>
     This would be accomplished by the following query:
@@ -391,23 +389,21 @@ SELECT * FROM weather JOIN cities ON city = name;
     <itemizedlist>
      <listitem>
       <para>
-       There is no result row for the city of Hayward.  This is
-       because there is no matching entry in the
-       <structname>cities</structname> table for Hayward, so the join
-       ignores the unmatched rows in the <structname>weather</structname> table.  We will see
-       shortly how this can be fixed.
+       对于 Hayward 市没有结果行。这是因为在
+      <structname>cities</structname> 表中没有与 Hayward 匹配的条目，因此连接
+      忽略了 <structname>weather</structname> 表中未匹配的行。我们很快会看到
+      如何解决这个问题。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       There are two columns containing the city name.  This is
-       correct because the lists of columns from the
-       <structname>weather</structname> and
-       <structname>cities</structname> tables are concatenated.  In
-       practice this is undesirable, though, so you will probably want
-       to list the output columns explicitly rather than using
-       <literal>*</literal>:
+       有两个包含城市名的列。这是正确的，因为
+      <structname>weather</structname> 和
+      <structname>cities</structname> 表中的列列表被连接在一起。不过，
+      在实践中这并不理想，因此你可能希望
+      显式列出输出列，而不是使用
+      <literal>*</literal>：
 <programlisting>
 SELECT city, temp_lo, temp_hi, prcp, date, location
     FROM weather JOIN cities ON city = name;
@@ -418,11 +414,11 @@ SELECT city, temp_lo, temp_hi, prcp, date, location
    </para>
 
    <para>
-    Since the columns all had different names, the parser
-    automatically found which table they belong to.  If there
-    were duplicate column names in the two tables you'd need to
-    <firstterm>qualify</firstterm> the column names to show which one you
-    meant, as in:
+    由于这些列的名称各不相同，解析器
+    自动找到了它们所属的表。如果
+    两个表中有重复的列名，你需要
+    <firstterm>限定</firstterm>列名以表明你指的是哪一个，
+    如下所示：
 
 <programlisting>
 SELECT weather.city, weather.temp_lo, weather.temp_hi,
@@ -430,14 +426,13 @@ SELECT weather.city, weather.temp_lo, weather.temp_hi,
     FROM weather JOIN cities ON weather.city = cities.name;
 </programlisting>
 
-    It is widely considered good style to qualify all column names
-    in a join query, so that the query won't fail if a duplicate
-    column name is later added to one of the tables.
+    在连接查询中限定所有列名被广泛认为是一种良好的风格，
+    这样即使以后在其中一个表中添加了重复的列名，查询也不会失败。
    </para>
 
    <para>
-    Join queries of the kind seen thus far can also be written in this
-    form:
+    到目前为止看到的这类连接查询也可以用这种
+    形式书写：
 
 <programlisting>
 SELECT *
@@ -445,30 +440,26 @@ SELECT *
     WHERE city = name;
 </programlisting>
 
-    This syntax pre-dates the <literal>JOIN</literal>/<literal>ON</literal>
-    syntax, which was introduced in SQL-92.  The tables are simply listed in
-    the <literal>FROM</literal> clause, and the comparison expression is added
-    to the <literal>WHERE</literal> clause.  The results from this older
-    implicit syntax and the newer explicit
-    <literal>JOIN</literal>/<literal>ON</literal> syntax are identical.  But
-    for a reader of the query, the explicit syntax makes its meaning easier to
-    understand: The join condition is introduced by its own key word whereas
-    previously the condition was mixed into the <literal>WHERE</literal>
-    clause together with other conditions.
+    这种语法早于 <literal>JOIN</literal>/<literal>ON</literal>
+    语法，后者是在 SQL-92 中引入的。表只是简单地列在
+    <literal>FROM</literal> 子句中，比较表达式则添加到
+    <literal>WHERE</literal> 子句中。这种较旧的隐式语法与较新的显式
+    <literal>JOIN</literal>/<literal>ON</literal> 语法的结果是相同的。但
+    对于查询的读者来说，显式语法使其含义更容易
+    理解：连接条件由它自己的关键字引入，而
+    以前该条件与其他条件混在 <literal>WHERE</literal>
+    子句中。
    </para>
 
    <indexterm><primary>join</primary><secondary>outer</secondary></indexterm>
 
    <para>
-    Now we will figure out how we can get the Hayward records back in.
-    What we want the query to do is to scan the
-    <structname>weather</structname> table and for each row to find the
-    matching <structname>cities</structname> row(s).  If no matching row is
-    found we want some <quote>empty values</quote> to be substituted
-    for the <structname>cities</structname> table's columns.  This kind
-    of query is called an <firstterm>outer join</firstterm>.  (The
-    joins we have seen so far are <firstterm>inner joins</firstterm>.)
-    The command looks like this:
+    现在我们要弄清楚如何把 Hayward 的记录找回来。
+    我们希望查询做的是扫描 <structname>weather</structname> 表，并为每一行找到匹配的
+    <structname>cities</structname> 行。如果没有找到匹配的行，我们希望用一些<quote>空值</quote>
+    来替代 <structname>cities</structname> 表的列。这种查询称为<firstterm>外连接</firstterm>。
+    （到目前为止我们看到的连接都是<firstterm>内连接</firstterm>。）
+    该命令如下所示：
 
 <programlisting>
 SELECT *
@@ -484,37 +475,32 @@ SELECT *
 (3 rows)
 </screen>
 
-    This query is called a <firstterm>left outer
-    join</firstterm> because the table mentioned on the left of the
-    join operator will have each of its rows in the output at least
-    once, whereas the table on the right will only have those rows
-    output that match some row of the left table.  When outputting a
-    left-table row for which there is no right-table match, empty (null)
-    values are substituted for the right-table columns.
+    这个查询称为<firstterm>左外连接</firstterm>，因为连接运算符
+    左侧提到的表在输出中至少会出现它的每一行，而右侧的表
+    只会输出那些与左表某行匹配的行。当输出左表中
+    没有右表匹配的行时，右表的列会用空（null）值替代。
    </para>
 
    <formalpara>
-    <title>Exercise:</title>
+    <title>练习：</title>
 
     <para>
-     There are also right outer joins and full outer joins.  Try to
-     find out what those do.
+     还有右外连接和全外连接。试着弄清楚
+     它们的作用。
     </para>
    </formalpara>
 
    <indexterm><primary>join</primary><secondary>self</secondary></indexterm>
    <indexterm><primary>alias</primary><secondary>for table name in query</secondary></indexterm>
    <para>
-    We can also join a table against itself.  This is called a
-    <firstterm>self join</firstterm>.  As an example, suppose we wish
-    to find all the weather records that are in the temperature range
-    of other weather records.  So we need to compare the
-    <structfield>temp_lo</structfield> and <structfield>temp_hi</structfield> columns of
-    each <structname>weather</structname> row to the
-    <structfield>temp_lo</structfield> and
-    <structfield>temp_hi</structfield> columns of all other
-    <structname>weather</structname> rows.  We can do this with the
-    following query:
+    我们也可以将一个表与它自身连接。这称为
+    <firstterm>自连接</firstterm>。举个例子，假设我们希望
+    找出所有温度范围落在其他天气记录温度范围内的天气记录。
+    因此我们需要把每个 <structname>weather</structname> 行的
+    <structfield>temp_lo</structfield> 和 <structfield>temp_hi</structfield> 列与所有其他
+    <structname>weather</structname> 行的 <structfield>temp_lo</structfield> 和
+    <structfield>temp_hi</structfield> 列进行比较。我们可以用
+    下面的查询来完成：
 
 <programlisting>
 SELECT w1.city, w1.temp_lo AS low, w1.temp_hi AS high,
@@ -531,15 +517,14 @@ SELECT w1.city, w1.temp_lo AS low, w1.temp_hi AS high,
 (2 rows)
 </screen>
 
-    Here we have relabeled the weather table as <literal>w1</literal> and
-    <literal>w2</literal> to be able to distinguish the left and right side
-    of the join.  You can also use these kinds of aliases in other
-    queries to save some typing, e.g.:
+    这里我们把 weather 表重新标记为 <literal>w1</literal> 和
+    <literal>w2</literal>，以便区分连接的左侧和右侧。
+    你也可以在其他查询中使用这类别名来少打一些字，例如：
 <programlisting>
 SELECT *
     FROM weather w JOIN cities c ON w.city = c.name;
 </programlisting>
-    You will encounter this style of abbreviating quite frequently.
+    你会经常遇到这种缩写风格。
    </para>
   </sect1>
 
