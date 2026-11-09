@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>PREPARE TRANSACTION</refname>
-  <refpurpose>prepare the current transaction for two-phase commit</refpurpose>
+  <refpurpose>为两阶段提交准备当前事务</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -26,53 +26,35 @@ PREPARE TRANSACTION <replaceable class="parameter">transaction_id</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>PREPARE TRANSACTION</command> prepares the current transaction
-   for two-phase commit. After this command, the transaction is no longer
-   associated with the current session; instead, its state is fully stored on
-   disk, and there is a very high probability that it can be committed
-   successfully, even if a database crash occurs before the commit is
-   requested.
+   <command>PREPARE TRANSACTION</command> 为两阶段提交准备当前事务。执行此命令后，该事务不再与当前会话关联；相反，它的状态被完整地存储在磁盘上，并且即使在该事务被请求提交之前发生数据库崩溃，它也有很高的概率能够成功提交。
   </para>
 
   <para>
-   Once prepared, a transaction can later be committed or rolled back
-   with <link linkend="sql-commit-prepared"><command>COMMIT PREPARED</command></link>
-   or <link linkend="sql-rollback-prepared"><command>ROLLBACK PREPARED</command></link>,
-   respectively.  Those commands can be issued from any session, not
-   only the one that executed the original transaction.
+   一旦准备好，事务随后可以分别用 <link linkend="sql-commit-prepared"><command>COMMIT PREPARED</command></link> 或 <link linkend="sql-rollback-prepared"><command>ROLLBACK PREPARED</command></link> 提交或回滚。这些命令可以从任何会话发出，而不仅限于执行原始事务的那个会话。
   </para>
 
   <para>
-   From the point of view of the issuing session, <command>PREPARE
-   TRANSACTION</command> is not unlike a <command>ROLLBACK</command> command:
-   after executing it, there is no active current transaction, and the
-   effects of the prepared transaction are no longer visible.  (The effects
-   will become visible again if the transaction is committed.)
+   从发出命令的会话的角度来看，<command>PREPARE
+   TRANSACTION</command> 与 <command>ROLLBACK</command> 命令并无不同：执行它之后，就不存在活动的当前事务，并且预备事务的效果也不再可见。（如果该事务被提交，这些效果将再次可见。）
   </para>
 
   <para>
-   If the <command>PREPARE TRANSACTION</command> command fails for any
-   reason, it becomes a <command>ROLLBACK</command>: the current transaction
-   is canceled.
+   如果 <command>PREPARE TRANSACTION</command> 命令因任何原因失败，它就会变成 <command>ROLLBACK</command>：当前事务被取消。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">transaction_id</replaceable></term>
     <listitem>
      <para>
-      An arbitrary identifier that later identifies this transaction for
-      <command>COMMIT PREPARED</command> or <command>ROLLBACK PREPARED</command>.
-      The identifier must be written as a string literal, and must be
-      less than 200 bytes long.  It must not be the same as the identifier
-      used for any currently prepared transaction.
+      一个任意标识符，稍后用于为 <command>COMMIT PREPARED</command> 或 <command>ROLLBACK PREPARED</command> 标识该事务。该标识符必须写成字符串字面量，且长度必须小于 200 字节。它不能与任何当前已预备事务使用的标识符相同。
      </para>
     </listitem>
    </varlistentry>
@@ -80,15 +62,11 @@ PREPARE TRANSACTION <replaceable class="parameter">transaction_id</replaceable>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注意事项</title>
 
   <para>
-   <command>PREPARE TRANSACTION</command> is not intended for use in applications
-   or interactive sessions. Its purpose is to allow an external
-   transaction manager to perform atomic global transactions across multiple
-   databases or other transactional resources. Unless you're writing a
-   transaction manager, you probably shouldn't be using <command>PREPARE
-   TRANSACTION</command>.
+   <command>PREPARE TRANSACTION</command> 并不打算用于应用程序或交互式会话。它的目的是允许外部事务管理器在多个数据库或其他事务性资源上执行原子全局事务。除非你正在编写事务管理器，否则你可能不应该使用 <command>PREPARE
+   TRANSACTION</command>。
   </para>
 
   <para>
@@ -97,29 +75,15 @@ PREPARE TRANSACTION <replaceable class="parameter">transaction_id</replaceable>
   </para>
 
   <para>
-   It is not currently allowed to <command>PREPARE</command> a transaction that
-   has executed any operations involving temporary tables or the session's
-   temporary namespace, created any cursors <literal>WITH HOLD</literal>, or
-   executed <command>LISTEN</command>, <command>UNLISTEN</command>, or
-   <command>NOTIFY</command>.
-   Those features are too tightly
-   tied to the current session to be useful in a transaction to be prepared.
+   目前不允许 <command>PREPARE</command> 一个已经执行了涉及临时表或会话临时命名空间的任何操作、创建了任何 <literal>WITH HOLD</literal> 游标、或执行了 <command>LISTEN</command>、<command>UNLISTEN</command> 或 <command>NOTIFY</command> 的事务。这些特性与当前会话绑定得过于紧密，无法在要预备的事务中发挥作用。
   </para>
 
   <para>
-   If the transaction modified any run-time parameters with <command>SET</command>
-   (without the <literal>LOCAL</literal> option),
-   those effects persist after <command>PREPARE TRANSACTION</command>, and will not
-   be affected by any later <command>COMMIT PREPARED</command> or
-   <command>ROLLBACK PREPARED</command>.  Thus, in this one respect
-   <command>PREPARE TRANSACTION</command> acts more like <command>COMMIT</command> than
-   <command>ROLLBACK</command>.
+   如果事务用 <command>SET</command> 修改了任何运行时参数（未使用 <literal>LOCAL</literal> 选项），这些效果在 <command>PREPARE TRANSACTION</command> 之后仍然存在，并且不会受到之后的任何 <command>COMMIT PREPARED</command> 或 <command>ROLLBACK PREPARED</command> 的影响。因此，在这一方面，<command>PREPARE TRANSACTION</command> 的行为更像 <command>COMMIT</command> 而不是 <command>ROLLBACK</command>。
   </para>
 
   <para>
-   All currently available prepared transactions are listed in the
-   <link linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link>
-   system view.
+   所有当前可用的预备事务都列在 <link linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link> 系统视图中。
   </para>
 
   <caution>
@@ -136,21 +100,15 @@ PREPARE TRANSACTION <replaceable class="parameter">transaction_id</replaceable>
    </para>
 
    <para>
-    If you have not set up an external transaction manager to track prepared
-    transactions and ensure they get closed out promptly, it is best to keep
-    the prepared-transaction feature disabled by setting
-    <xref linkend="guc-max-prepared-transactions"/> to zero.  This will
-    prevent accidental creation of prepared transactions that might then
-    be forgotten and eventually cause problems.
+    如果你没有设置外部事务管理器来跟踪预备事务并确保它们被及时关闭，那么最好通过将 <xref linkend="guc-max-prepared-transactions"/> 设置为零来禁用预备事务功能。这样可以防止意外创建预备事务，否则这些事务可能被遗忘并最终引发问题。
    </para>
   </caution>
  </refsect1>
 
  <refsect1 id="sql-prepare-transaction-examples">
-  <title>Examples</title>
+  <title>示例</title>
   <para>
-   Prepare the current transaction for two-phase commit, using
-   <literal>foobar</literal> as the transaction identifier:
+   使用 <literal>foobar</literal> 作为事务标识符，将当前事务准备为两阶段提交：
 
 <programlisting>
 PREPARE TRANSACTION 'foobar';
@@ -158,19 +116,15 @@ PREPARE TRANSACTION 'foobar';
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>PREPARE TRANSACTION</command> is a
-   <productname>PostgreSQL</productname> extension.  It is intended for use by
-   external transaction management systems, some of which are covered by
-   standards (such as X/Open XA), but the SQL side of those systems is not
-   standardized.
+   <command>PREPARE TRANSACTION</command> 是一个 <productname>PostgreSQL</productname> 扩展。它旨在供外部事务管理系统使用，其中一些系统由标准（如 X/Open XA）所涵盖，但这些系统的 SQL 端并未标准化。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-commit-prepared"/></member>
