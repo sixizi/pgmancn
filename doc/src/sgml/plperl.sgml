@@ -342,14 +342,13 @@ use strict;
  </sect1>
 
  <sect1 id="plperl-builtins">
-  <title>Built-in Functions</title>
+  <title>内置函数</title>
 
  <sect2 id="plperl-database">
-  <title>Database Access from PL/Perl</title>
+  <title>从 PL/Perl 访问数据库</title>
 
   <para>
-   Access to the database itself from your Perl function can be done
-   via the following functions:
+   通过以下函数，可以从你的 Perl 函数中访问数据库本身：
   </para>
 
    <variablelist>
@@ -363,57 +362,55 @@ use strict;
      </term>
      <listitem>
       <para>
-       <function>spi_exec_query</function> executes an SQL command and
-returns the entire row set as a reference to an array of hash references.
-If <replaceable>limit</replaceable> is specified and is greater than zero,
-then <function>spi_exec_query</function> retrieves at
-most <replaceable>limit</replaceable> rows, much as if the query included
-a <literal>LIMIT</literal> clause.  Omitting <replaceable>limit</replaceable>
-or specifying it as zero results in no row limit.
+       <function>spi_exec_query</function> 执行一条 SQL 命令，
+并把整个行集作为对哈希引用数组的引用返回。
+如果指定了 <replaceable>limit</replaceable> 且其值大于零，
+那么 <function>spi_exec_query</function> 最多检索
+<replaceable>limit</replaceable> 行，就如同查询中包含了
+一个 <literal>LIMIT</literal> 子句一样。省略 <replaceable>limit</replaceable>
+或将其指定为零则不会限制行数。
       </para>
 
       <para>
-<emphasis>You should only use this command when you know
-that the result set will be relatively small.</emphasis>  Here is an
-example of a query (<command>SELECT</command> command) with the
-optional maximum number of rows:
+<emphasis>只有当你确知结果集相对较小时，才应使用这条命令。</emphasis>  下面是一个带有
+可选最大行数的查询（<command>SELECT</command> 命令）示例：
 
 <programlisting>
 $rv = spi_exec_query('SELECT * FROM my_table', 5);
 </programlisting>
-        This returns up to 5 rows from the table
-        <literal>my_table</literal>.  If <literal>my_table</literal>
-        has a column <literal>my_column</literal>, you can get that
-        value from row <literal>$i</literal> of the result like this:
+        这会从表
+        <literal>my_table</literal> 中返回最多 5 行。如果 <literal>my_table</literal>
+        有一个列 <literal>my_column</literal>，你可以像这样
+        从结果的第 <literal>$i</literal> 行取得该值：
 <programlisting>
 $foo = $rv-&gt;{rows}[$i]-&gt;{my_column};
 </programlisting>
-       The total number of rows returned from a <command>SELECT</command>
-       query can be accessed like this:
+       从 <command>SELECT</command>
+       查询返回的总行数可以像这样访问：
 <programlisting>
 $nrows = $rv-&gt;{processed}
 </programlisting>
       </para>
 
       <para>
-       Here is an example using a different command type:
+       这里是一个使用不同命令类型的例子：
 <programlisting>
 $query = "INSERT INTO my_table VALUES (1, 'test')";
 $rv = spi_exec_query($query);
 </programlisting>
-       You can then access the command status (e.g.,
-       <literal>SPI_OK_INSERT</literal>) like this:
+       然后你可以像这样访问命令状态（例如
+       <literal>SPI_OK_INSERT</literal>）：
 <programlisting>
 $res = $rv-&gt;{status};
 </programlisting>
-       To get the number of rows affected, do:
+       要获取受影响的行数，请这样做：
 <programlisting>
 $nrows = $rv-&gt;{processed};
 </programlisting>
       </para>
 
       <para>
-       Here is a complete example:
+       这里是一个完整的例子：
 <programlisting>
 CREATE TABLE test (
     i int,
@@ -469,12 +466,10 @@ SELECT * FROM test_munge();
 
     <listitem>
     <para>
-    <literal>spi_query</literal> and <literal>spi_fetchrow</literal>
-    work together as a pair for row sets which might be large, or for cases
-    where you wish to return rows as they arrive.
-    <literal>spi_fetchrow</literal> works <emphasis>only</emphasis> with
-    <literal>spi_query</literal>. The following example illustrates how
-    you use them together:
+    <literal>spi_query</literal> 和 <literal>spi_fetchrow</literal>
+    作为一对配合使用，适用于可能很大的行集，或者你希望行一到达就返回的情况。
+    <literal>spi_fetchrow</literal> <emphasis>仅</emphasis>能与
+    <literal>spi_query</literal> 配合使用。下面的例子说明了如何将它们一起使用：
 
 <programlisting>
 CREATE TYPE foo_type AS (the_num INTEGER, the_text TEXT);
@@ -507,14 +502,7 @@ SELECT * from lotsa_md5(500);
     </para>
 
     <para>
-     Normally, <function>spi_fetchrow</function> should be repeated until it
-     returns <literal>undef</literal>, indicating that there are no more
-     rows to read.  The cursor returned by <literal>spi_query</literal>
-     is automatically freed when
-     <function>spi_fetchrow</function> returns <literal>undef</literal>.
-     If you do not wish to read all the rows, instead call
-     <function>spi_cursor_close</function> to free the cursor.
-     Failure to do so will result in memory leaks.
+     通常，<function>spi_fetchrow</function> 应被重复调用，直到它返回 <literal>undef</literal>，表示没有更多行可读取。当 <function>spi_fetchrow</function> 返回 <literal>undef</literal> 时，由 <literal>spi_query</literal> 返回的游标会被自动释放。如果你不想读取所有行，可以改为调用 <function>spi_cursor_close</function> 来释放该游标。不这样做将导致内存泄漏。
     </para>
 
     </listitem>
@@ -525,56 +513,43 @@ SELECT * from lotsa_md5(500);
       <literal><function>spi_prepare(<replaceable>command</replaceable>, <replaceable>argument types</replaceable>)</function></literal>
       <indexterm>
        <primary>spi_prepare</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
      </indexterm>
      </term>
      <term>
       <literal><function>spi_query_prepared(<replaceable>plan</replaceable>, <replaceable>arguments</replaceable>)</function></literal>
       <indexterm>
        <primary>spi_query_prepared</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <term>
       <literal><function>spi_exec_prepared(<replaceable>plan</replaceable> [, <replaceable>attributes</replaceable>], <replaceable>arguments</replaceable>)</function></literal>
       <indexterm>
        <primary>spi_exec_prepared</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <term>
       <literal><function>spi_freeplan(<replaceable>plan</replaceable>)</function></literal>
       <indexterm>
        <primary>spi_freeplan</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
 
     <listitem>
     <para>
-    <literal>spi_prepare</literal>, <literal>spi_query_prepared</literal>, <literal>spi_exec_prepared</literal>,
-    and <literal>spi_freeplan</literal> implement the same functionality but for prepared queries.
-    <literal>spi_prepare</literal> accepts a query string with numbered argument placeholders ($1, $2, etc.)
-    and a string list of argument types:
+    <literal>spi_prepare</literal>、<literal>spi_query_prepared</literal>、<literal>spi_exec_prepared</literal> 和 <literal>spi_freeplan</literal> 实现相同的功能，但针对的是预备查询。<literal>spi_prepare</literal> 接受一个带有编号参数占位符（$1、$2 等）的查询字符串以及一个参数类型字符串列表：
 <programlisting>
 $plan = spi_prepare('SELECT * FROM test WHERE id &gt; $1 AND name = $2',
                                                      'INTEGER', 'TEXT');
 </programlisting>
-    Once a query plan is prepared by a call to <literal>spi_prepare</literal>, the plan can be used instead
-    of the string query, either in <literal>spi_exec_prepared</literal>, where the result is the same as returned
-    by <literal>spi_exec_query</literal>, or in <literal>spi_query_prepared</literal> which returns a cursor
-    exactly as <literal>spi_query</literal> does, which can be later passed to <literal>spi_fetchrow</literal>.
-    The optional second parameter to <literal>spi_exec_prepared</literal> is a hash reference of attributes;
-    the only attribute currently supported is <literal>limit</literal>, which
-    sets the maximum number of rows returned from the query.
-    Omitting <literal>limit</literal> or specifying it as zero results in no
-    row limit.
+    一旦通过调用 <literal>spi_prepare</literal> 准备好查询计划，就可以用该计划代替字符串查询，既可以在 <literal>spi_exec_prepared</literal> 中使用（其结果与 <literal>spi_exec_query</literal> 返回的相同），也可以在 <literal>spi_query_prepared</literal> 中使用（它返回的游标与 <literal>spi_query</literal> 完全一样，之后可将其传给 <literal>spi_fetchrow</literal>）。<literal>spi_exec_prepared</literal> 的可选第二个参数是一个属性哈希引用；目前唯一支持的属性是 <literal>limit</literal>，它设置从查询返回的最大行数。省略 <literal>limit</literal> 或将其指定为零将导致没有行数限制。
     </para>
 
     <para>
-    The advantage of prepared queries is that is it possible to use one prepared plan for more
-    than one query execution. After the plan is not needed anymore, it can be freed with
-    <literal>spi_freeplan</literal>:
+    预备查询的优点是，可以对多次查询执行使用同一个预备计划。当不再需要该计划后，可以用 <literal>spi_freeplan</literal> 释放它：
 <programlisting>
 CREATE OR REPLACE FUNCTION init() RETURNS VOID AS $$
         $_SHARED{my_plan} = spi_prepare('SELECT (now() + $1)::date AS now',
@@ -601,13 +576,11 @@ SELECT done();
 ------------+------------+------------
  2005-12-10 | 2005-12-11 | 2005-12-12
 </programlisting>
-    Note that the parameter subscript in <literal>spi_prepare</literal> is defined via
-    $1, $2, $3, etc., so avoid declaring query strings in double quotes that might easily
-    lead to hard-to-catch bugs.
+    注意，<literal>spi_prepare</literal> 中的参数下标是通过 $1、$2、$3 等定义的，因此应避免用双引号声明查询字符串，否则很容易导致难以发现的 bug。
     </para>
 
     <para>
-    Another example illustrates usage of an optional parameter in <literal>spi_exec_prepared</literal>:
+    另一个例子演示了 <literal>spi_exec_prepared</literal> 中可选参数的用法：
 <programlisting>
 CREATE TABLE hosts AS SELECT id, ('192.168.1.'||id)::inet AS address
                       FROM generate_series(1,3) AS id;
@@ -661,18 +634,11 @@ SELECT release_hosts_query();
      </term>
      <listitem>
       <para>
-       Commit or roll back the current transaction.  This can only be called
-       in a procedure or anonymous code block (<command>DO</command> command)
-       called from the top level.  (Note that it is not possible to run the
-       SQL commands <command>COMMIT</command> or <command>ROLLBACK</command>
-       via <function>spi_exec_query</function> or similar.  It has to be done
-       using these functions.)  After a transaction is ended, a new
-       transaction is automatically started, so there is no separate function
-       for that.
+       提交或回滚当前事务。此函数只能在从顶层调用的过程或匿名代码块（<command>DO</command> 命令）中调用。（注意，无法通过 <function>spi_exec_query</function> 或类似方式运行 SQL 命令 <command>COMMIT</command> 或 <command>ROLLBACK</command>。必须使用这些函数来完成。）事务结束后会自动启动一个新事务，因此没有单独的函数用于此目的。
       </para>
 
       <para>
-       Here is an example:
+       下面是一个例子：
 <programlisting>
 CREATE PROCEDURE transaction_test1()
 LANGUAGE plperl
@@ -696,7 +662,7 @@ CALL transaction_test1();
  </sect2>
 
  <sect2 id="plperl-utility-functions">
-  <title>Utility Functions in PL/Perl</title>
+  <title>PL/Perl 中的实用函数</title>
 
    <variablelist>
     <varlistentry>
@@ -709,22 +675,19 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-       Emit a log or error message. Possible levels are
-       <literal>DEBUG</literal>, <literal>LOG</literal>, <literal>INFO</literal>,
-       <literal>NOTICE</literal>, <literal>WARNING</literal>, and <literal>ERROR</literal>.
+       发出日志或错误消息。可能的级别有
+       <literal>DEBUG</literal>、<literal>LOG</literal>、<literal>INFO</literal>、
+       <literal>NOTICE</literal>、<literal>WARNING</literal> 和 <literal>ERROR</literal>。
        <literal>ERROR</literal>
-        raises an error condition; if this is not trapped by the surrounding
-        Perl code, the error propagates out to the calling query, causing
-        the current transaction or subtransaction to be aborted.  This
-        is effectively the same as the Perl <literal>die</literal> command.
-        The other levels only generate messages of different
-        priority levels.
-        Whether messages of a particular priority are reported to the client,
-        written to the server log, or both is controlled by the
-        <xref linkend="guc-log-min-messages"/> and
-        <xref linkend="guc-client-min-messages"/> configuration
-        variables. See <xref linkend="runtime-config"/> for more
-        information.
+       会引发错误条件；如果外围的 Perl 代码没有捕获该错误，
+       错误就会传播到调用查询，导致当前事务或子事务被中止。这
+       实际上与 Perl 的 <literal>die</literal> 命令相同。
+       其他级别只会生成不同优先级的消息。
+       特定优先级的消息是报告给客户端、
+       写入服务器日志，还是两者都做，由
+       <xref linkend="guc-log-min-messages"/> 和
+       <xref linkend="guc-client-min-messages"/> 配置
+       变量控制。更多信息请参见 <xref linkend="runtime-config"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -739,10 +702,10 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-        Return the given string suitably quoted to be used as a string literal in an SQL
-        statement string. Embedded single-quotes and backslashes are properly doubled.
-        Note that <function>quote_literal</function> returns undef on undef input; if the argument
-        might be undef, <function>quote_nullable</function> is often more suitable.
+        返回经过适当引用的给定字符串，以便用作 SQL
+        语句字符串中的字符串字面量。嵌入的单引号和反斜杠会被正确地加倍。
+        注意，<function>quote_literal</function> 在输入为 undef 时返回 undef；如果参数
+        可能为 undef，<function>quote_nullable</function> 通常更合适。
       </para>
      </listitem>
     </varlistentry>
@@ -757,9 +720,7 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-        Return the given string suitably quoted to be used as a string literal in an SQL
-        statement string; or, if the argument is undef, return the unquoted string "NULL".
-        Embedded single-quotes and backslashes are properly doubled.
+        返回给定字符串，并为其适当地加上引号，以便在 SQL 语句字符串中用作字符串字面量；或者，如果参数为 undef，则返回未加引号的字符串 "NULL"。嵌入的单引号和反斜杠会被正确地双写。
       </para>
      </listitem>
     </varlistentry>
@@ -769,15 +730,12 @@ CALL transaction_test1();
       <literal><function>quote_ident(<replaceable>string</replaceable>)</function></literal>
       <indexterm>
        <primary>quote_ident</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <listitem>
       <para>
-        Return the given string suitably quoted to be used as an identifier in
-        an SQL statement string. Quotes are added only if necessary (i.e., if
-        the string contains non-identifier characters or would be case-folded).
-        Embedded quotes are properly doubled.
+        返回给定字符串，并为其适当地加上引号，以便在 SQL 语句字符串中用作标识符。只有在必要时（即该字符串包含非标识符字符或会被大小写折叠时）才会添加引号。嵌入的引号会被正确地双写。
       </para>
      </listitem>
     </varlistentry>
@@ -787,13 +745,12 @@ CALL transaction_test1();
       <literal><function>decode_bytea(<replaceable>string</replaceable>)</function></literal>
       <indexterm>
        <primary>decode_bytea</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <listitem>
       <para>
-        Return the unescaped binary data represented by the contents of the given string,
-        which should be <type>bytea</type> encoded.
+        返回由给定字符串内容所表示的未转义二进制数据，该字符串应为 <type>bytea</type> 编码。
         </para>
      </listitem>
     </varlistentry>
@@ -803,12 +760,12 @@ CALL transaction_test1();
       <literal><function>encode_bytea(<replaceable>string</replaceable>)</function></literal>
       <indexterm>
        <primary>encode_bytea</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <listitem>
       <para>
-        Return the <type>bytea</type> encoded form of the binary data contents of the given string.
+        返回给定字符串的二进制数据内容的 <type>bytea</type> 编码形式。
         </para>
      </listitem>
     </varlistentry>
@@ -818,7 +775,7 @@ CALL transaction_test1();
       <literal><function>encode_array_literal(<replaceable>array</replaceable>)</function></literal>
       <indexterm>
        <primary>encode_array_literal</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <term>
@@ -826,11 +783,10 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-        Returns the contents of the referenced array as a string in array literal format
-        (see <xref linkend="arrays-input"/>).
-        Returns the argument value unaltered if it's not a reference to an array.
-        The delimiter used between elements of the array literal defaults to "<literal>, </literal>"
-        if a delimiter is not specified or is undef.
+        将所引用数组的内容以数组字面量格式的字符串返回
+        （参见 <xref linkend="arrays-input"/>）。
+        如果参数值不是对数组的引用，则原样返回该参数值。
+        如果未指定分隔符或分隔符为 undef，则数组字面量元素之间使用的分隔符默认为 "<literal>, </literal>"。
         </para>
      </listitem>
     </varlistentry>
@@ -840,14 +796,13 @@ CALL transaction_test1();
       <literal><function>encode_typed_literal(<replaceable>value</replaceable>, <replaceable>typename</replaceable>)</function></literal>
       <indexterm>
        <primary>encode_typed_literal</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
       <listitem>
        <para>
-         Converts a Perl variable to the value of the data type passed as a
-         second argument and returns a string representation of this value.
-         Correctly handles nested arrays and values of composite types.
+         将 Perl 变量转换为作为第二个参数传入的数据类型的值，并返回该值的字符串表示。
+         能够正确处理嵌套数组和复合类型的值。
        </para>
       </listitem>
     </varlistentry>
@@ -857,16 +812,15 @@ CALL transaction_test1();
       <literal><function>encode_array_constructor(<replaceable>array</replaceable>)</function></literal>
       <indexterm>
        <primary>encode_array_constructor</primary>
-       <secondary>in PL/Perl</secondary>
+       <secondary>在 PL/Perl 中</secondary>
       </indexterm>
      </term>
      <listitem>
       <para>
-        Returns the contents of the referenced array as a string in array constructor format
-        (see <xref linkend="sql-syntax-array-constructors"/>).
-        Individual values are quoted using <function>quote_nullable</function>.
-        Returns the argument value, quoted using <function>quote_nullable</function>,
-        if it's not a reference to an array.
+        以数组构造器格式返回所引用数组的内容为字符串
+        （参见 <xref linkend="sql-syntax-array-constructors"/>）。
+        各个值使用 <function>quote_nullable</function> 加引号。
+        如果参数不是对数组的引用，则返回使用 <function>quote_nullable</function> 加引号的参数值。
         </para>
      </listitem>
     </varlistentry>
@@ -881,10 +835,10 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-        Returns a true value if the content of the given string looks like a
-        number, according to Perl, returns false otherwise.
-        Returns undef if the argument is undef.  Leading and trailing space is
-        ignored. <literal>Inf</literal> and <literal>Infinity</literal> are regarded as numbers.
+        如果给定字符串的内容按照 Perl 的判断看起来像一个数字，则返回真值，
+        否则返回假。
+        如果参数为 undef，则返回 undef。前导和尾随空格会被
+        忽略。<literal>Inf</literal> 和 <literal>Infinity</literal> 被视为数字。
         </para>
      </listitem>
     </varlistentry>
@@ -899,9 +853,8 @@ CALL transaction_test1();
      </term>
      <listitem>
       <para>
-        Returns a true value if the given argument may be treated as an
-        array reference, that is, if ref of the argument is <literal>ARRAY</literal> or
-        <literal>PostgreSQL::InServer::ARRAY</literal>.  Returns false otherwise.
+        如果给定参数可以被当作数组引用处理，即该参数的 ref 为 <literal>ARRAY</literal> 或
+        <literal>PostgreSQL::InServer::ARRAY</literal>，则返回真值。否则返回假。
       </para>
      </listitem>
     </varlistentry>
