@@ -7,6 +7,6 @@ VER=$(sed -n 's/.*version "\(.*\)".*/\1/p' version.sgml)
 xmllint --noent --valid --nonet --path . --output postgres-full.xml postgres.sgml
 rm -rf html && mkdir -p html
 xsltproc --nonet --path . --stringparam pg.version "$VER" \
-  --param website.stylesheet 1 \
+  --param website.stylesheet 1 --stringparam l10n.gentext.language zh_cn \
   stylesheet.xsl postgres-full.xml
 echo "built: $PWD/html/index.html"
