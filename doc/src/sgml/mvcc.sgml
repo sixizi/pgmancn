@@ -546,82 +546,58 @@ ERROR:  could not serialize access due to read/write dependencies among transact
  </sect1>
 
   <sect1 id="explicit-locking">
-   <title>Explicit Locking</title>
+   <title>显式锁定</title>
 
    <indexterm>
     <primary>lock</primary>
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> provides various lock modes
-    to control concurrent access to data in tables.  These modes can
-    be used for application-controlled locking in situations where
-    <acronym>MVCC</acronym> does not give the desired behavior.  Also,
-    most <productname>PostgreSQL</productname> commands automatically
-    acquire locks of appropriate modes to ensure that referenced
-    tables are not dropped or modified in incompatible ways while the
-    command executes.  (For example, <command>TRUNCATE</command> cannot safely be
-    executed concurrently with other operations on the same table, so it
-    obtains an <literal>ACCESS EXCLUSIVE</literal> lock on the table to
-    enforce that.)
+    <productname>PostgreSQL</productname> 提供了多种锁模式来控制对表中数据的并发访问。在 <acronym>MVCC</acronym> 无法提供所需行为的情况下，这些模式可用于应用程序控制的锁定。此外，大多数 <productname>PostgreSQL</productname> 命令会自动获取适当模式的锁，以确保在命令执行期间，被引用的表不会被以不兼容的方式删除或修改。（例如，<command>TRUNCATE</command> 不能与同一表上的其他操作安全地并发执行，因此它会在该表上获取一个 <literal>ACCESS EXCLUSIVE</literal> 锁来强制实现这一点。）
    </para>
 
    <para>
-    To examine a list of the currently outstanding locks in a database
-    server, use the
+    要查看数据库服务器中当前未释放的锁的列表，请使用
     <link linkend="view-pg-locks"><structname>pg_locks</structname></link>
-    system view. For more information on monitoring the status of the lock
-    manager subsystem, refer to <xref linkend="monitoring"/>.
+    系统视图。有关监控锁管理器子系统状态的更多信息，请参阅 <xref linkend="monitoring"/>。
    </para>
 
   <sect2 id="locking-tables">
-   <title>Table-Level Locks</title>
+   <title>表级锁</title>
 
    <indexterm zone="locking-tables">
     <primary>LOCK</primary>
    </indexterm>
 
    <para>
-    The list below shows the available lock modes and the contexts in
-    which they are used automatically by
-    <productname>PostgreSQL</productname>.  You can also acquire any
-    of these locks explicitly with the command <xref
-    linkend="sql-lock"/>.
-    Remember that all of these lock modes are table-level locks,
-    even if the name contains the word
-    <quote>row</quote>; the names of the lock modes are historical.
-    To some extent the names reflect the typical usage of each lock
-    mode &mdash; but the semantics are all the same.  The only real difference
-    between one lock mode and another is the set of lock modes with
-    which each conflicts (see <xref linkend="table-lock-compatibility"/>).
-    Two transactions cannot hold locks of conflicting
-    modes on the same table at the same time.  (However, a transaction
-    never conflicts with itself.  For example, it might acquire
-    <literal>ACCESS EXCLUSIVE</literal> lock and later acquire
-    <literal>ACCESS SHARE</literal> lock on the same table.)  Non-conflicting
-    lock modes can be held concurrently by many transactions.  Notice in
-    particular that some lock modes are self-conflicting (for example,
-    an <literal>ACCESS EXCLUSIVE</literal> lock cannot be held by more than one
-    transaction at a time) while others are not self-conflicting (for example,
-    an <literal>ACCESS SHARE</literal> lock can be held by multiple transactions).
+    下面的列表显示了可用的锁模式以及 <productname>PostgreSQL</productname> 自动使用它们的场景。你也可以使用 <xref
+    linkend="sql-lock"/> 命令显式地获取其中任何一种锁。
+    请记住，所有这些锁模式都是表级锁，即使名称中包含
+    <quote>row</quote> 一词；这些锁模式的名称是历史遗留的。
+    在某种程度上，这些名称反映了每种锁模式 &mdash; 的典型用法，但语义都是相同的。
+    一种锁模式与另一种锁模式之间唯一真正的区别是各自与之冲突的锁模式集合（参见 <xref linkend="table-lock-compatibility"/>）。
+    两个事务不能同时在同一张表上持有冲突模式的锁。（但是，一个事务
+    永远不会与自身冲突。例如，它可能先获取
+    <literal>ACCESS EXCLUSIVE</literal> 锁，随后又在同一张表上获取
+    <literal>ACCESS SHARE</literal> 锁。）不冲突的锁模式可以由许多事务同时持有。特别要注意，
+    有些锁模式是自冲突的（例如，一个 <literal>ACCESS EXCLUSIVE</literal> 锁在同一时间不能被多个
+    事务持有），而另一些则不是自冲突的（例如，
+    一个 <literal>ACCESS SHARE</literal> 锁可以由多个事务持有）。
    </para>
 
      <variablelist>
-      <title>Table-Level Lock Modes</title>
+      <title>表级锁模式</title>
       <varlistentry>
        <term>
         <literal>ACCESS SHARE</literal> (<literal>AccessShareLock</literal>)
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>ACCESS EXCLUSIVE</literal> lock
-         mode only.
+         仅与 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。
         </para>
 
         <para>
-         The <command>SELECT</command> command acquires a lock of this mode on
-         referenced tables.  In general, any query that only <emphasis>reads</emphasis> a table
-         and does not modify it will acquire this lock mode.
+         <command>SELECT</command> 命令会在被引用的表上获取这种模式的锁。通常，任何只<emphasis>读取</emphasis>表而不修改它的查询都会获取这种锁模式。
         </para>
        </listitem>
       </varlistentry>
@@ -632,19 +608,17 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>EXCLUSIVE</literal> and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
+         与 <literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。
         </para>
 
         <para>
-         The <command>SELECT</command> command acquires a lock of this mode
-         on all tables on which one of the <option>FOR UPDATE</option>,
-         <option>FOR NO KEY UPDATE</option>,
-         <option>FOR SHARE</option>, or
-         <option>FOR KEY SHARE</option> options is specified
-         (in addition to <literal>ACCESS SHARE</literal> locks on any other
-         tables that are referenced without any explicit
-         <option>FOR ...</option> locking option).
+         <command>SELECT</command> 命令会在所有指定了 <option>FOR UPDATE</option>、
+         <option>FOR NO KEY UPDATE</option>、
+         <option>FOR SHARE</option> 或
+         <option>FOR KEY SHARE</option> 选项之一的表上获取这种模式的锁
+         （此外还会在任何未带显式
+         <option>FOR ...</option> 锁定选项而被引用的其他表上获取
+         <literal>ACCESS SHARE</literal> 锁）。
         </para>
        </listitem>
       </varlistentry>
@@ -655,19 +629,17 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>SHARE</literal>, <literal>SHARE ROW
-         EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
+         与 <literal>SHARE</literal>、<literal>SHARE ROW
+         EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和
+         <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。
         </para>
 
         <para>
-         The commands <command>UPDATE</command>,
-         <command>DELETE</command>, <command>INSERT</command>, and
-         <command>MERGE</command>
-         acquire this lock mode on the target table (in addition to
-         <literal>ACCESS SHARE</literal> locks on any other referenced
-         tables).  In general, this lock mode will be acquired by any
-         command that <emphasis>modifies data</emphasis> in a table.
+         命令 <command>UPDATE</command>、
+         <command>DELETE</command>、<command>INSERT</command> 和 <command>MERGE</command>
+         会在目标表上获取这种锁模式（此外还会在任何其他被引用的表上获取
+         <literal>ACCESS SHARE</literal> 锁）。通常，任何<emphasis>修改表中数据</emphasis>的命令
+         都会获取这种锁模式。
         </para>
        </listitem>
       </varlistentry>
@@ -678,22 +650,12 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>SHARE UPDATE EXCLUSIVE</literal>,
-         <literal>SHARE</literal>, <literal>SHARE ROW
-         EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
-         This mode protects a table against
-         concurrent schema changes and <command>VACUUM</command> runs.
+         与 <literal>SHARE UPDATE EXCLUSIVE</literal>、<literal>SHARE</literal>、<literal>SHARE ROW
+         EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。此模式保护表免受并发的模式更改和 <command>VACUUM</command> 运行的影响。
         </para>
 
         <para>
-         Acquired by <command>VACUUM</command> (without <option>FULL</option>),
-         <command>ANALYZE</command>, <command>CREATE INDEX CONCURRENTLY</command>,
-         <command>CREATE STATISTICS</command>, <command>COMMENT ON</command>,
-         <command>REINDEX CONCURRENTLY</command>,
-         and certain <link linkend="sql-alterindex"><command>ALTER INDEX</command></link>
-         and <link linkend="sql-altertable"><command>ALTER TABLE</command></link> variants
-         (for full details see the documentation of these commands).
+         由 <command>VACUUM</command>（不带 <option>FULL</option>）、<command>ANALYZE</command>、<command>CREATE INDEX CONCURRENTLY</command>、<command>CREATE STATISTICS</command>、<command>COMMENT ON</command>、<command>REINDEX CONCURRENTLY</command> 以及某些 <link linkend="sql-alterindex"><command>ALTER INDEX</command></link> 和 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 变体获取（完整细节请参阅这些命令的文档）。
         </para>
        </listitem>
       </varlistentry>
@@ -704,16 +666,12 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>ROW EXCLUSIVE</literal>,
-         <literal>SHARE UPDATE EXCLUSIVE</literal>, <literal>SHARE ROW
-         EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
-         This mode protects a table against concurrent data changes.
+         与 <literal>ROW EXCLUSIVE</literal>、<literal>SHARE UPDATE EXCLUSIVE</literal>、<literal>SHARE ROW
+         EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。此模式保护表免受并发数据更改的影响。
         </para>
 
         <para>
-         Acquired by <command>CREATE INDEX</command>
-         (without <option>CONCURRENTLY</option>).
+         由 <command>CREATE INDEX</command>（不带 <option>CONCURRENTLY</option>）获取。
         </para>
        </listitem>
       </varlistentry>
@@ -724,18 +682,12 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>ROW EXCLUSIVE</literal>,
-         <literal>SHARE UPDATE EXCLUSIVE</literal>,
-         <literal>SHARE</literal>, <literal>SHARE ROW
-         EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
-         This mode protects a table against concurrent data changes, and
-         is self-exclusive so that only one session can hold it at a time.
+         与 <literal>ROW EXCLUSIVE</literal>、<literal>SHARE UPDATE EXCLUSIVE</literal>、<literal>SHARE</literal>、<literal>SHARE ROW
+         EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。此模式保护表免受并发数据更改的影响，并且是自斥的，因此同一时间只能有一个会话持有它。
         </para>
 
         <para>
-         Acquired by <command>CREATE TRIGGER</command> and some forms of
-         <link linkend="sql-altertable"><command>ALTER TABLE</command></link>.
+         由 <command>CREATE TRIGGER</command> 和某些形式的 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 获取。
         </para>
        </listitem>
       </varlistentry>
@@ -746,18 +698,16 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with the <literal>ROW SHARE</literal>, <literal>ROW
-         EXCLUSIVE</literal>, <literal>SHARE UPDATE
-         EXCLUSIVE</literal>, <literal>SHARE</literal>, <literal>SHARE
-         ROW EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal> lock modes.
-         This mode allows only concurrent <literal>ACCESS SHARE</literal> locks,
-         i.e., only reads from the table can proceed in parallel with a
-         transaction holding this lock mode.
+         与 <literal>ROW SHARE</literal>、<literal>ROW
+         EXCLUSIVE</literal>、<literal>SHARE UPDATE
+         EXCLUSIVE</literal>、<literal>SHARE</literal>、<literal>SHARE
+         ROW EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal> 锁模式冲突。
+         此模式只允许并发的 <literal>ACCESS SHARE</literal> 锁，
+         也就是说，只有对表的读取才能与持有此锁模式的事务并行进行。
         </para>
 
         <para>
-         Acquired by <command>REFRESH MATERIALIZED VIEW CONCURRENTLY</command>.
+         由 <command>REFRESH MATERIALIZED VIEW CONCURRENTLY</command> 获取。
         </para>
        </listitem>
       </varlistentry>
@@ -768,26 +718,16 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Conflicts with locks of all modes (<literal>ACCESS
-         SHARE</literal>, <literal>ROW SHARE</literal>, <literal>ROW
-         EXCLUSIVE</literal>, <literal>SHARE UPDATE
-         EXCLUSIVE</literal>, <literal>SHARE</literal>, <literal>SHARE
-         ROW EXCLUSIVE</literal>, <literal>EXCLUSIVE</literal>, and
-         <literal>ACCESS EXCLUSIVE</literal>).
-         This mode guarantees that the
-         holder is the only transaction accessing the table in any way.
+         与所有模式的锁冲突（<literal>ACCESS
+         SHARE</literal>、<literal>ROW SHARE</literal>、<literal>ROW
+         EXCLUSIVE</literal>、<literal>SHARE UPDATE
+         EXCLUSIVE</literal>、<literal>SHARE</literal>、<literal>SHARE
+         ROW EXCLUSIVE</literal>、<literal>EXCLUSIVE</literal> 和 <literal>ACCESS EXCLUSIVE</literal>）。
+         此模式保证持有者是唯一以任何方式访问该表的事务。
         </para>
 
         <para>
-         Acquired by the <command>DROP TABLE</command>,
-         <command>TRUNCATE</command>, <command>REINDEX</command>,
-         <command>CLUSTER</command>, <command>VACUUM FULL</command>,
-         and <command>REFRESH MATERIALIZED VIEW</command> (without
-         <option>CONCURRENTLY</option>)
-         commands. Many forms of <command>ALTER INDEX</command> and <command>ALTER TABLE</command> also acquire
-         a lock at this level. This is also the default lock mode for
-         <command>LOCK TABLE</command> statements that do not specify
-         a mode explicitly.
+         由 <command>DROP TABLE</command>、<command>TRUNCATE</command>、<command>REINDEX</command>、<command>CLUSTER</command>、<command>VACUUM FULL</command> 和 <command>REFRESH MATERIALIZED VIEW</command>（不带 <option>CONCURRENTLY</option>）命令获取。许多形式的 <command>ALTER INDEX</command> 和 <command>ALTER TABLE</command> 也会获取此级别的锁。对于未显式指定模式的 <command>LOCK TABLE</command> 语句，这也是默认的锁模式。
         </para>
        </listitem>
       </varlistentry>
@@ -795,26 +735,18 @@ ERROR:  could not serialize access due to read/write dependencies among transact
 
      <tip>
       <para>
-       Only an <literal>ACCESS EXCLUSIVE</literal> lock blocks a
-       <command>SELECT</command> (without <option>FOR UPDATE/SHARE</option>)
-       statement.
+       只有 <literal>ACCESS EXCLUSIVE</literal> 锁会阻塞 <command>SELECT</command>（不带 <option>FOR UPDATE/SHARE</option>）语句。
       </para>
      </tip>
 
    <para>
-    Once acquired, a lock is normally held until the end of the transaction.  But if a
-    lock is acquired after establishing a savepoint, the lock is released
-    immediately if the savepoint is rolled back to.  This is consistent with
-    the principle that <command>ROLLBACK</command> cancels all effects of the
-    commands since the savepoint.  The same holds for locks acquired within a
-    <application>PL/pgSQL</application> exception block: an error escape from the block
-    releases locks acquired within it.
+    一旦获取，锁通常保持到事务结束。但是，如果在建立保存点之后获取了锁，那么当回滚到该保存点时，锁会立即释放。这与 <command>ROLLBACK</command> 会取消自保存点以来所有命令效果的原则一致。对于在 <application>PL/pgSQL</application> 异常块内获取的锁也是如此：从该块中因错误退出会释放其中获取的锁。
    </para>
 
 
 
     <table tocentry="1" id="table-lock-compatibility">
-     <title>Conflicting Lock Modes</title>
+     <title>冲突的锁模式</title>
      <tgroup cols="9">
       <colspec colnum="1" colwidth="1.25*"/>
       <colspec colnum="2" colwidth="1*" colname="lockst"/>
@@ -828,8 +760,8 @@ ERROR:  could not serialize access due to read/write dependencies among transact
       <spanspec spanname="lockreq" namest="lockst" nameend="lockend" align="center"/>
       <thead>
        <row>
-        <entry morerows="1">Requested Lock Mode</entry>
-        <entry spanname="lockreq">Existing Lock Mode</entry>
+        <entry morerows="1">请求的锁模式</entry>
+        <entry spanname="lockreq">现有的锁模式</entry>
        </row>
        <row>
         <entry><literal>ACCESS SHARE</literal></entry>
@@ -937,60 +869,28 @@ ERROR:  could not serialize access due to read/write dependencies among transact
    </sect2>
 
    <sect2 id="locking-rows">
-    <title>Row-Level Locks</title>
+    <title>行级锁</title>
 
     <para>
-     In addition to table-level locks, there are row-level locks, which
-     are listed as below with the contexts in which they are used
-     automatically by <productname>PostgreSQL</productname>.  See
-     <xref linkend="row-lock-compatibility"/> for a complete table of
-     row-level lock conflicts.  Note that a transaction can hold
-     conflicting locks on the same row, even in different subtransactions;
-     but other than that, two transactions can never hold conflicting locks
-     on the same row.  Row-level locks do not affect data querying; they
-     block only <emphasis>writers and lockers</emphasis> to the same
-     row.  Row-level locks are released at transaction end or during
-     savepoint rollback, just like table-level locks.
+     除了表级锁之外，还有行级锁，下面列出了这些行级锁以及 <productname>PostgreSQL</productname> 自动使用它们的场景。有关行级锁冲突的完整表格，请参见
+     <xref linkend="row-lock-compatibility"/>。请注意，一个事务可以在同一行上持有冲突的锁，即使是在不同的子事务中；
+     但除此之外，两个事务永远不能在同一行上持有冲突的锁。行级锁不影响数据查询；它们只阻塞对同一行的<emphasis>写入者和加锁者</emphasis>。
+     行级锁在事务结束时或在保存点回滚期间释放，就像表级锁一样。
 
     </para>
 
      <variablelist>
-      <title>Row-Level Lock Modes</title>
+      <title>行级锁模式</title>
       <varlistentry>
        <term>
         <literal>FOR UPDATE</literal>
        </term>
        <listitem>
         <para>
-         <literal>FOR UPDATE</literal> causes the rows retrieved by the
-         <command>SELECT</command> statement to be locked as though for
-         update.  This prevents them from being locked, modified or deleted by
-         other transactions until the current transaction ends.  That is,
-         other transactions that attempt <command>UPDATE</command>,
-         <command>DELETE</command>,
-         <command>SELECT FOR UPDATE</command>,
-         <command>SELECT FOR NO KEY UPDATE</command>,
-         <command>SELECT FOR SHARE</command> or
-         <command>SELECT FOR KEY SHARE</command>
-         of these rows will be blocked until the current transaction ends;
-         conversely, <command>SELECT FOR UPDATE</command> will wait for a
-         concurrent transaction that has run any of those commands on the
-         same row,
-         and will then lock and return the updated row (or no row, if the
-         row was deleted).  Within a <literal>REPEATABLE READ</literal> or
-         <literal>SERIALIZABLE</literal> transaction,
-         however, an error will be thrown if a row to be locked has changed
-         since the transaction started.  For further discussion see
-         <xref linkend="applevel-consistency"/>.
+         <literal>FOR UPDATE</literal> 使得 <command>SELECT</command> 语句检索到的行被锁定，如同为了更新而锁定一样。这可以防止它们在当前事务结束之前被其他事务锁定、修改或删除。也就是说，其他试图对这些行执行 <command>UPDATE</command>、<command>DELETE</command>、<command>SELECT FOR UPDATE</command>、<command>SELECT FOR NO KEY UPDATE</command>、<command>SELECT FOR SHARE</command> 或 <command>SELECT FOR KEY SHARE</command> 的事务将被阻塞，直到当前事务结束；反过来，<command>SELECT FOR UPDATE</command> 将等待对同一行执行过上述任一命令的并发事务，然后锁定并返回更新后的行（如果该行已被删除，则不返回行）。然而，在 <literal>REPEATABLE READ</literal> 或 <literal>SERIALIZABLE</literal> 事务中，如果要锁定的行自事务开始以来已经发生变化，则会抛出错误。进一步的讨论请参见 <xref linkend="applevel-consistency"/>。
         </para>
         <para>
-         The <literal>FOR UPDATE</literal> lock mode
-         is also acquired by any <command>DELETE</command> on a row, and also by an
-         <command>UPDATE</command> that modifies the values of certain columns.  Currently,
-         the set of columns considered for the <command>UPDATE</command> case are those that
-         have a unique index on them that can be used in a foreign key (so partial
-         indexes and expressional indexes are not considered), but this may change
-         in the future.
+         任何对行的 <command>DELETE</command> 也会获取 <literal>FOR UPDATE</literal> 锁模式，修改某些列值的 <command>UPDATE</command> 也会获取该锁模式。目前，为 <command>UPDATE</command> 情况考虑的列集合是那些其上具有可用于外键的唯一索引的列（因此不考虑部分索引和表达式索引），但将来可能会改变。
         </para>
        </listitem>
       </varlistentry>
@@ -1001,11 +901,7 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Behaves similarly to <literal>FOR UPDATE</literal>, except that the lock
-         acquired is weaker: this lock will not block
-         <literal>SELECT FOR KEY SHARE</literal> commands that attempt to acquire
-         a lock on the same rows. This lock mode is also acquired by any
-         <command>UPDATE</command> that does not acquire a <literal>FOR UPDATE</literal> lock.
+         行为与 <literal>FOR UPDATE</literal> 类似，不同之处在于获取的锁更弱：该锁不会阻塞试图在同一批行上获取锁的 <literal>SELECT FOR KEY SHARE</literal> 命令。任何未获取 <literal>FOR UPDATE</literal> 锁的 <command>UPDATE</command> 也会获取该锁模式。
         </para>
        </listitem>
       </varlistentry>
@@ -1016,14 +912,7 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Behaves similarly to <literal>FOR NO KEY UPDATE</literal>, except that it
-         acquires a shared lock rather than exclusive lock on each retrieved
-         row.  A shared lock blocks other transactions from performing
-         <command>UPDATE</command>, <command>DELETE</command>,
-         <command>SELECT FOR UPDATE</command> or
-         <command>SELECT FOR NO KEY UPDATE</command> on these rows, but it does not
-         prevent them from performing <command>SELECT FOR SHARE</command> or
-         <command>SELECT FOR KEY SHARE</command>.
+         行为与 <literal>FOR NO KEY UPDATE</literal> 类似，不同之处在于它对每个检索到的行获取共享锁而不是排他锁。共享锁会阻止其他事务对这些行执行 <command>UPDATE</command>、<command>DELETE</command>、<command>SELECT FOR UPDATE</command> 或 <command>SELECT FOR NO KEY UPDATE</command>，但不会阻止它们执行 <command>SELECT FOR SHARE</command> 或 <command>SELECT FOR KEY SHARE</command>。
         </para>
        </listitem>
       </varlistentry>
@@ -1034,30 +923,19 @@ ERROR:  could not serialize access due to read/write dependencies among transact
        </term>
        <listitem>
         <para>
-         Behaves similarly to <literal>FOR SHARE</literal>, except that the
-         lock is weaker: <literal>SELECT FOR UPDATE</literal> is blocked, but not
-         <literal>SELECT FOR NO KEY UPDATE</literal>.  A key-shared lock blocks
-         other transactions from performing <command>DELETE</command> or
-         any <command>UPDATE</command> that changes the key values, but not
-         other <command>UPDATE</command>, and neither does it prevent
-         <command>SELECT FOR NO KEY UPDATE</command>, <command>SELECT FOR SHARE</command>,
-         or <command>SELECT FOR KEY SHARE</command>.
+         行为与 <literal>FOR SHARE</literal> 类似，不同之处在于锁更弱：<literal>SELECT FOR UPDATE</literal> 会被阻塞，但 <literal>SELECT FOR NO KEY UPDATE</literal> 不会。键共享锁会阻止其他事务执行 <command>DELETE</command> 或任何更改键值的 <command>UPDATE</command>，但不会阻止其他 <command>UPDATE</command>，也不会阻止 <command>SELECT FOR NO KEY UPDATE</command>、<command>SELECT FOR SHARE</command> 或 <command>SELECT FOR KEY SHARE</command>。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
     <para>
-     <productname>PostgreSQL</productname> doesn't remember any
-     information about modified rows in memory, so there is no limit on
-     the number of rows locked at one time.  However, locking a row
-     might cause a disk write, e.g., <command>SELECT FOR
-     UPDATE</command> modifies selected rows to mark them locked, and so
-     will result in disk writes.
+     <productname>PostgreSQL</productname> 不会在内存中记住任何关于被修改行的信息，因此一次锁定的行数没有限制。不过，锁定一行可能会导致磁盘写入，例如 <command>SELECT FOR
+     UPDATE</command> 会修改选中的行以将它们标记为已锁定，因此会导致磁盘写入。
     </para>
 
     <table tocentry="1" id="row-lock-compatibility">
-     <title>Conflicting Row-Level Locks</title>
+     <title>冲突的行级锁</title>
      <tgroup cols="5">
       <colspec colname="col1"    colwidth="1.5*"/>
       <colspec colname="lockst"  colwidth="1*"/>
@@ -1067,8 +945,8 @@ ERROR:  could not serialize access due to read/write dependencies among transact
       <spanspec namest="lockst" nameend="lockend" spanname="lockreq"/>
       <thead>
        <row>
-        <entry morerows="1">Requested Lock Mode</entry>
-        <entry spanname="lockreq">Current Lock Mode</entry>
+        <entry morerows="1">请求的锁模式</entry>
+        <entry spanname="lockreq">当前的锁模式</entry>
        </row>
        <row>
         <entry>FOR KEY SHARE</entry>
@@ -1112,104 +990,61 @@ ERROR:  could not serialize access due to read/write dependencies among transact
    </sect2>
 
    <sect2 id="locking-pages">
-    <title>Page-Level Locks</title>
+    <title>页级锁</title>
 
     <para>
-     In addition to table and row locks, page-level share/exclusive locks are
-     used to control read/write access to table pages in the shared buffer
-     pool.  These locks are released immediately after a row is fetched or
-     updated.  Application developers normally need not be concerned with
-     page-level locks, but they are mentioned here for completeness.
+     除了表锁和行锁之外，页级共享/排他锁用于控制对共享缓冲池中表页面的读/写访问。这些锁在行被取出或更新后立即释放。应用程序开发者通常不需要关心页级锁，但为了完整性在此提及。
     </para>
 
    </sect2>
 
    <sect2 id="locking-deadlocks">
-    <title>Deadlocks</title>
+    <title>死锁</title>
 
     <indexterm zone="locking-deadlocks">
      <primary>deadlock</primary>
     </indexterm>
 
     <para>
-     The use of explicit locking can increase the likelihood of
-     <firstterm>deadlocks</firstterm>, wherein two (or more) transactions each
-     hold locks that the other wants.  For example, if transaction 1
-     acquires an exclusive lock on table A and then tries to acquire
-     an exclusive lock on table B, while transaction 2 has already
-     exclusive-locked table B and now wants an exclusive lock on table
-     A, then neither one can proceed.
-     <productname>PostgreSQL</productname> automatically detects
-     deadlock situations and resolves them by aborting one of the
-     transactions involved, allowing the other(s) to complete.
-     (Exactly which transaction will be aborted is difficult to
-     predict and should not be relied upon.)
+     显式锁的使用可能会增加<firstterm>死锁</firstterm>的可能性，即两个（或多个）事务各自持有对方想要的锁。例如，如果事务 1 获取了表 A 上的排他锁，然后试图获取表 B 上的排他锁，而事务 2 已经对表 B 加了排他锁，现在想要获取表 A 上的排他锁，那么两者都无法继续。
+     <productname>PostgreSQL</productname> 会自动检测死锁情况，并通过中止涉及的事务之一来解决，让其余事务得以完成。
+     （具体哪个事务会被中止很难预测，不应依赖这一点。）
     </para>
 
     <para>
-     Note that deadlocks can also occur as the result of row-level
-     locks (and thus, they can occur even if explicit locking is not
-     used). Consider the case in which two concurrent
-     transactions modify a table. The first transaction executes:
+     请注意，死锁也可能由行级锁引起（因此，即使不使用显式锁也可能发生）。考虑两个并发事务修改同一个表的情况。第一个事务执行：
 
 <screen>
 UPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 11111;
 </screen>
 
-     This acquires a row-level lock on the row with the specified
-     account number. Then, the second transaction executes:
+     这会在指定账号的那一行上获取行级锁。然后，第二个事务执行：
 
 <screen>
 UPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 22222;
 UPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 11111;
 </screen>
 
-     The first <command>UPDATE</command> statement successfully
-     acquires a row-level lock on the specified row, so it succeeds in
-     updating that row. However, the second <command>UPDATE</command>
-     statement finds that the row it is attempting to update has
-     already been locked, so it waits for the transaction that
-     acquired the lock to complete. Transaction two is now waiting on
-     transaction one to complete before it continues execution. Now,
-     transaction one executes:
+     第一条 <command>UPDATE</command> 语句成功获取了指定行上的行级锁，因此它成功更新了该行。然而，第二条 <command>UPDATE</command> 语句发现它试图更新的行已经被锁定，于是它等待持有该锁的事务完成。事务二现在在等待事务一完成才能继续执行。现在，事务一执行：
 
 <screen>
 UPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 22222;
 </screen>
 
-     Transaction one attempts to acquire a row-level lock on the
-     specified row, but it cannot: transaction two already holds such
-     a lock. So it waits for transaction two to complete. Thus,
-     transaction one is blocked on transaction two, and transaction
-     two is blocked on transaction one: a deadlock
-     condition. <productname>PostgreSQL</productname> will detect this
-     situation and abort one of the transactions.
+     事务一试图获取指定行上的行级锁，但无法获取：事务二已经持有这样的锁。于是它等待事务二完成。因此，事务一被事务二阻塞，事务二被事务一阻塞：这就是死锁状态。<productname>PostgreSQL</productname> 会检测到这种情况并中止其中一个事务。
     </para>
 
     <para>
-     The best defense against deadlocks is generally to avoid them by
-     being certain that all applications using a database acquire
-     locks on multiple objects in a consistent order. In the example
-     above, if both transactions
-     had updated the rows in the same order, no deadlock would have
-     occurred. One should also ensure that the first lock acquired on
-     an object in a transaction is the most restrictive mode that will be
-     needed for that object.  If it is not feasible to verify this in
-     advance, then deadlocks can be handled on-the-fly by retrying
-     transactions that abort due to deadlocks.
+     防止死锁的最好办法通常是通过确保所有使用数据库的应用都以一致的顺序在多个对象上获取锁来避免死锁。在上面的例子中，如果两个事务以相同的顺序更新这些行，就不会发生死锁。还应当确保在一个事务中对某个对象获取的第一个锁是该对象所需的最严格的模式。如果无法提前验证这一点，那么可以通过重试因死锁而中止的事务来即时处理死锁。
     </para>
 
     <para>
-     So long as no deadlock situation is detected, a transaction seeking
-     either a table-level or row-level lock will wait indefinitely for
-     conflicting locks to be released.  This means it is a bad idea for
-     applications to hold transactions open for long periods of time
-     (e.g., while waiting for user input).
+     只要没有检测到死锁情况，请求表级锁或行级锁的事务就会无限期地等待冲突锁被释放。这意味着应用长时间保持事务打开（例如，在等待用户输入时）是个坏主意。
     </para>
    </sect2>
 
    <sect2 id="advisory-locks">
-    <title>Advisory Locks</title>
+    <title>咨询锁</title>
 
     <indexterm zone="advisory-locks">
      <primary>advisory lock</primary>
@@ -1221,43 +1056,11 @@ UPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 22222;
     </indexterm>
 
     <para>
-     <productname>PostgreSQL</productname> provides a means for
-     creating locks that have application-defined meanings.  These are
-     called <firstterm>advisory locks</firstterm>, because the system does not
-     enforce their use &mdash; it is up to the application to use them
-     correctly.  Advisory locks can be useful for locking strategies
-     that are an awkward fit for the MVCC model.
-     For example, a common use of advisory locks is to emulate pessimistic
-     locking strategies typical of so-called <quote>flat file</quote> data
-     management systems.
-     While a flag stored in a table could be used for the same purpose,
-     advisory locks are faster, avoid table bloat, and are automatically
-     cleaned up by the server at the end of the session.
+     <productname>PostgreSQL</productname> 提供了一种创建具有应用定义含义的锁的手段。这些锁被称为<firstterm>咨询锁</firstterm>，因为系统并不强制要求使用它们 &mdash; 正确使用它们取决于应用。对于不适合 MVCC 模型的锁定策略，咨询锁可能很有用。例如，咨询锁的一个常见用途是模拟所谓的<quote>平面文件</quote>数据管理系统典型的悲观锁定策略。虽然存储在表中的标志也可用于同样的目的，但咨询锁更快、可避免表膨胀，并且会在会话结束时由服务器自动清理。
     </para>
 
     <para>
-     There are two ways to acquire an advisory lock in
-     <productname>PostgreSQL</productname>: at session level or at
-     transaction level.
-     Once acquired at session level, an advisory lock is held until
-     explicitly released or the session ends.  Unlike standard lock requests,
-     session-level advisory lock requests do not honor transaction semantics:
-     a lock acquired during a transaction that is later rolled back will still
-     be held following the rollback, and likewise an unlock is effective even
-     if the calling transaction fails later.  A lock can be acquired multiple
-     times by its owning process; for each completed lock request there must
-     be a corresponding unlock request before the lock is actually released.
-     Transaction-level lock requests, on the other hand, behave more like
-     regular lock requests: they are automatically released at the end of the
-     transaction, and there is no explicit unlock operation.  This behavior
-     is often more convenient than the session-level behavior for short-term
-     usage of an advisory lock.
-     Session-level and transaction-level lock requests for the same advisory
-     lock identifier will block each other in the expected way.
-     If a session already holds a given advisory lock, additional requests by
-     it will always succeed, even if other sessions are awaiting the lock; this
-     statement is true regardless of whether the existing lock hold and new
-     request are at session level or transaction level.
+     在 <productname>PostgreSQL</productname> 中有两种获取咨询锁的方式：会话级或事务级。一旦在会话级获取，咨询锁将一直持有，直到被显式释放或会话结束。与标准锁请求不同，会话级咨询锁请求不遵循事务语义：在事务期间获取的锁即使该事务后来回滚，回滚后仍将持有；同样，即使调用的事务后来失败，解锁操作也仍然有效。一个锁可以被其所属进程多次获取；对于每个完成的加锁请求，必须有对应的解锁请求，锁才会真正释放。另一方面，事务级锁请求的行为更像常规锁请求：它们在事务结束时自动释放，并且没有显式的解锁操作。对于咨询锁的短期使用，这种行为通常比会话级行为更方便。对同一咨询锁标识符的会话级和事务级锁请求会以预期的方式相互阻塞。如果某个会话已经持有给定的咨询锁，它发出的额外请求总是会成功，即使其他会话正在等待该锁；无论现有锁的持有和新请求是会话级还是事务级，这一点都成立。
     </para>
 
     <para>
@@ -1269,22 +1072,11 @@ UPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 22222;
     </para>
 
     <para>
-     Both advisory locks and regular locks are stored in a shared memory
-     pool whose size is defined by the configuration variables
-     <xref linkend="guc-max-locks-per-transaction"/> and
-     <xref linkend="guc-max-connections"/>.
-     Care must be taken not to exhaust this
-     memory or the server will be unable to grant any locks at all.
-     This imposes an upper limit on the number of advisory locks
-     grantable by the server, typically in the tens to hundreds of thousands
-     depending on how the server is configured.
+     咨询锁和常规锁都存储在共享内存池中，其大小由配置变量 <xref linkend="guc-max-locks-per-transaction"/> 和 <xref linkend="guc-max-connections"/> 定义。必须注意不要耗尽此内存，否则服务器将完全无法授予任何锁。这对服务器可授予的咨询锁数量施加了上限，通常为数十到数十万个，具体取决于服务器的配置方式。
     </para>
 
     <para>
-     In certain cases using advisory locking methods, especially in queries
-     involving explicit ordering and <literal>LIMIT</literal> clauses, care must be
-     taken to control the locks acquired because of the order in which SQL
-     expressions are evaluated.  For example:
+     在某些情况下，使用咨询锁方法时，尤其是在涉及显式排序和 <literal>LIMIT</literal> 子句的查询中，必须注意控制因 SQL 表达式求值顺序而获取的锁。例如：
 <screen>
 SELECT pg_advisory_lock(id) FROM foo WHERE id = 12345; -- ok
 SELECT pg_advisory_lock(id) FROM foo WHERE id &gt; 12345 LIMIT 100; -- danger!
@@ -1293,19 +1085,12 @@ SELECT pg_advisory_lock(q.id) FROM
   SELECT id FROM foo WHERE id &gt; 12345 LIMIT 100
 ) q; -- ok
 </screen>
-     In the above queries, the second form is dangerous because the
-     <literal>LIMIT</literal> is not guaranteed to be applied before the locking
-     function is executed.  This might cause some locks to be acquired
-     that the application was not expecting, and hence would fail to release
-     (until it ends the session).
-     From the point of view of the application, such locks
-     would be dangling, although still viewable in
-     <structname>pg_locks</structname>.
+     在上述查询中，第二种形式是危险的，因为不能保证 <literal>LIMIT</literal> 在锁定函数执行之前被应用。这可能导致获取一些应用程序并不期望的锁，从而无法释放它们（直到会话结束）。
+     从应用程序的角度来看，此类锁将成为悬空锁，尽管仍然可以在 <structname>pg_locks</structname> 中查看。
     </para>
 
     <para>
-     The functions provided to manipulate advisory locks are described in
-     <xref linkend="functions-advisory-locks"/>.
+     用于操作咨询锁的函数在 <xref linkend="functions-advisory-locks"/> 中描述。
     </para>
    </sect2>
 
