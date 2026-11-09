@@ -450,26 +450,25 @@ int lo_unlink(PGconn *conn, Oid lobjId);
 </sect1>
 
 <sect1 id="lo-funcs">
-<title>Server-Side Functions</title>
+<title>服务器端函数</title>
 
   <para>
-   Server-side functions tailored for manipulating large objects from SQL are
-   listed in <xref linkend="lo-funcs-table"/>.
+   专为从 SQL 操作大对象而设计的服务器端函数列于 <xref linkend="lo-funcs-table"/> 中。
   </para>
 
    <table id="lo-funcs-table">
-    <title>SQL-Oriented Large Object Functions</title>
+    <title>面向 SQL 的大对象函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example(s)
+        示例
        </para></entry>
       </row>
      </thead>
@@ -484,11 +483,10 @@ int lo_unlink(PGconn *conn, Oid lobjId);
         <returnvalue>oid</returnvalue>
        </para>
        <para>
-        Creates a large object and stores <parameter>data</parameter> in it.
-        If <parameter>loid</parameter> is zero then the system will choose a
-        free OID, otherwise that OID is used (with an error if some large
-        object already has that OID).  On success, the large object's OID is
-        returned.
+        创建一个大型对象并将 <parameter>data</parameter> 存储在其中。
+        如果 <parameter>loid</parameter> 为零，则系统将选择一个
+        空闲的 OID，否则使用该 OID（如果某个大型对象已经
+        具有该 OID，则会报错）。成功时，返回该大型对象的 OID。
        </para>
        <para>
         <literal>lo_from_bytea(0, '\xffffff00')</literal>
@@ -505,8 +503,8 @@ int lo_unlink(PGconn *conn, Oid lobjId);
         <returnvalue>void</returnvalue>
        </para>
        <para>
-        Writes <parameter>data</parameter> starting at the given offset within
-        the large object; the large object is enlarged if necessary.
+        从大型对象内的给定偏移量处开始写入 <parameter>data</parameter>；
+        如有必要，大型对象会被扩大。
        </para>
        <para>
         <literal>lo_put(24528, 1, '\xaa')</literal>
@@ -523,7 +521,7 @@ int lo_unlink(PGconn *conn, Oid lobjId);
         <returnvalue>bytea</returnvalue>
        </para>
        <para>
-        Extracts the large object's contents, or a substring thereof.
+        提取大型对象的内容，或其中的一个子串。
        </para>
        <para>
         <literal>lo_get(24528, 0, 3)</literal>
@@ -535,16 +533,7 @@ int lo_unlink(PGconn *conn, Oid lobjId);
    </table>
 
   <para>
-   There are additional server-side functions corresponding to each of the
-   client-side functions described earlier; indeed, for the most part the
-   client-side functions are simply interfaces to the equivalent server-side
-   functions.  The ones just as convenient to call via SQL commands are
-   <function>lo_creat</function><indexterm><primary>lo_creat</primary></indexterm>,
-   <function>lo_create</function>,
-   <function>lo_unlink</function><indexterm><primary>lo_unlink</primary></indexterm>,
-   <function>lo_import</function><indexterm><primary>lo_import</primary></indexterm>, and
-   <function>lo_export</function><indexterm><primary>lo_export</primary></indexterm>.
-   Here are examples of their use:
+   对于前面描述的每个客户端函数，都有相应的服务器端函数；实际上，大多数情况下客户端函数只是等价服务器端函数的接口。通过 SQL 命令调用同样方便的函数有 <function>lo_creat</function><indexterm><primary>lo_creat</primary></indexterm>、<function>lo_create</function>、<function>lo_unlink</function><indexterm><primary>lo_unlink</primary></indexterm>、<function>lo_import</function><indexterm><primary>lo_import</primary></indexterm> 和 <function>lo_export</function><indexterm><primary>lo_export</primary></indexterm>。下面是它们的使用示例：
 
 <programlisting>
 CREATE TABLE image (
@@ -570,44 +559,17 @@ SELECT lo_export(image.raster, '/tmp/motd') FROM image
   </para>
 
   <para>
-    The server-side <function>lo_import</function> and
-    <function>lo_export</function> functions behave considerably differently
-    from their client-side analogs.  These two functions read and write files
-    in the server's file system, using the permissions of the database's
-    owning user.  Therefore, by default their use is restricted to superusers.
-    In contrast, the client-side import and export functions read and write
-    files in the client's file system, using the permissions of the client
-    program.  The client-side functions do not require any database
-    privileges, except the privilege to read or write the large object in
-    question.
+    服务器端的 <function>lo_import</function> 和 <function>lo_export</function> 函数的行为与它们的客户端对应函数有相当大的不同。这两个函数使用数据库属主用户的权限，在服务器的文件系统中读写文件。因此，默认情况下它们的使用仅限于超级用户。相比之下，客户端的导入和导出函数使用客户端程序的权限，在客户端的文件系统中读写文件。客户端函数不需要任何数据库权限，除了读写相关大对象的权限之外。
   </para>
 
   <caution>
    <para>
-    It is possible to <xref linkend="sql-grant"/> use of the
-    server-side <function>lo_import</function>
-    and <function>lo_export</function> functions to non-superusers, but
-    careful consideration of the security implications is required.  A
-    malicious user of such privileges could easily parlay them into becoming
-    superuser (for example by rewriting server configuration files), or could
-    attack the rest of the server's file system without bothering to obtain
-    database superuser privileges as such.  <emphasis>Access to roles having
-    such privilege must therefore be guarded just as carefully as access to
-    superuser roles.</emphasis>  Nonetheless, if use of
-    server-side <function>lo_import</function>
-    or <function>lo_export</function> is needed for some routine task, it's
-    safer to use a role with such privileges than one with full superuser
-    privileges, as that helps to reduce the risk of damage from accidental
-    errors.
+    可以通过 <xref linkend="sql-grant"/> 将服务器端 <function>lo_import</function> 和 <function>lo_export</function> 函数的使用权授予非超级用户，但必须仔细考虑其安全影响。拥有此类特权的恶意用户可以轻易地借此成为超级用户（例如通过重写服务器配置文件），或者无需费心获取数据库超级用户特权就能攻击服务器文件系统的其余部分。<emphasis>因此，对拥有此类特权的角色的访问必须像对超级用户角色的访问一样谨慎地加以防护。</emphasis>尽管如此，如果某些例行任务需要使用服务器端的 <function>lo_import</function> 或 <function>lo_export</function>，使用具有此类特权的角色比使用具有完全超级用户特权的角色更安全，因为这有助于降低意外错误造成损害的风险。
    </para>
   </caution>
 
   <para>
-    The functionality of <function>lo_read</function> and
-    <function>lo_write</function> is also available via server-side calls,
-    but the names of the server-side functions differ from the client side
-    interfaces in that they do not contain underscores.  You must call
-    these functions as <function>loread</function> and <function>lowrite</function>.
+    <function>lo_read</function> 和 <function>lo_write</function> 的功能也可以通过服务器端调用来使用，但服务器端函数的名称与客户端接口不同，它们不包含下划线。你必须以 <function>loread</function> 和 <function>lowrite</function> 来调用这些函数。
   </para>
 
 </sect1>
