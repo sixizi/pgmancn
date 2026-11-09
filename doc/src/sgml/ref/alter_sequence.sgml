@@ -17,7 +17,7 @@ PostgreSQL documentation
  <refnamediv>
   <refname>ALTER SEQUENCE</refname>
   <refpurpose>
-   change the definition of a sequence generator
+   更改序列生成器的定义
   </refpurpose>
  </refnamediv>
 
@@ -40,29 +40,28 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER SEQUENCE</command> changes the parameters of an existing
-   sequence generator.  Any parameters not specifically set in the
-   <command>ALTER SEQUENCE</command> command retain their prior settings.
+   <command>ALTER SEQUENCE</command> 更改现有序列生成器的参数。任何未在
+   <command>ALTER SEQUENCE</command> 命令中专门设置的参数都保留其先前的设置。
   </para>
 
   <para>
-   You must own the sequence to use <command>ALTER SEQUENCE</command>.
-   To change a sequence's schema, you must also have <literal>CREATE</literal>
-   privilege on the new schema.
-   To alter the owner, you must be able to <literal>SET ROLE</literal> to the
-   new owning role, and that role must have <literal>CREATE</literal>
-   privilege on the sequence's schema.
-   (These restrictions enforce that altering the owner
-   doesn't do anything you couldn't do by dropping and recreating the sequence.
-   However, a superuser can alter ownership of any sequence anyway.)
+   你必须拥有该序列才能使用 <command>ALTER SEQUENCE</command>。
+   要更改序列的模式，你还必须对新模式具有 <literal>CREATE</literal>
+   权限。
+   要更改所有者，你必须能够 <literal>SET ROLE</literal> 到
+   新的拥有角色，并且该角色必须对
+   该序列的模式具有 <literal>CREATE</literal> 权限。
+   （这些限制确保更改所有者不会做任何
+   你通过删除并重新创建序列所做不到的事情。
+   不过，超级用户可以以任何方式更改任何序列的所有者。）
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
    <para>
     <variablelist>
@@ -70,7 +69,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name (optionally schema-qualified) of a sequence to be altered.
+        要更改的序列的名称（可选地限定模式）。
        </para>
       </listitem>
      </varlistentry>
@@ -79,8 +78,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>IF EXISTS</literal></term>
       <listitem>
        <para>
-        Do not throw an error if the sequence does not exist. A notice is issued
-        in this case.
+        如果序列不存在，不抛出错误。这种情况下会发出一个提示。
        </para>
       </listitem>
      </varlistentry>
@@ -89,23 +87,15 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">data_type</replaceable></term>
       <listitem>
        <para>
-        The optional
-        clause <literal>AS <replaceable class="parameter">data_type</replaceable></literal>
-        changes the data type of the sequence.  Valid types are
-        <literal>smallint</literal>, <literal>integer</literal>,
-        and <literal>bigint</literal>.
+        可选子句 <literal>AS <replaceable class="parameter">data_type</replaceable></literal>
+        改变序列的数据类型。有效的类型有
+        <literal>smallint</literal>、<literal>integer</literal>
+        和 <literal>bigint</literal>。
        </para>
 
        <para>
-        Changing the data type automatically changes the minimum and maximum
-        values of the sequence if and only if the previous minimum and maximum
-        values were the minimum or maximum value of the old data type (in
-        other words, if the sequence had been created using <literal>NO
-        MINVALUE</literal> or <literal>NO MAXVALUE</literal>, implicitly or
-        explicitly).  Otherwise, the minimum and maximum values are preserved,
-        unless new values are given as part of the same command.  If the
-        minimum and maximum values do not fit into the new data type, an error
-        will be generated.
+        当且仅当先前的最大值和最小值分别是旧数据类型的最小值或最大值时（换言之，即该序列是通过 <literal>NO
+        MINVALUE</literal> 或 <literal>NO MAXVALUE</literal> 隐式或显式创建的），改变数据类型才会自动改变序列的最小值和最大值。否则，除非在同一条命令中给出了新值，最小值和最大值将保持不变。如果最小值和最大值无法容纳于新的数据类型，则会产生一个错误。
        </para>
       </listitem>
      </varlistentry>
@@ -114,11 +104,8 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">increment</replaceable></term>
       <listitem>
        <para>
-        The clause <literal>INCREMENT BY <replaceable
-        class="parameter">increment</replaceable></literal> is
-        optional. A positive value will make an ascending sequence, a
-        negative one a descending sequence.  If unspecified, the old
-        increment value will be maintained.
+        子句 <literal>INCREMENT BY <replaceable
+        class="parameter">increment</replaceable></literal> 是可选的。正值将构成升序序列，负值构成降序序列。如果未指定，则保持原有的增量值。
        </para>
       </listitem>
      </varlistentry>
@@ -128,13 +115,9 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>NO MINVALUE</literal></term>
       <listitem>
        <para>
-        The optional clause <literal>MINVALUE <replaceable
-        class="parameter">minvalue</replaceable></literal> determines
-        the minimum value a sequence can generate. If <literal>NO
-        MINVALUE</literal> is specified, the defaults of 1 and
-        the minimum value of the data type for ascending and descending sequences,
-        respectively, will be used.  If neither option is specified,
-        the current minimum value will be maintained.
+        可选子句 <literal>MINVALUE <replaceable
+        class="parameter">minvalue</replaceable></literal> 决定序列可以生成的最小值。如果指定了 <literal>NO
+        MINVALUE</literal>，则对于升序序列和降序序列，将分别使用默认值 1 和该数据类型的最小值。如果两个选项都未指定，则保持当前的最小值。
        </para>
       </listitem>
      </varlistentry>
@@ -144,13 +127,9 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>NO MAXVALUE</literal></term>
       <listitem>
        <para>
-        The optional clause <literal>MAXVALUE <replaceable
-        class="parameter">maxvalue</replaceable></literal> determines
-        the maximum value for the sequence. If <literal>NO
-        MAXVALUE</literal> is specified, the defaults of
-        the maximum value of the data type and -1 for ascending and descending
-        sequences, respectively, will be used.  If neither option is
-        specified, the current maximum value will be maintained.
+        可选子句 <literal>MAXVALUE <replaceable
+        class="parameter">maxvalue</replaceable></literal> 决定序列的最大值。如果指定了 <literal>NO
+        MAXVALUE</literal>，则对于升序序列和降序序列，将分别使用该数据类型的最大值和 -1 作为默认值。如果两个选项都未指定，则保持当前的最大值。
        </para>
       </listitem>
      </varlistentry>
@@ -159,16 +138,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>CYCLE</literal></term>
       <listitem>
        <para>
-        The optional <literal>CYCLE</literal> key word can be used to enable
-        the sequence to wrap around when the
-        <replaceable class="parameter">maxvalue</replaceable> or
-        <replaceable class="parameter">minvalue</replaceable> has been
-        reached by
-        an ascending or descending sequence respectively. If the limit is
-        reached, the next number generated will be the
-        <replaceable class="parameter">minvalue</replaceable> or
-        <replaceable class="parameter">maxvalue</replaceable>,
-        respectively.
+        可选的关键字 <literal>CYCLE</literal> 可用于使序列在升序或降序序列分别达到 <replaceable class="parameter">maxvalue</replaceable> 或 <replaceable class="parameter">minvalue</replaceable> 后回绕。如果达到限制，则生成的下一个数字将分别是 <replaceable class="parameter">minvalue</replaceable> 或 <replaceable class="parameter">maxvalue</replaceable>。
        </para>
       </listitem>
      </varlistentry>
@@ -177,12 +147,8 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>NO CYCLE</literal></term>
       <listitem>
        <para>
-        If the optional <literal>NO CYCLE</literal> key word is
-        specified, any calls to <function>nextval</function> after the
-        sequence has reached its maximum value will return an error.
-        If neither <literal>CYCLE</literal> or <literal>NO
-        CYCLE</literal> are specified, the old cycle behavior will be
-        maintained.
+        如果指定了可选的关键字 <literal>NO CYCLE</literal>，则序列达到最大值后对 <function>nextval</function> 的任何调用都将返回错误。如果既未指定 <literal>CYCLE</literal> 也未指定 <literal>NO
+        CYCLE</literal>，则将保持旧的循环行为。
        </para>
       </listitem>
      </varlistentry>
@@ -191,11 +157,8 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">start</replaceable></term>
       <listitem>
        <para>
-        The optional clause <literal>START WITH <replaceable
-        class="parameter">start</replaceable></literal> changes the
-        recorded start value of the sequence.  This has no effect on the
-        <emphasis>current</emphasis> sequence value; it simply sets the value
-        that future <command>ALTER SEQUENCE RESTART</command> commands will use.
+        可选子句 <literal>START WITH <replaceable
+        class="parameter">start</replaceable></literal> 更改序列记录的起始值。这不会影响<emphasis>当前</emphasis>序列值；它只是设置未来的 <command>ALTER SEQUENCE RESTART</command> 命令将使用的值。
        </para>
       </listitem>
      </varlistentry>
@@ -204,24 +167,13 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">restart</replaceable></term>
       <listitem>
        <para>
-        The optional clause <literal>RESTART [ WITH <replaceable
-        class="parameter">restart</replaceable> ]</literal> changes the
-        current value of the sequence.  This is similar to calling the
-        <function>setval</function> function with <literal>is_called</literal> =
-        <literal>false</literal>: the specified value will be returned by the
-        <emphasis>next</emphasis> call of <function>nextval</function>.
-        Writing <literal>RESTART</literal> with no <replaceable
-        class="parameter">restart</replaceable> value is equivalent to supplying
-        the start value that was recorded by <command>CREATE SEQUENCE</command>
-        or last set by <command>ALTER SEQUENCE START WITH</command>.
+        可选子句 <literal>RESTART [ WITH <replaceable
+        class="parameter">restart</replaceable> ]</literal> 更改序列的当前值。这类似于以 <literal>is_called</literal> = <literal>false</literal> 调用 <function>setval</function> 函数：指定的值将由<emphasis>下一次</emphasis>调用 <function>nextval</function> 返回。写入不带 <replaceable
+        class="parameter">restart</replaceable> 值的 <literal>RESTART</literal> 等价于提供由 <command>CREATE SEQUENCE</command> 记录的或由 <command>ALTER SEQUENCE START WITH</command> 最后设置的起始值。
        </para>
 
        <para>
-        In contrast to a <function>setval</function> call,
-        a <literal>RESTART</literal> operation on a sequence is transactional
-        and blocks concurrent transactions from obtaining numbers from the
-        same sequence. If that's not the desired mode of
-        operation, <function>setval</function> should be used.
+        与 <function>setval</function> 调用不同，对序列的 <literal>RESTART</literal> 操作是事务性的，并且会阻止并发事务从同一序列获取数字。如果这不是期望的操作模式，则应使用 <function>setval</function>。
        </para>
       </listitem>
      </varlistentry>
@@ -230,12 +182,8 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><replaceable class="parameter">cache</replaceable></term>
       <listitem>
        <para>
-        The clause <literal>CACHE <replaceable
-        class="parameter">cache</replaceable></literal> enables
-        sequence numbers to be preallocated and stored in memory for
-        faster access. The minimum value is 1 (only one value can be
-        generated at a time, i.e., no cache).  If unspecified, the old
-        cache value will be maintained.
+        子句 <literal>CACHE <replaceable
+        class="parameter">cache</replaceable></literal> 允许预分配序列号并存储在内存中以加快访问速度。最小值为 1（一次只能生成一个值，即无缓存）。如果未指定，则将保持旧的缓存值。
        </para>
       </listitem>
      </varlistentry>
@@ -244,9 +192,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
       <term><literal>SET { LOGGED | UNLOGGED }</literal></term>
       <listitem>
        <para>
-        This form changes the sequence from unlogged to logged or vice-versa
-        (see <xref linkend="sql-createsequence"/>).  It cannot be applied to a
-        temporary sequence.
+        这种形式把序列从无日志改为有日志，或反之（见 <xref linkend="sql-createsequence"/>）。它不能应用于临时序列。
        </para>
       </listitem>
      </varlistentry>
@@ -256,15 +202,8 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
     <term><literal>OWNED BY NONE</literal></term>
     <listitem>
      <para>
-      The <literal>OWNED BY</literal> option causes the sequence to be
-      associated with a specific table column, such that if that column
-      (or its whole table) is dropped, the sequence will be automatically
-      dropped as well.  If specified, this association replaces any
-      previously specified association for the sequence.  The specified
-      table must have the same owner and be in the same schema as the
-      sequence.
-      Specifying <literal>OWNED BY NONE</literal> removes any existing
-      association, making the sequence <quote>free-standing</quote>.
+      <literal>OWNED BY</literal> 选项使序列与特定的表列相关联，这样如果该列（或整个表）被删除，该序列也将被自动删除。如果指定了该选项，这种关联将替换之前为该序列指定的任何关联。指定的表必须与序列具有相同的拥有者，并且位于相同的模式中。
+      指定 <literal>OWNED BY NONE</literal> 会移除任何现有的关联，使序列成为<quote>独立</quote>的。
      </para>
     </listitem>
    </varlistentry>
@@ -273,7 +212,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
     <term><replaceable class="parameter">new_owner</replaceable></term>
     <listitem>
      <para>
-      The user name of the new owner of the sequence.
+      序列新拥有者的用户名。
      </para>
     </listitem>
    </varlistentry>
@@ -282,7 +221,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
     <term><replaceable class="parameter">new_name</replaceable></term>
     <listitem>
      <para>
-      The new name for the sequence.
+      序列的新名称。
      </para>
     </listitem>
    </varlistentry>
@@ -291,7 +230,7 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
     <term><replaceable class="parameter">new_schema</replaceable></term>
     <listitem>
      <para>
-      The new schema for the sequence.
+      序列的新模式。
      </para>
     </listitem>
    </varlistentry>
@@ -301,60 +240,45 @@ ALTER SEQUENCE [ IF EXISTS ] <replaceable class="parameter">name</replaceable> S
   </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>备注</title>
 
   <para>
-   <command>ALTER SEQUENCE</command> will not immediately affect
-   <function>nextval</function> results in backends,
-   other than the current one, that have preallocated (cached) sequence
-   values. They will use up all cached values prior to noticing the changed
-   sequence generation parameters.  The current backend will be affected
-   immediately.
+   除当前后端之外，<command>ALTER SEQUENCE</command> 不会立即影响那些已预分配（缓存）序列值的后端中的 <function>nextval</function> 结果。它们会先用完所有缓存值，然后才会注意到序列生成参数已更改。当前后端会立即受到影响。
   </para>
 
   <para>
-   <command>ALTER SEQUENCE</command> does not affect the <function>currval</function>
-   status for the sequence.  (Before <productname>PostgreSQL</productname>
-   8.3, it sometimes did.)
+   <command>ALTER SEQUENCE</command> 不影响序列的 <function>currval</function> 状态。（在 <productname>PostgreSQL</productname> 8.3 之前，它有时会影响。）
   </para>
 
   <para>
-   <command>ALTER SEQUENCE</command> blocks
-   concurrent <function>nextval</function>, <function>currval</function>,
-   <function>lastval</function>, and <command>setval</command> calls.
+   <command>ALTER SEQUENCE</command> 会阻塞并发的 <function>nextval</function>、<function>currval</function>、<function>lastval</function> 和 <command>setval</command> 调用。
   </para>
 
   <para>
-   For historical reasons, <command>ALTER TABLE</command> can be used with
-   sequences too; but the only variants of <command>ALTER TABLE</command>
-   that are allowed with sequences are equivalent to the forms shown above.
+   由于历史原因，<command>ALTER TABLE</command> 也可以用于序列；但允许用于序列的 <command>ALTER TABLE</command> 变体仅等同于上面所示的形式。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Restart a sequence called <literal>serial</literal>, at 105:
+   将名为 <literal>serial</literal> 的序列重新开始于 105：
 <programlisting>
 ALTER SEQUENCE serial RESTART WITH 105;
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>ALTER SEQUENCE</command> conforms to the <acronym>SQL</acronym>
-   standard, except for the <literal>AS</literal>, <literal>START WITH</literal>,
-   <literal>OWNED BY</literal>, <literal>OWNER TO</literal>, <literal>RENAME TO</literal>, and
-   <literal>SET SCHEMA</literal> clauses, which are
-   <productname>PostgreSQL</productname> extensions.
+   <command>ALTER SEQUENCE</command> 符合 <acronym>SQL</acronym> 标准，但 <literal>AS</literal>、<literal>START WITH</literal>、<literal>OWNED BY</literal>、<literal>OWNER TO</literal>、<literal>RENAME TO</literal> 和 <literal>SET SCHEMA</literal> 子句除外，它们是 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createsequence"/></member>
