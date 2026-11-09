@@ -3148,7 +3148,7 @@ extern PgStat_Kind pgstat_register_kind(PgStat_Kind kind,
   </sect1>
 
   <sect1 id="xfunc-optimization">
-   <title>Function Optimization Information</title>
+   <title>函数优化信息</title>
 
   <indexterm zone="xfunc-optimization">
    <primary>optimization information</primary>
@@ -3156,114 +3156,45 @@ extern PgStat_Kind pgstat_register_kind(PgStat_Kind kind,
   </indexterm>
 
    <para>
-    By default, a function is just a <quote>black box</quote> that the
-    database system knows very little about the behavior of.  However,
-    that means that queries using the function may be executed much less
-    efficiently than they could be.  It is possible to supply additional
-    knowledge that helps the planner optimize function calls.
+    默认情况下，函数只是一个<quote>黑盒</quote>，数据库系统对其行为知之甚少。然而，这意味着使用该函数的查询的执行效率可能远低于其本可达到的水平。可以提供额外的知识来帮助规划器优化函数调用。
    </para>
 
    <para>
-    Some basic facts can be supplied by declarative annotations provided in
-    the <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link> command.  Most important of
-    these is the function's <link linkend="xfunc-volatility">volatility
-    category</link> (<literal>IMMUTABLE</literal>, <literal>STABLE</literal>,
-    or <literal>VOLATILE</literal>); one should always be careful to
-    specify this correctly when defining a function.
-    The parallel safety property (<literal>PARALLEL
-    UNSAFE</literal>, <literal>PARALLEL RESTRICTED</literal>, or
-    <literal>PARALLEL SAFE</literal>) must also be specified if you hope
-    to use the function in parallelized queries.
-    It can also be useful to specify the function's estimated execution
-    cost, and/or the number of rows a set-returning function is estimated
-    to return.  However, the declarative way of specifying those two
-    facts only allows specifying a constant value, which is often
-    inadequate.
+    一些基本事实可以通过 <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link> 命令中提供的声明式注解来提供。其中最重要的是函数的 <link linkend="xfunc-volatility">易变性类别</link>（<literal>IMMUTABLE</literal>、<literal>STABLE</literal> 或 <literal>VOLATILE</literal>）；定义函数时应始终注意正确指定它。如果你希望在并行查询中使用该函数，还必须指定并行安全性属性（<literal>PARALLEL
+    UNSAFE</literal>、<literal>PARALLEL RESTRICTED</literal> 或 <literal>PARALLEL SAFE</literal>）。指定函数的估计执行成本，和/或集合返回函数估计返回的行数，也可能很有用。然而，以声明式方式指定这两项事实只允许指定一个常量值，这往往不够充分。
    </para>
 
    <para>
-    It is also possible to attach a <firstterm>planner support
-    function</firstterm> to an SQL-callable function (called
-    its <firstterm>target function</firstterm>), and thereby provide
-    knowledge about the target function that is too complex to be
-    represented declaratively.  Planner support functions have to be
-    written in C (although their target functions might not be), so this is
-    an advanced feature that relatively few people will use.
+    还可以将<firstterm>规划器支持函数</firstterm>附加到 SQL 可调用函数（称为其<firstterm>目标函数</firstterm>），从而提供关于目标函数的、过于复杂而无法以声明式方式表示的知识。规划器支持函数必须用 C 编写（尽管它们的目标函数可能不是），因此这是一个相对较少人使用的高级特性。
    </para>
 
    <para>
-    A planner support function must have the SQL signature
-<programlisting>
+    规划器支持函数必须具有 SQL 签名 <programlisting>
 supportfn(internal) returns internal
-</programlisting>
-    It is attached to its target function by specifying
-    the <literal>SUPPORT</literal> clause when creating the target function.
+</programlisting>。创建目标函数时通过指定 <literal>SUPPORT</literal> 子句将其附加到目标函数。
    </para>
 
    <para>
-    The details of the API for planner support functions can be found in
-    file <filename>src/include/nodes/supportnodes.h</filename> in the
-    <productname>PostgreSQL</productname> source code.  Here we provide
-    just an overview of what planner support functions can do.
-    The set of possible requests to a support function is extensible,
-    so more things might be possible in future versions.
+    规划器支持函数 API 的细节可以在 <productname>PostgreSQL</productname> 源代码的 <filename>src/include/nodes/supportnodes.h</filename> 文件中找到。这里我们只概述规划器支持函数能做什么。对支持函数的可能请求集合是可扩展的，因此在未来的版本中可能会有更多功能。
    </para>
 
    <para>
-    Some function calls can be simplified during planning based on
-    properties specific to the function.  For example,
-    <literal>int4mul(n, 1)</literal> could be simplified to
-    just <literal>n</literal>.  This type of transformation can be
-    performed by a planner support function, by having it implement
-    the <literal>SupportRequestSimplify</literal> request type.
-    The support function will be called for each instance of its target
-    function found in a query parse tree.  If it finds that the particular
-    call can be simplified into some other form, it can build and return a
-    parse tree representing that expression.  This will automatically work
-    for operators based on the function, too &mdash; in the example just
-    given, <literal>n * 1</literal> would also be simplified to
-    <literal>n</literal>.
-    (But note that this is just an example; this particular
-    optimization is not actually performed by
-    standard <productname>PostgreSQL</productname>.)
-    We make no guarantee that <productname>PostgreSQL</productname> will
-    never call the target function in cases that the support function could
-    simplify.  Ensure rigorous equivalence between the simplified
-    expression and an actual execution of the target function.
+    某些函数调用可以在规划期间根据该函数特有的属性进行简化。例如，<literal>int4mul(n, 1)</literal> 可以简化为仅 <literal>n</literal>。这类转换可以由规划器支持函数通过实现 <literal>SupportRequestSimplify</literal> 请求类型来完成。对于在查询分析树中发现的每个目标函数实例，都会调用该支持函数。如果它发现该特定调用可以简化为其他某种形式，就可以构建并返回表示该表达式的分析树。这也会自动作用于基于该函数的运算符，&mdash; 在刚才给出的例子中，<literal>n * 1</literal> 也会被简化为 <literal>n</literal>。（但请注意这只是一个例子；标准 <productname>PostgreSQL</productname> 实际上并不执行这一特定的优化。）我们不保证 <productname>PostgreSQL</productname> 在支持函数可以简化的情况下永远不会调用目标函数。请确保简化后的表达式与目标函数的实际执行之间严格等价。
    </para>
 
    <para>
-    For target functions that return <type>boolean</type>, it is often useful to estimate
-    the fraction of rows that will be selected by a <literal>WHERE</literal> clause using that
-    function.  This can be done by a support function that implements
-    the <literal>SupportRequestSelectivity</literal> request type.
+    对于返回 <type>boolean</type> 的目标函数，通常有用的是估计使用该函数的 <literal>WHERE</literal> 子句将选择的行所占的比例。这可以通过实现 <literal>SupportRequestSelectivity</literal> 请求类型的支持函数来完成。
    </para>
 
    <para>
-    If the target function's run time is highly dependent on its inputs,
-    it may be useful to provide a non-constant cost estimate for it.
-    This can be done by a support function that implements
-    the <literal>SupportRequestCost</literal> request type.
+    如果目标函数的运行时间高度依赖于其输入，那么为它提供一个非常量的代价估计可能是有用的。这可以通过实现 <literal>SupportRequestCost</literal> 请求类型的支持函数来完成。
    </para>
 
    <para>
-    For target functions that return sets, it is often useful to provide
-    a non-constant estimate for the number of rows that will be returned.
-    This can be done by a support function that implements
-    the <literal>SupportRequestRows</literal> request type.
+    对于返回集合的目标函数，通常有用的是为将返回的行数提供一个非常量估计。这可以通过实现 <literal>SupportRequestRows</literal> 请求类型的支持函数来完成。
    </para>
 
    <para>
-    For target functions that return <type>boolean</type>, it may be possible to
-    convert a function call appearing in <literal>WHERE</literal> into an indexable operator
-    clause or clauses.  The converted clauses might be exactly equivalent
-    to the function's condition, or they could be somewhat weaker (that is,
-    they might accept some values that the function condition does not).
-    In the latter case the index condition is said to
-    be <firstterm>lossy</firstterm>; it can still be used to scan an index,
-    but the function call will have to be executed for each row returned by
-    the index to see if it really passes the <literal>WHERE</literal> condition or not.
-    To create such conditions, the support function must implement
-    the <literal>SupportRequestIndexCondition</literal> request type.
+    对于返回 <type>boolean</type> 的目标函数，可能可以将出现在 <literal>WHERE</literal> 中的函数调用转换为一个或多个可索引的运算符子句。转换后的子句可能与函数条件完全等价，也可能稍弱一些（也就是说，它们可能接受一些函数条件不接受的值）。在后一种情况下，该索引条件被称为<firstterm>有损的</firstterm>；它仍然可以用于扫描索引，但必须对索引返回的每一行执行该函数调用，以检查它是否真正满足 <literal>WHERE</literal> 条件。要创建这样的条件，支持函数必须实现 <literal>SupportRequestIndexCondition</literal> 请求类型。
    </para>
   </sect1>
