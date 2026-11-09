@@ -6380,17 +6380,16 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
   </sect1>
 
    <sect1 id="runtime-config-statistics">
-    <title>Run-time Statistics</title>
+    <title>运行时统计信息</title>
 
     <sect2 id="runtime-config-cumulative-statistics">
-     <title>Cumulative Query and Index Statistics</title>
+     <title>累积查询和索引统计信息</title>
 
      <para>
-      These parameters control the server-wide cumulative statistics system.
-      When enabled, the data that is collected can be accessed via the
-      <structname>pg_stat</structname> and <structname>pg_statio</structname>
-      family of system views.  Refer to <xref linkend="monitoring"/> for more
-      information.
+      这些参数控制服务器范围的累积统计信息系统。
+      启用后，所收集的数据可以通过
+      <structname>pg_stat</structname> 和 <structname>pg_statio</structname>
+      系列系统视图访问。更多信息请参阅 <xref linkend="monitoring"/>。
      </para>
 
      <variablelist>
@@ -6398,21 +6397,15 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-activities" xreflabel="track_activities">
       <term><varname>track_activities</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>track_activities</varname> configuration parameter</primary>
+       <primary><varname>track_activities</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables the collection of information on the currently
-        executing command of each session, along with its identifier and the
-        time when that command began execution. This parameter is on by
-        default. Note that even when enabled, this information is only
-        visible to superusers, roles with privileges of the
-        <literal>pg_read_all_stats</literal> role and the user owning the
-        sessions being reported on (including sessions belonging to a role they
-        have the privileges of), so it should not represent a security risk.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        启用对每个会话当前正在执行的命令的信息收集，包括其标识符以及该命令开始执行的时间。此参数默认开启。请注意，即使启用，此信息也仅对超级用户、具有
+        <literal>pg_read_all_stats</literal> 角色权限的角色以及被报告会话的属主用户（包括属于其具有权限的角色的会话）可见，因此它不应构成安全风险。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6420,17 +6413,16 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-activity-query-size" xreflabel="track_activity_query_size">
       <term><varname>track_activity_query_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>track_activity_query_size</varname> configuration parameter</primary>
+       <primary><varname>track_activity_query_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-       Specifies the amount of memory reserved to store the text of the
-       currently executing command for each active session, for the
-       <structname>pg_stat_activity</structname>.<structfield>query</structfield> field.
-       If this value is specified without units, it is taken as bytes.
-       The default value is 1024 bytes.
-       This parameter can only be set at server start.
+       指定为每个活动会话保留的内存量，用于存储当前正在执行的命令文本，供
+       <structname>pg_stat_activity</structname>.<structfield>query</structfield> 字段使用。
+       如果指定该值时不带单位，则按字节处理。
+       默认值为 1024 字节。
+       该参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6438,16 +6430,15 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-counts" xreflabel="track_counts">
       <term><varname>track_counts</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>track_counts</varname> configuration parameter</primary>
+       <primary><varname>track_counts</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables collection of statistics on database activity.
-        This parameter is on by default, because the autovacuum
-        daemon needs the collected information.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        启用对数据库活动统计信息的收集。
+        该参数默认开启，因为自动清理守护进程需要收集到的信息。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6455,27 +6446,25 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-cost-delay-timing" xreflabel="track_cost_delay_timing">
       <term><varname>track_cost_delay_timing</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>track_cost_delay_timing</varname> configuration parameter</primary>
+       <primary><varname>track_cost_delay_timing</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables timing of cost-based vacuum delay (see
-        <xref linkend="runtime-config-resource-vacuum-cost"/>).  This parameter
-        is off by default, as it will repeatedly query the operating system for
-        the current time, which may cause significant overhead on some
-        platforms.  You can use the <xref linkend="pgtesttiming"/> tool to
-        measure the overhead of timing on your system.  Cost-based vacuum delay
-        timing information is displayed in
-        <link linkend="vacuum-progress-reporting"><structname>pg_stat_progress_vacuum</structname></link>,
-        <link linkend="analyze-progress-reporting"><structname>pg_stat_progress_analyze</structname></link>,
-        in the output of <xref linkend="sql-vacuum"/> and
-        <xref linkend="sql-analyze"/> when the
-        <literal>VERBOSE</literal> option is used, and by autovacuum for
-        auto-vacuums and auto-analyzes when
-        <xref linkend="guc-log-autovacuum-min-duration"/> is set.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        启用基于成本的清理延迟的计时（参见
+        <xref linkend="runtime-config-resource-vacuum-cost"/>）。该参数
+        默认关闭，因为它会反复向操作系统查询当前时间，这在某些
+        平台上可能造成显著开销。你可以使用 <xref linkend="pgtesttiming"/> 工具
+        测量你系统上计时的开销。基于成本的清理延迟
+        计时信息显示在
+        <link linkend="vacuum-progress-reporting"><structname>pg_stat_progress_vacuum</structname></link>、
+        <link linkend="analyze-progress-reporting"><structname>pg_stat_progress_analyze</structname></link> 中，
+        在使用 <literal>VERBOSE</literal> 选项时显示在 <xref linkend="sql-vacuum"/> 和
+        <xref linkend="sql-analyze"/> 的输出中，以及当设置了
+        <xref linkend="guc-log-autovacuum-min-duration"/> 时由自动清理进程
+        在自动清理和自动分析时显示。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6483,33 +6472,26 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-io-timing" xreflabel="track_io_timing">
       <term><varname>track_io_timing</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>track_io_timing</varname> configuration parameter</primary>
+       <primary><varname>track_io_timing</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables timing of database I/O waits.  This parameter is off by
-        default, as it will repeatedly query the operating system for
-        the current time, which may cause significant overhead on some
-        platforms.  You can use the <xref linkend="pgtesttiming"/> tool to
-        measure the overhead of timing on your system.
-        I/O timing information is
-        displayed in <link linkend="monitoring-pg-stat-database-view">
-        <structname>pg_stat_database</structname></link>,
+        启用数据库 I/O 等待的计时。此参数默认关闭，因为它会反复向操作系统查询当前时间，在某些平台上可能造成显著的开销。你可以使用 <xref linkend="pgtesttiming"/> 工具来测量你的系统上计时的开销。
+        I/O 计时信息显示在 <link linkend="monitoring-pg-stat-database-view">
+        <structname>pg_stat_database</structname></link>、
         <link linkend="monitoring-pg-stat-io-view">
-        <structname>pg_stat_io</structname></link> (if <varname>object</varname>
-        is not <literal>wal</literal>), in the output of the
+        <structname>pg_stat_io</structname></link>（如果 <varname>object</varname>
+        不为 <literal>wal</literal>）中，显示在
         <link linkend="pg-stat-get-backend-io">
-        <function>pg_stat_get_backend_io()</function></link> function (if
-        <varname>object</varname> is not <literal>wal</literal>), in the
-        output of <xref linkend="sql-explain"/> when the <literal>BUFFERS</literal>
-        option is used, in the output of <xref linkend="sql-vacuum"/> when
-        the <literal>VERBOSE</literal> option is used, by autovacuum
-        for auto-vacuums and auto-analyzes, when <xref
-        linkend="guc-log-autovacuum-min-duration"/> is set and by
-        <xref linkend="pgstatstatements"/>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        <function>pg_stat_get_backend_io()</function></link> 函数的输出中（如果
+        <varname>object</varname> 不为 <literal>wal</literal>），在使用 <literal>BUFFERS</literal>
+        选项时显示在 <xref linkend="sql-explain"/> 的输出中，在使用
+        <literal>VERBOSE</literal> 选项时显示在 <xref linkend="sql-vacuum"/> 的输出中，当设置了 <xref
+        linkend="guc-log-autovacuum-min-duration"/> 时由自动清理用于自动清理和自动分析，以及由
+        <xref linkend="pgstatstatements"/> 显示。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6517,25 +6499,24 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-wal-io-timing" xreflabel="track_wal_io_timing">
       <term><varname>track_wal_io_timing</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>track_wal_io_timing</varname> configuration parameter</primary>
+       <primary><varname>track_wal_io_timing</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables timing of WAL I/O waits. This parameter is off by default,
-        as it will repeatedly query the operating system for the current time,
-        which may cause significant overhead on some platforms.
-        You can use the <application>pg_test_timing</application> tool to
-        measure the overhead of timing on your system.
-        I/O timing information is displayed in
+        启用 WAL I/O 等待的计时。此参数默认关闭，
+        因为它会反复向操作系统查询当前时间，
+        在某些平台上可能造成显著的开销。
+        你可以使用 <application>pg_test_timing</application> 工具来
+        测量你的系统上计时的开销。
+        对于 <varname>object</varname> <literal>wal</literal>，I/O 计时信息显示在
         <link linkend="monitoring-pg-stat-io-view">
-        <structname>pg_stat_io</structname></link> for the
-        <varname>object</varname> <literal>wal</literal> and in the output of
-        the <link linkend="pg-stat-get-backend-io">
-        <function>pg_stat_get_backend_io()</function></link> function for the
-        <varname>object</varname> <literal>wal</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        <structname>pg_stat_io</structname></link> 中；对于
+        <varname>object</varname> <literal>wal</literal>，则显示在
+        <link linkend="pg-stat-get-backend-io">
+        <function>pg_stat_get_backend_io()</function></link> 函数的输出中。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6543,25 +6524,23 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-track-functions" xreflabel="track_functions">
       <term><varname>track_functions</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>track_functions</varname> configuration parameter</primary>
+       <primary><varname>track_functions</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables tracking of function call counts and time used. Specify
-        <literal>pl</literal> to track only procedural-language functions,
-        <literal>all</literal> to also track SQL and C language functions.
-        The default is <literal>none</literal>, which disables function
-        statistics tracking.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        启用对函数调用次数和所用时间的跟踪。指定
+        <literal>pl</literal> 仅跟踪过程语言函数，
+        指定 <literal>all</literal> 还会跟踪 SQL 和 C 语言函数。
+        默认值为 <literal>none</literal>，即禁用函数
+        统计跟踪。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <note>
         <para>
-         SQL-language functions that are simple enough to be <quote>inlined</quote>
-         into the calling query will not be tracked, regardless of this
-         setting.
+         足够简单、可以被<quote>内联</quote>到调用查询中的 SQL 语言函数不会被跟踪，无论此设置如何。
         </para>
        </note>
       </listitem>
@@ -6570,33 +6549,28 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-stats-fetch-consistency" xreflabel="stats_fetch_consistency">
       <term><varname>stats_fetch_consistency</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>stats_fetch_consistency</varname> configuration parameter</primary>
+       <primary><varname>stats_fetch_consistency</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Determines the behavior when cumulative statistics are accessed
-        multiple times within a transaction. When set to
-        <literal>none</literal>, each access re-fetches counters from shared
-        memory. When set to <literal>cache</literal>, the first access to
-        statistics for an object caches those statistics until the end of the
-        transaction unless <function>pg_stat_clear_snapshot()</function> is
-        called. When set to <literal>snapshot</literal>, the first statistics
-        access caches all statistics accessible in the current database, until
-        the end of the transaction unless
-        <function>pg_stat_clear_snapshot()</function> is called. Changing this
-        parameter in a transaction discards the statistics snapshot.
-        The default is <literal>cache</literal>.
+        决定在一个事务中多次访问累积统计信息时的行为。当设置为
+        <literal>none</literal> 时，每次访问都会从共享内存重新获取计数器。当设置为 <literal>cache</literal> 时，
+        对某个对象统计信息的首次访问会缓存这些统计信息，直到事务结束，
+        除非调用了 <function>pg_stat_clear_snapshot()</function>。当设置为 <literal>snapshot</literal> 时，首次统计信息访问
+        会缓存当前数据库中所有可访问的统计信息，直到事务结束，
+        除非调用了
+        <function>pg_stat_clear_snapshot()</function>。在事务中更改此参数会丢弃统计信息快照。
+        默认值为 <literal>cache</literal>。
        </para>
        <note>
         <para>
-         <literal>none</literal> is most suitable for monitoring systems. If
-         values are only accessed once, it is the most
-         efficient. <literal>cache</literal> ensures repeat accesses yield the
-         same values, which is important for queries involving
-         e.g. self-joins. <literal>snapshot</literal> can be useful when
-         interactively inspecting statistics, but has higher overhead,
-         particularly if many database objects exist.
+         <literal>none</literal> 最适合监控系统。如果值只被访问一次，它是最
+         高效的。<literal>cache</literal> 确保重复访问产生
+         相同的值，这对于涉及
+         例如自连接的查询很重要。<literal>snapshot</literal> 在
+         交互式检查统计信息时可能有用，但开销更高，
+         尤其是在存在许多数据库对象时。
         </para>
        </note>
       </listitem>
@@ -6606,41 +6580,29 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
     </sect2>
 
     <sect2 id="runtime-config-statistics-monitor">
-     <title>Statistics Monitoring</title>
+     <title>统计信息监控</title>
      <variablelist>
 
      <varlistentry id="guc-compute-query-id" xreflabel="compute_query_id">
       <term><varname>compute_query_id</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>compute_query_id</varname> configuration parameter</primary>
+       <primary><varname>compute_query_id</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables in-core computation of a query identifier.
-        Query identifiers can be displayed in the <link
+        启用查询标识符的核心内计算。
+        查询标识符可以显示在 <link
         linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link>
-        view, using <command>EXPLAIN</command>, or emitted in the log if
-        configured via the <xref linkend="guc-log-line-prefix"/> parameter.
-        The <xref linkend="pgstatstatements"/> extension also requires a query
-        identifier to be computed.  Note that an external module can
-        alternatively be used if the in-core query identifier computation
-        method is not acceptable.  In this case, in-core computation
-        must be always disabled.
-        Valid values are <literal>off</literal> (always disabled),
-        <literal>on</literal> (always enabled), <literal>auto</literal>,
-        which lets modules such as <xref linkend="pgstatstatements"/>
-        automatically enable it, and <literal>regress</literal> which
-        has the same effect as <literal>auto</literal>, except that the
-        query identifier is not shown in the <literal>EXPLAIN</literal> output
-        in order to facilitate automated regression testing.
-        The default is <literal>auto</literal>.
+        视图中（使用 <command>EXPLAIN</command>），或者如果通过 <xref linkend="guc-log-line-prefix"/> 参数进行了配置，也可以输出到日志中。
+        <xref linkend="pgstatstatements"/> 扩展也需要计算查询标识符。请注意，如果核心内查询标识符计算方法不可接受，也可以改用外部模块。在这种情况下，必须始终禁用核心内计算。
+        有效值为 <literal>off</literal>（始终禁用）、
+        <literal>on</literal>（始终启用）、<literal>auto</literal>（允许诸如 <xref linkend="pgstatstatements"/> 之类的模块自动启用它），以及 <literal>regress</literal>（其效果与 <literal>auto</literal> 相同，只是查询标识符不会显示在 <literal>EXPLAIN</literal> 输出中，以便于自动化回归测试）。
+        默认值为 <literal>auto</literal>。
        </para>
        <note>
         <para>
-         To ensure that only one query identifier is calculated and
-         displayed, extensions that calculate query identifiers should
-         throw an error if a query identifier has already been computed.
+         为确保只计算并显示一个查询标识符，计算查询标识符的扩展在查询标识符已被计算的情况下应抛出错误。
         </para>
        </note>
       </listitem>
@@ -6649,36 +6611,27 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-log-statement-stats">
       <term><varname>log_statement_stats</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_statement_stats</varname> configuration parameter</primary>
+       <primary><varname>log_statement_stats</varname> 配置参数</primary>
       </indexterm>
       </term>
       <term><varname>log_parser_stats</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_parser_stats</varname> configuration parameter</primary>
+       <primary><varname>log_parser_stats</varname> 配置参数</primary>
       </indexterm>
       </term>
       <term><varname>log_planner_stats</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_planner_stats</varname> configuration parameter</primary>
+       <primary><varname>log_planner_stats</varname> 配置参数</primary>
       </indexterm>
       </term>
       <term><varname>log_executor_stats</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_executor_stats</varname> configuration parameter</primary>
+       <primary><varname>log_executor_stats</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        For each query, output performance statistics of the respective
-        module to the server log. This is a crude profiling
-        instrument, similar to the Unix <function>getrusage()</function> operating
-        system facility.  <varname>log_statement_stats</varname> reports total
-        statement statistics, while the others report per-module statistics.
-        <varname>log_statement_stats</varname> cannot be enabled together with
-        any of the per-module options.  All of these options are disabled by
-        default.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change these settings.
+        对每个查询，将相应模块的性能统计信息输出到服务器日志。这是一种粗糙的性能剖析工具，类似于 Unix <function>getrusage()</function> 操作系统设施。<varname>log_statement_stats</varname> 报告总的语句统计信息，而其他选项报告各模块的统计信息。<varname>log_statement_stats</varname> 不能与任何按模块的选项一起启用。所有这些选项默认都是禁用的。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改这些设置。
        </para>
       </listitem>
      </varlistentry>
