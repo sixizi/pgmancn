@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE TRANSFORM</refname>
-  <refpurpose>define a new transform</refpurpose>
+  <refpurpose>定义一个新的转换</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -29,61 +29,49 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
  </refsynopsisdiv>
 
  <refsect1 id="sql-createtransform-description">
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE TRANSFORM</command> defines a new transform.
-   <command>CREATE OR REPLACE TRANSFORM</command> will either create a new
-   transform, or replace an existing definition.
+   <command>CREATE TRANSFORM</command> 定义一个新的转换。
+   <command>CREATE OR REPLACE TRANSFORM</command> 将创建一个新转换，或者替换已有的定义。
   </para>
 
   <para>
-   A transform specifies how to adapt a data type to a procedural language.
-   For example, when writing a function in PL/Python using
-   the <type>hstore</type> type, PL/Python has no prior knowledge how to
-   present <type>hstore</type> values in the Python environment.  Language
-   implementations usually default to using the text representation, but that
-   is inconvenient when, for example, an associative array or a list would be
-   more appropriate.
+   转换指定如何让一种数据类型适配一种过程语言。
+   例如，在使用 <type>hstore</type> 类型以 PL/Python 编写函数时，
+   PL/Python 事先并不知道如何在 Python 环境中
+   呈现 <type>hstore</type> 值。语言实现通常默认使用文本表示，
+   但在某些情况下（例如关联数组或列表更合适时），
+   这样做并不方便。
   </para>
 
   <para>
-   A transform specifies two functions:
+   一个转换指定两个函数：
    <itemizedlist>
     <listitem>
      <para>
-      A <quote>from SQL</quote> function that converts the type from the SQL
-      environment to the language.  This function will be invoked on the
-      arguments of a function written in the language.
+      一个<quote>从 SQL</quote>转换的函数，把类型从 SQL
+      环境转换为该语言。该函数会被应用于用该语言编写的
+      函数的参数。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      A <quote>to SQL</quote> function that converts the type from the
-      language to the SQL environment.  This function will be invoked on the
-      return value of a function written in the language.
+      一个<quote>到 SQL</quote>函数，用于把该类型从该语言转换到 SQL 环境。该函数将在此语言中编写的函数的返回值上被调用。
      </para>
     </listitem>
    </itemizedlist>
-   It is not necessary to provide both of these functions.  If one is not
-   specified, the language-specific default behavior will be used if
-   necessary.  (To prevent a transformation in a certain direction from
-   happening at all, you could also write a transform function that always
-   errors out.)
+   不必同时提供这两个函数。如果未指定其中一个，则在必要时将使用该语言特定的默认行为。（要完全阻止某个方向上的转换发生，你也可以编写一个总是报错的转换函数。）
   </para>
 
   <para>
-   To be able to create a transform, you must own and
-   have <literal>USAGE</literal> privilege on the type, have
-   <literal>USAGE</literal> privilege on the language, and own and
-   have <literal>EXECUTE</literal> privilege on the from-SQL and to-SQL
-   functions, if specified.
+   要能够创建转换，你必须拥有该类型并具有其 <literal>USAGE</literal> 权限，具有该语言的 <literal>USAGE</literal> 权限，并且如果指定了 from-SQL 和 to-SQL 函数，还必须拥有这两个函数并具有其 <literal>EXECUTE</literal> 权限。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
    <variablelist>
     <varlistentry>
@@ -91,7 +79,7 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
 
      <listitem>
       <para>
-       The name of the data type of the transform.
+       转换的数据类型的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -101,7 +89,7 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
 
      <listitem>
       <para>
-       The name of the language of the transform.
+       转换的语言的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -111,16 +99,7 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
 
      <listitem>
       <para>
-       The name of the function for converting the type from the SQL
-       environment to the language.  It must take one argument of
-       type <type>internal</type> and return type <type>internal</type>.  The
-       actual argument will be of the type for the transform, and the function
-       should be coded as if it were.  (But it is not allowed to declare an
-       SQL-level function returning <type>internal</type> without at
-       least one argument of type <type>internal</type>.)  The actual return
-       value will be something specific to the language implementation.
-       If no argument list is specified, the function name must be unique in
-       its schema.
+       用于将类型从 SQL 环境转换为该语言的函数名称。它必须接受一个类型为 <type>internal</type> 的参数并返回类型 <type>internal</type>。实际参数将是该转换所针对的类型，函数的编写方式应视其为此类型。（但不允许声明一个返回 <type>internal</type> 的 SQL 层函数而没有任何类型为 <type>internal</type> 的参数。）实际返回值将是特定于该语言实现的内容。如果未指定参数列表，则函数名在其模式中必须唯一。
       </para>
      </listitem>
     </varlistentry>
@@ -130,13 +109,7 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
 
      <listitem>
       <para>
-       The name of the function for converting the type from the language to
-       the SQL environment.  It must take one argument of type
-       <type>internal</type> and return the type that is the type for the
-       transform.  The actual argument value will be something specific to the
-       language implementation.
-       If no argument list is specified, the function name must be unique in
-       its schema.
+       用于将类型从该语言转换为 SQL 环境的函数名称。它必须接受一个类型为 <type>internal</type> 的参数并返回作为该转换所针对类型的类型。实际参数值将是特定于该语言实现的内容。如果未指定参数列表，则函数名在其模式中必须唯一。
       </para>
      </listitem>
     </varlistentry>
@@ -144,25 +117,24 @@ CREATE [ OR REPLACE ] TRANSFORM FOR <replaceable>type_name</replaceable> LANGUAG
  </refsect1>
 
  <refsect1 id="sql-createtransform-notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   Use <link linkend="sql-droptransform"><command>DROP TRANSFORM</command></link> to remove transforms.
+   使用 <link linkend="sql-droptransform"><command>DROP TRANSFORM</command></link> 删除转换。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createtransform-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To create a transform for type <type>hstore</type> and language
-   <literal>plpython3u</literal>, first set up the type and the language:
+   要为类型 <type>hstore</type> 和语言 <literal>plpython3u</literal> 创建转换，首先设置该类型和语言：
 <programlisting>
 CREATE TYPE hstore ...;
 
 CREATE EXTENSION plpython3u;
 </programlisting>
-   Then create the necessary functions:
+   然后创建必要的函数：
 <programlisting>
 CREATE FUNCTION hstore_to_plpython(val internal) RETURNS internal
 LANGUAGE C STRICT IMMUTABLE
@@ -172,36 +144,32 @@ CREATE FUNCTION plpython_to_hstore(val internal) RETURNS hstore
 LANGUAGE C STRICT IMMUTABLE
 AS ...;
 </programlisting>
-   And finally create the transform to connect them all together:
+   最后创建转换将它们全部连接起来：
 <programlisting>
 CREATE TRANSFORM FOR hstore LANGUAGE plpython3u (
     FROM SQL WITH FUNCTION hstore_to_plpython(internal),
     TO SQL WITH FUNCTION plpython_to_hstore(internal)
 );
 </programlisting>
-   In practice, these commands would be wrapped up in an extension.
+   在实践中，这些命令会被包装在一个扩展中。
   </para>
 
   <para>
-   The <filename>contrib</filename> section contains a number of extensions
-   that provide transforms, which can serve as real-world examples.
+   <filename>contrib</filename> 一节包含若干提供转换的扩展，它们可以作为现实中的示例。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createtransform-compat">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   This form of <command>CREATE TRANSFORM</command> is a
-   <productname>PostgreSQL</productname> extension.  There is a <command>CREATE
-   TRANSFORM</command> command in the <acronym>SQL</acronym> standard, but it
-   is for adapting data types to client languages.  That usage is not supported
-   by <productname>PostgreSQL</productname>.
+   <command>CREATE TRANSFORM</command> 的这种形式是一个 <productname>PostgreSQL</productname> 扩展。<acronym>SQL</acronym> 标准中有一个 <command>CREATE
+   TRANSFORM</command> 命令，但它是用于让数据类型适配客户端语言的。<productname>PostgreSQL</productname> 不支持这种用法。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createtransform-seealso">
-  <title>See Also</title>
+  <title>另见</title>
 
   <para>
    <xref linkend="sql-createfunction"/>,
