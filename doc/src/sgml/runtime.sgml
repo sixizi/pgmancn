@@ -1830,97 +1830,79 @@ openssl x509 -req -in server.csr -text -days 365 \
  </sect1>
 
  <sect1 id="ssh-tunnels">
-  <title>Secure TCP/IP Connections with <application>SSH</application> Tunnels</title>
+  <title>使用 <application>SSH</application> 隧道建立安全的 TCP/IP 连接</title>
 
   <indexterm zone="ssh-tunnels">
    <primary>ssh</primary>
   </indexterm>
 
   <para>
-   It is possible to use <application>SSH</application> to encrypt the network
-   connection between clients and a
-   <productname>PostgreSQL</productname> server. Done properly, this
-   provides an adequately secure network connection, even for non-SSL-capable
-   clients.
+   可以使用 <application>SSH</application> 来加密客户端与
+   <productname>PostgreSQL</productname> 服务器之间的网络连接。如果配置得当，即使对于不支持 SSL 的客户端，
+   这也能提供足够安全的网络连接。
   </para>
 
   <para>
-   First make sure that an <application>SSH</application> server is
-   running properly on the same machine as the
-   <productname>PostgreSQL</productname> server and that you can log in using
-   <command>ssh</command> as some user;  you then can establish a
-   secure tunnel to the remote server.  A secure tunnel listens on a
-   local port and forwards all traffic to a port on the remote machine.
-   Traffic sent to the remote port can arrive on its
-   <literal>localhost</literal> address, or different bind
-   address if desired;  it does not appear as coming from your
-   local machine.  This command creates a secure tunnel from the client
-   machine to the remote machine <literal>foo.com</literal>:
+   首先确保在与 <productname>PostgreSQL</productname> 服务器同一台机器上有一个
+   <application>SSH</application> 服务器正常运行，并且你可以使用
+   <command>ssh</command> 以某个用户身份登录；然后你就可以建立到远程服务器的
+   安全隧道。安全隧道监听一个本地端口，并将所有流量转发到远程机器上的某个端口。
+   发送到远程端口的流量可以到达其
+   <literal>localhost</literal> 地址，或者根据需要到达不同的绑定地址；它不会表现为来自你的
+   本地机器。以下命令创建一条从客户端机器到远程机器 <literal>foo.com</literal> 的安全隧道：
 <programlisting>
 ssh -L 63333:localhost:5432 joe@foo.com
 </programlisting>
-   The first number in the <option>-L</option> argument, 63333, is the
-   local port number of the tunnel; it can be any unused port.  (IANA
-   reserves ports 49152 through 65535 for private use.)  The name or IP
-   address after this is the remote bind address you are connecting to,
-   i.e., <literal>localhost</literal>, which is the default.  The second
-   number, 5432, is the remote end of the tunnel, e.g., the port number
-   your database server is using.  In order to connect to the database
-   server using this tunnel, you connect to port 63333 on the local
-   machine:
+   <option>-L</option> 参数中的第一个数字 63333 是该隧道的
+   本地端口号；它可以是任何未使用的端口。（IANA
+   保留 49152 到 65535 端口供私人使用。）其后的名称或 IP
+   地址是你要连接的远程绑定地址，
+   即 <literal>localhost</literal>，这是默认值。第二个
+   数字 5432 是隧道的远程端，例如你的数据库服务器所使用的端口号。
+   为了使用该隧道连接到数据库服务器，你需要连接到本地机器上的 63333 端口：
 <programlisting>
 psql -h localhost -p 63333 postgres
 </programlisting>
-   To the database server it will then look as though you are
-   user <literal>joe</literal> on host <literal>foo.com</literal>
-   connecting to the <literal>localhost</literal> bind address, and it
-   will use whatever authentication procedure was configured for
-   connections by that user to that bind address.  Note that the server will not
-   think the connection is SSL-encrypted, since in fact it is not
-   encrypted between the
-   <application>SSH</application> server and the
-   <productname>PostgreSQL</productname> server.  This should not pose any
-   extra security risk because they are on the same machine.
+   对数据库服务器而言，看起来就像是
+   主机 <literal>foo.com</literal> 上的用户 <literal>joe</literal>
+   连接到 <literal>localhost</literal> 绑定地址，并且
+   它将使用为该用户到该绑定地址的连接所配置的任何认证过程。请注意，服务器不会
+   认为该连接是 SSL 加密的，因为实际上在
+   <application>SSH</application> 服务器与
+   <productname>PostgreSQL</productname> 服务器之间它并未加密。这不应带来任何
+   额外的安全风险，因为它们位于同一台机器上。
   </para>
 
   <para>
-   In order for the
-   tunnel setup to succeed you must be allowed to connect via
-   <command>ssh</command> as <literal>joe@foo.com</literal>, just
-   as if you had attempted to use <command>ssh</command> to create a
-   terminal session.
+   为了使隧道设置成功，你必须被允许以
+   <literal>joe@foo.com</literal> 身份通过 <command>ssh</command> 连接，
+   就像你尝试使用 <command>ssh</command> 创建终端会话一样。
   </para>
 
   <para>
-   You could also have set up port forwarding as
+   你也可以将端口转发设置为
 <programlisting>
 ssh -L 63333:foo.com:5432 joe@foo.com
 </programlisting>
-   but then the database server will see the connection as coming in
-   on its <literal>foo.com</literal> bind address, which is not opened by
-   the default setting <literal>listen_addresses =
-   'localhost'</literal>.  This is usually not what you want.
+   但这样数据库服务器将看到连接是从其 <literal>foo.com</literal> 绑定地址进来的，
+   而该地址默认设置 <literal>listen_addresses =
+   'localhost'</literal> 并未开放。这通常不是你想要的。
   </para>
 
   <para>
-   If you have to <quote>hop</quote> to the database server via some
-   login host, one possible setup could look like this:
+   如果你必须通过某个登录主机<quote>跳转</quote>到数据库服务器，一种可能的设置如下：
 <programlisting>
 ssh -L 63333:db.foo.com:5432 joe@shell.foo.com
 </programlisting>
-   Note that this way the connection
-   from <literal>shell.foo.com</literal>
-   to <literal>db.foo.com</literal> will not be encrypted by the SSH
-   tunnel.
-   SSH offers quite a few configuration possibilities when the network
-   is restricted in various ways.  Please refer to the SSH
-   documentation for details.
+   请注意，这种方式下从 <literal>shell.foo.com</literal>
+   到 <literal>db.foo.com</literal> 的连接不会被 SSH 隧道加密。
+   当网络受到各种方式的限制时，SSH 提供了相当多的配置可能性。
+   详情请参阅 SSH 文档。
   </para>
 
   <tip>
    <para>
-    Several other applications exist that can provide secure tunnels using
-    a procedure similar in concept to the one just described.
+    还存在若干其他应用程序，它们可以使用在概念上类似于刚才所述过程的方法来提供安全隧道。
    </para>
   </tip>
 
