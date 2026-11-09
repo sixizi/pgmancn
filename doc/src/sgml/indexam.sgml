@@ -771,23 +771,14 @@ amtranslatecmptype (CompareType cmptype, Oid opfamily, Oid opcintype);
  </sect1>
 
  <sect1 id="index-cost-estimation">
-  <title>Index Cost Estimation Functions</title>
+  <title>索引代价估算函数</title>
 
   <para>
-   The <function>amcostestimate</function> function is given information describing
-   a possible index scan, including lists of WHERE and ORDER BY clauses that
-   have been determined to be usable with the index.  It must return estimates
-   of the cost of accessing the index and the selectivity of the WHERE
-   clauses (that is, the fraction of parent-table rows that will be
-   retrieved during the index scan).  For simple cases, nearly all the
-   work of the cost estimator can be done by calling standard routines
-   in the optimizer; the point of having an <function>amcostestimate</function> function is
-   to allow index access methods to provide index-type-specific knowledge,
-   in case it is possible to improve on the standard estimates.
+   <function>amcostestimate</function> 函数会收到描述一次可能的索引扫描的信息，其中包括已确定可用于该索引的 WHERE 和 ORDER BY 子句列表。它必须返回访问该索引的代价估算值以及 WHERE 子句的选择率（即索引扫描期间将检索到的父表行的比例）。对于简单的情况，代价估算器几乎所有的工作都可以通过调用优化器中的标准例程来完成；提供 <function>amcostestimate</function> 函数的意义在于允许索引访问方法提供索引类型相关的知识，以便在有可能改进标准估算值时使用。
   </para>
 
   <para>
-   Each <function>amcostestimate</function> function must have the signature:
+   每个 <function>amcostestimate</function> 函数必须具有如下签名：
 
 <programlisting>
 void
@@ -801,14 +792,14 @@ amcostestimate (PlannerInfo *root,
                 double *indexPages);
 </programlisting>
 
-   The first three parameters are inputs:
+   前三个参数是输入：
 
    <variablelist>
     <varlistentry>
      <term><parameter>root</parameter></term>
      <listitem>
       <para>
-       The planner's information about the query being processed.
+       规划器关于正在处理的查询的信息。
       </para>
      </listitem>
     </varlistentry>
@@ -817,8 +808,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>path</parameter></term>
      <listitem>
       <para>
-       The index access path being considered.  All fields except cost and
-       selectivity values are valid.
+       正在考虑的索引访问路径。除代价和选择率值之外的所有字段都是有效的。
       </para>
      </listitem>
     </varlistentry>
@@ -827,12 +817,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>loop_count</parameter></term>
      <listitem>
       <para>
-       The number of repetitions of the index scan that should be factored
-       into the cost estimates.  This will typically be greater than one when
-       considering a parameterized scan for use in the inside of a nestloop
-       join.  Note that the cost estimates should still be for just one scan;
-       a larger <parameter>loop_count</parameter> means that it may be appropriate
-       to allow for some caching effects across multiple scans.
+       在代价估算中应当计入的索引扫描重复次数。当考虑在嵌套循环连接内侧使用参数化扫描时，这个值通常大于一。注意，代价估算仍然应当只针对一次扫描；<parameter>loop_count</parameter> 较大意味着可能适合考虑多次扫描之间的某些缓存效应。
       </para>
      </listitem>
     </varlistentry>
@@ -840,14 +825,14 @@ amcostestimate (PlannerInfo *root,
   </para>
 
   <para>
-   The last five parameters are pass-by-reference outputs:
+   最后五个参数是按引用传递的输出参数：
 
    <variablelist>
     <varlistentry>
      <term><parameter>*indexStartupCost</parameter></term>
      <listitem>
       <para>
-       Set to cost of index start-up processing
+       设置为索引启动处理的代价
       </para>
      </listitem>
     </varlistentry>
@@ -856,7 +841,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>*indexTotalCost</parameter></term>
      <listitem>
       <para>
-       Set to total cost of index processing
+       设置为索引处理的总代价
       </para>
      </listitem>
     </varlistentry>
@@ -865,7 +850,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>*indexSelectivity</parameter></term>
      <listitem>
       <para>
-       Set to index selectivity
+       设置为索引选择率
       </para>
      </listitem>
     </varlistentry>
@@ -874,8 +859,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>*indexCorrelation</parameter></term>
      <listitem>
       <para>
-       Set to correlation coefficient between index scan order and
-       underlying table's order
+       设置为索引扫描顺序与底层表顺序之间的相关系数
       </para>
      </listitem>
     </varlistentry>
@@ -884,7 +868,7 @@ amcostestimate (PlannerInfo *root,
      <term><parameter>*indexPages</parameter></term>
      <listitem>
       <para>
-       Set to number of index leaf pages
+       设置为索引叶子页的数量
       </para>
      </listitem>
     </varlistentry>
@@ -892,70 +876,46 @@ amcostestimate (PlannerInfo *root,
   </para>
 
   <para>
-   Note that cost estimate functions must be written in C, not in SQL or
-   any available procedural language, because they must access internal
-   data structures of the planner/optimizer.
+   注意，代价估算函数必须用 C 编写，而不能用 SQL 或任何可用的过程语言编写，因为它们必须访问规划器/优化器的内部数据结构。
   </para>
 
   <para>
-   The index access costs should be computed using the parameters used by
-   <filename>src/backend/optimizer/path/costsize.c</filename>: a sequential
-   disk block fetch has cost <varname>seq_page_cost</varname>, a nonsequential fetch
-   has cost <varname>random_page_cost</varname>, and the cost of processing one index
-   row should usually be taken as <varname>cpu_index_tuple_cost</varname>.  In
-   addition, an appropriate multiple of <varname>cpu_operator_cost</varname> should
-   be charged for any comparison operators invoked during index processing
-   (especially evaluation of the indexquals themselves).
+   索引访问代价应使用 <filename>src/backend/optimizer/path/costsize.c</filename> 所用的参数来计算：一次顺序磁盘块读取的代价为 <varname>seq_page_cost</varname>，一次非顺序读取的代价为 <varname>random_page_cost</varname>，处理一行索引行的代价通常应取为 <varname>cpu_index_tuple_cost</varname>。此外，对于索引处理期间调用的任何比较运算符（尤其是对 indexquals 本身的求值），应收取 <varname>cpu_operator_cost</varname> 的适当倍数。
   </para>
 
   <para>
-   The access costs should include all disk and CPU costs associated with
-   scanning the index itself, but <emphasis>not</emphasis> the costs of retrieving or
-   processing the parent-table rows that are identified by the index.
+   访问代价应包含与扫描索引本身相关的所有磁盘和 CPU 代价，但<emphasis>不</emphasis>包含检索或处理由该索引所标识的父表行的代价。
   </para>
 
   <para>
-   The <quote>start-up cost</quote> is the part of the total scan cost that
-   must be expended before we can begin to fetch the first row.  For most
-   indexes this can be taken as zero, but an index type with a high start-up
-   cost might want to set it nonzero.
+   <quote>启动代价</quote>是总扫描代价中在我们能够开始取第一行之前必须消耗的那部分。对于大多数索引，这可以取为零，但启动代价较高的索引类型可能希望将其设为非零。
   </para>
 
   <para>
-   The <parameter>indexSelectivity</parameter> should be set to the estimated fraction of the parent
-   table rows that will be retrieved during the index scan.  In the case
-   of a lossy query, this will typically be higher than the fraction of
-   rows that actually pass the given qual conditions.
+   <parameter>indexSelectivity</parameter> 应设置为在索引扫描期间将检索到的父表行的估计比例。在有损查询的情况下，这通常会高于实际通过给定限定条件的行的比例。
   </para>
 
   <para>
-   The <parameter>indexCorrelation</parameter> should be set to the correlation (ranging between
-   -1.0 and 1.0) between the index order and the table order.  This is used
-   to adjust the estimate for the cost of fetching rows from the parent
-   table.
+   <parameter>indexCorrelation</parameter> 应设置为索引顺序与表顺序之间的相关性（取值范围在 -1.0 到 1.0 之间）。这用于调整从父表取行的代价估计。
   </para>
 
   <para>
-   The <parameter>indexPages</parameter> should be set to the number of leaf pages.
-   This is used to estimate the number of workers for parallel index scan.
+   <parameter>indexPages</parameter> 应设置为叶子页的数量。它用于估计并行索引扫描的工作进程数。
   </para>
 
   <para>
-   When <parameter>loop_count</parameter> is greater than one, the returned numbers
-   should be averages expected for any one scan of the index.
+   当 <parameter>loop_count</parameter> 大于 1 时，返回的数字应为对索引进行任意一次扫描的预期平均值。
   </para>
 
   <procedure>
-   <title>Cost Estimation</title>
+   <title>代价估算</title>
    <para>
-    A typical cost estimator will proceed as follows:
+    典型的代价估算器将按如下步骤进行：
    </para>
 
    <step>
     <para>
-     Estimate and return the fraction of parent-table rows that will be visited
-     based on the given qual conditions.  In the absence of any index-type-specific
-     knowledge, use the standard optimizer function <function>clauselist_selectivity()</function>:
+     根据给定的限定条件，估算并返回将被访问的父表行的比例。在缺乏任何特定于索引类型的知识时，使用标准优化器函数 <function>clauselist_selectivity()</function>：
 
 <programlisting>
 *indexSelectivity = clauselist_selectivity(root, path-&gt;indexquals,
@@ -967,24 +927,19 @@ amcostestimate (PlannerInfo *root,
 
    <step>
     <para>
-     Estimate the number of index rows that will be visited during the
-     scan.  For many index types this is the same as <parameter>indexSelectivity</parameter> times
-     the number of rows in the index, but it might be more.  (Note that the
-     index's size in pages and rows is available from the
-     <literal>path-&gt;indexinfo</literal> struct.)
+     估算扫描期间将被访问的索引行数。对于许多索引类型，这等于 <parameter>indexSelectivity</parameter> 乘以索引中的行数，但也可能更多。（注意，索引的页数和行数可从 <literal>path-&gt;indexinfo</literal> 结构体中获取。）
     </para>
    </step>
 
    <step>
     <para>
-     Estimate the number of index pages that will be retrieved during the scan.
-     This might be just <parameter>indexSelectivity</parameter> times the index's size in pages.
+     估算扫描期间将检索的索引页数。这可能只是 <parameter>indexSelectivity</parameter> 乘以索引的页数大小。
     </para>
    </step>
 
    <step>
     <para>
-     Compute the index access cost.  A generic estimator might do this:
+     计算索引访问代价。一个通用的估算函数可能会这样做：
 
 <programlisting>
 /*
@@ -999,23 +954,19 @@ cost_qual_eval(&amp;index_qual_cost, path-&gt;indexquals, root);
     (cpu_index_tuple_cost + index_qual_cost.per_tuple) * numIndexTuples;
 </programlisting>
 
-     However, the above does not account for amortization of index reads
-     across repeated index scans.
+     但是，上述做法没有考虑在重复索引扫描中对索引读取的分摊。
     </para>
    </step>
 
    <step>
     <para>
-     Estimate the index correlation.  For a simple ordered index on a single
-     field, this can be retrieved from pg_statistic.  If the correlation
-     is not known, the conservative estimate is zero (no correlation).
+     估算索引相关性。对于单个字段上的简单有序索引，可以从 pg_statistic 中获取。如果相关性未知，保守的估算值为零（无相关性）。
     </para>
    </step>
   </procedure>
 
   <para>
-   Examples of cost estimator functions can be found in
-   <filename>src/backend/utils/adt/selfuncs.c</filename>.
+   代价估算函数的示例可以在 <filename>src/backend/utils/adt/selfuncs.c</filename> 中找到。
   </para>
  </sect1>
 </chapter>
