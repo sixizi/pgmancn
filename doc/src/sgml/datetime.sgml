@@ -13,51 +13,40 @@
   </para>
 
   <sect1 id="datetime-input-rules">
-   <title>Date/Time Input Interpretation</title>
+   <title>日期/时间输入解释</title>
 
    <para>
-    Date/time input strings are decoded using the following procedure.
+    日期/时间输入字符串使用以下过程进行解码。
    </para>
 
    <procedure>
     <step>
      <para>
-      Break the input string into tokens and categorize each token as
-      a string, time, time zone, or number.
+      将输入字符串分解为记号，并将每个记号归类为字符串、时间、时区或数字。
      </para>
 
      <substeps>
       <step>
        <para>
-        If the numeric token contains a colon (<literal>:</literal>), this is
-        a time string. Include all subsequent digits and colons.
+        如果数字记号包含冒号（<literal>:</literal>），则这是一个时间字符串。包含所有后续数字和冒号。
        </para>
       </step>
 
       <step>
        <para>
-        If the numeric token contains a dash (<literal>-</literal>), slash
-        (<literal>/</literal>), or two or more dots (<literal>.</literal>), this is
-        a date string which might have a text month.  If a date token has
-        already been seen, it is instead interpreted as a time zone
-        name (e.g., <literal>America/New_York</literal>).
+        如果数字记号包含短横线（<literal>-</literal>）、斜线（<literal>/</literal>）或两个或更多点（<literal>.</literal>），则这是一个日期字符串，其中可能包含文本月份。如果已经遇到过日期记号，则改为将其解释为时区名称（例如 <literal>America/New_York</literal>）。
        </para>
       </step>
 
       <step>
        <para>
-        If the token is numeric only, then it is either a single field
-        or an ISO 8601 concatenated date (e.g.,
-        <literal>19990113</literal> for January 13, 1999) or time
-        (e.g., <literal>141516</literal> for 14:15:16).
+        如果记号仅由数字组成，那么它要么是单个字段，要么是 ISO 8601 连接日期（例如，<literal>19990113</literal> 表示 1999 年 1 月 13 日）或时间（例如，<literal>141516</literal> 表示 14:15:16）。
        </para>
       </step>
 
       <step>
        <para>
-        If the token starts with a plus (<literal>+</literal>) or minus
-        (<literal>-</literal>), then it is either a numeric time zone or a special
-        field.
+        如果记号以加号（<literal>+</literal>）或减号（<literal>-</literal>）开头，那么它要么是数字时区，要么是特殊字段。
        </para>
       </step>
      </substeps>
@@ -65,31 +54,25 @@
 
     <step>
      <para>
-      If the token is an alphabetic string, match up with possible strings:
+      如果记号是字母字符串，则与可能的字符串进行匹配：
      </para>
 
      <substeps>
       <step>
        <para>
-        See if the token matches any known time zone abbreviation.
-        These abbreviations are determined by the configuration settings
-        described in <xref linkend="datetime-config-files"/>.
+        查看该记号是否匹配任何已知的时区缩写。这些缩写由 <xref linkend="datetime-config-files"/> 中描述的配置设置决定。
        </para>
       </step>
 
       <step>
        <para>
-        If not found, search an internal table to match
-        the token as either a special string (e.g., <literal>today</literal>),
-        day (e.g., <literal>Thursday</literal>),
-        month (e.g., <literal>January</literal>),
-        or noise word (e.g., <literal>at</literal>, <literal>on</literal>).
+        如果未找到，则搜索内部表，以将该记号匹配为特殊字符串（例如 <literal>today</literal>）、日（例如 <literal>Thursday</literal>）、月（例如 <literal>January</literal>）或噪声词（例如 <literal>at</literal>、<literal>on</literal>）。
        </para>
       </step>
 
       <step>
        <para>
-        If still not found, throw an error.
+        如果仍未找到，则抛出错误。
        </para>
       </step>
      </substeps>
@@ -97,47 +80,37 @@
 
     <step>
      <para>
-      When the token is a number or number field:
+      当记号是数字或数字字段时：
      </para>
 
      <substeps>
       <step>
        <para>
-        If there are eight or six digits,
-        and if no other date fields have been previously read, then interpret
-        as a <quote>concatenated date</quote> (e.g.,
-        <literal>19990118</literal> or <literal>990118</literal>).
-        The interpretation is <literal>YYYYMMDD</literal> or <literal>YYMMDD</literal>.
+        如果有八位或六位数字，并且之前没有读取过其他日期字段，则将其解释为<quote>拼接日期</quote>（例如 <literal>19990118</literal> 或 <literal>990118</literal>）。其解释为 <literal>YYYYMMDD</literal> 或 <literal>YYMMDD</literal>。
        </para>
       </step>
 
       <step>
        <para>
-        If the token is three digits
-        and a year has already been read, then interpret as day of year.
+        如果该记号是三位数字且已经读取了年份，则将其解释为一年中的第几天。
        </para>
       </step>
 
       <step>
        <para>
-        If four or six digits and a year has already been read, then
-        interpret as a time (<literal>HHMM</literal> or <literal>HHMMSS</literal>).
+        如果是四位或六位数字且已经读取了年份，则将其解释为时间（<literal>HHMM</literal> 或 <literal>HHMMSS</literal>）。
        </para>
       </step>
 
       <step>
        <para>
-        If three or more digits and no date fields have yet been found,
-        interpret as a year (this forces yy-mm-dd ordering of the remaining
-        date fields).
+        如果是三位或更多位数字且尚未找到任何日期字段，则将其解释为年份（这会强制其余日期字段采用 yy-mm-dd 顺序）。
        </para>
       </step>
 
       <step>
        <para>
-        Otherwise the date field ordering is assumed to follow the
-        <varname>DateStyle</varname> setting: mm-dd-yy, dd-mm-yy, or yy-mm-dd.
-        Throw an error if a month or day field is found to be out of range.
+        否则，假定日期字段的顺序遵循 <varname>DateStyle</varname> 设置：mm-dd-yy、dd-mm-yy 或 yy-mm-dd。如果发现月份或日期字段超出范围，则抛出错误。
        </para>
       </step>
      </substeps>
@@ -145,22 +118,17 @@
 
     <step>
      <para>
-      If BC has been specified, negate the year and add one for
-      internal storage.  (There is no year zero in the Gregorian
-      calendar, so numerically 1 BC becomes year zero.)
+      如果指定了 BC，则对年份取负并加一以便内部存储。（公历中没有公元零年，因此数值上的公元前 1 年变为第零年。）
      </para>
     </step>
 
     <step>
      <para>
-      If BC was not specified, and if the year field was two digits in length,
-      then adjust the year to four digits. If the field is less than 70, then
-      add 2000, otherwise add 1900.
+      如果未指定 BC，且年份字段为两位数，则将年份调整为四位数。如果该字段小于 70，则加上 2000，否则加上 1900。
 
       <tip>
        <para>
-        Gregorian years AD 1&ndash;99 can be entered by using 4 digits with leading
-        zeros (e.g., <literal>0099</literal> is AD 99).
+        公元 1&ndash;99 年的格里高利历年份可以通过使用带前导零的 4 位数字输入（例如，<literal>0099</literal> 表示公元 99 年）。
        </para>
       </tip>
      </para>
