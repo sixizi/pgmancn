@@ -1278,52 +1278,44 @@ include_dir 'conf.d'
    </sect1>
 
    <sect1 id="runtime-config-resource">
-    <title>Resource Consumption</title>
+    <title>资源消耗</title>
 
     <sect2 id="runtime-config-resource-memory">
-     <title>Memory</title>
+     <title>内存</title>
 
      <variablelist>
      <varlistentry id="guc-shared-buffers" xreflabel="shared_buffers">
       <term><varname>shared_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>shared_buffers</varname> configuration parameter</primary>
+       <primary><varname>shared_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the amount of memory the database server uses for shared
-        memory buffers.  The default is typically 128 megabytes
-        (<literal>128MB</literal>), but might be less if your kernel settings will
-        not support it (as determined during <application>initdb</application>).
-        This setting must be at least 128 kilobytes.  However,
-        settings significantly higher than the minimum are usually needed
-        for good performance.
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        (Non-default values of <symbol>BLCKSZ</symbol> change the minimum
-        value.)
-        This parameter can only be set at server start.
+        设置数据库服务器用于共享内存缓冲区的内存量。默认值通常是 128 兆字节
+        （<literal>128MB</literal>），但如果你的内核设置不支持（在 <application>initdb</application> 期间确定），则可能更少。
+        此设置必须至少为 128 千字节。不过，为了获得良好性能，
+        通常需要显著高于最小值的设置。
+        如果指定此值时不带单位，则按块计算，
+        即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        （<symbol>BLCKSZ</symbol> 的非默认值会改变最小值。）
+        此参数只能在服务器启动时设置。
        </para>
 
        <para>
-        If you have a dedicated database server with 1GB or more of RAM, a
-        reasonable starting value for <varname>shared_buffers</varname> is 25%
-        of the memory in your system.  There are some workloads where even
-        larger settings for <varname>shared_buffers</varname> are effective, but
-        because <productname>PostgreSQL</productname> also relies on the
-        operating system cache, it is unlikely that an allocation of more than
-        40% of RAM to <varname>shared_buffers</varname> will work better than a
-        smaller amount.  Larger settings for <varname>shared_buffers</varname>
-        usually require a corresponding increase in
-        <varname>max_wal_size</varname>, in order to spread out the
-        process of writing large quantities of new or changed data over a
-        longer period of time.
+        如果你有一台拥有 1GB 或更多内存的专用数据库服务器，
+        <varname>shared_buffers</varname> 的一个合理起始值是系统内存的 25%。
+        在某些工作负载下，即使为 <varname>shared_buffers</varname> 设置更大的值也很有效，
+        但由于 <productname>PostgreSQL</productname> 还依赖操作系统缓存，将超过 40% 的内存分配给
+        <varname>shared_buffers</varname> 不太可能比分配较小的量效果更好。为 <varname>shared_buffers</varname>
+        设置更大的值通常需要相应地增加
+        <varname>max_wal_size</varname>，以便将写入大量新数据或更改数据的过程
+        分散到更长的时间段内。
        </para>
 
        <para>
-        On systems with less than 1GB of RAM, a smaller percentage of RAM is
-        appropriate, so as to leave adequate space for the operating system.
+        在内存小于 1GB 的系统上，适合使用较小的内存百分比，
+        以便为操作系统留出足够的空间。
        </para>
 
       </listitem>
@@ -1332,63 +1324,29 @@ include_dir 'conf.d'
      <varlistentry id="guc-huge-pages" xreflabel="huge_pages">
       <term><varname>huge_pages</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>huge_pages</varname> configuration parameter</primary>
+       <primary><varname>huge_pages</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls whether huge pages are requested for the main shared memory
-        area. Valid values are <literal>try</literal> (the default),
-        <literal>on</literal>, and <literal>off</literal>.
-        This parameter can only be set at server start. With
-        <varname>huge_pages</varname> set to <literal>try</literal>, the
-        server will try to request huge pages, but fall back to the default if
-        that fails. With <literal>on</literal>, failure to request huge pages
-        will prevent the server from starting up. With <literal>off</literal>,
-        huge pages will not be requested. The actual state of huge pages is
-        indicated by the server variable
-        <xref linkend="guc-huge-pages-status"/>.
+        控制是否为主共享内存区域请求大页。有效值为 <literal>try</literal>（默认值）、<literal>on</literal> 和 <literal>off</literal>。此参数只能在服务器启动时设置。当 <varname>huge_pages</varname> 设置为 <literal>try</literal> 时，服务器将尝试请求大页，但如果请求失败则回退到默认值。当设置为 <literal>on</literal> 时，请求大页失败将阻止服务器启动。当设置为 <literal>off</literal> 时，将不请求大页。大页的实际状态由服务器变量 <xref linkend="guc-huge-pages-status"/> 指示。
        </para>
 
        <para>
-        At present, this setting is supported only on Linux and Windows. The
-        setting is ignored on other systems when set to
-        <literal>try</literal>.  On Linux, it is only supported when
-        <varname>shared_memory_type</varname> is set to <literal>mmap</literal>
-        (the default).
+        目前，只有 Linux 和 Windows 支持此设置。在其他系统上，当设置为 <literal>try</literal> 时该设置将被忽略。在 Linux 上，仅当 <varname>shared_memory_type</varname> 设置为 <literal>mmap</literal>（默认值）时才支持此设置。
        </para>
 
        <para>
-        The use of huge pages results in smaller page tables and less CPU time
-        spent on memory management, increasing performance. For more details about
-        using huge pages on Linux, see <xref linkend="linux-huge-pages"/>.
+        使用大页可以减少页表大小，并减少花在内存管理上的 CPU 时间，从而提高性能。有关在 Linux 上使用大页的更多详细信息，请参见 <xref linkend="linux-huge-pages"/>。
        </para>
 
        <para>
-        Huge pages are known as large pages on Windows.  To use them, you need to
-        assign the user right <quote>Lock pages in memory</quote> to the Windows user account
-        that runs <productname>PostgreSQL</productname>.
-        You can use Windows Group Policy tool (gpedit.msc) to assign the user right
-        <quote>Lock pages in memory</quote>.
-        To start the database server on the command prompt as a standalone process,
-        not as a Windows service, the command prompt must be run as an administrator or
-        User Access Control (UAC) must be disabled. When the UAC is enabled, the normal
-        command prompt revokes the user right <quote>Lock pages in memory</quote> when started.
+        大页在 Windows 上称为 large pages。要使用它们，需要为运行 <productname>PostgreSQL</productname> 的 Windows 用户账户分配<quote>Lock pages in memory</quote>用户权限。可以使用 Windows 组策略工具（gpedit.msc）分配<quote>Lock pages in memory</quote>用户权限。要在命令提示符下以独立进程（而不是作为 Windows 服务）启动数据库服务器，必须以管理员身份运行命令提示符，或者必须禁用用户账户控制（UAC）。启用 UAC 时，普通命令提示符在启动时会撤销<quote>Lock pages in memory</quote>用户权限。
        </para>
 
        <para>
-        Note that this setting only affects the main shared memory area.
-        Operating systems such as Linux, FreeBSD, and Illumos can also use
-        huge pages (also known as <quote>super</quote> pages or
-        <quote>large</quote> pages) automatically for normal memory
-        allocation, without an explicit request from
-        <productname>PostgreSQL</productname>. On Linux, this is called
-        <quote>transparent huge pages</quote><indexterm><primary>transparent
-        huge pages</primary></indexterm> (THP). That feature has been known to
-        cause performance degradation with
-        <productname>PostgreSQL</productname> for some users on some Linux
-        versions, so its use is currently discouraged (unlike explicit use of
-        <varname>huge_pages</varname>).
+        请注意，此设置只影响主共享内存区域。
+        诸如 Linux、FreeBSD 和 Illumos 之类的操作系统还可以在普通内存分配时自动使用大页（也称为<quote>超级</quote>页或<quote>大</quote>页），而无需 <productname>PostgreSQL</productname> 显式请求。在 Linux 上，这称为<quote>透明大页</quote><indexterm><primary>透明大页</primary></indexterm>（THP）。已知在某些 Linux 版本上，该特性会导致某些用户使用 <productname>PostgreSQL</productname> 时性能下降，因此目前不鼓励使用它（不同于显式使用 <varname>huge_pages</varname>）。
        </para>
       </listitem>
      </varlistentry>
@@ -1396,26 +1354,23 @@ include_dir 'conf.d'
      <varlistentry id="guc-huge-page-size" xreflabel="huge_page_size">
       <term><varname>huge_page_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>huge_page_size</varname> configuration parameter</primary>
+       <primary><varname>huge_page_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls the size of huge pages, when they are enabled with
-        <xref linkend="guc-huge-pages"/>.
-        The default is zero (<literal>0</literal>).
-        When set to <literal>0</literal>, the default huge page size on the
-        system will be used. This parameter can only be set at server start.
+        当通过 <xref linkend="guc-huge-pages"/> 启用大页时，控制大页的大小。
+        默认值为零（<literal>0</literal>）。
+        当设置为 <literal>0</literal> 时，将使用系统上的默认大页大小。此参数只能在服务器启动时设置。
        </para>
        <para>
-        Some commonly available page sizes on modern 64 bit server architectures include:
-        <literal>2MB</literal> and <literal>1GB</literal> (Intel and AMD), <literal>16MB</literal> and
-        <literal>16GB</literal> (IBM POWER), and <literal>64kB</literal>, <literal>2MB</literal>,
-        <literal>32MB</literal> and <literal>1GB</literal> (ARM). For more information
-        about usage and support, see <xref linkend="linux-huge-pages"/>.
+        现代 64 位服务器架构上一些常见可用的页大小包括：
+        <literal>2MB</literal> 和 <literal>1GB</literal>（Intel 和 AMD）、<literal>16MB</literal> 和
+        <literal>16GB</literal>（IBM POWER），以及 <literal>64kB</literal>、<literal>2MB</literal>、
+        <literal>32MB</literal> 和 <literal>1GB</literal>（ARM）。有关用法和支持的更多信息，请参见 <xref linkend="linux-huge-pages"/>。
        </para>
        <para>
-        Non-default settings are currently supported only on Linux.
+        目前仅在 Linux 上支持非默认设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1423,33 +1378,20 @@ include_dir 'conf.d'
      <varlistentry id="guc-temp-buffers" xreflabel="temp_buffers">
       <term><varname>temp_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>temp_buffers</varname> configuration parameter</primary>
+       <primary><varname>temp_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the maximum amount of memory used for temporary buffers within
-        each database session.  These are session-local buffers used only
-        for access to temporary tables.
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default is eight megabytes (<literal>8MB</literal>).
-        (If <symbol>BLCKSZ</symbol> is not 8kB, the default value scales
-        proportionally to it.)
-        This setting can be changed within individual
-        sessions, but only before the first use of temporary tables
-        within the session; subsequent attempts to change the value will
-        have no effect on that session.
+        设置每个数据库会话中用于临时缓冲区的最大内存量。这些是会话本地缓冲区，仅用于访问临时表。
+        如果指定此值时不带单位，则按块计算，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 8 兆字节（<literal>8MB</literal>）。
+        （如果 <symbol>BLCKSZ</symbol> 不是 8kB，则默认值按比例缩放。）
+        此设置可以在单个会话中更改，但只能在会话中首次使用临时表之前更改；之后尝试更改该值将对该会话没有影响。
        </para>
 
        <para>
-        A session will allocate temporary buffers as needed up to the limit
-        given by <varname>temp_buffers</varname>.  The cost of setting a large
-        value in sessions that do not actually need many temporary
-        buffers is only a buffer descriptor, or about 64 bytes, per
-        increment in <varname>temp_buffers</varname>.  However if a buffer is
-        actually used an additional 8192 bytes will be consumed for it
-        (or in general, <symbol>BLCKSZ</symbol> bytes).
+        会话将根据需要分配临时缓冲区，最多可达 <varname>temp_buffers</varname> 给出的限制。在不实际需要许多临时缓冲区的会话中设置较大值的代价仅为每个 <varname>temp_buffers</varname> 增量一个缓冲区描述符，约 64 字节。然而，如果实际使用了某个缓冲区，则会为其额外消耗 8192 字节（或一般而言，<symbol>BLCKSZ</symbol> 字节）。
        </para>
       </listitem>
      </varlistentry>
@@ -1457,32 +1399,23 @@ include_dir 'conf.d'
      <varlistentry id="guc-max-prepared-transactions" xreflabel="max_prepared_transactions">
       <term><varname>max_prepared_transactions</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_prepared_transactions</varname> configuration parameter</primary>
+       <primary><varname>max_prepared_transactions</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the maximum number of transactions that can be in the
-        <quote>prepared</quote> state simultaneously (see <xref
-        linkend="sql-prepare-transaction"/>).
-        Setting this parameter to zero (which is the default)
-        disables the prepared-transaction feature.
-        This parameter can only be set at server start.
+        设置可以同时处于<quote>预备</quote>状态的最大事务数（参见 <xref
+        linkend="sql-prepare-transaction"/>）。
+        将此参数设置为零（即默认值）会禁用预备事务功能。
+        此参数只能在服务器启动时设置。
        </para>
 
        <para>
-        If you are not planning to use prepared transactions, this parameter
-        should be set to zero to prevent accidental creation of prepared
-        transactions.  If you are using prepared transactions, you will
-        probably want <varname>max_prepared_transactions</varname> to be at
-        least as large as <xref linkend="guc-max-connections"/>, so that every
-        session can have a prepared transaction pending.
+        如果您不打算使用预备事务，则应将此参数设置为零，以防止意外创建预备事务。如果您使用预备事务，您可能希望 <varname>max_prepared_transactions</varname> 至少与 <xref linkend="guc-max-connections"/> 一样大，以便每个会话都可以有一个挂起的预备事务。
        </para>
 
        <para>
-        When running a standby server, you must set this parameter to the
-        same or higher value than on the primary server. Otherwise, queries
-        will not be allowed in the standby server.
+        在运行备用服务器时，您必须将此参数设置为与主服务器上相同或更高的值。否则，备用服务器中将不允许查询。
        </para>
       </listitem>
      </varlistentry>
@@ -1490,38 +1423,22 @@ include_dir 'conf.d'
      <varlistentry id="guc-work-mem" xreflabel="work_mem">
       <term><varname>work_mem</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>work_mem</varname> configuration parameter</primary>
+       <primary><varname>work_mem</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the base maximum amount of memory to be used by a query operation
-        (such as a sort or hash table) before writing to temporary disk files.
-        If this value is specified without units, it is taken as kilobytes.
-        The default value is four megabytes (<literal>4MB</literal>).
-        Note that a complex query might perform several sort and hash
-        operations at the same time, with each operation generally being
-        allowed to use as much memory as this value specifies before
-        it starts
-        to write data into temporary files.  Also, several running
-        sessions could be doing such operations concurrently.
-        Therefore, the total memory used could be many times the value
-        of <varname>work_mem</varname>; it is necessary to keep this
-        fact in mind when choosing the value.  Sort operations are used
-        for <literal>ORDER BY</literal>, <literal>DISTINCT</literal>,
-        and merge joins.
-        Hash tables are used in hash joins, hash-based aggregation, memoize
-        nodes and hash-based processing of <literal>IN</literal> subqueries.
+        设置查询操作（例如排序或哈希表）在写入临时磁盘文件之前可以使用的基准最大内存量。
+        如果指定该值时不带单位，则按 KB 处理。
+        默认值为四兆字节（<literal>4MB</literal>）。
+        请注意，一个复杂查询可能同时执行多个排序和哈希操作，每个操作在开始将数据写入临时文件之前通常都被允许使用该值所指定的内存量。此外，多个正在运行的会话可能并发地执行此类操作。
+        因此，所使用的总内存可能是 <varname>work_mem</varname> 值的许多倍；在选择该值时有必要牢记这一事实。排序操作用于 <literal>ORDER BY</literal>、<literal>DISTINCT</literal> 和合并连接。
+        哈希表用于哈希连接、基于哈希的聚合、记忆化节点以及 <literal>IN</literal> 子查询的基于哈希的处理。
        </para>
        <para>
-        Hash-based operations are generally more sensitive to memory
-        availability than equivalent sort-based operations.  The
-        memory limit for a hash table is computed by multiplying
-        <varname>work_mem</varname> by
-        <varname>hash_mem_multiplier</varname>.  This makes it
-        possible for hash-based operations to use an amount of memory
-        that exceeds the usual <varname>work_mem</varname> base
-        amount.
+        基于哈希的操作通常比等效的基于排序的操作对内存可用性更敏感。
+        哈希表的内存限制是通过将 <varname>work_mem</varname> 乘以 <varname>hash_mem_multiplier</varname> 计算得出的。
+        这使得基于哈希的操作可以使用超过通常 <varname>work_mem</varname> 基准量的内存量。
        </para>
       </listitem>
      </varlistentry>
@@ -1529,29 +1446,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-hash-mem-multiplier" xreflabel="hash_mem_multiplier">
       <term><varname>hash_mem_multiplier</varname> (<type>floating point</type>)
       <indexterm>
-       <primary><varname>hash_mem_multiplier</varname> configuration parameter</primary>
+       <primary><varname>hash_mem_multiplier</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Used to compute the maximum amount of memory that hash-based
-        operations can use.  The final limit is determined by
-        multiplying <varname>work_mem</varname> by
-        <varname>hash_mem_multiplier</varname>.  The default value is
-        2.0, which makes hash-based operations use twice the usual
-        <varname>work_mem</varname> base amount.
+        用于计算基于哈希的操作可以使用的最大内存量。最终限制由 <varname>work_mem</varname> 乘以 <varname>hash_mem_multiplier</varname> 决定。
+        默认值为 2.0，这使得基于哈希的操作使用通常 <varname>work_mem</varname> 基准量的两倍。
        </para>
        <para>
-        Consider increasing <varname>hash_mem_multiplier</varname> in
-        environments where spilling by query operations is a regular
-        occurrence, especially when simply increasing
-        <varname>work_mem</varname> results in memory pressure (memory
-        pressure typically takes the form of intermittent out of
-        memory errors).  The default setting of 2.0 is often effective with
-        mixed workloads.  Higher settings in the range of 2.0 - 8.0 or
-        more may be effective in environments where
-        <varname>work_mem</varname> has already been increased to 40MB
-        or more.
+        在查询操作经常发生溢出的环境中，尤其是在单纯增加 <varname>work_mem</varname> 会导致内存压力（内存压力通常表现为间歇性的内存不足错误）时，可以考虑增大 <varname>hash_mem_multiplier</varname>。
+        对于混合负载，默认设置 2.0 通常很有效。
+        在 <varname>work_mem</varname> 已经增大到 40MB 或更多的环境中，将设置提高到 2.0 - 8.0 或更高的范围可能会更有效。
        </para>
       </listitem>
      </varlistentry>
@@ -1559,29 +1465,24 @@ include_dir 'conf.d'
      <varlistentry id="guc-maintenance-work-mem" xreflabel="maintenance_work_mem">
       <term><varname>maintenance_work_mem</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>maintenance_work_mem</varname> configuration parameter</primary>
+       <primary><varname>maintenance_work_mem</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum amount of memory to be used by maintenance
-        operations, such as <command>VACUUM</command>, <command>CREATE
-        INDEX</command>, and <command>ALTER TABLE ADD FOREIGN KEY</command>.
-        If this value is specified without units, it is taken as kilobytes.
-        It defaults
-        to 64 megabytes (<literal>64MB</literal>).  Since only one of these
-        operations can be executed at a time by a database session, and
-        an installation normally doesn't have many of them running
-        concurrently, it's safe to set this value significantly larger
-        than <varname>work_mem</varname>.  Larger settings might improve
-        performance for vacuuming and for restoring database dumps.
+        指定维护操作（例如 <command>VACUUM</command>、<command>CREATE
+        INDEX</command> 和 <command>ALTER TABLE ADD FOREIGN KEY</command>）可使用的最大内存量。
+        如果指定该值时不带单位，则以千字节为单位。
+        默认值为 64 兆字节（<literal>64MB</literal>）。由于一个数据库会话一次只能执行这些操作中的一种，
+        而且通常安装环境中不会有很多这类操作并发运行，
+        因此将此值设置得明显大于 <varname>work_mem</varname> 是安全的。较大的设置可能会改善
+        清理和恢复数据库转储的性能。
        </para>
        <para>
-        Note that when autovacuum runs, up to
-        <xref linkend="guc-autovacuum-max-workers"/> times this memory
-        may be allocated, so be careful not to set the default value
-        too high.  It may be useful to control for this by separately
-        setting <xref linkend="guc-autovacuum-work-mem"/>.
+        请注意，当自动清理运行时，最多可能分配该内存量的
+        <xref linkend="guc-autovacuum-max-workers"/> 倍，因此注意不要把默认值
+        设置得太高。通过单独设置
+        <xref linkend="guc-autovacuum-work-mem"/> 来控制这一点可能会有用。
        </para>
       </listitem>
      </varlistentry>
@@ -1589,21 +1490,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-autovacuum-work-mem" xreflabel="autovacuum_work_mem">
       <term><varname>autovacuum_work_mem</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>autovacuum_work_mem</varname> configuration parameter</primary>
+       <primary><varname>autovacuum_work_mem</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum amount of memory to be used by each
-        autovacuum worker process.
-        If this value is specified without units, it is taken as kilobytes.
-        It defaults to -1, indicating that
-        the value of <xref linkend="guc-maintenance-work-mem"/> should
-        be used instead.  The setting has no effect on the behavior of
-        <command>VACUUM</command> when run in other contexts.
-        This parameter can only be set in the
-        <filename>postgresql.conf</filename> file or on the server command
-        line.
+        指定每个自动清理工作进程可使用的最大内存量。
+        如果指定该值时不带单位，则以千字节为单位。
+        默认值为 -1，表示应改用
+        <xref linkend="guc-maintenance-work-mem"/> 的值。在其他上下文中运行
+        <command>VACUUM</command> 时，该设置对其行为没有影响。
+        此参数只能在
+        <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1612,28 +1510,14 @@ include_dir 'conf.d'
       <term>
        <varname>vacuum_buffer_usage_limit</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>vacuum_buffer_usage_limit</varname> configuration parameter</primary>
+        <primary><varname>vacuum_buffer_usage_limit</varname> 配置参数</primary>
        </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the size of the
-        <glossterm linkend="glossary-buffer-access-strategy">Buffer Access Strategy</glossterm>
-        used by the <command>VACUUM</command> and <command>ANALYZE</command>
-        commands.  A setting of <literal>0</literal> will allow the operation
-        to use any number of <varname>shared_buffers</varname>.  Otherwise
-        valid sizes range from <literal>128 kB</literal> to
-        <literal>16 GB</literal>.  If the specified size would exceed 1/8 the
-        size of <varname>shared_buffers</varname>, the size is silently capped
-        to that value.  The default value is <literal>2MB</literal>.  If
-        this value is specified without units, it is taken as kilobytes.  This
-        parameter can be set at any time.  It can be overridden for
-        <xref linkend="sql-vacuum"/> and <xref linkend="sql-analyze"/>
-        when passing the <option>BUFFER_USAGE_LIMIT</option> option.  Higher
-        settings can allow <command>VACUUM</command> and
-        <command>ANALYZE</command> to run more quickly, but having too large a
-        setting may cause too many other useful pages to be evicted from
-        shared buffers.
+        指定
+        <glossterm linkend="glossary-buffer-access-strategy">缓冲区访问策略</glossterm>
+        由 <command>VACUUM</command> 和 <command>ANALYZE</command> 命令使用的大小。设置为 <literal>0</literal> 将允许该操作使用任意数量的 <varname>shared_buffers</varname>。否则，有效的大小范围是 <literal>128 kB</literal> 到 <literal>16 GB</literal>。如果指定的大小超过 <varname>shared_buffers</varname> 大小的 1/8，则该大小会被静默限制为该值。默认值为 <literal>2MB</literal>。如果指定该值时未带单位，则按千字节处理。该参数可随时设置。在传递 <option>BUFFER_USAGE_LIMIT</option> 选项时，可以为 <xref linkend="sql-vacuum"/> 和 <xref linkend="sql-analyze"/> 覆盖该参数。较高的设置可以让 <command>VACUUM</command> 和 <command>ANALYZE</command> 运行得更快，但设置过大可能导致过多其他有用的页面被逐出共享缓冲区。
        </para>
       </listitem>
      </varlistentry>
@@ -1641,20 +1525,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-logical-decoding-work-mem" xreflabel="logical_decoding_work_mem">
       <term><varname>logical_decoding_work_mem</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>logical_decoding_work_mem</varname> configuration parameter</primary>
+       <primary><varname>logical_decoding_work_mem</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum amount of memory to be used by logical decoding,
-        before some of the decoded changes are written to local disk. This
-        limits the amount of memory used by logical streaming replication
-        connections. It defaults to 64 megabytes (<literal>64MB</literal>).
-        Since each replication connection only uses a single buffer of this size,
-        and an installation normally doesn't have many such connections
-        concurrently (as limited by <varname>max_wal_senders</varname>), it's
-        safe to set this value significantly higher than <varname>work_mem</varname>,
-        reducing the amount of decoded changes written to disk.
+        指定逻辑解码在将部分解码后的更改写入本地磁盘之前可使用的最大内存量。这限制了逻辑流复制连接所使用的内存量。默认值为 64 兆字节（<literal>64MB</literal>）。由于每个复制连接只使用一个此大小的缓冲区，而且一个安装通常不会同时有许多这样的连接（受 <varname>max_wal_senders</varname> 限制），因此将该值设置得明显高于 <varname>work_mem</varname> 是安全的，这样可以减少写入磁盘的解码后更改的数量。
        </para>
       </listitem>
      </varlistentry>
@@ -1662,20 +1538,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-commit-timestamp-buffers" xreflabel="commit_timestamp_buffers">
       <term><varname>commit_timestamp_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>commit_timestamp_buffers</varname> configuration parameter</primary>
+       <primary><varname>commit_timestamp_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of memory to use to cache the contents of
-        <literal>pg_commit_ts</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>0</literal>, which requests
-        <varname>shared_buffers</varname>/512 up to 1024 blocks,
-        but not fewer than 16 blocks.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_commit_ts</literal> 内容的内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时未带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>0</literal>，即请求
+        <varname>shared_buffers</varname>/512 个块，最多 1024 个块，
+        但不少于 16 个块。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1683,18 +1557,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-multixact-member-buffers" xreflabel="multixact_member_buffers">
       <term><varname>multixact_member_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>multixact_member_buffers</varname> configuration parameter</primary>
+       <primary><varname>multixact_member_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_multixact/members</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>32</literal>.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_multixact/members</literal> 内容的共享内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时未带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>32</literal>。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1702,18 +1574,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-multixact-offset-buffers" xreflabel="multixact_offset_buffers">
       <term><varname>multixact_offset_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>multixact_offset_buffers</varname> configuration parameter</primary>
+       <primary><varname>multixact_offset_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_multixact/offsets</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>16</literal>.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_multixact/offsets</literal> 内容的共享内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时未带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>16</literal>。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1721,18 +1591,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-notify-buffers" xreflabel="notify_buffers">
       <term><varname>notify_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>notify_buffers</varname> configuration parameter</primary>
+       <primary><varname>notify_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_notify</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>16</literal>.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_notify</literal> 内容的共享内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时不带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>16</literal>。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1740,18 +1608,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-serializable-buffers" xreflabel="serializable_buffers">
       <term><varname>serializable_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>serializable_buffers</varname> configuration parameter</primary>
+       <primary><varname>serializable_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_serial</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>32</literal>.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_serial</literal> 内容的共享内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时不带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>32</literal>。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1759,20 +1625,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-subtransaction-buffers" xreflabel="subtransaction_buffers">
       <term><varname>subtransaction_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>subtransaction_buffers</varname> configuration parameter</primary>
+       <primary><varname>subtransaction_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_subtrans</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>0</literal>, which requests
-        <varname>shared_buffers</varname>/512 up to 1024 blocks,
-        but not fewer than 16 blocks.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_subtrans</literal> 内容的共享内存量（参见
+        <xref linkend="pgdata-contents-table"/>）。
+        如果指定该值时不带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>0</literal>，即请求
+        <varname>shared_buffers</varname>/512 最多 1024 块，
+        但不少于 16 块。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1780,20 +1644,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-transaction-buffers" xreflabel="transaction_buffers">
       <term><varname>transaction_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>transaction_buffers</varname> configuration parameter</primary>
+       <primary><varname>transaction_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of shared memory to use to cache the contents
-        of <literal>pg_xact</literal> (see
-        <xref linkend="pgdata-contents-table"/>).
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The default value is <literal>0</literal>, which requests
-        <varname>shared_buffers</varname>/512 up to 1024 blocks,
-        but not fewer than 16 blocks.
-        This parameter can only be set at server start.
+        指定用于缓存 <literal>pg_xact</literal> 内容的共享内存量（参见 <xref linkend="pgdata-contents-table"/>）。如果指定该值时未带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。默认值为 <literal>0</literal>，即请求 <varname>shared_buffers</varname>/512 最多 1024 块，但不少于 16 块。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1801,33 +1657,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-max-stack-depth" xreflabel="max_stack_depth">
       <term><varname>max_stack_depth</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_stack_depth</varname> configuration parameter</primary>
+       <primary><varname>max_stack_depth</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum safe depth of the server's execution stack.
-        The ideal setting for this parameter is the actual stack size limit
-        enforced by the kernel (as set by <literal>ulimit -s</literal> or local
-        equivalent), less a safety margin of a megabyte or so.  The safety
-        margin is needed because the stack depth is not checked in every
-        routine in the server, but only in key potentially-recursive routines.
-        If this value is specified without units, it is taken as kilobytes.
-        The default setting is two megabytes (<literal>2MB</literal>), which
-        is conservatively small and unlikely to risk crashes.  However,
-        it might be too small to allow execution of complex functions.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        指定服务器执行栈的最大安全深度。此参数的理想设置是内核实际强制的栈大小限制（由 <literal>ulimit -s</literal> 或本地等效项设置）减去大约 1 兆字节的安全余量。之所以需要安全余量，是因为并非服务器中的每个例程都会检查栈深度，而只在关键的可能递归的例程中检查。如果指定该值时未带单位，则以千字节为单位。默认设置为 2 兆字节（<literal>2MB</literal>），这是一个保守的小值，不太可能带来崩溃风险。但是，它可能太小，以致无法执行复杂函数。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
 
        <para>
-        Setting <varname>max_stack_depth</varname> higher than
-        the actual kernel limit will mean that a runaway recursive function
-        can crash an individual backend process.  On platforms where
-        <productname>PostgreSQL</productname> can determine the kernel limit,
-        the server will not allow this variable to be set to an unsafe
-        value.  However, not all platforms provide the information,
-        so caution is recommended in selecting a value.
+        将 <varname>max_stack_depth</varname> 设置为高于实际内核限制的值，意味着失控的递归函数可能导致单个后端进程崩溃。在 <productname>PostgreSQL</productname> 能够确定内核限制的平台上，服务器将不允许将此变量设置为不安全的值。但是，并非所有平台都提供此信息，因此建议在选择值时谨慎行事。
        </para>
       </listitem>
      </varlistentry>
@@ -1835,7 +1674,7 @@ include_dir 'conf.d'
      <varlistentry id="guc-shared-memory-type" xreflabel="shared_memory_type">
       <term><varname>shared_memory_type</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>shared_memory_type</varname> configuration parameter</primary>
+       <primary><varname>shared_memory_type</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
@@ -1861,27 +1700,13 @@ include_dir 'conf.d'
      <varlistentry id="guc-dynamic-shared-memory-type" xreflabel="dynamic_shared_memory_type">
       <term><varname>dynamic_shared_memory_type</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>dynamic_shared_memory_type</varname> configuration parameter</primary>
+       <primary><varname>dynamic_shared_memory_type</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the dynamic shared memory implementation that the server
-        should use.  Possible values are <literal>posix</literal> (for POSIX shared
-        memory allocated using <literal>shm_open</literal>), <literal>sysv</literal>
-        (for System V shared memory allocated via <literal>shmget</literal>),
-        <literal>windows</literal> (for Windows shared memory),
-        and <literal>mmap</literal> (to simulate shared memory using
-        memory-mapped files stored in the data directory).
-        Not all values are supported on all platforms; the first supported
-        option is usually the default for that platform.  The use of the
-        <literal>mmap</literal> option, which is not the default on any platform,
-        is generally discouraged because the operating system may write
-        modified pages back to disk repeatedly, increasing system I/O load;
-        however, it may be useful for debugging, when the
-        <literal>pg_dynshmem</literal> directory is stored on a RAM disk, or when
-        other shared memory facilities are not available.
-        This parameter can only be set at server start.
+        指定服务器应使用的动态共享内存实现。可能的值有 <literal>posix</literal>（表示使用 <literal>shm_open</literal> 分配的 POSIX 共享内存）、<literal>sysv</literal>（表示通过 <literal>shmget</literal> 分配的 System V 共享内存）、<literal>windows</literal>（表示 Windows 共享内存）以及 <literal>mmap</literal>（表示使用存储在数据目录中的内存映射文件来模拟共享内存）。并非所有值在所有平台上都受支持；第一个受支持的选项通常就是该平台的默认值。一般不建议使用 <literal>mmap</literal> 选项（它在任何平台上都不是默认值），因为操作系统可能会反复将修改过的页面写回磁盘，从而增加系统 I/O 负载；不过，在调试时、当 <literal>pg_dynshmem</literal> 目录存放在内存磁盘上时，或者当其它共享内存设施不可用时，它可能会很有用。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1889,24 +1714,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-min-dynamic-shared-memory" xreflabel="min_dynamic_shared_memory">
       <term><varname>min_dynamic_shared_memory</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>min_dynamic_shared_memory</varname> configuration parameter</primary>
+       <primary><varname>min_dynamic_shared_memory</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the amount of memory that should be allocated at server
-        startup for use by parallel queries.  When this memory region is
-        insufficient or exhausted by concurrent queries, new parallel queries
-        try to allocate extra shared memory temporarily from the operating
-        system using the method configured with
-        <varname>dynamic_shared_memory_type</varname>, which may be slower due
-        to memory management overheads.  Memory that is allocated at startup
-        with <varname>min_dynamic_shared_memory</varname> is affected by
-        the <varname>huge_pages</varname> setting on operating systems where
-        that is supported, and may be more likely to benefit from larger pages
-        on operating systems where that is managed automatically.
-        The default value is <literal>0</literal> (none). This parameter can
-        only be set at server start.
+        指定在服务器启动时应分配多少内存供并行查询使用。当此内存区域不足或被并发查询耗尽时，新的并行查询会尝试使用由 <varname>dynamic_shared_memory_type</varname> 配置的方法从操作系统临时分配额外的共享内存，由于内存管理开销，这可能较慢。在支持该特性的操作系统上，启动时用 <varname>min_dynamic_shared_memory</varname> 分配的内存会受到 <varname>huge_pages</varname> 设置的影响，而在自动管理大页的操作系统上，它更有可能从大页中获益。默认值为 <literal>0</literal>（none）。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1915,32 +1728,21 @@ include_dir 'conf.d'
      </sect2>
 
      <sect2 id="runtime-config-resource-disk">
-     <title>Disk</title>
+     <title>磁盘</title>
 
      <variablelist>
      <varlistentry id="guc-temp-file-limit" xreflabel="temp_file_limit">
       <term><varname>temp_file_limit</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>temp_file_limit</varname> configuration parameter</primary>
+       <primary><varname>temp_file_limit</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum amount of disk space that a process can use
-        for temporary files, such as sort and hash temporary files, or the
-        storage file for a held cursor.  A transaction attempting to exceed
-        this limit will be canceled.
-        If this value is specified without units, it is taken as kilobytes.
-        <literal>-1</literal> (the default) means no limit.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        指定一个进程可用于临时文件（例如排序和哈希临时文件，或持有游标的存储文件）的最大磁盘空间量。试图超过此限制的事务将被取消。如果指定该值时不带单位，则按千字节计算。<literal>-1</literal>（默认值）表示没有限制。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
        <para>
-        This setting constrains the total space used at any instant by all
-        temporary files used by a given <productname>PostgreSQL</productname> process.
-        It should be noted that disk space used for explicit temporary
-        tables, as opposed to temporary files used behind-the-scenes in query
-        execution, does <emphasis>not</emphasis> count against this limit.
+        此设置限制给定的 <productname>PostgreSQL</productname> 进程所使用的所有临时文件在任意时刻占用的总空间。需要注意的是，用于显式临时表的磁盘空间（相对于查询执行过程中在后台使用的临时文件）<emphasis>不</emphasis>计入此限制。
        </para>
       </listitem>
      </varlistentry>
@@ -1948,18 +1750,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-file-copy-method" xreflabel="file_copy_method">
       <term><varname>file_copy_method</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>file_copy_method</varname> configuration parameter</primary>
+       <primary><varname>file_copy_method</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the method used to copy files.
-        Possible values are <literal>COPY</literal> (default) and
-        <literal>CLONE</literal> (if operating support is available).
+        指定用于复制文件的方法。
+        可能的值为 <literal>COPY</literal>（默认）和
+        <literal>CLONE</literal>（如果操作系统支持可用）。
        </para>
 
        <para>
-       This parameter affects:
+       此参数影响：
        </para>
        <itemizedlist>
         <listitem>
@@ -1975,47 +1777,41 @@ include_dir 'conf.d'
        </itemizedlist>
 
        <para>
-        <literal>CLONE</literal> uses the <function>copy_file_range()</function>
-        (Linux, FreeBSD) or <function>copyfile</function>
-        (macOS) system calls, giving the kernel the opportunity to share disk
-        blocks or push work down to lower layers on some file systems.
+        <literal>CLONE</literal> 使用 <function>copy_file_range()</function>
+        （Linux、FreeBSD）或 <function>copyfile</function>
+        （macOS）系统调用，使内核有机会共享磁盘块，或在某些文件系统上将工作下推到更低层。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-file-extend-method" xreflabel="file_extend_method">
-      <term><varname>file_extend_method</varname> (<type>enum</type>)
+      <term><varname>file_extend_method</varname>（<type>enum</type>）
       <indexterm>
-       <primary><varname>file_extend_method</varname> configuration parameter</primary>
+       <primary><varname>file_extend_method</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the method used to extend data files during bulk operations
-        such as <command>COPY</command>.  The first available option is used as
-        the default, depending on the operating system:
+        指定在诸如 <command>COPY</command> 之类的批量操作期间扩展数据文件所用的方法。根据操作系统的不同，将第一个可用的选项用作默认值：
         <itemizedlist>
          <listitem>
           <para>
-           <literal>posix_fallocate</literal> (Unix) uses the standard POSIX
-            interface for allocating disk space, but is missing on some systems.
-            If it is present but the underlying file system doesn't support it,
-            this option silently falls back to <literal>write_zeros</literal>.
-            Current versions of BTRFS are known to disable compression when
-            this option is used.
-            This is the default on systems that have the function.
+           <literal>posix_fallocate</literal>（Unix）使用标准 POSIX
+            接口分配磁盘空间，但在某些系统上缺失。
+            如果它存在但底层文件系统不支持它，
+            此选项会静默回退到 <literal>write_zeros</literal>。
+            已知当前版本的 BTRFS 在使用
+            此选项时会禁用压缩。
+            在具有该函数的系统上，这是默认值。
            </para>
          </listitem>
          <listitem>
           <para>
-           <literal>write_zeros</literal> extends files by writing out blocks
-            of zero bytes.  This is the default on systems that don't have the
-            function <function>posix_fallocate</function>.
+           <literal>write_zeros</literal> 通过写出零字节块来扩展文件。这是在没有 <function>posix_fallocate</function> 函数的系统上的默认方式。
           </para>
          </listitem>
         </itemizedlist>
-        The <literal>write_zeros</literal> method is always used when data
-        files are extended by 8 blocks or fewer.
+        当数据文件扩展 8 个块或更少时，总是使用 <literal>write_zeros</literal> 方法。
        </para>
       </listitem>
      </varlistentry>
@@ -2023,16 +1819,14 @@ include_dir 'conf.d'
      <varlistentry id="guc-max-notify-queue-pages" xreflabel="max_notify_queue_pages">
       <term><varname>max_notify_queue_pages</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_notify_queue_pages</varname> configuration parameter</primary>
+       <primary><varname>max_notify_queue_pages</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies the maximum amount of allocated pages for
-        <xref linkend="sql-notify"/> / <xref linkend="sql-listen"/> queue.
-        The default value is 1048576. For 8 KB pages it allows to consume
-        up to 8 GB of disk space.
-        This parameter can only be set at server start.
+        指定用于 <xref linkend="sql-notify"/> / <xref linkend="sql-listen"/> 队列的已分配页面的最大数量。
+        默认值为 1048576。对于 8 KB 的页面，它最多允许消耗 8 GB 的磁盘空间。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2041,31 +1835,21 @@ include_dir 'conf.d'
      </sect2>
 
      <sect2 id="runtime-config-resource-kernel">
-     <title>Kernel Resource Usage</title>
+     <title>内核资源使用</title>
 
      <variablelist>
      <varlistentry id="guc-max-files-per-process" xreflabel="max_files_per_process">
       <term><varname>max_files_per_process</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_files_per_process</varname> configuration parameter</primary>
+       <primary><varname>max_files_per_process</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the maximum number of open files each server subprocess is
-        allowed to open simultaneously;  files already opened in the
-        postmaster are not counted toward this limit. The default is one
-        thousand files.
+        设置每个服务器子进程允许同时打开的最大文件数；在 postmaster 中已经打开的文件不计入此限制。默认值为一千个文件。
        </para>
        <para>
-        If the kernel is enforcing
-        a safe per-process limit, you don't need to worry about this setting.
-        But on some platforms (notably, most BSD systems), the kernel will
-        allow individual processes to open many more files than the system
-        can actually support if many processes all try to open
-        that many files. If you find yourself seeing <quote>Too many open
-        files</quote> failures, try reducing this setting.
-        This parameter can only be set at server start.
+        如果内核正在强制执行安全的每进程限制，则无需担心此设置。但在某些平台上（尤其是大多数 BSD 系统），如果许多进程都尝试打开那么多文件，内核会允许单个进程打开比系统实际能支持的更多的文件。如果您遇到 <quote>Too many open files</quote> 失败，请尝试降低此设置。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2074,50 +1858,22 @@ include_dir 'conf.d'
 
 
     <sect2 id="runtime-config-resource-background-writer">
-     <title>Background Writer</title>
+     <title>后台写入器</title>
 
      <para>
-      There is a separate server
-      process called the <firstterm>background writer</firstterm>, whose function
-      is to issue writes of <quote>dirty</quote> (new or modified) shared
-      buffers.  When the number of clean shared buffers appears to be
-      insufficient, the background writer writes some dirty buffers to the
-      file system and marks them as clean.  This reduces the likelihood
-      that server processes handling user queries will be unable to find
-      clean buffers and have to write dirty buffers themselves.
-      However, the background writer does cause a net overall
-      increase in I/O load, because while a repeatedly-dirtied page might
-      otherwise be written only once per checkpoint interval, the
-      background writer might write it several times as it is dirtied
-      in the same interval.  The parameters discussed in this subsection
-      can be used to tune the behavior for local needs.
+      有一个单独的服务器进程称为 <firstterm>后台写入器</firstterm>，其功能是发出对<quote>脏</quote>（新的或修改过的）共享缓冲区的写入。当干净共享缓冲区的数量似乎不足时，后台写入器会将一些脏缓冲区写入文件系统并将它们标记为干净。这降低了处理用户查询的服务器进程无法找到干净缓冲区而不得不自己写入脏缓冲区的可能性。然而，后台写入器确实会导致 I/O 负载的净总体增加，因为一个反复变脏的页面原本可能每个检查点间隔只写入一次，而后台写入器在同一间隔内随着它变脏可能会写入多次。本小节中讨论的参数可用于根据本地需求调整该行为。
      </para>
 
      <variablelist>
       <varlistentry id="guc-bgwriter-delay" xreflabel="bgwriter_delay">
        <term><varname>bgwriter_delay</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>bgwriter_delay</varname> configuration parameter</primary>
+        <primary><varname>bgwriter_delay</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Specifies the delay between activity rounds for the
-         background writer.  In each round the writer issues writes
-         for some number of dirty buffers (controllable by the
-         following parameters).  It then sleeps for
-         the length of <varname>bgwriter_delay</varname>, and repeats.
-         When there are no dirty buffers in the
-         buffer pool, though, it goes into a longer sleep regardless of
-         <varname>bgwriter_delay</varname>.
-         If this value is specified without units, it is taken as milliseconds.
-         The default value is 200
-         milliseconds (<literal>200ms</literal>). Note that on some systems, the
-         effective resolution of sleep delays is 10 milliseconds; setting
-         <varname>bgwriter_delay</varname> to a value that is not a multiple of 10
-         might have the same results as setting it to the next higher multiple
-         of 10.  This parameter can only be set in the
-         <filename>postgresql.conf</filename> file or on the server command line.
+         指定后台写入器活动轮次之间的延迟。在每一轮中，写入器会为若干脏缓冲区发出写操作（数量由后面的参数控制）。然后它睡眠 <varname>bgwriter_delay</varname> 所指定的时长，再重复此过程。不过，当缓冲区池中没有脏缓冲区时，无论 <varname>bgwriter_delay</varname> 如何设置，它都会进入更长的睡眠。如果指定该值时不带单位，则按毫秒处理。默认值为 200 毫秒（<literal>200ms</literal>）。请注意，在某些系统上，睡眠延迟的有效分辨率为 10 毫秒；将 <varname>bgwriter_delay</varname> 设置为不是 10 的倍数的值，其结果可能与设置为下一个更大的 10 的倍数相同。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
         </para>
        </listitem>
       </varlistentry>
@@ -2125,18 +1881,12 @@ include_dir 'conf.d'
       <varlistentry id="guc-bgwriter-lru-maxpages" xreflabel="bgwriter_lru_maxpages">
        <term><varname>bgwriter_lru_maxpages</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>bgwriter_lru_maxpages</varname> configuration parameter</primary>
+        <primary><varname>bgwriter_lru_maxpages</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         In each round, no more than this many buffers will be written
-         by the background writer.  Setting this to zero disables
-         background writing.  (Note that checkpoints, which are managed by
-         a separate, dedicated auxiliary process, are unaffected.)
-         The default value is 100 buffers.
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         在每一轮中，后台写入器最多写入这么多个缓冲区。将其设置为零将禁用后台写入。（请注意，由单独的专用辅助进程管理的检查点不受影响。）默认值为 100 个缓冲区。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
         </para>
        </listitem>
       </varlistentry>
@@ -2144,27 +1894,12 @@ include_dir 'conf.d'
       <varlistentry id="guc-bgwriter-lru-multiplier" xreflabel="bgwriter_lru_multiplier">
        <term><varname>bgwriter_lru_multiplier</varname> (<type>floating point</type>)
        <indexterm>
-        <primary><varname>bgwriter_lru_multiplier</varname> configuration parameter</primary>
+        <primary><varname>bgwriter_lru_multiplier</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         The number of dirty buffers written in each round is based on the
-         number of new buffers that have been needed by server processes
-         during recent rounds.  The average recent need is multiplied by
-         <varname>bgwriter_lru_multiplier</varname> to arrive at an estimate of the
-         number of buffers that will be needed during the next round.  Dirty
-         buffers are written until there are that many clean, reusable buffers
-         available.  (However, no more than <varname>bgwriter_lru_maxpages</varname>
-         buffers will be written per round.)
-         Thus, a setting of 1.0 represents a <quote>just in time</quote> policy
-         of writing exactly the number of buffers predicted to be needed.
-         Larger values provide some cushion against spikes in demand,
-         while smaller values intentionally leave writes to be done by
-         server processes.
-         The default is 2.0.
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         每一轮中写入的脏缓冲区数量取决于最近若干轮中服务器进程所需的新缓冲区数量。最近的平均需求量乘以 <varname>bgwriter_lru_multiplier</varname>，即可估算出下一轮中将需要的缓冲区数量。脏缓冲区会被持续写入，直到有那么多干净、可复用的缓冲区可用为止。（但是，每轮写入的缓冲区不会超过 <varname>bgwriter_lru_maxpages</varname> 个。）因此，设置为 1.0 表示一种<quote>恰好及时</quote>的策略，即恰好写入预测所需的缓冲区数量。较大的值可以针对需求高峰提供一定的缓冲，而较小的值则有意把写操作留给服务器进程去完成。默认值为 2.0。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
         </para>
        </listitem>
       </varlistentry>
@@ -2172,42 +1907,27 @@ include_dir 'conf.d'
       <varlistentry id="guc-bgwriter-flush-after" xreflabel="bgwriter_flush_after">
        <term><varname>bgwriter_flush_after</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>bgwriter_flush_after</varname> configuration parameter</primary>
+        <primary><varname>bgwriter_flush_after</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Whenever more than this amount of data has
-         been written by the background writer, attempt to force the OS to issue these
-         writes to the underlying storage.  Doing so will limit the amount of
-         dirty data in the kernel's page cache, reducing the likelihood of
-         stalls when an <function>fsync</function> is issued at the end of a checkpoint, or when
-         the OS writes data back in larger batches in the background.  Often
-         that will result in greatly reduced transaction latency, but there
-         also are some cases, especially with workloads that are bigger than
-         <xref linkend="guc-shared-buffers"/>, but smaller than the OS's page
-         cache, where performance might degrade.  This setting may have no
-         effect on some platforms.
-         If this value is specified without units, it is taken as blocks,
-         that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-         The valid range is between
-         <literal>0</literal>, which disables forced writeback, and
-         <literal>2MB</literal>.  The default is <literal>512kB</literal> on Linux,
-         <literal>0</literal> elsewhere.  (If <symbol>BLCKSZ</symbol> is not 8kB,
-         the default and maximum values scale proportionally to it.)
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         只要后台写入器写入的数据超过此数量，就尝试强制操作系统将这些写入发送到底层存储。这样做将限制内核页缓存中的脏数据量，降低在检查点结束时发出 <function>fsync</function> 时、或操作系统在后台以更大批次回写数据时出现停顿的可能性。通常这会大幅降低事务延迟，但在某些情况下，尤其是当工作负载大于 <xref linkend="guc-shared-buffers"/> 但小于操作系统的页缓存时，性能可能会下降。此设置在某些平台上可能没有效果。
+         如果指定此值时不带单位，则按块计算，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+         有效范围介于 <literal>0</literal>（禁用强制回写）和
+         <literal>2MB</literal> 之间。Linux 上的默认值为 <literal>512kB</literal>，
+         其他平台为 <literal>0</literal>。（如果 <symbol>BLCKSZ</symbol> 不是 8kB，
+         则默认值和最大值会按比例缩放。）
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      Smaller values of <varname>bgwriter_lru_maxpages</varname> and
-      <varname>bgwriter_lru_multiplier</varname> reduce the extra I/O load
-      caused by the background writer, but make it more likely that server
-      processes will have to issue writes for themselves, delaying interactive
-      queries.
+      较小的 <varname>bgwriter_lru_maxpages</varname> 和
+      <varname>bgwriter_lru_multiplier</varname> 值可减少后台写入器引起的额外 I/O 负载，但会使服务器进程更有可能不得不自行发出写入，从而延迟交互式查询。
      </para>
     </sect2>
 
@@ -2218,29 +1938,14 @@ include_dir 'conf.d'
       <varlistentry id="guc-backend-flush-after" xreflabel="backend_flush_after">
        <term><varname>backend_flush_after</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>backend_flush_after</varname> configuration parameter</primary>
+        <primary><varname>backend_flush_after</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Whenever more than this amount of data has
-         been written by a single backend, attempt to force the OS to issue
-         these writes to the underlying storage.  Doing so will limit the
-         amount of dirty data in the kernel's page cache, reducing the
-         likelihood of stalls when an <function>fsync</function> is issued at the end of a
-         checkpoint, or when the OS writes data back in larger batches in the
-         background.  Often that will result in greatly reduced transaction
-         latency, but there also are some cases, especially with workloads
-         that are bigger than <xref linkend="guc-shared-buffers"/>, but smaller
-         than the OS's page cache, where performance might degrade.  This
-         setting may have no effect on some platforms.
-         If this value is specified without units, it is taken as blocks,
-         that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-         The valid range is
-         between <literal>0</literal>, which disables forced writeback,
-         and <literal>2MB</literal>.  The default is <literal>0</literal>, i.e., no
-         forced writeback.  (If <symbol>BLCKSZ</symbol> is not 8kB,
-         the maximum value scales proportionally to it.)
+         每当单个后端写入了超过此数量的数据时，尝试强制操作系统将这些写入发送到底层存储。这样做将限制内核页缓存中的脏数据量，降低在检查点结束时发出 <function>fsync</function> 时、或操作系统在后台以更大批次写回数据时发生停顿的可能性。这通常能大幅降低事务延迟，但在某些情况下，尤其是当工作负载大于 <xref linkend="guc-shared-buffers"/> 但小于操作系统的页缓存时，性能可能会下降。此设置在某些平台上可能没有效果。
+         如果指定此值时不带单位，则按块计算，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+         有效范围在 <literal>0</literal>（禁用强制写回）和 <literal>2MB</literal> 之间。默认值为 <literal>0</literal>，即不强制写回。（如果 <symbol>BLCKSZ</symbol> 不是 8kB，则最大值按比例缩放。）
         </para>
        </listitem>
       </varlistentry>
@@ -2248,32 +1953,20 @@ include_dir 'conf.d'
       <varlistentry id="guc-effective-io-concurrency" xreflabel="effective_io_concurrency">
        <term><varname>effective_io_concurrency</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>effective_io_concurrency</varname> configuration parameter</primary>
+        <primary><varname>effective_io_concurrency</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Sets the number of concurrent storage I/O operations that
-         <productname>PostgreSQL</productname> expects can be executed
-         simultaneously.  Raising this value will increase the number of I/O
-         operations that any individual <productname>PostgreSQL</productname>
-         session attempts to initiate in parallel.  The allowed range is
-         <literal>1</literal> to <literal>1000</literal>, or
-         <literal>0</literal> to disable issuance of asynchronous I/O requests.
-         The default is <literal>16</literal>.
+         设置 <productname>PostgreSQL</productname> 预期可以同时执行的并发存储 I/O 操作数。提高此值将增加任何单个 <productname>PostgreSQL</productname> 会话尝试并行发起的 I/O 操作数。允许的范围是 <literal>1</literal> 到 <literal>1000</literal>，或使用 <literal>0</literal> 禁用异步 I/O 请求的发出。默认值为 <literal>16</literal>。
         </para>
 
         <para>
-         Higher values will have the most impact on higher latency storage
-         where queries otherwise experience noticeable I/O stalls and on
-         devices with high IOPs. Unnecessarily high values may increase I/O
-         latency for all queries on the system.
+         较高的值对延迟较高的存储（否则查询会经历明显的 I/O 停顿）以及高 IOPS 的设备影响最大。不必要的高值可能会增加系统上所有查询的 I/O 延迟。
         </para>
 
         <para>
-         On systems with prefetch advice support,
-         <varname>effective_io_concurrency</varname> also controls the
-         prefetch distance.
+         在支持预取建议的系统上，<varname>effective_io_concurrency</varname> 还控制预取距离。
         </para>
 
         <para>
@@ -2292,14 +1985,11 @@ include_dir 'conf.d'
        </term>
        <listitem>
         <para>
-         Similar to <varname>effective_io_concurrency</varname>, but used
-         for maintenance work that is done on behalf of many client sessions.
+         类似于 <varname>effective_io_concurrency</varname>，但用于代表许多客户端会话执行的维护工作。
         </para>
         <para>
-         The default is <literal>16</literal>.  This value can be overridden
-         for tables in a particular tablespace by setting the tablespace
-         parameter of the same name (see <xref
-         linkend="sql-altertablespace"/>).
+         默认值为 <literal>16</literal>。对于特定表空间中的表，可以通过设置同名的表空间参数来覆盖此值（参见 <xref
+         linkend="sql-altertablespace"/>）。
         </para>
        </listitem>
       </varlistentry>
@@ -2312,14 +2002,11 @@ include_dir 'conf.d'
        </term>
        <listitem>
         <para>
-         Controls the largest I/O size in operations that combine I/O, and silently
-         limits the user-settable parameter <varname>io_combine_limit</varname>.
-         This parameter can only be set at server start.
-         If this value is specified without units, it is taken as blocks,
-         that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-         The maximum possible size depends on the operating system and block
-         size, but is typically 1MB on Unix and 128kB on Windows.
-         The default is 128kB.
+         控制组合 I/O 操作中最大的 I/O 大小，并隐式限制用户可设置的参数 <varname>io_combine_limit</varname>。
+         此参数只能在服务器启动时设置。
+         如果指定此值时不带单位，则按块计算，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+         最大可能大小取决于操作系统和块大小，但在 Unix 上通常为 1MB，在 Windows 上为 128kB。
+         默认值为 128kB。
         </para>
        </listitem>
       </varlistentry>
@@ -2332,15 +2019,10 @@ include_dir 'conf.d'
        </term>
        <listitem>
         <para>
-         Controls the largest I/O size in operations that combine I/O.  If set
-         higher than the <varname>io_max_combine_limit</varname> parameter, the
-         lower value will silently be used instead, so both may need to be raised
-         to increase the I/O size.
-         If this value is specified without units, it is taken as blocks,
-         that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-         The maximum possible size depends on the operating system and block
-         size, but is typically 1MB on Unix and 128kB on Windows.
-         The default is 128kB.
+         控制合并 I/O 的操作中最大的 I/O 大小。如果设置得比 <varname>io_max_combine_limit</varname> 参数更高，则会静默使用较低的值，因此可能需要同时提高两者才能增大 I/O 大小。
+         如果此值未指定单位，则按块计，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+         可能的最大大小取决于操作系统和块大小，但在 Unix 上通常为 1MB，在 Windows 上为 128kB。
+         默认值为 128kB。
         </para>
        </listitem>
       </varlistentry>
@@ -2348,25 +2030,22 @@ include_dir 'conf.d'
       <varlistentry id="guc-io-max-concurrency" xreflabel="io_max_concurrency">
        <term><varname>io_max_concurrency</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>io_max_concurrency</varname> configuration parameter</primary>
+        <primary><varname>io_max_concurrency</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Controls the maximum number of I/O operations that one process can
-         execute simultaneously.
+         控制一个进程可以同时执行的最大 I/O 操作数。
         </para>
         <para>
-         The default setting of <literal>-1</literal> selects a number based
-         on <xref linkend="guc-shared-buffers"/> and the maximum number of
-         processes (<xref linkend="guc-max-connections"/>, <xref
-         linkend="guc-autovacuum-worker-slots"/>, <xref
-         linkend="guc-max-worker-processes"/> and <xref
-         linkend="guc-max-wal-senders"/>), but not more than
-         <literal>64</literal>.
+         <literal>-1</literal> 的默认设置会根据 <xref linkend="guc-shared-buffers"/> 和最大进程数（<xref linkend="guc-max-connections"/>、<xref
+         linkend="guc-autovacuum-worker-slots"/>、<xref
+         linkend="guc-max-worker-processes"/> 和 <xref
+         linkend="guc-max-wal-senders"/>）选择一个数值，但不超过
+         <literal>64</literal>。
         </para>
         <para>
-         This parameter can only be set at server start.
+         此参数只能在服务器启动时设置。
         </para>
        </listitem>
       </varlistentry>
@@ -2374,37 +2053,37 @@ include_dir 'conf.d'
       <varlistentry id="guc-io-method" xreflabel="io_method">
        <term><varname>io_method</varname> (<type>enum</type>)
        <indexterm>
-        <primary><varname>io_method</varname> configuration parameter</primary>
+        <primary><varname>io_method</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Selects the method for executing asynchronous I/O.
-         Possible values are:
+         选择执行异步 I/O 的方法。
+         可能的值为：
          <itemizedlist>
           <listitem>
            <para>
-            <literal>worker</literal> (execute asynchronous I/O using worker processes)
+            <literal>worker</literal>（使用工作进程执行异步 I/O）
            </para>
           </listitem>
           <listitem>
            <para>
-            <literal>io_uring</literal> (execute asynchronous I/O using
-            io_uring, requires a build with
+            <literal>io_uring</literal>（使用
+            io_uring 执行异步 I/O，需要使用
             <link linkend="configure-option-with-liburing"><option>--with-liburing</option></link> /
-            <link linkend="configure-with-liburing-meson"><option>-Dliburing</option></link>)
+            <link linkend="configure-with-liburing-meson"><option>-Dliburing</option></link> 构建）
            </para>
           </listitem>
           <listitem>
            <para>
-            <literal>sync</literal> (execute asynchronous-eligible I/O synchronously)
+            <literal>sync</literal>（同步执行符合异步条件的 I/O）
            </para>
           </listitem>
          </itemizedlist>
-         The default is <literal>worker</literal>.
+         默认值为 <literal>worker</literal>。
         </para>
         <para>
-         This parameter can only be set at server start.
+         此参数只能在服务器启动时设置。
         </para>
        </listitem>
       </varlistentry>
@@ -2412,19 +2091,18 @@ include_dir 'conf.d'
       <varlistentry id="guc-io-workers" xreflabel="io_workers">
        <term><varname>io_workers</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>io_workers</varname> configuration parameter</primary>
+        <primary><varname>io_workers</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Selects the number of I/O worker processes to use. The default is
-         3. This parameter can only be set in the
-         <filename>postgresql.conf</filename> file or on the server command
-         line.
+         选择要使用的 I/O 工作进程数量。默认值为
+         3。此参数只能在
+         <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
         </para>
         <para>
-         Only has an effect if <xref linkend="guc-io-method"/> is set to
-         <literal>worker</literal>.
+         仅当 <xref linkend="guc-io-method"/> 被设置为
+         <literal>worker</literal> 时才有效。
         </para>
        </listitem>
       </varlistentry>
@@ -2432,33 +2110,26 @@ include_dir 'conf.d'
     </sect2>
 
     <sect2 id="runtime-config-resource-worker-processes">
-     <title>Worker Processes</title>
+     <title>工作进程</title>
 
      <variablelist>
       <varlistentry id="guc-max-worker-processes" xreflabel="max_worker_processes">
        <term><varname>max_worker_processes</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>max_worker_processes</varname> configuration parameter</primary>
+        <primary><varname>max_worker_processes</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Sets the maximum number of background processes that the cluster
-         can support.  This parameter can only be set at server start.  The
-         default is 8.
+         设置数据库集簇能够支持的后台进程的最大数量。此参数只能在服务器启动时设置。默认值为 8。
         </para>
 
         <para>
-         When running a standby server, you must set this parameter to the
-         same or higher value than on the primary server. Otherwise, queries
-         will not be allowed in the standby server.
+         当运行备用服务器时，你必须将此参数设置为与主服务器上相同或更高的值。否则，备用服务器上将不允许查询。
         </para>
 
         <para>
-         When changing this value, consider also adjusting
-         <xref linkend="guc-max-parallel-workers"/>,
-         <xref linkend="guc-max-parallel-maintenance-workers"/>, and
-         <xref linkend="guc-max-parallel-workers-per-gather"/>.
+         更改此值时，请考虑同时调整 <xref linkend="guc-max-parallel-workers"/>、<xref linkend="guc-max-parallel-maintenance-workers"/> 和 <xref linkend="guc-max-parallel-workers-per-gather"/>。
         </para>
        </listitem>
       </varlistentry>
@@ -2466,41 +2137,20 @@ include_dir 'conf.d'
       <varlistentry id="guc-max-parallel-workers-per-gather" xreflabel="max_parallel_workers_per_gather">
        <term><varname>max_parallel_workers_per_gather</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>max_parallel_workers_per_gather</varname> configuration parameter</primary>
+        <primary><varname>max_parallel_workers_per_gather</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Sets the maximum number of workers that can be started by a single
-         <literal>Gather</literal> or <literal>Gather Merge</literal> node.
-         Parallel workers are taken from the pool of processes established by
-         <xref linkend="guc-max-worker-processes"/>, limited by
-         <xref linkend="guc-max-parallel-workers"/>.  Note that the requested
-         number of workers may not actually be available at run time.  If this
-         occurs, the plan will run with fewer workers than expected, which may
-         be inefficient.  The default value is 2.  Setting this value to 0
-         disables parallel query execution.
+         设置单个 <literal>Gather</literal> 或 <literal>Gather Merge</literal> 节点可以启动的最大工作者数量。并行工作者从由 <xref linkend="guc-max-worker-processes"/> 建立的进程池中获取，并受 <xref linkend="guc-max-parallel-workers"/> 限制。注意，请求的工作者数量在运行时可能实际上不可用。如果发生这种情况，计划将以比预期更少的工作者运行，这可能效率低下。默认值为 2。将此值设置为 0 会禁用并行查询执行。
         </para>
 
         <para>
-         Note that parallel queries may consume very substantially more
-         resources than non-parallel queries, because each worker process is
-         a completely separate process which has roughly the same impact on the
-         system as an additional user session.  This should be taken into
-         account when choosing a value for this setting, as well as when
-         configuring other settings that control resource utilization, such
-         as <xref linkend="guc-work-mem"/>.  Resource limits such as
-         <varname>work_mem</varname> are applied individually to each worker,
-         which means the total utilization may be much higher across all
-         processes than it would normally be for any single process.
-         For example, a parallel query using 4 workers may use up to 5 times
-         as much CPU time, memory, I/O bandwidth, and so forth as a query which
-         uses no workers at all.
+         注意，并行查询可能消耗比非并行查询多得多的资源，因为每个工作者进程都是一个完全独立的进程，其对系统的影响大致相当于一个额外的用户会话。在为该设置选择值以及配置其他控制资源利用率的设置（例如 <xref linkend="guc-work-mem"/>）时，应考虑到这一点。诸如 <varname>work_mem</varname> 之类的资源限制会分别应用于每个工作者，这意味着所有进程的总利用率可能远高于任何单个进程通常的利用率。例如，使用 4 个工作者的并行查询所消耗的 CPU 时间、内存、I/O 带宽等最多可达完全不使用工作者的查询的 5 倍。
         </para>
 
         <para>
-         For more information on parallel query, see
-         <xref linkend="parallel-query"/>.
+         有关并行查询的更多信息，请参见 <xref linkend="parallel-query"/>。
         </para>
        </listitem>
       </varlistentry>
@@ -2508,38 +2158,16 @@ include_dir 'conf.d'
       <varlistentry id="guc-max-parallel-maintenance-workers" xreflabel="max_parallel_maintenance_workers">
        <term><varname>max_parallel_maintenance_workers</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>max_parallel_maintenance_workers</varname> configuration parameter</primary>
+        <primary><varname>max_parallel_maintenance_workers</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Sets the maximum number of parallel workers that can be
-         started by a single utility command.  Currently, the parallel
-         utility commands that support the use of parallel workers are
-         <command>CREATE INDEX</command> when building a B-tree,
-         GIN, or BRIN index,
-         and <command>VACUUM</command> without <literal>FULL</literal>
-         option.  Parallel workers are taken from the pool of processes
-         established by <xref linkend="guc-max-worker-processes"/>, limited
-         by <xref linkend="guc-max-parallel-workers"/>.  Note that the requested
-         number of workers may not actually be available at run time.
-         If this occurs, the utility operation will run with fewer
-         workers than expected.  The default value is 2.  Setting this
-         value to 0 disables the use of parallel workers by utility
-         commands.
+         设置单个工具命令可以启动的并行工作进程的最大数量。目前，支持使用并行工作进程的并行工具命令有：构建 B-tree、GIN 或 BRIN 索引时的 <command>CREATE INDEX</command>，以及不带 <literal>FULL</literal> 选项的 <command>VACUUM</command>。并行工作进程取自 <xref linkend="guc-max-worker-processes"/> 所建立的进程池，并受 <xref linkend="guc-max-parallel-workers"/> 限制。请注意，请求的工作进程数在运行时可能实际上不可用。如果发生这种情况，工具操作将以比预期更少的工作进程运行。默认值为 2。将此值设置为 0 会禁用工具命令对并行工作进程的使用。
         </para>
 
         <para>
-         Note that parallel utility commands should not consume
-         substantially more memory than equivalent non-parallel
-         operations.  This strategy differs from that of parallel
-         query, where resource limits generally apply per worker
-         process.  Parallel utility commands treat the resource limit
-         <varname>maintenance_work_mem</varname> as a limit to be applied to
-         the entire utility command, regardless of the number of
-         parallel worker processes.  However, parallel utility
-         commands may still consume substantially more CPU resources
-         and I/O bandwidth.
+         请注意，并行工具命令消耗的内存不应比等效的非并行操作多很多。这一策略与并行查询不同，并行查询的资源限制通常按每个工作进程分别应用。并行工具命令将资源限制 <varname>maintenance_work_mem</varname> 视为应用于整个工具命令的限制，而不管并行工作进程的数量。但是，并行工具命令仍可能消耗多得多的 CPU 资源和 I/O 带宽。
         </para>
        </listitem>
       </varlistentry>
@@ -2547,20 +2175,12 @@ include_dir 'conf.d'
       <varlistentry id="guc-max-parallel-workers" xreflabel="max_parallel_workers">
        <term><varname>max_parallel_workers</varname> (<type>integer</type>)
        <indexterm>
-        <primary><varname>max_parallel_workers</varname> configuration parameter</primary>
+        <primary><varname>max_parallel_workers</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Sets the maximum number of workers that the cluster can support for
-         parallel operations.  The default value is 8.  When increasing or
-         decreasing this value, consider also adjusting
-         <xref linkend="guc-max-parallel-maintenance-workers"/> and
-         <xref linkend="guc-max-parallel-workers-per-gather"/>.
-         Also, note that a setting for this value which is higher than
-         <xref linkend="guc-max-worker-processes"/> will have no effect,
-         since parallel workers are taken from the pool of worker processes
-         established by that setting.
+         设置数据库集簇可以为并行操作支持的最大工作进程数。默认值为 8。增大或减小此值时，请考虑同时调整 <xref linkend="guc-max-parallel-maintenance-workers"/> 和 <xref linkend="guc-max-parallel-workers-per-gather"/>。另外请注意，将此值设置得高于 <xref linkend="guc-max-worker-processes"/> 将不会产生效果，因为并行工作进程取自该设置所建立的工作进程池。
         </para>
        </listitem>
       </varlistentry>
@@ -2569,21 +2189,12 @@ include_dir 'conf.d'
        <term>
        <varname>parallel_leader_participation</varname> (<type>boolean</type>)
        <indexterm>
-        <primary><varname>parallel_leader_participation</varname> configuration parameter</primary>
+        <primary><varname>parallel_leader_participation</varname> 配置参数</primary>
        </indexterm>
        </term>
        <listitem>
         <para>
-         Allows the leader process to execute the query plan under
-         <literal>Gather</literal> and <literal>Gather Merge</literal> nodes
-         instead of waiting for worker processes.  The default is
-         <literal>on</literal>.  Setting this value to <literal>off</literal>
-         reduces the likelihood that workers will become blocked because the
-         leader is not reading tuples fast enough, but requires the leader
-         process to wait for worker processes to start up before the first
-         tuples can be produced.  The degree to which the leader can help or
-         hinder performance depends on the plan type, number of workers and
-         query duration.
+         允许领导者进程在 <literal>Gather</literal> 和 <literal>Gather Merge</literal> 节点下执行查询计划，而不是等待工作者进程。默认值为 <literal>on</literal>。将此值设置为 <literal>off</literal> 可降低工作者进程因领导者读取元组速度不够快而被阻塞的可能性，但要求领导者进程在能够产生第一批元组之前等待工作者进程启动。领导者对性能是有帮助还是有妨碍，其程度取决于计划类型、工作者数量和查询持续时间。
         </para>
        </listitem>
       </varlistentry>
