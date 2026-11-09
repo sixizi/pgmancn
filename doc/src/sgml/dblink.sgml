@@ -60,7 +60,7 @@
 
   <refnamediv>
    <refname>dblink_connect</refname>
-   <refpurpose>opens a persistent connection to a remote database</refpurpose>
+   <refpurpose>打开到远程数据库的持久连接</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -71,39 +71,27 @@ dblink_connect(text connname, text connstr) returns text
   </refsynopsisdiv>
 
   <refsect1>
-   <title>Description</title>
+   <title>描述</title>
 
    <para>
-    <function>dblink_connect()</function> establishes a connection to a remote
-    <productname>PostgreSQL</productname> database.  The server and database to
-    be contacted are identified through a standard <application>libpq</application>
-    connection string.  Optionally, a name can be assigned to the
-    connection.  Multiple named connections can be open at once, but
-    only one unnamed connection is permitted at a time.  The connection
-    will persist until closed or until the database session is ended.
+    <function>dblink_connect()</function> 建立到远程 <productname>PostgreSQL</productname> 数据库的连接。要联系的服务器和数据库通过标准的 <application>libpq</application> 连接字符串来标识。可选地，可以为该连接指定一个名称。可以同时打开多个命名连接，但一次只允许有一个未命名连接。该连接将一直保持，直到被关闭或数据库会话结束。
    </para>
 
    <para>
-    The connection string may also be the name of an existing foreign
-    server.  It is recommended to use the foreign-data wrapper
-    <literal>dblink_fdw</literal> when defining the foreign
-    server.  See the example below, as well as
-    <xref linkend="sql-createserver"/> and
-    <xref linkend="sql-createusermapping"/>.
+    连接字符串也可以是现有外部服务器的名称。在定义外部服务器时，建议使用外部数据包装器 <literal>dblink_fdw</literal>。请参见下面的示例，以及 <xref linkend="sql-createserver"/> 和 <xref linkend="sql-createusermapping"/>。
    </para>
 
   </refsect1>
 
   <refsect1>
-   <title>Arguments</title>
+   <title>参数</title>
 
    <variablelist>
     <varlistentry>
      <term><parameter>connname</parameter></term>
      <listitem>
       <para>
-       The name to use for this connection; if omitted, an unnamed
-       connection is opened, replacing any existing unnamed connection.
+       用于此连接的名称；如果省略，则打开一个未命名连接，替换任何现有的未命名连接。
       </para>
      </listitem>
     </varlistentry>
@@ -111,11 +99,11 @@ dblink_connect(text connname, text connstr) returns text
     <varlistentry>
      <term><parameter>connstr</parameter></term>
      <listitem>
-      <para><application>libpq</application>-style connection info string, for example
+      <para><application>libpq</application> 风格的连接信息串，例如
        <literal>hostaddr=127.0.0.1 port=5432 dbname=mydb user=postgres
-       password=mypasswd options=-csearch_path=</literal>.
-       For details see <xref linkend="libpq-connstring"/>.
-       Alternatively, the name of a foreign server.
+       password=mypasswd options=-csearch_path=</literal>。
+       详情请参见 <xref linkend="libpq-connstring"/>。
+       或者，外部服务器的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -123,60 +111,54 @@ dblink_connect(text connname, text connstr) returns text
   </refsect1>
 
   <refsect1>
-   <title>Return Value</title>
+   <title>返回值</title>
 
    <para>
-    Returns status, which is always <literal>OK</literal> (since any error
-    causes the function to throw an error instead of returning).
+    返回状态，该状态始终为 <literal>OK</literal>（因为任何错误都会导致函数抛出错误而不是返回）。
    </para>
   </refsect1>
 
   <refsect1>
-   <title>Notes</title>
+   <title>说明</title>
 
    <para>
-    If untrusted users have access to a database that has not adopted a
-    <link linkend="ddl-schemas-patterns">secure schema usage pattern</link>,
-    begin each session by removing publicly-writable schemas from
-    <varname>search_path</varname>.  One could, for example,
-    add <literal>options=-csearch_path=</literal> to
-    <parameter>connstr</parameter>.  This consideration is not specific
-    to <filename>dblink</filename>; it applies to every interface for
-    executing arbitrary SQL commands.
+    如果不可信用户能够访问尚未采用
+    <link linkend="ddl-schemas-patterns">安全模式使用模式</link>的数据库，
+    请在每个会话开始时从
+    <varname>search_path</varname> 中移除可公开写入的模式。例如，可以将
+    <literal>options=-csearch_path=</literal> 添加到
+    <parameter>connstr</parameter>。这一考虑并非
+    <filename>dblink</filename> 所特有；它适用于执行任意 SQL 命令的每一个接口。
    </para>
 
    <para>
-    The foreign-data wrapper <filename>dblink_fdw</filename> has an additional
-    Boolean option <literal>use_scram_passthrough</literal> that controls
-    whether <filename>dblink</filename> will use the SCRAM pass-through
-    authentication to connect to the remote database.  It can be specified
-    for a foreign server or a user mapping.  A user mapping setting overrides
-    the foreign server setting.  With SCRAM pass-through authentication,
-    <filename>dblink</filename> uses SCRAM-hashed secrets instead of plain-text
-    user passwords to connect to the remote server. This avoids storing
-    plain-text user passwords in PostgreSQL system catalogs.
-    See the documentation of the equivalent <link
+    外部数据包装器 <filename>dblink_fdw</filename> 有一个额外的
+    布尔选项 <literal>use_scram_passthrough</literal>，用于控制
+    <filename>dblink</filename> 是否使用 SCRAM 直通认证
+    来连接远程数据库。它可以
+    为外部服务器或用户映射指定。用户映射的设置会覆盖
+    外部服务器的设置。使用 SCRAM 直通认证时，
+    <filename>dblink</filename> 使用经 SCRAM 哈希的机密而非纯文本
+    用户口令来连接远程服务器。这避免了在
+    PostgreSQL 系统目录中存储纯文本用户口令。
+    有关更多细节和限制，请参见 postgres_fdw 的等价 <link
     linkend="postgres-fdw-option-use-scram-passthrough"><literal>use_scram_passthrough</literal></link>
-    option of postgres_fdw for further details and restrictions.
+    选项的文档。
    </para>
 
    <para>
-    Only superusers may use <function>dblink_connect</function> to create
-    connections that use neither password authentication, SCRAM pass-through,
-    nor GSSAPI-authentication.
-    If non-superusers need this capability, use
-    <function>dblink_connect_u</function> instead.
+    只有超级用户可以使用 <function>dblink_connect</function> 创建既不使用密码认证、也不使用 SCRAM 直通认证和 GSSAPI 认证的连接。
+    如果非超级用户需要此能力，请改用 <function>dblink_connect_u</function>。
    </para>
 
    <para>
-    It is unwise to choose connection names that contain equal signs,
-    as this opens a risk of confusion with connection info strings
-    in other <filename>dblink</filename> functions.
+    选择包含等号的连接名称是不明智的，
+    因为这可能会与其他 <filename>dblink</filename> 函数中的连接信息字符串产生混淆。
    </para>
   </refsect1>
 
   <refsect1>
-   <title>Examples</title>
+   <title>示例</title>
 
 <screen>
 SELECT dblink_connect('dbname=postgres options=-csearch_path=');
