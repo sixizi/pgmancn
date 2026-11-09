@@ -116,7 +116,7 @@ def translate_file(path: str, model: str, workers: int, st: dict, force=False,
         missing = [u.uid for u in grp if u.uid not in res]
         new_text = apply_translations(text, grp, res)
         # 结构校验：标签序列必须完全一致
-        if tags_of(new_text) != tags_of(text):
+        if sorted(tags_of(new_text)) != sorted(tags_of(text)) or not P.balanced(new_text.strip()):
             print(f"  !! tag sequence changed in {rel}, section {sec}; skipped", flush=True)
             st.setdefault("failed", []).append(key)
             save_status(st)
@@ -129,7 +129,7 @@ def translate_file(path: str, model: str, workers: int, st: dict, force=False,
                 if re.match(r"<title[ >]", u.src.strip()[:7]):
                     title = res.get(u.uid, "").strip()
                     break
-            git("add", os.path.relpath(path, ROOT))
+            git("add", "-f", os.path.relpath(path, ROOT))
             msg = f"zh: 翻译 {rel} — {sec}" + (f"（{title}）" if title else "")
             r = git("commit", "-m", msg, check=False)
             if r.returncode != 0:

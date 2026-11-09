@@ -26,6 +26,8 @@ SKIP_TAGS = {
 }
 
 OPAQUE_TAGS = {
+    "programlisting", "screen", "synopsis", "literallayout", "programlistingco",
+    "literallayoutco", "screenco", "synopsisco",
     "command", "literal", "function", "varname", "type", "structname", "filename",
     "option", "envar", "systemitem", "application", "productname", "acronym",
     "database", "username", "hostname", "classname", "methodname", "interfacename",
@@ -113,30 +115,42 @@ def contains_block(node: Node) -> bool:
     return False
 
 
-def collect_units(text: str) -> list[Node]:
-    units: list[Node] = []
+def collect_units(text: str):
+    """返回翻译单元区间 (start, end, node)。
+
+    含块级子元素的段落（如段后跟列表/表格）拆成多段文本单元，
+    子元素本身另行处理，从而保证不重叠、不遗漏。
+    """
+    spans = []
     root = parse_tags(text)
 
     def walk(node: Node):
         if node.tag in SKIP_TAGS:
             return
         if node.tag in BLOCK_TAGS and has_letters(text_of(text, node)):
-            if node.tag in CONTAINER_BLOCKS and contains_block(node):
-                for ch in node.children:
-                    walk(ch)
+            block_kids = [
+                c for c in node.children
+                if (c.tag in BLOCK_TAGS and has_letters(text_of(text, c))) or contains_block(c)
+            ]
+            if block_kids:
+                pos = node.inner_start
+                for c in block_kids:
+                    if c.start > pos:
+                        spans.append((pos, c.start, node))
+                    pos = c.end
+                if node.inner_end > pos:
+                    spans.append((pos, node.inner_end, node))
+                for c in block_kids:
+                    walk(c)
                 return
-            if contains_block(node):
-                for ch in node.children:
-                    walk(ch)
-                return
-            units.append(node)
+            spans.append((node.inner_start, node.inner_end, node))
             return
         for ch in node.children:
             walk(ch)
 
     walk(root)
-    units.sort(key=lambda n: n.inner_start)
-    return units
+    spans.sort(key=lambda x: x[0])
+    return spans
 
 
 @dataclass
@@ -199,17 +213,39 @@ def section_of(node: Node) -> str:
     return ""
 
 
+def render_range(text: str, start: int, end: int, node: Node, ph: dict[str, str]) -> str:
+    """渲染节点内 [start,end) 区间，区间内的内联子元素保留标签或转占位符。"""
+    out = []
+    pos = start
+    for ch in node.children:
+        if ch.start < start or ch.end > end:
+            continue
+        out.append(sub_placeholders(text[pos:ch.start], ph))
+        if ch.tag in OPAQUE_TAGS:
+            key = "{{O%d}}" % len(ph)
+            ph[key] = text[ch.start:ch.end]
+            out.append(key)
+        else:
+            out.append(ch.raw_open)
+            if ch.inner_end > ch.inner_start:
+                out.append(render(ch, text, ph))
+            out.append(closing_of(text, ch))
+        pos = ch.end
+    out.append(sub_placeholders(text[pos:end], ph))
+    return "".join(out)
+
+
 def make_units(text: str) -> list[Unit]:
     units = []
-    for i, node in enumerate(collect_units(text)):
+    for i, (start, end, node) in enumerate(collect_units(text)):
         ph: dict[str, str] = {}
-        src = render(node, text, ph)
+        src = render_range(text, start, end, node, ph)
         # 只保留含英文单词的单元
         raw_text = re.sub(r"<[^>]+>", "", TAG_RE.sub("", src))
         if len(re.findall(r"[A-Za-z]{2,}", raw_text)) < 1:
             continue
         tags = [m.group() for m in TAG_RE.finditer(src) if m.group().startswith("<")]
-        units.append(Unit(i, node.inner_start, node.inner_end, src, ph, tags, node, section_of(node)))
+        units.append(Unit(i, start, end, src, ph, tags, node, section_of(node)))
     return units
 
 
@@ -281,14 +317,17 @@ def validate(src: Unit, out: str) -> tuple[bool, str]:
     if not out.strip():
         return False, "empty"
     tags_out = [m.group() for m in TAG_RE.finditer(out) if m.group().startswith("<")]
-    if tags_out != src.tags:
+    if sorted(tags_out) != sorted(src.tags):
         return False, "tag-mismatch"
+    if not balanced(out):
+        return False, "tag-unbalanced"
     ph_src = re.findall(r"\{\{[OE]\d+\}\}", src.src)
     ph_out = re.findall(r"\{\{[OE]\d+\}\}", out)
     if sorted(ph_src) != sorted(ph_out):
         return False, "placeholder-mismatch"
     if ph_src != ph_out:
-        return False, "placeholder-order"
+        # 中文语序可能调整占位符位置；只要集合一致且可完整还原即可接受
+        pass
     letters = re.sub(r"\{\{[OE]\d+\}\}|<[^>]+>", "", out)
     if re.search(r"[A-Za-z]{3,}", letters):
         # 仍可接受（含大量专有名词），仅记录
@@ -297,6 +336,24 @@ def validate(src: Unit, out: str) -> tuple[bool, str]:
     if cjk == 0 and len(re.findall(r"[A-Za-z]{3,}", letters)) > 2:
         return False, "no-chinese"
     return True, "ok"
+
+
+def balanced(s: str) -> bool:
+    depth = 0
+    for m in TAG_RE.finditer(s):
+        t = m.group()
+        if not t.startswith("<") or t.startswith("<!") or t.startswith("<?"):
+            continue
+        nm = re.match(r"</?([A-Za-z][\w.-]*)", t)
+        if not nm:
+            continue
+        if t.startswith("</"):
+            depth -= 1
+            if depth < 0:
+                return False
+        elif not t.endswith("/>"):
+            depth += 1
+    return depth == 0
 
 
 def restore(out: str, ph: dict[str, str]) -> str:
