@@ -1127,7 +1127,7 @@ SELECT b, char_length(b) FROM test2;
   </sect1>
 
  <sect1 id="datatype-binary">
-  <title>Binary Data Types</title>
+  <title>二进制数据类型</title>
 
   <indexterm zone="datatype-binary">
    <primary>binary data</primary>
@@ -1138,90 +1138,70 @@ SELECT b, char_length(b) FROM test2;
   </indexterm>
 
    <para>
-    The <type>bytea</type> data type allows storage of binary strings;
-    see <xref linkend="datatype-binary-table"/>.
+    <type>bytea</type> 数据类型允许存储二进制串；
+    参见 <xref linkend="datatype-binary-table"/>。
    </para>
 
    <table id="datatype-binary-table">
-    <title>Binary Data Types</title>
+    <title>二进制数据类型</title>
     <tgroup cols="3">
      <colspec colname="col1" colwidth="1*"/>
      <colspec colname="col2" colwidth="3*"/>
      <colspec colname="col3" colwidth="2*"/>
      <thead>
       <row>
-       <entry>Name</entry>
-       <entry>Storage Size</entry>
-       <entry>Description</entry>
+       <entry>名称</entry>
+       <entry>存储尺寸</entry>
+       <entry>描述</entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry><type>bytea</type></entry>
-       <entry>1 or 4 bytes plus the actual binary string</entry>
-       <entry>variable-length binary string</entry>
+       <entry>1 或 4 字节加上实际的二进制串</entry>
+       <entry>变长二进制串</entry>
       </row>
      </tbody>
     </tgroup>
    </table>
 
    <para>
-    A binary string is a sequence of octets (or bytes).  Binary
-    strings are distinguished from character strings in two
-    ways.  First, binary strings specifically allow storing
-    octets of value zero and other <quote>non-printable</quote>
-    octets (usually, octets outside the decimal range 32 to 126).
-    Character strings disallow zero octets, and also disallow any
-    other octet values and sequences of octet values that are invalid
-    according to the database's selected character set encoding.
-    Second, operations on binary strings process the actual bytes,
-    whereas the processing of character strings depends on locale settings.
-    In short, binary strings are appropriate for storing data that the
-    programmer thinks of as <quote>raw bytes</quote>, whereas character
-    strings are appropriate for storing text.
+    二进制串是八位字节（或字节）的序列。二进制串与字符串的区别有两点。
+    第一，二进制串明确允许存储值为零的八位字节以及其他<quote>不可打印</quote>的八位字节
+    （通常是指十进制范围 32 到 126 之外的八位字节）。
+    字符串不允许零字节，也不允许根据数据库所选字符集编码无效的
+    任何其他八位字节值以及八位字节值序列。
+    第二，对二进制串的操作处理的是实际字节，
+    而字符串的处理取决于区域设置。
+    简而言之，二进制串适合存储程序员认为是<quote>原始字节</quote>的数据，
+    而字符串适合存储文本。
    </para>
 
    <para>
-    The <type>bytea</type> type supports two
-    formats for input and output: <quote>hex</quote> format
-    and <productname>PostgreSQL</productname>'s historical
-    <quote>escape</quote> format.  Both
-    of these are always accepted on input.  The output format depends
-    on the configuration parameter <xref linkend="guc-bytea-output"/>;
-    the default is hex.  (Note that the hex format was introduced in
-    <productname>PostgreSQL</productname> 9.0; earlier versions and some
-    tools don't understand it.)
+    <type>bytea</type> 类型支持两种输入和输出格式：<quote>十六进制</quote>格式
+    和 <productname>PostgreSQL</productname> 历史遗留的<quote>转义</quote>格式。这两种格式
+    在输入时总是被接受。输出格式取决于配置参数
+    <xref linkend="guc-bytea-output"/>；默认为十六进制。
+    （注意，十六进制格式是在 <productname>PostgreSQL</productname> 9.0 中引入的；
+    更早的版本和一些工具无法理解它。）
    </para>
 
    <para>
-    The <acronym>SQL</acronym> standard defines a different binary
-    string type, called <type>BLOB</type> or <type>BINARY LARGE
-    OBJECT</type>.  The input format is different from
-    <type>bytea</type>, but the provided functions and operators are
-    mostly the same.
+    <acronym>SQL</acronym> 标准定义了另一种二进制串类型，称为 <type>BLOB</type> 或 <type>BINARY LARGE
+    OBJECT</type>。
+    其输入格式与 <type>bytea</type> 不同，但提供的函数和运算符
+    大体相同。
    </para>
 
   <sect2 id="datatype-binary-bytea-hex-format">
-   <title><type>bytea</type> Hex Format</title>
+   <title><type>bytea</type> 十六进制格式</title>
 
    <para>
-    The <quote>hex</quote> format encodes binary data as 2 hexadecimal digits
-    per byte, most significant nibble first.  The entire string is
-    preceded by the sequence <literal>\x</literal> (to distinguish it
-    from the escape format).  In some contexts, the initial backslash may
-    need to be escaped by doubling it
-    (see <xref linkend="sql-syntax-strings"/>).
-    For input, the hexadecimal digits can
-    be either upper or lower case, and whitespace is permitted between
-    digit pairs (but not within a digit pair nor in the starting
-    <literal>\x</literal> sequence).
-    The hex format is compatible with a wide
-    range of external applications and protocols, and it tends to be
-    faster to convert than the escape format, so its use is preferred.
+    <quote>hex</quote> 格式将二进制数据编码为每字节 2 个十六进制数字，最高有效半字节在前。整个字符串前面会加上序列 <literal>\x</literal>（以区别于转义格式）。在某些上下文中，开头的反斜杠可能需要通过双写来转义（参见 <xref linkend="sql-syntax-strings"/>）。对于输入，十六进制数字可以是大写或小写，数字对之间允许出现空白（但数字对内部以及起始的 <literal>\x</literal> 序列中不允许）。hex 格式与广泛的外部应用程序和协议兼容，而且转换起来通常比转义格式更快，因此推荐使用它。
    </para>
 
    <para>
-    Example:
+    示例：
 <programlisting>
 SET bytea_output = 'hex';
 
@@ -1234,40 +1214,18 @@ SELECT '\xDEADBEEF'::bytea;
   </sect2>
 
   <sect2 id="datatype-binary-bytea-escape-format">
-   <title><type>bytea</type> Escape Format</title>
+   <title><type>bytea</type> 转义格式</title>
 
    <para>
-    The <quote>escape</quote> format is the traditional
-    <productname>PostgreSQL</productname> format for the <type>bytea</type>
-    type.  It
-    takes the approach of representing a binary string as a sequence
-    of ASCII characters, while converting those bytes that cannot be
-    represented as an ASCII character into special escape sequences.
-    If, from the point of view of the application, representing bytes
-    as characters makes sense, then this representation can be
-    convenient.  But in practice it is usually confusing because it
-    fuzzes up the distinction between binary strings and character
-    strings, and also the particular escape mechanism that was chosen is
-    somewhat unwieldy.  Therefore, this format should probably be avoided
-    for most new applications.
+    <quote>escape</quote> 格式是 <type>bytea</type> 类型的传统 <productname>PostgreSQL</productname> 格式。它采用的方法是将二进制串表示为一系列 ASCII 字符，同时把那些无法表示为 ASCII 字符的字节转换为特殊的转义序列。如果从应用程序的角度来看，把字节表示为字符是合理的，那么这种表示方式可能很方便。但在实践中它通常令人困惑，因为它模糊了二进制串与字符串之间的区别，而且所选择的特定转义机制也相当笨拙。因此，大多数新应用程序可能应避免使用此格式。
    </para>
 
    <para>
-    When entering <type>bytea</type> values in escape format,
-    octets of certain
-    values <emphasis>must</emphasis> be escaped, while all octet
-    values <emphasis>can</emphasis> be escaped.  In
-    general, to escape an octet, convert it into its three-digit
-    octal value and precede it by a backslash.
-    Backslash itself (octet decimal value 92) can alternatively be represented by
-    double backslashes.
-    <xref linkend="datatype-binary-sqlesc"/>
-    shows the characters that must be escaped, and gives the alternative
-    escape sequences where applicable.
+    以转义格式输入 <type>bytea</type> 值时，某些值的八位组<emphasis>必须</emphasis>转义，而所有八位组值都<emphasis>可以</emphasis>转义。通常，要转义一个八位组，需将其转换为三位八进制值并在其前面加上一个反斜杠。反斜杠本身（八位组十进制值 92）也可以用双反斜杠表示。<xref linkend="datatype-binary-sqlesc"/> 显示了必须转义的字符，并在适用的情况下给出了替代转义序列。
    </para>
 
    <table id="datatype-binary-sqlesc">
-    <title><type>bytea</type> Literal Escaped Octets</title>
+    <title><type>bytea</type> 字面量转义八位组</title>
     <tgroup cols="5">
      <colspec colname="col1" colwidth="1*"/>
      <colspec colname="col2" colwidth="1*"/>
@@ -1276,18 +1234,18 @@ SELECT '\xDEADBEEF'::bytea;
      <colspec colname="col5" colwidth="1*"/>
      <thead>
       <row>
-       <entry>Decimal Octet Value</entry>
-       <entry>Description</entry>
-       <entry>Escaped Input Representation</entry>
-       <entry>Example</entry>
-       <entry>Hex Representation</entry>
+       <entry>十进制八位组值</entry>
+       <entry>描述</entry>
+       <entry>转义输入表示</entry>
+       <entry>示例</entry>
+       <entry>十六进制表示</entry>
       </row>
      </thead>
 
      <tbody>
       <row>
        <entry>0</entry>
-       <entry>zero octet</entry>
+       <entry>零八位组</entry>
        <entry><literal>'\000'</literal></entry>
        <entry><literal>'\000'::bytea</literal></entry>
        <entry><literal>\x00</literal></entry>
@@ -1295,24 +1253,24 @@ SELECT '\xDEADBEEF'::bytea;
 
       <row>
        <entry>39</entry>
-       <entry>single quote</entry>
-       <entry><literal>''''</literal> or <literal>'\047'</literal></entry>
+       <entry>单引号</entry>
+       <entry><literal>''''</literal> 或 <literal>'\047'</literal></entry>
        <entry><literal>''''::bytea</literal></entry>
        <entry><literal>\x27</literal></entry>
       </row>
 
       <row>
        <entry>92</entry>
-       <entry>backslash</entry>
-       <entry><literal>'\\'</literal> or <literal>'\134'</literal></entry>
+       <entry>反斜杠</entry>
+       <entry><literal>'\\'</literal> 或 <literal>'\134'</literal></entry>
        <entry><literal>'\\'::bytea</literal></entry>
        <entry><literal>\x5c</literal></entry>
       </row>
 
       <row>
-       <entry>0 to 31 and 127 to 255</entry>
-       <entry><quote>non-printable</quote> octets</entry>
-       <entry><literal>'\<replaceable>xxx'</replaceable></literal> (octal value)</entry>
+       <entry>0 到 31 以及 127 到 255</entry>
+       <entry><quote>不可打印</quote>八位字节</entry>
+       <entry><literal>'\<replaceable>xxx'</replaceable></literal>（八进制值）</entry>
        <entry><literal>'\001'::bytea</literal></entry>
        <entry><literal>\x01</literal></entry>
       </row>
@@ -1322,40 +1280,19 @@ SELECT '\xDEADBEEF'::bytea;
    </table>
 
    <para>
-    The requirement to escape <emphasis>non-printable</emphasis> octets
-    varies depending on locale settings. In some instances you can get away
-    with leaving them unescaped.
+    转义<emphasis>不可打印</emphasis>八位组的要求因区域设置而异。在某些情况下，可以不转义它们。
    </para>
 
    <para>
-    The reason that single quotes must be doubled, as shown
-    in <xref linkend="datatype-binary-sqlesc"/>, is that this
-    is true for any string literal in an SQL command.  The generic
-    string-literal parser consumes the outermost single quotes
-    and reduces any pair of single quotes to one data character.
-    What the <type>bytea</type> input function sees is just one
-    single quote, which it treats as a plain data character.
-    However, the <type>bytea</type> input function treats
-    backslashes as special, and the other behaviors shown in
-    <xref linkend="datatype-binary-sqlesc"/> are implemented by
-    that function.
+    必须双写单引号的原因（如 <xref linkend="datatype-binary-sqlesc"/> 所示）在于，这对 SQL 命令中的任何字符串字面量都成立。通用字符串字面量解析器会消耗最外层的单引号，并将任意一对单引号缩减为一个数据字符。<type>bytea</type> 输入函数看到的只是一个单引号，它将其视为普通数据字符。然而，<type>bytea</type> 输入函数将反斜线视为特殊字符，<xref linkend="datatype-binary-sqlesc"/> 中所示的其他行为均由该函数实现。
    </para>
 
    <para>
-    In some contexts, backslashes must be doubled compared to what is
-    shown above, because the generic string-literal parser will also
-    reduce pairs of backslashes to one data character;
-    see <xref linkend="sql-syntax-strings"/>.
+    在某些上下文中，反斜线必须比上面所示的多写一倍，因为通用字符串字面量解析器也会将一对反斜线缩减为一个数据字符；参见 <xref linkend="sql-syntax-strings"/>。
    </para>
 
    <para>
-    <type>Bytea</type> octets are output in <literal>hex</literal>
-    format by default.  If you change <xref linkend="guc-bytea-output"/>
-    to <literal>escape</literal>,
-    <quote>non-printable</quote> octets are converted to their
-    equivalent three-digit octal value and preceded by one backslash.
-    Most <quote>printable</quote> octets are output by their standard
-    representation in the client character set, e.g.:
+    默认情况下，<type>Bytea</type> 八位组以 <literal>hex</literal> 格式输出。如果将 <xref linkend="guc-bytea-output"/> 改为 <literal>escape</literal>，<quote>不可打印</quote>八位组会被转换为其等效的三位八进制值，并在前面加一个反斜线。大多数<quote>可打印</quote>八位组按其在客户端字符集中的标准表示形式输出，例如：
 
 <programlisting>
 SET bytea_output = 'escape';
@@ -1366,12 +1303,11 @@ SELECT 'abc \153\154\155 \052\251\124'::bytea;
  abc klm *\251T
 </programlisting>
 
-    The octet with decimal value 92 (backslash) is doubled in the output.
-    Details are in <xref linkend="datatype-binary-resesc"/>.
+    十进制值为 92 的八位组（反斜线）在输出中会加倍。详情请参见 <xref linkend="datatype-binary-resesc"/>。
    </para>
 
    <table id="datatype-binary-resesc">
-    <title><type>bytea</type> Output Escaped Octets</title>
+    <title><type>bytea</type> 输出转义八位组</title>
     <tgroup cols="5">
      <colspec colname="col1" colwidth="1*"/>
      <colspec colname="col2" colwidth="1*"/>
@@ -1380,11 +1316,11 @@ SELECT 'abc \153\154\155 \052\251\124'::bytea;
      <colspec colname="col5" colwidth="1*"/>
      <thead>
       <row>
-       <entry>Decimal Octet Value</entry>
-       <entry>Description</entry>
-       <entry>Escaped Output Representation</entry>
-       <entry>Example</entry>
-       <entry>Output Result</entry>
+       <entry>十进制八位组值</entry>
+       <entry>描述</entry>
+       <entry>转义输出表示</entry>
+       <entry>示例</entry>
+       <entry>输出结果</entry>
       </row>
      </thead>
 
@@ -1392,24 +1328,24 @@ SELECT 'abc \153\154\155 \052\251\124'::bytea;
 
       <row>
        <entry>92</entry>
-       <entry>backslash</entry>
+       <entry>反斜线</entry>
        <entry><literal>\\</literal></entry>
        <entry><literal>'\134'::bytea</literal></entry>
        <entry><literal>\\</literal></entry>
       </row>
 
       <row>
-       <entry>0 to 31 and 127 to 255</entry>
-       <entry><quote>non-printable</quote> octets</entry>
-       <entry><literal>\<replaceable>xxx</replaceable></literal> (octal value)</entry>
+       <entry>0 到 31 以及 127 到 255</entry>
+       <entry><quote>不可打印</quote>的八位字节</entry>
+       <entry><literal>\<replaceable>xxx</replaceable></literal>（八进制值）</entry>
        <entry><literal>'\001'::bytea</literal></entry>
        <entry><literal>\001</literal></entry>
       </row>
 
       <row>
-       <entry>32 to 126</entry>
-       <entry><quote>printable</quote> octets</entry>
-       <entry>client character set representation</entry>
+       <entry>32 到 126</entry>
+       <entry><quote>可打印</quote>的八位字节</entry>
+       <entry>客户端字符集表示</entry>
        <entry><literal>'\176'::bytea</literal></entry>
        <entry><literal>~</literal></entry>
       </row>
@@ -1419,11 +1355,8 @@ SELECT 'abc \153\154\155 \052\251\124'::bytea;
    </table>
 
    <para>
-    Depending on the front end to <productname>PostgreSQL</productname> you use,
-    you might have additional work to do in terms of escaping and
-    unescaping <type>bytea</type> strings. For example, you might also
-    have to escape line feeds and carriage returns if your interface
-    automatically translates these.
+    取决于你使用的 <productname>PostgreSQL</productname> 前端，
+    你可能还需要额外处理 <type>bytea</type> 字符串的转义和反转义。例如，如果你的接口会自动转换换行符和回车符，你可能还需要对它们进行转义。
    </para>
   </sect2>
  </sect1>
