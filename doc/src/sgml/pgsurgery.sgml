@@ -1,25 +1,18 @@
 <!-- doc/src/sgml/pgsurgery.sgml -->
 
 <sect1 id="pgsurgery" xreflabel="pg_surgery">
- <title>pg_surgery &mdash; perform low-level surgery on relation data</title>
+ <title>pg_surgery &mdash; 对关系数据执行底层手术</title>
 
  <indexterm zone="pgsurgery">
   <primary>pg_surgery</primary>
  </indexterm>
 
  <para>
-  The <filename>pg_surgery</filename> module provides various functions to
-  perform surgery on a damaged relation. These functions are unsafe by design
-  and using them may corrupt (or further corrupt) your database. For example,
-  these functions can easily be used to make a table inconsistent with its
-  own indexes, to cause <literal>UNIQUE</literal> or
-  <literal>FOREIGN KEY</literal> constraint violations, or even to make
-  tuples visible which, when read, will cause a database server crash.
-  They should be used with great caution and only as a last resort.
+  <filename>pg_surgery</filename> 模块提供了多种函数，用于对已损坏的关系执行手术。这些函数在设计上就是不安全的，使用它们可能会损坏（或进一步损坏）你的数据库。例如，这些函数很容易被用来使表与其自身的索引不一致、导致 <literal>UNIQUE</literal> 或 <literal>FOREIGN KEY</literal> 约束冲突，甚至使某些元组变为可见，而这些元组在被读取时会导致数据库服务器崩溃。应极其谨慎地使用它们，并且仅将其作为最后手段。
  </para>
 
  <sect2 id="pgsurgery-funcs">
-  <title>Functions</title>
+  <title>函数</title>
 
   <variablelist>
    <varlistentry>
@@ -29,10 +22,7 @@
 
     <listitem>
      <para>
-      <function>heap_force_kill</function> marks <quote>used</quote> line
-      pointers as <quote>dead</quote> without examining the tuples. The
-      intended use of this function is to forcibly remove tuples that are not
-      otherwise accessible. For example:
+      <function>heap_force_kill</function> 在不对元组进行检查的情况下，将<quote>已使用</quote>的行指针标记为<quote>死亡</quote>。此函数的预期用途是强制移除那些无法以其他方式访问的元组。例如：
 <programlisting>
 test=&gt; select * from t1 where ctid = '(0, 1)';
 ERROR:  could not access status of transaction 4007513275
@@ -59,12 +49,7 @@ test=# select * from t1 where ctid = '(0, 1)';
 
     <listitem>
      <para>
-      <function>heap_force_freeze</function> marks tuples as frozen without
-      examining the tuple data. The intended use of this function is to
-      make accessible tuples which are inaccessible due to corrupted
-      visibility information, or which prevent the table from being
-      successfully vacuumed due to corrupted visibility information.
-      For example:
+      <function>heap_force_freeze</function> 在不对元组数据进行检查的情况下将元组标记为冻结。此函数的预期用途是使那些因可见性信息损坏而无法访问的元组变为可访问，或者使那些因可见性信息损坏而导致表无法成功执行 VACUUM 的元组变为可访问。例如：
 <programlisting>
 test=&gt; vacuum t1;
 ERROR:  found xmin 507 from before relfrozenxid 515
@@ -97,7 +82,7 @@ test=# select ctid from t1 where xmin = 2;
  </sect2>
 
  <sect2 id="pgsurgery-authors">
-  <title>Authors</title>
+  <title>作者</title>
 
   <para>
    Ashutosh Sharma <email>ashu.coek88@gmail.com</email>
