@@ -2203,74 +2203,44 @@ include_dir 'conf.d'
    </sect1>
 
    <sect1 id="runtime-config-wal">
-    <title>Write Ahead Log</title>
+    <title>预写式日志</title>
 
    <para>
-    For additional information on tuning these settings,
-    see <xref linkend="wal-configuration"/>.
+    有关调整这些设置的更多信息，请参见 <xref linkend="wal-configuration"/>。
    </para>
 
     <sect2 id="runtime-config-wal-settings">
-     <title>Settings</title>
+     <title>设置</title>
      <variablelist>
 
      <varlistentry id="guc-wal-level" xreflabel="wal_level">
       <term><varname>wal_level</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>wal_level</varname> configuration parameter</primary>
+       <primary><varname>wal_level</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        <varname>wal_level</varname> determines how much information is written to
-        the WAL. The default value is <literal>replica</literal>, which writes enough
-        data to support WAL archiving and replication, including running
-        read-only queries on a standby server. <literal>minimal</literal> removes all
-        logging except the information required to recover from a crash or
-        immediate shutdown.  Finally,
-        <literal>logical</literal> adds information necessary to support logical
-        decoding.  Each level includes the information logged at all lower
-        levels.  This parameter can only be set at server start.
+        <varname>wal_level</varname> 决定向 WAL 中写入多少信息。默认值为 <literal>replica</literal>，它会写入足够的数据以支持 WAL 归档和复制，包括在备用服务器上运行只读查询。<literal>minimal</literal> 会移除除崩溃或立即关闭恢复所需信息之外的所有日志记录。最后，<literal>logical</literal> 会增加支持逻辑解码所需的信息。每个级别都包含所有较低级别记录的信息。此参数只能在服务器启动时设置。
        </para>
        <para>
-        The <literal>minimal</literal> level generates the least WAL
-        volume.  It logs no row information for permanent relations
-        in transactions that create or
-        rewrite them.  This can make operations much faster (see
-        <xref linkend="populate-pitr"/>).  Operations that initiate this
-        optimization include:
+        <literal>minimal</literal> 级别产生的 WAL 量最少。对于创建或重写永久关系的事务，它不记录这些关系的行信息。这可以使操作快得多（参见 <xref linkend="populate-pitr"/>）。启用此优化的操作包括：
         <simplelist>
          <member><command>ALTER ... SET TABLESPACE</command></member>
          <member><command>CLUSTER</command></member>
          <member><command>CREATE TABLE</command></member>
          <member><command>REFRESH MATERIALIZED VIEW</command>
-         (without <option>CONCURRENTLY</option>)</member>
+         （不带 <option>CONCURRENTLY</option>）</member>
          <member><command>REINDEX</command></member>
          <member><command>TRUNCATE</command></member>
         </simplelist>
-        However, minimal WAL does not contain sufficient information for
-        point-in-time recovery, so <literal>replica</literal> or
-        higher must be used to enable continuous archiving
-        (<xref linkend="guc-archive-mode"/>) and streaming binary replication.
-        In fact, the server will not even start in this mode if
-        <varname>max_wal_senders</varname> is non-zero.
-        Note that changing <varname>wal_level</varname> to
-        <literal>minimal</literal> makes previous base backups unusable
-        for point-in-time recovery and standby servers.
+        然而，最小 WAL 不包含用于时间点恢复的足够信息，因此必须使用 <literal>replica</literal> 或更高级别才能启用连续归档（<xref linkend="guc-archive-mode"/>）和流式二进制复制。事实上，如果 <varname>max_wal_senders</varname> 非零，服务器甚至不会在此模式下启动。请注意，将 <varname>wal_level</varname> 更改为 <literal>minimal</literal> 会使之前的基备份无法用于时间点恢复和备用服务器。
        </para>
        <para>
-        In <literal>logical</literal> level, the same information is logged as
-        with <literal>replica</literal>, plus information needed to
-        extract logical change sets from the WAL. Using a level of
-        <literal>logical</literal> will increase the WAL volume, particularly if many
-        tables are configured for <literal>REPLICA IDENTITY FULL</literal> and
-        many <command>UPDATE</command> and <command>DELETE</command> statements are
-        executed.
+        在 <literal>logical</literal> 级别，记录的信息与 <literal>replica</literal> 相同，外加从 WAL 中提取逻辑变更集所需的信息。使用 <literal>logical</literal> 级别会增加 WAL 量，尤其是当许多表配置了 <literal>REPLICA IDENTITY FULL</literal> 且执行了许多 <command>UPDATE</command> 和 <command>DELETE</command> 语句时。
        </para>
        <para>
-        In releases prior to 9.6, this parameter also allowed the
-        values <literal>archive</literal> and <literal>hot_standby</literal>.
-        These are still accepted but mapped to <literal>replica</literal>.
+        在 9.6 之前的版本中，此参数还允许取值 <literal>archive</literal> 和 <literal>hot_standby</literal>。这些值仍被接受，但会映射为 <literal>replica</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2278,61 +2248,33 @@ include_dir 'conf.d'
      <varlistentry id="guc-fsync" xreflabel="fsync">
       <term><varname>fsync</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>fsync</varname> configuration parameter</primary>
+       <primary><varname>fsync</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If this parameter is on, the <productname>PostgreSQL</productname> server
-        will try to make sure that updates are physically written to
-        disk, by issuing <function>fsync()</function> system calls or various
-        equivalent methods (see <xref linkend="guc-wal-sync-method"/>).
-        This ensures that the database cluster can recover to a
-        consistent state after an operating system or hardware crash.
+        如果此参数为开，<productname>PostgreSQL</productname> 服务器将尝试通过发出 <function>fsync()</function> 系统调用或各种等效方法（参见 <xref linkend="guc-wal-sync-method"/>）来确保更新被物理写入磁盘。这确保数据库集簇在操作系统或硬件崩溃后能恢复到一致状态。
        </para>
 
        <para>
-        While turning off <varname>fsync</varname> is often a performance
-        benefit, this can result in unrecoverable data corruption in
-        the event of a power failure or system crash.  Thus it
-        is only advisable to turn off <varname>fsync</varname> if
-        you can easily recreate your entire database from external
-        data.
+        虽然关闭 <varname>fsync</varname> 通常能带来性能收益，但在断电或系统崩溃的情况下，这可能导致无法恢复的数据损坏。因此，只有在能够轻松地从外部数据重建整个数据库时，才建议关闭 <varname>fsync</varname>。
        </para>
 
        <para>
-        Examples of safe circumstances for turning off
-        <varname>fsync</varname> include the initial loading of a new
-        database cluster from a backup file, using a database cluster
-        for processing a batch of data after which the database
-        will be thrown away and recreated,
-        or for a read-only database clone which
-        gets recreated frequently and is not used for failover.  High
-        quality hardware alone is not a sufficient justification for
-        turning off <varname>fsync</varname>.
+        关闭 <varname>fsync</varname> 的安全情形示例包括：从备份文件初始加载新数据库集簇、使用数据库集簇处理一批数据之后将数据库丢弃并重建，或者用于频繁重建且不用于故障转移的只读数据库克隆。仅凭高质量硬件不足以成为关闭 <varname>fsync</varname> 的理由。
        </para>
 
        <para>
-        For reliable recovery when changing <varname>fsync</varname>
-        off to on, it is necessary to force all modified buffers in the
-        kernel to durable storage.  This can be done while the cluster
-        is shutdown or while <varname>fsync</varname> is on by running <command>initdb
-        --sync-only</command>, running <command>sync</command>, unmounting the
-        file system, or rebooting the server.
+        为了在将 <varname>fsync</varname> 从关闭改为开启时可靠恢复，必须强制内核中所有已修改的缓冲区写入持久存储。这可以在数据库集簇关闭时完成，或者在 <varname>fsync</varname> 开启时通过运行 <command>initdb
+        --sync-only</command>、运行 <command>sync</command>、卸载文件系统或重启服务器来完成。
        </para>
 
        <para>
-        In many situations, turning off <xref linkend="guc-synchronous-commit"/>
-        for noncritical transactions can provide much of the potential
-        performance benefit of turning off <varname>fsync</varname>, without
-        the attendant risks of data corruption.
+        在许多情况下，对非关键事务关闭 <xref linkend="guc-synchronous-commit"/> 可以提供关闭 <varname>fsync</varname> 所带来的大部分潜在性能优势，而不会带来数据损坏的风险。
        </para>
 
        <para>
-        <varname>fsync</varname> can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
-        If you turn this parameter off, also consider turning off
-        <xref linkend="guc-full-page-writes"/>.
+        <varname>fsync</varname> 只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。如果关闭此参数，还应考虑关闭 <xref linkend="guc-full-page-writes"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -2340,93 +2282,37 @@ include_dir 'conf.d'
      <varlistentry id="guc-synchronous-commit" xreflabel="synchronous_commit">
       <term><varname>synchronous_commit</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>synchronous_commit</varname> configuration parameter</primary>
+       <primary><varname>synchronous_commit</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies how much WAL processing must complete before
-        the database server returns a <quote>success</quote>
-        indication to the client.  Valid values are
-        <literal>remote_apply</literal>, <literal>on</literal>
-        (the default), <literal>remote_write</literal>,
-        <literal>local</literal>, and <literal>off</literal>.
+        指定数据库服务器在向客户端返回 <quote>成功</quote> 指示之前必须完成多少 WAL 处理。有效值为 <literal>remote_apply</literal>、<literal>on</literal>（默认值）、<literal>remote_write</literal>、<literal>local</literal> 和 <literal>off</literal>。
        </para>
 
        <para>
-        If <varname>synchronous_standby_names</varname> is empty,
-        the only meaningful settings are <literal>on</literal> and
-        <literal>off</literal>;  <literal>remote_apply</literal>,
-        <literal>remote_write</literal> and <literal>local</literal>
-        all provide the same local synchronization level
-        as <literal>on</literal>.  The local behavior of all
-        non-<literal>off</literal> modes is to wait for local flush of WAL
-        to disk.  In <literal>off</literal> mode, there is no waiting,
-        so there can be a delay between when success is reported to the
-        client and when the transaction is later guaranteed to be safe
-        against a server crash.  (The maximum
-        delay is three times <xref linkend="guc-wal-writer-delay"/>.)  Unlike
-        <xref linkend="guc-fsync"/>, setting this parameter to <literal>off</literal>
-        does not create any risk of database inconsistency: an operating
-        system or database crash might
-        result in some recent allegedly-committed transactions being lost, but
-        the database state will be just the same as if those transactions had
-        been aborted cleanly.  So, turning <varname>synchronous_commit</varname> off
-        can be a useful alternative when performance is more important than
-        exact certainty about the durability of a transaction.  For more
-        discussion see <xref linkend="wal-async-commit"/>.
+        如果 <varname>synchronous_standby_names</varname> 为空，则唯一有意义的设置是 <literal>on</literal> 和 <literal>off</literal>；<literal>remote_apply</literal>、<literal>remote_write</literal> 和 <literal>local</literal> 都提供与 <literal>on</literal> 相同的本地同步级别。所有非 <literal>off</literal> 模式的本地行为都是等待 WAL 本地刷写到磁盘。在 <literal>off</literal> 模式下没有等待，因此在向客户端报告成功与事务随后被保证能安全应对服务器崩溃之间可能存在延迟。（最大延迟是 <xref linkend="guc-wal-writer-delay"/> 的三倍。）与 <xref linkend="guc-fsync"/> 不同，将此参数设置为 <literal>off</literal> 不会产生任何数据库不一致的风险：操作系统或数据库崩溃可能导致一些最近声称已提交的事务丢失，但数据库状态将与那些事务被干净地中止时完全相同。因此，当性能比事务持久性的确切确定性更重要时，关闭 <varname>synchronous_commit</varname> 可能是一个有用的替代方案。更多讨论请参见 <xref linkend="wal-async-commit"/>。
        </para>
 
        <para>
-        If <xref linkend="guc-synchronous-standby-names"/> is non-empty,
-        <varname>synchronous_commit</varname> also controls whether
-        transaction commits will wait for their WAL records to be
-        processed on the standby server(s).
+        如果 <xref linkend="guc-synchronous-standby-names"/> 非空，<varname>synchronous_commit</varname> 还控制事务提交是否等待其 WAL 记录在备用服务器上被处理。
        </para>
 
        <para>
-        When set to <literal>remote_apply</literal>, commits will wait
-        until replies from the current synchronous standby(s) indicate they
-        have received the commit record of the transaction and applied
-        it, so that it has become visible to queries on the standby(s),
-        and also written to durable storage on the standbys.  This will
-        cause much larger commit delays than previous settings since
-        it waits for WAL replay.  When set to <literal>on</literal>,
-        commits wait until replies
-        from the current synchronous standby(s) indicate they have received
-        the commit record of the transaction and flushed it to durable storage.  This
-        ensures the transaction will not be lost unless both the primary and
-        all synchronous standbys suffer corruption of their database storage.
-        When set to <literal>remote_write</literal>, commits will wait until replies
-        from the current synchronous standby(s) indicate they have
-        received the commit record of the transaction and written it to
-        their file systems. This setting ensures data preservation if a standby instance of
-        <productname>PostgreSQL</productname> crashes, but not if the standby
-        suffers an operating-system-level crash because the data has not
-        necessarily reached durable storage on the standby.
-        The setting <literal>local</literal> causes commits to wait for
-        local flush to disk, but not for replication.  This is usually not
-        desirable when synchronous replication is in use, but is provided for
-        completeness.
+        当设置为 <literal>remote_apply</literal> 时，提交将等待来自当前同步备用服务器的回复表明它们已收到该事务的提交记录并已应用它，从而使其对备用服务器上的查询可见，并且也已写入备用服务器上的持久存储。由于它要等待 WAL 重放，这将导致比之前的设置大得多的提交延迟。当设置为 <literal>on</literal> 时，提交将等待来自当前同步备用服务器的回复表明它们已收到该事务的提交记录并将其刷写到持久存储。这确保除非主服务器和所有同步备用服务器的数据库存储都发生损坏，否则该事务不会丢失。当设置为 <literal>remote_write</literal> 时，提交将等待来自当前同步备用服务器的回复表明它们已收到该事务的提交记录并将其写入它们的文件系统。此设置可确保在 <productname>PostgreSQL</productname> 的备用实例崩溃时数据得以保留，但如果备用服务器遭遇操作系统级崩溃则不能，因为数据不一定已经到达备用服务器上的持久存储。设置 <literal>local</literal> 使提交等待本地刷写到磁盘，但不等待复制。在使用同步复制时这通常不可取，但为了完整性而提供。
        </para>
 
        <para>
-        This parameter can be changed at any time; the behavior for any
-        one transaction is determined by the setting in effect when it
-        commits.  It is therefore possible, and useful, to have some
-        transactions commit synchronously and others asynchronously.
-        For example, to make a single multistatement transaction commit
-        asynchronously when the default is the opposite, issue <command>SET
-        LOCAL synchronous_commit TO OFF</command> within the transaction.
+        此参数可以随时更改；任何单个事务的行为由它提交时生效的设置决定。因此，让一些事务同步提交而另一些异步提交是可能的，也是有用的。例如，当默认值相反时，要让单个多语句事务异步提交，可在该事务内发出 <command>SET
+        LOCAL synchronous_commit TO OFF</command>。
        </para>
 
        <para>
-        <xref linkend="synchronous-commit-matrix"/> summarizes the
-        capabilities of the <varname>synchronous_commit</varname> settings.
+        <xref linkend="synchronous-commit-matrix"/> 总结了 <varname>synchronous_commit</varname> 各项设置的能力。
        </para>
 
        <table id="synchronous-commit-matrix">
-        <title>synchronous_commit Modes</title>
+        <title>synchronous_commit 模式</title>
         <tgroup cols="5">
          <colspec colname="col1" colwidth="1.5*"/>
          <colspec colname="col2" colwidth="1*"/>
@@ -2435,11 +2321,11 @@ include_dir 'conf.d'
          <colspec colname="col5" colwidth="1*"/>
          <thead>
           <row>
-           <entry>synchronous_commit setting</entry>
-           <entry>local durable commit</entry>
-           <entry>standby durable commit after PG crash</entry>
-           <entry>standby durable commit after OS crash</entry>
-           <entry>standby query consistency</entry>
+           <entry>synchronous_commit 设置</entry>
+           <entry>本地持久提交</entry>
+           <entry>PG 崩溃后的备库持久提交</entry>
+           <entry>操作系统崩溃后的备库持久提交</entry>
+           <entry>备库查询一致性</entry>
           </row>
          </thead>
 
@@ -2495,101 +2381,72 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-sync-method" xreflabel="wal_sync_method">
       <term><varname>wal_sync_method</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>wal_sync_method</varname> configuration parameter</primary>
+       <primary><varname>wal_sync_method</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Method used for forcing WAL updates out to disk.
-        If <varname>fsync</varname> is off then this setting is irrelevant,
-        since WAL file updates will not be forced out at all.
-        Possible values are:
+        用于强制将 WAL 更新写出到磁盘的方法。
+        如果 <varname>fsync</varname> 为 off，则此设置无关紧要，
+        因为根本不会强制写出 WAL 文件更新。
+        可能的取值有：
        </para>
        <itemizedlist>
         <listitem>
         <para>
-         <literal>open_datasync</literal> (write WAL files with <function>open()</function> option <symbol>O_DSYNC</symbol>)
+         <literal>open_datasync</literal>（使用 <function>open()</function> 选项 <symbol>O_DSYNC</symbol> 写 WAL 文件）
         </para>
         </listitem>
         <listitem>
         <para>
-         <literal>fdatasync</literal> (call <function>fdatasync()</function> at each commit)
+         <literal>fdatasync</literal>（每次提交时调用 <function>fdatasync()</function>）
         </para>
         </listitem>
         <listitem>
         <para>
-         <literal>fsync</literal> (call <function>fsync()</function> at each commit)
+         <literal>fsync</literal>（每次提交时调用 <function>fsync()</function>）
         </para>
         </listitem>
         <listitem>
         <para>
-         <literal>fsync_writethrough</literal> (call <function>fsync()</function> at each commit, forcing write-through of any disk write cache)
+         <literal>fsync_writethrough</literal>（每次提交时调用 <function>fsync()</function>，强制写穿任何磁盘写缓存）
         </para>
         </listitem>
         <listitem>
         <para>
-         <literal>open_sync</literal> (write WAL files with <function>open()</function> option <symbol>O_SYNC</symbol>)
+         <literal>open_sync</literal>（使用 <function>open()</function> 选项 <symbol>O_SYNC</symbol> 写 WAL 文件）
         </para>
         </listitem>
        </itemizedlist>
        <para>
-        Not all of these choices are available on all platforms.
-        The default is the first method in the above list that is supported
-        by the platform, except that <literal>fdatasync</literal> is the default on
-        Linux and FreeBSD.  The default is not necessarily ideal; it might be
-        necessary to change this setting or other aspects of your system
-        configuration in order to create a crash-safe configuration or
-        achieve optimal performance.
-        These aspects are discussed in <xref linkend="wal-reliability"/>.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        并非所有这些选择在所有平台上都可用。默认值是上述列表中平台所支持的第一种方法，但在 Linux 和 FreeBSD 上默认值是 <literal>fdatasync</literal>。默认值未必理想；为了创建崩溃安全的配置或获得最佳性能，可能有必要更改此设置或系统配置的其他方面。这些方面在 <xref linkend="wal-reliability"/> 中讨论。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-full-page-writes" xreflabel="full_page_writes">
-      <term><varname>full_page_writes</varname> (<type>boolean</type>)
+      <term><varname>full_page_writes</varname>（<type>boolean</type>）
       <indexterm>
-       <primary><varname>full_page_writes</varname> configuration parameter</primary>
+       <primary><varname>full_page_writes</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When this parameter is on, the <productname>PostgreSQL</productname> server
-        writes the entire content of each disk page to WAL during the
-        first modification of that page after a checkpoint.
-        This is needed because
-        a page write that is in process during an operating system crash might
-        be only partially completed, leading to an on-disk page
-        that contains a mix of old and new data.  The row-level change data
-        normally stored in WAL will not be enough to completely restore
-        such a page during post-crash recovery.  Storing the full page image
-        guarantees that the page can be correctly restored, but at the price
-        of increasing the amount of data that must be written to WAL.
-        (Because WAL replay always starts from a checkpoint, it is sufficient
-        to do this during the first change of each page after a checkpoint.
-        Therefore, one way to reduce the cost of full-page writes is to
-        increase the checkpoint interval parameters.)
+        当此参数开启时，<productname>PostgreSQL</productname> 服务器会在检查点之后对每个磁盘页进行第一次修改时，将该页的全部内容写入 WAL。
+        这是必要的，因为在操作系统崩溃期间正在进行的页写入可能只完成了一部分，导致磁盘上的页包含新旧数据的混合。通常存储在 WAL 中的行级变更数据不足以在崩溃后恢复期间完全恢复这样的页。存储完整页映像可以保证该页能够被正确恢复，但代价是必须写入 WAL 的数据量增加。
+        （由于 WAL 重放总是从检查点开始，因此只需在检查点之后对每个页的第一次修改时这样做即可。因此，降低完整页写入开销的一种方法是增大检查点间隔参数。）
        </para>
 
        <para>
-        Turning this parameter off speeds normal operation, but
-        might lead to either unrecoverable data corruption, or silent
-        data corruption, after a system failure. The risks are similar to turning off
-        <varname>fsync</varname>, though smaller, and it should be turned off
-        only based on the same circumstances recommended for that parameter.
+        关闭此参数可以加快正常操作的速度，但可能在系统故障后导致不可恢复的数据损坏或静默的数据损坏。这些风险类似于关闭 <varname>fsync</varname>，尽管更小，并且只应在建议对该参数关闭的相同情况下才关闭它。
        </para>
 
        <para>
-        Turning off this parameter does not affect use of
-        WAL archiving for point-in-time recovery (PITR)
-        (see <xref linkend="continuous-archiving"/>).
+        关闭此参数不会影响使用 WAL 归档进行时间点恢复（PITR）（参见 <xref linkend="continuous-archiving"/>）。
        </para>
 
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
-        The default is <literal>on</literal>.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。默认值为 <literal>on</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2597,26 +2454,20 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-log-hints" xreflabel="wal_log_hints">
       <term><varname>wal_log_hints</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>wal_log_hints</varname> configuration parameter</primary>
+       <primary><varname>wal_log_hints</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When this parameter is <literal>on</literal>, the <productname>PostgreSQL</productname>
-        server writes the entire content of each disk page to WAL during the
-        first modification of that page after a checkpoint, even for
-        non-critical modifications of so-called hint bits.
+        当此参数为 <literal>on</literal> 时，<productname>PostgreSQL</productname> 服务器会在检查点之后对每个磁盘页进行第一次修改时，将该页的全部内容写入 WAL，即使是对所谓提示位的非关键修改也是如此。
        </para>
 
        <para>
-        If data checksums are enabled, hint bit updates are always WAL-logged
-        and this setting is ignored. You can use this setting to test how much
-        extra WAL-logging would occur if your database had data checksums
-        enabled.
+        如果启用了数据校验和，提示位更新将始终记录到 WAL 中，并且此设置会被忽略。你可以使用此设置来测试：如果你的数据库启用了数据校验和，将会产生多少额外的 WAL 记录。
        </para>
 
        <para>
-        This parameter can only be set at server start. The default value is <literal>off</literal>.
+        此参数只能在服务器启动时设置。默认值为 <literal>off</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -2624,34 +2475,31 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-compression" xreflabel="wal_compression">
       <term><varname>wal_compression</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>wal_compression</varname> configuration parameter</primary>
+       <primary><varname>wal_compression</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter enables compression of WAL using the specified
-        compression method.
-        When enabled, the <productname>PostgreSQL</productname>
-        server compresses full page images written to WAL (e.g. when
-        <xref linkend="guc-full-page-writes"/> is on, during a base backup,
-        etc.).
-        A compressed page image will be decompressed during WAL replay.
-        The supported methods are <literal>pglz</literal>,
-        <literal>lz4</literal> (if <productname>PostgreSQL</productname>
-        was compiled with <option>--with-lz4</option>) and
-        <literal>zstd</literal> (if <productname>PostgreSQL</productname>
-        was compiled with <option>--with-zstd</option>).
-        The value <literal>on</literal> is a historical spelling of <literal>pglz</literal>.
-        The default value is <literal>off</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        此参数使用指定的压缩方法启用 WAL 压缩。
+        启用后，<productname>PostgreSQL</productname>
+        服务器会压缩写入 WAL 的完整页映像（例如当
+        <xref linkend="guc-full-page-writes"/> 开启时、在基础备份期间
+        等）。
+        压缩后的页映像将在 WAL 重放期间被解压缩。
+        支持的方法有 <literal>pglz</literal>、
+        <literal>lz4</literal>（如果 <productname>PostgreSQL</productname>
+        在编译时包含了 <option>--with-lz4</option>）以及
+        <literal>zstd</literal>（如果 <productname>PostgreSQL</productname>
+        在编译时包含了 <option>--with-zstd</option>）。
+        值 <literal>on</literal> 是 <literal>pglz</literal> 的历史拼写。
+        默认值为 <literal>off</literal>。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <para>
-        Enabling compression can reduce the WAL volume without
-        increasing the risk of unrecoverable data corruption,
-        but at the cost of some extra CPU spent on the compression during
-        WAL logging and on the decompression during WAL replay.
+        启用压缩可以在不增加不可恢复数据损坏风险的前提下减少 WAL 体积，
+        但代价是在 WAL 记录期间压缩以及在 WAL 重放期间解压缩会额外消耗一些 CPU。
        </para>
       </listitem>
      </varlistentry>
@@ -2659,18 +2507,18 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-init-zero" xreflabel="wal_init_zero">
       <term><varname>wal_init_zero</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>wal_init_zero</varname> configuration parameter</primary>
+       <primary><varname>wal_init_zero</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If set to <literal>on</literal> (the default), this option causes new
-        WAL files to be filled with zeroes.  On some file systems, this ensures
-        that space is allocated before we need to write WAL records.  However,
-        <firstterm>Copy-On-Write</firstterm> (COW) file systems may not benefit
-        from this technique, so the option is given to skip the unnecessary
-        work.  If set to <literal>off</literal>, only the final byte is written
-        when the file is created so that it has the expected size.
+        如果设置为 <literal>on</literal>（默认值），此选项会使新的
+        WAL 文件被零填充。在某些文件系统上，这可确保在我们需要
+        写入 WAL 记录之前就已分配好空间。然而，
+        <firstterm>写时复制</firstterm>（COW）文件系统可能无法从
+        这种技术中获益，因此提供了该选项以跳过不必要的
+        工作。如果设置为 <literal>off</literal>，则创建文件时只写入最后一个字节，
+        使其具有预期的大小。
        </para>
       </listitem>
      </varlistentry>
@@ -2678,15 +2526,15 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-recycle" xreflabel="wal_recycle">
       <term><varname>wal_recycle</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>wal_recycle</varname> configuration parameter</primary>
+       <primary><varname>wal_recycle</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If set to <literal>on</literal> (the default), this option causes WAL
-        files to be recycled by renaming them, avoiding the need to create new
-        ones.  On COW file systems, it may be faster to create new ones, so the
-        option is given to disable this behavior.
+        如果设置为 <literal>on</literal>（默认值），此选项会通过重命名来回收
+        WAL 文件，从而避免创建新文件。在 COW 文件系统上，
+        创建新文件可能更快，因此提供了该选项来禁用此
+        行为。
        </para>
       </listitem>
      </varlistentry>
@@ -2694,32 +2542,30 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-buffers" xreflabel="wal_buffers">
       <term><varname>wal_buffers</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_buffers</varname> configuration parameter</primary>
+       <primary><varname>wal_buffers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The amount of shared memory used for WAL data that has not yet been
-        written to disk.  The default setting of -1 selects a size equal to
-        1/32nd (about 3%) of <xref linkend="guc-shared-buffers"/>, but not less
-        than <literal>64kB</literal> nor more than the size of one WAL
-        segment, typically <literal>16MB</literal>.  This value can be set
-        manually if the automatic choice is too large or too small,
-        but any positive value less than <literal>32kB</literal> will be
-        treated as <literal>32kB</literal>.
-        If this value is specified without units, it is taken as WAL blocks,
-        that is <symbol>XLOG_BLCKSZ</symbol> bytes, typically 8kB.
-        This parameter can only be set at server start.
+        用于尚未写入磁盘的 WAL 数据的共享内存量。
+        默认设置 -1 选择的大小等于
+        <xref linkend="guc-shared-buffers"/> 的 1/32（约 3%），但不少于
+        <literal>64kB</literal>，也不超过一个 WAL
+        段的大小，通常为 <literal>16MB</literal>。如果自动选择的值过大或过小，
+        可以手动设置该值，
+        但任何小于 <literal>32kB</literal> 的正值都将
+        被视为 <literal>32kB</literal>。
+        如果指定该值时未带单位，则将其视为 WAL 块，
+        即 <symbol>XLOG_BLCKSZ</symbol> 字节，通常为 8kB。
+        该参数只能在服务器启动时设置。
        </para>
 
        <para>
-        The contents of the WAL buffers are written out to disk at every
-        transaction commit, so extremely large values are unlikely to
-        provide a significant benefit.  However, setting this value to at
-        least a few megabytes can improve write performance on a busy
-        server where many clients are committing at once.  The auto-tuning
-        selected by the default setting of -1 should give reasonable
-        results in most cases.
+        WAL 缓冲区的内容在每次事务提交时都会写出到磁盘，
+        因此极大的值不太可能带来显著的好处。不过，在
+        众多客户端同时提交的繁忙服务器上，将该值设置为至少
+        几兆字节可以提高写入性能。由默认设置 -1 选择的
+        自动调整在大多数情况下应能给出合理的结果。
        </para>
 
       </listitem>
@@ -2728,26 +2574,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-writer-delay" xreflabel="wal_writer_delay">
       <term><varname>wal_writer_delay</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_writer_delay</varname> configuration parameter</primary>
+       <primary><varname>wal_writer_delay</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
       <para>
-        Specifies how often the WAL writer flushes WAL, in time terms.
-        After flushing WAL the writer sleeps for the length of time given
-        by <varname>wal_writer_delay</varname>, unless woken up sooner
-        by an asynchronously committing transaction. If the last flush
-        happened less than <varname>wal_writer_delay</varname> ago and less
-        than <varname>wal_writer_flush_after</varname> worth of WAL has been
-        produced since, then WAL is only written to the operating system, not
-        flushed to disk.
-        If this value is specified without units, it is taken as milliseconds.
-        The default value is 200 milliseconds (<literal>200ms</literal>).  Note that
-        on some systems, the effective resolution of sleep delays is 10
-        milliseconds; setting <varname>wal_writer_delay</varname> to a value that is
-        not a multiple of 10 might have the same results as setting it to the
-        next higher multiple of 10. This parameter can only be set in the
-        <filename>postgresql.conf</filename> file or on the server command line.
+        以时间方式指定 WAL 写入器刷写 WAL 的频率。
+        刷写 WAL 之后，写入器会休眠 <varname>wal_writer_delay</varname> 所指定的时长，除非被异步提交的事务更早唤醒。
+        如果上一次刷写发生在不到 <varname>wal_writer_delay</varname> 之前，并且自那以后产生的 WAL 少于 <varname>wal_writer_flush_after</varname>，那么 WAL 只会被写入操作系统，而不会刷写到磁盘。
+        如果指定该值时未给出单位，则按毫秒处理。
+        默认值为 200 毫秒（<literal>200ms</literal>）。请注意，在某些系统上，休眠延迟的有效分辨率为 10 毫秒；将 <varname>wal_writer_delay</varname> 设置为不是 10 的倍数的值，其结果可能与将其设置为下一个更大的 10 的倍数相同。该参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2755,23 +2591,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-writer-flush-after" xreflabel="wal_writer_flush_after">
       <term><varname>wal_writer_flush_after</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_writer_flush_after</varname> configuration parameter</primary>
+       <primary><varname>wal_writer_flush_after</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
       <para>
-        Specifies how often the WAL writer flushes WAL, in volume terms.
-        If the last flush happened less
-        than <varname>wal_writer_delay</varname> ago and less
-        than <varname>wal_writer_flush_after</varname> worth of WAL has been
-        produced since, then WAL is only written to the operating system, not
-        flushed to disk.  If <varname>wal_writer_flush_after</varname> is set
-        to <literal>0</literal> then WAL data is always flushed immediately.
-        If this value is specified without units, it is taken as WAL blocks,
-        that is <symbol>XLOG_BLCKSZ</symbol> bytes, typically 8kB.
-        The default is <literal>1MB</literal>.
-        This parameter can only be set in the
-        <filename>postgresql.conf</filename> file or on the server command line.
+        以数据量方式指定 WAL 写入器刷写 WAL 的频率。
+        如果上一次刷写发生在不到 <varname>wal_writer_delay</varname> 之前，并且自那以后产生的 WAL 少于 <varname>wal_writer_flush_after</varname>，那么 WAL 只会被写入操作系统，而不会刷写到磁盘。如果 <varname>wal_writer_flush_after</varname> 被设置为 <literal>0</literal>，则 WAL 数据总是立即刷写。
+        如果指定该值时未给出单位，则按 WAL 块处理，即 <symbol>XLOG_BLCKSZ</symbol> 字节，通常为 8kB。
+        默认值为 <literal>1MB</literal>。
+        该参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2779,20 +2608,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-skip-threshold" xreflabel="wal_skip_threshold">
       <term><varname>wal_skip_threshold</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_skip_threshold</varname> configuration parameter</primary>
+       <primary><varname>wal_skip_threshold</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>wal_level</varname> is <literal>minimal</literal> and a
-        transaction commits after creating or rewriting a permanent relation,
-        this setting determines how to persist the new data.  If the data is
-        smaller than this setting, write it to the WAL log; otherwise, use an
-        fsync of affected files.  Depending on the properties of your storage,
-        raising or lowering this value might help if such commits are slowing
-        concurrent transactions.  If this value is specified without units, it
-        is taken as kilobytes.  The default is two megabytes
-        (<literal>2MB</literal>).
+        当 <varname>wal_level</varname> 为 <literal>minimal</literal> 且事务在创建或重写永久关系之后提交时，此设置决定如何持久化新数据。如果数据小于此设置值，则将其写入 WAL 日志；否则，对受影响的文件执行 fsync。取决于存储的特性，如果此类提交正在拖慢并发事务，提高或降低此值可能会有帮助。如果指定该值时未给出单位，则按千字节处理。默认值为两兆字节（<literal>2MB</literal>）。
        </para>
       </listitem>
      </varlistentry>
@@ -2800,37 +2621,15 @@ include_dir 'conf.d'
      <varlistentry id="guc-commit-delay" xreflabel="commit_delay">
       <term><varname>commit_delay</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>commit_delay</varname> configuration parameter</primary>
+       <primary><varname>commit_delay</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Setting <varname>commit_delay</varname> adds a time delay
-        before a WAL flush is initiated.  This can improve
-        group commit throughput by allowing a larger number of transactions
-        to commit via a single WAL flush, if system load is high enough
-        that additional transactions become ready to commit within the
-        given interval.  However, it also increases latency by up to the
-        <varname>commit_delay</varname> for each WAL
-        flush.  Because the delay is just wasted if no other transactions
-        become ready to commit, a delay is only performed if at least
-        <varname>commit_siblings</varname> other transactions are active
-        when a flush is about to be initiated.  Also, no delays are
-        performed if <varname>fsync</varname> is disabled.
-        If this value is specified without units, it is taken as microseconds.
-        The default <varname>commit_delay</varname> is zero (no delay).
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        设置 <varname>commit_delay</varname> 会在发起 WAL 刷写之前增加一段延时。如果系统负载足够高，使得更多事务在给定时间间隔内进入可提交状态，那么这可以通过让更多事务经由一次 WAL 刷写完成提交，从而提高组提交吞吐量。不过，它也会使每次 WAL 刷写的延迟最多增加 <varname>commit_delay</varname>。由于如果没有其他事务进入可提交状态，这段延时就被白白浪费，所以只有当即将发起刷写时至少有 <varname>commit_siblings</varname> 个其他事务处于活动状态，才会执行延时。此外，如果 <varname>fsync</varname> 被禁用，则不会执行任何延时。如果指定该值时未给出单位，则按微秒处理。默认值 <varname>commit_delay</varname> 为零（无延时）。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
        <para>
-        In <productname>PostgreSQL</productname> releases prior to 9.3,
-        <varname>commit_delay</varname> behaved differently and was much
-        less effective: it affected only commits, rather than all WAL flushes,
-        and waited for the entire configured delay even if the WAL flush
-        was completed sooner.  Beginning in <productname>PostgreSQL</productname> 9.3,
-        the first process that becomes ready to flush waits for the configured
-        interval, while subsequent processes wait only until the leader
-        completes the flush operation.
+        在 9.3 之前的 <productname>PostgreSQL</productname> 发行版中，<varname>commit_delay</varname> 的行为有所不同，而且效果差得多：它只影响提交，而不是所有 WAL 刷写，并且即使 WAL 刷写提前完成，也会等待整个配置的延时。从 <productname>PostgreSQL</productname> 9.3 开始，第一个准备好刷写的进程会等待配置的时间间隔，而后续进程只等待领导者完成刷写操作。
        </para>
       </listitem>
      </varlistentry>
@@ -2838,16 +2637,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-commit-siblings" xreflabel="commit_siblings">
       <term><varname>commit_siblings</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>commit_siblings</varname> configuration parameter</primary>
+       <primary><varname>commit_siblings</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Minimum number of concurrent open transactions to require
-        before performing the <varname>commit_delay</varname> delay. A larger
-        value makes it more probable that at least one other
-        transaction will become ready to commit during the delay
-        interval. The default is five transactions.
+        执行 <varname>commit_delay</varname> 延时之前要求的最小并发打开事务数。较大的值会使至少一个其他事务在延时期间进入可提交状态的可能性更大。默认值为五个事务。
        </para>
       </listitem>
      </varlistentry>
@@ -2855,7 +2650,7 @@ include_dir 'conf.d'
      </variablelist>
      </sect2>
      <sect2 id="runtime-config-wal-checkpoints">
-     <title>Checkpoints</title>
+     <title>检查点</title>
 
     <variablelist>
      <varlistentry id="guc-checkpoint-timeout" xreflabel="checkpoint_timeout">
@@ -2866,14 +2661,13 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        Maximum time between automatic WAL checkpoints.
-        If this value is specified without units, it is taken as seconds.
-        The valid range is between 30 seconds and one day.
-        The default is five minutes (<literal>5min</literal>).
-        Increasing this parameter can increase the amount of time needed
-        for crash recovery.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        自动 WAL 检查点之间的最大时间间隔。
+        如果指定该值时不带单位，则按秒处理。
+        有效范围是 30 秒到一天。
+        默认值为五分钟（<literal>5min</literal>）。
+        增大此参数会增加崩溃恢复所需的时间。
+        此参数只能在 <filename>postgresql.conf</filename>
+        文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2886,16 +2680,13 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        Specifies the target of checkpoint completion, as a fraction of
-        total time between checkpoints. The default is 0.9, which spreads the
-        checkpoint across almost all of the available interval, providing fairly
-        consistent I/O load while also leaving some time for checkpoint
-        completion overhead.  Reducing this parameter is not recommended because
-        it causes the checkpoint to complete faster.  This results in a higher
-        rate of I/O during the checkpoint followed by a period of less I/O between
-        the checkpoint completion and the next scheduled checkpoint.  This
-        parameter can only be set in the <filename>postgresql.conf</filename> file
-        or on the server command line.
+        指定检查点完成的目标，以检查点之间总时间的比例表示。
+        默认值为 0.9，这会将检查点分散到几乎整个可用时间间隔内，从而提供相当
+        一致的 I/O 负载，同时也为检查点完成的开销留出一些时间。不建议减小此
+        参数，因为那会使检查点更快完成。这会导致检查点期间的 I/O 速率更高，
+        随后在检查点完成与下一个计划检查点之间的一段时间内 I/O 较少。此
+        参数只能在 <filename>postgresql.conf</filename> 文件中
+        或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2908,26 +2699,10 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        Whenever more than this amount of data has been
-        written while performing a checkpoint, attempt to force the
-        OS to issue these writes to the underlying storage.  Doing so will
-        limit the amount of dirty data in the kernel's page cache, reducing
-        the likelihood of stalls when an <function>fsync</function> is issued at the end of the
-        checkpoint, or when the OS writes data back in larger batches in the
-        background.  Often that will result in greatly reduced transaction
-        latency, but there also are some cases, especially with workloads
-        that are bigger than <xref linkend="guc-shared-buffers"/>, but smaller
-        than the OS's page cache, where performance might degrade.  This
-        setting may have no effect on some platforms.
-        If this value is specified without units, it is taken as blocks,
-        that is <symbol>BLCKSZ</symbol> bytes, typically 8kB.
-        The valid range is
-        between <literal>0</literal>, which disables forced writeback,
-        and <literal>2MB</literal>.  The default is <literal>256kB</literal> on
-        Linux, <literal>0</literal> elsewhere.  (If <symbol>BLCKSZ</symbol> is not
-        8kB, the default and maximum values scale proportionally to it.)
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        在执行检查点期间，只要写入的数据量超过此值，就尝试强制操作系统将这些写入发送到底层存储。这样做将限制内核页缓存中的脏数据量，降低在检查点结束时发出 <function>fsync</function> 时、或操作系统在后台以更大的批次回写数据时出现停顿的可能性。通常这会大幅降低事务延迟，但在某些情况下性能可能会下降，尤其是当工作负载大于 <xref linkend="guc-shared-buffers"/> 但小于操作系统页缓存时。此设置在某些平台上可能没有效果。
+        如果指定此值时不带单位，则以块为单位，即 <symbol>BLCKSZ</symbol> 字节，通常为 8kB。
+        有效范围在 <literal>0</literal>（禁用强制回写）和 <literal>2MB</literal> 之间。默认值在 Linux 上为 <literal>256kB</literal>，在其他平台上为 <literal>0</literal>。（如果 <symbol>BLCKSZ</symbol> 不是 8kB，则默认值和最大值会按比例缩放。）
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2935,22 +2710,17 @@ include_dir 'conf.d'
      <varlistentry id="guc-checkpoint-warning" xreflabel="checkpoint_warning">
       <term><varname>checkpoint_warning</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>checkpoint_warning</varname> configuration parameter</primary>
+       <primary><varname>checkpoint_warning</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Write a message to the server log if checkpoints caused by
-        the filling of WAL segment files happen closer together
-        than this amount of time (which suggests that
-        <varname>max_wal_size</varname> ought to be raised).
-        If this value is specified without units, it is taken as seconds.
-        The default is 30 seconds (<literal>30s</literal>).
-        Zero disables the warning.
-        No warnings will be generated if <varname>checkpoint_timeout</varname>
-        is less than <varname>checkpoint_warning</varname>.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        如果由 WAL 段文件填满而引发的检查点之间的间隔小于此时间，则向服务器日志写入一条消息（这表明应当提高 <varname>max_wal_size</varname>）。
+        如果指定此值时不带单位，则以秒为单位。
+        默认值为 30 秒（<literal>30s</literal>）。
+        零表示禁用该警告。
+        如果 <varname>checkpoint_timeout</varname> 小于 <varname>checkpoint_warning</varname>，则不会产生任何警告。
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2958,22 +2728,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-max-wal-size" xreflabel="max_wal_size">
       <term><varname>max_wal_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_wal_size</varname> configuration parameter</primary>
+       <primary><varname>max_wal_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Maximum size to let the WAL grow during automatic
-        checkpoints. This is a soft limit; WAL size can exceed
-        <varname>max_wal_size</varname> under special circumstances, such as
-        heavy load, a failing <varname>archive_command</varname> or <varname>archive_library</varname>, or a high
-        <varname>wal_keep_size</varname> setting.
-        If this value is specified without units, it is taken as megabytes.
-        The default is 1 GB.
-        Increasing this parameter can increase the amount of time needed for
-        crash recovery.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        自动检查点期间允许 WAL 增长的最大尺寸。这是一个软限制；在特殊情况下，WAL 的大小可以超过 <varname>max_wal_size</varname>，例如高负载、<varname>archive_command</varname> 或 <varname>archive_library</varname> 失败，或者 <varname>wal_keep_size</varname> 设置较高时。
+        如果指定该值时不带单位，则按兆字节处理。
+        默认值为 1 GB。
+        增大此参数会增加崩溃恢复所需的时间。
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -2981,20 +2745,16 @@ include_dir 'conf.d'
      <varlistentry id="guc-min-wal-size" xreflabel="min_wal_size">
       <term><varname>min_wal_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>min_wal_size</varname> configuration parameter</primary>
+       <primary><varname>min_wal_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        As long as WAL disk usage stays below this setting, old WAL files are
-        always recycled for future use at a checkpoint, rather than removed.
-        This can be used to ensure that enough WAL space is reserved to
-        handle spikes in WAL usage, for example when running large batch
-        jobs.
-        If this value is specified without units, it is taken as megabytes.
-        The default is 80 MB.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        只要 WAL 磁盘用量保持在此设置以下，旧的 WAL 文件在检查点时总是会被回收以供将来使用，而不是被删除。
+        这可用于确保预留足够的 WAL 空间来处理 WAL 用量的尖峰，例如在运行大型批处理作业时。
+        如果指定该值时不带单位，则按兆字节处理。
+        默认值为 80 MB。
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3002,39 +2762,29 @@ include_dir 'conf.d'
      </variablelist>
      </sect2>
      <sect2 id="runtime-config-wal-archiving">
-     <title>Archiving</title>
+     <title>归档</title>
 
     <variablelist>
      <varlistentry id="guc-archive-mode" xreflabel="archive_mode">
       <term><varname>archive_mode</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>archive_mode</varname> configuration parameter</primary>
+       <primary><varname>archive_mode</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>archive_mode</varname> is enabled, completed WAL segments
-        are sent to archive storage by setting
-        <xref linkend="guc-archive-command"/> or
-        <xref linkend="guc-archive-library"/>. In addition to <literal>off</literal>,
-        to disable, there are two modes: <literal>on</literal>, and
-        <literal>always</literal>. During normal operation, there is no
-        difference between the two modes, but when set to <literal>always</literal>
-        the WAL archiver is enabled also during archive recovery or standby
-        mode. In <literal>always</literal> mode, all files restored from the archive
-        or streamed with streaming replication will be archived (again). See
-        <xref linkend="continuous-archiving-in-standby"/> for details.
+        当启用 <varname>archive_mode</varname> 时，已完成的 WAL 段会通过设置
+        <xref linkend="guc-archive-command"/> 或
+        <xref linkend="guc-archive-library"/> 发送到归档存储。除了 <literal>off</literal> 之外，
+        要禁用还有两种模式：<literal>on</literal> 和
+        <literal>always</literal>。在正常运行期间，这两种模式没有
+        区别，但当设置为 <literal>always</literal> 时，
+        在归档恢复或后备模式下也会启用 WAL 归档器。在 <literal>always</literal> 模式下，从归档恢复的
+        或通过流复制流式传输的所有文件都将被（再次）归档。详情请参见
+        <xref linkend="continuous-archiving-in-standby"/>。
        </para>
        <para>
-        <varname>archive_mode</varname> is a separate setting from
-        <varname>archive_command</varname> and
-        <varname>archive_library</varname> so that
-        <varname>archive_command</varname> and
-        <varname>archive_library</varname> can be changed without leaving
-        archiving mode.
-        This parameter can only be set at server start.
-        <varname>archive_mode</varname> cannot be enabled when
-        <varname>wal_level</varname> is set to <literal>minimal</literal>.
+        <varname>archive_mode</varname> 是与 <varname>archive_command</varname> 和 <varname>archive_library</varname> 分开的独立设置，这样无需退出归档模式即可更改 <varname>archive_command</varname> 和 <varname>archive_library</varname>。此参数只能在服务器启动时设置。当 <varname>wal_level</varname> 设置为 <literal>minimal</literal> 时，无法启用 <varname>archive_mode</varname>。
        </para>
       </listitem>
      </varlistentry>
@@ -3042,39 +2792,15 @@ include_dir 'conf.d'
      <varlistentry id="guc-archive-command" xreflabel="archive_command">
       <term><varname>archive_command</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>archive_command</varname> configuration parameter</primary>
+       <primary><varname>archive_command</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The local shell command to execute to archive a completed WAL file
-        segment.  Any <literal>%p</literal> in the string is
-        replaced by the path name of the file to archive, and any
-        <literal>%f</literal> is replaced by only the file name.
-        (The path name is relative to the working directory of the server,
-        i.e., the cluster's data directory.)
-        Use <literal>%%</literal> to embed an actual <literal>%</literal> character in the
-        command.  It is important for the command to return a zero
-        exit status only if it succeeds. For more information see
-        <xref linkend="backup-archiving-wal"/>.
+        为归档已完成的 WAL 文件段而要执行的本地 shell 命令。字符串中的任何 <literal>%p</literal> 都会被替换为要归档的文件的路径名，任何 <literal>%f</literal> 都只会被替换为文件名。（该路径名相对于服务器的工作目录，即数据库集簇的数据目录。）使用 <literal>%%</literal> 在命令中嵌入实际的 <literal>%</literal> 字符。重要的是，该命令只有在成功时才返回零退出状态。更多信息请参见 <xref linkend="backup-archiving-wal"/>。
        </para>
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.  It is only used if
-        <varname>archive_mode</varname> was enabled at server start and
-        <varname>archive_library</varname> is set to an empty string.  If both
-        <varname>archive_command</varname> and <varname>archive_library</varname>
-        are set, an error will be raised.
-        If <varname>archive_command</varname> is an empty string (the default) while
-        <varname>archive_mode</varname> is enabled (and <varname>archive_library</varname>
-        is set to an empty string), WAL archiving is temporarily
-        disabled, but the server continues to accumulate WAL segment files in
-        the expectation that a command will soon be provided.  Setting
-        <varname>archive_command</varname> to a command that does nothing but
-        return true, e.g., <literal>/bin/true</literal> (<literal>REM</literal> on
-        Windows), effectively disables
-        archiving, but also breaks the chain of WAL files needed for
-        archive recovery, so it should only be used in unusual circumstances.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。只有在服务器启动时启用了 <varname>archive_mode</varname> 且 <varname>archive_library</varname> 设置为空字符串时才会使用它。如果同时设置了 <varname>archive_command</varname> 和 <varname>archive_library</varname>，则会引发错误。如果 <varname>archive_command</varname> 为空字符串（默认值）而 <varname>archive_mode</varname> 已启用（且 <varname>archive_library</varname> 设置为空字符串），则 WAL 归档会被临时禁用，但服务器会继续累积 WAL 段文件，以期很快会提供命令。将 <varname>archive_command</varname> 设置为一个除了返回 true 之外什么都不做的命令，例如 <literal>/bin/true</literal>（在 Windows 上是 <literal>REM</literal>），实际上会禁用归档，但也会破坏归档恢复所需的 WAL 文件链，因此只应在异常情况下使用。
        </para>
       </listitem>
      </varlistentry>
@@ -3082,24 +2808,15 @@ include_dir 'conf.d'
      <varlistentry id="guc-archive-library" xreflabel="archive_library">
       <term><varname>archive_library</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>archive_library</varname> configuration parameter</primary>
+       <primary><varname>archive_library</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The library to use for archiving completed WAL file segments.  If set to
-        an empty string (the default), archiving via shell is enabled, and
-        <xref linkend="guc-archive-command"/> is used.  If both
-        <varname>archive_command</varname> and <varname>archive_library</varname>
-        are set, an error will be raised.  Otherwise, the specified
-        shared library is used for archiving. The WAL archiver process is
-        restarted by the postmaster when this parameter changes. For more
-        information, see <xref linkend="backup-archiving-wal"/> and
-        <xref linkend="archive-modules"/>.
+        用于归档已完成的 WAL 文件段的库。如果设置为空字符串（默认值），则启用通过 shell 进行归档，并使用 <xref linkend="guc-archive-command"/>。如果同时设置了 <varname>archive_command</varname> 和 <varname>archive_library</varname>，将引发错误。否则，使用指定的共享库进行归档。当此参数更改时，postmaster 会重新启动 WAL 归档进程。更多信息，请参见 <xref linkend="backup-archiving-wal"/> 和 <xref linkend="archive-modules"/>。
        </para>
        <para>
-        This parameter can only be set in the
-        <filename>postgresql.conf</filename> file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3107,33 +2824,12 @@ include_dir 'conf.d'
      <varlistentry id="guc-archive-timeout" xreflabel="archive_timeout">
       <term><varname>archive_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>archive_timeout</varname> configuration parameter</primary>
+       <primary><varname>archive_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The <xref linkend="guc-archive-command"/> or <xref linkend="guc-archive-library"/> is only invoked for
-        completed WAL segments. Hence, if your server generates little WAL
-        traffic (or has slack periods where it does so), there could be a
-        long delay between the completion of a transaction and its safe
-        recording in archive storage.  To limit how old unarchived
-        data can be, you can set <varname>archive_timeout</varname> to force the
-        server to switch to a new WAL segment file periodically.  When this
-        parameter is greater than zero, the server will switch to a new
-        segment file whenever this amount of time has elapsed since the last
-        segment file switch, and there has been any database activity,
-        including a single checkpoint (checkpoints are skipped if there is
-        no database activity).  Note that archived files that are closed
-        early due to a forced switch are still the same length as completely
-        full files.  Therefore, it is unwise to use a very short
-        <varname>archive_timeout</varname> &mdash; it will bloat your archive
-        storage.  <varname>archive_timeout</varname> settings of a minute or so are
-        usually reasonable.  You should consider using streaming replication,
-        instead of archiving, if you want data to be copied off the primary
-        server more quickly than that.
-        If this value is specified without units, it is taken as seconds.
-        This parameter can only be set in the
-        <filename>postgresql.conf</filename> file or on the server command line.
+        <xref linkend="guc-archive-command"/> 或 <xref linkend="guc-archive-library"/> 仅对已完成的 WAL 段调用。因此，如果你的服务器产生的 WAL 流量很少（或者在某些空闲时段产生得很少），那么从事务完成到其安全记录到归档存储之间可能会有很长的延迟。为了限制未归档数据的最长保留时间，你可以设置 <varname>archive_timeout</varname> 来强制服务器定期切换到新的 WAL 段文件。当此参数大于零时，只要自上次段文件切换以来经过了这段时间，并且有任何数据库活动（包括一次检查点），服务器就会切换到新的段文件（如果没有数据库活动，则跳过检查点）。请注意，由于强制切换而提前关闭的归档文件，其长度仍与完全写满的文件相同。因此，使用非常短的 <varname>archive_timeout</varname> 是不明智的 &mdash; 它会使你的归档存储膨胀。<varname>archive_timeout</varname> 设置为一分钟左右通常是合理的。如果你希望数据比这更快地复制到主服务器之外，应考虑使用流复制而不是归档。如果指定此值时不带单位，则按秒处理。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3143,7 +2839,7 @@ include_dir 'conf.d'
 
    <sect2 id="runtime-config-wal-recovery">
 
-    <title>Recovery</title>
+    <title>恢复</title>
 
      <indexterm>
       <primary>configuration</primary>
@@ -3152,9 +2848,7 @@ include_dir 'conf.d'
      </indexterm>
 
     <para>
-     This section describes the settings that apply to recovery in general,
-     affecting crash recovery, streaming replication and archive-based
-     replication.
+     本节描述通常适用于恢复的设置，影响崩溃恢复、流复制和基于归档的复制。
     </para>
 
 
@@ -3162,25 +2856,20 @@ include_dir 'conf.d'
      <varlistentry id="guc-recovery-prefetch" xreflabel="recovery_prefetch">
       <term><varname>recovery_prefetch</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>recovery_prefetch</varname> configuration parameter</primary>
+       <primary><varname>recovery_prefetch</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Whether to try to prefetch blocks that are referenced in the WAL that
-        are not yet in the buffer pool, during recovery.  Valid values are
-        <literal>off</literal>, <literal>on</literal> and
-        <literal>try</literal> (the default).  The setting
-        <literal>try</literal> enables
-        prefetching only if the operating system provides support for issuing
-        read-ahead advice.
+        是否在恢复期间尝试预取 WAL 中引用但尚未进入缓冲池的块。有效值为
+        <literal>off</literal>、<literal>on</literal> 和
+        <literal>try</literal>（默认值）。仅当操作系统支持发出预读建议时，设置为
+        <literal>try</literal> 才会启用预取。
        </para>
        <para>
-        Prefetching blocks that will soon be needed can reduce I/O wait times
-        during recovery with some workloads.
-        See also the <xref linkend="guc-wal-decode-buffer-size"/> and
-        <xref linkend="guc-maintenance-io-concurrency"/> settings, which limit
-        prefetching activity.
+        预取很快将需要的块可以在某些工作负载下减少恢复期间的 I/O 等待时间。
+        另请参阅 <xref linkend="guc-wal-decode-buffer-size"/> 和
+        <xref linkend="guc-maintenance-io-concurrency"/> 设置，它们会限制预取活动。
        </para>
       </listitem>
      </varlistentry>
@@ -3188,16 +2877,13 @@ include_dir 'conf.d'
      <varlistentry id="guc-wal-decode-buffer-size" xreflabel="wal_decode_buffer_size">
       <term><varname>wal_decode_buffer_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_decode_buffer_size</varname> configuration parameter</primary>
+       <primary><varname>wal_decode_buffer_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        A limit on how far ahead the server can look in the WAL, to find
-        blocks to prefetch.  If this value is specified without units, it is
-        taken as bytes.
-        The default is 512kB.
-        This parameter can only be set at server start.
+        服务器在 WAL 中向前查找可预取块的距离上限。如果指定该值时未给出单位，
+        则按字节处理。默认值为 512kB。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3207,7 +2893,7 @@ include_dir 'conf.d'
 
   <sect2 id="runtime-config-wal-archive-recovery">
 
-    <title>Archive Recovery</title>
+    <title>归档恢复</title>
 
     <indexterm>
      <primary>configuration</primary>
@@ -3216,89 +2902,68 @@ include_dir 'conf.d'
     </indexterm>
 
     <para>
-     This section describes the settings that apply only for the duration of
-     the recovery.  They must be reset for any subsequent recovery you wish to
-     perform.
+     本节介绍仅在恢复期间生效的设置。如果你希望执行任何后续恢复，必须重置这些设置。
     </para>
 
     <para>
-     <quote>Recovery</quote> covers using the server as a standby or for
-     executing a targeted recovery.  Typically, standby mode would be used to
-     provide high availability and/or read scalability, whereas a targeted
-     recovery is used to recover from data loss.
+     <quote>恢复</quote>涵盖将服务器用作备用服务器或执行定向恢复。通常，备用模式用于提供高可用性和/或读扩展能力，而定向恢复用于从数据丢失中恢复。
     </para>
 
     <para>
-     To start the server in standby mode, create a file called
+     要以备用模式启动服务器，请在数据目录中创建一个名为
      <filename>standby.signal</filename><indexterm><primary>standby.signal</primary></indexterm>
-     in the data directory.  The server will enter recovery and will not stop
-     recovery when the end of archived WAL is reached, but will keep trying to
-     continue recovery by connecting to the sending server as specified by the
-     <varname>primary_conninfo</varname> setting and/or by fetching new WAL
-     segments using <varname>restore_command</varname>.  For this mode, the
-     parameters from this section and <xref
-     linkend="runtime-config-replication-standby"/> are of interest.
-     Parameters from <xref linkend="runtime-config-wal-recovery-target"/> will
-     also be applied but are typically not useful in this mode.
+     的文件。服务器将进入恢复状态，并且在到达归档 WAL 的末尾时不会停止
+     恢复，而是会继续尝试恢复：通过连接到 <varname>primary_conninfo</varname> 设置所指定的
+     发送服务器，和/或使用 <varname>restore_command</varname> 获取新的 WAL
+     段。对于此模式，本节以及 <xref
+     linkend="runtime-config-replication-standby"/> 中的参数值得关注。
+     来自 <xref linkend="runtime-config-wal-recovery-target"/> 的参数
+     也会被应用，但在此模式下通常没有用处。
     </para>
 
     <para>
-     To start the server in targeted recovery mode, create a file called
+     要以定向恢复模式启动服务器，请在数据目录中创建一个名为
      <filename>recovery.signal</filename><indexterm><primary>recovery.signal</primary></indexterm>
-     in the data directory.  If both <filename>standby.signal</filename> and
-     <filename>recovery.signal</filename> files are created, standby mode
-     takes precedence.  Targeted recovery mode ends when the archived WAL is
-     fully replayed, or when <varname>recovery_target</varname> is reached.
-     In this mode, the parameters from both this section and <xref
-     linkend="runtime-config-wal-recovery-target"/> will be used.
+     的文件。如果同时创建了 <filename>standby.signal</filename> 和
+     <filename>recovery.signal</filename> 文件，则备用模式优先。当归档 WAL
+     被完全重放，或到达 <varname>recovery_target</varname> 时，定向恢复模式结束。
+     在此模式下，本节和 <xref
+     linkend="runtime-config-wal-recovery-target"/> 中的参数都会被使用。
     </para>
 
     <variablelist>
      <varlistentry id="guc-restore-command" xreflabel="restore_command">
       <term><varname>restore_command</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>restore_command</varname> configuration parameter</primary>
+        <primary><varname>restore_command</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The local shell command to execute to retrieve an archived segment of
-        the WAL file series. This parameter is required for archive recovery,
-        but optional for streaming replication.
-        Any <literal>%f</literal> in the string is
-        replaced by the name of the file to retrieve from the archive,
-        and any <literal>%p</literal> is replaced by the copy destination path name
-        on the server.
-        (The path name is relative to the current working directory,
-        i.e., the cluster's data directory.)
-        Any <literal>%r</literal> is replaced by the name of the file containing the
-        last valid restart point. That is the earliest file that must be kept
-        to allow a restore to be restartable, so this information can be used
-        to truncate the archive to just the minimum required to support
-        restarting from the current restore. <literal>%r</literal> is typically only
-        used by warm-standby configurations
-        (see <xref linkend="warm-standby"/>).
-        Write <literal>%%</literal> to embed an actual <literal>%</literal> character.
+        要执行的本地 shell 命令，用于从 WAL 文件系列中取回一个归档段。此参数对于归档恢复是必需的，但对于流复制是可选的。
+        字符串中的任何 <literal>%f</literal> 都会被替换为要从归档中取回的文件名，
+        任何 <literal>%p</literal> 都会被替换为服务器上的副本目标路径名。
+        （该路径名相对于当前工作目录，
+        即数据库集簇的数据目录。）
+        任何 <literal>%r</literal> 都会被替换为包含最后一个有效重启点的文件名。那是为了允许恢复可重启而必须保留的最早文件，
+        因此该信息可用于将归档截断到仅支持从当前恢复重启所需的最小范围。<literal>%r</literal> 通常只用于温备配置
+        （参见 <xref linkend="warm-standby"/>）。
+        写入 <literal>%%</literal> 以嵌入实际的 <literal>%</literal> 字符。
        </para>
 
        <para>
-        It is important for the command to return a zero exit status
-        only if it succeeds.  The command <emphasis>will</emphasis> be asked for file
-        names that are not present in the archive; it must return nonzero
-        when so asked.  Examples:
+        命令只有在成功时才返回零退出状态，这一点很重要。该命令<emphasis>会</emphasis>被要求提供归档中不存在的文件名；
+        在这种情况下它必须返回非零值。示例：
 <programlisting>
 restore_command = 'cp /mnt/server/archivedir/%f "%p"'
 restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
 </programlisting>
-        An exception is that if the command was terminated by a signal (other
-        than <systemitem>SIGTERM</systemitem>, which is used as part of a
-        database server shutdown) or an error by the shell (such as command
-        not found), then recovery will abort and the server will not start up.
+        一个例外是，如果命令被信号终止（<systemitem>SIGTERM</systemitem> 除外，它被用作数据库服务器关闭的一部分）或 shell 出错（例如找不到命令），
+        那么恢复将中止，服务器将不会启动。
        </para>
 
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3306,44 +2971,26 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-archive-cleanup-command" xreflabel="archive_cleanup_command">
       <term><varname>archive_cleanup_command</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>archive_cleanup_command</varname> configuration parameter</primary>
+        <primary><varname>archive_cleanup_command</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This optional parameter specifies a shell command that will be executed
-        at every restartpoint.  The purpose of
-        <varname>archive_cleanup_command</varname> is to provide a mechanism for
-        cleaning up old archived WAL files that are no longer needed by the
-        standby server.
-        Any <literal>%r</literal> is replaced by the name of the file containing the
-        last valid restart point.
-        That is the earliest file that must be <emphasis>kept</emphasis> to allow a
-        restore to be restartable, and so all files earlier than <literal>%r</literal>
-        may be safely removed.
-        This information can be used to truncate the archive to just the
-        minimum required to support restart from the current restore.
-        The <xref linkend="pgarchivecleanup"/> module
-        is often used in <varname>archive_cleanup_command</varname> for
-        single-standby configurations, for example:
+        这个可选参数指定一个 shell 命令，该命令将在每个重启点执行。<varname>archive_cleanup_command</varname> 的目的是提供一种机制，用于清理从服务器不再需要的旧归档 WAL 文件。
+        任何 <literal>%r</literal> 都会被替换为包含最后一个有效重启点的文件名。
+        这是为使恢复可重启而必须<emphasis>保留</emphasis>的最早文件，因此所有早于 <literal>%r</literal> 的文件都可以安全删除。
+        此信息可用于将归档截断到仅支持从当前恢复重启所需的最小范围。
+        <xref linkend="pgarchivecleanup"/> 模块通常用于单从服务器配置的 <varname>archive_cleanup_command</varname> 中，例如：
 <programlisting>archive_cleanup_command = 'pg_archivecleanup /mnt/server/archivedir %r'</programlisting>
-        Note however that if multiple standby servers are restoring from the
-        same archive directory, you will need to ensure that you do not delete
-        WAL files until they are no longer needed by any of the servers.
-        <varname>archive_cleanup_command</varname> would typically be used in a
-        warm-standby configuration (see <xref linkend="warm-standby"/>).
-        Write <literal>%%</literal> to embed an actual <literal>%</literal> character in the
-        command.
+        但请注意，如果多个从服务器从同一个归档目录进行恢复，你需要确保在任何服务器都不再需要 WAL 文件之前不要删除它们。
+        <varname>archive_cleanup_command</varname> 通常用于温备配置（参见 <xref linkend="warm-standby"/>）。
+        写入 <literal>%%</literal> 以在命令中嵌入实际的 <literal>%</literal> 字符。
        </para>
        <para>
-        If the command returns a nonzero exit status then a warning log
-        message will be written.  An exception is that if the command was
-        terminated by a signal or an error by the shell (such as command not
-        found), a fatal error will be raised.
+        如果命令返回非零退出状态，则会写入一条警告日志消息。例外情况是，如果命令被信号终止或 shell 出错（例如找不到命令），则会引发致命错误。
        </para>
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3351,28 +2998,20 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-recovery-end-command" xreflabel="recovery_end_command">
       <term><varname>recovery_end_command</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>recovery_end_command</varname> configuration parameter</primary>
+        <primary><varname>recovery_end_command</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies a shell command that will be executed once only
-        at the end of recovery. This parameter is optional. The purpose of the
-        <varname>recovery_end_command</varname> is to provide a mechanism for cleanup
-        following replication or recovery.
-        Any <literal>%r</literal> is replaced by the name of the file containing the
-        last valid restart point, like in <xref linkend="guc-archive-cleanup-command"/>.
+        此参数指定一个 shell 命令，该命令仅在恢复结束时执行一次。此参数是可选的。<varname>recovery_end_command</varname> 的目的是提供一种在复制或恢复之后进行清理的机制。
+        任何 <literal>%r</literal> 都会被替换为包含最后一个有效重启点的文件名，如同 <xref linkend="guc-archive-cleanup-command"/> 中那样。
        </para>
        <para>
-        If the command returns a nonzero exit status then a warning log
-        message will be written and the database will proceed to start up
-        anyway.  An exception is that if the command was terminated by a
-        signal or an error by the shell (such as command not found), the
-        database will not proceed with startup.
+        如果命令返回非零退出状态，则会写入一条警告日志消息，并且数据库仍会继续启动。例外情况是，如果命令被信号终止或 shell 出错（例如找不到命令），则数据库将不会继续启动。
        </para>
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename>
+        文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -3383,36 +3022,31 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
 
   <sect2 id="runtime-config-wal-recovery-target">
 
-    <title>Recovery Target</title>
+    <title>恢复目标</title>
 
      <para>
-      By default, recovery will recover to the end of the WAL log. The
-      following parameters can be used to specify an earlier stopping point.
-      At most one of <varname>recovery_target</varname>,
-      <varname>recovery_target_lsn</varname>, <varname>recovery_target_name</varname>,
-      <varname>recovery_target_time</varname>, or <varname>recovery_target_xid</varname>
-      can be used; if more than one of these is specified in the configuration
-      file, an error will be raised.
-      These parameters can only be set at server start.
+      默认情况下，恢复将恢复到 WAL 日志的末尾。以下参数可用于指定更早的停止点。
+      最多只能使用 <varname>recovery_target</varname>、
+      <varname>recovery_target_lsn</varname>、<varname>recovery_target_name</varname>、
+      <varname>recovery_target_time</varname> 或 <varname>recovery_target_xid</varname>
+      中的一个；如果在配置文件中指定了多个，则会引发错误。
+      这些参数只能在服务器启动时设置。
      </para>
 
      <variablelist>
      <varlistentry id="guc-recovery-target" xreflabel="recovery_target">
       <term><varname>recovery_target</varname><literal> = 'immediate'</literal>
       <indexterm>
-        <primary><varname>recovery_target</varname> configuration parameter</primary>
+        <primary><varname>recovery_target</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies that recovery should end as soon as a
-        consistent state is reached, i.e., as early as possible. When restoring
-        from an online backup, this means the point where taking the backup
-        ended.
+        此参数指定恢复应在达到一致状态后立即结束，即尽可能早地结束。当从在线备份恢复时，这意味着获取备份结束的那个点。
        </para>
        <para>
-        Technically, this is a string parameter, but <literal>'immediate'</literal>
-        is currently the only allowed value.
+        从技术上讲，这是一个字符串参数，但 <literal>'immediate'</literal>
+        目前是唯一允许的值。
        </para>
       </listitem>
      </varlistentry>
@@ -3420,13 +3054,12 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-recovery-target-name" xreflabel="recovery_target_name">
       <term><varname>recovery_target_name</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>recovery_target_name</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_name</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies the named restore point (created with
-        <function>pg_create_restore_point()</function>) to which recovery will proceed.
+        此参数指定恢复将推进到的命名恢复点（由 <function>pg_create_restore_point()</function> 创建）。
        </para>
       </listitem>
      </varlistentry>
@@ -3434,25 +3067,22 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-recovery-target-time" xreflabel="recovery_target_time">
       <term><varname>recovery_target_time</varname> (<type>timestamp</type>)
       <indexterm>
-        <primary><varname>recovery_target_time</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_time</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies the time stamp up to which recovery
-        will proceed.
-        The precise stopping point is also influenced by
-        <xref linkend="guc-recovery-target-inclusive"/>.
+        此参数指定恢复将推进到的时间戳。
+        精确的停止点还受
+        <xref linkend="guc-recovery-target-inclusive"/> 影响。
        </para>
 
        <para>
-        The value of this parameter is a time stamp in the same format
-        accepted by the <type>timestamp with time zone</type> data type,
-        except that you cannot use a time zone abbreviation (unless the
-        <xref linkend="guc-timezone-abbreviations"/> variable has been set
-        earlier in the configuration file).  Preferred style is to use a
-        numeric offset from UTC, or you can write a full time zone name,
-        e.g., <literal>Europe/Helsinki</literal> not <literal>EEST</literal>.
+        此参数的值是一个时间戳，其格式与 <type>timestamp with time zone</type> 数据类型所接受的格式相同，
+        只是不能使用时区缩写（除非在配置文件中更早地设置了
+        <xref linkend="guc-timezone-abbreviations"/> 变量）。首选方式是使用
+        相对于 UTC 的数字偏移量，或者也可以写出完整的时区名称，
+        例如 <literal>Europe/Helsinki</literal> 而不是 <literal>EEST</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -3460,19 +3090,16 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-recovery-target-xid" xreflabel="recovery_target_xid">
       <term><varname>recovery_target_xid</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>recovery_target_xid</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_xid</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies the transaction ID up to which recovery
-        will proceed. Keep in mind
-        that while transaction IDs are assigned sequentially at transaction
-        start, transactions can complete in a different numeric order.
-        The transactions that will be recovered are those that committed
-        before (and optionally including) the specified one.
-        The precise stopping point is also influenced by
-        <xref linkend="guc-recovery-target-inclusive"/>.
+        此参数指定恢复将进行到哪个事务 ID 为止。请记住，
+        虽然事务 ID 是在事务开始时按顺序分配的，但事务完成的数字顺序可能不同。
+        将被恢复的事务是在指定事务之前（可选地包括该事务）提交的事务。
+        精确的停止点还受
+        <xref linkend="guc-recovery-target-inclusive"/> 影响。
        </para>
       </listitem>
      </varlistentry>
@@ -3480,24 +3107,22 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-recovery-target-lsn" xreflabel="recovery_target_lsn">
       <term><varname>recovery_target_lsn</varname> (<type>pg_lsn</type>)
       <indexterm>
-        <primary><varname>recovery_target_lsn</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_lsn</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies the LSN of the write-ahead log location up
-        to which recovery will proceed. The precise stopping point is also
-        influenced by <xref linkend="guc-recovery-target-inclusive"/>. This
-        parameter is parsed using the system data type
-        <link linkend="datatype-pg-lsn"><type>pg_lsn</type></link>.
+        此参数指定恢复将进行到的预写式日志位置的 LSN。精确的停止点还
+        受 <xref linkend="guc-recovery-target-inclusive"/> 影响。此
+        参数使用系统数据类型
+        <link linkend="datatype-pg-lsn"><type>pg_lsn</type></link> 解析。
        </para>
       </listitem>
      </varlistentry>
      </variablelist>
 
      <para>
-       The following options further specify the recovery target, and affect
-       what happens when the target is reached:
+       以下选项进一步指定恢复目标，并影响到达目标时发生的情况：
      </para>
 
      <variablelist>
@@ -3505,20 +3130,19 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
                    xreflabel="recovery_target_inclusive">
       <term><varname>recovery_target_inclusive</varname> (<type>boolean</type>)
       <indexterm>
-        <primary><varname>recovery_target_inclusive</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_inclusive</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies whether to stop just after the specified recovery target
-        (<literal>on</literal>), or just before the recovery target
-        (<literal>off</literal>).
-        Applies when <xref linkend="guc-recovery-target-lsn"/>,
-        <xref linkend="guc-recovery-target-time"/>, or
-        <xref linkend="guc-recovery-target-xid"/> is specified.
-        This setting controls whether transactions
-        having exactly the target WAL location (LSN), commit time, or transaction ID, respectively, will
-        be included in the recovery.  Default is <literal>on</literal>.
+        指定是在指定的恢复目标之后立即停止
+        （<literal>on</literal>），还是在恢复目标之前立即停止
+        （<literal>off</literal>）。
+        当指定了 <xref linkend="guc-recovery-target-lsn"/>、
+        <xref linkend="guc-recovery-target-time"/> 或
+        <xref linkend="guc-recovery-target-xid"/> 时适用。
+        此设置控制是否将恰好具有目标 WAL 位置（LSN）、提交时间或事务 ID 的事务
+        包含在恢复中。默认为 <literal>on</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -3527,33 +3151,28 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
                    xreflabel="recovery_target_timeline">
       <term><varname>recovery_target_timeline</varname> (<type>string</type>)
       <indexterm>
-        <primary><varname>recovery_target_timeline</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_timeline</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies recovering into a particular timeline.  The value can be a
-        numeric timeline ID or a special value.  The value
-        <literal>current</literal> recovers along the same timeline that was
-        current when the base backup was taken.  The
-        value <literal>latest</literal> recovers
-        to the latest timeline found in the archive, which is useful in
-        a standby server.  <literal>latest</literal> is the default.
+        指定恢复到一个特定的时间线。该值可以是数字形式的时间线 ID，也可以是特殊值。值
+        <literal>current</literal> 表示沿着创建基础备份时当前的时间线进行恢复。值
+        <literal>latest</literal> 表示恢复到归档中找到的最新时间线，这在备用服务器中很有用。<literal>latest</literal>
+        是默认值。
        </para>
 
        <para>
-        To specify a timeline ID in hexadecimal (for example, if extracted
-        from a WAL file name or history file), prefix it with a
-        <literal>0x</literal>.  For instance, if the WAL file name is
-        <filename>00000011000000A10000004F</filename>, then the timeline ID is
-        <literal>0x11</literal> (or 17 decimal).
+        要以十六进制指定时间线 ID（例如，从 WAL 文件名或历史文件中提取出来的），
+        请在其前面加上 <literal>0x</literal>。例如，如果 WAL 文件名是
+        <filename>00000011000000A10000004F</filename>，那么时间线 ID 就是
+        <literal>0x11</literal>（即十进制的 17）。
        </para>
 
        <para>
-        You usually only need to set this parameter
-        in complex re-recovery situations, where you need to return to
-        a state that itself was reached after a point-in-time recovery.
-        See <xref linkend="backup-timelines"/> for discussion.
+        通常只有在复杂的重复恢复情形下才需要设置此参数，即当你需要回到某个本身是在
+        一次时间点恢复之后才达到的状态时。相关讨论请参见
+        <xref linkend="backup-timelines"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -3562,55 +3181,35 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
                    xreflabel="recovery_target_action">
       <term><varname>recovery_target_action</varname> (<type>enum</type>)
       <indexterm>
-        <primary><varname>recovery_target_action</varname> configuration parameter</primary>
+        <primary><varname>recovery_target_action</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies what action the server should take once the recovery target is
-        reached. The default is <literal>pause</literal>, which means recovery will
-        be paused. <literal>promote</literal> means the recovery process will finish
-        and the server will start to accept connections.
-        Finally <literal>shutdown</literal> will stop the server after reaching the
-        recovery target.
+        指定服务器在到达恢复目标后应采取的操作。默认值是 <literal>pause</literal>，这意味着恢复
+        将暂停。<literal>promote</literal> 表示恢复过程将结束，服务器将开始接受连接。
+        最后，<literal>shutdown</literal> 将在到达恢复目标后停止服务器。
        </para>
        <para>
-        The intended use of the <literal>pause</literal> setting is to allow queries
-        to be executed against the database to check if this recovery target
-        is the most desirable point for recovery.
-        The paused state can be resumed by
-        using <function>pg_wal_replay_resume()</function> (see
-        <xref linkend="functions-recovery-control-table"/>), which then
-        causes recovery to end. If this recovery target is not the
-        desired stopping point, then shut down the server, change the
-        recovery target settings to a later target and restart to
-        continue recovery.
+        该 <literal>pause</literal> 设置的预期用途是允许对数据库执行查询，以检查此恢复目标是否是恢复的最佳点。
+        可以使用 <function>pg_wal_replay_resume()</function> 恢复暂停状态（参见
+        <xref linkend="functions-recovery-control-table"/>），随后这会导致恢复结束。如果此恢复目标不是期望的停止点，则关闭服务器，将恢复目标设置更改为更晚的目标并重新启动以继续恢复。
        </para>
        <para>
-        The <literal>shutdown</literal> setting is useful to have the instance ready
-        at the exact replay point desired.  The instance will still be able to
-        replay more WAL records (and in fact will have to replay WAL records
-        since the last checkpoint next time it is started).
+        <literal>shutdown</literal> 设置有助于让实例在期望的精确重放点就绪。该实例仍然能够重放更多 WAL 记录（事实上，下次启动时必须重放自上次检查点以来的 WAL 记录）。
        </para>
        <para>
-        Note that because <filename>recovery.signal</filename> will not be
-        removed when <varname>recovery_target_action</varname> is set to <literal>shutdown</literal>,
-        any subsequent start will end with immediate shutdown unless the
-        configuration is changed or the <filename>recovery.signal</filename>
-        file is removed manually.
+        请注意，由于当 <varname>recovery_target_action</varname> 设置为 <literal>shutdown</literal> 时 <filename>recovery.signal</filename> 不会被移除，除非更改配置或手动删除 <filename>recovery.signal</filename>
+        文件，否则任何后续启动都将以立即关闭结束。
        </para>
        <para>
-        This setting has no effect if no recovery target is set.
-        If <xref linkend="guc-hot-standby"/> is not enabled, a setting of
-        <literal>pause</literal> will act the same as <literal>shutdown</literal>.
-        If the recovery target is reached while a promotion is ongoing,
-        a setting of <literal>pause</literal> will act the same as
-        <literal>promote</literal>.
+        如果未设置恢复目标，此设置无效。
+        如果未启用 <xref linkend="guc-hot-standby"/>，则 <literal>pause</literal> 的设置将与 <literal>shutdown</literal> 作用相同。
+        如果在进行提升时到达恢复目标，则 <literal>pause</literal> 的设置将与
+        <literal>promote</literal> 作用相同。
        </para>
        <para>
-        In any case, if a recovery target is configured but the archive
-        recovery ends before the target is reached, the server will shut down
-        with a fatal error.
+        在任何情况下，如果配置了恢复目标，但归档恢复在到达目标之前结束，服务器将以致命错误关闭。
        </para>
       </listitem>
      </varlistentry>
@@ -3619,35 +3218,30 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
    </sect2>
 
    <sect2 id="runtime-config-wal-summarization">
-    <title>WAL Summarization</title>
+    <title>WAL 汇总</title>
 
     <para>
-     These settings control WAL summarization, a feature which must be
-     enabled in order to perform an
-     <link linkend="backup-incremental-backup">incremental backup</link>.
+     这些设置控制 WAL 汇总，必须启用该功能才能执行
+     <link linkend="backup-incremental-backup">增量备份</link>。
     </para>
 
     <variablelist>
      <varlistentry id="guc-summarize-wal" xreflabel="summarize_wal">
       <term><varname>summarize_wal</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>summarize_wal</varname> configuration parameter</primary>
+       <primary><varname>summarize_wal</varname> 配置参数</primary>
       </indexterm>
       </term>
      <listitem>
       <para>
-       Enables the WAL summarizer process. Note that WAL summarization can
-       be enabled either on a primary or on a standby.  This parameter can only
-       be set in the <filename>postgresql.conf</filename> file or on the server
-       command line.  The default is <literal>off</literal>.
+       启用 WAL 汇总器进程。注意，WAL 汇总既可以在主库上启用，也可以在备库上启用。此参数只能在
+       <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。默认值为 <literal>off</literal>。
       </para>
       <para>
-       The server cannot be started with <literal>summarize_wal=on</literal>
-       if <literal>wal_level</literal> is set to <literal>minimal</literal>. If
-       <literal>summarize_wal=on</literal> is configured after server startup
-       while <literal>wal_level=minimal</literal>, the summarizer will run
-       but refuse to generate summary files for any WAL generated with
-       <literal>wal_level=minimal</literal>.
+       如果 <literal>wal_level</literal> 设置为 <literal>minimal</literal>，则服务器无法在 <literal>summarize_wal=on</literal>
+       的情况下启动。如果在服务器启动后配置了 <literal>summarize_wal=on</literal>，而此时
+       <literal>wal_level=minimal</literal>，则汇总器会运行，但会拒绝为使用
+       <literal>wal_level=minimal</literal> 生成的任何 WAL 生成汇总文件。
       </para>
       </listitem>
      </varlistentry>
@@ -3655,27 +3249,24 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
      <varlistentry id="guc-wal-summary-keep-time" xreflabel="wal_summary_keep_time">
       <term><varname>wal_summary_keep_time</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>wal_summary_keep_time</varname> configuration parameter</primary>
+       <primary><varname>wal_summary_keep_time</varname> 配置参数</primary>
       </indexterm>
       </term>
      <listitem>
       <para>
-       Configures the amount of time after which the WAL summarizer
-       automatically removes old WAL summaries. The file timestamp is used to
-       determine which files are old enough to remove. Typically, you should set
-       this comfortably higher than the time that could pass between a backup
-       and a later incremental backup that depends on it.  WAL summaries must
-       be available for the entire range of WAL records between the preceding
-       backup and the new one being taken; if not, the incremental backup will
-       fail. If this parameter is set to zero, WAL summaries will not be
-       automatically deleted, but it is safe to manually remove files that you
-       know will not be required for future incremental backups.
-       This parameter can only be set in the
-       <filename>postgresql.conf</filename> file or on the server command line.
-       If this value is specified without units, it is taken as minutes.
-       The default is 10 days. If <literal>summarize_wal = off</literal>,
-       existing WAL summaries will not be removed regardless of the value of
-       this parameter, because the WAL summarizer will not run.
+       配置 WAL 汇总器自动删除旧 WAL 汇总所经过的时间量。文件时间戳用于
+       确定哪些文件足够旧、可以删除。通常，应将其设置得明显高于一次备份
+       与依赖它的后续增量备份之间可能经过的时间。对于前一次
+       备份与正在进行的本次备份之间的整个 WAL 记录范围，WAL 汇总必须
+       可用；否则增量备份将失败。如果此参数设置为零，则不会
+       自动删除 WAL 汇总，但可以安全地手动删除你确知未来增量备份
+       不需要的文件。
+       此参数只能在
+       <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
+       如果指定该值时不带单位，则按分钟处理。
+       默认值为 10 天。如果 <literal>summarize_wal = off</literal>，
+       则无论此参数的值如何，都不会删除现有的 WAL 汇总，
+       因为 WAL 汇总器不会运行。
       </para>
       </listitem>
      </varlistentry>
