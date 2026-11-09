@@ -1675,53 +1675,32 @@ CREATE VIEW phone_number WITH (security_barrier) AS
 </sect1>
 
 <sect1 id="rules-status">
-<title>Rules and Command Status</title>
+<title>规则与命令状态</title>
 
 <para>
-    The <productname>PostgreSQL</productname> server returns a command
-    status string, such as <literal>INSERT 149592 1</literal>, for each
-    command it receives.  This is simple enough when there are no rules
-    involved, but what happens when the query is rewritten by rules?
+    <productname>PostgreSQL</productname> 服务器对收到的每条命令都会返回一个命令状态字符串，例如 <literal>INSERT 149592 1</literal>。在不涉及规则时这很简单，但如果查询被规则重写，会发生什么呢？
 </para>
 
 <para>
-    Rules affect the command status as follows:
+    规则会按如下方式影响命令状态：
 
     <itemizedlist>
      <listitem>
       <para>
-       If there is no unconditional <literal>INSTEAD</literal> rule for the query, then
-       the originally given query will be executed, and its command
-       status will be returned as usual.  (But note that if there were
-       any conditional <literal>INSTEAD</literal> rules, the negation of their qualifications
-       will have been added to the original query.  This might reduce the
-       number of rows it processes, and if so the reported status will
-       be affected.)
+       如果该查询没有无条件的 <literal>INSTEAD</literal> 规则，那么最初给定的查询将被执行，其命令状态会照常返回。（但请注意，如果存在任何有条件的 <literal>INSTEAD</literal> 规则，那么它们的限定条件的否定形式会被添加到原始查询中。这可能会减少它处理的行数，若如此，所报告的状态将受到影响。）
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If there is any unconditional <literal>INSTEAD</literal> rule for the query, then
-       the original query will not be executed at all.  In this case,
-       the server will return the command status for the last query
-       that was inserted by an <literal>INSTEAD</literal> rule (conditional or
-       unconditional) and is of the same command type
-       (<command>INSERT</command>, <command>UPDATE</command>, or
-       <command>DELETE</command>) as the original query.  If no query
-       meeting those requirements is added by any rule, then the
-       returned command status shows the original query type and
-       zeroes for the row-count and OID fields.
+       如果该查询存在任何无条件的 <literal>INSTEAD</literal> 规则，那么原始查询根本不会被执行。在这种情况下，服务器将返回由某条 <literal>INSTEAD</literal> 规则（有条件的或无条件的）插入的最后一条查询的命令状态，且该查询的命令类型（<command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command>）与原始查询相同。如果没有任何规则添加满足这些要求的查询，那么返回的命令状态将显示原始查询类型，并且行数和 OID 字段为零。
       </para>
      </listitem>
     </itemizedlist>
 </para>
 
 <para>
-    The programmer can ensure that any desired <literal>INSTEAD</literal> rule is the one
-    that sets the command status in the second case, by giving it the
-    alphabetically last rule name among the active rules, so that it
-    gets applied last.
+    程序员可以确保在第二种情况下由任何期望的 <literal>INSTEAD</literal> 规则来设置命令状态，方法是让它在所有活动规则中具有按字母顺序排在最后的规则名，从而最后被应用。
 </para>
 </sect1>
 
