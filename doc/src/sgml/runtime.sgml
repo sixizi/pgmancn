@@ -1131,7 +1131,7 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
  </sect1>
 
  <sect1 id="upgrading">
-  <title>Upgrading a <productname>PostgreSQL</productname> Cluster</title>
+  <title>升级 <productname>PostgreSQL</productname> 数据库集簇</title>
 
   <indexterm zone="upgrading">
    <primary>upgrading</primary>
@@ -1143,44 +1143,19 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
   </indexterm>
 
   <para>
-   This section discusses how to upgrade your database data from one
-   <productname>PostgreSQL</productname> release to a newer one.
+   本节讨论如何将数据库数据从一个 <productname>PostgreSQL</productname> 发行版升级到更新的版本。
   </para>
 
   <para>
-   Current <productname>PostgreSQL</productname> version numbers consist of a
-   major and a minor version number.  For example, in the version number 10.1,
-   the 10 is the major version number and the 1 is the minor version number,
-   meaning this would be the first minor release of the major release 10.  For
-   releases before <productname>PostgreSQL</productname> version 10.0, version
-   numbers consist of three numbers, for example, 9.5.3.  In those cases, the
-   major version consists of the first two digit groups of the version number,
-   e.g., 9.5, and the minor version is the third number, e.g., 3, meaning this
-   would be the third minor release of the major release 9.5.
+   当前的 <productname>PostgreSQL</productname> 版本号由主版本号和次版本号组成。例如，在版本号 10.1 中，10 是主版本号，1 是次版本号，意味着这是主版本 10 的第一个次发行版。对于 <productname>PostgreSQL</productname> 10.0 之前的发行版，版本号由三个数字组成，例如 9.5.3。在这些情况下，主版本由版本号的前两组数字组成，例如 9.5，次版本是第三个数字，例如 3，意味着这是主版本 9.5 的第三个次发行版。
   </para>
 
   <para>
-   Minor releases never change the internal storage format and are always
-   compatible with earlier and later minor releases of the same major version
-   number.  For example, version 10.1 is compatible with version 10.0 and
-   version 10.6.  Similarly, for example, 9.5.3 is compatible with 9.5.0,
-   9.5.1, and 9.5.6.  To update between compatible versions, you simply
-   replace the executables while the server is down and restart the server.
-   The data directory remains unchanged &mdash; minor upgrades are that
-   simple.
+   次发行版从不改变内部存储格式，并且始终与同一主版本号的较早和较晚的次发行版兼容。例如，版本 10.1 与版本 10.0 和版本 10.6 兼容。类似地，例如，9.5.3 与 9.5.0、9.5.1 和 9.5.6 兼容。要在兼容版本之间更新，只需在服务器关闭时替换可执行文件并重新启动服务器。数据目录保持不变 &mdash; 次版本升级就是如此简单。
   </para>
 
   <para>
-   For <emphasis>major</emphasis> releases of <productname>PostgreSQL</productname>, the
-   internal data storage format is subject to change, thus complicating
-   upgrades.  The traditional method for moving data to a new major version
-   is to dump and restore the database, though this can be slow.  A
-   faster method is <xref linkend="pgupgrade"/>.  Replication methods are
-   also available, as discussed below.
-   (If you are using a pre-packaged version
-   of <productname>PostgreSQL</productname>, it may provide scripts to
-   assist with major version upgrades.  Consult the package-level
-   documentation for details.)
+   对于 <productname>PostgreSQL</productname> 的<emphasis>主</emphasis>发行版，内部数据存储格式可能会改变，从而使升级变得复杂。将数据移动到新主版本的传统方法是转储并恢复数据库，尽管这可能很慢。更快的方法是 <xref linkend="pgupgrade"/>。也可以使用复制方法，如下所述。（如果您使用的是 <productname>PostgreSQL</productname> 的预打包版本，它可能提供协助主版本升级的脚本。有关详细信息，请查阅包级别的文档。）
   </para>
 
   <para>
@@ -1194,21 +1169,16 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
   </para>
 
   <para>
-   Cautious users will want to test their client applications on the new
-   version before switching over fully; therefore, it's often a good idea to
-   set up concurrent installations of old and new versions.  When
-   testing a <productname>PostgreSQL</productname> major upgrade, consider the
-   following categories of possible changes:
+   谨慎的用户会希望在新版本上测试其客户端应用，然后再完全切换过去；因此，通常一个好主意是同时安装新旧两个版本。在测试 <productname>PostgreSQL</productname> 大版本升级时，请考虑以下可能变更的类别：
   </para>
 
   <variablelist>
 
    <varlistentry>
-    <term>Administration</term>
+    <term>管理</term>
     <listitem>
      <para>
-      The capabilities available for administrators to monitor and control
-      the server often change and improve in each major release.
+      管理员可用于监控和控制服务器的能力通常会在每个大版本中发生变化并得到改进。
      </para>
     </listitem>
    </varlistentry>
@@ -1217,38 +1187,34 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
     <term>SQL</term>
     <listitem>
      <para>
-      Typically this includes new SQL command capabilities and not changes
-      in behavior, unless specifically mentioned in the release notes.
+      通常这包括新的 SQL 命令能力，而不包括行为变更，除非发行说明中特别提及。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry>
-    <term>Library API</term>
+    <term>库 API</term>
     <listitem>
      <para>
-      Typically libraries like <application>libpq</application> only add new
-      functionality, again unless mentioned in the release notes.
+      通常，像 <application>libpq</application> 这样的库只会增加新功能，除非发行说明中另有提及。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry>
-    <term>System Catalogs</term>
+    <term>系统目录</term>
     <listitem>
      <para>
-      System catalog changes usually only affect database management tools.
+      系统目录的变更通常只影响数据库管理工具。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry>
-    <term>Server C-language API</term>
+    <term>服务器 C 语言 API</term>
     <listitem>
      <para>
-      This involves changes in the backend function API, which is written
-      in the C programming language.  Such changes affect code that
-      references backend functions deep inside the server.
+      这涉及后端函数 API 的变更，该 API 是用 C 编程语言编写的。此类变更会影响那些在服务器内部深处引用后端函数的代码。
      </para>
     </listitem>
    </varlistentry>
@@ -1256,121 +1222,77 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
   </variablelist>
 
   <sect2 id="upgrading-via-pgdumpall">
-   <title>Upgrading Data via <application>pg_dumpall</application></title>
+   <title>通过 <application>pg_dumpall</application> 升级数据</title>
 
    <para>
-    One upgrade method is to dump data from one major version of
-    <productname>PostgreSQL</productname> and restore it in another &mdash;  to do
-    this, you must use a <emphasis>logical</emphasis> backup tool like
-    <application>pg_dumpall</application>; file system
-    level backup methods will not work. (There are checks in place that prevent
-    you from using a data directory with an incompatible version of
-    <productname>PostgreSQL</productname>, so no great harm can be done by
-    trying to start the wrong server version on a data directory.)
+    一种升级方法是从一个主版本的 <productname>PostgreSQL</productname> 中转储数据，然后将其恢复到另一个 &mdash; 中。要做到这一点，你必须使用像 <application>pg_dumpall</application> 这样的<emphasis>逻辑</emphasis>备份工具；文件系统级别的备份方法将无法工作。（系统中设有检查，防止你将数据目录用于不兼容版本的 <productname>PostgreSQL</productname>，因此尝试在数据目录上启动错误的服务器版本不会造成大的损害。）
    </para>
 
    <para>
-    It is recommended that you use the <application>pg_dump</application> and
-    <application>pg_dumpall</application> programs from the <emphasis>newer</emphasis>
-    version of
-    <productname>PostgreSQL</productname>, to take advantage of enhancements
-    that might have been made in these programs.  Current releases of the
-    dump programs can read data from any server version back to 9.2.
+    建议你使用<emphasis>较新</emphasis>版本的 <productname>PostgreSQL</productname> 中的 <application>pg_dump</application> 和 <application>pg_dumpall</application> 程序，以利用这些程序中可能已经做出的改进。当前版本的转储程序可以读取回溯到 9.2 的任何服务器版本的数据。
    </para>
 
    <para>
-    These instructions assume that your existing installation is under the
-    <filename>/usr/local/pgsql</filename> directory, and that the data area is in
-    <filename>/usr/local/pgsql/data</filename>.  Substitute your paths
-    appropriately.
+    这些说明假定你现有的安装位于 <filename>/usr/local/pgsql</filename> 目录下，并且数据区域位于 <filename>/usr/local/pgsql/data</filename> 中。请适当地替换你的路径。
    </para>
 
    <procedure>
     <step>
      <para>
-      If making a backup, make sure that your database is not being updated.
-      This does not affect the integrity of the backup, but the changed
-      data would of course not be included. If necessary, edit the
-      permissions in the file <filename>/usr/local/pgsql/data/pg_hba.conf</filename>
-      (or equivalent) to disallow access from everyone except you.
-      See <xref linkend="client-authentication"/> for additional information on
-      access control.
+      如果要进行备份，请确保你的数据库没有正在被更新。这不会影响备份的完整性，但更改过的数据当然不会被包含在内。如有必要，请编辑文件 <filename>/usr/local/pgsql/data/pg_hba.conf</filename>（或等效文件）中的权限，以禁止除你之外的任何人访问。有关访问控制的更多信息，请参见 <xref linkend="client-authentication"/>。
      </para>
 
      <para>
       <indexterm>
        <primary>pg_dumpall</primary>
-       <secondary>use during upgrade</secondary>
+       <secondary>升级期间使用</secondary>
       </indexterm>
 
-      To back up your database installation, type:
+      要备份你的数据库安装，请输入：
 <screen>
 <userinput>pg_dumpall &gt; <replaceable>outputfile</replaceable></userinput>
 </screen>
      </para>
 
      <para>
-      To make the backup, you can use the <application>pg_dumpall</application>
-      command from the version you are currently running;  see <xref
-      linkend="backup-dump-all"/> for more details.  For best
-      results, however, try to use the <application>pg_dumpall</application>
-      command from <productname>PostgreSQL</productname> &version;,
-      since this version contains bug fixes and improvements over older
-      versions.  While this advice might seem idiosyncratic since you
-      haven't installed the new version yet, it is advisable to follow
-      it if you plan to install the new version in parallel with the
-      old version.  In that case you can complete the installation
-      normally and transfer the data later.  This will also decrease
-      the downtime.
+      要进行备份，你可以使用当前所运行版本中的 <application>pg_dumpall</application> 命令；更多细节请参见 <xref
+      linkend="backup-dump-all"/>。不过，为了获得最佳结果，请尽量使用 <productname>PostgreSQL</productname> &version; 中的 <application>pg_dumpall</application> 命令，因为该版本包含了对旧版本的错误修复和改进。虽然这个建议看起来有些奇怪，因为你还没有安装新版本，但如果你计划将新版本与旧版本并行安装，那么遵循它是可取的。在这种情况下，你可以正常完成安装，稍后再传输数据。这也会减少停机时间。
      </para>
     </step>
 
     <step>
      <para>
-      Shut down the old server:
+      关闭旧服务器：
 <screen>
 <userinput>pg_ctl stop</userinput>
 </screen>
-      On systems that have <productname>PostgreSQL</productname> started at boot time,
-      there is probably a start-up file that will accomplish the same thing. For
-      example, on a <systemitem class="osname">Red Hat Linux</systemitem> system one
-      might find that this works:
+      在启动时启动了 <productname>PostgreSQL</productname> 的系统上，可能有一个启动文件可以完成同样的事情。例如，在 <systemitem class="osname">Red Hat Linux</systemitem> 系统上，可能会发现这样可行：
 <screen>
 <userinput>/etc/rc.d/init.d/postgresql stop</userinput>
 </screen>
-      See <xref linkend="runtime"/> for details about starting and
-      stopping the server.
+      有关启动和停止服务器的详细信息，请参见 <xref linkend="runtime"/>。
      </para>
     </step>
 
     <step>
      <para>
-      If restoring from backup, rename or delete the old installation
-      directory if it is not version-specific.  It is a good idea to
-      rename the directory, rather than
-      delete it, in case you have trouble and need to revert to it.  Keep
-      in mind the directory might consume significant disk space.  To rename
-      the directory, use a command like this:
+      如果从备份恢复，且旧安装目录不是特定于版本的，请重命名或删除该目录。最好重命名该目录而不是删除它，以防遇到问题需要回退到它。请记住该目录可能会占用大量磁盘空间。要重命名该目录，请使用类似下面的命令：
 <screen>
 <userinput>mv /usr/local/pgsql /usr/local/pgsql.old</userinput>
 </screen>
-     (Be sure to move the directory as a single unit so relative paths
-     remain unchanged.)
+     （确保将目录作为一个整体移动，以便相对路径保持不变。）
      </para>
     </step>
 
     <step>
      <para>
-      Install the new version of <productname>PostgreSQL</productname> as
-      outlined in <xref linkend="installation"/>.
+      按照 <xref linkend="installation"/> 中所述安装新版本的 <productname>PostgreSQL</productname>。
      </para>
     </step>
 
     <step>
      <para>
-      Create a new database cluster if needed.  Remember that you must
-      execute these commands while logged in to the special database user
-      account (which you already have if you are upgrading).
+      如果需要，创建一个新的数据库集簇。请记住，必须在登录到特殊的数据库用户账户（如果正在升级，则已经拥有该账户）的情况下执行这些命令。
 <programlisting>
 <userinput>/usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data</userinput>
 </programlisting>
@@ -1379,15 +1301,13 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
 
     <step>
      <para>
-      Restore your previous <filename>pg_hba.conf</filename> and any
-      <filename>postgresql.conf</filename> modifications.
+      恢复之前的 <filename>pg_hba.conf</filename> 以及任何 <filename>postgresql.conf</filename> 修改。
      </para>
     </step>
 
     <step>
      <para>
-      Start the database server, again using the special database user
-      account:
+      再次使用特殊的数据库用户账户启动数据库服务器：
 <programlisting>
 <userinput>/usr/local/pgsql/bin/postgres -D /usr/local/pgsql/data</userinput>
 </programlisting>
@@ -1396,30 +1316,27 @@ $ <userinput>kill -INT `head -1 /usr/local/pgsql/data/postmaster.pid`</userinput
 
     <step>
      <para>
-      Finally, restore your data from backup with:
+      最后，使用<emphasis>新的</emphasis> <application>psql</application> 从备份恢复数据：
 <screen>
 <userinput>/usr/local/pgsql/bin/psql -d postgres -f <replaceable>outputfile</replaceable></userinput>
 </screen>
-      using the <emphasis>new</emphasis> <application>psql</application>.
      </para>
     </step>
    </procedure>
 
    <para>
-    The least downtime can be achieved by installing the new server in
-    a different directory and running both the old and the new servers
-    in parallel, on different ports. Then you can use something like:
+    实现最短停机时间的方法是：将新服务器安装到不同的目录，并在不同的端口上并行运行旧服务器和新服务器。然后你可以使用类似下面的命令：
 
 <programlisting>
 pg_dumpall -p 5432 | psql -d postgres -p 5433
 </programlisting>
-    to transfer your data.
+    来传输数据。
    </para>
 
   </sect2>
 
   <sect2 id="upgrading-via-pg-upgrade">
-   <title>Upgrading Data via <application>pg_upgrade</application></title>
+   <title>通过 <application>pg_upgrade</application> 升级数据</title>
 
    <para>
     The <xref linkend="pgupgrade"/> module allows an installation to
@@ -1434,27 +1351,14 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </sect2>
 
   <sect2 id="upgrading-via-replication">
-   <title>Upgrading Data via Replication</title>
+   <title>通过复制升级数据</title>
 
    <para>
-    It is also possible to use logical replication methods to create a standby
-    server with the updated version of <productname>PostgreSQL</productname>.
-    This is possible because logical replication supports
-    replication between different major versions of
-    <productname>PostgreSQL</productname>.  The standby can be on the same computer or
-    a different computer.  Once it has synced up with the primary server
-    (running the older version of <productname>PostgreSQL</productname>), you can
-    switch primaries and make the standby the primary and shut down the older
-    database instance.  Such a switch-over results in only several seconds
-    of downtime for an upgrade.
+    也可以使用逻辑复制方法创建一个带有更新版本 <productname>PostgreSQL</productname> 的备用服务器。之所以可行，是因为逻辑复制支持在不同主版本的 <productname>PostgreSQL</productname> 之间进行复制。备用服务器可以位于同一台计算机上，也可以位于不同的计算机上。一旦它与主服务器（运行较旧版本的 <productname>PostgreSQL</productname>）同步完成，你就可以切换主服务器，让备用服务器成为主服务器，并关闭较旧的数据库实例。这样的切换使得升级的停机时间只有几秒钟。
    </para>
 
    <para>
-    This method of upgrading can be performed using the built-in logical
-    replication facilities as well as using external logical replication
-    systems such as <productname>pglogical</productname>,
-    <productname>Slony</productname>, <productname>Londiste</productname>, and
-    <productname>Bucardo</productname>.
+    这种升级方法既可以使用内置的逻辑复制功能来执行，也可以使用外部逻辑复制系统（例如 <productname>pglogical</productname>、<productname>Slony</productname>、<productname>Londiste</productname> 和 <productname>Bucardo</productname>）来执行。
    </para>
   </sect2>
  </sect1>
