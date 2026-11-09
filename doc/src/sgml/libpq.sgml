@@ -8078,7 +8078,7 @@ typedef struct PGoauthBearerRequest
 
 
  <sect1 id="libpq-threading">
-  <title>Behavior in Threaded Programs</title>
+  <title>线程程序中的行为</title>
 
   <indexterm zone="libpq-threading">
    <primary>threads</primary>
@@ -8086,28 +8086,25 @@ typedef struct PGoauthBearerRequest
   </indexterm>
 
   <para>
-   As of version 17, <application>libpq</application> is always reentrant and thread-safe.
-   However, one restriction is that no two threads attempt to manipulate
-   the same <structname>PGconn</structname> object at the same time. In particular,
-   you cannot issue concurrent commands from different threads through
-   the same connection object. (If you need to run concurrent commands,
-   use multiple connections.)
+   从版本 17 开始，<application>libpq</application> 始终是可重入且线程安全的。
+   但有一个限制：不能有两个线程同时试图操纵同一个 <structname>PGconn</structname> 对象。特别是，
+   你不能通过同一个连接对象从不同线程发出并发命令。（如果你需要
+   运行并发命令，请使用多个连接。）
   </para>
 
   <para>
-   <structname>PGresult</structname> objects are normally read-only after creation,
-   and so can be passed around freely between threads.  However, if you use
-   any of the <structname>PGresult</structname>-modifying functions described in
-   <xref linkend="libpq-misc"/> or <xref linkend="libpq-events"/>, it's up
-   to you to avoid concurrent operations on the same <structname>PGresult</structname>,
-   too.
+   <structname>PGresult</structname> 对象在创建后通常是只读的，
+   因此可以在线程之间自由传递。但是，如果你使用了
+   <xref linkend="libpq-misc"/> 或 <xref linkend="libpq-events"/> 中描述的任何
+   修改 <structname>PGresult</structname> 的函数，那么你也需要自行避免对同一个 <structname>PGresult</structname>
+   进行并发操作。
   </para>
 
   <para>
-   In earlier versions, <application>libpq</application> could be compiled
-   with or without thread support, depending on compiler options. This
-   function allows the querying of <application>libpq</application>'s
-   thread-safe status:
+   在更早的版本中，<application>libpq</application> 可以
+   在编译时选择支持或不支持线程，具体取决于编译器选项。此
+   函数允许查询 <application>libpq</application> 的
+   线程安全状态：
   </para>
 
   <variablelist>
@@ -8116,49 +8113,45 @@ typedef struct PGoauthBearerRequest
 
     <listitem>
      <para>
-      Returns the thread safety status of the
-      <application>libpq</application> library.
+      返回 <application>libpq</application> 库的线程安全状态。
 <synopsis>
 int PQisthreadsafe();
 </synopsis>
      </para>
 
      <para>
-      Returns 1 if the <application>libpq</application> is thread-safe
-      and 0 if it is not. Always returns 1 on version 17 and above.
+      如果 <application>libpq</application> 是线程安全的则返回 1，否则返回 0。在 17 及以上版本中始终返回 1。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   The deprecated functions <xref linkend="libpq-PQrequestCancel"/> and
-   <xref linkend="libpq-PQoidStatus"/> are not thread-safe and should not be
-   used in multithread programs.  <xref linkend="libpq-PQrequestCancel"/>
-   can be replaced by <xref linkend="libpq-PQcancelBlocking"/>.
-   <xref linkend="libpq-PQoidStatus"/> can be replaced by
-   <xref linkend="libpq-PQoidValue"/>.
+   已废弃的函数 <xref linkend="libpq-PQrequestCancel"/> 和
+   <xref linkend="libpq-PQoidStatus"/> 不是线程安全的，不应在多线程程序中使用。
+   <xref linkend="libpq-PQrequestCancel"/>
+   可以用 <xref linkend="libpq-PQcancelBlocking"/> 替代。
+   <xref linkend="libpq-PQoidStatus"/> 可以用
+   <xref linkend="libpq-PQoidValue"/> 替代。
   </para>
 
   <para>
-   If you are using Kerberos inside your application (in addition to inside
-   <application>libpq</application>), you will need to do locking around
-   Kerberos calls because Kerberos functions are not thread-safe.  See
-   function <function>PQregisterThreadLock</function> in the
-   <application>libpq</application> source code for a way to do cooperative
-   locking between <application>libpq</application> and your application.
+   如果你在应用程序内部使用 Kerberos（除了在
+   <application>libpq</application> 内部使用之外），你将需要围绕
+   Kerberos 调用加锁，因为 Kerberos 函数不是线程安全的。参见
+   <application>libpq</application> 源代码中的函数 <function>PQregisterThreadLock</function>，
+   了解在 <application>libpq</application> 与你的应用程序之间进行协作式加锁的方法。
   </para>
 
   <para>
-   Similarly, if you are using <productname>Curl</productname> inside your application,
-   <emphasis>and</emphasis> you do not already
-   <ulink url="https://curl.se/libcurl/c/curl_global_init.html">initialize
-   libcurl globally</ulink> before starting new threads, you will need to
-   cooperatively lock (again via <function>PQregisterThreadLock</function>)
-   around any code that may initialize libcurl. This restriction is lifted for
-   more recent versions of <productname>Curl</productname> that are built to support thread-safe
-   initialization; those builds can be identified by the advertisement of a
-   <literal>threadsafe</literal> feature in their version metadata.
+   同样，如果你在应用程序内部使用 <productname>Curl</productname>，
+   <emphasis>并且</emphasis>在启动新线程之前尚未
+   <ulink url="https://curl.se/libcurl/c/curl_global_init.html">全局初始化
+   libcurl</ulink>，那么你将需要对任何可能初始化 libcurl 的代码
+   进行协作式加锁（同样通过 <function>PQregisterThreadLock</function>）。
+   对于构建为支持线程安全初始化的较新版本 <productname>Curl</productname>，此限制已取消；
+   这些构建可以通过其版本元数据中公布的
+   <literal>threadsafe</literal> 特性来识别。
   </para>
  </sect1>
 
