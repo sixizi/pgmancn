@@ -1654,73 +1654,41 @@ CONTEXT:  processing remote data for replication origin "pg_16395" during "INSER
  </sect1>
 
  <sect1 id="logical-replication-restrictions">
-  <title>Restrictions</title>
+  <title>限制</title>
 
   <para>
-   Logical replication currently has the following restrictions or missing
-   functionality.  These might be addressed in future releases.
+   逻辑复制目前有以下限制或缺失的功能。这些问题可能会在未来的版本中解决。
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     The database schema and DDL commands are not replicated.  The initial
-     schema can be copied by hand using <literal>pg_dump
-     --schema-only</literal>.  Subsequent schema changes would need to be kept
-     in sync manually.  (Note, however, that there is no need for the schemas
-     to be absolutely the same on both sides.)  Logical replication is robust
-     when schema definitions change in a live database: When the schema is
-     changed on the publisher and replicated data starts arriving at the
-     subscriber but does not fit into the table schema, replication will error
-     until the schema is updated.  In many cases, intermittent errors can be
-     avoided by applying additive schema changes to the subscriber first.
+     数据库模式和 DDL 命令不会被复制。初始模式可以使用 <literal>pg_dump
+     --schema-only</literal> 手工复制。后续的模式变更需要手动保持同步。（但请注意，两侧的模式不必完全相同。）逻辑复制在活动数据库中模式定义发生变化时是健壮的：当发布端的模式发生变更，而复制数据开始到达订阅端但无法匹配表模式时，复制将报错，直到模式被更新。在许多情况下，可以先在订阅端应用新增式的模式变更来避免间歇性错误。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Sequence data is not replicated.  The data in serial or identity columns
-     backed by sequences will of course be replicated as part of the table,
-     but the sequence itself would still show the start value on the
-     subscriber.  If the subscriber is used as a read-only database, then this
-     should typically not be a problem.  If, however, some kind of switchover
-     or failover to the subscriber database is intended, then the sequences
-     would need to be updated to the latest values, either by copying the
-     current data from the publisher (perhaps
-     using <command>pg_dump</command>) or by determining a sufficiently high
-     value from the tables themselves.
+     序列数据不会被复制。由序列支持的 serial 或 identity 列中的数据当然会作为表的一部分被复制，但序列本身在订阅端仍会显示起始值。如果订阅端被用作只读数据库，那么这通常不是问题。但是，如果打算对订阅端数据库进行某种切换或故障转移，则需要将序列更新为最新值，可以通过从发布端复制当前数据（也许使用 <command>pg_dump</command>）或从表本身确定一个足够高的值来实现。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Replication of <command>TRUNCATE</command> commands is supported, but
-     some care must be taken when truncating groups of tables connected by
-     foreign keys.  When replicating a truncate action, the subscriber will
-     truncate the same group of tables that was truncated on the publisher,
-     either explicitly specified or implicitly collected via
-     <literal>CASCADE</literal>, minus tables that are not part of the
-     subscription.  This will work correctly if all affected tables are part
-     of the same subscription.  But if some tables to be truncated on the
-     subscriber have foreign-key links to tables that are not part of the same
-     (or any) subscription, then the application of the truncate action on the
-     subscriber will fail.
+     支持复制 <command>TRUNCATE</command> 命令，但在截断由外键连接的一组表时需要小心。复制截断操作时，订阅端将截断与发布端被截断的相同的一组表，这些表要么是显式指定的，要么是通过 <literal>CASCADE</literal> 隐式收集的，减去不属于该订阅的表。如果所有受影响的表都属于同一个订阅，这将正常工作。但是，如果订阅端要截断的某些表与不属于同一（或任何）订阅的表存在外键链接，那么在订阅端应用截断操作将失败。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Large objects (see <xref linkend="largeobjects"/>) are not replicated.
-     There is no workaround for that, other than storing data in normal
-     tables.
+     大对象（参见 <xref linkend="largeobjects"/>）不会被复制。除了将数据存储在普通表中之外，没有其他变通方法。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Replication is only supported by tables, including partitioned tables.
-     Attempts to replicate other types of relations, such as views, materialized
-     views, or foreign tables, will result in an error.
+     复制仅支持表，包括分区表。尝试复制其他类型的关系（例如视图、物化视图或外部表）将导致错误。
     </para>
    </listitem>
 
@@ -1742,14 +1710,7 @@ CONTEXT:  processing remote data for replication origin "pg_16395" during "INSER
 
    <listitem>
     <para>
-     When using
-     <link linkend="sql-altertable-replica-identity-full"><literal>REPLICA IDENTITY FULL</literal></link>
-     on published tables, it is important to note that the <literal>UPDATE</literal>
-     and <literal>DELETE</literal> operations cannot be applied to subscribers
-     if the tables include attributes with datatypes (such as point or box)
-     that do not have a default operator class for B-tree or Hash. However,
-     this limitation can be overcome by ensuring that the table has a primary
-     key or replica identity defined for it.
+     在已发布的表上使用 <link linkend="sql-altertable-replica-identity-full"><literal>REPLICA IDENTITY FULL</literal></link> 时，务必注意：如果表中包含的数据类型（例如 point 或 box）没有 B-tree 或 Hash 的默认运算符类，则 <literal>UPDATE</literal> 和 <literal>DELETE</literal> 操作无法应用于订阅端。不过，可以通过确保为该表定义了主键或副本标识来克服这一限制。
     </para>
    </listitem>
   </itemizedlist>
