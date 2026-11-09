@@ -34,11 +34,10 @@
  </note>
 
  <sect1 id="plpython-funcs">
-  <title>PL/Python Functions</title>
+  <title>PL/Python 函数</title>
 
   <para>
-   Functions in PL/Python are declared via the
-   standard <xref linkend="sql-createfunction"/> syntax:
+   PL/Python 中的函数通过标准的 <xref linkend="sql-createfunction"/> 语法声明：
 
 <programlisting>
 CREATE FUNCTION <replaceable>funcname</replaceable> (<replaceable>argument-list</replaceable>)
@@ -50,25 +49,11 @@ $$ LANGUAGE plpython3u;
   </para>
 
   <para>
-   The body of a function is simply a Python script. When the function
-   is called, its arguments are passed as elements of the list
-   <varname>args</varname>; named arguments are also passed as
-   ordinary variables to the Python script.  Use of named arguments is
-   usually more readable.  The result is returned from the Python code
-   in the usual way, with <literal>return</literal> or
-   <literal>yield</literal> (in case of a result-set statement).  If
-   you do not provide a return value, Python returns the default
-   <symbol>None</symbol>. <application>PL/Python</application> translates
-   Python's <symbol>None</symbol> into the SQL null value.  In a procedure,
-   the result from the Python code must be <symbol>None</symbol> (typically
-   achieved by ending the procedure without a <literal>return</literal>
-   statement or by using a <literal>return</literal> statement without
-   argument); otherwise, an error will be raised.
+   函数体就是一个 Python 脚本。当函数被调用时，其参数作为列表 <varname>args</varname> 的元素传入；命名参数也会作为普通变量传给 Python 脚本。使用命名参数通常更具可读性。结果按通常方式从 Python 代码中返回，使用 <literal>return</literal> 或 <literal>yield</literal>（在结果集语句的情况下）。如果没有提供返回值，Python 返回默认值 <symbol>None</symbol>。<application>PL/Python</application> 将 Python 的 <symbol>None</symbol> 转换为 SQL 空值。在过程（procedure）中，Python 代码的结果必须是 <symbol>None</symbol>（通常通过不带 <literal>return</literal> 语句结束过程，或使用不带参数的 <literal>return</literal> 语句来实现）；否则将引发错误。
   </para>
 
   <para>
-   For example, a function to return the greater of two integers can be
-   defined as:
+   例如，一个返回两个整数中较大者的函数可以定义为：
 
 <programlisting>
 CREATE FUNCTION pymax (a integer, b integer)
@@ -80,8 +65,7 @@ AS $$
 $$ LANGUAGE plpython3u;
 </programlisting>
 
-   The Python code that is given as the body of the function definition
-   is transformed into a Python function. For example, the above results in:
+   作为函数定义主体给出的 Python 代码会被转换为一个 Python 函数。例如，上述定义会得到：
 
 <programlisting>
 def __plpython_procedure_pymax_23456():
@@ -90,17 +74,11 @@ def __plpython_procedure_pymax_23456():
   return b
 </programlisting>
 
-   assuming that 23456 is the OID assigned to the function by
-   <productname>PostgreSQL</productname>.
+   这里假设 23456 是 <productname>PostgreSQL</productname> 为该函数分配的 OID。
   </para>
 
   <para>
-   The arguments are set as global variables.  Because of the scoping
-   rules of Python, this has the subtle consequence that an argument
-   variable cannot be reassigned inside the function to the value of
-   an expression that involves the variable name itself, unless the
-   variable is redeclared as global in the block.  For example, the
-   following won't work:
+   参数被设置为全局变量。由于 Python 的作用域规则，这会产生一个微妙的后果：在函数内部，不能把某个参数变量重新赋值为一个涉及该变量名本身的表达式的结果，除非在该代码块中把该变量重新声明为全局变量。例如，下面的写法不会奏效：
 <programlisting>
 CREATE FUNCTION pystrip(x text)
   RETURNS text
@@ -109,13 +87,7 @@ AS $$
   return x
 $$ LANGUAGE plpython3u;
 </programlisting>
-   because assigning to <varname>x</varname>
-   makes <varname>x</varname> a local variable for the entire block,
-   and so the <varname>x</varname> on the right-hand side of the
-   assignment refers to a not-yet-assigned local
-   variable <varname>x</varname>, not the PL/Python function
-   parameter.  Using the <literal>global</literal> statement, this can
-   be made to work:
+   因为对 <varname>x</varname> 的赋值会使 <varname>x</varname> 成为整个代码块的局部变量，于是赋值右侧的 <varname>x</varname> 引用的是尚未赋值的局部变量 <varname>x</varname>，而不是 PL/Python 函数参数。使用 <literal>global</literal> 语句可以让它正常工作：
 <programlisting>
 CREATE FUNCTION pystrip(x text)
   RETURNS text
@@ -125,9 +97,7 @@ AS $$
   return x
 $$ LANGUAGE plpython3u;
 </programlisting>
-   But it is advisable not to rely on this implementation detail of
-   PL/Python.  It is better to treat the function parameters as
-   read-only.
+   但最好不要依赖 PL/Python 的这一实现细节。更好的做法是把函数参数视为只读。
   </para>
  </sect1>
 
