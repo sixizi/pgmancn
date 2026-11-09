@@ -27,65 +27,49 @@
 
 
  <sect1 id="locale">
-  <title>Locale Support</title>
+  <title>区域支持</title>
 
   <indexterm zone="locale"><primary>locale</primary></indexterm>
 
   <para>
-   <firstterm>Locale</firstterm> support refers to an application respecting
-   cultural preferences regarding alphabets, sorting, number
-   formatting, etc.  <productname>PostgreSQL</productname> uses the standard ISO
-   C and <acronym>POSIX</acronym> locale facilities provided by the server operating
-   system.  For additional information refer to the documentation of your
-   system.
+   <firstterm>区域</firstterm>支持是指应用程序遵循与字母表、排序、数字格式等相关的文化偏好。<productname>PostgreSQL</productname> 使用服务器操作系统提供的标准 ISO C 和 <acronym>POSIX</acronym> 区域设施。有关更多信息，请参阅系统的文档。
   </para>
 
   <sect2 id="locale-overview">
-   <title>Overview</title>
+   <title>概述</title>
 
    <para>
-    Locale support is automatically initialized when a database
-    cluster is created using <command>initdb</command>.
-    <command>initdb</command> will initialize the database cluster
-    with the locale setting of its execution environment by default,
-    so if your system is already set to use the locale that you want
-    in your database cluster then there is nothing else you need to
-    do.  If you want to use a different locale (or you are not sure
-    which locale your system is set to), you can instruct
-    <command>initdb</command> exactly which locale to use by
-    specifying the <option>--locale</option> option. For example:
+    使用 <command>initdb</command> 创建数据库集簇时，区域支持会自动初始化。
+    默认情况下，<command>initdb</command> 会使用其执行环境的区域设置来初始化数据库集簇，
+    因此，如果你的系统已经设置为使用你希望在数据库集簇中使用的区域，
+    那么你不需要再做其他任何事情。如果你想使用不同的区域（或者你不确定
+    你的系统设置的是哪个区域），你可以通过指定 <option>--locale</option> 选项来指示
+    <command>initdb</command> 确切使用哪个区域。例如：
 <screen>
 initdb --locale=sv_SE
 </screen>
    </para>
 
    <para>
-    This example for Unix systems sets the locale to Swedish
-    (<literal>sv</literal>) as spoken
-    in Sweden (<literal>SE</literal>).  Other possibilities might include
-    <literal>en_US</literal> (U.S. English) and <literal>fr_CA</literal> (French
-    Canadian).  If more than one character set can be used for a
-    locale then the specifications can take the form
-    <replaceable>language_territory.codeset</replaceable>.  For example,
-    <literal>fr_BE.UTF-8</literal> represents the French language (fr) as
-    spoken in Belgium (BE), with a <acronym>UTF-8</acronym> character set
-    encoding.
+    这个 Unix 系统的示例将区域设置为瑞典（<literal>sv</literal>）所说的瑞典语
+    （<literal>SE</literal>）。其他可能的设置包括
+    <literal>en_US</literal>（美国英语）和 <literal>fr_CA</literal>（加拿大法语）。
+    如果某个区域可以使用多个字符集，那么这些指定可以采用
+    <replaceable>language_territory.codeset</replaceable> 的形式。例如，
+    <literal>fr_BE.UTF-8</literal> 表示比利时（BE）所说的法语（fr），
+    并使用 <acronym>UTF-8</acronym> 字符集编码。
    </para>
 
    <para>
-    What locales are available on your
-    system under what names depends on what was provided by the operating
-    system vendor and what was installed.  On most Unix systems, the command
-    <literal>locale -a</literal> will provide a list of available locales.
-    Windows uses more verbose locale names, such as <literal>German_Germany</literal>
-    or <literal>Swedish_Sweden.1252</literal>, but the principles are the same.
+    你的系统上有哪些区域可用、以什么名称可用，取决于操作系统
+    供应商提供了什么以及安装了哪些内容。在大多数 Unix 系统上，命令
+    <literal>locale -a</literal> 会提供可用区域的列表。
+    Windows 使用更详细的区域名称，例如 <literal>German_Germany</literal>
+    或 <literal>Swedish_Sweden.1252</literal>，但原理是相同的。
    </para>
 
    <para>
-    Occasionally it is useful to mix rules from several locales, e.g.,
-    use English collation rules but Spanish messages.  To support that, a
-    set of locale subcategories exist that control only certain
-    aspects of the localization rules:
+    有时混合使用多个区域设置的规则是很有用的，例如，使用英语的排序规则但使用西班牙语的消息。为了支持这一点，存在一组区域设置子类别，它们只控制本地化规则的某些方面：
 
     <informaltable>
      <tgroup cols="2">
@@ -94,59 +78,41 @@ initdb --locale=sv_SE
       <tbody>
        <row>
         <entry><envar>LC_COLLATE</envar></entry>
-        <entry>String sort order</entry>
+        <entry>字符串排序顺序</entry>
        </row>
        <row>
         <entry><envar>LC_CTYPE</envar></entry>
-        <entry>Character classification (What is a letter? Its upper-case equivalent?)</entry>
+        <entry>字符分类（什么是字母？其大写等价形式？）</entry>
        </row>
        <row>
         <entry><envar>LC_MESSAGES</envar></entry>
-        <entry>Language of messages</entry>
+        <entry>消息的语言</entry>
        </row>
        <row>
         <entry><envar>LC_MONETARY</envar></entry>
-        <entry>Formatting of currency amounts</entry>
+        <entry>货币金额的格式</entry>
        </row>
        <row>
         <entry><envar>LC_NUMERIC</envar></entry>
-        <entry>Formatting of numbers</entry>
+        <entry>数字的格式</entry>
        </row>
        <row>
         <entry><envar>LC_TIME</envar></entry>
-        <entry>Formatting of dates and times</entry>
+        <entry>日期和时间的格式化</entry>
        </row>
       </tbody>
      </tgroup>
     </informaltable>
 
-    The category names translate into names of
-    <command>initdb</command> options to override the locale choice
-    for a specific category.  For instance, to set the locale to
-    French Canadian, but use U.S. rules for formatting currency, use
-    <literal>initdb --locale=fr_CA --lc-monetary=en_US</literal>.
+    类别名称会转换为 <command>initdb</command> 选项的名称，用于覆盖特定类别的区域设置选择。例如，要将区域设置为加拿大法语，但使用美国规则格式化货币，请使用 <literal>initdb --locale=fr_CA --lc-monetary=en_US</literal>。
    </para>
 
    <para>
-    If you want the system to behave as if it had no locale support,
-    use the special locale name <literal>C</literal>, or equivalently
-    <literal>POSIX</literal>.
+    如果希望系统表现得好像不支持区域设置，请使用特殊区域名 <literal>C</literal>，或等价的 <literal>POSIX</literal>。
    </para>
 
    <para>
-    Some locale categories must have their values
-    fixed when the database is created.  You can use different settings
-    for different databases, but once a database is created, you cannot
-    change them for that database anymore. <literal>LC_COLLATE</literal>
-    and <literal>LC_CTYPE</literal> are these categories.  They affect
-    the sort order of indexes, so they must be kept fixed, or indexes on
-    text columns would become corrupt.
-    (But you can alleviate this restriction using collations, as discussed
-    in <xref linkend="collation"/>.)
-    The default values for these
-    categories are determined when <command>initdb</command> is run, and
-    those values are used when new databases are created, unless
-    specified otherwise in the <command>CREATE DATABASE</command> command.
+    某些区域类别必须在创建数据库时固定其值。你可以为不同的数据库使用不同的设置，但一旦数据库被创建，就不能再为该数据库更改这些设置。<literal>LC_COLLATE</literal> 和 <literal>LC_CTYPE</literal> 就是这些类别。它们会影响索引的排序顺序，因此必须保持固定，否则文本列上的索引会损坏。（但你可以使用排序规则来缓解这一限制，如 <xref linkend="collation"/> 中所述。）这些类别的默认值在运行 <command>initdb</command> 时确定，并且在创建新数据库时会使用这些值，除非在 <command>CREATE DATABASE</command> 命令中另有指定。
    </para>
 
    <para>
@@ -162,63 +128,42 @@ initdb --locale=sv_SE
    </para>
 
    <para>
-    Note that the locale behavior of the server is determined by the
-    environment variables seen by the server, not by the environment
-    of any client.  Therefore, be careful to configure the correct locale settings
-    before starting the server.  A consequence of this is that if
-    client and server are set up in different locales, messages might
-    appear in different languages depending on where they originated.
+    请注意，服务器的区域行为由服务器所看到的环境变量决定，而不是由任何客户端的环境决定。因此，在启动服务器之前，请务必配置正确的区域设置。这样做的结果是，如果客户端和服务器设置在不同的区域设置中，消息可能会根据其来源而显示为不同的语言。
    </para>
 
    <note>
     <para>
-     When we speak of inheriting the locale from the execution
-     environment, this means the following on most operating systems:
-     For a given locale category, say the collation, the following
-     environment variables are consulted in this order until one is
-     found to be set: <envar>LC_ALL</envar>, <envar>LC_COLLATE</envar>
-     (or the variable corresponding to the respective category),
-     <envar>LANG</envar>.  If none of these environment variables are
-     set then the locale defaults to <literal>C</literal>.
+     当我们说从执行环境继承区域设置时，在大多数操作系统上这意味着：对于给定的区域类别（例如排序规则），会按以下顺序查询下列环境变量，直到找到某个已设置的变量为止：<envar>LC_ALL</envar>、<envar>LC_COLLATE</envar>（或与相应类别对应的变量）、<envar>LANG</envar>。如果这些环境变量都没有设置，则区域设置默认为 <literal>C</literal>。
     </para>
 
     <para>
-     Some message localization libraries also look at the environment
-     variable <envar>LANGUAGE</envar> which overrides all other locale
-     settings for the purpose of setting the language of messages.  If
-     in doubt, please refer to the documentation of your operating
-     system, in particular the documentation about
-     <application>gettext</application>.
+     某些消息本地化库还会查看环境变量 <envar>LANGUAGE</envar>，为了设定消息的语言，它会覆盖所有其他区域设置。如有疑问，请参阅操作系统的文档，特别是关于 <application>gettext</application> 的文档。
     </para>
    </note>
 
    <para>
-    To enable messages to be translated to the user's preferred language,
-    <acronym>NLS</acronym> must have been selected at build time
-    (<literal>configure --enable-nls</literal>).  All other locale support is
-    built in automatically.
+    要使消息能够翻译成用户首选的语言，必须在构建时选择 <acronym>NLS</acronym>（<literal>configure --enable-nls</literal>）。所有其他区域支持都是自动内置的。
    </para>
   </sect2>
 
   <sect2 id="locale-behavior">
-   <title>Behavior</title>
+   <title>行为</title>
 
    <para>
-    The locale settings influence the following SQL features:
+    区域设置会影响以下 SQL 特性：
 
     <itemizedlist>
      <listitem>
       <para>
-       Sort order in queries using <literal>ORDER BY</literal> or the standard
-       comparison operators on textual data
-       <indexterm><primary>ORDER BY</primary><secondary>and locales</secondary></indexterm>
+       使用 <literal>ORDER BY</literal> 或标准比较运算符对文本数据进行查询时的排序顺序
+<indexterm><primary>ORDER BY</primary><secondary>与区域设置</secondary></indexterm>
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The <function>upper</function>, <function>lower</function>, and <function>initcap</function>
-       functions
+       <function>upper</function>、<function>lower</function> 和 <function>initcap</function>
+       函数
        <indexterm><primary>upper</primary><secondary>and locales</secondary></indexterm>
        <indexterm><primary>lower</primary><secondary>and locales</secondary></indexterm>
       </para>
@@ -226,10 +171,8 @@ initdb --locale=sv_SE
 
      <listitem>
       <para>
-       Pattern matching operators (<literal>LIKE</literal>, <literal>SIMILAR TO</literal>,
-       and POSIX-style regular expressions); locales affect both case
-       insensitive matching and the classification of characters by
-       character-class regular expressions
+       模式匹配运算符（<literal>LIKE</literal>、<literal>SIMILAR TO</literal>
+       以及 POSIX 风格的正则表达式）；排序规则既影响不区分大小写的匹配，也影响字符类正则表达式对字符的分类
        <indexterm><primary>LIKE</primary><secondary>and locales</secondary></indexterm>
        <indexterm><primary>regular expressions</primary><secondary>and locales</secondary></indexterm>
       </para>
@@ -237,132 +180,91 @@ initdb --locale=sv_SE
 
      <listitem>
       <para>
-       The <function>to_char</function> family of functions
+       <function>to_char</function> 系列函数
        <indexterm><primary>to_char</primary><secondary>and locales</secondary></indexterm>
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The ability to use indexes with <literal>LIKE</literal> clauses
+       在 <literal>LIKE</literal> 子句中使用索引的能力
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    The drawback of using locales other than <literal>C</literal> or
-    <literal>POSIX</literal> in <productname>PostgreSQL</productname> is its performance
-    impact. It slows character handling and prevents ordinary indexes
-    from being used by <literal>LIKE</literal>. For this reason use locales
-    only if you actually need them.
+    在 <productname>PostgreSQL</productname> 中使用 <literal>C</literal> 或
+    <literal>POSIX</literal> 之外的排序规则的缺点在于其对性能的影响。它会减慢字符处理速度，并使 <literal>LIKE</literal> 无法使用普通索引。因此，只有在确实需要时才使用排序规则。
    </para>
 
    <para>
-    As a workaround to allow <productname>PostgreSQL</productname> to use indexes
-    with <literal>LIKE</literal> clauses under a non-C locale, several custom
-    operator classes exist. These allow the creation of an index that
-    performs a strict character-by-character comparison, ignoring
-    locale comparison rules. Refer to <xref linkend="indexes-opclass"/>
-    for more information.  Another approach is to create indexes using
-    the <literal>C</literal> collation, as discussed in
-    <xref linkend="collation"/>.
+    作为一种变通方法，为了让 <productname>PostgreSQL</productname> 在非 C 排序规则下能够对 <literal>LIKE</literal> 子句使用索引，存在若干自定义运算符类。这些运算符类允许创建一个执行严格的逐字符比较、忽略排序规则比较规则的索引。更多信息请参阅 <xref linkend="indexes-opclass"/>。另一种方法是使用 <literal>C</literal> 排序规则创建索引，如 <xref linkend="collation"/> 中所述。
    </para>
   </sect2>
 
   <sect2 id="locale-selecting-locales">
-   <title>Selecting Locales</title>
+   <title>选择区域设置</title>
 
    <para>
-    Locales can be selected in different scopes depending on requirements.
-    The above overview showed how locales are specified using
-    <command>initdb</command> to set the defaults for the entire cluster.  The
-    following list shows where locales can be selected.  Each item provides
-    the defaults for the subsequent items, and each lower item allows
-    overriding the defaults on a finer granularity.
+    区域设置可以根据需求在不同的作用域中选择。上面的概述展示了如何使用 <command>initdb</command> 为整个数据库集簇设置默认值。下面的列表展示了可以在哪些位置选择区域设置。每一项都为后续各项提供默认值，而越靠后的项允许以更细的粒度覆盖默认值。
    </para>
 
    <orderedlist>
     <listitem>
      <para>
-      As explained above, the environment of the operating system provides the
-      defaults for the locales of a newly initialized database cluster.  In
-      many cases, this is enough: if the operating system is configured for
-      the desired language/territory, by default
-      <productname>PostgreSQL</productname> will also behave according
-      to that locale.
+      如上所述，操作系统的环境为新初始化的数据库集簇提供区域设置的默认值。在许多情况下，这就足够了：如果操作系统已配置为所需的语言/地区，那么默认情况下 <productname>PostgreSQL</productname> 也会按照该区域设置行事。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      As shown above, command-line options for <command>initdb</command>
-      specify the locale settings for a newly initialized database cluster.
-      Use this if the operating system does not have the locale configuration
-      you want for your database system.
+      如上所示，<command>initdb</command> 的命令行选项为新初始化的数据库集簇指定区域设置。如果操作系统没有你希望用于数据库系统的区域设置配置，请使用此方式。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      A locale can be selected separately for each database.  The SQL command
-      <command>CREATE DATABASE</command> and its command-line equivalent
-      <command>createdb</command> have options for that.  Use this for example
-      if a database cluster houses databases for multiple tenants with
-      different requirements.
+      可以为每个数据库单独选择区域设置。SQL 命令 <command>CREATE DATABASE</command> 及其等效的命令行工具 <command>createdb</command> 提供了相应选项。例如，如果数据库集簇承载着多个具有不同需求的租户的数据库，请使用此方式。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Locale settings can be made for individual table columns.  This uses an
-      SQL object called <firstterm>collation</firstterm> and is explained in
-      <xref linkend="collation"/>.  Use this for example to sort data in
-      different languages or customize the sort order of a particular table.
+      可以为单个表列设置区域设置。这使用一个称为<firstterm>排序规则</firstterm>的 SQL 对象，在 <xref linkend="collation"/> 中进行了说明。例如，可使用此方式对不同语言的数据进行排序，或自定义特定表的排序顺序。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Finally, locales can be selected for an individual query.  Again, this
-      uses SQL collation objects.  This could be used to change the sort order
-      based on run-time choices or for ad-hoc experimentation.
+      最后，可以为单个查询选择区域。同样，这使用 SQL 排序规则对象。这可以用于根据运行时选择更改排序顺序，或者用于临时实验。
      </para>
     </listitem>
    </orderedlist>
   </sect2>
 
   <sect2 id="locale-providers">
-   <title>Locale Providers</title>
+   <title>区域提供者</title>
 
    <para>
-    A locale provider specifies which library defines the locale behavior for
-    collations and character classifications.
+    区域提供者指定由哪个库定义排序规则和字符分类的区域行为。
    </para>
 
    <para>
-    The commands and tools that select the locale settings, as described
-    above, each have an option to select the locale provider. Here is an
-    example to initialize a database cluster using the ICU provider:
+    如上所述，用于选择区域设置的命令和工具各自都有一个用于选择区域提供者的选项。下面是一个使用 ICU 提供者初始化数据库集簇的示例：
 <programlisting>
 initdb --locale-provider=icu --icu-locale=en
 </programlisting>
-    See the description of the respective commands and programs for
-    details.  Note that you can mix locale providers at different
-    granularities, for example use <literal>libc</literal> by default for the
-    cluster but have one database that uses the <literal>icu</literal>
-    provider, and then have collation objects using either provider within
-    those databases.
+    详情请参见相应命令和程序的说明。请注意，你可以在不同的粒度上混合使用区域提供者，例如默认情况下为集簇使用 <literal>libc</literal>，但让其中一个数据库使用 <literal>icu</literal> 提供者，然后在这些数据库中使用任意一种提供者的排序规则对象。
    </para>
 
    <para>
-    Regardless of the locale provider, the operating system is still used to
-    provide some locale-aware behavior, such as messages (see <xref
-    linkend="guc-lc-messages"/>).
+    无论使用哪种区域提供者，操作系统仍然用于提供某些区域相关的行为，例如消息（参见 <xref
+    linkend="guc-lc-messages"/>）。
    </para>
 
    <para>
-    The available locale providers are listed below:
+    可用的区域提供者如下所示：
    </para>
 
    <variablelist>
@@ -370,29 +272,16 @@ initdb --locale-provider=icu --icu-locale=en
      <term><literal>builtin</literal></term>
      <listitem>
       <para>
-       The <literal>builtin</literal> provider uses built-in operations. Only
-       the <literal>C</literal>, <literal>C.UTF-8</literal>, and
-       <literal>PG_UNICODE_FAST</literal> locales are supported for this
-       provider.
+       <literal>builtin</literal> 提供者使用内置操作。该提供者仅支持 <literal>C</literal>、<literal>C.UTF-8</literal> 和 <literal>PG_UNICODE_FAST</literal> 区域设置。
       </para>
       <para>
-       The <literal>C</literal> locale behavior is identical to the
-       <literal>C</literal> locale in the libc provider. When using this
-       locale, the behavior may depend on the database encoding.
+       <literal>C</literal> 区域设置的行为与 libc 提供者中的 <literal>C</literal> 区域设置完全相同。使用该区域设置时，行为可能取决于数据库编码。
       </para>
       <para>
-       The <literal>C.UTF-8</literal> locale is available only for when the
-       database encoding is <literal>UTF-8</literal>, and the behavior is
-       based on Unicode. The collation uses the code point values only. The
-       regular expression character classes are based on the "POSIX
-       Compatible" semantics, and the case mapping is the "simple" variant.
+       <literal>C.UTF-8</literal> 区域设置仅在数据库编码为 <literal>UTF-8</literal> 时可用，其行为基于 Unicode。排序规则仅使用码点值。正则表达式字符类基于 "POSIX Compatible" 语义，大小写映射为 "simple" 变体。
       </para>
       <para>
-       The <literal>PG_UNICODE_FAST</literal> locale is available only when
-       the database encoding is <literal>UTF-8</literal>, and the behavior is
-       based on Unicode. The collation uses the code point values only. The
-       regular expression character classes are based on the "Standard"
-       semantics, and the case mapping is the "full" variant.
+       <literal>PG_UNICODE_FAST</literal> 区域设置仅在数据库编码为 <literal>UTF-8</literal> 时可用，其行为基于 Unicode。排序规则仅使用码点值。正则表达式字符类基于 "Standard" 语义，大小写映射为 "full" 变体。
       </para>
      </listitem>
     </varlistentry>
@@ -401,24 +290,14 @@ initdb --locale-provider=icu --icu-locale=en
      <term><literal>icu</literal></term>
      <listitem>
       <para>
-       The <literal>icu</literal> provider uses the external
-       ICU<indexterm><primary>ICU</primary></indexterm>
-       library. <productname>PostgreSQL</productname> must have been
-       configured with support.
+       <literal>icu</literal> 提供者使用外部 ICU<indexterm><primary>ICU</primary></indexterm> 库。<productname>PostgreSQL</productname> 必须已配置为支持该功能。
       </para>
       <para>
-       ICU provides collation and character classification behavior that is
-       independent of the operating system and database encoding, which is
-       preferable if you expect to transition to other platforms without any
-       change in results. <literal>LC_COLLATE</literal> and
-       <literal>LC_CTYPE</literal> can be set independently of the ICU
-       locale.
+       ICU 提供的排序规则和字符分类行为独立于操作系统和数据库编码，如果你希望迁移到其他平台而结果不发生任何变化，这更为可取。<literal>LC_COLLATE</literal> 和 <literal>LC_CTYPE</literal> 可以独立于 ICU 区域设置进行设置。
       </para>
       <note>
        <para>
-        For the ICU provider, results may depend on the version of the ICU
-        library used, as it is updated to reflect changes in natural language
-        over time.
+        对于 ICU 提供者，结果可能取决于所使用的 ICU 库的版本，因为它会随时间更新以反映自然语言的变化。
        </para>
       </note>
      </listitem>
@@ -428,15 +307,11 @@ initdb --locale-provider=icu --icu-locale=en
      <term><literal>libc</literal></term>
      <listitem>
       <para>
-       The <literal>libc</literal> provider uses the operating system's C
-       library. The collation and character classification behavior is
-       controlled by the settings <literal>LC_COLLATE</literal> and
-       <literal>LC_CTYPE</literal>, so they cannot be set independently.
+       <literal>libc</literal> 提供者使用操作系统的 C 库。排序规则和字符分类行为由 <literal>LC_COLLATE</literal> 和 <literal>LC_CTYPE</literal> 设置控制，因此它们不能被独立设置。
       </para>
       <note>
        <para>
-        The same locale name may have different behavior on different
-        platforms when using the libc provider.
+        使用 libc 提供者时，相同的区域名称在不同平台上可能具有不同的行为。
        </para>
       </note>
      </listitem>
@@ -445,14 +320,14 @@ initdb --locale-provider=icu --icu-locale=en
   </sect2>
 
   <sect2 id="icu-locales">
-   <title>ICU Locales</title>
+   <title>ICU 区域设置</title>
 
    <sect3 id="icu-locale-names">
-    <title>ICU Locale Names</title>
+    <title>ICU 区域名称</title>
 
     <para>
-     The ICU format for the locale name is a <link
-     linkend="icu-language-tag">Language Tag</link>.
+     ICU 的区域名称格式是 <link
+     linkend="icu-language-tag">语言标签</link>。
 
 <programlisting>
 CREATE COLLATION mycollation1 (provider = icu, locale = 'ja-JP');
@@ -462,7 +337,7 @@ CREATE COLLATION mycollation2 (provider = icu, locale = 'fr');
    </sect3>
 
    <sect3 id="icu-canonicalization">
-    <title>Locale Canonicalization and Validation</title>
+    <title>区域规范化与验证</title>
     <para>
      When defining a new ICU collation object or database with ICU as the
      provider, the given locale name is transformed ("canonicalized") into a
@@ -483,21 +358,15 @@ NOTICE:  using standard form "de-DE" for locale "de_DE.utf8"
     </para>
 
     <para>
-     A locale with no language name, or the special language name
-     <literal>root</literal>, is transformed to have the language
-     <literal>und</literal> ("undefined").
+     没有语言名称的区域，或者特殊的语言名称 <literal>root</literal>，会被转换为语言 <literal>und</literal>（“未定义”）。
     </para>
 
     <para>
-     ICU can transform most libc locale names, as well as some other formats,
-     into language tags for easier transition to ICU. If a libc locale name is
-     used in ICU, it may not have precisely the same behavior as in libc.
+     ICU 可以把大多数 libc 区域名称以及一些其他格式转换为语言标签，以便更容易地迁移到 ICU。如果在 ICU 中使用 libc 区域名称，其行为可能与在 libc 中并不完全相同。
     </para>
 
     <para>
-     If there is a problem interpreting the locale name, or if the locale name
-     represents a language or region that ICU does not recognize, you will see
-     the following warning:
+     如果在解释区域名称时出现问题，或者区域名称表示的语言或地区是 ICU 无法识别的，就会看到以下警告：
 
 <screen>
 CREATE COLLATION nonsense (provider = icu, locale = 'nonsense');
@@ -506,61 +375,47 @@ HINT:  To disable ICU locale validation, set parameter icu_validation_level to D
 CREATE COLLATION
 </screen>
 
-     <xref linkend="guc-icu-validation-level"/> controls how the message is
-     reported. Unless set to <literal>ERROR</literal>, the collation will
-     still be created, but the behavior may not be what the user intended.
+     <xref linkend="guc-icu-validation-level"/> 控制消息的报告方式。除非设置为 <literal>ERROR</literal>，否则排序规则仍会被创建，但行为可能不是用户所期望的。
     </para>
    </sect3>
 
    <sect3 id="icu-language-tag">
-    <title>Language Tag</title>
+    <title>语言标签</title>
 
     <para>
-     A language tag, defined in BCP 47, is a standardized identifier used to
-     identify languages, regions, and other information about a locale.
+     语言标签（定义于 BCP 47）是一种标准化标识符，用于标识语言、地区以及有关区域设置的其他信息。
     </para>
 
     <para>
-     Basic language tags are simply
-     <replaceable>language</replaceable><literal>-</literal><replaceable>region</replaceable>;
-     or even just <replaceable>language</replaceable>. The
-     <replaceable>language</replaceable> is a language code
-     (e.g. <literal>fr</literal> for French), and
-     <replaceable>region</replaceable> is a region code
-     (e.g. <literal>CA</literal> for Canada). Examples:
-     <literal>ja-JP</literal>, <literal>de</literal>, or
-     <literal>fr-CA</literal>.
+     基本的语言标签就是
+     <replaceable>language</replaceable><literal>-</literal><replaceable>region</replaceable>；
+     甚至只是 <replaceable>language</replaceable>。其中
+     <replaceable>language</replaceable> 是语言代码
+     （例如 <literal>fr</literal> 表示法语），
+     <replaceable>region</replaceable> 是地区代码
+     （例如 <literal>CA</literal> 表示加拿大）。示例：
+     <literal>ja-JP</literal>、<literal>de</literal> 或
+     <literal>fr-CA</literal>。
     </para>
 
     <para>
-     Collation settings may be included in the language tag to customize
-     collation behavior. ICU allows extensive customization, such as
-     sensitivity (or insensitivity) to accents, case, and punctuation;
-     treatment of digits within text; and many other options to satisfy a
-     variety of uses.
+     排序规则设置可以包含在语言标签中，以定制排序规则行为。ICU 允许进行大量定制，例如对重音符号、大小写和标点的敏感性（或不敏感性）；文本中数字的处理方式；以及许多其他选项，以满足各种用途。
     </para>
 
     <para>
-     To include this additional collation information in a language tag,
-     append <literal>-u</literal>, which indicates there are additional
-     collation settings, followed by one or more
+     要将这些额外的排序规则信息包含在语言标签中，请追加 <literal>-u</literal>（表示后面还有额外的排序规则设置），随后跟一个或多个
      <literal>-</literal><replaceable>key</replaceable><literal>-</literal><replaceable>value</replaceable>
-     pairs. The <replaceable>key</replaceable> is the key for a <link
-     linkend="icu-collation-settings">collation setting</link> and
-     <replaceable>value</replaceable> is a valid value for that setting. For
-     boolean settings, the <literal>-</literal><replaceable>key</replaceable>
-     may be specified without a corresponding
-     <literal>-</literal><replaceable>value</replaceable>, which implies a
-     value of <literal>true</literal>.
+     对。<replaceable>key</replaceable> 是 <link
+     linkend="icu-collation-settings">排序规则设置</link> 的键，
+     <replaceable>value</replaceable> 是该设置的有效值。对于布尔型设置，可以只指定 <literal>-</literal><replaceable>key</replaceable>
+     而不带对应的
+     <literal>-</literal><replaceable>value</replaceable>，这隐含值为 <literal>true</literal>。
     </para>
 
     <para>
-     For example, the language tag <literal>en-US-u-kn-ks-level2</literal>
-     means the locale with the English language in the US region, with
-     collation settings <literal>kn</literal> set to <literal>true</literal>
-     and <literal>ks</literal> set to <literal>level2</literal>. Those
-     settings mean the collation will be case-insensitive and treat a sequence
-     of digits as a single number:
+     例如，语言标签 <literal>en-US-u-kn-ks-level2</literal>
+     表示美国地区英语的区域设置，其中排序规则设置 <literal>kn</literal> 设为 <literal>true</literal>，
+     <literal>ks</literal> 设为 <literal>level2</literal>。这些设置意味着排序规则将不区分大小写，并将一串数字视为单个数字：
 
 <screen>
 CREATE COLLATION mycollation5 (provider = icu, deterministic = false, locale = 'en-US-u-kn-ks-level2');
@@ -579,57 +434,45 @@ SELECT 'N-45' &lt; 'N-123' COLLATE mycollation5 as result;
     </para>
 
     <para>
-     See <xref linkend="icu-custom-collations"/> for details and additional
-     examples of using language tags with custom collation information for the
-     locale.
+     有关使用带有区域设置自定义排序规则信息的语言标签的详细信息和其他示例，请参见 <xref linkend="icu-custom-collations"/>。
     </para>
    </sect3>
   </sect2>
 
   <sect2 id="locale-problems">
-   <title>Problems</title>
+   <title>问题</title>
 
    <para>
-    If locale support doesn't work according to the explanation above,
-    check that the locale support in your operating system is
-    correctly configured.  To check what locales are installed on your
-    system, you can use the command <literal>locale -a</literal> if
-    your operating system provides it.
+    如果按照上面的说明，区域设置支持仍然无法正常工作，
+    请检查你的操作系统中的区域设置支持是否已正确配置。
+    要检查系统上安装了哪些区域设置，如果你的操作系统提供了
+    <literal>locale -a</literal> 命令，你可以使用它。
    </para>
 
    <para>
-    Check that <productname>PostgreSQL</productname> is actually using the locale
-    that you think it is.  The <envar>LC_COLLATE</envar> and <envar>LC_CTYPE</envar>
-    settings are determined when a database is created, and cannot be
-    changed except by creating a new database.  Other locale
-    settings including <envar>LC_MESSAGES</envar> and <envar>LC_MONETARY</envar>
-    are initially determined by the environment the server is started
-    in, but can be changed on-the-fly.  You can check the active locale
-    settings using the <command>SHOW</command> command.
+    检查 <productname>PostgreSQL</productname> 是否确实在使用你认为它正在使用的区域设置。
+    <envar>LC_COLLATE</envar> 和 <envar>LC_CTYPE</envar> 设置是在创建数据库时确定的，除非创建新数据库，
+    否则无法更改。其他区域设置（包括 <envar>LC_MESSAGES</envar> 和 <envar>LC_MONETARY</envar>）
+    最初由启动服务器时所处的环境决定，但可以动态更改。
+    你可以使用 <command>SHOW</command> 命令检查当前生效的区域设置。
    </para>
 
    <para>
-    The directory <filename>src/test/locale</filename> in the source
-    distribution contains a test suite for
-    <productname>PostgreSQL</productname>'s locale support.
+    源代码发行版中的 <filename>src/test/locale</filename> 目录包含一套用于测试
+    <productname>PostgreSQL</productname> 区域设置支持的测试套件。
    </para>
 
    <para>
-    Client applications that handle server-side errors by parsing the
-    text of the error message will obviously have problems when the
-    server's messages are in a different language.  Authors of such
-    applications are advised to make use of the error code scheme
-    instead.
+    那些通过解析错误消息文本来处理服务器端错误的客户端应用，
+    在服务器消息使用不同语言时显然会遇到问题。建议此类应用的
+    作者改用错误代码方案。
    </para>
 
    <para>
-    Maintaining catalogs of message translations requires the on-going
-    efforts of many volunteers that want to see
-    <productname>PostgreSQL</productname> speak their preferred language well.
-    If messages in your language are currently not available or not fully
-    translated, your assistance would be appreciated.  If you want to
-    help, refer to <xref linkend="nls"/> or write to the developers'
-    mailing list.
+    维护消息翻译的系统目录需要许多志愿者的持续努力，
+    他们希望 <productname>PostgreSQL</productname> 能很好地使用他们偏好的语言。
+    如果你所用语言的消息目前不可用或未完全翻译，我们将感谢你的帮助。
+    如果你想提供帮助，请参阅 <xref linkend="nls"/> 或写信给开发者邮件列表。
    </para>
   </sect2>
  </sect1>
