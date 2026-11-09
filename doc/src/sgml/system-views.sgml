@@ -1024,38 +1024,27 @@ AND c1.path[c2.level] = c2.path[c2.level];
   </indexterm>
 
   <para>
-   The view <structname>pg_file_settings</structname> provides a summary of
-   the contents of the server's configuration file(s).  A row appears in
-   this view for each <quote>name = value</quote> entry appearing in the files,
-   with annotations indicating whether the value could be applied
-   successfully.  Additional row(s) may appear for problems not linked to
-   a <quote>name = value</quote> entry, such as syntax errors in the files.
+   视图 <structname>pg_file_settings</structname> 提供服务器配置文件内容的摘要。文件中每个 <quote>name = value</quote> 条目都会在此视图中对应一行，并带有注释说明该值是否能够成功应用。对于与 <quote>name = value</quote> 条目无关的问题（例如文件中的语法错误），可能会出现额外的行。
   </para>
 
   <para>
-   This view is helpful for checking whether planned changes in the
-   configuration files will work, or for diagnosing a previous failure.
-   Note that this view reports on the <emphasis>current</emphasis> contents of the
-   files, not on what was last applied by the server.  (The
-   <link linkend="view-pg-settings"><structname>pg_settings</structname></link>
-   view is usually sufficient to determine that.)
+   此视图有助于检查配置文件中的计划变更是否会生效，或用于诊断先前的失败。请注意，此视图报告的是文件的<emphasis>当前</emphasis>内容，而不是服务器上次应用的内容。（<link linkend="view-pg-settings"><structname>pg_settings</structname></link> 视图通常足以确定这一点。）
   </para>
 
   <para>
-   By default, the <structname>pg_file_settings</structname> view can be read
-   only by superusers.
+   默认情况下，只有超级用户才能读取 <structname>pg_file_settings</structname> 视图。
   </para>
 
   <table>
-   <title><structname>pg_file_settings</structname> Columns</title>
+   <title><structname>pg_file_settings</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -1066,7 +1055,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>sourcefile</structfield> <type>text</type>
       </para>
       <para>
-       Full path name of the configuration file
+       配置文件的完整路径名
       </para></entry>
      </row>
 
@@ -1075,7 +1064,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>sourceline</structfield> <type>int4</type>
       </para>
       <para>
-       Line number within the configuration file where the entry appears
+       该条目在配置文件中出现的行号
       </para></entry>
      </row>
 
@@ -1084,7 +1073,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>seqno</structfield> <type>int4</type>
       </para>
       <para>
-       Order in which the entries are processed (1..<replaceable>n</replaceable>)
+       条目的处理顺序（1..<replaceable>n</replaceable>）
       </para></entry>
      </row>
 
@@ -1093,7 +1082,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>name</structfield> <type>text</type>
       </para>
       <para>
-       Configuration parameter name
+       配置参数名
       </para></entry>
      </row>
 
@@ -1102,7 +1091,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>setting</structfield> <type>text</type>
       </para>
       <para>
-       Value to be assigned to the parameter
+       要赋给参数的值
       </para></entry>
      </row>
 
@@ -1111,7 +1100,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>applied</structfield> <type>bool</type>
       </para>
       <para>
-       True if the value can be applied successfully
+       如果该值可以成功应用则为真
       </para></entry>
      </row>
 
@@ -1120,8 +1109,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>error</structfield> <type>text</type>
       </para>
       <para>
-       If not null, an error message indicating why this entry could
-       not be applied
+       如果不为空，则表示一条错误消息，说明此条目为何无法被应用
       </para></entry>
      </row>
     </tbody>
@@ -1129,24 +1117,14 @@ AND c1.path[c2.level] = c2.path[c2.level];
   </table>
 
   <para>
-   If the configuration file contains syntax errors or invalid parameter
-   names, the server will not attempt to apply any settings from it, and
-   therefore all the <structfield>applied</structfield> fields will read as false.
-   In such a case there will be one or more rows with
-   non-null <structfield>error</structfield> fields indicating the
-   problem(s).  Otherwise, individual settings will be applied if possible.
-   If an individual setting cannot be applied (e.g., invalid value, or the
-   setting cannot be changed after server start) it will have an appropriate
-   message in the <structfield>error</structfield> field.  Another way that
-   an entry might have <structfield>applied</structfield> = false is that it is
-   overridden by a later entry for the same parameter name; this case is not
-   considered an error so nothing appears in
-   the <structfield>error</structfield> field.
+   如果配置文件包含语法错误或无效的参数名，服务器将不会尝试应用其中的任何设置，因此所有 <structfield>applied</structfield> 字段都会读为 false。
+   在这种情况下，会有一行或多行具有非空的 <structfield>error</structfield> 字段，指出问题所在。否则，将尽可能应用各个设置。
+   如果某个单独设置无法应用（例如值无效，或该设置在服务器启动后无法更改），它将在 <structfield>error</structfield> 字段中给出相应的消息。
+   条目出现 <structfield>applied</structfield> = false 的另一种可能是，它被同一参数名的后续条目覆盖；这种情况不被视为错误，因此 <structfield>error</structfield> 字段中不会显示任何内容。
   </para>
 
   <para>
-   See <xref linkend="config-setting"/> for more information about the various
-   ways to change run-time parameters.
+   有关更改运行时参数的各种方式的更多信息，请参见 <xref linkend="config-setting"/>。
   </para>
 
 </sect1>
