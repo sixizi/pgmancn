@@ -133,20 +133,19 @@ CREATE INDEX test1_id_index ON test1 (id);
 
 
  <sect1 id="indexes-types">
-  <title>Index Types</title>
+  <title>索引类型</title>
 
   <para>
-   <productname>PostgreSQL</productname> provides several index types:
-   B-tree, Hash, GiST, SP-GiST, GIN, BRIN, and the extension <link
-   linkend="bloom">bloom</link>.
-   Each index type uses a different
-   algorithm that is best suited to different types of indexable clauses.
-   By default, the <link linkend="sql-createindex"><command>CREATE
-   INDEX</command></link> command creates
-   B-tree indexes, which fit the most common situations.
-   The other index types are selected by writing the keyword
-   <literal>USING</literal> followed by the index type name.
-   For example, to create a Hash index:
+   <productname>PostgreSQL</productname> 提供了多种索引类型：
+   B-tree、Hash、GiST、SP-GiST、GIN、BRIN 以及扩展 <link
+   linkend="bloom">bloom</link>。
+   每种索引类型使用不同的算法，最适合不同类型的可索引子句。
+   默认情况下，<link linkend="sql-createindex"><command>CREATE
+   INDEX</command></link> 命令创建
+   B-tree 索引，它适合最常见的情况。
+   其他索引类型通过写出关键字
+   <literal>USING</literal> 后跟索引类型名称来选择。
+   例如，要创建 Hash 索引：
 <programlisting>
 CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable> USING HASH (<replaceable>column</replaceable>);
 </programlisting>
@@ -165,47 +164,42 @@ CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable>
    </indexterm>
 
   <para>
-   B-trees can handle equality and range queries on data that can be sorted
-   into some ordering.
-   In particular, the <productname>PostgreSQL</productname> query planner
-   will consider using a B-tree index whenever an indexed column is
-   involved in a comparison using one of these operators:
+   B-tree 可以处理可排序成某种顺序的数据上的等值和范围查询。
+   特别是，当被索引的列参与使用下列运算符之一的比较时，<productname>PostgreSQL</productname> 查询规划器
+   会考虑使用 B-tree 索引：
 
 <synopsis>
 &lt; &nbsp; &lt;= &nbsp; = &nbsp; &gt;= &nbsp; &gt;
 </synopsis>
 
-   Constructs equivalent to combinations of these operators, such as
-   <literal>BETWEEN</literal> and <literal>IN</literal>, can also be implemented with
-   a B-tree index search.  Also, an <literal>IS NULL</literal> or <literal>IS NOT
-   NULL</literal> condition on an index column can be used with a B-tree index.
+   与这些运算符组合等价的构造，例如
+   <literal>BETWEEN</literal> 和 <literal>IN</literal>，也可以通过 B-tree 索引扫描来实现。
+   此外，索引列上的 <literal>IS NULL</literal> 或 <literal>IS NOT
+   NULL</literal> 条件也可以与 B-tree 索引一起使用。
   </para>
 
   <para>
-   The optimizer can also use a B-tree index for queries involving the
-   pattern matching operators <literal>LIKE</literal> and <literal>~</literal>
-   <emphasis>if</emphasis> the pattern is a constant and is anchored to
-   the beginning of the string &mdash; for example, <literal>col LIKE
-   'foo%'</literal> or <literal>col ~ '^foo'</literal>, but not
-   <literal>col LIKE '%bar'</literal>. However, if your database does not
-   use the C locale you will need to create the index with a special
-   operator class to support indexing of pattern-matching queries; see
-   <xref linkend="indexes-opclass"/> below. It is also possible to use
-   B-tree indexes for <literal>ILIKE</literal> and
-   <literal>~*</literal>, but only if the pattern starts with
-   non-alphabetic characters, i.e., characters that are not affected by
-   upper/lower case conversion.
+   优化器还可以对涉及模式匹配运算符 <literal>LIKE</literal> 和 <literal>~</literal>
+   的查询使用 B-tree 索引，<emphasis>如果</emphasis>模式是常量并且锚定在
+   字符串开头 &mdash; 例如，<literal>col LIKE
+   'foo%'</literal> 或 <literal>col ~ '^foo'</literal>，但不是
+   <literal>col LIKE '%bar'</literal>。但是，如果你的数据库不使用 C 区域设置，
+   你将需要使用特殊的运算符类创建索引，以支持
+   模式匹配查询的索引；参见下面的
+   <xref linkend="indexes-opclass"/>。也可以对 <literal>ILIKE</literal> 和
+   <literal>~*</literal> 使用 B-tree 索引，但仅当模式以
+   非字母字符开头，即不受
+   大小写转换影响的字符。
   </para>
 
   <para>
-   B-tree indexes can also be used to retrieve data in sorted order.
-   This is not always faster than a simple scan and sort, but it is
-   often helpful.
+   B-tree 索引还可以用于按排序顺序检索数据。
+   这并不总是比简单的扫描和排序更快，但通常很有帮助。
   </para>
   </sect2>
 
   <sect2 id="indexes-types-hash">
-   <title>Hash</title>
+   <title>哈希</title>
 
    <indexterm>
     <primary>index</primary>
@@ -217,12 +211,7 @@ CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable>
    </indexterm>
 
   <para>
-   Hash indexes store a 32-bit hash code derived from the
-   value of the indexed column. Hence,
-   such indexes can only handle simple equality comparisons.
-   The query planner will consider using a hash index whenever an
-   indexed column is involved in a comparison using the
-   equal operator:
+   哈希索引存储从被索引列的值派生出的 32 位哈希码。因此，这类索引只能处理简单的等值比较。只要被索引列参与了使用等号运算符的比较，查询规划器就会考虑使用哈希索引：
 
 <synopsis>
 =
@@ -243,39 +232,25 @@ CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable>
    </indexterm>
 
   <para>
-   GiST indexes are not a single kind of index, but rather an infrastructure
-   within which many different indexing strategies can be implemented.
-   Accordingly, the particular operators with which a GiST index can be
-   used vary depending on the indexing strategy (the <firstterm>operator
-   class</firstterm>).  As an example, the standard distribution of
-   <productname>PostgreSQL</productname> includes GiST operator classes
-   for several two-dimensional geometric data types, which support indexed
-   queries using these operators:
+   GiST 索引并不是单一类型的索引，而是一种基础设施，可以在其中实现许多不同的索引策略。相应地，GiST 索引可使用的具体运算符取决于索引策略（即 <firstterm>运算符类</firstterm>）。举例来说，<productname>PostgreSQL</productname> 的标准发行版包含针对若干二维几何数据类型的 GiST 运算符类，它们支持使用下列运算符的索引查询：
 
 <synopsis>
 &lt;&lt; &nbsp; &amp;&lt; &nbsp; &amp;&gt; &nbsp; &gt;&gt; &nbsp; &lt;&lt;| &nbsp; &amp;&lt;| &nbsp; |&amp;&gt; &nbsp; |&gt;&gt; &nbsp; @&gt; &nbsp; &lt;@ &nbsp; ~= &nbsp; &amp;&amp;
 </synopsis>
 
-   (See <xref linkend="functions-geometry"/> for the meaning of
-   these operators.)
-   The GiST operator classes included in the standard distribution are
-   documented in <xref linkend="gist-builtin-opclasses-table"/>.
-   Many other GiST operator
-   classes are available in the <literal>contrib</literal> collection or as separate
-   projects.  For more information see <xref linkend="gist"/>.
+   （这些运算符的含义请参见 <xref linkend="functions-geometry"/>。）
+   标准发行版中包含的 GiST 运算符类记录在 <xref linkend="gist-builtin-opclasses-table"/> 中。
+   许多其他 GiST 运算符类可在 <literal>contrib</literal> 集合中获得，或作为单独的项目提供。更多信息请参见 <xref linkend="gist"/>。
   </para>
 
   <para>
-   GiST indexes are also capable of optimizing <quote>nearest-neighbor</quote>
-   searches, such as
+   GiST 索引还能够优化 <quote>最近邻</quote> 搜索，例如
 <programlisting><![CDATA[
 SELECT * FROM places ORDER BY location <-> point '(101,456)' LIMIT 10;
 ]]>
 </programlisting>
-   which finds the ten places closest to a given target point.  The ability
-   to do this is again dependent on the particular operator class being used.
-   In <xref linkend="gist-builtin-opclasses-table"/>, operators that can be
-   used in this way are listed in the column <quote>Ordering Operators</quote>.
+   它会找出距离给定目标点最近的十个地点。能否做到这一点同样取决于所使用的具体运算符类。
+   在 <xref linkend="gist-builtin-opclasses-table"/> 中，可以这样使用的运算符列在 <quote>排序运算符</quote> 列中。
   </para>
   </sect2>
 
@@ -292,30 +267,20 @@ SELECT * FROM places ORDER BY location <-> point '(101,456)' LIMIT 10;
    </indexterm>
 
   <para>
-   SP-GiST indexes, like GiST indexes, offer an infrastructure that supports
-   various kinds of searches.  SP-GiST permits implementation of a wide range
-   of different non-balanced disk-based data structures, such as quadtrees,
-   k-d trees, and radix trees (tries).  As an example, the standard distribution of
-   <productname>PostgreSQL</productname> includes SP-GiST operator classes
-   for two-dimensional points, which support indexed
-   queries using these operators:
+   SP-GiST 索引与 GiST 索引一样，提供了一种支持各种类型搜索的基础设施。SP-GiST 允许实现多种不同的非平衡的基于磁盘的数据结构，例如四叉树、k-d 树和基数树（trie）。举例来说，<productname>PostgreSQL</productname> 的标准发行版包含了针对二维点的 SP-GiST 运算符类，它们支持使用以下运算符的索引查询：
 
 <synopsis>
 &lt;&lt; &nbsp; &gt;&gt; &nbsp; ~= &nbsp; &lt;@ &nbsp; &lt;&lt;| &nbsp; |&gt;&gt;
 </synopsis>
 
-   (See <xref linkend="functions-geometry"/> for the meaning of
-   these operators.)
-   The SP-GiST operator classes included in the standard distribution are
-   documented in <xref linkend="spgist-builtin-opclasses-table"/>.
-   For more information see <xref linkend="spgist"/>.
+   （这些运算符的含义请参见 <xref linkend="functions-geometry"/>。）
+   标准发行版中包含的 SP-GiST 运算符类记录在 <xref linkend="spgist-builtin-opclasses-table"/> 中。
+   更多信息请参见 <xref linkend="spgist"/>。
   </para>
 
   <para>
-   Like GiST, SP-GiST supports <quote>nearest-neighbor</quote> searches.
-   For SP-GiST operator classes that support distance ordering, the
-   corresponding operator is listed in the <quote>Ordering Operators</quote>
-   column in <xref linkend="spgist-builtin-opclasses-table"/>.
+   与 GiST 一样，SP-GiST 支持<quote>最近邻</quote>搜索。
+   对于支持距离排序的 SP-GiST 运算符类，相应的运算符列在 <xref linkend="spgist-builtin-opclasses-table"/> 的<quote>排序运算符</quote>列中。
   </para>
   </sect2>
 
@@ -332,33 +297,20 @@ SELECT * FROM places ORDER BY location <-> point '(101,456)' LIMIT 10;
    </indexterm>
 
   <para>
-   GIN indexes are <quote>inverted indexes</quote> which are appropriate for
-   data values that contain multiple component values, such as arrays.  An
-   inverted index contains a separate entry for each component value, and
-   can efficiently handle queries that test for the presence of specific
-   component values.
+   GIN 索引是<quote>倒排索引</quote>，适用于包含多个组件值的数据值，例如数组。倒排索引为每个组件值包含一个单独的条目，并且能够高效地处理测试特定组件值是否存在的查询。
   </para>
 
   <para>
-   Like GiST and SP-GiST, GIN can support
-   many different user-defined indexing strategies, and the particular
-   operators with which a GIN index can be used vary depending on the
-   indexing strategy.
-   As an example, the standard distribution of
-   <productname>PostgreSQL</productname> includes a GIN operator class
-   for arrays, which supports indexed queries using these operators:
+   与 GiST 和 SP-GiST 一样，GIN 可以支持许多不同的用户定义索引策略，并且 GIN 索引可以使用的具体运算符因索引策略而异。
+   举例来说，<productname>PostgreSQL</productname> 的标准发行版包含一个用于数组的 GIN 运算符类，它支持使用以下运算符的索引查询：
 
 <synopsis>
 &lt;@ &nbsp; @&gt; &nbsp; = &nbsp; &amp;&amp;
 </synopsis>
 
-   (See <xref linkend="functions-array"/> for the meaning of
-   these operators.)
-   The GIN operator classes included in the standard distribution are
-   documented in <xref linkend="gin-builtin-opclasses-table"/>.
-   Many other GIN operator
-   classes are available in the <literal>contrib</literal> collection or as separate
-   projects.  For more information see <xref linkend="gin"/>.
+   （这些运算符的含义请参见 <xref linkend="functions-array"/>。）
+   标准发行版中包含的 GIN 运算符类记录在 <xref linkend="gin-builtin-opclasses-table"/> 中。
+   许多其他 GIN 运算符类可在 <literal>contrib</literal> 集合中获得，或作为单独的项目提供。更多信息请参见 <xref linkend="gin"/>。
   </para>
   </sect2>
 
@@ -375,26 +327,13 @@ SELECT * FROM places ORDER BY location <-> point '(101,456)' LIMIT 10;
    </indexterm>
 
   <para>
-   BRIN indexes (a shorthand for Block Range INdexes) store summaries about
-   the values stored in consecutive physical block ranges of a table.
-   Thus, they are most effective for columns whose values are well-correlated
-   with the physical order of the table rows.
-   Like GiST, SP-GiST and GIN,
-   BRIN can support many different indexing strategies,
-   and the particular operators with which a BRIN index can be used
-   vary depending on the indexing strategy.
-   For data types that have a linear sort order, the indexed data
-   corresponds to the minimum and maximum values of the
-   values in the column for each block range.  This supports indexed queries
-   using these operators:
+   BRIN 索引（Block Range INdexes 的简称）存储关于表中连续物理块范围内所存储值的摘要信息。因此，它对于值与表行的物理顺序高度相关的列最为有效。与 GiST、SP-GiST 和 GIN 一样，BRIN 可以支持多种不同的索引策略，而 BRIN 索引可使用的具体运算符会因索引策略的不同而有所差异。对于具有线性排序顺序的数据类型，被索引的数据对应于每个块范围内该列值的最小值和最大值。这支持使用以下运算符的索引查询：
 
 <synopsis>
 &lt; &nbsp; &lt;= &nbsp; = &nbsp; &gt;= &nbsp; &gt;
 </synopsis>
 
-   The BRIN operator classes included in the standard distribution are
-   documented in <xref linkend="brin-builtin-opclasses-table"/>.
-   For more information see <xref linkend="brin"/>.
+   标准发行版中包含的 BRIN 运算符类记录在 <xref linkend="brin-builtin-opclasses-table"/> 中。更多信息请参见 <xref linkend="brin"/>。
   </para>
   </sect2>
  </sect1>
