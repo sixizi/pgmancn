@@ -41,203 +41,141 @@
   </para>
 
  <sect1 id="routine-vacuuming">
-  <title>Routine Vacuuming</title>
+  <title>常规清理</title>
 
   <indexterm zone="routine-vacuuming">
    <primary>vacuum</primary>
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> databases require periodic
-   maintenance known as <firstterm>vacuuming</firstterm>.  For many installations, it
-   is sufficient to let vacuuming be performed by the <firstterm>autovacuum
-   daemon</firstterm>, which is described in <xref linkend="autovacuum"/>.  You might
-   need to adjust the autovacuuming parameters described there to obtain best
-   results for your situation.  Some database administrators will want to
-   supplement or replace the daemon's activities with manually-managed
-   <command>VACUUM</command> commands, which typically are executed according to a
-   schedule by <application>cron</application> or <application>Task
-   Scheduler</application> scripts.  To set up manually-managed vacuuming properly,
-   it is essential to understand the issues discussed in the next few
-   subsections.  Administrators who rely on autovacuuming may still wish
-   to skim this material to help them understand and adjust autovacuuming.
+   <productname>PostgreSQL</productname> 数据库需要定期维护，这种维护称为<firstterm>清理</firstterm>。对许多安装而言，让<firstterm>自动清理守护进程</firstterm>执行清理就足够了，该进程在 <xref linkend="autovacuum"/> 中描述。你可能需要调整那里描述的自动清理参数，以便针对你的具体情况获得最佳结果。一些数据库管理员会希望用手工管理的 <command>VACUUM</command> 命令来补充或替代该守护进程的活动，这些命令通常由 <application>cron</application> 或 <application>Task
+   Scheduler</application> 脚本按照计划执行。要正确设置手工管理的清理，必须理解接下来几个小节中讨论的问题。依赖自动清理的管理员可能仍希望浏览这些材料，以帮助他们理解和调整自动清理。
   </para>
 
   <sect2 id="vacuum-basics">
-   <title>Vacuuming Basics</title>
+   <title>清理基础</title>
 
    <para>
-    <productname>PostgreSQL</productname>'s
-    <link linkend="sql-vacuum"><command>VACUUM</command></link> command has to
-    process each table on a regular basis for several reasons:
+    <productname>PostgreSQL</productname> 的
+    <link linkend="sql-vacuum"><command>VACUUM</command></link> 命令必须定期处理每个表，原因有几个：
 
     <orderedlist>
      <listitem>
-      <simpara>To recover or reuse disk space occupied by updated or deleted
-      rows.</simpara>
+      <simpara>回收或重用被更新或删除的行所占用的磁盘空间。</simpara>
      </listitem>
 
      <listitem>
-      <simpara>To update data statistics used by the
-      <productname>PostgreSQL</productname> query planner.</simpara>
+      <simpara>更新 <productname>PostgreSQL</productname> 查询规划器所使用的数据统计信息。</simpara>
      </listitem>
 
      <listitem>
-      <simpara>To update the visibility map, which speeds
-      up <link linkend="indexes-index-only-scans">index-only
-      scans</link>.</simpara>
+      <simpara>更新可见性映射，可加速<link linkend="indexes-index-only-scans">仅索引扫描</link>。</simpara>
      </listitem>
 
      <listitem>
-      <simpara>To protect against loss of very old data due to
-      <firstterm>transaction ID wraparound</firstterm> or
-      <firstterm>multixact ID wraparound</firstterm>.</simpara>
+      <simpara>防止因<firstterm>事务 ID 回卷</firstterm>或<firstterm>多事务 ID 回卷</firstterm>导致非常旧的数据丢失。</simpara>
      </listitem>
     </orderedlist>
 
-    Each of these reasons dictates performing <command>VACUUM</command> operations
-    of varying frequency and scope, as explained in the following subsections.
+    这些原因中的每一个都决定了以不同的频率和范围执行 <command>VACUUM</command> 操作，如下文各小节所述。
    </para>
 
    <para>
-    There are two variants of <command>VACUUM</command>: standard <command>VACUUM</command>
-    and <command>VACUUM FULL</command>.  <command>VACUUM FULL</command> can reclaim more
-    disk space but runs much more slowly.  Also,
-    the standard form of <command>VACUUM</command> can run in parallel with production
-    database operations.  (Commands such as <command>SELECT</command>,
-    <command>INSERT</command>, <command>UPDATE</command>, and
-    <command>DELETE</command> will continue to function normally, though you
-    will not be able to modify the definition of a table with commands such as
-    <command>ALTER TABLE</command> while it is being vacuumed.)
-    <command>VACUUM FULL</command> requires an
-    <literal>ACCESS EXCLUSIVE</literal> lock on the table it is
-    working on, and therefore cannot be done in parallel with other use
-    of the table.  Generally, therefore,
-    administrators should strive to use standard <command>VACUUM</command> and
-    avoid <command>VACUUM FULL</command>.
+    <command>VACUUM</command> 有两种变体：标准 <command>VACUUM</command> 和 <command>VACUUM FULL</command>。<command>VACUUM FULL</command> 可以回收更多磁盘空间，但运行速度慢得多。此外，<command>VACUUM</command> 的标准形式可以与生产数据库操作并行运行。（诸如 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command> 和 <command>DELETE</command> 之类的命令将继续正常工作，不过在表被清理期间，你无法用 <command>ALTER TABLE</command> 之类的命令修改表的定义。）<command>VACUUM FULL</command> 需要在其所处理的表上获得 <literal>ACCESS EXCLUSIVE</literal> 锁，因此无法与该表的其他使用并行进行。因此，管理员通常应尽量使用标准 <command>VACUUM</command> 而避免 <command>VACUUM FULL</command>。
    </para>
 
    <para>
-    <command>VACUUM</command> creates a substantial amount of I/O
-    traffic, which can cause poor performance for other active sessions.
-    There are configuration parameters that can be adjusted to reduce the
-    performance impact of background vacuuming &mdash; see
-    <xref linkend="runtime-config-resource-vacuum-cost"/>.
+    <command>VACUUM</command> 会产生大量 I/O 流量，可能导致其他活动会话性能变差。有一些配置参数可以调整，以减轻后台清理 &mdash; 的性能影响，参见 <xref linkend="runtime-config-resource-vacuum-cost"/>。
    </para>
   </sect2>
 
   <sect2 id="vacuum-for-space-recovery">
-   <title>Recovering Disk Space</title>
+   <title>回收磁盘空间</title>
 
    <indexterm zone="vacuum-for-space-recovery">
     <primary>disk space</primary>
    </indexterm>
 
    <para>
-    In <productname>PostgreSQL</productname>, an
-    <command>UPDATE</command> or <command>DELETE</command> of a row does not
-    immediately remove the old version of the row.
-    This approach is necessary to gain the benefits of multiversion
-    concurrency control (<acronym>MVCC</acronym>, see <xref linkend="mvcc"/>): the row version
-    must not be deleted while it is still potentially visible to other
-    transactions. But eventually, an outdated or deleted row version is no
-    longer of interest to any transaction. The space it occupies must then be
-    reclaimed for reuse by new rows, to avoid unbounded growth of disk
-    space requirements. This is done by running <command>VACUUM</command>.
+    在 <productname>PostgreSQL</productname> 中，对某一行的
+    <command>UPDATE</command> 或 <command>DELETE</command> 并不会立即移除该行的旧版本。
+    这种做法对于获得多版本并发控制（<acronym>MVCC</acronym>，参见 <xref linkend="mvcc"/>）的好处是必要的：
+    只要该行版本对其他事务仍然可能可见，就不能删除它。但最终，
+    过时或被删除的行版本不再为任何事务所关注。此时必须回收它占用的空间，
+    以便供新行重用，从而避免磁盘空间需求无限制增长。这是通过运行 <command>VACUUM</command> 来完成的。
    </para>
 
    <para>
-    The standard form of <command>VACUUM</command> removes dead row
-    versions in tables and indexes and marks the space available for
-    future reuse.  However, it will not return the space to the operating
-    system, except in the special case where one or more pages at the
-    end of a table become entirely free and an exclusive table lock can be
-    easily obtained.  In contrast, <command>VACUUM FULL</command> actively compacts
-    tables by writing a complete new version of the table file with no dead
-    space.  This minimizes the size of the table, but can take a long time.
-    It also requires extra disk space for the new copy of the table, until
-    the operation completes.
+    <command>VACUUM</command> 的标准形式会移除表和索引中的死行版本，
+    并将该空间标记为可供将来重用。但是，它不会把空间归还给操作系统，
+    除非出现特殊情况：表末尾的一个或多个页面完全空闲，
+    并且可以轻松获得排他表锁。相比之下，<command>VACUUM FULL</command> 通过写入
+    一个没有死空间的完整新表文件来主动压缩表。这会最小化表的大小，
+    但可能耗时很长。它还需要额外的磁盘空间来存放表的新副本，
+    直到操作完成。
    </para>
 
    <para>
-    The usual goal of routine vacuuming is to do standard <command>VACUUM</command>s
-    often enough to avoid needing <command>VACUUM FULL</command>.  The
-    autovacuum daemon attempts to work this way, and in fact will
-    never issue <command>VACUUM FULL</command>.  In this approach, the idea
-    is not to keep tables at their minimum size, but to maintain steady-state
-    usage of disk space: each table occupies space equivalent to its
-    minimum size plus however much space gets used up between vacuum runs.
-    Although <command>VACUUM FULL</command> can be used to shrink a table back
-    to its minimum size and return the disk space to the operating system,
-    there is not much point in this if the table will just grow again in the
-    future.  Thus, moderately-frequent standard <command>VACUUM</command> runs are a
-    better approach than infrequent <command>VACUUM FULL</command> runs for
-    maintaining heavily-updated tables.
+    例行清理的通常目标是足够频繁地执行标准 <command>VACUUM</command>，
+    从而避免需要使用 <command>VACUUM FULL</command>。自动清理守护进程就试图以这种方式工作，
+    事实上它永远不会发出 <command>VACUUM FULL</command>。在这种做法中，
+    目的不是让表保持最小大小，而是维持磁盘空间的稳态使用：
+    每个表占用的空间等于其最小大小加上两次清理运行之间用掉的空间。
+    尽管可以使用 <command>VACUUM FULL</command> 将表收缩回最小大小并把磁盘空间归还给操作系统，
+    但如果表将来还会再次增长，这样做就没有太大意义。因此，
+    对于更新频繁的表，适度频繁地运行标准 <command>VACUUM</command> 比不经常运行
+    <command>VACUUM FULL</command> 是更好的做法。
    </para>
 
    <para>
-    Some administrators prefer to schedule vacuuming themselves, for example
-    doing all the work at night when load is low.
-    The difficulty with doing vacuuming according to a fixed schedule
-    is that if a table has an unexpected spike in update activity, it may
-    get bloated to the point that <command>VACUUM FULL</command> is really necessary
-    to reclaim space.  Using the autovacuum daemon alleviates this problem,
-    since the daemon schedules vacuuming dynamically in response to update
-    activity.  It is unwise to disable the daemon completely unless you
-    have an extremely predictable workload.  One possible compromise is
-    to set the daemon's parameters so that it will only react to unusually
-    heavy update activity, thus keeping things from getting out of hand,
-    while scheduled <command>VACUUM</command>s are expected to do the bulk of the
-    work when the load is typical.
+    有些管理员喜欢自己安排清理工作，例如在负载较低的夜间完成所有工作。
+    按照固定计划执行清理的困难在于，如果某张表的更新活动出现意外高峰，
+    它可能会膨胀到确实需要 <command>VACUUM FULL</command> 才能回收空间的程度。使用自动清理守护进程可以缓解这一问题，
+    因为该守护进程会根据更新活动动态地安排清理。除非你的工作负载极其可预测，
+    否则完全禁用该守护进程是不明智的。一种可能的折中方案是
+    设置守护进程的参数，使其只对异常繁重的更新活动做出反应，从而避免情况失控，
+    同时期望按计划执行的 <command>VACUUM</command> 在负载正常时完成大部分工作。
    </para>
 
    <para>
-    For those not using autovacuum, a typical approach is to schedule a
-    database-wide <command>VACUUM</command> once a day during a low-usage period,
-    supplemented by more frequent vacuuming of heavily-updated tables as
-    necessary. (Some installations with extremely high update rates vacuum
-    their busiest tables as often as once every few minutes.) If you have
-    multiple databases in a cluster, don't forget to
-    <command>VACUUM</command> each one; the program <xref
-    linkend="app-vacuumdb"/> might be helpful.
+    对于不使用自动清理的用户，一种典型做法是在使用率较低的时段
+    每天安排一次数据库范围的 <command>VACUUM</command>，
+    并在必要时对更新频繁的表进行更频繁的清理作为补充。（有些更新率极高的安装
+    对其最繁忙的表甚至每隔几分钟就清理一次。）如果一个数据库集簇中有多个数据库，
+    不要忘记对每一个都执行 <command>VACUUM</command>；<xref
+    linkend="app-vacuumdb"/> 程序可能会有帮助。
    </para>
 
    <tip>
    <para>
-    Plain <command>VACUUM</command> may not be satisfactory when
-    a table contains large numbers of dead row versions as a result of
-    massive update or delete activity.  If you have such a table and
-    you need to reclaim the excess disk space it occupies, you will need
-    to use <command>VACUUM FULL</command>, or alternatively
+    当一张表由于大量更新或删除活动而包含大量死行版本时，
+    单纯的 <command>VACUUM</command> 可能无法令人满意。如果你有这样的表，
+    并且需要回收它占用的多余磁盘空间，就需要使用 <command>VACUUM FULL</command>，或者
     <link linkend="sql-cluster"><command>CLUSTER</command></link>
-    or one of the table-rewriting variants of
-    <link linkend="sql-altertable"><command>ALTER TABLE</command></link>.
-    These commands rewrite an entire new copy of the table and build
-    new indexes for it.  All these options require an
-    <literal>ACCESS EXCLUSIVE</literal> lock.  Note that
-    they also temporarily use extra disk space approximately equal to the size
-    of the table, since the old copies of the table and indexes can't be
-    released until the new ones are complete.
+    或 <link linkend="sql-altertable"><command>ALTER TABLE</command></link>
+    的各种重写表变体之一。
+    这些命令会重写整张表的新副本，并为其构建新索引。所有这些选项都需要
+    <literal>ACCESS EXCLUSIVE</literal> 锁。请注意，
+    它们还会临时占用大约等于表大小的额外磁盘空间，
+    因为在新的副本完成之前，表和索引的旧副本无法被释放。
    </para>
    </tip>
 
    <tip>
    <para>
-    If you have a table whose entire contents are deleted on a periodic
-    basis, consider doing it with
-    <link linkend="sql-truncate"><command>TRUNCATE</command></link> rather
-    than using <command>DELETE</command> followed by
-    <command>VACUUM</command>. <command>TRUNCATE</command> removes the
-    entire content of the table immediately, without requiring a
-    subsequent <command>VACUUM</command> or <command>VACUUM
-    FULL</command> to reclaim the now-unused disk space.
-    The disadvantage is that strict MVCC semantics are violated.
+    如果你有一张表的内容会被定期全部删除，考虑使用
+    <link linkend="sql-truncate"><command>TRUNCATE</command></link> 来完成，
+    而不是先使用 <command>DELETE</command> 再使用
+    <command>VACUUM</command>。<command>TRUNCATE</command> 会立即删除表的全部内容，
+    无需随后执行 <command>VACUUM</command> 或 <command>VACUUM
+    FULL</command> 来回收现已不再使用的磁盘空间。
+    其缺点是会违反严格的 MVCC 语义。
    </para>
    </tip>
   </sect2>
 
   <sect2 id="vacuum-for-statistics">
-   <title>Updating Planner Statistics</title>
+   <title>更新规划器统计信息</title>
 
    <indexterm zone="vacuum-for-statistics">
     <primary>statistics</primary>
@@ -260,50 +198,19 @@
    </para>
 
    <para>
-    The autovacuum daemon, if enabled, will automatically issue
-    <command>ANALYZE</command> commands whenever the content of a table has
-    changed sufficiently.  However, administrators might prefer to rely
-    on manually-scheduled <command>ANALYZE</command> operations, particularly
-    if it is known that update activity on a table will not affect the
-    statistics of <quote>interesting</quote> columns.  The daemon schedules
-    <command>ANALYZE</command> strictly as a function of the number of rows
-    inserted or updated; it has no knowledge of whether that will lead
-    to meaningful statistical changes.
+    如果启用了自动清理守护进程，那么只要表的内容发生了足够大的变化，它就会自动发出 <command>ANALYZE</command> 命令。不过，管理员可能更愿意依赖手动安排的 <command>ANALYZE</command> 操作，特别是当已知对某张表的更新活动不会影响<quote>值得关注</quote>的列的统计信息时。该守护进程严格根据插入或更新的行数来安排 <command>ANALYZE</command>；它并不知道这样做是否会带来有意义的统计信息变化。
    </para>
 
    <para>
-    Tuples changed in partitions and inheritance children do not trigger
-    analyze on the parent table.  If the parent table is empty or rarely
-    changed, it may never be processed by autovacuum, and the statistics for
-    the inheritance tree as a whole won't be collected. It is necessary to
-    run <command>ANALYZE</command> on the parent table manually in order to
-    keep the statistics up to date.
+    分区和继承子表中被更改的元组不会触发对父表的 analyze。如果父表为空或很少被更改，它可能永远不会被自动清理处理，因而整个继承树的统计信息就不会被收集。为了保持统计信息最新，有必要在父表上手动运行 <command>ANALYZE</command>。
    </para>
 
    <para>
-    As with vacuuming for space recovery, frequent updates of statistics
-    are more useful for heavily-updated tables than for seldom-updated
-    ones. But even for a heavily-updated table, there might be no need for
-    statistics updates if the statistical distribution of the data is
-    not changing much. A simple rule of thumb is to think about how much
-    the minimum and maximum values of the columns in the table change.
-    For example, a <type>timestamp</type> column that contains the time
-    of row update will have a constantly-increasing maximum value as
-    rows are added and updated; such a column will probably need more
-    frequent statistics updates than, say, a column containing URLs for
-    pages accessed on a website. The URL column might receive changes just
-    as often, but the statistical distribution of its values probably
-    changes relatively slowly.
+    与用于回收空间的清理一样，对于更新频繁的表，频繁更新统计信息比对于很少更新的表更有用。但即使对于更新频繁的表，如果数据的统计分布变化不大，也可能不需要更新统计信息。一个简单的经验法则是考虑表中各列的最小值和最大值变化有多大。例如，一个包含行更新时间戳的 <type>timestamp</type> 列，随着行的插入和更新，其最大值会不断增加；这样的列可能比（比如说）一个包含网站上所访问页面的 URL 的列需要更频繁的统计信息更新。URL 列可能同样频繁地发生变化，但其值的统计分布可能变化得相对较慢。
    </para>
 
    <para>
-    It is possible to run <command>ANALYZE</command> on specific tables and even
-    just specific columns of a table, so the flexibility exists to update some
-    statistics more frequently than others if your application requires it.
-    In practice, however, it is usually best to just analyze the entire
-    database, because it is a fast operation.  <command>ANALYZE</command> uses a
-    statistically random sampling of the rows of a table rather than reading
-    every single row.
+    可以对特定的表运行 <command>ANALYZE</command>，甚至可以只针对表的特定列运行，因此如果你的应用需要，可以灵活地更频繁地更新某些统计信息。不过在实践中，通常最好只分析整个数据库，因为这是一项快速操作。<command>ANALYZE</command> 使用对表行的统计随机抽样，而不是读取每一行。
    </para>
 
    <tip>
@@ -319,70 +226,38 @@
     </para>
 
     <para>
-     Also, by default there is limited information available about
-     the selectivity of functions.  However, if you create a statistics
-     object or an expression
-     index that uses a function call, useful statistics will be
-     gathered about the function, which can greatly improve query
-     plans that use the expression index.
+     此外，默认情况下，关于函数选择性的可用信息是有限的。不过，如果你创建一个统计对象或使用函数调用的表达式索引，就会收集关于该函数的有用统计信息，这可以极大地改进使用该表达式索引的查询计划。
     </para>
    </tip>
 
    <tip>
     <para>
-     The autovacuum daemon does not issue <command>ANALYZE</command> commands for
-     foreign tables, since it has no means of determining how often that
-     might be useful.  If your queries require statistics on foreign tables
-     for proper planning, it's a good idea to run manually-managed
-     <command>ANALYZE</command> commands on those tables on a suitable schedule.
+     自动清理守护进程不会对外部表发出 <command>ANALYZE</command> 命令，因为它无法确定这样做多久会有用。如果你的查询需要外部表的统计信息才能正确规划，那么最好按合适的时间安排对这些表手动执行 <command>ANALYZE</command> 命令。
     </para>
    </tip>
 
    <tip>
     <para>
-     The autovacuum daemon does not issue <command>ANALYZE</command> commands
-     for partitioned tables.  Inheritance parents will only be analyzed if the
-     parent itself is changed - changes to child tables do not trigger
-     autoanalyze on the parent table.  If your queries require statistics on
-     parent tables for proper planning, it is necessary to periodically run
-     a manual <command>ANALYZE</command> on those tables to keep the statistics
-     up to date.
+     自动清理守护进程不会对分区表发出 <command>ANALYZE</command> 命令。只有当父表本身发生变化时，继承父表才会被分析——对子表的更改不会触发对父表的自动分析。如果你的查询需要父表的统计信息才能正确规划，则有必要定期对这些表手动运行 <command>ANALYZE</command> 以保持统计信息最新。
     </para>
    </tip>
 
   </sect2>
 
   <sect2 id="vacuum-for-visibility-map">
-   <title>Updating the Visibility Map</title>
+   <title>更新可见性映射</title>
 
    <para>
-    Vacuum maintains a <link linkend="storage-vm">visibility map</link> for each
-    table to keep track of which pages contain only tuples that are known to be
-    visible to all active transactions (and all future transactions, until the
-    page is again modified).  This has two purposes.  First, vacuum
-    itself can skip such pages on the next run, since there is nothing to
-    clean up.
+    Vacuum 为每个表维护一个<link linkend="storage-vm">可见性映射</link>，用来跟踪哪些页面只包含已知对所有活动事务（以及所有未来事务，直到该页面再次被修改）可见的元组。这有两个目的。第一，vacuum 自身在下次运行时可以跳过这些页面，因为没有什么需要清理。
    </para>
 
    <para>
-    Second, it allows <productname>PostgreSQL</productname> to answer some
-    queries using only the index, without reference to the underlying table.
-    Since <productname>PostgreSQL</productname> indexes don't contain tuple
-    visibility information, a normal index scan fetches the heap tuple for each
-    matching index entry, to check whether it should be seen by the current
-    transaction.
-    An <link linkend="indexes-index-only-scans"><firstterm>index-only
-    scan</firstterm></link>, on the other hand, checks the visibility map first.
-    If it's known that all tuples on the page are
-    visible, the heap fetch can be skipped.  This is most useful on
-    large data sets where the visibility map can prevent disk accesses.
-    The visibility map is vastly smaller than the heap, so it can easily be
-    cached even when the heap is very large.
+    第二，它允许 <productname>PostgreSQL</productname> 仅使用索引来回答某些查询，而无需访问底层表。由于 <productname>PostgreSQL</productname> 索引不包含元组可见性信息，普通的索引扫描会为每个匹配的索引项取出堆元组，以检查它是否应该被当前事务看到。另一方面，<link linkend="indexes-index-only-scans"><firstterm>仅索引扫描</firstterm></link>会先检查可见性映射。如果已知该页面上的所有元组都可见，就可以跳过堆取元组。这在大型数据集上最有用，因为可见性映射可以避免磁盘访问。可见性映射比堆小得多，因此即使堆非常大，它也很容易缓存。
    </para>
   </sect2>
 
   <sect2 id="vacuum-for-wraparound">
-   <title>Preventing Transaction ID Wraparound Failures</title>
+   <title>防止事务 ID 回卷失败</title>
 
    <indexterm zone="vacuum-for-wraparound">
     <primary>transaction ID</primary>
@@ -395,88 +270,36 @@
     </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname>'s
-    <link linkend="mvcc-intro">MVCC</link> transaction semantics
-    depend on being able to compare transaction ID (<acronym>XID</acronym>)
-    numbers: a row version with an insertion XID greater than the current
-    transaction's XID is <quote>in the future</quote> and should not be visible
-    to the current transaction.  But since transaction IDs have limited size
-    (32 bits) a cluster that runs for a long time (more
-    than 4 billion transactions) would suffer <firstterm>transaction ID
-    wraparound</firstterm>: the XID counter wraps around to zero, and all of a sudden
-    transactions that were in the past appear to be in the future &mdash; which
-    means their output become invisible.  In short, catastrophic data loss.
-    (Actually the data is still there, but that's cold comfort if you cannot
-    get at it.)  To avoid this, it is necessary to vacuum every table
-    in every database at least once every two billion transactions.
+    <productname>PostgreSQL</productname> 的<link linkend="mvcc-intro">MVCC</link>事务语义依赖于能够比较事务 ID（<acronym>XID</acronym>）编号：插入 XID 大于当前事务 XID 的行版本是<quote>未来的</quote>，不应对当前事务可见。但由于事务 ID 的大小有限（32 位），一个运行很长时间（超过 40 亿个事务）的数据库集簇会遭遇<firstterm>事务 ID 回卷</firstterm>：XID 计数器回卷到零，于是突然间，原本属于过去的事务看起来变成了未来的事务 &mdash; 这意味着它们的输出变得不可见。简而言之，就是灾难性的数据丢失。（实际上数据仍然在那里，但如果你无法访问它，那也只是无济于事的安慰。）为了避免这种情况，有必要至少每二十亿个事务对每个数据库中的每个表执行一次 vacuum。
    </para>
 
    <para>
-    The reason that periodic vacuuming solves the problem is that
-    <command>VACUUM</command> will mark rows as <emphasis>frozen</emphasis>, indicating that
-    they were inserted by a transaction that committed sufficiently far in
-    the past that the effects of the inserting transaction are certain to be
-    visible to all current and future transactions.
-    Normal XIDs are
-    compared using modulo-2<superscript>32</superscript> arithmetic. This means
-    that for every normal XID, there are two billion XIDs that are
-    <quote>older</quote> and two billion that are <quote>newer</quote>; another
-    way to say it is that the normal XID space is circular with no
-    endpoint. Therefore, once a row version has been created with a particular
-    normal XID, the row version will appear to be <quote>in the past</quote> for
-    the next two billion transactions, no matter which normal XID we are
-    talking about. If the row version still exists after more than two billion
-    transactions, it will suddenly appear to be in the future. To
-    prevent this, <productname>PostgreSQL</productname> reserves a special XID,
-    <literal>FrozenTransactionId</literal>, which does not follow the normal XID
-    comparison rules and is always considered older
-    than every normal XID.
-    Frozen row versions are treated as if the inserting XID were
-    <literal>FrozenTransactionId</literal>, so that they will appear to be
-    <quote>in the past</quote> to all normal transactions regardless of wraparound
-    issues, and so such row versions will be valid until deleted, no matter
-    how long that is.
+    定期清理之所以能解决该问题，是因为 <command>VACUUM</command> 会把行标记为<emphasis>冻结</emphasis>，表示这些行是由一个提交时间足够久远的事务插入的，因此可以确定该插入事务的影响对所有当前和未来的事务都是可见的。
+    普通 XID 使用模 2<superscript>32</superscript> 算术进行比较。这意味着对于每个普通 XID，都有二十亿个 XID 比它<quote>更旧</quote>，另有二十亿个比它<quote>更新</quote>；换句话说，普通 XID 空间是循环的，没有端点。因此，一旦某个行版本以某个特定的普通 XID 创建，那么在接下来的二十亿个事务看来，该行版本都会显得<quote>在过去</quote>，无论我们谈论的是哪个普通 XID。如果该行版本在超过二十亿个事务之后仍然存在，它就会突然显得位于未来。为防止这种情况，<productname>PostgreSQL</productname> 保留了一个特殊的 XID，即 <literal>FrozenTransactionId</literal>，它不遵循普通的 XID 比较规则，并且始终被认为比每个普通 XID 都旧。
+    冻结的行版本被当作其插入 XID 是 <literal>FrozenTransactionId</literal> 来处理，因此无论是否存在回卷问题，它们对所有普通事务都会显得<quote>在过去</quote>，所以这样的行版本在被删除之前一直有效，无论这时间有多长。
    </para>
 
    <note>
     <para>
-     In <productname>PostgreSQL</productname> versions before 9.4, freezing was
-     implemented by actually replacing a row's insertion XID
-     with <literal>FrozenTransactionId</literal>, which was visible in the
-     row's <structname>xmin</structname> system column.  Newer versions just set a flag
-     bit, preserving the row's original <structname>xmin</structname> for possible
-     forensic use.  However, rows with <structname>xmin</structname> equal
-     to <literal>FrozenTransactionId</literal> (2) may still be found
-     in databases <application>pg_upgrade</application>'d from pre-9.4 versions.
+     在 9.4 之前的 <productname>PostgreSQL</productname> 版本中，冻结是通过实际把行的插入 XID 替换为 <literal>FrozenTransactionId</literal> 来实现的，这在该行的 <structname>xmin</structname> 系统列中可见。较新的版本只是设置一个标志位，保留行原来的 <structname>xmin</structname> 以备可能的取证之用。不过，在从 9.4 之前的版本 <application>pg_upgrade</application> 而来的数据库中，仍可能找到 <structname>xmin</structname> 等于 <literal>FrozenTransactionId</literal>（2）的行。
     </para>
     <para>
-     Also, system catalogs may contain rows with <structname>xmin</structname> equal
-     to <literal>BootstrapTransactionId</literal> (1), indicating that they were
-     inserted during the first phase of <application>initdb</application>.
-     Like <literal>FrozenTransactionId</literal>, this special XID is treated as
-     older than every normal XID.
+     此外，系统目录中可能包含 <structname>xmin</structname> 等于 <literal>BootstrapTransactionId</literal>（1）的行，表示它们是在 <application>initdb</application> 的第一阶段插入的。与 <literal>FrozenTransactionId</literal> 一样，这个特殊 XID 被视为比每个普通 XID 都旧。
     </para>
    </note>
 
    <para>
-    <xref linkend="guc-vacuum-freeze-min-age"/>
-    controls how old an XID value has to be before rows bearing that XID will be
-    frozen.  Increasing this setting may avoid unnecessary work if the
-    rows that would otherwise be frozen will soon be modified again,
-    but decreasing this setting increases
-    the number of transactions that can elapse before the table must be
-    vacuumed again.
+    <xref linkend="guc-vacuum-freeze-min-age"/> 控制 XID 值必须有多旧，带有该 XID 的行才会被冻结。如果那些原本会被冻结的行很快又会被修改，那么提高此设置可以避免不必要的工作，但降低此设置会增加在必须再次清理该表之前可以经过的事务数。
    </para>
 
    <para>
-    <command>VACUUM</command> uses the <link linkend="storage-vm">visibility map</link>
-    to determine which pages of a table must be scanned.  Normally, it
-    will skip pages that don't have any dead row versions even if those pages
-    might still have row versions with old XID values.  Therefore, normal
-    <command>VACUUM</command>s won't always freeze every old row version in the table.
-    When that happens, <command>VACUUM</command> will eventually need to perform an
-    <firstterm>aggressive vacuum</firstterm>, which will freeze all eligible unfrozen
-    XID and MXID values, including those from all-visible but not all-frozen pages.
+    <command>VACUUM</command> 使用 <link linkend="storage-vm">可见性映射</link>
+    来确定必须扫描表的哪些页面。通常，它会跳过没有任何死行版本的页面，
+    即使这些页面可能仍含有带旧 XID 值的行版本。因此，普通的
+    <command>VACUUM</command> 并不总是会冻结表中的每一个旧行版本。
+    当这种情况发生时，<command>VACUUM</command> 最终需要执行一次
+    <firstterm>激进清理</firstterm>，它会冻结所有符合条件的未冻结
+    XID 和 MXID 值，包括来自全可见但未全冻结页面的那些值。
    </para>
 
    <para>
@@ -495,104 +318,72 @@
 
    <para>
     <xref linkend="guc-vacuum-freeze-table-age"/>
-    controls when a table is aggressively vacuumed. All all-visible but not all-frozen
-    pages are scanned if the number of transactions that have passed since the
-    last such scan is greater than <varname>vacuum_freeze_table_age</varname> minus
-    <varname>vacuum_freeze_min_age</varname>. Setting
-    <varname>vacuum_freeze_table_age</varname> to 0 forces <command>VACUUM</command> to
-    always use its aggressive strategy.
+    控制何时对表进行激进清理。如果自上次此类扫描以来经过的事务数大于
+    <varname>vacuum_freeze_table_age</varname> 减去 <varname>vacuum_freeze_min_age</varname>，则会扫描所有全可见但未全冻结的页面。将
+    <varname>vacuum_freeze_table_age</varname> 设置为 0 会强制 <command>VACUUM</command> 始终使用其激进策略。
    </para>
 
    <para>
-    The maximum time that a table can go unvacuumed is two billion
-    transactions minus the <varname>vacuum_freeze_min_age</varname> value at
-    the time of the last aggressive vacuum. If it were to go
-    unvacuumed for longer than
-    that, data loss could result.  To ensure that this does not happen,
-    autovacuum is invoked on any table that might contain unfrozen rows with
-    XIDs older than the age specified by the configuration parameter <xref
-    linkend="guc-autovacuum-freeze-max-age"/>.  (This will happen even if
-    autovacuum is disabled.)
+    一个表可以未被清理的最长时间是二十亿个事务减去上次激进清理时的
+    <varname>vacuum_freeze_min_age</varname> 值。如果超过该时间仍未清理，则可能导致数据丢失。为确保
+    不会发生这种情况，会对任何可能包含 XID 早于配置参数 <xref
+    linkend="guc-autovacuum-freeze-max-age"/> 所指定年龄的未冻结行的表
+    调用自动清理。（即使禁用了自动清理，也会发生这种情况。）
    </para>
 
    <para>
-    This implies that if a table is not otherwise vacuumed,
-    autovacuum will be invoked on it approximately once every
-    <varname>autovacuum_freeze_max_age</varname> minus
-    <varname>vacuum_freeze_min_age</varname> transactions.
-    For tables that are regularly vacuumed for space reclamation purposes,
-    this is of little importance.  However, for static tables
-    (including tables that receive inserts, but no updates or deletes),
-    there is no need to vacuum for space reclamation, so it can
-    be useful to try to maximize the interval between forced autovacuums
-    on very large static tables.  Obviously one can do this either by
-    increasing <varname>autovacuum_freeze_max_age</varname> or decreasing
-    <varname>vacuum_freeze_min_age</varname>.
+    这意味着，如果一个表没有以其他方式被清理，那么大约每
+    <varname>autovacuum_freeze_max_age</varname> 减去
+    <varname>vacuum_freeze_min_age</varname> 个事务就会对它调用一次自动清理。
+    对于为了回收空间而定期清理的表来说，这一点并不重要。然而，对于静态表
+    （包括接收插入、但没有更新或删除的表），
+    不需要为了回收空间而清理，因此对于非常大的静态表，
+    尽量增大强制自动清理之间的间隔可能是有用的。
+    显然，可以通过增大 <varname>autovacuum_freeze_max_age</varname> 或减小
+    <varname>vacuum_freeze_min_age</varname> 来实现。
    </para>
 
    <para>
-    The effective maximum for <varname>vacuum_freeze_table_age</varname> is 0.95 *
-    <varname>autovacuum_freeze_max_age</varname>; a setting higher than that will be
-    capped to the maximum. A value higher than
-    <varname>autovacuum_freeze_max_age</varname> wouldn't make sense because an
-    anti-wraparound autovacuum would be triggered at that point anyway, and
-    the 0.95 multiplier leaves some breathing room to run a manual
-    <command>VACUUM</command> before that happens.  As a rule of thumb,
-    <command>vacuum_freeze_table_age</command> should be set to a value somewhat
-    below <varname>autovacuum_freeze_max_age</varname>, leaving enough gap so that
-    a regularly scheduled <command>VACUUM</command> or an autovacuum triggered by
-    normal delete and update activity is run in that window.  Setting it too
-    close could lead to anti-wraparound autovacuums, even though the table
-    was recently vacuumed to reclaim space, whereas lower values lead to more
-    frequent aggressive vacuuming.
+    <varname>vacuum_freeze_table_age</varname> 的有效最大值是 0.95 *
+    <varname>autovacuum_freeze_max_age</varname>；高于该值的设置将被限制为最大值。高于
+    <varname>autovacuum_freeze_max_age</varname> 的值没有意义，因为到那时无论如何都会
+    触发防回卷自动清理，而 0.95 这个乘数留出了一些余地，可以在那之前
+    运行一次手动 <command>VACUUM</command>。根据经验，
+    <command>vacuum_freeze_table_age</command> 应设置为略低于 <varname>autovacuum_freeze_max_age</varname> 的值，
+    留出足够的间隔，以便在该窗口内运行定期安排的 <command>VACUUM</command>
+    或由正常删除和更新活动触发的自动清理。设置得
+    太接近可能导致防回卷自动清理，即使该表
+    最近为了回收空间而被清理过；而较低的值会导致
+    更频繁的激进清理。
    </para>
 
    <para>
-    The sole disadvantage of increasing <varname>autovacuum_freeze_max_age</varname>
-    (and <varname>vacuum_freeze_table_age</varname> along with it) is that
-    the <filename>pg_xact</filename> and <filename>pg_commit_ts</filename>
-    subdirectories of the database cluster will take more space, because it
-    must store the commit status and (if <varname>track_commit_timestamp</varname> is
-    enabled) timestamp of all transactions back to
-    the <varname>autovacuum_freeze_max_age</varname> horizon.  The commit status uses
-    two bits per transaction, so if
-    <varname>autovacuum_freeze_max_age</varname> is set to its maximum allowed value
-    of two billion, <filename>pg_xact</filename> can be expected to grow to about half
-    a gigabyte and <filename>pg_commit_ts</filename> to about 20GB.  If this
-    is trivial compared to your total database size,
-    setting <varname>autovacuum_freeze_max_age</varname> to its maximum allowed value
-    is recommended.  Otherwise, set it depending on what you are willing to
-    allow for <filename>pg_xact</filename> and <filename>pg_commit_ts</filename> storage.
-    (The default, 200 million transactions, translates to about 50MB
-    of <filename>pg_xact</filename> storage and about 2GB of <filename>pg_commit_ts</filename>
-    storage.)
+    增大 <varname>autovacuum_freeze_max_age</varname>
+    （以及随之而来的 <varname>vacuum_freeze_table_age</varname>）的唯一缺点是，
+    数据库集簇的 <filename>pg_xact</filename> 和 <filename>pg_commit_ts</filename>
+    子目录将占用更多空间，因为它
+    必须存储一直回溯到
+    <varname>autovacuum_freeze_max_age</varname> 视界的所有事务的提交状态以及（如果启用了
+    <varname>track_commit_timestamp</varname>）时间戳。提交状态每个事务使用
+    两位，因此如果
+    <varname>autovacuum_freeze_max_age</varname> 设置为其允许的最大值
+    二十亿，<filename>pg_xact</filename> 预计会增长到约半
+    吉字节，<filename>pg_commit_ts</filename> 会增长到约 20GB。如果与
+    数据库总大小相比这微不足道，
+    建议将 <varname>autovacuum_freeze_max_age</varname> 设置为其允许的最大值。
+    否则，根据你愿意为
+    <filename>pg_xact</filename> 和 <filename>pg_commit_ts</filename> 存储留出多少空间来设置它。
+    （默认值 2 亿个事务相当于约 50MB
+    的 <filename>pg_xact</filename> 存储和约 2GB 的 <filename>pg_commit_ts</filename>
+    存储。）
    </para>
 
    <para>
-    One disadvantage of decreasing <varname>vacuum_freeze_min_age</varname> is that
-    it might cause <command>VACUUM</command> to do useless work: freezing a row
-    version is a waste of time if the row is modified
-    soon thereafter (causing it to acquire a new XID).  So the setting should
-    be large enough that rows are not frozen until they are unlikely to change
-    any more.
+    减小 <varname>vacuum_freeze_min_age</varname> 的一个缺点是，它可能导致 <command>VACUUM</command> 做无用功：如果某个行版本不久之后就被修改（从而获得新的 XID），那么冻结该行版本就是浪费时间。因此该设置应当足够大，使得只有在行不太可能再发生变化之后才会被冻结。
    </para>
 
    <para>
-    To track the age of the oldest unfrozen XIDs in a database,
-    <command>VACUUM</command> stores XID
-    statistics in the system tables <structname>pg_class</structname> and
-    <structname>pg_database</structname>.  In particular,
-    the <structfield>relfrozenxid</structfield> column of a table's
-    <structname>pg_class</structname> row contains the oldest remaining unfrozen
-    XID at the end of the most recent <command>VACUUM</command> that successfully
-    advanced <structfield>relfrozenxid</structfield> (typically the most recent
-    aggressive VACUUM).  Similarly, the
-    <structfield>datfrozenxid</structfield> column of a database's
-    <structname>pg_database</structname> row is a lower bound on the unfrozen XIDs
-    appearing in that database &mdash; it is just the minimum of the
-    per-table <structfield>relfrozenxid</structfield> values within the database.
-    A convenient way to
-    examine this information is to execute queries such as:
+    为了跟踪数据库中最早未冻结 XID 的年龄，<command>VACUUM</command> 将 XID 统计信息存储在系统表 <structname>pg_class</structname> 和 <structname>pg_database</structname> 中。特别地，表的 <structname>pg_class</structname> 行的 <structfield>relfrozenxid</structfield> 列包含在最近一次成功推进 <structfield>relfrozenxid</structfield> 的 <command>VACUUM</command>（通常是最近一次激进 VACUUM）结束时仍然存在的最旧未冻结 XID。类似地，数据库的 <structname>pg_database</structname> 行的 <structfield>datfrozenxid</structfield> 列是该数据库中出现的未冻结 XID 的下界 &mdash; 它只是该数据库内各表 <structfield>relfrozenxid</structfield> 值的最小值。检查此信息的一种便捷方式是执行如下查询：
 
 <programlisting>
 SELECT c.oid::regclass as table_name,
@@ -604,137 +395,67 @@ WHERE c.relkind IN ('r', 'm');
 SELECT datname, age(datfrozenxid) FROM pg_database;
 </programlisting>
 
-    The <literal>age</literal> column measures the number of transactions from the
-    cutoff XID to the current transaction's XID.
+    <literal>age</literal> 列度量从截止 XID 到当前事务 XID 之间的事务数。
    </para>
 
    <tip>
     <para>
-     When the <command>VACUUM</command> command's <literal>VERBOSE</literal>
-     parameter is specified, <command>VACUUM</command> prints various
-     statistics about the table.  This includes information about how
-     <structfield>relfrozenxid</structfield> and
-     <structfield>relminmxid</structfield> advanced, and the number of
-     newly frozen pages.  The same details appear in the server log when
-     autovacuum logging (controlled by <xref
-      linkend="guc-log-autovacuum-min-duration"/>) reports on a
-     <command>VACUUM</command> operation executed by autovacuum.
+     当指定 <command>VACUUM</command> 命令的 <literal>VERBOSE</literal> 参数时，<command>VACUUM</command> 会打印关于该表的各种统计信息。其中包括有关 <structfield>relfrozenxid</structfield> 和 <structfield>relminmxid</structfield> 如何推进的信息，以及新冻结的页面数。当自动清理日志记录（由 <xref
+      linkend="guc-log-autovacuum-min-duration"/> 控制）报告自动清理执行的 <command>VACUUM</command> 操作时，服务器日志中也会出现相同的详细信息。
     </para>
    </tip>
 
    <para>
-    While <command>VACUUM</command> scans mostly pages that have been
-    modified since the last vacuum, it may also eagerly scan some
-    all-visible but not all-frozen pages in an attempt to freeze them, but
-    the <structfield>relfrozenxid</structfield> will only be advanced when
-    every page of the table that might contain unfrozen XIDs is scanned.
-    This happens when
-    <structfield>relfrozenxid</structfield> is more than
-    <varname>vacuum_freeze_table_age</varname> transactions old, when
-    <command>VACUUM</command>'s <literal>FREEZE</literal> option is used, or when all
-    pages that are not already all-frozen happen to
-    require vacuuming to remove dead row versions. When <command>VACUUM</command>
-    scans every page in the table that is not already all-frozen, it should
-    set <literal>age(relfrozenxid)</literal> to a value just a little more than the
-    <varname>vacuum_freeze_min_age</varname> setting
-    that was used (more by the number of transactions started since the
-    <command>VACUUM</command> started).  <command>VACUUM</command>
-    will set <structfield>relfrozenxid</structfield> to the oldest XID
-    that remains in the table, so it's possible that the final value
-    will be much more recent than strictly required.
-    If no <structfield>relfrozenxid</structfield>-advancing
-    <command>VACUUM</command> is issued on the table until
-    <varname>autovacuum_freeze_max_age</varname> is reached, an autovacuum will soon
-    be forced for the table.
+    虽然 <command>VACUUM</command> 主要扫描自上次 vacuum 以来被修改过的页面，但它也可能主动扫描一些 all-visible 但并非 all-frozen 的页面以尝试冻结它们，不过只有当表中可能包含未冻结 XID 的每个页面都被扫描后，<structfield>relfrozenxid</structfield> 才会被推进。
+    这种情况发生在 <structfield>relfrozenxid</structfield> 已超过 <varname>vacuum_freeze_table_age</varname> 个事务的年龄时、使用了 <command>VACUUM</command> 的 <literal>FREEZE</literal> 选项时，或者所有尚未 all-frozen 的页面恰好都需要 vacuum 以移除死行版本时。当 <command>VACUUM</command> 扫描表中每个尚未 all-frozen 的页面时，它应把 <literal>age(relfrozenxid)</literal> 设置为略大于所用 <varname>vacuum_freeze_min_age</varname> 设置的值（多出的部分等于自 <command>VACUUM</command> 启动以来启动的事务数）。<command>VACUUM</command> 会把 <structfield>relfrozenxid</structfield> 设置为表中保留的最旧 XID，因此最终值可能比严格要求的要新得多。
+    如果在达到 <varname>autovacuum_freeze_max_age</varname> 之前没有对该表发出推进 <structfield>relfrozenxid</structfield> 的 <command>VACUUM</command>，那么很快就会对该表强制执行一次 autovacuum。
    </para>
 
    <para>
-    If for some reason autovacuum fails to clear old XIDs from a table, the
-    system will begin to emit warning messages like this when the database's
-    oldest XIDs reach forty million transactions from the wraparound point:
+    如果由于某种原因 autovacuum 未能清除表中的旧 XID，那么当数据库最旧的 XID 距离回卷点还有四千万个事务时，系统将开始发出如下警告消息：
 
 <programlisting>
 WARNING:  database "mydb" must be vacuumed within 39985967 transactions
 HINT:  To avoid XID assignment failures, execute a database-wide VACUUM in that database.
 </programlisting>
 
-    (A manual <command>VACUUM</command> should fix the problem, as suggested by the
-    hint; but note that the <command>VACUUM</command> should be performed by a
-    superuser, else it will fail to process system catalogs, which prevent it from
-    being able to advance the database's <structfield>datfrozenxid</structfield>.)
-    If these warnings are ignored, the system will refuse to assign new XIDs once
-    there are fewer than three million transactions left until wraparound:
+    （正如提示所建议的，手动执行 <command>VACUUM</command> 应该能解决该问题；但请注意，<command>VACUUM</command> 应由超级用户执行，否则它将无法处理系统目录，从而无法推进数据库的 <structfield>datfrozenxid</structfield>。）
+    如果忽略这些警告，那么一旦距离回卷点剩余的事务数少于三百万，系统将拒绝分配新的 XID：
 
 <programlisting>
 ERROR:  database is not accepting commands that assign new transaction IDs to avoid wraparound data loss in database "mydb"
 HINT:  Execute a database-wide VACUUM in that database.
 </programlisting>
 
-    In this condition any transactions already in progress can continue,
-    but only read-only transactions can be started. Operations that
-    modify database records or truncate relations will fail.
-    The <command>VACUUM</command> command can still be run normally.
-    Note that, contrary to what was sometimes recommended in earlier releases,
-    it is not necessary or desirable to stop the postmaster or enter single
-    user-mode in order to restore normal operation.
-    Instead, follow these steps:
+    在此状态下，任何已在进行中的事务都可以继续，但只能启动只读事务。修改数据库记录或截断关系的操作将失败。<command>VACUUM</command> 命令仍可正常运行。请注意，与早期版本中有时建议的做法相反，为了恢复正常运行，既不需要也不应该停止 postmaster 或进入单用户模式。而应按照以下步骤操作：
 
     <orderedlist>
      <listitem>
-      <simpara>Resolve old prepared transactions. You can find these by checking
-       <link linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link> for rows where
-       <literal>age(transactionid)</literal> is large. Such transactions should be
-       committed or rolled back.</simpara>
+      <simpara>解决旧的预备事务。你可以通过检查 <link linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link> 中 <literal>age(transactionid)</literal> 较大的行来找到它们。此类事务应被提交或回滚。</simpara>
      </listitem>
      <listitem>
-      <simpara>End long-running open transactions. You can find these by checking
-       <link linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link> for rows where
-       <literal>age(backend_xid)</literal> or <literal>age(backend_xmin)</literal> is
-       large. Such transactions should be committed or rolled back, or the session
-       can be terminated using <literal>pg_terminate_backend</literal>.</simpara>
+      <simpara>结束长时间运行的打开事务。你可以通过检查 <link linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link> 中 <literal>age(backend_xid)</literal> 或 <literal>age(backend_xmin)</literal> 较大的行来找到这些事务。这类事务应该被提交或回滚，或者可以使用 <literal>pg_terminate_backend</literal> 终止该会话。</simpara>
      </listitem>
      <listitem>
-      <simpara>Drop any old replication slots. Use
-       <link linkend="view-pg-replication-slots"><structname>pg_replication_slots</structname></link> to
-       find slots where <literal>age(xmin)</literal> or <literal>age(catalog_xmin)</literal>
-       is large. In many cases, such slots were created for replication to servers that no
-       longer exist, or that have been down for a long time. If you drop a slot for a server
-       that still exists and might still try to connect to that slot, that replica may
-       need to be rebuilt.</simpara>
+      <simpara>删除任何旧的复制槽。使用 <link linkend="view-pg-replication-slots"><structname>pg_replication_slots</structname></link> 查找 <literal>age(xmin)</literal> 或 <literal>age(catalog_xmin)</literal> 较大的槽。在许多情况下，这类槽是为向已不存在的服务器、或已停机很长时间的服务器进行复制而创建的。如果你删除的槽所对应的服务器仍然存在，并且可能仍会尝试连接到该槽，则该副本可能需要重建。</simpara>
      </listitem>
      <listitem>
-      <simpara>Execute <command>VACUUM</command> in the target database. A database-wide
-       <literal>VACUUM</literal> is simplest; to reduce the time required, it as also possible
-       to issue manual <command>VACUUM</command> commands on the tables where
-       <structfield>relminxid</structfield> is oldest. Do not use <literal>VACUUM FULL</literal>
-       in this scenario, because it requires an XID and will therefore fail, except in super-user
-       mode, where it will instead consume an XID and thus increase the risk of transaction ID
-       wraparound. Do not use <literal>VACUUM FREEZE</literal> either, because it will do
-       more than the minimum amount of work required to restore normal operation.</simpara>
+      <simpara>在目标数据库中执行 <command>VACUUM</command>。全数据库范围的 <literal>VACUUM</literal> 是最简单的；为减少所需时间，也可以对 <structfield>relminxid</structfield> 最旧的表手动发出 <command>VACUUM</command> 命令。在此场景中不要使用 <literal>VACUUM FULL</literal>，因为它需要一个 XID，因此会失败，除非在超级用户模式下，此时它会消耗一个 XID，从而增加事务 ID 回卷的风险。也不要使用 <literal>VACUUM FREEZE</literal>，因为它所做的工作会超出恢复正常运行所需的最小工作量。</simpara>
      </listitem>
      <listitem>
-      <simpara>Once normal operation is restored, ensure that autovacuum is properly configured
-       in the target database in order to avoid future problems.</simpara>
+      <simpara>一旦恢复正常运行，请确保在目标数据库中正确配置了自动清理，以避免将来出现问题。</simpara>
      </listitem>
     </orderedlist>
    </para>
 
    <note>
     <para>
-     In earlier versions, it was sometimes necessary to stop the postmaster and
-     <command>VACUUM</command> the database in a single-user mode. In typical scenarios, this
-     is no longer necessary, and should be avoided whenever possible, since it involves taking
-     the system down. It is also riskier, since it disables transaction ID wraparound safeguards
-     that are designed to prevent data loss.  The only reason to use single-user mode in this
-     scenario is if you wish to <command>TRUNCATE</command> or <command>DROP</command> unneeded
-     tables to avoid needing to <command>VACUUM</command> them.  The three-million-transaction
-     safety margin exists to let the administrator do this. See the
-     <xref linkend="app-postgres"/> reference page for details about using single-user mode.
+     在较早的版本中，有时需要停止 postmaster 并以单用户模式 <command>VACUUM</command> 数据库。在典型场景中，这已不再必要，并且应尽可能避免，因为它涉及关闭系统。它的风险也更高，因为它会禁用旨在防止数据丢失的事务 ID 回卷保护措施。在此场景中使用单用户模式的唯一理由是，你希望 <command>TRUNCATE</command> 或 <command>DROP</command> 不需要的表，以避免需要 <command>VACUUM</command> 它们。三百万事务的安全余量正是为了让管理员能够这样做。有关使用单用户模式的详细信息，请参阅 <xref linkend="app-postgres"/> 参考页。
     </para>
    </note>
 
    <sect3 id="vacuum-for-multixact-wraparound">
-    <title>Multixacts and Wraparound</title>
+    <title>多事务与回卷</title>
 
     <indexterm>
      <primary>MultiXactId</primary>
@@ -746,49 +467,15 @@ HINT:  Execute a database-wide VACUUM in that database.
     </indexterm>
 
     <para>
-     <firstterm>Multixact IDs</firstterm> are used to support row locking by
-     multiple transactions.  Since there is only limited space in a tuple
-     header to store lock information, that information is encoded as
-     a <quote>multiple transaction ID</quote>, or multixact ID for short,
-     whenever there is more than one transaction concurrently locking a
-     row.  Information about which transaction IDs are included in any
-     particular multixact ID is stored separately in
-     the <filename>pg_multixact</filename> subdirectory, and only the multixact ID
-     appears in the <structfield>xmax</structfield> field in the tuple header.
-     Like transaction IDs, multixact IDs are implemented as a
-     32-bit counter and corresponding storage, all of which requires
-     careful aging management, storage cleanup, and wraparound handling.
-     There is a separate storage area which holds the list of members in
-     each multixact, which also uses a 32-bit counter and which must also
-     be managed.  The system function
-     <function>pg_get_multixact_members()</function> described in
-     <xref linkend="functions-pg-snapshot"/> can be used to examine the
-     transaction IDs associated with a multixact ID.
+     <firstterm>多事务 ID</firstterm>用于支持多个事务的行锁定。由于元组头部中用于存储锁信息的空间有限，当有多个事务并发锁定同一行时，该信息会被编码为一个<quote>多事务 ID</quote>，简称 multixact ID。关于任何特定多事务 ID 中包含哪些事务 ID 的信息单独存储在 <filename>pg_multixact</filename> 子目录中，元组头部的 <structfield>xmax</structfield> 字段中只出现多事务 ID。与事务 ID 一样，多事务 ID 也实现为 32 位计数器及相应的存储，所有这些都需要谨慎的老化管理、存储清理和回绕处理。有一个单独的存储区域保存每个多事务的成员列表，它也使用 32 位计数器，同样必须加以管理。<xref linkend="functions-pg-snapshot"/> 中描述的系统函数 <function>pg_get_multixact_members()</function> 可用于检查与某个多事务 ID 关联的事务 ID。
     </para>
 
     <para>
-     Whenever <command>VACUUM</command> scans any part of a table, it will replace
-     any multixact ID it encounters which is older than
-     <xref linkend="guc-vacuum-multixact-freeze-min-age"/>
-     by a different value, which can be the zero value, a single
-     transaction ID, or a newer multixact ID.  For each table,
-     <structname>pg_class</structname>.<structfield>relminmxid</structfield> stores the oldest
-     possible multixact ID still appearing in any tuple of that table.
-     If this value is older than
-     <xref linkend="guc-vacuum-multixact-freeze-table-age"/>, an aggressive
-     vacuum is forced.  As discussed in the previous section, an aggressive
-     vacuum means that only those pages which are known to be all-frozen will
-     be skipped.  <function>mxid_age()</function> can be used on
-     <structname>pg_class</structname>.<structfield>relminmxid</structfield> to find its age.
+     每当 <command>VACUUM</command> 扫描表的任何部分时，它都会将遇到的、比 <xref linkend="guc-vacuum-multixact-freeze-min-age"/> 更旧的多事务 ID 替换为另一个值，该值可以是零值、单个事务 ID 或更新的多事务 ID。对于每个表，<structname>pg_class</structname>.<structfield>relminmxid</structfield> 存储该表任何元组中仍然可能出现的最旧多事务 ID。如果该值比 <xref linkend="guc-vacuum-multixact-freeze-table-age"/> 更旧，则会强制进行激进 vacuum。如上一节所述，激进 vacuum 意味着只跳过那些已知为全部冻结的页面。可以对 <structname>pg_class</structname>.<structfield>relminmxid</structfield> 使用 <function>mxid_age()</function> 来查找其年龄。
     </para>
 
     <para>
-     Aggressive <command>VACUUM</command>s, regardless of what causes
-     them, are <emphasis>guaranteed</emphasis> to be able to advance
-     the table's <structfield>relminmxid</structfield>.
-     Eventually, as all tables in all databases are scanned and their
-     oldest multixact values are advanced, on-disk storage for older
-     multixacts can be removed.
+     激进的 <command>VACUUM</command>，无论由什么原因引起，都<emphasis>保证</emphasis>能够推进表的 <structfield>relminmxid</structfield>。最终，随着所有数据库中的所有表都被扫描且其最旧的多事务值被推进，较旧多事务的磁盘存储就可以被移除。
     </para>
 
     <para>
@@ -803,38 +490,30 @@ HINT:  Execute a database-wide VACUUM in that database.
     </para>
 
     <para>
-     Similar to the XID case, if autovacuum fails to clear old MXIDs from a table, the
-     system will begin to emit warning messages when the database's oldest MXIDs reach forty
-     million transactions from the wraparound point.  And, just as in the XID case, if these
-     warnings are ignored, the system will refuse to generate new MXIDs once there are fewer
-     than three million left until wraparound.
+     与 XID 的情况类似，如果自动清理未能从表中清除旧的 MXID，那么当数据库中最旧的
+    MXID 距离回卷点还有四千万个事务时，系统将开始发出警告消息。而且，正如 XID
+    的情况一样，如果忽略这些警告，那么一旦距离回卷只剩不到三百万个 MXID，系统就会
+    拒绝生成新的 MXID。
     </para>
 
     <para>
-     Normal operation when MXIDs are exhausted can be restored in much the same way as
-     when XIDs are exhausted. Follow the same steps in the previous section, but with the
-     following differences:
+     MXID 耗尽后恢复正常运行的方式与 XID 耗尽时大致相同。请遵循上一节中的相同步骤，
+    但有以下不同之处：
 
     <orderedlist>
      <listitem>
-      <simpara>Running transactions and prepared transactions can be ignored if there
-       is no chance that they might appear in a multixact.</simpara>
+      <simpara>如果运行中的事务和预备事务不可能出现在 multixact 中，则可以忽略它们。</simpara>
      </listitem>
      <listitem>
-      <simpara>Unlike transaction ID wraparound, replication slots do not
-       directly hold back multixact cleanup. Dropping stale replication
-       slots is therefore not usually relevant to resolving multixact ID
-       wraparound problems.</simpara>
+      <simpara>与事务 ID 回卷不同，复制槽不会直接阻碍 multixact 清理。因此，删除陈旧的复制
+       槽通常与解决 multixact ID 回卷问题无关。</simpara>
      </listitem>
      <listitem>
-      <simpara>MXID information is not directly visible in system views such as
-       <literal>pg_stat_activity</literal>; however, looking for old XIDs is still a good
-       way of determining which transactions are causing MXID wraparound problems.</simpara>
+      <simpara>MXID 信息在诸如 <literal>pg_stat_activity</literal> 之类的系统视图中不能直接看到；不过，查找旧的 XID
+       仍然是确定哪些事务导致 MXID 回卷问题的好方法。</simpara>
      </listitem>
      <listitem>
-      <simpara>XID exhaustion will block all write transactions, but MXID exhaustion will
-       only block a subset of write transactions, specifically those that involve
-       row locks that require an MXID.</simpara>
+      <simpara>XID 耗尽会阻塞所有写事务，而 MXID 耗尽只会阻塞一部分写事务，具体来说是那些涉及需要 MXID 的行锁的写事务。</simpara>
      </listitem>
     </orderedlist>
    </para>
@@ -843,176 +522,99 @@ HINT:  Execute a database-wide VACUUM in that database.
   </sect2>
 
   <sect2 id="autovacuum">
-   <title>The Autovacuum Daemon</title>
+   <title>自动清理守护进程</title>
 
    <indexterm>
     <primary>autovacuum</primary>
     <secondary>general information</secondary>
    </indexterm>
    <para>
-    <productname>PostgreSQL</productname> has an optional but highly
-    recommended feature called <firstterm>autovacuum</firstterm>,
-    whose purpose is to automate the execution of
-    <command>VACUUM</command> and <command>ANALYZE</command> commands.
-    When enabled, autovacuum checks for
-    tables that have had a large number of inserted, updated or deleted
-    tuples.  These checks use the statistics collection facility;
-    therefore, autovacuum cannot be used unless <xref
-    linkend="guc-track-counts"/> is set to <literal>true</literal>.
-    In the default configuration, autovacuuming is enabled and the related
-    configuration parameters are appropriately set.
+    <productname>PostgreSQL</productname> 有一个可选但强烈推荐的功能，称为 <firstterm>autovacuum</firstterm>，
+    其目的是自动执行 <command>VACUUM</command> 和 <command>ANALYZE</command> 命令。
+    启用后，autovacuum 会检查那些发生了大量插入、更新或删除
+    元组的表。这些检查使用统计信息收集设施；
+    因此，除非将 <xref
+    linkend="guc-track-counts"/> 设置为 <literal>true</literal>，否则无法使用 autovacuum。
+    在默认配置中，自动清理是启用的，并且相关的
+    配置参数已适当设置。
    </para>
 
    <para>
-    The <quote>autovacuum daemon</quote> actually consists of multiple processes.
-    There is a persistent daemon process, called the
-    <firstterm>autovacuum launcher</firstterm>, which is in charge of starting
-    <firstterm>autovacuum worker</firstterm> processes for all databases. The
-    launcher will distribute the work across time, attempting to start one
-    worker within each database every <xref linkend="guc-autovacuum-naptime"/>
-    seconds.  (Therefore, if the installation has <replaceable>N</replaceable> databases,
-    a new worker will be launched every
-    <varname>autovacuum_naptime</varname>/<replaceable>N</replaceable> seconds.)
-    A maximum of <xref linkend="guc-autovacuum-max-workers"/> worker processes
-    are allowed to run at the same time. If there are more than
-    <varname>autovacuum_max_workers</varname> databases to be processed,
-    the next database will be processed as soon as the first worker finishes.
-    Each worker process will check each table within its database and
-    execute <command>VACUUM</command> and/or <command>ANALYZE</command> as needed.
-    <xref linkend="guc-log-autovacuum-min-duration"/> can be set to monitor
-    autovacuum workers' activity.
+    <quote>autovacuum 守护进程</quote>实际上由多个进程组成。
+    有一个常驻的守护进程，称为
+    <firstterm>autovacuum 启动器</firstterm>，它负责为所有数据库启动
+    <firstterm>autovacuum 工作进程</firstterm>。启动器会
+    将工作分摊到不同时间，尝试每隔 <xref linkend="guc-autovacuum-naptime"/>
+    秒在每个数据库中启动一个工作进程。
+    （因此，如果该安装有 <replaceable>N</replaceable> 个数据库，
+    则每 <varname>autovacuum_naptime</varname>/<replaceable>N</replaceable> 秒就会启动一个新的工作进程。）
+    最多允许同时运行 <xref linkend="guc-autovacuum-max-workers"/> 个工作进程。
+    如果要处理的数据库超过 <varname>autovacuum_max_workers</varname> 个，
+    则一旦第一个工作进程完成，就会处理下一个数据库。
+    每个工作进程都会检查其数据库中的每个表，并根据需要
+    执行 <command>VACUUM</command> 和/或 <command>ANALYZE</command>。
+    可以设置 <xref linkend="guc-log-autovacuum-min-duration"/> 来监控
+    autovacuum 工作进程的活动。
    </para>
 
    <para>
-    If several large tables all become eligible for vacuuming in a short
-    amount of time, all autovacuum workers might become occupied with
-    vacuuming those tables for a long period.  This would result
-    in other tables and databases not being vacuumed until a worker becomes
-    available. There is no limit on how many workers might be in a
-    single database, but workers do try to avoid repeating work that has
-    already been done by other workers. Note that the number of running
-    workers does not count towards <xref linkend="guc-max-connections"/> or
-    <xref linkend="guc-superuser-reserved-connections"/> limits.
+    如果多个大表在短时间内都变得可以清理，
+    所有 autovacuum 工作进程可能会长时间忙于清理这些表。
+    这将导致其他表和数据库在有工作进程
+    可用之前无法被清理。单个数据库中可以有
+    多少个工作进程并没有限制，但工作进程确实会尽量避免重复其他工作进程
+    已经完成的工作。请注意，运行中的
+    工作进程数量不计入 <xref linkend="guc-max-connections"/> 或
+    <xref linkend="guc-superuser-reserved-connections"/> 限制。
    </para>
 
    <para>
-    Tables whose <structfield>relfrozenxid</structfield> value is more than
-    <xref linkend="guc-autovacuum-freeze-max-age"/> transactions old are always
-    vacuumed (this also applies to those tables whose freeze max age has
-    been modified via storage parameters; see below).  Otherwise, if the
-    number of tuples obsoleted since the last
-    <command>VACUUM</command> exceeds the <quote>vacuum threshold</quote>, the
-    table is vacuumed.  The vacuum threshold is defined as:
+    <structfield>relfrozenxid</structfield> 值超过 <xref linkend="guc-autovacuum-freeze-max-age"/> 个事务年龄的表总是会被清理（这也适用于那些通过存储参数修改了冻结最大年龄的表；见下文）。否则，如果自上次 <command>VACUUM</command> 以来废弃的元组数超过<quote>清理阈值</quote>，则该表会被清理。清理阈值定义为：
 <programlisting>
 vacuum threshold = Minimum(vacuum max threshold, vacuum base threshold + vacuum scale factor * number of tuples)
 </programlisting>
-    where the vacuum max threshold is
-    <xref linkend="guc-autovacuum-vacuum-max-threshold"/>,
-    the vacuum base threshold is
-    <xref linkend="guc-autovacuum-vacuum-threshold"/>,
-    the vacuum scale factor is
-    <xref linkend="guc-autovacuum-vacuum-scale-factor"/>,
-    and the number of tuples is
-    <structname>pg_class</structname>.<structfield>reltuples</structfield>.
+    其中清理最大阈值为 <xref linkend="guc-autovacuum-vacuum-max-threshold"/>，清理基础阈值为 <xref linkend="guc-autovacuum-vacuum-threshold"/>，清理比例因子为 <xref linkend="guc-autovacuum-vacuum-scale-factor"/>，元组数为 <structname>pg_class</structname>。<structfield>reltuples</structfield>。
    </para>
 
    <para>
-    The table is also vacuumed if the number of tuples inserted since the last
-    vacuum has exceeded the defined insert threshold, which is defined as:
+    如果自上次清理以来插入的元组数超过定义的插入阈值，则该表也会被清理，该阈值定义为：
 <programlisting>
 vacuum insert threshold = vacuum base insert threshold + vacuum insert scale factor * number of tuples * percent of table not frozen
 </programlisting>
-    where the vacuum insert base threshold is
-    <xref linkend="guc-autovacuum-vacuum-insert-threshold"/>,
-    the vacuum insert scale factor is
-    <xref linkend="guc-autovacuum-vacuum-insert-scale-factor"/>,
-    the number of tuples is
-    <structname>pg_class</structname>.<structfield>reltuples</structfield>,
-    and the percent of the table not frozen is
-    <literal>1 - pg_class.relallfrozen / pg_class.relpages</literal>.
-    Such vacuums may allow portions of the table to be marked as
-    <firstterm>all visible</firstterm> and also allow tuples to be frozen, which
-    can reduce the work required in subsequent vacuums.
-    For tables which receive <command>INSERT</command> operations but no or
-    almost no <command>UPDATE</command>/<command>DELETE</command> operations,
-    it may be beneficial to lower the table's
-    <xref linkend="reloption-autovacuum-freeze-min-age"/> as this may allow
-    tuples to be frozen by earlier vacuums.  The number of obsolete tuples and
-    the number of inserted tuples are obtained from the cumulative statistics system;
-    it is an eventually-consistent count updated by each <command>UPDATE</command>,
-    <command>DELETE</command> and <command>INSERT</command> operation.
-    If the <structfield>relfrozenxid</structfield> value of the table
-    is more than <varname>vacuum_freeze_table_age</varname> transactions old,
-    an aggressive vacuum is performed to freeze old tuples and advance
-    <structfield>relfrozenxid</structfield>.
+    其中清理插入基础阈值为 <xref linkend="guc-autovacuum-vacuum-insert-threshold"/>，清理插入比例因子为 <xref linkend="guc-autovacuum-vacuum-insert-scale-factor"/>，元组数为 <structname>pg_class</structname>。<structfield>reltuples</structfield>，表中未冻结的百分比为 <literal>1 - pg_class.relallfrozen / pg_class.relpages</literal>。此类清理可以将表的部分内容标记为 <firstterm>全部可见</firstterm>，并且还允许冻结元组，这可以减少后续清理所需的工作量。对于接收 <command>INSERT</command> 操作但没有或几乎没有 <command>UPDATE</command>/<command>DELETE</command> 操作的表，降低表的 <xref linkend="reloption-autovacuum-freeze-min-age"/> 可能是有益的，因为这可能允许较早的清理冻结元组。废弃元组数和插入元组数从累积统计系统获得；它是由每个 <command>UPDATE</command>、<command>DELETE</command> 和 <command>INSERT</command> 操作更新的最终一致性计数。如果表的 <structfield>relfrozenxid</structfield> 值超过 <varname>vacuum_freeze_table_age</varname> 个事务年龄，则执行激进清理以冻结旧元组并推进 <structfield>relfrozenxid</structfield>。
    </para>
 
    <para>
-    For analyze, a similar condition is used: the threshold, defined as:
+    对于 analyze，使用类似的条件：将定义为以下内容的阈值：
 <programlisting>
 analyze threshold = analyze base threshold + analyze scale factor * number of tuples
 </programlisting>
-    is compared to the total number of tuples inserted, updated, or deleted
-    since the last <command>ANALYZE</command>.
+    与自上次 <command>ANALYZE</command> 以来插入、更新或删除的元组总数进行比较。
    </para>
 
    <para>
-    Partitioned tables do not directly store tuples and consequently
-    are not processed by autovacuum.  (Autovacuum does process table
-    partitions just like other tables.)  Unfortunately, this means that
-    autovacuum does  not run <command>ANALYZE</command> on partitioned
-    tables, and this can cause suboptimal plans for queries that reference
-    partitioned table statistics.  You can work around this problem by
-    manually running <command>ANALYZE</command> on partitioned tables
-    when they are first populated, and again whenever the distribution
-    of data in their partitions changes significantly.
+    分区表不直接存储元组，因此不会被自动清理处理。（自动清理确实会像处理其他表一样处理表分区。）不幸的是，这意味着自动清理不会在分区表上运行 <command>ANALYZE</command>，这可能导致引用分区表统计信息的查询产生次优的计划。要绕过这个问题，可以在分区表首次填充数据时手动对其运行 <command>ANALYZE</command>，之后每当其分区中的数据分布发生显著变化时再次运行。
    </para>
 
    <para>
-    Temporary tables cannot be accessed by autovacuum.  Therefore,
-    appropriate vacuum and analyze operations should be performed via
-    session SQL commands.
+    临时表无法被自动清理访问。因此，应通过会话 SQL 命令执行适当的 vacuum 和 analyze 操作。
    </para>
 
    <para>
-    The default thresholds and scale factors are taken from
-    <filename>postgresql.conf</filename>, but it is possible to override them
-    (and many other autovacuum control parameters) on a per-table basis; see
-    <xref linkend="sql-createtable-storage-parameters"/> for more information.
-    If a setting has been changed via a table's storage parameters, that value
-    is used when processing that table; otherwise the global settings are
-    used. See <xref linkend="runtime-config-autovacuum"/> for more details on
-    the global settings.
+    默认阈值和比例因子取自 <filename>postgresql.conf</filename>，但可以按表覆盖它们（以及许多其他自动清理控制参数）；更多信息请参见 <xref linkend="sql-createtable-storage-parameters"/>。如果已通过表的存储参数更改了某项设置，则处理该表时将使用该值；否则使用全局设置。有关全局设置的更多细节，请参见 <xref linkend="runtime-config-autovacuum"/>。
    </para>
 
    <para>
-    When multiple workers are running, the autovacuum cost delay parameters
-    (see <xref linkend="runtime-config-resource-vacuum-cost"/>) are
-    <quote>balanced</quote> among all the running workers, so that the
-    total I/O impact on the system is the same regardless of the number
-    of workers actually running.  However, any workers processing tables whose
-    per-table <literal>autovacuum_vacuum_cost_delay</literal> or
-    <literal>autovacuum_vacuum_cost_limit</literal> storage parameters have been set
-    are not considered in the balancing algorithm.
+    当有多个工作进程在运行时，自动清理的成本延迟参数（参见 <xref linkend="runtime-config-resource-vacuum-cost"/>）会在所有正在运行的工作进程之间进行<quote>平衡</quote>，这样无论实际运行的工作进程数量是多少，对系统的总 I/O 影响都相同。但是，任何正在处理已设置按表 <literal>autovacuum_vacuum_cost_delay</literal> 或 <literal>autovacuum_vacuum_cost_limit</literal> 存储参数的表的工作进程，都不参与该平衡算法。
    </para>
 
    <para>
-    Autovacuum workers generally don't block other commands.  If a process
-    attempts to acquire a lock that conflicts with the
-    <literal>SHARE UPDATE EXCLUSIVE</literal> lock held by autovacuum, lock
-    acquisition will interrupt the autovacuum.  For conflicting lock modes,
-    see <xref linkend="table-lock-compatibility"/>.  However, if the autovacuum
-    is running to prevent transaction ID wraparound (i.e., the autovacuum query
-    name in the <structname>pg_stat_activity</structname> view ends with
-    <literal>(to prevent wraparound)</literal>), the autovacuum is not
-    automatically interrupted.
+    自动清理工作进程通常不会阻塞其他命令。如果某个进程试图获取与自动清理持有的 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁相冲突的锁，获取锁的操作将中断自动清理。有关冲突的锁模式，请参见 <xref linkend="table-lock-compatibility"/>。但是，如果自动清理是为了防止事务 ID 回卷而运行（即 <structname>pg_stat_activity</structname> 视图中自动清理查询名称以 <literal>(to prevent wraparound)</literal> 结尾），则自动清理不会被自动中断。
    </para>
 
    <warning>
     <para>
-     Regularly running commands that acquire locks conflicting with a
-     <literal>SHARE UPDATE EXCLUSIVE</literal> lock (e.g., ANALYZE) can
-     effectively prevent autovacuums from ever completing.
+     定期运行会获取与 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁相冲突的锁的命令（例如 ANALYZE），实际上可能会使自动清理永远无法完成。
     </para>
    </warning>
   </sect2>
