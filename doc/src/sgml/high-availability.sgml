@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/high-availability.sgml -->
 
 <chapter id="high-availability">
- <title>High Availability, Load Balancing, and Replication</title>
+ <title>高可用性、负载均衡与复制</title>
 
  <indexterm><primary>high availability</primary></indexterm>
  <indexterm><primary>failover</primary></indexterm>
@@ -11,72 +11,31 @@
  <indexterm><primary>data partitioning</primary></indexterm>
 
  <para>
-  Database servers can work together to allow a second server to
-  take over quickly if the primary server fails (high
-  availability), or to allow several computers to serve the same
-  data (load balancing).  Ideally, database servers could work
-  together seamlessly.  Web servers serving static web pages can
-  be combined quite easily by merely load-balancing web requests
-  to multiple machines.  In fact, read-only database servers can
-  be combined relatively easily too.  Unfortunately, most database
-  servers have a read/write mix of requests, and read/write servers
-  are much harder to combine.  This is because though read-only
-  data needs to be placed on each server only once, a write to any
-  server has to be propagated to all servers so that future read
-  requests to those servers return consistent results.
+  数据库服务器可以协同工作，使得在主服务器发生故障时，第二台服务器能够快速接管（高可用性），或者让多台计算机为同一份数据提供服务（负载均衡）。理想情况下，数据库服务器能够无缝地协同工作。提供静态网页的 Web 服务器可以很容易地组合起来，只需把 Web 请求负载均衡到多台机器上即可。事实上，只读数据库服务器也可以相对容易地组合起来。遗憾的是，大多数数据库服务器处理的都是读写混合的请求，而读写服务器要组合起来则困难得多。这是因为，只读数据虽然只需在每个服务器上放置一次，但对任意一台服务器的写入都必须传播到所有服务器，以便后续对这些服务器的读请求返回一致的结果。
  </para>
 
  <para>
-  This synchronization problem is the fundamental difficulty for
-  servers working together.  Because there is no single solution
-  that eliminates the impact of the sync problem for all use cases,
-  there are multiple solutions.  Each solution addresses this
-  problem in a different way, and minimizes its impact for a specific
-  workload.
+  这种同步问题正是服务器协同工作的根本困难所在。由于不存在一种能够消除同步问题对所有用例影响的单一解决方案，因此存在多种解决方案。每种解决方案都以不同的方式处理这一问题，并针对特定的工作负载将其影响降到最低。
  </para>
 
  <para>
-  Some solutions deal with synchronization by allowing only one
-  server to modify the data.  Servers that can modify data are
-  called read/write, <firstterm>master</firstterm> or <firstterm>primary</firstterm> servers.
-  Servers that track changes in the primary are called <firstterm>standby</firstterm>
-  or <firstterm>secondary</firstterm> servers. A standby server that cannot be connected
-  to until it is promoted to a primary server is called a <firstterm>warm
-  standby</firstterm> server, and one that can accept connections and serves read-only
-  queries is called a <firstterm>hot standby</firstterm> server.
+  有些解决方案通过只允许一台服务器修改数据来处理同步问题。能够修改数据的服务器称为读写服务器、<firstterm>主</firstterm>服务器或 <firstterm>primary</firstterm> 服务器。跟踪主服务器上变更的服务器称为 <firstterm>后备</firstterm>服务器或 <firstterm>secondary</firstterm> 服务器。在被提升为主服务器之前无法连接的后备服务器称为<firstterm>温后备</firstterm>服务器，而能够接受连接并提供只读查询服务的后备服务器称为<firstterm>热后备</firstterm>服务器。
  </para>
 
  <para>
-  Some solutions are synchronous,
-  meaning that a data-modifying transaction is not considered
-  committed until all servers have committed the transaction.  This
-  guarantees that a failover will not lose any data and that all
-  load-balanced servers will return consistent results no matter
-  which server is queried. In contrast, asynchronous solutions allow some
-  delay between the time of a commit and its propagation to the other servers,
-  opening the possibility that some transactions might be lost in
-  the switch to a backup server, and that load balanced servers
-  might return slightly stale results.  Asynchronous communication
-  is used when synchronous would be too slow.
+  有些解决方案是同步的，这意味着修改数据的事务只有在所有服务器都提交该事务之后才被视为已提交。这保证了故障转移不会丢失任何数据，并且无论查询哪台服务器，所有负载均衡的服务器都会返回一致的结果。相比之下，异步解决方案允许在提交时刻与其传播到其他服务器之间有一定延迟，这就带来了在切换到备份服务器时可能丢失某些事务的可能性，并且负载均衡的服务器可能返回略微过时的结果。当同步方式过慢时，就使用异步通信。
  </para>
 
  <para>
-  Solutions can also be categorized by their granularity.  Some solutions
-  can deal only with an entire database server, while others allow control
-  at the per-table or per-database level.
+  解决方案也可以按其粒度进行分类。有些解决方案只能处理整个数据库服务器，而另一些则允许在每张表或每个数据库的级别上进行控制。
  </para>
 
  <para>
-  Performance must be considered in any choice.  There is usually a
-  trade-off between functionality and
-  performance.  For example, a fully synchronous solution over a slow
-  network might cut performance by more than half, while an asynchronous
-  one might have a minimal performance impact.
+  在任何选择中都必须考虑性能。功能与性能之间通常需要权衡。例如，在慢速网络上采用完全同步的解决方案可能会使性能下降一半以上，而异步解决方案对性能的影响可能很小。
  </para>
 
  <para>
-  The remainder of this section outlines various failover, replication,
-  and load balancing solutions.
+  本节的其余部分概述各种故障转移、复制和负载均衡解决方案。
  </para>
 
  <sect1 id="different-replication-solutions">
