@@ -1,141 +1,102 @@
 <!-- doc/src/sgml/pgoverexplain.sgml -->
 
 <sect1 id="pgoverexplain" xreflabel="pg_overexplain">
- <title>pg_overexplain &mdash; allow EXPLAIN to dump even more details</title>
+ <title>pg_overexplain &mdash; 允许 EXPLAIN 转储更多细节</title>
 
  <indexterm zone="pgoverexplain">
   <primary>pg_overexplain</primary>
  </indexterm>
 
  <para>
-  The <filename>pg_overexplain</filename> module extends <command>EXPLAIN</command>
-  with new options that provide additional output. It is mostly intended to
-  assist with debugging of and development of the planner, rather than for
-  general use. Since this module displays internal details of planner data
-  structures, it may be necessary to refer to the source code to make sense
-  of the output. Furthermore, the output is likely to change whenever (and as
-  often as) those data structures change.
+  <filename>pg_overexplain</filename> 模块用提供额外输出的新选项扩展了 <command>EXPLAIN</command>。它主要用于协助规划器的调试与开发，而不是供一般使用。由于该模块显示规划器数据结构的内部细节，可能有必要参考源代码才能理解输出。此外，只要这些数据结构发生变化（而且经常变化），输出就可能随之改变。
  </para>
 
  <para>
-  To use it, simply load it into the server.  You can load it into an
-  individual session:
+  要使用它，只需将其加载到服务器中。你可以将其加载到单个会话中：
 
 <programlisting>
 LOAD 'pg_overexplain';
 </programlisting>
 
-  You can also preload it into some or all sessions by including
-  <literal>pg_overexplain</literal> in
-  <xref linkend="guc-session-preload-libraries"/> or
-  <xref linkend="guc-shared-preload-libraries"/> in
-  <filename>postgresql.conf</filename>.
+  你也可以通过在 <filename>postgresql.conf</filename> 中的
+  <xref linkend="guc-session-preload-libraries"/> 或
+  <xref linkend="guc-shared-preload-libraries"/> 里包含
+  <literal>pg_overexplain</literal>，将其预加载到部分或全部会话中。
  </para>
 
  <sect2 id="pgoverexplain-debug">
   <title>EXPLAIN (DEBUG)</title>
 
   <para>
-   The <literal>DEBUG</literal> option displays miscellaneous information from
-   the plan tree that is not normally shown because it is not expected to be
-   of general interest. For each individual plan node, it will display the
-   following fields.  See <structname>Plan</structname> in
-   <filename>nodes/plannodes.h</filename> for additional documentation of these
-   fields.
+   <literal>DEBUG</literal> 选项显示计划树中通常不显示的各种信息，因为预计这些信息不会引起普遍关注。对于每个单独的计划节点，它将显示以下字段。有关这些字段的更多文档，请参见
+   <filename>nodes/plannodes.h</filename> 中的 <structname>Plan</structname>。
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     <literal>Disabled Nodes</literal>. Normal <command>EXPLAIN</command>
-     determines whether a node is disabled by checking whether the node's
-     count of disabled nodes is larger than the sum of the counts for the
-     underlying nodes. This option shows the raw counter value.
+     <literal>Disabled Nodes</literal>。普通的 <command>EXPLAIN</command>
+     通过检查节点的禁用节点计数是否大于底层节点的计数之和，来确定节点是否被禁用。此选项显示原始计数器值。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Parallel Safe</literal>. Indicates whether it would be safe for
-     a plan tree node to appear beneath a <literal>Gather</literal> or
-     <literal>Gather Merge</literal> node, regardless of whether it is
-     actually below such a node.
+     <literal>Parallel Safe</literal>。指示计划树节点出现在 <literal>Gather</literal> 或 <literal>Gather Merge</literal> 节点之下是否安全，无论它实际上是否位于此类节点之下。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Plan Node ID</literal>. An internal ID number that should be
-     unique for every node in the plan tree. It is used to coordinate parallel
-     query activity.
+     <literal>Plan Node ID</literal>。一个内部 ID 编号，对于计划树中的每个节点都应当是唯一的。它用于协调并行查询活动。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>extParam</literal> and <literal>allParam</literal>. Information
-     about which numbered parameters affect this plan node or its children. In
-     text mode, these fields are only displayed if they are non-empty sets.
+     <literal>extParam</literal> 和 <literal>allParam</literal>。关于哪些编号参数会影响此计划节点或其子节点的信息。在文本模式下，仅当这些字段为非空集合时才会显示。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   Once per query, the <literal>DEBUG</literal> option will display the
-   following fields. See <structname>PlannedStmt</structname> in
-   <filename>nodes/plannodes.h</filename> for additional detail.
+   每个查询一次，<literal>DEBUG</literal> 选项将显示以下字段。更多细节请参见 <filename>nodes/plannodes.h</filename> 中的 <structname>PlannedStmt</structname>。
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     <literal>Command Type</literal>. For example, <literal>select</literal>
-     or <literal>update</literal>.
+     <literal>Command Type</literal>。例如，<literal>select</literal> 或 <literal>update</literal>。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Flags</literal>. A comma-separated list of Boolean structure
-     member names from the <structname>PlannedStmt</structname> that are set to
-     <literal>true</literal>. It covers the following structure members:
-     <literal>hasReturning</literal>, <literal>hasModifyingCTE</literal>,
-     <literal>canSetTag</literal>, <literal>transientPlan</literal>,
-     <literal>dependsOnRole</literal>, <literal>parallelModeNeeded</literal>.
+     <literal>Flags</literal>。来自 <structname>PlannedStmt</structname> 的布尔结构成员名称的逗号分隔列表，这些成员被设置为 <literal>true</literal>。它涵盖以下结构成员：<literal>hasReturning</literal>、<literal>hasModifyingCTE</literal>、<literal>canSetTag</literal>、<literal>transientPlan</literal>、<literal>dependsOnRole</literal>、<literal>parallelModeNeeded</literal>。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Subplans Needing Rewind</literal>. Integer IDs of subplans that
-     may need to be rewound by the executor.
+     <literal>Subplans Needing Rewind</literal>。可能需要由执行器回卷的子计划的整数 ID。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Relation OIDs</literal>. OIDs of relations upon which this plan
-     depends.
+     <literal>Relation OIDs</literal>。此计划所依赖的关系的 OID。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Executor Parameter Types</literal>. Type OID for each executor parameter
-     (e.g. when a nested loop is chosen and a parameter is used to pass a value down
-     to an inner index scan). Does not include parameters supplied to a prepared
-     statement by the user.
+     <literal>Executor Parameter Types</literal>。每个执行器参数的类型 OID（例如，当选择嵌套循环并且使用参数将值向下传递给内层索引扫描时）。不包括用户提供给预备语句的参数。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <literal>Parse Location</literal>. Location within the query string
-     supplied to the planner where this query's text can be found. May be
-     <literal>Unknown</literal> in some contexts. Otherwise, may be
-     <literal>NNN to end</literal> for some integer <literal>NNN</literal> or
-     <literal>NNN for MMM bytes</literal> for some integers
-     <literal>NNN</literal> and <literal>MMM</literal>.
+     <literal>Parse Location</literal>。在提供给规划器的查询字符串中，可以找到此查询文本的位置。在某些上下文中可能为 <literal>Unknown</literal>。否则，对于某个整数 <literal>NNN</literal> 可能为 <literal>NNN to end</literal>，或者对于某些整数 <literal>NNN</literal> 和 <literal>MMM</literal> 可能为 <literal>NNN for MMM bytes</literal>。
     </para>
    </listitem>
   </itemizedlist>
@@ -145,53 +106,30 @@ LOAD 'pg_overexplain';
   <title>EXPLAIN (RANGE_TABLE)</title>
 
   <para>
-   The <literal>RANGE_TABLE</literal> option displays information from the
-   plan tree specifically concerning the query's range table. Range table
-   entries correspond roughly to items appearing in the query's
-   <literal>FROM</literal> clause, but with numerous exceptions. For example,
-   subqueries that are proved unnecessary may be deleted from the range table
-   entirely, while inheritance expansion adds range table entries for child
-   tables that are not named directly in the query.
+   <literal>RANGE_TABLE</literal> 选项显示计划树中与查询的范围表特别相关的信息。范围表条目大致对应于查询的 <literal>FROM</literal> 子句中出现的项，但有许多例外。例如，被证明不必要的子查询可能会从范围表中完全删除，而继承展开会为查询中未直接命名的子表添加范围表条目。
   </para>
 
   <para>
-   Range table entries are generally referenced within the query plan by a
-   range table index, or RTI. Plan nodes that reference one or more RTIs will
-   be labelled accordingly, using one of the following fields: <literal>Scan
-   RTI</literal>, <literal>Nominal RTI</literal>, <literal>Exclude Relation
-   RTI</literal>, <literal>Append RTIs</literal>.
+   范围表项在查询计划中通常通过范围表索引（RTI）引用。引用一个或多个 RTI 的计划节点会相应地使用下列字段之一进行标注：<literal>Scan
+   RTI</literal>、<literal>Nominal RTI</literal>、<literal>Exclude Relation
+   RTI</literal>、<literal>Append RTIs</literal>。
   </para>
 
   <para>
-   In addition, the query as a whole may maintain lists of range table indexes
-   that are needed for various purposes. These lists will be displayed once
-   per query, labelled as appropriate as <literal>Unprunable RTIs</literal> or
-   <literal>Result RTIs</literal>. In text mode, these fields are only
-   displayed if they are non-empty sets.
+   此外，整个查询可能出于各种目的维护若干范围表索引的列表。这些列表对每个查询显示一次，并按情况标注为 <literal>Unprunable RTIs</literal> 或 <literal>Result RTIs</literal>。在文本模式下，仅当这些字段为非空集合时才会显示。
   </para>
 
   <para>
-   Finally, but most importantly, the <literal>RANGE_TABLE</literal> option
-   will display a dump of the query's entire range table. Each range table
-   entry is labelled with the appropriate range table index, the kind of range
-   table entry (e.g.  <literal>relation</literal>,
-   <literal>subquery</literal>, or <literal>join</literal>), followed by the
-   contents of various range table entry fields that are not normally part of
-   <command>EXPLAIN</command> output. Some of these fields are only displayed
-   for certain kinds of range table entries. For example,
-   <literal>Eref</literal> is displayed for all types of range table entries,
-   but <literal>CTE Name</literal> is displayed only for range table entries
-   of type <literal>cte</literal>.
+   最后，也是最重要的一点，<literal>RANGE_TABLE</literal> 选项将显示查询整个范围表的转储。每个范围表项都标注有相应的范围表索引、范围表项的种类（例如 <literal>relation</literal>、<literal>subquery</literal> 或 <literal>join</literal>），随后是通常不属于 <command>EXPLAIN</command> 输出的各种范围表项字段的内容。其中某些字段仅对特定种类的范围表项显示。例如，<literal>Eref</literal> 对所有类型的范围表项都会显示，但 <literal>CTE Name</literal> 仅对类型为 <literal>cte</literal> 的范围表项显示。
   </para>
 
   <para>
-   For more information about range table entries, see the definition of
-   <structname>RangeTblEntry</structname> in <filename>nodes/parsenodes.h</filename>.
+   有关范围表项的更多信息，请参见 <filename>nodes/parsenodes.h</filename> 中 <structname>RangeTblEntry</structname> 的定义。
   </para>
  </sect2>
 
  <sect2 id="pgoverexplain-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Robert Haas <email>rhaas@postgresql.org</email>
