@@ -96,68 +96,34 @@
 
  <sect1 id="subxacts">
 
-  <title>Subtransactions</title>
+  <title>子事务</title>
 
   <para>
-   Subtransactions are started inside transactions, allowing large
-   transactions to be broken into smaller units.  Subtransactions can
-   commit or abort without affecting their parent transactions, allowing
-   parent transactions to continue. This allows errors to be handled
-   more easily, which is a common application development pattern.
-   The word subtransaction is often abbreviated as
-   <firstterm>subxact</firstterm>.
+   子事务在事务内部启动，允许大事务被拆分为更小的单元。子事务可以提交或中止而不影响其父事务，从而允许父事务继续执行。这使得错误更容易处理，这是一种常见的应用开发模式。subtransaction 一词通常缩写为 <firstterm>subxact</firstterm>。
   </para>
 
   <para>
-   Subtransactions can be started explicitly using the
-   <command>SAVEPOINT</command> command, but can also be started in
-   other ways, such as PL/pgSQL's <literal>EXCEPTION</literal> clause.
-   PL/Python and PL/Tcl also support explicit subtransactions.
-   Subtransactions can also be started from other subtransactions.
-   The top-level transaction and its child subtransactions form a
-   hierarchy or tree, which is why we refer to the main transaction as
-   the top-level transaction.
+   子事务可以使用 <command>SAVEPOINT</command> 命令显式启动，但也可以通过其他方式启动，例如 PL/pgSQL 的 <literal>EXCEPTION</literal> 子句。PL/Python 和 PL/Tcl 也支持显式子事务。子事务也可以从其他子事务中启动。顶层事务及其子子事务构成一个层次结构或树，这就是为什么我们将主事务称为顶层事务。
   </para>
 
   <para>
-   If a subtransaction is assigned a non-virtual transaction ID,
-   its transaction ID is referred to as a <quote>subxid</quote>.
-   Read-only subtransactions are not assigned subxids, but once they
-   attempt to write, they will be assigned one. This also causes all of
-   a subxid's parents, up to and including the top-level transaction,
-   to be assigned non-virtual transaction ids.  We ensure that a parent
-   xid is always lower than any of its child subxids.
+   如果子事务被分配了非虚拟事务 ID，其事务 ID 被称为<quote>子事务 ID</quote>（subxid）。只读子事务不会被分配子事务 ID，但一旦它们尝试写入，就会被分配一个。这还会导致某个子事务 ID 的所有父事务（直至并包括顶层事务）都被分配非虚拟事务 ID。我们确保父事务的 xid 始终小于其任何子子事务的 subxid。
   </para>
 
   <para>
-   The immediate parent xid of each subxid is recorded in the
-   <filename>pg_subtrans</filename> directory. No entry is made for
-   top-level xids since they do not have a parent, nor is an entry made
-   for read-only subtransactions.
+   每个子事务 ID 的直接父事务 xid 记录在 <filename>pg_subtrans</filename> 目录中。顶层 xid 不建立条目，因为它们没有父事务；只读子事务也不建立条目。
   </para>
 
   <para>
-   When a subtransaction commits, all of its committed child
-   subtransactions with subxids will also be considered subcommitted
-   in that transaction.  When a subtransaction aborts, all of its child
-   subtransactions will also be considered aborted.
+   当子事务提交时，其所有带有子事务 ID 的已提交子子事务在该事务中也将被视为已子提交。当子事务中止时，其所有子子事务也将被视为已中止。
   </para>
 
   <para>
-   When a top-level transaction with an xid commits, all of its
-   subcommitted child subtransactions are also persistently recorded
-   as committed in the <filename>pg_xact</filename> subdirectory.  If the
-   top-level transaction aborts, all its subtransactions are also aborted,
-   even if they were subcommitted.
+   当一个带有 xid 的顶层事务提交时，其所有已子提交的子事务也会在 <filename>pg_xact</filename> 子目录中被持久地记录为已提交。如果顶层事务中止，其所有子事务也会中止，即使它们已经被子提交。
   </para>
 
   <para>
-   The more subtransactions each transaction keeps open (not
-   rolled back or released), the greater the transaction management
-   overhead. Up to 64 open subxids are cached in shared memory for
-   each backend; after that point, the storage I/O overhead increases
-   significantly due to additional lookups of subxid entries in
-   <filename>pg_subtrans</filename>.
+   每个事务保持打开（未回滚或释放）的子事务越多，事务管理的开销就越大。每个后端最多在共享内存中缓存 64 个打开的子 xid；超过该数量后，由于需要在 <filename>pg_subtrans</filename> 中额外查找子 xid 条目，存储 I/O 开销会显著增加。
   </para>
  </sect1>
 
