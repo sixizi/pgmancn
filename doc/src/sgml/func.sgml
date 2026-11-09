@@ -20947,7 +20947,7 @@ SELECT count(*) FROM sometable;
  </sect1>
 
  <sect1 id="functions-window">
-  <title>Window Functions</title>
+  <title>窗口函数</title>
 
   <indexterm zone="functions-window">
    <primary>window function</primary>
@@ -20955,40 +20955,27 @@ SELECT count(*) FROM sometable;
   </indexterm>
 
   <para>
-   <firstterm>Window functions</firstterm> provide the ability to perform
-   calculations across sets of rows that are related to the current query
-   row.  See <xref linkend="tutorial-window"/> for an introduction to this
-   feature, and <xref linkend="syntax-window-functions"/> for syntax
-   details.
+   <firstterm>窗口函数</firstterm>提供了在当前查询行相关的一组行上进行计算的能力。有关此功能的介绍，请参见 <xref linkend="tutorial-window"/>；有关语法细节，请参见 <xref linkend="syntax-window-functions"/>。
   </para>
 
   <para>
-   The built-in window functions are listed in
-   <xref linkend="functions-window-table"/>.  Note that these functions
-   <emphasis>must</emphasis> be invoked using window function syntax, i.e., an
-   <literal>OVER</literal> clause is required.
+   内置窗口函数列于 <xref linkend="functions-window-table"/>。请注意，这些函数<emphasis>必须</emphasis>使用窗口函数语法调用，即需要一个 <literal>OVER</literal> 子句。
   </para>
 
   <para>
-   In addition to these functions, any built-in or user-defined
-   ordinary aggregate (i.e., not ordered-set or hypothetical-set aggregates)
-   can be used as a window function; see
-   <xref linkend="functions-aggregate"/> for a list of the built-in aggregates.
-   Aggregate functions act as window functions only when an <literal>OVER</literal>
-   clause follows the call; otherwise they act as plain aggregates
-   and return a single row for the entire set.
+   除这些函数外，任何内置或用户定义的普通聚合（即不是有序集聚合或假设集聚合）都可以用作窗口函数；内置聚合的列表请参见 <xref linkend="functions-aggregate"/>。聚合函数只有在调用后跟有 <literal>OVER</literal> 子句时才作为窗口函数使用；否则它们作为普通聚合使用，并为整个集合返回一行。
   </para>
 
    <table id="functions-window-table">
-    <title>General-Purpose Window Functions</title>
+    <title>通用窗口函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para></entry>
       </row>
      </thead>
@@ -21003,8 +20990,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Returns the number of the current row within its partition, counting
-        from 1.
+        返回当前行在其分区内的编号，从 1 开始计数。
        </para></entry>
       </row>
 
@@ -21017,9 +21003,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Returns the rank of the current row, with gaps; that is,
-        the <function>row_number</function> of the first row in its peer
-        group.
+        返回当前行的排名，带间隔；即其同级组中第一行的 <function>row_number</function>。
        </para></entry>
       </row>
 
@@ -21032,8 +21016,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Returns the rank of the current row, without gaps; this function
-        effectively counts peer groups.
+        返回当前行的排名，没有间隔；这个函数实际上是在计算同级组（peer group）的数目。
        </para></entry>
       </row>
 
@@ -21046,9 +21029,9 @@ SELECT count(*) FROM sometable;
         <returnvalue>double precision</returnvalue>
        </para>
        <para>
-        Returns the relative rank of the current row, that is
-        (<function>rank</function> - 1) / (total partition rows - 1).
-        The value thus ranges from 0 to 1 inclusive.
+        返回当前行的相对排名，即
+        (<function>rank</function> - 1) / (分区总行数 - 1)。
+        因此取值范围为 0 到 1（含端点）。
        </para></entry>
       </row>
 
@@ -21061,9 +21044,9 @@ SELECT count(*) FROM sometable;
         <returnvalue>double precision</returnvalue>
        </para>
        <para>
-        Returns the cumulative distribution, that is (number of partition rows
-        preceding or peers with current row) / (total partition rows).
-        The value thus ranges from 1/<parameter>N</parameter> to 1.
+        返回累积分布，即（当前行之前或与当前行同级的
+        分区行数）/（分区总行数）。
+        因此取值范围为 1/<parameter>N</parameter> 到 1。
        </para></entry>
       </row>
 
@@ -21076,8 +21059,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>integer</returnvalue>
        </para>
        <para>
-        Returns an integer ranging from 1 to the argument value, dividing the
-        partition as equally as possible.
+        返回一个从 1 到参数值的整数，尽可能平均地划分分区。
        </para></entry>
       </row>
 
@@ -21092,17 +21074,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>anycompatible</returnvalue>
        </para>
        <para>
-        Returns <parameter>value</parameter> evaluated at
-        the row that is <parameter>offset</parameter>
-        rows before the current row within the partition; if there is no such
-        row, instead returns <parameter>default</parameter>
-        (which must be of a type compatible with
-        <parameter>value</parameter>).
-        Both <parameter>offset</parameter> and
-        <parameter>default</parameter> are evaluated
-        with respect to the current row.  If omitted,
-        <parameter>offset</parameter> defaults to 1 and
-        <parameter>default</parameter> to <literal>NULL</literal>.
+        返回在分区内当前行之前 <parameter>offset</parameter> 行的那一行上求值的 <parameter>value</parameter>；如果不存在这样的行，则改为返回 <parameter>default</parameter>（其类型必须与 <parameter>value</parameter> 兼容）。<parameter>offset</parameter> 和 <parameter>default</parameter> 都是相对于当前行求值的。如果省略，<parameter>offset</parameter> 默认为 1，<parameter>default</parameter> 默认为 <literal>NULL</literal>。
        </para></entry>
       </row>
 
@@ -21117,17 +21089,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>anycompatible</returnvalue>
        </para>
        <para>
-        Returns <parameter>value</parameter> evaluated at
-        the row that is <parameter>offset</parameter>
-        rows after the current row within the partition; if there is no such
-        row, instead returns <parameter>default</parameter>
-        (which must be of a type compatible with
-        <parameter>value</parameter>).
-        Both <parameter>offset</parameter> and
-        <parameter>default</parameter> are evaluated
-        with respect to the current row.  If omitted,
-        <parameter>offset</parameter> defaults to 1 and
-        <parameter>default</parameter> to <literal>NULL</literal>.
+        返回在分区内当前行之后 <parameter>offset</parameter> 行的那一行上求值的 <parameter>value</parameter>；如果不存在这样的行，则改为返回 <parameter>default</parameter>（其类型必须与 <parameter>value</parameter> 兼容）。<parameter>offset</parameter> 和 <parameter>default</parameter> 都是相对于当前行求值的。如果省略，<parameter>offset</parameter> 默认为 1，<parameter>default</parameter> 默认为 <literal>NULL</literal>。
        </para></entry>
       </row>
 
@@ -21140,8 +21102,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>anyelement</returnvalue>
        </para>
        <para>
-        Returns <parameter>value</parameter> evaluated
-        at the row that is the first row of the window frame.
+        返回在窗口帧的第一行上求值的 <parameter>value</parameter>。
        </para></entry>
       </row>
 
@@ -21154,8 +21115,7 @@ SELECT count(*) FROM sometable;
         <returnvalue>anyelement</returnvalue>
        </para>
        <para>
-        Returns <parameter>value</parameter> evaluated
-        at the row that is the last row of the window frame.
+        返回在窗口帧的最后一行上求值的 <parameter>value</parameter>。
        </para></entry>
       </row>
 
@@ -21168,10 +21128,8 @@ SELECT count(*) FROM sometable;
         <returnvalue>anyelement</returnvalue>
        </para>
        <para>
-        Returns <parameter>value</parameter> evaluated
-        at the row that is the <parameter>n</parameter>'th
-        row of the window frame (counting from 1);
-        returns <literal>NULL</literal> if there is no such row.
+        返回在窗口帧的第 <parameter>n</parameter> 行（从 1 开始计数）上求值的 <parameter>value</parameter>；
+        如果不存在这样的行，则返回 <literal>NULL</literal>。
        </para></entry>
       </row>
      </tbody>
@@ -21179,53 +21137,23 @@ SELECT count(*) FROM sometable;
    </table>
 
   <para>
-   All of the functions listed in
-   <xref linkend="functions-window-table"/> depend on the sort ordering
-   specified by the <literal>ORDER BY</literal> clause of the associated window
-   definition.  Rows that are not distinct when considering only the
-   <literal>ORDER BY</literal> columns are said to be <firstterm>peers</firstterm>.
-   The four ranking functions (including <function>cume_dist</function>) are
-   defined so that they give the same answer for all rows of a peer group.
+   <xref linkend="functions-window-table"/> 中列出的所有函数都依赖于
+   相关窗口定义的 <literal>ORDER BY</literal> 子句所指定的排序顺序。
+   仅考虑 <literal>ORDER BY</literal> 列时彼此没有区别的行被称为<firstterm>同级行</firstterm>。
+   四个排名函数（包括 <function>cume_dist</function>）的定义保证它们对同级组的所有行给出相同的结果。
   </para>
 
   <para>
-   Note that <function>first_value</function>, <function>last_value</function>, and
-   <function>nth_value</function> consider only the rows within the <quote>window
-   frame</quote>, which by default contains the rows from the start of the
-   partition through the last peer of the current row.  This is
-   likely to give unhelpful results for <function>last_value</function> and
-   sometimes also <function>nth_value</function>.  You can redefine the frame by
-   adding a suitable frame specification (<literal>RANGE</literal>,
-   <literal>ROWS</literal> or <literal>GROUPS</literal>) to
-   the <literal>OVER</literal> clause.
-   See <xref linkend="syntax-window-functions"/> for more information
-   about frame specifications.
+   注意 <function>first_value</function>、<function>last_value</function> 和 <function>nth_value</function> 只考虑 <quote>窗口帧</quote> 内的行，默认情况下该帧包含从分区起点到当前行的最后一个同级行的所有行。对于 <function>last_value</function> 以及有时 <function>nth_value</function>，这很可能会给出没有帮助的结果。你可以通过向 <literal>OVER</literal> 子句添加合适的帧说明（<literal>RANGE</literal>、<literal>ROWS</literal> 或 <literal>GROUPS</literal>）来重新定义帧。有关帧说明的更多信息，请参见 <xref linkend="syntax-window-functions"/>。
   </para>
 
   <para>
-   When an aggregate function is used as a window function, it aggregates
-   over the rows within the current row's window frame.
-   An aggregate used with <literal>ORDER BY</literal> and the default window frame
-   definition produces a <quote>running sum</quote> type of behavior, which may or
-   may not be what's wanted.  To obtain
-   aggregation over the whole partition, omit <literal>ORDER BY</literal> or use
-   <literal>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</literal>.
-   Other frame specifications can be used to obtain other effects.
+   当聚合函数被用作窗口函数时，它会对当前行的窗口帧内的行进行聚合。与 <literal>ORDER BY</literal> 及默认窗口帧定义一起使用的聚合会产生一种 <quote>运行求和</quote> 类型的行为，这可能正是你想要的，也可能不是。要对整个分区进行聚合，请省略 <literal>ORDER BY</literal> 或使用 <literal>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</literal>。其他帧说明可用于获得其他效果。
   </para>
 
   <note>
    <para>
-    The SQL standard defines a <literal>RESPECT NULLS</literal> or
-    <literal>IGNORE NULLS</literal> option for <function>lead</function>, <function>lag</function>,
-    <function>first_value</function>, <function>last_value</function>, and
-    <function>nth_value</function>.  This is not implemented in
-    <productname>PostgreSQL</productname>: the behavior is always the
-    same as the standard's default, namely <literal>RESPECT NULLS</literal>.
-    Likewise, the standard's <literal>FROM FIRST</literal> or <literal>FROM LAST</literal>
-    option for <function>nth_value</function> is not implemented: only the
-    default <literal>FROM FIRST</literal> behavior is supported.  (You can achieve
-    the result of <literal>FROM LAST</literal> by reversing the <literal>ORDER BY</literal>
-    ordering.)
+    SQL 标准为 <function>lead</function>、<function>lag</function>、<function>first_value</function>、<function>last_value</function> 和 <function>nth_value</function> 定义了 <literal>RESPECT NULLS</literal> 或 <literal>IGNORE NULLS</literal> 选项。这在 <productname>PostgreSQL</productname> 中未实现：行为始终与标准的默认行为相同，即 <literal>RESPECT NULLS</literal>。同样，标准中针对 <function>nth_value</function> 的 <literal>FROM FIRST</literal> 或 <literal>FROM LAST</literal> 选项也未实现：只支持默认的 <literal>FROM FIRST</literal> 行为。（你可以通过反转 <literal>ORDER BY</literal> 的排序来实现 <literal>FROM LAST</literal> 的结果。）
    </para>
   </note>
 
