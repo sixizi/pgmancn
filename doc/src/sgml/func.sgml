@@ -27741,36 +27741,35 @@ SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');
   </sect1>
 
   <sect1 id="functions-trigger">
-   <title>Trigger Functions</title>
+   <title>触发器函数</title>
 
   <para>
-   While many uses of triggers involve user-written trigger functions,
-   <productname>PostgreSQL</productname> provides a few built-in trigger
-   functions that can be used directly in user-defined triggers.  These
-   are summarized in <xref linkend="builtin-triggers-table"/>.
-   (Additional built-in trigger functions exist, which implement foreign
-   key constraints and deferred index constraints.  Those are not documented
-   here since users need not use them directly.)
+   虽然触发器的许多用法都涉及用户编写的触发器函数，
+   但 <productname>PostgreSQL</productname> 提供了一些内置触发器函数，
+   可以直接用于用户定义的触发器。这些函数汇总在
+   <xref linkend="builtin-triggers-table"/> 中。
+   （还存在其他内置触发器函数，它们实现外键约束和延迟索引约束。
+   由于用户无需直接使用它们，因此这里不作介绍。）
   </para>
 
   <para>
-   For more information about creating triggers, see
-   <xref linkend="sql-createtrigger"/>.
+   有关创建触发器的更多信息，请参见
+   <xref linkend="sql-createtrigger"/>。
   </para>
 
    <table id="builtin-triggers-table">
-    <title>Built-In Trigger Functions</title>
+    <title>内置触发器函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example Usage
+        用法示例
        </para></entry>
       </row>
      </thead>
@@ -27785,7 +27784,7 @@ SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');
         <returnvalue>trigger</returnvalue>
        </para>
        <para>
-        Suppresses do-nothing update operations.  See below for details.
+        抑制不做任何修改的更新操作。详见下文。
        </para>
        <para>
         <literal>CREATE TRIGGER ... suppress_redundant_updates_trigger()</literal>
@@ -27801,10 +27800,7 @@ SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');
         <returnvalue>trigger</returnvalue>
        </para>
        <para>
-        Automatically updates a <type>tsvector</type> column from associated
-        plain-text document column(s).  The text search configuration to use
-        is specified by name as a trigger argument.  See
-        <xref linkend="textsearch-update-triggers"/> for details.
+        根据关联的纯文本文档列自动更新一个 <type>tsvector</type> 列。要使用的文本检索配置以名称形式指定为触发器参数。详见 <xref linkend="textsearch-update-triggers"/>。
        </para>
        <para>
         <literal>CREATE TRIGGER ... tsvector_update_trigger(tsvcol, 'pg_catalog.swedish', title, body)</literal>
@@ -27820,10 +27816,7 @@ SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');
         <returnvalue>trigger</returnvalue>
        </para>
        <para>
-        Automatically updates a <type>tsvector</type> column from associated
-        plain-text document column(s).  The text search configuration to use
-        is taken from a <type>regconfig</type> column of the table.  See
-        <xref linkend="textsearch-update-triggers"/> for details.
+        从关联的纯文本文档列自动更新 <type>tsvector</type> 列。要使用的文本搜索配置取自该表的 <type>regconfig</type> 列。详情请参见 <xref linkend="textsearch-update-triggers"/>。
        </para>
        <para>
         <literal>CREATE TRIGGER ... tsvector_update_trigger_column(tsvcol, tsconfigcol, title, body)</literal>
@@ -27834,45 +27827,21 @@ SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');
    </table>
 
    <para>
-      The <function>suppress_redundant_updates_trigger</function> function,
-      when applied as a row-level <literal>BEFORE UPDATE</literal> trigger,
-      will prevent any update that does not actually change the data in the
-      row from taking place.  This overrides the normal behavior which always
-      performs a physical row update
-      regardless of whether or not the data has changed. (This normal behavior
-      makes updates run faster, since no checking is required, and is also
-      useful in certain cases.)
+      <function>suppress_redundant_updates_trigger</function> 函数在作为行级 <literal>BEFORE UPDATE</literal> 触发器应用时，将阻止任何实际上不改变行中数据的更新发生。这会覆盖总是执行物理行更新的常规行为，无论数据是否已更改。（这种常规行为使更新运行得更快，因为不需要进行检查，并且在某些情况下也很有用。）
     </para>
 
     <para>
-      Ideally, you should avoid running updates that don't actually
-      change the data in the record. Redundant updates can cost considerable
-      unnecessary time, especially if there are lots of indexes to alter,
-      and space in dead rows that will eventually have to be vacuumed.
-      However, detecting such situations in client code is not
-      always easy, or even possible, and writing expressions to detect
-      them can be error-prone. An alternative is to use
-      <function>suppress_redundant_updates_trigger</function>, which will skip
-      updates that don't change the data. You should use this with care,
-      however. The trigger takes a small but non-trivial time for each record,
-      so if most of the records affected by updates do actually change,
-      use of this trigger will make updates run slower on average.
+      理想情况下，应当避免执行实际上不改变记录中数据的更新。冗余更新会耗费相当多的不必要时间，尤其是在有大量索引需要修改时，还会占用最终必须被清理的死行空间。然而，在客户端代码中检测这类情况并不总是容易，甚至不可能，而编写表达式来检测它们又容易出错。另一种方法是使用 <function>suppress_redundant_updates_trigger</function>，它会跳过不改变数据的更新。不过，使用时应谨慎。该触发器对每条记录都会花费少量但不可忽略的时间，因此如果受更新影响的大多数记录确实发生了变化，使用该触发器平均会使更新运行得更慢。
     </para>
 
     <para>
-      The <function>suppress_redundant_updates_trigger</function> function can be
-      added to a table like this:
+      <function>suppress_redundant_updates_trigger</function> 函数可以像这样添加到表中：
 <programlisting>
 CREATE TRIGGER z_min_update
 BEFORE UPDATE ON tablename
 FOR EACH ROW EXECUTE FUNCTION suppress_redundant_updates_trigger();
 </programlisting>
-      In most cases, you need to fire this trigger last for each row, so that
-      it does not override other triggers that might wish to alter the row.
-      Bearing in mind that triggers fire in name order, you would therefore
-      choose a trigger name that comes after the name of any other trigger
-      you might have on the table.  (Hence the <quote>z</quote> prefix in the
-      example.)
+      在大多数情况下，你需要为每一行最后触发此触发器，这样它就不会覆盖其他可能希望修改该行的触发器。请记住触发器按名称顺序触发，因此你应选择一个排在表上任何其他触发器名称之后的触发器名称。（因此示例中使用了 <quote>z</quote> 前缀。）
     </para>
   </sect1>
 
