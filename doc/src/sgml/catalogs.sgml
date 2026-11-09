@@ -6421,36 +6421,27 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </indexterm>
 
   <para>
-   The catalog <structname>pg_shdepend</structname> records the
-   dependency relationships between database objects and shared objects,
-   such as roles.  This information allows
-   <productname>PostgreSQL</productname> to ensure that those objects are
-   unreferenced before attempting to delete them.
+   系统目录 <structname>pg_shdepend</structname> 记录数据库对象与共享对象（例如角色）之间的依赖关系。此信息使 <productname>PostgreSQL</productname> 能够确保在尝试删除这些对象之前，它们没有被引用。
   </para>
 
   <para>
-   See also <link linkend="catalog-pg-depend"><structname>pg_depend</structname></link>,
-   which performs a similar function for dependencies involving objects
-   within a single database.
+   另请参阅 <link linkend="catalog-pg-depend"><structname>pg_depend</structname></link>，它对涉及单个数据库内对象的依赖关系执行类似的功能。
   </para>
 
   <para>
-   Unlike most system catalogs, <structname>pg_shdepend</structname>
-   is shared across all databases of a cluster: there is only one
-   copy of <structname>pg_shdepend</structname> per cluster, not
-   one per database.
+   与大多数系统目录不同，<structname>pg_shdepend</structname> 在数据库集簇的所有数据库之间共享：每个数据库集簇只有一份 <structname>pg_shdepend</structname> 副本，而不是每个数据库一份。
   </para>
 
   <table>
-   <title><structname>pg_shdepend</structname> Columns</title>
+   <title><structname>pg_shdepend</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -6459,31 +6450,30 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>dbid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the database the dependent object is in,
-       or zero for a shared object
+       依赖对象所在数据库的 OID，如果是共享对象则为零
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>classid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the system catalog the dependent object is in
+       依赖对象所在系统目录的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>objid</structfield> <type>oid</type>
-       (references any OID column)
+       （引用任意 OID 列）
       </para>
       <para>
-       The OID of the specific dependent object
+       特定依赖对象的 OID
       </para></entry>
      </row>
 
@@ -6492,30 +6482,28 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>objsubid</structfield> <type>int4</type>
       </para>
       <para>
-       For a table column, this is the column number (the
-       <structfield>objid</structfield> and <structfield>classid</structfield> refer to the
-       table itself).  For all other object types, this column is zero.
+       对于表列，这是列号（<structfield>objid</structfield> 和 <structfield>classid</structfield> 指表本身）。对于所有其他对象类型，此列为零。
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>refclassid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the system catalog the referenced object is in
-       (must be a shared catalog)
+       被引用对象所在的系统目录的 OID
+       （必须是共享目录）
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>refobjid</structfield> <type>oid</type>
-       (references any OID column)
+       （引用任意 OID 列）
       </para>
       <para>
-       The OID of the specific referenced object
+       特定被引用对象的 OID
       </para></entry>
      </row>
 
@@ -6524,7 +6512,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>deptype</structfield> <type>char</type>
       </para>
       <para>
-       A code defining the specific semantics of this dependency relationship; see text
+       定义此依赖关系具体语义的代码；参见正文
       </para></entry>
      </row>
     </tbody>
@@ -6532,18 +6520,14 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </table>
 
   <para>
-   In all cases, a <structname>pg_shdepend</structname> entry indicates that
-   the referenced object cannot be dropped without also dropping the dependent
-   object.  However, there are several subflavors identified by
-   <structfield>deptype</structfield>:
+   在所有情况下，<structname>pg_shdepend</structname> 条目都表示：如果不一并删除依赖对象，就无法删除被引用对象。不过，有几种由 <structfield>deptype</structfield> 标识的子类型：
 
    <variablelist>
     <varlistentry>
      <term><symbol>SHARED_DEPENDENCY_OWNER</symbol> (<literal>o</literal>)</term>
      <listitem>
       <para>
-       The referenced object (which must be a role) is the owner of the
-       dependent object.
+       被引用对象（必须是一个角色）是依赖对象的所有者。
       </para>
      </listitem>
     </varlistentry>
@@ -6552,11 +6536,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>SHARED_DEPENDENCY_ACL</symbol> (<literal>a</literal>)</term>
      <listitem>
       <para>
-       The referenced object (which must be a role) is mentioned in the
-       <acronym>ACL</acronym> of the
-       dependent object.  (A <symbol>SHARED_DEPENDENCY_ACL</symbol> entry is
-       not made for the owner of the object, since the owner will have
-       a <symbol>SHARED_DEPENDENCY_OWNER</symbol> entry anyway.)
+       被引用对象（必须是一个角色）出现在依赖对象的 <acronym>ACL</acronym> 中。（不会为对象的所有者创建 <symbol>SHARED_DEPENDENCY_ACL</symbol> 条目，因为所有者无论如何都会有一个 <symbol>SHARED_DEPENDENCY_OWNER</symbol> 条目。）
       </para>
      </listitem>
     </varlistentry>
@@ -6565,9 +6545,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>SHARED_DEPENDENCY_INITACL</symbol> (<literal>i</literal>)</term>
      <listitem>
       <para>
-       The referenced object (which must be a role) is mentioned in a
-       <link linkend="catalog-pg-init-privs"><structname>pg_init_privs</structname></link>
-       entry for the dependent object.
+       被引用对象（必须是一个角色）出现在依赖对象的 <link linkend="catalog-pg-init-privs"><structname>pg_init_privs</structname></link> 条目中。
       </para>
      </listitem>
     </varlistentry>
@@ -6576,8 +6554,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>SHARED_DEPENDENCY_POLICY</symbol> (<literal>r</literal>)</term>
      <listitem>
       <para>
-       The referenced object (which must be a role) is mentioned as the
-       target of a dependent policy object.
+       被引用对象（必须是一个角色）被提及为某个依赖策略对象的目标。
       </para>
      </listitem>
     </varlistentry>
@@ -6586,24 +6563,17 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>SHARED_DEPENDENCY_TABLESPACE</symbol> (<literal>t</literal>)</term>
      <listitem>
       <para>
-       The referenced object (which must be a tablespace) is mentioned as
-       the tablespace for a relation that doesn't have storage.
+       被引用对象（必须是一个表空间）被提及为某个没有存储的关系的表空间。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
 
-   Other dependency flavors might be needed in future.  Note in particular
-   that the current definition only supports roles and tablespaces as referenced
-   objects.
+   将来可能需要其他种类的依赖。特别要注意，当前的定义只支持把角色和表空间作为被引用的对象。
   </para>
 
   <para>
-   As in the <structname>pg_depend</structname> catalog, most objects
-   created during <application>initdb</application> are
-   considered <quote>pinned</quote>.  No entries are made
-   in <structname>pg_shdepend</structname> that would have a pinned
-   object as either referenced or dependent object.
+   与 <structname>pg_depend</structname> 系统目录中一样，在 <application>initdb</application> 期间创建的大多数对象都被视为<quote>固定</quote>的。<structname>pg_shdepend</structname> 中不会为任何以固定对象作为被引用对象或依赖对象的依赖关系建立条目。
   </para>
 
  </sect1>
