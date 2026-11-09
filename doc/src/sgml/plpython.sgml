@@ -102,132 +102,101 @@ $$ LANGUAGE plpython3u;
  </sect1>
 
  <sect1 id="plpython-data">
-  <title>Data Values</title>
+  <title>数据值</title>
   <para>
-   Generally speaking, the aim of PL/Python is to provide
-   a <quote>natural</quote> mapping between the PostgreSQL and the
-   Python worlds.  This informs the data mapping rules described
-   below.
+   一般来说，PL/Python 的目标是在 PostgreSQL 世界与 Python 世界之间提供一种<quote>自然的</quote>映射。这决定了下面描述的数据映射规则。
   </para>
 
   <sect2 id="plpython-data-type-mapping">
-   <title>Data Type Mapping</title>
+   <title>数据类型映射</title>
    <para>
-    When a PL/Python function is called, its arguments are converted from
-    their PostgreSQL data type to a corresponding Python type:
+    当调用 PL/Python 函数时，其参数会从相应的 PostgreSQL 数据类型转换为对应的 Python 类型：
 
     <itemizedlist>
      <listitem>
       <para>
-       PostgreSQL <type>boolean</type> is converted to Python <type>bool</type>.
+       PostgreSQL <type>boolean</type> 会转换为 Python <type>bool</type>。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       PostgreSQL <type>smallint</type>, <type>int</type>, <type>bigint</type>
-       and <type>oid</type> are converted to Python <type>int</type>.
+       PostgreSQL <type>smallint</type>、<type>int</type>、<type>bigint</type>
+       和 <type>oid</type> 会转换为 Python <type>int</type>。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       PostgreSQL <type>real</type> and <type>double</type> are converted to
-       Python <type>float</type>.
+       PostgreSQL <type>real</type> 和 <type>double</type> 被转换为 Python <type>float</type>。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       PostgreSQL <type>numeric</type> is converted to
-       Python <type>Decimal</type>.  This type is imported from
-       the <literal>cdecimal</literal> package if that is available.
-       Otherwise,
-       <literal>decimal.Decimal</literal> from the standard library will be
-       used.  <literal>cdecimal</literal> is significantly faster
-       than <literal>decimal</literal>.  In Python 3.3 and up,
-       however, <literal>cdecimal</literal> has been integrated into the
-       standard library under the name <literal>decimal</literal>, so there is
-       no longer any difference.
+       PostgreSQL <type>numeric</type> 被转换为 Python <type>Decimal</type>。如果 <literal>cdecimal</literal> 包可用，则从该包导入此类型。否则，将使用标准库中的 <literal>decimal.Decimal</literal>。<literal>cdecimal</literal> 比 <literal>decimal</literal> 快得多。不过在 Python 3.3 及更高版本中，<literal>cdecimal</literal> 已经以 <literal>decimal</literal> 的名称集成到标准库中，因此不再有任何区别。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       PostgreSQL <type>bytea</type> is converted to Python <type>bytes</type>.
+       PostgreSQL <type>bytea</type> 被转换为 Python <type>bytes</type>。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       All other data types, including the PostgreSQL character string types,
-       are converted to a Python <type>str</type> (in Unicode like all Python
-       strings).
+       所有其他数据类型（包括 PostgreSQL 的字符串类型）都被转换为 Python <type>str</type>（与所有 Python 字符串一样采用 Unicode）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       For nonscalar data types, see below.
+       对于非标量数据类型，请参见下文。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    When a PL/Python function returns, its return value is converted to the
-    function's declared PostgreSQL return data type as follows:
+    当 PL/Python 函数返回时，其返回值会按如下方式转换为该函数所声明的 PostgreSQL 返回数据类型：
 
     <itemizedlist>
      <listitem>
       <para>
-       When the PostgreSQL return type is <type>boolean</type>, the
-       return value will be evaluated for truth according to the
-       <emphasis>Python</emphasis> rules.  That is, 0 and empty string
-       are false, but notably <literal>'f'</literal> is true.
+       当 PostgreSQL 返回类型为 <type>boolean</type> 时，返回值将按照 <emphasis>Python</emphasis> 规则进行真值求值。也就是说，0 和空字符串为假，但值得注意的是 <literal>'f'</literal> 为真。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When the PostgreSQL return type is <type>bytea</type>, the return value
-       will be converted to Python <type>bytes</type> using the respective
-       Python built-ins, with the result being converted to
-       <type>bytea</type>.
+       当 PostgreSQL 返回类型为 <type>bytea</type> 时，返回值将使用相应的 Python 内置函数转换为 Python <type>bytes</type>，结果再转换为 <type>bytea</type>。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       For all other PostgreSQL return types, the return value is converted
-       to a string using the Python built-in <literal>str</literal>, and the
-       result is passed to the input function of the PostgreSQL data type.
-       (If the Python value is a <type>float</type>, it is converted using
-       the <literal>repr</literal> built-in instead of <literal>str</literal>, to
-       avoid loss of precision.)
+       对于所有其他 PostgreSQL 返回类型，返回值使用 Python 内置函数 <literal>str</literal> 转换为字符串，然后将结果传递给 PostgreSQL 数据类型的输入函数。（如果 Python 值是 <type>float</type>，则使用 <literal>repr</literal> 内置函数而不是 <literal>str</literal> 进行转换，以避免精度损失。）
       </para>
 
       <para>
-       Strings are automatically converted to the PostgreSQL server encoding
-       when they are passed to PostgreSQL.
+       当字符串传递给 PostgreSQL 时，它们会自动转换为 PostgreSQL 服务器编码。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       For nonscalar data types, see below.
+       对于非标量数据类型，请参见下文。
       </para>
      </listitem>
     </itemizedlist>
 
-    Note that logical mismatches between the declared PostgreSQL
-    return type and the Python data type of the actual return object
-    are not flagged; the value will be converted in any case.
+    请注意，声明的 PostgreSQL 返回类型与实际返回对象的 Python 数据类型之间的逻辑不匹配不会被标记；该值无论如何都会被转换。
    </para>
   </sect2>
 
   <sect2 id="plpython-data-null">
-   <title>Null, None</title>
+   <title>Null、None</title>
   <para>
    If an SQL null value<indexterm><primary>null value</primary><secondary
    sortas="PL/Python">in PL/Python</secondary></indexterm> is passed to a
@@ -259,11 +228,9 @@ $$ LANGUAGE plpython3u;
   </sect2>
 
   <sect2 id="plpython-arrays">
-   <title>Arrays, Lists</title>
+   <title>数组、列表</title>
   <para>
-   SQL array values are passed into PL/Python as a Python list.  To
-   return an SQL array value out of a PL/Python function, return a
-   Python list:
+   SQL 数组值作为 Python 列表传入 PL/Python。要从 PL/Python 函数返回 SQL 数组值，请返回一个 Python 列表：
 
 <programlisting>
 CREATE FUNCTION return_arr()
@@ -279,10 +246,7 @@ SELECT return_arr();
 (1 row)
 </programlisting>
 
-   Multidimensional arrays are passed into PL/Python as nested Python lists.
-   A 2-dimensional array is a list of lists, for example. When returning
-   a multi-dimensional SQL array out of a PL/Python function, the inner
-   lists at each level must all be of the same size. For example:
+   多维数组作为嵌套的 Python 列表传入 PL/Python。例如，二维数组是列表的列表。当从 PL/Python 函数返回多维 SQL 数组时，每一层的内层列表的大小必须全部相同。例如：
 
 <programlisting>
 CREATE FUNCTION test_type_conversion_array_int4(x int4[]) RETURNS int4[] AS $$
@@ -298,17 +262,10 @@ INFO:  ([[1, 2, 3], [4, 5, 6]], &lt;type 'list'&gt;)
 (1 row)
 </programlisting>
 
-   Other Python sequences, like tuples, are also accepted for
-   backwards-compatibility with PostgreSQL versions 9.6 and below, when
-   multi-dimensional arrays were not supported. However, they are always
-   treated as one-dimensional arrays, because they are ambiguous with
-   composite types. For the same reason, when a composite type is used in a
-   multi-dimensional array, it must be represented by a tuple, rather than a
-   list.
+   其他 Python 序列（如元组）也被接受，以便与不支持多维数组的 PostgreSQL 9.6 及更早版本向后兼容。但是，它们始终被视为一维数组，因为它们与复合类型存在歧义。出于同样的原因，当在多维数组中使用复合类型时，必须用元组而不是列表来表示。
   </para>
   <para>
-   Note that in Python, strings are sequences, which can have
-   undesirable effects that might be familiar to Python programmers:
+   请注意，在 Python 中，字符串是序列，这可能会产生一些不良影响，Python 程序员可能对此比较熟悉：
 
 <programlisting>
 CREATE FUNCTION return_str_arr()
@@ -327,12 +284,9 @@ SELECT return_str_arr();
   </sect2>
 
   <sect2 id="plpython-data-composite-types">
-   <title>Composite Types</title>
+   <title>复合类型</title>
   <para>
-   Composite-type arguments are passed to the function as Python mappings. The
-   element names of the mapping are the attribute names of the composite type.
-   If an attribute in the passed row has the null value, it has the value
-   <symbol>None</symbol> in the mapping. Here is an example:
+   复合类型参数作为 Python 映射传递给函数。映射的元素名是复合类型的属性名。如果传入的行中某个属性为 null 值，则它在映射中的值为 <symbol>None</symbol>。下面是一个示例：
 
 <programlisting>
 CREATE TABLE employee (
@@ -354,8 +308,7 @@ $$ LANGUAGE plpython3u;
   </para>
 
   <para>
-   There are multiple ways to return row or composite types from a Python
-   function. The following examples assume we have:
+   从 Python 函数返回行类型或复合类型有多种方式。以下示例假设我们有：
 
 <programlisting>
 CREATE TYPE named_value AS (
@@ -364,18 +317,14 @@ CREATE TYPE named_value AS (
 );
 </programlisting>
 
-   A composite result can be returned as a:
+   复合结果可以按以下形式返回：
 
    <variablelist>
     <varlistentry>
-     <term>Sequence type (a tuple or list, but not a set because
-     it is not indexable)</term>
+     <term>序列类型（元组或列表，但不能是集合，因为集合不可索引）</term>
      <listitem>
       <para>
-       Returned sequence objects must have the same number of items as the
-       composite result type has fields. The item with index 0 is assigned to
-       the first field of the composite type, 1 to the second and so on. For
-       example:
+       返回的序列对象所包含的项数必须与复合结果类型的字段数相同。索引为 0 的项被赋给复合类型的第一个字段，索引为 1 的项赋给第二个字段，依此类推。例如：
 
 <programlisting>
 CREATE FUNCTION make_pair (name text, value integer)
@@ -386,23 +335,19 @@ AS $$
 $$ LANGUAGE plpython3u;
 </programlisting>
 
-       To return an SQL null for any column, insert <symbol>None</symbol> at
-       the corresponding position.
+       要为任何列返回 SQL null，请在相应位置插入 <symbol>None</symbol>。
       </para>
       <para>
-       When an array of composite types is returned, it cannot be returned as a list,
-       because it is ambiguous whether the Python list represents a composite type,
-       or another array dimension.
+       当返回复合类型数组时，不能将其作为列表返回，因为无法确定 Python 列表表示的是一个复合类型，还是另一个数组维度。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry>
-     <term>Mapping (dictionary)</term>
+     <term>映射（字典）</term>
      <listitem>
       <para>
-       The value for each result type column is retrieved from the mapping
-       with the column name as key. Example:
+       每个结果类型列的值都从映射中获取，以列名作为键。例如：
 
 <programlisting>
 CREATE FUNCTION make_pair (name text, value integer)
@@ -412,20 +357,16 @@ AS $$
 $$ LANGUAGE plpython3u;
 </programlisting>
 
-       Any extra dictionary key/value pairs are ignored. Missing keys are
-       treated as errors.
-       To return an SQL null value for any column, insert
-       <symbol>None</symbol> with the corresponding column name as the key.
+任何额外的字典键/值对都会被忽略。缺少键会被视为错误。要为任何列返回 SQL null 值，请插入以对应列名为键的 <symbol>None</symbol>。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry>
-     <term>Object (any object providing method <literal>__getattr__</literal>)</term>
+     <term>对象（任何提供 <literal>__getattr__</literal> 方法的对象）</term>
      <listitem>
       <para>
-       This works the same as a mapping.
-       Example:
+       这与映射的工作方式相同。例如：
 
 <programlisting>
 CREATE FUNCTION make_pair (name text, value integer)
@@ -451,7 +392,7 @@ $$ LANGUAGE plpython3u;
   </para>
 
    <para>
-    Functions with <literal>OUT</literal> parameters are also supported.  For example:
+    也支持带有 <literal>OUT</literal> 参数的函数。例如：
 <programlisting>
 CREATE FUNCTION multiout_simple(OUT i integer, OUT j integer) AS $$
 return (1, 2)
@@ -462,7 +403,7 @@ SELECT * FROM multiout_simple();
    </para>
 
    <para>
-    Output parameters of procedures are passed back the same way.  For example:
+    过程的输出参数以相同的方式传回。例如：
 <programlisting>
 CREATE PROCEDURE python_triple(INOUT a integer, INOUT b integer) AS $$
 return (a * 3, b * 3)
@@ -474,12 +415,9 @@ CALL python_triple(5, 10);
   </sect2>
 
   <sect2 id="plpython-data-set-returning-funcs">
-   <title>Set-Returning Functions</title>
+   <title>集合返回函数</title>
   <para>
-   A <application>PL/Python</application> function can also return sets of
-   scalar or composite types. There are several ways to achieve this because
-   the returned object is internally turned into an iterator. The following
-   examples assume we have composite type:
+   <application>PL/Python</application> 函数也可以返回标量类型或复合类型的集合。有多种方式可以实现这一点，因为返回的对象在内部会被转换为迭代器。下面的示例假设我们有复合类型：
 
 <programlisting>
 CREATE TYPE greeting AS (
@@ -488,11 +426,11 @@ CREATE TYPE greeting AS (
 );
 </programlisting>
 
-   A set result can be returned from a:
+   集合结果可以从以下对象返回：
 
    <variablelist>
     <varlistentry>
-     <term>Sequence type (tuple, list, set)</term>
+     <term>序列类型（元组、列表、集合）</term>
      <listitem>
       <para>
 <programlisting>
@@ -509,8 +447,7 @@ $$ LANGUAGE plpython3u;
     </varlistentry>
 
     <varlistentry>
-     <term>Iterator (any object providing <symbol>__iter__</symbol> and
-      <symbol>__next__</symbol> methods)</term>
+     <term>迭代器（任何提供 <symbol>__iter__</symbol> 和 <symbol>__next__</symbol> 方法的对象）</term>
      <listitem>
       <para>
 <programlisting>
@@ -540,7 +477,7 @@ $$ LANGUAGE plpython3u;
     </varlistentry>
 
     <varlistentry>
-     <term>Generator (<literal>yield</literal>)</term>
+     <term>生成器（<literal>yield</literal>）</term>
      <listitem>
       <para>
 <programlisting>
@@ -559,9 +496,8 @@ $$ LANGUAGE plpython3u;
   </para>
 
    <para>
-    Set-returning functions with <literal>OUT</literal> parameters
-    (using <literal>RETURNS SETOF record</literal>) are also
-    supported.  For example:
+    也支持带 <literal>OUT</literal> 参数的集合返回函数
+    （使用 <literal>RETURNS SETOF record</literal>）。例如：
 <programlisting>
 CREATE FUNCTION multiout_simple_setof(n integer, OUT integer, OUT integer) RETURNS SETOF record AS $$
 return [(1, 2)] * n
