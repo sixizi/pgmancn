@@ -4811,14 +4811,14 @@ SELECT * FROM parent WHERE key = 2400;
    </sect1>
 
    <sect1 id="runtime-config-logging">
-    <title>Error Reporting and Logging</title>
+    <title>错误报告和日志记录</title>
 
     <indexterm zone="runtime-config-logging">
      <primary>server log</primary>
     </indexterm>
 
     <sect2 id="runtime-config-logging-where">
-     <title>Where to Log</title>
+     <title>日志记录到哪里</title>
 
      <indexterm zone="runtime-config-logging-where">
       <primary>where to log</primary>
@@ -4834,62 +4834,51 @@ SELECT * FROM parent WHERE key = 2400;
      <varlistentry id="guc-log-destination" xreflabel="log_destination">
       <term><varname>log_destination</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_destination</varname> configuration parameter</primary>
+       <primary><varname>log_destination</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        <productname>PostgreSQL</productname> supports several methods
-         for logging server messages, including
-         <systemitem>stderr</systemitem>, <systemitem>csvlog</systemitem>,
-         <systemitem>jsonlog</systemitem>, and
-         <systemitem>syslog</systemitem>. On Windows,
-         <systemitem>eventlog</systemitem> is also supported. Set this
-         parameter to a list of desired log destinations separated by
-         commas. The default is to log to <systemitem>stderr</systemitem>
-         only.
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+        <productname>PostgreSQL</productname> 支持多种记录服务器消息的方法，包括
+         <systemitem>stderr</systemitem>、<systemitem>csvlog</systemitem>、
+         <systemitem>jsonlog</systemitem> 和
+         <systemitem>syslog</systemitem>。在 Windows 上，
+         还支持 <systemitem>eventlog</systemitem>。将此参数设置为所需日志目标组成的列表，以逗号分隔。
+         默认情况下只记录到 <systemitem>stderr</systemitem>。
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。
        </para>
        <para>
-        If <systemitem>csvlog</systemitem> is included in <varname>log_destination</varname>,
-        log entries are output in <quote>comma-separated
-        value</quote> (<acronym>CSV</acronym>) format, which is convenient for
-        loading logs into programs.
-        See <xref linkend="runtime-config-logging-csvlog"/> for details.
-        <xref linkend="guc-logging-collector"/> must be enabled to generate
-        CSV-format log output.
+        如果 <varname>log_destination</varname> 中包含 <systemitem>csvlog</systemitem>，
+        则日志项以<quote>逗号分隔值</quote>（<acronym>CSV</acronym>）格式输出，
+        便于将日志加载到程序中。
+        详情请参见 <xref linkend="runtime-config-logging-csvlog"/>。
+        必须启用 <xref linkend="guc-logging-collector"/> 才能生成
+        CSV 格式的日志输出。
        </para>
        <para>
-        If <systemitem>jsonlog</systemitem> is included in
-        <varname>log_destination</varname>, log entries are output in
-        <acronym>JSON</acronym> format, which is convenient for loading logs
-        into programs.
-        See <xref linkend="runtime-config-logging-jsonlog"/> for details.
-        <xref linkend="guc-logging-collector"/> must be enabled to generate
-        JSON-format log output.
+        如果
+        <varname>log_destination</varname> 中包含 <systemitem>jsonlog</systemitem>，则日志项以
+        <acronym>JSON</acronym> 格式输出，便于将日志加载到程序中。
+        详情请参见 <xref linkend="runtime-config-logging-jsonlog"/>。
+        必须启用 <xref linkend="guc-logging-collector"/> 才能生成
+        JSON 格式的日志输出。
        </para>
        <para>
-        When either <systemitem>stderr</systemitem>,
-        <systemitem>csvlog</systemitem> or <systemitem>jsonlog</systemitem> are
-        included, the file <filename>current_logfiles</filename> is created to
-        record the location of the log file(s) currently in use by the logging
-        collector and the associated logging destination. This provides a
-        convenient way to find the logs currently in use by the instance. Here
-        is an example of this file's content:
+        当包含 <systemitem>stderr</systemitem>、
+        <systemitem>csvlog</systemitem> 或 <systemitem>jsonlog</systemitem> 中的任意一个时，会创建文件 <filename>current_logfiles</filename>，
+        用于记录日志收集器当前正在使用的日志文件的位置以及关联的日志目标。
+        这提供了一种便捷的方式来查找该实例当前正在使用的日志。以下是该文件内容的一个示例：
 <programlisting>
 stderr log/postgresql.log
 csvlog log/postgresql.csv
 jsonlog log/postgresql.json
 </programlisting>
 
-        <filename>current_logfiles</filename> is recreated when a new log file
-        is created as an effect of rotation, and
-        when <varname>log_destination</varname> is reloaded.  It is removed when
-        none of <systemitem>stderr</systemitem>,
-        <systemitem>csvlog</systemitem> or <systemitem>jsonlog</systemitem> are
-        included in <varname>log_destination</varname>, and when the logging
-        collector is disabled.
+        当因轮转而创建新的日志文件时，以及重新加载 <varname>log_destination</varname> 时，
+        会重新创建 <filename>current_logfiles</filename>。当 <varname>log_destination</varname> 中不包含
+        <systemitem>stderr</systemitem>、<systemitem>csvlog</systemitem> 或 <systemitem>jsonlog</systemitem> 中的任何一个时，
+        以及当日志收集器被禁用时，该文件会被删除。
        </para>
 
        <note>
@@ -4910,12 +4899,10 @@ local0.*    /var/log/postgresql
          to make it work.
         </para>
         <para>
-         On Windows, when you use the <literal>eventlog</literal>
-         option for <varname>log_destination</varname>, you should
-         register an event source and its library with the operating
-         system so that the Windows Event Viewer can display event
-         log messages cleanly.
-         See <xref linkend="event-log-registration"/> for details.
+         在 Windows 上，当你对 <varname>log_destination</varname> 使用 <literal>eventlog</literal>
+        选项时，应当向操作系统注册一个事件源及其库，
+        以便 Windows 事件查看器能够清晰地显示事件日志消息。
+        详情请参见 <xref linkend="event-log-registration"/>。
         </para>
        </note>
       </listitem>
@@ -4924,44 +4911,29 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-logging-collector" xreflabel="logging_collector">
       <term><varname>logging_collector</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>logging_collector</varname> configuration parameter</primary>
+       <primary><varname>logging_collector</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-         This parameter enables the <firstterm>logging collector</firstterm>, which
-         is a background process that captures log messages
-         sent to <systemitem>stderr</systemitem> and redirects them into log files.
-         This approach is often more useful than
-         logging to <application>syslog</application>, since some types of messages
-         might not appear in <application>syslog</application> output.  (One common
-         example is dynamic-linker failure messages; another is error messages
-         produced by scripts such as <varname>archive_command</varname>.)
-         This parameter can only be set at server start.
+         此参数启用 <firstterm>日志收集器</firstterm>，
+        它是一个后台进程，负责捕获发送到 <systemitem>stderr</systemitem> 的日志消息
+        并将它们重定向到日志文件中。
+        这种方法通常比记录到 <application>syslog</application> 更有用，
+        因为某些类型的消息可能不会出现在 <application>syslog</application> 输出中。
+        （一个常见的例子是动态链接器失败消息；另一个是诸如 <varname>archive_command</varname> 之类的脚本产生的错误消息。）
+        此参数只能在服务器启动时设置。
        </para>
 
        <note>
         <para>
-         It is possible to log to <systemitem>stderr</systemitem> without using the
-         logging collector; the log messages will just go to wherever the
-         server's <systemitem>stderr</systemitem> is directed.  However, that method is
-         only suitable for low log volumes, since it provides no convenient
-         way to rotate log files.  Also, on some platforms not using the
-         logging collector can result in lost or garbled log output, because
-         multiple processes writing concurrently to the same log file can
-         overwrite each other's output.
+         可以在不使用日志收集器的情况下记录到 <systemitem>stderr</systemitem>；日志消息只会被发送到服务器 <systemitem>stderr</systemitem> 所指向的位置。不过，该方法只适用于日志量较低的场景，因为它没有提供方便的日志文件轮转方式。此外，在某些平台上，不使用日志收集器可能导致日志输出丢失或乱码，因为多个进程并发写入同一个日志文件时可能会相互覆盖输出。
         </para>
        </note>
 
        <note>
         <para>
-          The logging collector is designed to never lose messages.  This means
-          that in case of extremely high load, server processes could be
-          blocked while trying to send additional log messages when the
-          collector has fallen behind.  In contrast, <application>syslog</application>
-          prefers to drop messages if it cannot write them, which means it
-          may fail to log some messages in such cases but it will not block
-          the rest of the system.
+          日志收集器的设计目标是绝不丢失消息。这意味着在负载极高的情况下，当收集器处理不过来时，服务器进程在尝试发送更多日志消息时可能会被阻塞。相比之下，<application>syslog</application> 在无法写入消息时更倾向于丢弃消息，这意味着在这种情况下它可能会漏记一些消息，但不会阻塞系统的其余部分。
         </para>
        </note>
 
@@ -4971,18 +4943,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-directory" xreflabel="log_directory">
       <term><varname>log_directory</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_directory</varname> configuration parameter</primary>
+       <primary><varname>log_directory</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>logging_collector</varname> is enabled,
-        this parameter determines the directory in which log files will be created.
-        It can be specified as an absolute path, or relative to the
-        cluster data directory.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
-        The default is <literal>log</literal>.
+        当启用 <varname>logging_collector</varname> 时，此参数决定创建日志文件所在的目录。它可以指定为绝对路径，或相对于数据库集簇数据目录的路径。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。默认值为 <literal>log</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -4990,53 +4956,26 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-filename" xreflabel="log_filename">
       <term><varname>log_filename</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_filename</varname> configuration parameter</primary>
+       <primary><varname>log_filename</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>logging_collector</varname> is enabled,
-        this parameter sets the file names of the created log files.  The value
-        is treated as a <function>strftime</function> pattern,
-        so <literal>%</literal>-escapes can be used to specify time-varying
-        file names.  (Note that if there are
-        any time-zone-dependent <literal>%</literal>-escapes, the computation
-        is done in the zone specified
-        by <xref linkend="guc-log-timezone"/>.)
-        The supported <literal>%</literal>-escapes are similar to those
-        listed in the Open Group's <ulink
+        当启用 <varname>logging_collector</varname> 时，此参数设置所创建日志文件的文件名。该值被当作 <function>strftime</function> 模式处理，因此可以使用 <literal>%</literal> 转义来指定随时间变化的文件名。（注意，如果存在任何依赖于时区的 <literal>%</literal> 转义，则计算是在 <xref linkend="guc-log-timezone"/> 指定的时区中进行的。）支持的 <literal>%</literal> 转义与 Open Group 的 <ulink
         url="https://pubs.opengroup.org/onlinepubs/009695399/functions/strftime.html">strftime
-        </ulink> specification.
-        Note that the system's <function>strftime</function> is not used
-        directly, so platform-specific (nonstandard) extensions do not work.
-        The default is <literal>postgresql-%Y-%m-%d_%H%M%S.log</literal>.
+        </ulink> 规范中列出的转义类似。注意，系统自身的 <function>strftime</function> 不会被直接使用，因此平台相关的（非标准）扩展不起作用。默认值为 <literal>postgresql-%Y-%m-%d_%H%M%S.log</literal>。
        </para>
        <para>
-        If you specify a file name without escapes, you should plan to
-        use a log rotation utility to avoid eventually filling the
-        entire disk.  In releases prior to 8.4, if
-        no <literal>%</literal> escapes were
-        present, <productname>PostgreSQL</productname> would append
-        the epoch of the new log file's creation time, but this is no
-        longer the case.
+        如果你指定的文件名中不含转义序列，你应当计划使用日志轮转工具，以避免最终填满整个磁盘。在 8.4 之前的版本中，如果不存在 <literal>%</literal> 转义，<productname>PostgreSQL</productname> 会追加新日志文件创建时间的 epoch，但现在不再如此。
        </para>
        <para>
-        If CSV-format output is enabled in <varname>log_destination</varname>,
-        <literal>.csv</literal> will be appended to the timestamped
-        log file name to create the file name for CSV-format output.
-        (If <varname>log_filename</varname> ends in <literal>.log</literal>, the suffix is
-        replaced instead.)
+        如果在 <varname>log_destination</varname> 中启用了 CSV 格式输出，<literal>.csv</literal> 将被追加到带时间戳的日志文件名之后，以构成 CSV 格式输出的文件名。（如果 <varname>log_filename</varname> 以 <literal>.log</literal> 结尾，则改为替换该后缀。）
        </para>
        <para>
-        If JSON-format output is enabled in <varname>log_destination</varname>,
-        <literal>.json</literal> will be appended to the timestamped
-        log file name to create the file name for JSON-format output.
-        (If <varname>log_filename</varname> ends in <literal>.log</literal>, the suffix is
-        replaced instead.)
+        如果在 <varname>log_destination</varname> 中启用了 JSON 格式输出，<literal>.json</literal> 将被追加到带时间戳的日志文件名之后，以构成 JSON 格式输出的文件名。（如果 <varname>log_filename</varname> 以 <literal>.log</literal> 结尾，则改为替换该后缀。）
        </para>
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5044,33 +4983,19 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-file-mode" xreflabel="log_file_mode">
       <term><varname>log_file_mode</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_file_mode</varname> configuration parameter</primary>
+       <primary><varname>log_file_mode</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        On Unix systems this parameter sets the permissions for log files
-        when <varname>logging_collector</varname> is enabled. (On Microsoft
-        Windows this parameter is ignored.)
-        The parameter value is expected to be a numeric mode
-        specified in the format accepted by the
-        <function>chmod</function> and <function>umask</function>
-        system calls.  (To use the customary octal format the number
-        must start with a <literal>0</literal> (zero).)
+        在 Unix 系统上，当启用 <varname>logging_collector</varname> 时，此参数设置日志文件的权限。（在 Microsoft Windows 上此参数被忽略。）
+        参数值应为以 <function>chmod</function> 和 <function>umask</function> 系统调用所接受的格式指定的数字模式。（要使用惯用的八进制格式，数字必须以 <literal>0</literal>（零）开头。）
        </para>
        <para>
-        The default permissions are <literal>0600</literal>, meaning only the
-        server owner can read or write the log files.  The other commonly
-        useful setting is <literal>0640</literal>, allowing members of the owner's
-        group to read the files.  Note however that to make use of such a
-        setting, you'll need to alter <xref linkend="guc-log-directory"/> to
-        store the files somewhere outside the cluster data directory.  In
-        any case, it's unwise to make the log files world-readable, since
-        they might contain sensitive data.
+        默认权限是 <literal>0600</literal>，这意味着只有服务器所有者可以读写日志文件。另一个常用的有用设置是 <literal>0640</literal>，它允许所有者所在组的成员读取这些文件。但请注意，要使用这样的设置，你需要修改 <xref linkend="guc-log-directory"/>，把文件存放在数据库集簇数据目录之外的某个位置。无论如何，让日志文件全局可读都是不明智的，因为它们可能包含敏感数据。
        </para>
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5078,19 +5003,17 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-rotation-age" xreflabel="log_rotation_age">
       <term><varname>log_rotation_age</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_rotation_age</varname> configuration parameter</primary>
+       <primary><varname>log_rotation_age</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>logging_collector</varname> is enabled,
-        this parameter determines the maximum amount of time to use an
-        individual log file, after which a new log file will be created.
-        If this value is specified without units, it is taken as minutes.
-        The default is 24 hours.
-        Set to zero to disable time-based creation of new log files.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        当启用 <varname>logging_collector</varname> 时，
+        此参数决定单个日志文件的最长使用时间，超过该时间后将创建新的日志文件。
+        如果指定此值时不带单位，则按分钟处理。
+        默认值为 24 小时。
+        设置为零可禁用基于时间创建新日志文件。
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5098,20 +5021,19 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-rotation-size" xreflabel="log_rotation_size">
       <term><varname>log_rotation_size</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_rotation_size</varname> configuration parameter</primary>
+       <primary><varname>log_rotation_size</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <varname>logging_collector</varname> is enabled,
-        this parameter determines the maximum size of an individual log file.
-        After this amount of data has been emitted into a log file,
-        a new log file will be created.
-        If this value is specified without units, it is taken as kilobytes.
-        The default is 10 megabytes.
-        Set to zero to disable size-based creation of new log files.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        当启用 <varname>logging_collector</varname> 时，
+        此参数决定单个日志文件的最大大小。
+        在向日志文件写入这么多数据之后，
+        将创建新的日志文件。
+        如果指定此值时不带单位，则按千字节处理。
+        默认值为 10 兆字节。
+        设置为零可禁用基于大小创建新日志文件。
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5124,37 +5046,35 @@ local0.*    /var/log/postgresql
       </term>
       <listitem>
        <para>
-        When <varname>logging_collector</varname> is enabled,
-        this parameter will cause <productname>PostgreSQL</productname> to truncate (overwrite),
-        rather than append to, any existing log file of the same name.
-        However, truncation will occur only when a new file is being opened
-        due to time-based rotation, not during server startup or size-based
-        rotation.  When off, pre-existing files will be appended to in
-        all cases.  For example, using this setting in combination with
-        a <varname>log_filename</varname> like <literal>postgresql-%H.log</literal>
-        would result in generating twenty-four hourly log files and then
-        cyclically overwriting them.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        当启用 <varname>logging_collector</varname> 时，
+        此参数将使 <productname>PostgreSQL</productname> 截断（覆盖）任何同名的现有日志文件，
+        而不是向其追加内容。
+        不过，只有在因基于时间的轮转而打开新文件时才会发生截断，
+        在服务器启动或基于大小的轮转期间不会发生。
+        关闭时，在所有情况下都会向已存在的文件追加内容。
+        例如，将此设置与类似 <literal>postgresql-%H.log</literal> 的 <varname>log_filename</varname> 结合使用，
+        会生成二十四个每小时的日志文件，然后循环覆盖它们。
+        此参数只能在 <filename>postgresql.conf</filename>
+        文件中或服务器命令行上设置。
        </para>
        <para>
-        Example:  To keep 7 days of logs, one log file per day named
-        <literal>server_log.Mon</literal>, <literal>server_log.Tue</literal>,
-        etc., and automatically overwrite last week's log with this week's log,
-        set <varname>log_filename</varname> to <literal>server_log.%a</literal>,
-        <varname>log_truncate_on_rotation</varname> to <literal>on</literal>, and
-        <varname>log_rotation_age</varname> to <literal>1440</literal>.
+        示例：要保留 7 天的日志，每天一个日志文件，命名为
+        <literal>server_log.Mon</literal>、<literal>server_log.Tue</literal>
+        等，并自动用本周的日志覆盖上周的日志，
+        请将 <varname>log_filename</varname> 设置为 <literal>server_log.%a</literal>，
+        将 <varname>log_truncate_on_rotation</varname> 设置为 <literal>on</literal>，并将
+        <varname>log_rotation_age</varname> 设置为 <literal>1440</literal>。
        </para>
        <para>
-        Example: To keep 24 hours of logs, one log file per hour, but
-        also rotate sooner if the log file size exceeds 1GB, set
-        <varname>log_filename</varname> to <literal>server_log.%H%M</literal>,
-        <varname>log_truncate_on_rotation</varname> to <literal>on</literal>,
-        <varname>log_rotation_age</varname> to <literal>60</literal>, and
-        <varname>log_rotation_size</varname> to <literal>1000000</literal>.
-        Including <literal>%M</literal> in <varname>log_filename</varname> allows
-        any size-driven rotations that might occur to select a file name
-        different from the hour's initial file name.
+        示例：要保留 24 小时的日志，每小时一个日志文件，但
+        如果日志文件大小超过 1GB 则提前轮转，请将
+        <varname>log_filename</varname> 设置为 <literal>server_log.%H%M</literal>，
+        将 <varname>log_truncate_on_rotation</varname> 设置为 <literal>on</literal>，
+        将 <varname>log_rotation_age</varname> 设置为 <literal>60</literal>，并将
+        <varname>log_rotation_size</varname> 设置为 <literal>1000000</literal>。
+        在 <varname>log_filename</varname> 中包含 <literal>%M</literal> 可让
+        可能发生的任何由大小驱动的轮转选择与该小时初始文件名
+        不同的文件名。
        </para>
       </listitem>
      </varlistentry>
@@ -5167,17 +5087,17 @@ local0.*    /var/log/postgresql
       </term>
       <listitem>
        <para>
-        When logging to <application>syslog</application> is enabled, this parameter
-        determines the <application>syslog</application>
-        <quote>facility</quote> to be used.  You can choose
-        from <literal>LOCAL0</literal>, <literal>LOCAL1</literal>,
-        <literal>LOCAL2</literal>, <literal>LOCAL3</literal>, <literal>LOCAL4</literal>,
-        <literal>LOCAL5</literal>, <literal>LOCAL6</literal>, <literal>LOCAL7</literal>;
-        the default is <literal>LOCAL0</literal>. See also the
-        documentation of your system's
-        <application>syslog</application> daemon.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        当启用记录到 <application>syslog</application> 时，此参数
+        决定要使用的 <application>syslog</application>
+        <quote>设施</quote>。你可以
+        从 <literal>LOCAL0</literal>、<literal>LOCAL1</literal>、
+        <literal>LOCAL2</literal>、<literal>LOCAL3</literal>、<literal>LOCAL4</literal>、
+        <literal>LOCAL5</literal>、<literal>LOCAL6</literal>、<literal>LOCAL7</literal> 中选择；
+        默认为 <literal>LOCAL0</literal>。另请参阅
+        你系统的 <application>syslog</application>
+        守护进程的文档。
+        此参数只能在 <filename>postgresql.conf</filename>
+        文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5190,13 +5110,12 @@ local0.*    /var/log/postgresql
       </term>
        <listitem>
         <para>
-         When logging to <application>syslog</application> is enabled, this parameter
-         determines the program name used to identify
-         <productname>PostgreSQL</productname> messages in
-         <application>syslog</application> logs. The default is
-         <literal>postgres</literal>.
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         当启用记录到 <application>syslog</application> 时，此参数决定用于在
+         <application>syslog</application> 日志中标识
+         <productname>PostgreSQL</productname> 消息的程序名。默认值为
+         <literal>postgres</literal>。
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。
         </para>
        </listitem>
       </varlistentry>
@@ -5210,21 +5129,18 @@ local0.*    /var/log/postgresql
 
        <listitem>
         <para>
-         When logging to <application>syslog</application> and this is on (the
-         default), then each message will be prefixed by an increasing
-         sequence number (such as <literal>[2]</literal>).  This circumvents
-         the <quote>--- last message repeated N times ---</quote> suppression
-         that many syslog implementations perform by default.  In more modern
-         syslog implementations, repeated message suppression can be configured
-         (for example, <literal>$RepeatedMsgReduction</literal>
-         in <productname>rsyslog</productname>), so this might not be
-         necessary.  Also, you could turn this off if you actually want to
-         suppress repeated messages.
+         当记录到 <application>syslog</application> 且此项开启（默认情况）时，
+         每条消息前都会加上一个递增的序列号（例如 <literal>[2]</literal>）。这可以规避
+         许多 syslog 实现默认执行的 <quote>--- last message repeated N times ---</quote>
+         抑制。在更现代的 syslog 实现中，可以配置重复消息抑制
+         （例如 <productname>rsyslog</productname> 中的 <literal>$RepeatedMsgReduction</literal>），
+         因此这可能并非必需。另外，如果你确实希望
+         抑制重复消息，也可以关闭此项。
         </para>
 
         <para>
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。
         </para>
       </listitem>
      </varlistentry>
@@ -5237,27 +5153,15 @@ local0.*    /var/log/postgresql
       </term>
       <listitem>
        <para>
-        When logging to <application>syslog</application> is enabled, this parameter
-        determines how messages are delivered to syslog.  When on (the
-        default), messages are split by lines, and long lines are split so
-        that they will fit into 1024 bytes, which is a typical size limit for
-        traditional syslog implementations.  When off, PostgreSQL server log
-        messages are delivered to the syslog service as is, and it is up to
-        the syslog service to cope with the potentially bulky messages.
+        当启用记录到 <application>syslog</application> 时，此参数决定消息如何传递给 syslog。当打开时（默认值），消息按行拆分，长行也会被拆分，以便能放入 1024 字节，这是传统 syslog 实现的典型大小限制。当关闭时，PostgreSQL 服务器日志消息按原样传递给 syslog 服务，由 syslog 服务自行处理可能很庞大的消息。
        </para>
 
        <para>
-        If syslog is ultimately logging to a text file, then the effect will
-        be the same either way, and it is best to leave the setting on, since
-        most syslog implementations either cannot handle large messages or
-        would need to be specially configured to handle them.  But if syslog
-        is ultimately writing into some other medium, it might be necessary or
-        more useful to keep messages logically together.
+        如果 syslog 最终记录到文本文件，那么两种方式的效果相同，最好保持该设置为打开，因为大多数 syslog 实现要么无法处理大消息，要么需要专门配置才能处理它们。但如果 syslog 最终写入某种其他介质，则可能有必要或更有用地让消息在逻辑上保持在一起。
        </para>
 
        <para>
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5265,16 +5169,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-event-source" xreflabel="event_source">
       <term><varname>event_source</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>event_source</varname> configuration parameter</primary>
+       <primary><varname>event_source</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When logging to <application>event log</application> is enabled, this parameter
-        determines the program name used to identify
-        <productname>PostgreSQL</productname> messages in
-        the log. The default is <literal>PostgreSQL</literal>.
-        This parameter can only be set at server start.
+        当启用记录到 <application>event log</application> 时，此参数决定用于在日志中标识 <productname>PostgreSQL</productname> 消息的程序名。默认值为 <literal>PostgreSQL</literal>。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5282,7 +5182,7 @@ local0.*    /var/log/postgresql
       </variablelist>
     </sect2>
      <sect2 id="runtime-config-logging-when">
-     <title>When to Log</title>
+     <title>何时记录日志</title>
 
      <variablelist>
 
@@ -5294,19 +5194,13 @@ local0.*    /var/log/postgresql
       </term>
       <listitem>
        <para>
-        Controls which <link linkend="runtime-config-severity-levels">message
-        levels</link> are written to the server log.
-        Valid values are <literal>DEBUG5</literal>, <literal>DEBUG4</literal>,
-        <literal>DEBUG3</literal>, <literal>DEBUG2</literal>, <literal>DEBUG1</literal>,
-        <literal>INFO</literal>, <literal>NOTICE</literal>, <literal>WARNING</literal>,
-        <literal>ERROR</literal>, <literal>LOG</literal>, <literal>FATAL</literal>, and
-        <literal>PANIC</literal>.  Each level includes all the levels that
-        follow it.  The later the level, the fewer messages are sent
-        to the log.  The default is <literal>WARNING</literal>.  Note that
-        <literal>LOG</literal> has a different rank here than in
-        <xref linkend="guc-client-min-messages"/>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制哪些 <link linkend="runtime-config-severity-levels">消息级别</link> 被写入服务器日志。
+        有效值为 <literal>DEBUG5</literal>、<literal>DEBUG4</literal>、
+        <literal>DEBUG3</literal>、<literal>DEBUG2</literal>、<literal>DEBUG1</literal>、
+        <literal>INFO</literal>、<literal>NOTICE</literal>、<literal>WARNING</literal>、
+        <literal>ERROR</literal>、<literal>LOG</literal>、<literal>FATAL</literal> 和
+        <literal>PANIC</literal>。每个级别都包含其后的所有级别。级别越靠后，发送到日志的消息就越少。默认为 <literal>WARNING</literal>。请注意，<literal>LOG</literal> 在此处的级别顺序与 <xref linkend="guc-client-min-messages"/> 中不同。
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5319,25 +5213,17 @@ local0.*    /var/log/postgresql
       </term>
       <listitem>
        <para>
-        Controls which SQL statements that cause an error
-        condition are recorded in the server log.  The current
-        SQL statement is included in the log entry for any message of
-        the specified
-        <link linkend="runtime-config-severity-levels">severity</link>
-        or higher.
-        Valid values are <literal>DEBUG5</literal>,
-        <literal>DEBUG4</literal>, <literal>DEBUG3</literal>,
-        <literal>DEBUG2</literal>, <literal>DEBUG1</literal>,
-        <literal>INFO</literal>, <literal>NOTICE</literal>,
-        <literal>WARNING</literal>, <literal>ERROR</literal>,
-        <literal>LOG</literal>,
-        <literal>FATAL</literal>, and <literal>PANIC</literal>.
-        The default is <literal>ERROR</literal>, which means statements
-        causing errors, log messages, fatal errors, or panics will be logged.
-        To effectively turn off logging of failing statements,
-        set this parameter to <literal>PANIC</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制哪些导致错误状况的 SQL 语句会被记录到服务器日志中。对于指定 <link linkend="runtime-config-severity-levels">严重级别</link> 或更高级别的任何消息，当前 SQL 语句都会被包含在日志条目中。
+        有效值为 <literal>DEBUG5</literal>、
+        <literal>DEBUG4</literal>、<literal>DEBUG3</literal>、
+        <literal>DEBUG2</literal>、<literal>DEBUG1</literal>、
+        <literal>INFO</literal>、<literal>NOTICE</literal>、
+        <literal>WARNING</literal>、<literal>ERROR</literal>、
+        <literal>LOG</literal>、
+        <literal>FATAL</literal> 和 <literal>PANIC</literal>。
+        默认为 <literal>ERROR</literal>，这意味着导致错误、日志消息、致命错误或 panic 的语句将被记录。
+        要有效关闭失败语句的日志记录，请将此参数设置为 <literal>PANIC</literal>。
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5350,43 +5236,25 @@ local0.*    /var/log/postgresql
       </term>
        <listitem>
         <para>
-         Causes the duration of each completed statement to be logged
-         if the statement ran for at least the specified amount of time.
-         For example, if you set it to <literal>250ms</literal>
-         then all SQL statements that run 250ms or longer will be
-         logged.  Enabling this parameter can be helpful in tracking down
-         unoptimized queries in your applications.
-         If this value is specified without units, it is taken as milliseconds.
-         Setting this to zero prints all statement durations.
-         <literal>-1</literal> (the default) disables logging statement
-         durations.
-         Only superusers and users with the appropriate <literal>SET</literal>
-         privilege can change this setting.
+         使每个已完成语句的持续时间被记录到日志中，前提是该语句运行时间至少达到指定的时长。
+         例如，如果将其设置为 <literal>250ms</literal>，那么所有运行时间达到 250ms 或更长的 SQL 语句都会被记录。启用此参数有助于找出应用程序中未优化的查询。
+         如果指定该值时未带单位，则按毫秒处理。
+         将其设置为零会打印所有语句的持续时间。
+         <literal>-1</literal>（默认值）禁用语句持续时间日志记录。
+         只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
         </para>
 
         <para>
-         This overrides <xref linkend="guc-log-min-duration-sample"/>,
-         meaning that queries with duration exceeding this setting are not
-         subject to sampling and are always logged.
+         这会覆盖 <xref linkend="guc-log-min-duration-sample"/>，也就是说，持续时间超过此设置的查询不会被采样，而总是会被记录日志。
         </para>
 
         <para>
-         For clients using extended query protocol, durations of the Parse,
-         Bind, and Execute steps are logged independently.
+         对于使用扩展查询协议的客户端，Parse、Bind 和 Execute 步骤的持续时间会被独立记录。
         </para>
 
        <note>
         <para>
-         When using this option together with
-         <xref linkend="guc-log-statement"/>,
-         the text of statements that are logged because of
-         <varname>log_statement</varname> will not be repeated in the
-         duration log message.
-         If you are not using <application>syslog</application>, it is recommended
-         that you log the PID or session ID using
-         <xref linkend="guc-log-line-prefix"/>
-         so that you can link the statement message to the later
-         duration message using the process ID or session ID.
+         当此选项与 <xref linkend="guc-log-statement"/> 一起使用时，因 <varname>log_statement</varname> 而被记录的语句文本不会在持续时间日志消息中重复。如果你没有使用 <application>syslog</application>，建议使用 <xref linkend="guc-log-line-prefix"/> 记录 PID 或会话 ID，这样你就可以通过进程 ID 或会话 ID 把语句消息与稍后的持续时间消息关联起来。
         </para>
        </note>
        </listitem>
@@ -5395,40 +5263,20 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-min-duration-sample" xreflabel="log_min_duration_sample">
       <term><varname>log_min_duration_sample</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_min_duration_sample</varname> configuration parameter</primary>
+       <primary><varname>log_min_duration_sample</varname> 配置参数</primary>
       </indexterm>
       </term>
        <listitem>
         <para>
-         Allows sampling the duration of completed statements that ran for
-         at least the specified amount of time.  This produces the same
-         kind of log entries as
-         <xref linkend="guc-log-min-duration-statement"/>, but only for a
-         subset of the executed statements, with sample rate controlled by
-         <xref linkend="guc-log-statement-sample-rate"/>.
-         For example, if you set it to <literal>100ms</literal> then all
-         SQL statements that run 100ms or longer will be considered for
-         sampling.  Enabling this parameter can be helpful when the
-         traffic is too high to log all queries.
-         If this value is specified without units, it is taken as milliseconds.
-         Setting this to zero samples all statement durations.
-         <literal>-1</literal> (the default) disables sampling statement
-         durations.
-         Only superusers and users with the appropriate <literal>SET</literal>
-         privilege can change this setting.
+         允许对运行时间至少达到指定时长的已完成语句的持续时间进行采样。这会产生与 <xref linkend="guc-log-min-duration-statement"/> 相同类型的日志项，但只针对已执行语句的一个子集，采样率由 <xref linkend="guc-log-statement-sample-rate"/> 控制。例如，如果将其设置为 <literal>100ms</literal>，那么所有运行时间达到 100ms 或更长的 SQL 语句都会被纳入采样考虑。当流量过高而无法记录所有查询时，启用此参数会很有帮助。如果指定此值时不带单位，则按毫秒处理。将其设置为零会对所有语句的持续时间进行采样。<literal>-1</literal>（默认值）会禁用语句持续时间采样。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
         </para>
 
         <para>
-         This setting has lower priority
-         than <varname>log_min_duration_statement</varname>, meaning that
-         statements with durations
-         exceeding <varname>log_min_duration_statement</varname> are not
-         subject to sampling and are always logged.
+         此设置的优先级低于 <varname>log_min_duration_statement</varname>，也就是说，持续时间超过 <varname>log_min_duration_statement</varname> 的语句不会被采样，而总是会被记录日志。
         </para>
 
         <para>
-         Other notes for <varname>log_min_duration_statement</varname>
-         apply also to this setting.
+         <varname>log_min_duration_statement</varname> 的其他说明也适用于此设置。
         </para>
        </listitem>
      </varlistentry>
@@ -5436,24 +5284,23 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-statement-sample-rate" xreflabel="log_statement_sample_rate">
       <term><varname>log_statement_sample_rate</varname> (<type>floating point</type>)
       <indexterm>
-       <primary><varname>log_statement_sample_rate</varname> configuration parameter</primary>
+       <primary><varname>log_statement_sample_rate</varname> 配置参数</primary>
       </indexterm>
       </term>
        <listitem>
         <para>
-         Determines the fraction of statements with duration exceeding
-         <xref linkend="guc-log-min-duration-sample"/> that will be logged.
-         Sampling is stochastic, for example <literal>0.5</literal> means
-         there is statistically one chance in two that any given statement
-         will be logged.
-         The default is <literal>1.0</literal>, meaning to log all sampled
-         statements.
-         Setting this to zero disables sampled statement-duration logging,
-         the same as setting
-         <varname>log_min_duration_sample</varname> to
-         <literal>-1</literal>.
-         Only superusers and users with the appropriate <literal>SET</literal>
-         privilege can change this setting.
+         确定持续时间超过
+         <xref linkend="guc-log-min-duration-sample"/> 的语句被记录的比例。
+         采样是随机的，例如 <literal>0.5</literal> 表示从统计上讲，
+         任何给定语句有二分之一的概率被记录。
+         默认值为 <literal>1.0</literal>，表示记录所有被采样的
+         语句。
+         将此值设置为零会禁用采样语句持续时间日志记录，
+         这与将
+         <varname>log_min_duration_sample</varname> 设置为
+         <literal>-1</literal> 相同。
+         只有超级用户和具有相应 <literal>SET</literal>
+         权限的用户才能更改此设置。
         </para>
        </listitem>
      </varlistentry>
@@ -5461,29 +5308,28 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-transaction-sample-rate" xreflabel="log_transaction_sample_rate">
       <term><varname>log_transaction_sample_rate</varname> (<type>floating point</type>)
       <indexterm>
-       <primary><varname>log_transaction_sample_rate</varname> configuration parameter</primary>
+       <primary><varname>log_transaction_sample_rate</varname> 配置参数</primary>
       </indexterm>
       </term>
        <listitem>
         <para>
-         Sets the fraction of transactions whose statements are all logged,
-         in addition to statements logged for other reasons.  It applies to
-         each new transaction regardless of its statements' durations.
-         Sampling is stochastic, for example <literal>0.1</literal> means
-         there is statistically one chance in ten that any given transaction
-         will be logged.
-         <varname>log_transaction_sample_rate</varname> can be helpful to
-         construct a sample of transactions.
-         The default is <literal>0</literal>, meaning not to log
-         statements from any additional transactions.  Setting this
-         to <literal>1</literal> logs all statements of all transactions.
-         Only superusers and users with the appropriate <literal>SET</literal>
-         privilege can change this setting.
+         设置语句全部被记录的事务所占的比例，
+         此外还会记录因其他原因而记录的语句。它适用于
+         每个新事务，无论其语句的持续时间如何。
+         采样是随机的，例如 <literal>0.1</literal> 表示从统计上讲，
+         任何给定事务有十分之一的概率被记录。
+         <varname>log_transaction_sample_rate</varname> 有助于
+         构造事务样本。
+         默认值为 <literal>0</literal>，表示不记录
+         任何额外事务的语句。将此值
+         设置为 <literal>1</literal> 会记录所有事务的所有语句。
+         只有超级用户和具有相应 <literal>SET</literal>
+         权限的用户才能更改此设置。
         </para>
        <note>
         <para>
-         Like all statement-logging options, this option can add significant
-         overhead.
+         与所有语句日志记录选项一样，此选项可能会带来显著的
+         开销。
         </para>
        </note>
        </listitem>
@@ -5492,29 +5338,19 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-startup-progress-interval" xreflabel="log_startup_progress_interval">
       <term><varname>log_startup_progress_interval</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_startup_progress_interval</varname> configuration parameter</primary>
+       <primary><varname>log_startup_progress_interval</varname> 配置参数</primary>
       </indexterm>
       </term>
        <listitem>
         <para>
-         Sets the amount of time after which the startup process will log
-         a message about a long-running operation that is still in progress,
-         as well as the interval between further progress messages for that
-         operation. The default is 10 seconds. A setting of <literal>0</literal>
-         disables the feature.  If this value is specified without units,
-         it is taken as milliseconds.  This setting is applied separately to
-         each operation.
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line.
+         设置启动进程在某个长时间运行的操作仍在进行时记录一条关于该操作的消息的时间量，以及该操作后续进度消息之间的间隔。默认值为 10 秒。设置为 <literal>0</literal>
+         会禁用此功能。如果指定该值时不带单位，则将其视为毫秒。此设置分别应用于每个操作。
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。
         </para>
 
         <para>
-         For example, if syncing the data directory takes 25 seconds and
-         thereafter resetting unlogged relations takes 8 seconds, and if this
-         setting has the default value of 10 seconds, then a messages will be
-         logged for syncing the data directory after it has been in progress
-         for 10 seconds and again after it has been in progress for 20 seconds,
-         but nothing will be logged for resetting unlogged relations.
+         例如，如果同步数据目录需要 25 秒，随后重置未记录关系需要 8 秒，并且此设置采用默认值 10 秒，那么同步数据目录在进行 10 秒后会记录一条消息，并在进行 20 秒后再记录一条消息，但重置未记录关系不会记录任何消息。
         </para>
        </listitem>
      </varlistentry>
@@ -5522,15 +5358,12 @@ local0.*    /var/log/postgresql
      </variablelist>
 
     <para>
-     <xref linkend="runtime-config-severity-levels"/> explains the message
-     severity levels used by <productname>PostgreSQL</productname>.  If logging output
-     is sent to <systemitem>syslog</systemitem> or Windows'
-     <systemitem>eventlog</systemitem>, the severity levels are translated
-     as shown in the table.
+     <xref linkend="runtime-config-severity-levels"/> 说明了 <productname>PostgreSQL</productname> 使用的消息严重级别。如果日志输出发送到 <systemitem>syslog</systemitem> 或 Windows 的
+     <systemitem>eventlog</systemitem>，则严重级别会按表中所示进行转换。
     </para>
 
     <table id="runtime-config-severity-levels">
-     <title>Message Severity Levels</title>
+     <title>消息严重级别</title>
      <tgroup cols="4">
       <colspec colname="col1" colwidth="1*"/>
       <colspec colname="col2" colwidth="2*"/>
@@ -5538,8 +5371,8 @@ local0.*    /var/log/postgresql
       <colspec colname="col4" colwidth="1*"/>
       <thead>
        <row>
-        <entry>Severity</entry>
-        <entry>Usage</entry>
+        <entry>严重级别</entry>
+        <entry>用法</entry>
         <entry><systemitem>syslog</systemitem></entry>
         <entry><systemitem>eventlog</systemitem></entry>
        </row>
@@ -5548,63 +5381,56 @@ local0.*    /var/log/postgresql
       <tbody>
        <row>
         <entry><literal>DEBUG1 .. DEBUG5</literal></entry>
-        <entry>Provides successively-more-detailed information for use by
-         developers.</entry>
+        <entry>为开发者提供逐级更为详细的信息。</entry>
         <entry><literal>DEBUG</literal></entry>
         <entry><literal>INFORMATION</literal></entry>
        </row>
 
        <row>
         <entry><literal>INFO</literal></entry>
-        <entry>Provides information implicitly requested by the user,
-         e.g., output from <command>VACUUM VERBOSE</command>.</entry>
+        <entry>提供用户隐式请求的信息，例如来自 <command>VACUUM VERBOSE</command> 的输出。</entry>
         <entry><literal>INFO</literal></entry>
         <entry><literal>INFORMATION</literal></entry>
        </row>
 
        <row>
         <entry><literal>NOTICE</literal></entry>
-        <entry>Provides information that might be helpful to users, e.g.,
-         notice of truncation of long identifiers.</entry>
+        <entry>提供可能对用户有帮助的信息，例如长标识符被截断的通知。</entry>
         <entry><literal>NOTICE</literal></entry>
         <entry><literal>INFORMATION</literal></entry>
        </row>
 
        <row>
         <entry><literal>WARNING</literal></entry>
-        <entry>Provides warnings of likely problems, e.g., <command>COMMIT</command>
-         outside a transaction block.</entry>
+        <entry>提供对可能问题的警告，例如在事务块之外执行 <command>COMMIT</command>。</entry>
         <entry><literal>NOTICE</literal></entry>
         <entry><literal>WARNING</literal></entry>
        </row>
 
        <row>
         <entry><literal>ERROR</literal></entry>
-        <entry>Reports an error that caused the current command to
-         abort.</entry>
+        <entry>报告导致当前命令中止的错误。</entry>
         <entry><literal>WARNING</literal></entry>
         <entry><literal>ERROR</literal></entry>
        </row>
 
        <row>
         <entry><literal>LOG</literal></entry>
-        <entry>Reports information of interest to administrators, e.g.,
-         checkpoint activity.</entry>
+        <entry>报告管理员感兴趣的信息，例如检查点活动。</entry>
         <entry><literal>INFO</literal></entry>
         <entry><literal>INFORMATION</literal></entry>
        </row>
 
        <row>
         <entry><literal>FATAL</literal></entry>
-        <entry>Reports an error that caused the current session to
-         abort.</entry>
+        <entry>报告导致当前会话中止的错误。</entry>
         <entry><literal>ERR</literal></entry>
         <entry><literal>ERROR</literal></entry>
        </row>
 
        <row>
         <entry><literal>PANIC</literal></entry>
-        <entry>Reports an error that caused all database sessions to abort.</entry>
+        <entry>报告导致所有数据库会话中止的错误。</entry>
         <entry><literal>CRIT</literal></entry>
         <entry><literal>ERROR</literal></entry>
        </row>
@@ -5614,12 +5440,12 @@ local0.*    /var/log/postgresql
 
     </sect2>
      <sect2 id="runtime-config-logging-what">
-     <title>What to Log</title>
+     <title>记录什么</title>
 
      <note>
       <para>
-       What you choose to log can have security implications;  see
-       <xref linkend="logfile-maintenance"/>.
+       你选择记录的内容可能会带来安全隐患；请参见
+       <xref linkend="logfile-maintenance"/>。
       </para>
      </note>
 
@@ -5628,21 +5454,21 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-application-name" xreflabel="application_name">
       <term><varname>application_name</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>application_name</varname> configuration parameter</primary>
+       <primary><varname>application_name</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The <varname>application_name</varname> can be any string of less than
-        <symbol>NAMEDATALEN</symbol> characters (64 characters in a standard build).
-        It is typically set by an application upon connection to the server.
-        The name will be displayed in the <structname>pg_stat_activity</structname> view
-        and included in CSV log entries.  It can also be included in regular
-        log entries via the <xref linkend="guc-log-line-prefix"/> parameter.
-        Only printable ASCII characters may be used in the
-        <varname>application_name</varname> value.
-        Other characters are replaced with <link
-        linkend="sql-syntax-strings-escape">C-style hexadecimal escapes</link>.
+        <varname>application_name</varname> 可以是任何少于
+        <symbol>NAMEDATALEN</symbol> 个字符的字符串（在标准构建中为 64 个字符）。
+        它通常由应用程序在连接到服务器时设置。
+        该名称将显示在 <structname>pg_stat_activity</structname> 视图中，
+        并包含在 CSV 日志条目中。它也可以通过
+        <xref linkend="guc-log-line-prefix"/> 参数包含在常规
+        日志条目中。
+        <varname>application_name</varname> 值中只能使用可打印的 ASCII 字符。
+        其他字符会被替换为 <link
+        linkend="sql-syntax-strings-escape">C 风格十六进制转义</link>。
        </para>
       </listitem>
      </varlistentry>
@@ -5650,30 +5476,30 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-debug-print-parse">
       <term><varname>debug_print_parse</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>debug_print_parse</varname> configuration parameter</primary>
+       <primary><varname>debug_print_parse</varname> 配置参数</primary>
       </indexterm>
       </term>
       <term><varname>debug_print_rewritten</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>debug_print_rewritten</varname> configuration parameter</primary>
+       <primary><varname>debug_print_rewritten</varname> 配置参数</primary>
       </indexterm>
       </term>
       <term><varname>debug_print_plan</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>debug_print_plan</varname> configuration parameter</primary>
+       <primary><varname>debug_print_plan</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        These parameters enable various debugging output to be emitted.
-        When set, they print the resulting parse tree, the query rewriter
-        output, or the execution plan for each executed query.
-        These messages are emitted at <literal>LOG</literal> message level, so by
-        default they will appear in the server log but will not be sent to the
-        client.  You can change that by adjusting
-        <xref linkend="guc-client-min-messages"/> and/or
-        <xref linkend="guc-log-min-messages"/>.
-        These parameters are off by default.
+        这些参数用于启用各种调试输出的生成。
+        设置后，它们会为每个执行的查询打印生成的解析树、查询重写器
+        输出或执行计划。
+        这些消息以 <literal>LOG</literal> 消息级别发出，因此默认情况下
+        它们会出现在服务器日志中，但不会发送给
+        客户端。你可以通过调整
+        <xref linkend="guc-client-min-messages"/> 和/或
+        <xref linkend="guc-log-min-messages"/> 来改变这一点。
+        这些参数默认是关闭的。
        </para>
       </listitem>
      </varlistentry>
@@ -5681,17 +5507,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-debug-pretty-print">
       <term><varname>debug_pretty_print</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>debug_pretty_print</varname> configuration parameter</primary>
+       <primary><varname>debug_pretty_print</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When set, <varname>debug_pretty_print</varname> indents the messages
-        produced by <varname>debug_print_parse</varname>,
-        <varname>debug_print_rewritten</varname>, or
-        <varname>debug_print_plan</varname>.  This results in more readable
-        but much longer output than the <quote>compact</quote> format used when
-        it is off.  It is on by default.
+        当启用时，<varname>debug_pretty_print</varname> 会缩进由 <varname>debug_print_parse</varname>、<varname>debug_print_rewritten</varname> 或 <varname>debug_print_plan</varname> 产生的消息。与关闭时使用的 <quote>紧凑</quote> 格式相比，这样输出的内容更易读，但会长得多。该参数默认开启。
        </para>
       </listitem>
      </varlistentry>
@@ -5700,25 +5521,12 @@ local0.*    /var/log/postgresql
       <term><varname>log_autovacuum_min_duration</varname> (<type>integer</type>)
       <indexterm>
        <primary><varname>log_autovacuum_min_duration</varname></primary>
-       <secondary>configuration parameter</secondary>
+       <secondary>配置参数</secondary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes each action executed by autovacuum to be logged if it ran for at
-        least the specified amount of time.  Setting this to zero logs
-        all autovacuum actions. <literal>-1</literal> disables logging autovacuum
-        actions. If this value is specified without units, it is taken as milliseconds.
-        For example, if you set this to
-        <literal>250ms</literal> then all automatic vacuums and analyzes that run
-        250ms or longer will be logged.  In addition, when this parameter is
-        set to any value other than <literal>-1</literal>, a message will be
-        logged if an autovacuum action is skipped due to a conflicting lock or a
-        concurrently dropped relation. The default is <literal>10min</literal>.
-        Enabling this parameter can be helpful in tracking autovacuum activity.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line; but the setting can be overridden for
-        individual tables by changing table storage parameters.
+        使自动清理执行的每个动作在运行时间至少达到指定时长时被记录到日志中。将此参数设置为零会记录所有自动清理动作。<literal>-1</literal> 会禁用自动清理动作的日志记录。如果指定该值时不带单位，则按毫秒处理。例如，如果将其设置为 <literal>250ms</literal>，那么所有运行时间达到 250ms 或更长的自动清理和自动分析都会被记录到日志中。此外，当此参数设置为除 <literal>-1</literal> 以外的任何值时，如果某个自动清理动作由于冲突的锁或并发删除的关系而被跳过，也会记录一条消息。默认值为 <literal>10min</literal>。启用此参数有助于跟踪自动清理活动。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置；但可以通过更改表的存储参数来为单个表覆盖该设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5726,16 +5534,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-checkpoints" xreflabel="log_checkpoints">
       <term><varname>log_checkpoints</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_checkpoints</varname> configuration parameter</primary>
+       <primary><varname>log_checkpoints</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes checkpoints and restartpoints to be logged in the server log.
-        Some statistics are included in the log messages, including the number
-        of buffers written and the time spent writing them.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line. The default is on.
+        使检查点和重启点被记录到服务器日志中。日志消息中包含一些统计信息，包括写入的缓冲区数量以及写入它们所花费的时间。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。默认值为开启。
        </para>
       </listitem>
      </varlistentry>
@@ -5743,77 +5547,56 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-connections" xreflabel="log_connections">
       <term><varname>log_connections</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_connections</varname> configuration parameter</primary>
+       <primary><varname>log_connections</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes aspects of each connection to the server to be logged.
-        The default is the empty string, <literal>''</literal>, which
-        disables all connection logging. The following options may be
-        specified alone or in a comma-separated list:
+        使得与服务器的每个连接的某些方面被记录到日志中。默认值为空字符串 <literal>''</literal>，它会禁用所有连接日志记录。以下选项可以单独指定，也可以在以逗号分隔的列表中指定：
        </para>
 
        <table id="log-connections-options">
-        <title>Log Connection Options</title>
+        <title>记录连接选项</title>
         <tgroup cols="2">
          <colspec colname="col1" colwidth="1*"/>
          <colspec colname="col2" colwidth="2*"/>
          <thead>
           <row>
-           <entry>Name</entry>
-           <entry>Description</entry>
+           <entry>名称</entry>
+           <entry>描述</entry>
           </row>
          </thead>
          <tbody>
           <row>
            <entry><literal>receipt</literal></entry>
-           <entry>Logs receipt of a connection.</entry>
+           <entry>记录收到连接。</entry>
           </row>
 
           <row>
            <entry><literal>authentication</literal></entry>
            <entry>
-            Logs the original identity used by an authentication method
-            to identify a user. In most cases, the identity string
-            matches the <productname>PostgreSQL</productname> username,
-            but some third-party authentication methods may alter the
-            original user identifier before the server stores it. Failed
-            authentication is always logged regardless of the value of
-            this setting.
+            记录认证方法用于标识用户的原始身份。在大多数情况下，该身份字符串与 <productname>PostgreSQL</productname> 用户名一致，但某些第三方认证方法可能会在服务器存储原始用户标识符之前将其更改。无论此设置的值如何，认证失败始终会被记录到日志中。
            </entry>
           </row>
 
           <row>
            <entry><literal>authorization</literal></entry>
            <entry>
-            Logs successful completion of authorization. At this point
-            the connection has been established but the backend is not
-            yet fully set up. The log message includes the authorized
-            username as well as the database name and application name,
-            if applicable.
+            记录授权成功完成。此时连接已经建立，但后端尚未完全设置完成。日志消息包含已授权的用户名，以及数据库名和应用名（如果适用）。
            </entry>
           </row>
 
           <row>
            <entry><literal>setup_durations</literal></entry>
            <entry>
-            Logs the time spent establishing the connection and setting up the
-            backend until the connection is ready to execute its first
-            query. The log message includes three durations:  the total
-            setup duration (starting from the postmaster accepting the
-            incoming connection and ending when the connection is ready
-            for query), the time it took to fork the new backend, and
-            the time it took to authenticate the user.
+            记录建立连接和设置后端直到连接准备好执行其第一个查询所花费的时间。日志消息包含三个持续时间：总设置持续时间（从 postmaster 接受传入连接开始，到连接准备好执行查询为止）、fork 新后端所花费的时间，以及认证用户所花费的时间。
            </entry>
           </row>
 
           <row>
            <entry><literal>all</literal></entry>
            <entry>
-            A convenience alias equivalent to specifying all options. If
-            <literal>all</literal> is specified in a list of other
-            options, all connection aspects will be logged.
+            一个便捷别名，等同于指定所有选项。如果在其他选项列表中指定了 <literal>all</literal>，则将记录所有连接方面的信息。
            </entry>
           </row>
 
@@ -5827,27 +5610,16 @@ local0.*    /var/log/postgresql
        </para>
 
        <para>
-        For the purposes of backwards compatibility, <literal>on</literal>,
-        <literal>off</literal>, <literal>true</literal>,
-        <literal>false</literal>, <literal>yes</literal>,
-        <literal>no</literal>, <literal>1</literal>, and <literal>0</literal>
-        are still supported. The positive values are equivalent to specifying
-        the <literal>receipt</literal>, <literal>authentication</literal>, and
-        <literal>authorization</literal> options.
+        为了向后兼容，仍然支持 <literal>on</literal>、<literal>off</literal>、<literal>true</literal>、<literal>false</literal>、<literal>yes</literal>、<literal>no</literal>、<literal>1</literal> 和 <literal>0</literal>。正值等同于指定 <literal>receipt</literal>、<literal>authentication</literal> 和 <literal>authorization</literal> 选项。
        </para>
 
        <para>
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this parameter at session start,
-        and it cannot be changed at all within a session.
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能在会话启动时更改此参数，并且在会话内完全无法更改。
        </para>
 
        <note>
         <para>
-         Some client programs, like <application>psql</application>, attempt
-         to connect twice while determining if a password is required, so
-         duplicate <quote>connection received</quote> messages do not
-         necessarily indicate a problem.
+         有些客户端程序（如 <application>psql</application>）在判断是否需要密码时会尝试连接两次，因此重复的 <quote>connection received</quote> 消息不一定表示存在问题。
         </para>
        </note>
       </listitem>
@@ -5856,18 +5628,15 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-disconnections" xreflabel="log_disconnections">
       <term><varname>log_disconnections</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_disconnections</varname> configuration parameter</primary>
+       <primary><varname>log_disconnections</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes session terminations to be logged.  The log output
-        provides information similar to <varname>log_connections</varname>,
-        plus the duration of the session.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this parameter at session start,
-        and it cannot be changed at all within a session.
-        The default is <literal>off</literal>.
+        使会话终止被记录到日志中。日志输出提供的信息类似于 <varname>log_connections</varname>，外加会话的持续时间。
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能在会话启动时更改此参数，
+        并且在会话内完全无法更改。
+        默认值为 <literal>off</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -5876,33 +5645,23 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-duration" xreflabel="log_duration">
       <term><varname>log_duration</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_duration</varname> configuration parameter</primary>
+       <primary><varname>log_duration</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes the duration of every completed statement to be logged.
-        The default is <literal>off</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        使每条已完成语句的持续时间被记录到日志中。
+        默认值为 <literal>off</literal>。
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
 
        <para>
-        For clients using extended query protocol, durations of the Parse,
-        Bind, and Execute steps are logged independently.
+        对于使用扩展查询协议的客户端，Parse、Bind 和 Execute 步骤的持续时间会分别独立记录。
        </para>
 
        <note>
         <para>
-         The difference between enabling <varname>log_duration</varname> and setting
-         <xref linkend="guc-log-min-duration-statement"/> to zero is that
-         exceeding <varname>log_min_duration_statement</varname> forces the text of
-         the query to be logged, but this option doesn't.  Thus, if
-         <varname>log_duration</varname> is <literal>on</literal> and
-         <varname>log_min_duration_statement</varname> has a positive value, all
-         durations are logged but the query text is included only for
-         statements exceeding the threshold.  This behavior can be useful for
-         gathering statistics in high-load installations.
+         启用 <varname>log_duration</varname> 与把 <xref linkend="guc-log-min-duration-statement"/> 设置为零之间的区别在于：超过 <varname>log_min_duration_statement</varname> 会强制记录查询文本，而该选项不会。因此，如果 <varname>log_duration</varname> 为 <literal>on</literal> 且 <varname>log_min_duration_statement</varname> 为正值，则所有持续时间都会被记录，但只有超过阈值的语句才会包含查询文本。这种行为对于在高负载安装中收集统计信息很有用。
         </para>
        </note>
       </listitem>
@@ -5911,22 +5670,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-error-verbosity" xreflabel="log_error_verbosity">
       <term><varname>log_error_verbosity</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>log_error_verbosity</varname> configuration parameter</primary>
+       <primary><varname>log_error_verbosity</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls the amount of detail written in the server log for each
-        message that is logged.  Valid values are <literal>TERSE</literal>,
-        <literal>DEFAULT</literal>, and <literal>VERBOSE</literal>, each adding more
-        fields to displayed messages.  <literal>TERSE</literal> excludes
-        the logging of <literal>DETAIL</literal>, <literal>HINT</literal>,
-        <literal>QUERY</literal>, and <literal>CONTEXT</literal> error information.
-        <literal>VERBOSE</literal> output includes the <symbol>SQLSTATE</symbol> error
-        code (see also <xref linkend="errcodes-appendix"/>) and the source code file name, function name,
-        and line number that generated the error.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制服务器日志中记录的每条消息所写入的详细程度。有效值为 <literal>TERSE</literal>、<literal>DEFAULT</literal> 和 <literal>VERBOSE</literal>，每个值都会向显示的消息中添加更多字段。<literal>TERSE</literal> 会排除对 <literal>DETAIL</literal>、<literal>HINT</literal>、<literal>QUERY</literal> 和 <literal>CONTEXT</literal> 错误信息的记录。<literal>VERBOSE</literal> 输出包含 <symbol>SQLSTATE</symbol> 错误码（另见 <xref linkend="errcodes-appendix"/>）以及产生该错误的源代码文件名、函数名和行号。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5934,17 +5683,12 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-hostname" xreflabel="log_hostname">
       <term><varname>log_hostname</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_hostname</varname> configuration parameter</primary>
+       <primary><varname>log_hostname</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        By default, connection log messages only show the IP address of the
-        connecting host. Turning this parameter on causes logging of the
-        host name as well.  Note that depending on your host name resolution
-        setup this might impose a non-negligible performance penalty.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        默认情况下，连接日志消息只显示连接主机的 IP 地址。打开此参数还会记录主机名。请注意，取决于你的主机名解析设置，这可能会带来不可忽视的性能损失。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -5952,183 +5696,158 @@ local0.*    /var/log/postgresql
      <varlistentry id="guc-log-line-prefix" xreflabel="log_line_prefix">
       <term><varname>log_line_prefix</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_line_prefix</varname> configuration parameter</primary>
+       <primary><varname>log_line_prefix</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-         This is a <function>printf</function>-style string that is output at the
-         beginning of each log line.
-         <literal>%</literal> characters begin <quote>escape sequences</quote>
-         that are replaced with status information as outlined below.
-         Unrecognized escapes are ignored. Other
-         characters are copied straight to the log line. Some escapes are
-         only recognized by session processes, and will be treated as empty by
-         background processes such as the main server process. Status
-         information may be aligned either left or right by specifying a
-         numeric literal after the % and before the option. A negative
-         value will cause the status information to be padded on the
-         right with spaces to give it a minimum width, whereas a positive
-         value will pad on the left. Padding can be useful to aid human
-         readability in log files.
+         这是一个 <function>printf</function> 风格的字符串，会在每条日志行的开头输出。
+         <literal>%</literal> 字符会开始一个<quote>转义序列</quote>，它会被替换为下文所述的状态信息。
+         无法识别的转义会被忽略。其他字符会直接复制到日志行中。有些转义
+         只能被会话进程识别，而主服务器进程等后台进程会将其视为空。
+         通过在 % 之后、选项之前指定一个数字字面量，可以让状态信息
+         左对齐或右对齐。负值会使状态信息在右侧用空格填充，以达到最小宽度，
+         而正值则会在左侧填充。填充有助于提高日志文件的人类可读性。
        </para>
 
        <para>
-         This parameter can only be set in the <filename>postgresql.conf</filename>
-         file or on the server command line. The default is
-         <literal>'%m [%p] '</literal> which logs a time stamp and the process ID.
+         此参数只能在 <filename>postgresql.conf</filename>
+         文件中或服务器命令行上设置。默认值为
+         <literal>'%m [%p] '</literal>，它会记录时间戳和进程 ID。
        </para>
 
          <informaltable>
           <tgroup cols="3">
            <thead>
             <row>
-             <entry>Escape</entry>
-             <entry>Effect</entry>
-             <entry>Session only</entry>
+             <entry>转义</entry>
+             <entry>效果</entry>
+             <entry>仅会话</entry>
              </row>
             </thead>
            <tbody>
             <row>
              <entry><literal>%a</literal></entry>
-             <entry>Application name</entry>
-             <entry>yes</entry>
+             <entry>应用程序名</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%u</literal></entry>
-             <entry>User name</entry>
-             <entry>yes</entry>
+             <entry>用户名</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%d</literal></entry>
-             <entry>Database name</entry>
-             <entry>yes</entry>
+             <entry>数据库名</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%r</literal></entry>
-             <entry>Remote host name or IP address, and remote port</entry>
-             <entry>yes</entry>
+             <entry>远程主机名或 IP 地址，以及远程端口</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%h</literal></entry>
-             <entry>Remote host name or IP address</entry>
-             <entry>yes</entry>
+             <entry>远程主机名或 IP 地址</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%L</literal></entry>
-             <entry>Local address (the IP address on the server that the
-             client connected to)</entry>
-             <entry>yes</entry>
+             <entry>本地地址（客户端连接到的服务器上的 IP 地址）</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%b</literal></entry>
-             <entry>Backend type</entry>
-             <entry>no</entry>
+             <entry>后端类型</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%p</literal></entry>
-             <entry>Process ID</entry>
-             <entry>no</entry>
+             <entry>进程 ID</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%P</literal></entry>
-             <entry>Process ID of the parallel group leader, if this process
-              is a parallel query worker</entry>
-             <entry>no</entry>
+             <entry>如果此进程是并行查询工作进程，则为并行组领导进程的进程 ID</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%t</literal></entry>
-             <entry>Time stamp without milliseconds</entry>
-             <entry>no</entry>
+             <entry>不带毫秒的时间戳</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%m</literal></entry>
-             <entry>Time stamp with milliseconds</entry>
-             <entry>no</entry>
+             <entry>带毫秒的时间戳</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%n</literal></entry>
-             <entry>Time stamp with milliseconds (as a Unix epoch)</entry>
-             <entry>no</entry>
+             <entry>带毫秒的时间戳（作为 Unix 纪元）</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%i</literal></entry>
-             <entry>Command tag: type of session's current command</entry>
-             <entry>yes</entry>
+             <entry>命令标签：会话当前命令的类型</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%e</literal></entry>
-             <entry>SQLSTATE error code</entry>
-             <entry>no</entry>
+             <entry>SQLSTATE 错误代码</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%c</literal></entry>
-             <entry>Session ID: see below</entry>
-             <entry>no</entry>
+             <entry>会话 ID：见下文</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%l</literal></entry>
-             <entry>Number of the log line for each session or process, starting at 1</entry>
-             <entry>no</entry>
+             <entry>每个会话或进程的日志行号，从 1 开始</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%s</literal></entry>
-             <entry>Process start time stamp</entry>
-             <entry>no</entry>
+             <entry>进程启动时间戳</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%v</literal></entry>
              <entry>Virtual transaction ID (procNumber/localXID);  see
              <xref linkend="transaction-id"/></entry>
-             <entry>no</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%x</literal></entry>
              <entry>Transaction ID (0 if none is assigned);  see
              <xref linkend="transaction-id"/></entry>
-             <entry>no</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%q</literal></entry>
-             <entry>Produces no output, but tells non-session
-             processes to stop at this point in the string; ignored by
-             session processes</entry>
-             <entry>no</entry>
+             <entry>不产生输出，但告诉非会话进程在字符串的此位置停止；会话进程忽略此项</entry>
+             <entry>否</entry>
             </row>
             <row>
              <entry><literal>%Q</literal></entry>
-             <entry>Query identifier of the current query.  Query
-             identifiers are not computed by default, so this field
-             will be zero unless <xref linkend="guc-compute-query-id"/>
-             parameter is enabled or a third-party module that computes
-             query identifiers is configured.</entry>
-             <entry>yes</entry>
+             <entry>当前查询的查询标识符。默认不计算查询标识符，因此除非启用了 <xref linkend="guc-compute-query-id"/> 参数，或配置了计算查询标识符的第三方模块，否则此字段为零。</entry>
+             <entry>是</entry>
             </row>
             <row>
              <entry><literal>%%</literal></entry>
-             <entry>Literal <literal>%</literal></entry>
-             <entry>no</entry>
+             <entry>字面量 <literal>%</literal></entry>
+             <entry>否</entry>
             </row>
            </tbody>
           </tgroup>
          </informaltable>
 
          <para>
-          The backend type corresponds to the column
-          <structfield>backend_type</structfield> in the view
-          <link linkend="monitoring-pg-stat-activity-view">
-          <structname>pg_stat_activity</structname></link>,
-          but additional types can appear
-          in the log that don't show in that view.
+          后端类型对应于视图 <link linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link> 中的 <structfield>backend_type</structfield> 列，但日志中还可能出现该视图中未显示的额外类型。
          </para>
 
          <para>
-         The <literal>%c</literal> escape prints a quasi-unique session identifier,
-         consisting of two 4-byte hexadecimal numbers (without leading zeros)
-         separated by a dot.  The numbers are the process start time and the
-         process ID, so <literal>%c</literal> can also be used as a space saving way
-         of printing those items.  For example, to generate the session
-         identifier from <literal>pg_stat_activity</literal>, use this query:
+         <literal>%c</literal> 转义会打印一个准唯一的会话标识符，它由两个 4 字节的十六进制数（不带前导零）组成，中间用一个点分隔。这两个数分别是进程启动时间和进程 ID，因此 <literal>%c</literal> 也可以用作打印这些内容的一种节省空间的方式。例如，要从 <literal>pg_stat_activity</literal> 生成会话标识符，可使用以下查询：
 <programlisting>
 SELECT to_hex(trunc(EXTRACT(EPOCH FROM backend_start))::integer) || '.' ||
        to_hex(pid)
@@ -6139,26 +5858,19 @@ FROM pg_stat_activity;
 
        <tip>
         <para>
-         If you set a nonempty value for <varname>log_line_prefix</varname>,
-         you should usually make its last character be a space, to provide
-         visual separation from the rest of the log line.  A punctuation
-         character can be used too.
+         如果为 <varname>log_line_prefix</varname> 设置了非空值，通常应让其最后一个字符为空格，以便与日志行的其余部分在视觉上分隔开。也可以使用标点字符。
         </para>
        </tip>
 
        <tip>
         <para>
-         <application>Syslog</application> produces its own
-         time stamp and process ID information, so you probably do not want to
-         include those escapes if you are logging to <application>syslog</application>.
+         <application>Syslog</application> 会自行生成时间戳和进程 ID 信息，因此如果要记录到 <application>syslog</application>，你可能不希望包含这些转义。
         </para>
        </tip>
 
        <tip>
         <para>
-         The <literal>%q</literal> escape is useful when including information that is
-         only available in session (backend) context like user or database
-         name.  For example:
+         当需要包含仅在会话（后端）上下文中才可用的信息（如用户名或数据库名）时，<literal>%q</literal> 转义很有用。例如：
 <programlisting>
 log_line_prefix = '%m [%p] %q%u@%d/%a '
 </programlisting>
@@ -6167,11 +5879,7 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
 
        <note>
         <para>
-         The <literal>%Q</literal> escape always reports a zero identifier
-         for lines output by <xref linkend="guc-log-statement"/> because
-         <varname>log_statement</varname> generates output before an
-         identifier can be calculated, including invalid statements for
-         which an identifier cannot be calculated.
+         <literal>%Q</literal> 转义始终为 <xref linkend="guc-log-statement"/> 输出的行报告零标识符，因为 <varname>log_statement</varname> 在能够计算出标识符之前就生成输出，包括无法计算标识符的无效语句。
         </para>
        </note>
       </listitem>
@@ -6180,17 +5888,12 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-lock-waits" xreflabel="log_lock_waits">
       <term><varname>log_lock_waits</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_lock_waits</varname> configuration parameter</primary>
+       <primary><varname>log_lock_waits</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls whether a log message is produced when a session waits
-        longer than <xref linkend="guc-deadlock-timeout"/> to acquire a
-        lock.  This is useful in determining if lock waits are causing
-        poor performance.  The default is <literal>off</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制当会话等待获取锁的时间超过 <xref linkend="guc-deadlock-timeout"/> 时是否产生日志消息。这对于判断锁等待是否导致性能不佳很有用。默认值为 <literal>off</literal>。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6198,18 +5901,12 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-lock-failures" xreflabel="log_lock_failures">
       <term><varname>log_lock_failures</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_lock_failures</varname> configuration parameter</primary>
+       <primary><varname>log_lock_failures</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls whether a detailed log message is produced
-        when a lock acquisition fails.  This is useful for analyzing
-        the causes of lock failures.  Currently, only lock failures
-        due to <literal>SELECT NOWAIT</literal> is supported.
-        The default is <literal>off</literal>.  Only superusers and
-        users with the appropriate <literal>SET</literal> privilege
-        can change this setting.
+        控制当获取锁失败时是否产生详细的日志消息。这对于分析锁失败的原因很有用。目前仅支持由 <literal>SELECT NOWAIT</literal> 导致的锁失败。默认值为 <literal>off</literal>。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6218,21 +5915,18 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-recovery-conflict-waits" xreflabel="log_recovery_conflict_waits">
       <term><varname>log_recovery_conflict_waits</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_recovery_conflict_waits</varname> configuration parameter</primary>
+       <primary><varname>log_recovery_conflict_waits</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls whether a log message is produced when the startup process
-        waits longer than <varname>deadlock_timeout</varname>
-        for recovery conflicts.  This is useful in determining if recovery
-        conflicts prevent the recovery from applying WAL.
+        控制当启动进程等待恢复冲突的时间超过 <varname>deadlock_timeout</varname>
+        时是否产生日志消息。这对于判断恢复冲突是否阻止恢复应用 WAL 很有用。
        </para>
 
        <para>
-        The default is <literal>off</literal>.  This parameter can only be set
-        in the <filename>postgresql.conf</filename> file or on the server
-        command line.
+        默认值为 <literal>off</literal>。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器
+        命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6240,28 +5934,26 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-parameter-max-length" xreflabel="log_parameter_max_length">
       <term><varname>log_parameter_max_length</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_parameter_max_length</varname> configuration parameter</primary>
+       <primary><varname>log_parameter_max_length</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If greater than zero, each bind parameter value logged with a
-        non-error statement-logging message is trimmed to this many bytes.
-        Zero disables logging of bind parameters for non-error statement logs.
-        <literal>-1</literal> (the default) allows bind parameters to be
-        logged in full.
-        If this value is specified without units, it is taken as bytes.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        如果大于零，则通过非错误语句日志消息记录的每个绑定参数值都会被截断为此字节数。
+        零表示禁用非错误语句日志的绑定参数记录。
+        <literal>-1</literal>（默认值）允许完整记录绑定参数。
+        如果指定此值时不带单位，则按字节处理。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <para>
-        This setting only affects log messages printed as a result of
-        <xref linkend="guc-log-statement"/>,
-        <xref linkend="guc-log-min-duration-statement"/>, and related settings.
-        Non-zero values of this setting add some overhead, particularly
-        if parameters are sent in binary form, since then conversion to
-        text is required.
+        此设置仅影响因
+        <xref linkend="guc-log-statement"/>、
+        <xref linkend="guc-log-min-duration-statement"/> 及相关设置而输出的日志消息。
+        此设置的非零值会增加一些开销，特别是
+        当参数以二进制形式发送时，因为此时需要转换为
+        文本。
        </para>
       </listitem>
      </varlistentry>
@@ -6269,27 +5961,23 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-parameter-max-length-on-error" xreflabel="log_parameter_max_length_on_error">
       <term><varname>log_parameter_max_length_on_error</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_parameter_max_length_on_error</varname> configuration parameter</primary>
+       <primary><varname>log_parameter_max_length_on_error</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If greater than zero, each bind parameter value reported in error
-        messages is trimmed to this many bytes.
-        Zero (the default) disables including bind parameters in error
-        messages.
-        <literal>-1</literal> allows bind parameters to be printed in full.
-        If this value is specified without units, it is taken as bytes.
+        如果大于零，错误消息中报告的每个绑定参数值都会被截断为这么多字节。
+        零（默认值）会禁止在错误消息中包含绑定参数。
+        <literal>-1</literal> 允许完整打印绑定参数。
+        如果指定此值时不带单位，则按字节处理。
        </para>
 
        <para>
-        Non-zero values of this setting add overhead, as
-        <productname>PostgreSQL</productname> will need to store textual
-        representations of parameter values in memory at the start of each
-        statement, whether or not an error eventually occurs.  The overhead
-        is greater when bind parameters are sent in binary form than when
-        they are sent as text, since the former case requires data
-        conversion while the latter only requires copying the string.
+        此设置的非零值会增加开销，因为
+        <productname>PostgreSQL</productname> 需要在每条语句开始时将参数值的文本
+        表示形式存储在内存中，无论最终是否发生错误。当绑定参数
+        以二进制形式发送时，开销比以文本形式发送时更大，因为
+        前者需要进行数据转换，而后者只需复制字符串。
        </para>
       </listitem>
      </varlistentry>
@@ -6297,48 +5985,45 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-statement" xreflabel="log_statement">
       <term><varname>log_statement</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>log_statement</varname> configuration parameter</primary>
+       <primary><varname>log_statement</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls which SQL statements are logged. Valid values are
-        <literal>none</literal> (off), <literal>ddl</literal>, <literal>mod</literal>, and
-        <literal>all</literal> (all statements). <literal>ddl</literal> logs all data definition
-        statements, such as <command>CREATE</command>, <command>ALTER</command>, and
-        <command>DROP</command> statements. <literal>mod</literal> logs all
-        <literal>ddl</literal> statements, plus data-modifying statements
-        such as <command>INSERT</command>,
-        <command>UPDATE</command>, <command>DELETE</command>, <command>TRUNCATE</command>,
-        and <command>COPY FROM</command>.
-        <command>PREPARE</command>, <command>EXECUTE</command>, and
-        <command>EXPLAIN ANALYZE</command> statements are also logged if their
-        contained command is of an appropriate type.  For clients using
-        extended query protocol, logging occurs when an Execute message
-        is received, and values of the Bind parameters are included
-        (with any embedded single-quote marks doubled).
+        控制记录哪些 SQL 语句。有效值为
+        <literal>none</literal>（关闭）、<literal>ddl</literal>、<literal>mod</literal> 和
+        <literal>all</literal>（所有语句）。<literal>ddl</literal> 记录所有数据定义
+        语句，例如 <command>CREATE</command>、<command>ALTER</command> 和
+        <command>DROP</command> 语句。<literal>mod</literal> 记录所有
+        <literal>ddl</literal> 语句，以及数据修改语句，
+        例如 <command>INSERT</command>、
+        <command>UPDATE</command>、<command>DELETE</command>、<command>TRUNCATE</command>
+        和 <command>COPY FROM</command>。
+        如果 <command>PREPARE</command>、<command>EXECUTE</command> 和
+        <command>EXPLAIN ANALYZE</command> 语句所包含的命令属于适当的类型，它们也会被记录。
+        对于使用扩展查询协议的客户端，日志记录在收到
+        Execute 消息时发生，并且会包含 Bind 参数的值
+        （其中嵌入的单引号会被双写）。
        </para>
 
        <para>
-        The default is <literal>none</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        默认值为 <literal>none</literal>。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <note>
         <para>
-         Statements that contain simple syntax errors are not logged
-         even by the <varname>log_statement</varname> = <literal>all</literal> setting,
-         because the log message is emitted only after basic parsing has
-         been done to determine the statement type.  In the case of extended
-         query protocol, this setting likewise does not log statements that
-         fail before the Execute phase (i.e., during parse analysis or
-         planning).  Set <varname>log_min_error_statement</varname> to
-         <literal>ERROR</literal> (or lower) to log such statements.
+         即使设置 <varname>log_statement</varname> = <literal>all</literal>，
+         包含简单语法错误的语句也不会被记录，
+         因为日志消息只有在完成基本解析以确定语句类型之后才会发出。
+         对于扩展查询协议，此设置同样不会记录在 Execute 阶段之前
+         （即在解析分析或规划期间）失败的语句。
+         将 <varname>log_min_error_statement</varname> 设置为
+         <literal>ERROR</literal>（或更低）以记录此类语句。
         </para>
         <para>
-         Logged statements might reveal sensitive data and even contain
-         plaintext passwords.
+         记录到日志的语句可能泄露敏感数据，甚至包含明文密码。
         </para>
        </note>
       </listitem>
@@ -6347,17 +6032,15 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-replication-commands" xreflabel="log_replication_commands">
       <term><varname>log_replication_commands</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>log_replication_commands</varname> configuration parameter</primary>
+       <primary><varname>log_replication_commands</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Causes each replication command and <literal>walsender</literal>
-        process's replication slot acquisition/release to be logged in the
-        server log. See <xref linkend="protocol-replication"/> for more
-        information about replication command. The default value is
-        <literal>off</literal>. Only superusers and users with the appropriate
-        <literal>SET</literal> privilege can change this setting.
+        使每个复制命令以及 <literal>walsender</literal>
+        进程获取/释放复制槽的操作都记录到服务器日志中。有关复制命令的更多信息，请参见 <xref linkend="protocol-replication"/>。默认值为
+        <literal>off</literal>。只有超级用户和具有相应
+        <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6365,23 +6048,19 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-temp-files" xreflabel="log_temp_files">
       <term><varname>log_temp_files</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>log_temp_files</varname> configuration parameter</primary>
+       <primary><varname>log_temp_files</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls logging of temporary file names and sizes.
-        Temporary files can be
-        created for sorts, hashes, and temporary query results.
-        If enabled by this setting, a log entry is emitted for each
-        temporary file, with the file size specified in bytes, when it is deleted.
-        A value of zero logs all temporary file information, while positive
-        values log only files whose size is greater than or equal to
-        the specified amount of data.
-        If this value is specified without units, it is taken as kilobytes.
-        The default setting is -1, which disables such logging.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制临时文件名和大小的日志记录。
+        临时文件可能因排序、哈希和临时查询结果而创建。
+        如果启用此设置，则每个临时文件在被删除时都会输出一条日志条目，其中以字节为单位指定文件大小。
+        值为零会记录所有临时文件信息，而正值则只记录大小大于或等于指定数据量的文件。
+        如果指定此值时不带单位，则按千字节处理。
+        默认设置为 -1，即禁用此类日志记录。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6389,20 +6068,12 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      <varlistentry id="guc-log-timezone" xreflabel="log_timezone">
       <term><varname>log_timezone</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>log_timezone</varname> configuration parameter</primary>
+       <primary><varname>log_timezone</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the time zone used for timestamps written in the server log.
-        Unlike <xref linkend="guc-timezone"/>, this value is cluster-wide,
-        so that all sessions will report timestamps consistently.
-        The built-in default is <literal>GMT</literal>, but that is typically
-        overridden in <filename>postgresql.conf</filename>; <application>initdb</application>
-        will install a setting there corresponding to its system environment.
-        See <xref linkend="datatype-timezones"/> for more information.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        设置写入服务器日志的时间戳所使用的时区。与 <xref linkend="guc-timezone"/> 不同，此值是集簇范围的，因此所有会话都将一致地报告时间戳。内置默认值为 <literal>GMT</literal>，但通常会在 <filename>postgresql.conf</filename> 中被覆盖；<application>initdb</application> 会在其中安装一个与其系统环境对应的设置。更多信息请参见 <xref linkend="datatype-timezones"/>。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6410,41 +6081,10 @@ log_line_prefix = '%m [%p] %q%u@%d/%a '
      </variablelist>
     </sect2>
      <sect2 id="runtime-config-logging-csvlog">
-     <title>Using CSV-Format Log Output</title>
+     <title>使用 CSV 格式的日志输出</title>
 
        <para>
-        Including <literal>csvlog</literal> in the <varname>log_destination</varname> list
-        provides a convenient way to import log files into a database table.
-        This option emits log lines in comma-separated-values
-        (<acronym>CSV</acronym>) format,
-        with these columns:
-        time stamp with milliseconds,
-        user name,
-        database name,
-        process ID,
-        client host:port number,
-        session ID,
-        per-session line number,
-        command tag,
-        session start time,
-        virtual transaction ID,
-        regular transaction ID,
-        error severity,
-        SQLSTATE code,
-        error message,
-        error message detail,
-        hint,
-        internal query that led to the error (if any),
-        character count of the error position therein,
-        error context,
-        user query that led to the error (if any and enabled by
-        <varname>log_min_error_statement</varname>),
-        character count of the error position therein,
-        location of the error in the PostgreSQL source code
-        (if <varname>log_error_verbosity</varname> is set to <literal>verbose</literal>),
-        application name, backend type, process ID of parallel group leader,
-        and query id.
-        Here is a sample table definition for storing CSV-format log output:
+        在 <varname>log_destination</varname> 列表中包含 <literal>csvlog</literal> 提供了一种将日志文件导入数据库表的便捷方式。此选项以逗号分隔值（<acronym>CSV</acronym>）格式输出日志行，包含以下列：带毫秒的时间戳、用户名、数据库名、进程 ID、客户端主机:端口号、会话 ID、每会话行号、命令标签、会话开始时间、虚拟事务 ID、常规事务 ID、错误严重性、SQLSTATE 代码、错误消息、错误消息详情、提示、导致错误的内部查询（如果有）、其中错误位置的字符数、错误上下文、导致错误的用户查询（如果有且由 <varname>log_min_error_statement</varname> 启用）、其中错误位置的字符数、错误在 PostgreSQL 源代码中的位置（如果 <varname>log_error_verbosity</varname> 设置为 <literal>verbose</literal>）、应用程序名、后端类型、并行组领导者的进程 ID 以及查询 ID。以下是用于存储 CSV 格式日志输出的示例表定义：
 
 <programlisting>
 CREATE TABLE postgres_log
@@ -6481,240 +6121,215 @@ CREATE TABLE postgres_log
        </para>
 
        <para>
-        To import a log file into this table, use the <command>COPY FROM</command>
-        command:
+        要将日志文件导入此表，请使用 <command>COPY FROM</command> 命令：
 
 <programlisting>
 COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
 </programlisting>
-        It is also possible to access the file as a foreign table, using
-        the supplied <xref linkend="file-fdw"/> module.
+        也可以使用提供的 <xref linkend="file-fdw"/> 模块将该文件作为外部表访问。
        </para>
 
        <para>
-       There are a few things you need to do to simplify importing CSV log
-       files:
+       要简化 CSV 日志文件的导入，需要做几件事：
 
        <orderedlist>
          <listitem>
            <para>
-            Set <varname>log_filename</varname> and
-            <varname>log_rotation_age</varname> to provide a consistent,
-            predictable naming scheme for your log files.  This lets you
-            predict what the file name will be and know when an individual log
-            file is complete and therefore ready to be imported.
+            设置 <varname>log_filename</varname> 和 <varname>log_rotation_age</varname>，为日志文件提供一致、可预测的命名方案。这样你就可以预测文件名，并知道单个日志文件何时完成、因而可以导入。
          </para>
         </listitem>
 
         <listitem>
            <para>
-            Set <varname>log_rotation_size</varname> to 0 to disable
-            size-based log rotation, as it makes the log file name difficult
-            to predict.
+            将 <varname>log_rotation_size</varname> 设置为 0 可禁用基于大小的日志轮转，因为这会使得日志文件名难以预测。
            </para>
         </listitem>
 
         <listitem>
           <para>
-           Set <varname>log_truncate_on_rotation</varname> to <literal>on</literal> so
-           that old log data isn't mixed with the new in the same file.
+           将 <varname>log_truncate_on_rotation</varname> 设置为 <literal>on</literal>，以便旧的日志数据不会与新的日志数据混在同一个文件中。
           </para>
         </listitem>
 
         <listitem>
           <para>
-           The table definition above includes a primary key specification.
-           This is useful to protect against accidentally importing the same
-           information twice.  The <command>COPY</command> command commits all of the
-           data it imports at one time, so any error will cause the entire
-           import to fail.  If you import a partial log file and later import
-           the file again when it is complete, the primary key violation will
-           cause the import to fail.  Wait until the log is complete and
-           closed before importing.  This procedure will also protect against
-           accidentally importing a partial line that hasn't been completely
-           written, which would also cause <command>COPY</command> to fail.
+           上面的表定义包含主键声明。这有助于防止意外地两次导入相同的信息。<command>COPY</command> 命令会一次性提交它导入的所有数据，因此任何错误都会导致整个导入失败。如果你导入了一个不完整的日志文件，之后在该文件完整时再次导入该文件，主键冲突将导致导入失败。请等到日志完整并关闭后再导入。此过程还可以防止意外导入尚未完全写入的部分行，这同样会导致 <command>COPY</command> 失败。
           </para>
         </listitem>
         </orderedlist>
       </para>
     </sect2>
      <sect2 id="runtime-config-logging-jsonlog">
-     <title>Using JSON-Format Log Output</title>
+     <title>使用 JSON 格式的日志输出</title>
 
      <para>
-      Including <literal>jsonlog</literal> in the
-      <varname>log_destination</varname> list provides a convenient way to
-      import log files into many different programs. This option emits log
-      lines in <acronym>JSON</acronym> format.
+      将 <literal>jsonlog</literal> 包含在 <varname>log_destination</varname> 列表中，为将日志文件导入许多不同的程序提供了一种便捷方式。此选项以 <acronym>JSON</acronym> 格式输出日志行。
      </para>
 
      <para>
-      String fields with null values are excluded from output.
-      Additional fields may be added in the future. User applications that
-      process <literal>jsonlog</literal> output should ignore unknown fields.
+      值为 null 的字符串字段不会出现在输出中。将来可能会添加其他字段。处理 <literal>jsonlog</literal> 输出的用户应用程序应忽略未知字段。
      </para>
 
      <para>
-      Each log line is serialized as a JSON object with the set of keys and
-      their associated values shown in <xref
-      linkend="runtime-config-logging-jsonlog-keys-values"/>.
+      每条日志行都被序列化为一个 JSON 对象，其中包含的键集合及其关联值如 <xref
+      linkend="runtime-config-logging-jsonlog-keys-values"/> 所示。
      </para>
 
      <table id="runtime-config-logging-jsonlog-keys-values">
-      <title>Keys and Values of JSON Log Entries</title>
+      <title>JSON 日志项的键和值</title>
       <tgroup cols="3">
        <thead>
         <row>
-         <entry>Key name</entry>
-         <entry>Type</entry>
-         <entry>Description</entry>
+         <entry>键名</entry>
+         <entry>类型</entry>
+         <entry>描述</entry>
         </row>
        </thead>
        <tbody>
         <row>
          <entry><literal>timestamp</literal></entry>
          <entry>string</entry>
-         <entry>Time stamp with milliseconds</entry>
+         <entry>带毫秒的时间戳</entry>
         </row>
         <row>
          <entry><literal>user</literal></entry>
-         <entry>string</entry>
-         <entry>User name</entry>
+         <entry>字符串</entry>
+         <entry>用户名</entry>
         </row>
         <row>
          <entry><literal>dbname</literal></entry>
-         <entry>string</entry>
-         <entry>Database name</entry>
+         <entry>字符串</entry>
+         <entry>数据库名</entry>
         </row>
         <row>
          <entry><literal>pid</literal></entry>
-         <entry>number</entry>
-         <entry>Process ID</entry>
+         <entry>数字</entry>
+         <entry>进程 ID</entry>
         </row>
         <row>
          <entry><literal>remote_host</literal></entry>
-         <entry>string</entry>
-         <entry>Client host</entry>
+         <entry>字符串</entry>
+         <entry>客户端主机</entry>
         </row>
         <row>
          <entry><literal>remote_port</literal></entry>
-         <entry>number</entry>
-         <entry>Client port</entry>
+         <entry>数字</entry>
+         <entry>客户端端口</entry>
         </row>
         <row>
          <entry><literal>session_id</literal></entry>
-         <entry>string</entry>
-         <entry>Session ID</entry>
+         <entry>字符串</entry>
+         <entry>会话 ID</entry>
         </row>
         <row>
          <entry><literal>line_num</literal></entry>
-         <entry>number</entry>
-         <entry>Per-session line number</entry>
+         <entry>数字</entry>
+         <entry>每个会话的行号</entry>
         </row>
         <row>
          <entry><literal>ps</literal></entry>
-         <entry>string</entry>
-         <entry>Current ps display</entry>
+         <entry>字符串</entry>
+         <entry>当前 ps 显示</entry>
         </row>
         <row>
          <entry><literal>session_start</literal></entry>
-         <entry>string</entry>
-         <entry>Session start time</entry>
+         <entry>字符串</entry>
+         <entry>会话开始时间</entry>
         </row>
         <row>
          <entry><literal>vxid</literal></entry>
          <entry>string</entry>
-         <entry>Virtual transaction ID</entry>
+         <entry>虚拟事务 ID</entry>
         </row>
         <row>
          <entry><literal>txid</literal></entry>
          <entry>string</entry>
-         <entry>Regular transaction ID</entry>
+         <entry>常规事务 ID</entry>
         </row>
         <row>
          <entry><literal>error_severity</literal></entry>
          <entry>string</entry>
-         <entry>Error severity</entry>
+         <entry>错误严重程度</entry>
         </row>
         <row>
          <entry><literal>state_code</literal></entry>
          <entry>string</entry>
-         <entry>SQLSTATE code</entry>
+         <entry>SQLSTATE 代码</entry>
         </row>
         <row>
          <entry><literal>message</literal></entry>
          <entry>string</entry>
-         <entry>Error message</entry>
+         <entry>错误消息</entry>
         </row>
         <row>
          <entry><literal>detail</literal></entry>
          <entry>string</entry>
-         <entry>Error message detail</entry>
+         <entry>错误消息详情</entry>
         </row>
         <row>
          <entry><literal>hint</literal></entry>
-         <entry>string</entry>
-         <entry>Error message hint</entry>
+         <entry>字符串</entry>
+         <entry>错误消息提示</entry>
         </row>
         <row>
          <entry><literal>internal_query</literal></entry>
-         <entry>string</entry>
-         <entry>Internal query that led to the error</entry>
+         <entry>字符串</entry>
+         <entry>导致该错误的内部查询</entry>
         </row>
         <row>
          <entry><literal>internal_position</literal></entry>
-         <entry>number</entry>
-         <entry>Cursor index into internal query</entry>
+         <entry>数字</entry>
+         <entry>内部查询中的游标索引</entry>
         </row>
         <row>
          <entry><literal>context</literal></entry>
-         <entry>string</entry>
-         <entry>Error context</entry>
+         <entry>字符串</entry>
+         <entry>错误上下文</entry>
         </row>
         <row>
          <entry><literal>statement</literal></entry>
-         <entry>string</entry>
-         <entry>Client-supplied query string</entry>
+         <entry>字符串</entry>
+         <entry>客户端提供的查询字符串</entry>
         </row>
         <row>
          <entry><literal>cursor_position</literal></entry>
-         <entry>number</entry>
-         <entry>Cursor index into query string</entry>
+         <entry>数字</entry>
+         <entry>指向查询字符串的游标索引</entry>
         </row>
         <row>
          <entry><literal>func_name</literal></entry>
-         <entry>string</entry>
-         <entry>Error location function name</entry>
+         <entry>字符串</entry>
+         <entry>错误位置所在的函数名</entry>
         </row>
         <row>
          <entry><literal>file_name</literal></entry>
-         <entry>string</entry>
-         <entry>File name of error location</entry>
+         <entry>字符串</entry>
+         <entry>错误位置所在的文件名</entry>
         </row>
         <row>
          <entry><literal>file_line_num</literal></entry>
-         <entry>number</entry>
-         <entry>File line number of the error location</entry>
+         <entry>数字</entry>
+         <entry>错误位置的文件行号</entry>
         </row>
         <row>
          <entry><literal>application_name</literal></entry>
-         <entry>string</entry>
-         <entry>Client application name</entry>
+         <entry>字符串</entry>
+         <entry>客户端应用名称</entry>
         </row>
         <row>
          <entry><literal>backend_type</literal></entry>
-         <entry>string</entry>
-         <entry>Type of backend</entry>
+         <entry>字符串</entry>
+         <entry>后端类型</entry>
         </row>
         <row>
          <entry><literal>leader_pid</literal></entry>
-         <entry>number</entry>
-         <entry>Process ID of leader for active parallel workers</entry>
+         <entry>数字</entry>
+         <entry>活动并行工作者的领导者进程 ID</entry>
         </row>
         <row>
          <entry><literal>query_id</literal></entry>
-         <entry>number</entry>
-         <entry>Query ID</entry>
+         <entry>数字</entry>
+         <entry>查询 ID</entry>
         </row>
        </tbody>
       </tgroup>
@@ -6722,41 +6337,28 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
     </sect2>
 
    <sect2 id="runtime-config-logging-proc-title">
-    <title>Process Title</title>
+    <title>进程标题</title>
 
     <para>
-     These settings control how process titles of server processes are
-     modified.  Process titles are typically viewed using programs like
-     <application>ps</application> or, on Windows, <application>Process Explorer</application>.
-     See <xref linkend="monitoring-ps"/> for details.
+     这些设置控制服务器进程的进程标题如何被修改。进程标题通常使用像 <application>ps</application> 这样的程序查看，或者在 Windows 上使用 <application>Process Explorer</application> 查看。详情请参见 <xref linkend="monitoring-ps"/>。
     </para>
 
     <variablelist>
      <varlistentry id="guc-cluster-name" xreflabel="cluster_name">
       <term><varname>cluster_name</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>cluster_name</varname> configuration parameter</primary>
+       <primary><varname>cluster_name</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets a name that identifies this database cluster (instance) for
-        various purposes.  The cluster name appears in the process title for
-        all server processes in this cluster.  Moreover, it is the default
-        application name for a standby connection (see <xref
-        linkend="guc-synchronous-standby-names"/>).
+        设置一个名称，用于在各种场合标识此数据库集簇（实例）。该集簇名称会出现在此集簇中所有服务器进程的进程标题中。此外，它还是后备连接的默认应用名称（参见 <xref
+        linkend="guc-synchronous-standby-names"/>）。
        </para>
 
        <para>
-        The name can be any string of less
-        than <symbol>NAMEDATALEN</symbol> characters (64 characters in a standard
-        build). Only printable ASCII characters may be used in the
-        <varname>cluster_name</varname> value.
-        Other characters are replaced with <link
-        linkend="sql-syntax-strings-escape">C-style hexadecimal escapes</link>.
-        No name is shown if this parameter is set to the empty string
-        <literal>''</literal> (which is the default).
-        This parameter can only be set at server start.
+        该名称可以是任意少于 <symbol>NAMEDATALEN</symbol> 个字符的字符串（标准构建中为 64 个字符）。<varname>cluster_name</varname> 值中只能使用可打印的 ASCII 字符。其他字符会被替换为 <link
+        linkend="sql-syntax-strings-escape">C 风格十六进制转义</link>。如果此参数被设置为空字符串 <literal>''</literal>（这是默认值），则不显示任何名称。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -6764,18 +6366,12 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-update-process-title" xreflabel="update_process_title">
       <term><varname>update_process_title</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>update_process_title</varname> configuration parameter</primary>
+       <primary><varname>update_process_title</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Enables updating of the process title every time a new SQL command
-        is received by the server.
-        This setting defaults to <literal>on</literal> on most platforms, but it
-        defaults to <literal>off</literal> on Windows due to that platform's larger
-        overhead for updating the process title.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        启用后，每当服务器收到新的 SQL 命令时都会更新进程标题。在大多数平台上，此设置的默认值为 <literal>on</literal>，但在 Windows 上默认值为 <literal>off</literal>，因为该平台更新进程标题的开销更大。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
