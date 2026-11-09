@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CLUSTER</refname>
-  <refpurpose>cluster a table according to an index</refpurpose>
+  <refpurpose>根据索引对表进行聚簇</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -30,65 +30,55 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CLUSTER</command> instructs <productname>PostgreSQL</productname>
-   to cluster the table specified
-   by <replaceable class="parameter">table_name</replaceable>
-   based on the index specified by
-   <replaceable class="parameter">index_name</replaceable>. The index must
-   already have been defined on
-   <replaceable class="parameter">table_name</replaceable>.
+   <command>CLUSTER</command> 指示 <productname>PostgreSQL</productname>
+   根据 <replaceable class="parameter">index_name</replaceable> 指定的索引对
+   <replaceable class="parameter">table_name</replaceable> 指定的表进行聚簇。
+   该索引必须已经定义在
+   <replaceable class="parameter">table_name</replaceable> 上。
   </para>
 
   <para>
-   When a table is clustered, it is physically reordered
-   based on the index information. Clustering is a one-time operation:
-   when the table is subsequently updated, the changes are
-   not clustered.  That is, no attempt is made to store new or
-   updated rows according to their index order.  (If one wishes, one can
-   periodically recluster by issuing the command again.  Also, setting
-   the table's <literal>fillfactor</literal> storage parameter to less than
-   100% can aid in preserving cluster ordering during updates, since updated
-   rows are kept on the same page if enough space is available there.)
+   当一个表被聚簇时，它会根据索引信息在物理上重新排序。聚簇是一次性操作：
+   当表随后被更新时，这些更改不会被聚簇。也就是说，不会尝试按照索引顺序
+   存储新行或更新后的行。（如果愿意，可以定期再次发出该命令来重新聚簇。
+   此外，将表的 <literal>fillfactor</literal> 存储参数设置为小于
+   100% 有助于在更新期间保持聚簇顺序，因为如果页面上有足够的空间，
+   更新后的行会保留在同一页面上。）
   </para>
 
   <para>
-   When a table is clustered, <productname>PostgreSQL</productname>
-   remembers which index it was clustered by.  The form
-   <command>CLUSTER <replaceable class="parameter">table_name</replaceable></command>
-   reclusters the table using the same index as before.  You can also
-   use the <literal>CLUSTER</literal> or <literal>SET WITHOUT CLUSTER</literal>
-   forms of <link linkend="sql-altertable"><command>ALTER TABLE</command></link> to set the index to be used for
-   future cluster operations, or to clear any previous setting.
+   当一个表被聚簇时，<productname>PostgreSQL</productname>
+   会记住它是按哪个索引聚簇的。<command>CLUSTER <replaceable class="parameter">table_name</replaceable></command>
+   形式会使用与之前相同的索引重新聚簇该表。你也可以
+   使用 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 的 <literal>CLUSTER</literal> 或 <literal>SET WITHOUT CLUSTER</literal>
+   形式来设置将来聚簇操作要使用的索引，或者清除之前的任何设置。
   </para>
 
   <para>
-   <command>CLUSTER</command> without a
-   <replaceable class="parameter">table_name</replaceable> reclusters all the
-   previously-clustered tables in the current database that the calling user
-   has privileges for.  This form of <command>CLUSTER</command> cannot be
-   executed inside a transaction block.
+   不带 <replaceable class="parameter">table_name</replaceable> 的 <command>CLUSTER</command>
+   会重新聚簇当前数据库中调用用户有权限的
+   所有先前已聚簇的表。<command>CLUSTER</command> 的这种形式
+   不能在事务块内执行。
   </para>
 
   <para>
-   When a table is being clustered, an <literal>ACCESS
-   EXCLUSIVE</literal> lock is acquired on it. This prevents any other
-   database operations (both reads and writes) from operating on the
-   table until the <command>CLUSTER</command> is finished.
+   当对表进行聚簇时，会在该表上获取一个 <literal>ACCESS
+   EXCLUSIVE</literal> 锁。这会阻止任何其他数据库操作（包括读和写）在该表上执行，直到 <command>CLUSTER</command> 完成。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">table_name</replaceable></term>
     <listitem>
      <para>
-      The name (possibly schema-qualified) of a table.
+      表的名称（可能带有模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -97,7 +87,7 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
     <term><replaceable class="parameter">index_name</replaceable></term>
     <listitem>
      <para>
-      The name of an index.
+      索引的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -106,8 +96,7 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
     <term><literal>VERBOSE</literal></term>
     <listitem>
      <para>
-      Prints a progress report as each table is clustered
-      at <literal>INFO</literal> level.
+      当每张表以 <literal>INFO</literal> 级别进行聚簇时打印进度报告。
      </para>
     </listitem>
    </varlistentry>
@@ -116,12 +105,7 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
     <term><replaceable class="parameter">boolean</replaceable></term>
     <listitem>
      <para>
-      Specifies whether the selected option should be turned on or off.
-      You can write <literal>TRUE</literal>, <literal>ON</literal>, or
-      <literal>1</literal> to enable the option, and <literal>FALSE</literal>,
-      <literal>OFF</literal>, or <literal>0</literal> to disable it.  The
-      <replaceable class="parameter">boolean</replaceable> value can also
-      be omitted, in which case <literal>TRUE</literal> is assumed.
+      指定所选选项应打开还是关闭。可以写 <literal>TRUE</literal>、<literal>ON</literal> 或 <literal>1</literal> 来启用该选项，写 <literal>FALSE</literal>、<literal>OFF</literal> 或 <literal>0</literal> 来禁用它。<replaceable class="parameter">boolean</replaceable> 值也可以省略，此时假定为 <literal>TRUE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -129,33 +113,18 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
    <para>
-    To cluster a table, one must have the <literal>MAINTAIN</literal> privilege
-    on the table.
+    要对一个表进行聚簇，必须具有该表的 <literal>MAINTAIN</literal> 权限。
    </para>
 
    <para>
-    In cases where you are accessing single rows randomly
-    within a table, the actual order of the data in the
-    table is unimportant. However, if you tend to access some
-    data more than others, and there is an index that groups
-    them together, you will benefit from using <command>CLUSTER</command>.
-    If you are requesting a range of indexed values from a table, or a
-    single indexed value that has multiple rows that match,
-    <command>CLUSTER</command> will help because once the index identifies the
-    table page for the first row that matches, all other rows
-    that match are probably already on the same table page,
-    and so you save disk accesses and speed up the query.
+    在你随机访问表中的单行的情况下，表中数据的实际顺序并不重要。但是，如果你倾向于比其他数据更频繁地访问某些数据，并且有一个索引将这些数据分组在一起，那么使用 <command>CLUSTER</command> 会带来好处。如果你要从表中请求一个索引值范围，或者请求一个匹配多行的单个索引值，<command>CLUSTER</command> 会有帮助，因为一旦索引确定了第一个匹配行的表页，所有其他匹配的行很可能已经在同一个表页上，因此你节省了磁盘访问并加快了查询速度。
    </para>
 
    <para>
-    <command>CLUSTER</command> can re-sort the table using either an index scan
-    on the specified index, or (if the index is a b-tree) a sequential
-    scan followed by sorting.  It will attempt to choose the method that
-    will be faster, based on planner cost parameters and available statistical
-    information.
+    <command>CLUSTER</command> 可以使用对指定索引的索引扫描，或者（如果该索引是 b-tree）顺序扫描后再排序，来重新排序表。它将根据规划器代价参数和可用的统计信息，尝试选择更快的方法。
    </para>
 
    <para>
@@ -165,101 +134,78 @@ CLUSTER [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <r
    </para>
 
    <para>
-    When an index scan is used, a temporary copy of the table is created that
-    contains the table data in the index order.  Temporary copies of each
-    index on the table are created as well.  Therefore, you need free space on
-    disk at least equal to the sum of the table size and the index sizes.
+    当使用索引扫描时，会创建该表的一个临时副本，其中包含按索引顺序排列的表数据。表上每个索引的临时副本也会被创建。因此，你需要的磁盘空闲空间至少等于表大小与索引大小之和。
    </para>
 
    <para>
-    When a sequential scan and sort is used, a temporary sort file is
-    also created, so that the peak temporary space requirement is as much
-    as double the table size, plus the index sizes.  This method is often
-    faster than the index scan method, but if the disk space requirement is
-    intolerable, you can disable this choice by temporarily setting <xref
-    linkend="guc-enable-sort"/> to <literal>off</literal>.
+    当使用顺序扫描和排序时，还会创建一个临时排序文件，因此临时空间的峰值需求可达表大小的两倍，再加上索引的大小。这种方法通常比索引扫描方法更快，但如果磁盘空间需求无法承受，可以通过将 <xref
+    linkend="guc-enable-sort"/> 临时设置为 <literal>off</literal> 来禁用此选择。
    </para>
 
    <para>
-    It is advisable to set <xref linkend="guc-maintenance-work-mem"/> to
-    a reasonably large value (but not more than the amount of RAM you can
-    dedicate to the <command>CLUSTER</command> operation) before clustering.
+    建议在聚簇之前将 <xref linkend="guc-maintenance-work-mem"/> 设置为一个相当大的值（但不要超过您能为 <command>CLUSTER</command> 操作专门分配的 RAM 量）。
    </para>
 
    <para>
-    Because the planner records statistics about the ordering of
-    tables, it is advisable to run <link linkend="sql-analyze"><command>ANALYZE</command></link>
-    on the newly clustered table.
-    Otherwise, the planner might make poor choices of query plans.
+    由于规划器会记录有关表排序的统计信息，建议对新聚簇的表运行 <link linkend="sql-analyze"><command>ANALYZE</command></link>。否则，规划器可能会做出糟糕的查询计划选择。
    </para>
 
    <para>
-    Because <command>CLUSTER</command> remembers which indexes are clustered,
-    one can cluster the tables one wants clustered manually the first time,
-    then set up a periodic maintenance script that executes
-    <command>CLUSTER</command> without any parameters, so that the desired tables
-    are periodically reclustered.
+    由于 <command>CLUSTER</command> 会记住哪些索引已聚簇，第一次可以手动对想要聚簇的表进行聚簇，然后设置一个定期维护脚本，执行不带任何参数的 <command>CLUSTER</command>，以便定期重新聚簇所需的表。
    </para>
 
   <para>
-    Each backend running <command>CLUSTER</command> will report its progress
-    in the <structname>pg_stat_progress_cluster</structname> view. See
-    <xref linkend="cluster-progress-reporting"/> for details.
+    每个运行 <command>CLUSTER</command> 的后端都会在 <structname>pg_stat_progress_cluster</structname> 视图中报告其进度。详情请参见 <xref linkend="cluster-progress-reporting"/>。
   </para>
 
    <para>
-    Clustering a partitioned table clusters each of its partitions using the
-    partition of the specified partitioned index.  When clustering a partitioned
-    table, the index may not be omitted.  <command>CLUSTER</command> on a
-    partitioned table cannot be executed inside a transaction block.
+    对分区表进行聚簇时，会使用指定分区索引的各个分区来聚簇它的每个分区。对分区表进行聚簇时，不能省略索引。对分区表执行 <command>CLUSTER</command> 不能在事务块内执行。
    </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Cluster the table <literal>employees</literal> on the basis of
-   its index <literal>employees_ind</literal>:
+   基于其索引 <literal>employees_ind</literal> 对表 <literal>employees</literal> 进行聚簇：
 <programlisting>
 CLUSTER employees USING employees_ind;
 </programlisting>
   </para>
 
   <para>
-   Cluster the <literal>employees</literal> table using the same
-   index that was used before:
+   使用之前用过的同一索引对 <literal>employees</literal> 表进行聚簇：
 <programlisting>
 CLUSTER employees;
 </programlisting>
   </para>
 
   <para>
-   Cluster all tables in the database that have previously been clustered:
+   对数据库中所有先前已被聚簇的表进行聚簇：
 <programlisting>
 CLUSTER;
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>CLUSTER</command> statement in the SQL standard.
+   SQL 标准中没有 <command>CLUSTER</command> 语句。
   </para>
 
   <para>
-   The following syntax was used before <productname>PostgreSQL</productname>
-   17 and is still supported:
+   以下语法在 <productname>PostgreSQL</productname>
+   17 之前使用，目前仍受支持：
 <synopsis>
 CLUSTER [ VERBOSE ] [ <replaceable class="parameter">table_name</replaceable> [ USING <replaceable class="parameter">index_name</replaceable> ] ]
 </synopsis>
   </para>
 
   <para>
-   The following syntax was used before <productname>PostgreSQL</productname>
-   8.3 and is still supported:
+   以下语法在 <productname>PostgreSQL</productname>
+   8.3 之前使用，目前仍受支持：
 <synopsis>
 CLUSTER <replaceable class="parameter">index_name</replaceable> ON <replaceable class="parameter">table_name</replaceable>
 </synopsis>
@@ -267,7 +213,7 @@ CLUSTER <replaceable class="parameter">index_name</replaceable> ON <replaceable 
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="app-clusterdb"/></member>
