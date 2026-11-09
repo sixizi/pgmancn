@@ -1208,13 +1208,13 @@ CREATE EVENT TRIGGER perl_a_snitch
  </sect1>
 
  <sect1 id="plperl-under-the-hood">
-  <title>PL/Perl Under the Hood</title>
+  <title>PL/Perl 内幕</title>
 
  <sect2 id="plperl-config">
-  <title>Configuration</title>
+  <title>配置</title>
 
   <para>
-  This section lists configuration parameters that affect <application>PL/Perl</application>.
+  本节列出了影响 <application>PL/Perl</application> 的配置参数。
   </para>
 
   <variablelist>
@@ -1223,55 +1223,34 @@ CREATE EVENT TRIGGER perl_a_snitch
       <term>
        <varname>plperl.on_init</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>plperl.on_init</varname> configuration parameter</primary>
+       <primary><varname>plperl.on_init</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Specifies Perl code to be executed when a Perl interpreter is first
-        initialized, before it is specialized for use by <literal>plperl</literal> or
-        <literal>plperlu</literal>.
-        The SPI functions are not available when this code is executed.
-        If the code fails with an error it will abort the initialization of
-        the interpreter and propagate out to the calling query, causing the
-        current transaction or subtransaction to be aborted.
+        指定在 Perl 解释器首次初始化时执行的 Perl 代码，此时该解释器尚未被专门化以供 <literal>plperl</literal> 或 <literal>plperlu</literal> 使用。
+        执行此代码时，SPI 函数不可用。
+        如果该代码因错误而失败，它将中止解释器的初始化，并把错误传播到调用它的查询，从而导致当前事务或子事务被中止。
        </para>
        <para>
-       The Perl code is limited to a single string. Longer code can be placed
-       into a module and loaded by the <literal>on_init</literal> string.
-       Examples:
+       Perl 代码仅限于单个字符串。较长的代码可以放入模块中，并通过 <literal>on_init</literal> 字符串加载。
+       示例：
 <programlisting>
 plperl.on_init = 'require "plperlinit.pl"'
 plperl.on_init = 'use lib "/my/app"; use MyApp::PgInit;'
 </programlisting>
        </para>
        <para>
-       Any modules loaded by <literal>plperl.on_init</literal>, either directly or
-       indirectly, will be available for use by <literal>plperl</literal>.  This may
-       create a security risk. To see what modules have been loaded you can use:
+       由 <literal>plperl.on_init</literal> 直接或间接加载的任何模块都将可供 <literal>plperl</literal> 使用。这可能会带来安全风险。要查看已加载了哪些模块，可以使用：
 <programlisting>
 DO 'elog(WARNING, join ", ", sort keys %INC)' LANGUAGE plperl;
 </programlisting>
        </para>
        <para>
-        Initialization will happen in the postmaster if the <literal>plperl</literal> library is
-        included in <xref linkend="guc-shared-preload-libraries"/>, in which
-        case extra consideration should be given to the risk of destabilizing
-        the postmaster.  The principal reason for making use of this feature
-        is that Perl modules loaded by <literal>plperl.on_init</literal> need be
-        loaded only at postmaster start, and will be instantly available
-        without loading overhead in individual database sessions.  However,
-        keep in mind that the overhead is avoided only for the first Perl
-        interpreter used by a database session &mdash; either PL/PerlU, or
-        PL/Perl for the first SQL role that calls a PL/Perl function.  Any
-        additional Perl interpreters created in a database session will have
-        to execute <literal>plperl.on_init</literal> afresh.  Also, on Windows there
-        will be no savings whatsoever from preloading, since the Perl
-        interpreter created in the postmaster process does not propagate to
-        child processes.
+        如果 <literal>plperl</literal> 库被包含在 <xref linkend="guc-shared-preload-libraries"/> 中，初始化将在 postmaster 中进行，在这种情况下，应当格外考虑使 postmaster 不稳定的风险。使用此功能的主要原因是，由 <literal>plperl.on_init</literal> 加载的 Perl 模块只需在 postmaster 启动时加载，之后即可立即使用，而无需在各个数据库会话中承担加载开销。但是，请记住，只有数据库会话 &mdash; 所使用的第一个 Perl 解释器（要么是 PL/PerlU，要么是第一个调用 PL/Perl 函数的 SQL 角色所使用的 PL/Perl）才能避免该开销。在数据库会话中创建的任何其他 Perl 解释器都必须重新执行 <literal>plperl.on_init</literal>。此外，在 Windows 上，预加载完全不会带来任何节省，因为在 postmaster 进程中创建的 Perl 解释器不会传播到子进程。
        </para>
        <para>
-       This parameter can only be set in the <filename>postgresql.conf</filename> file or on the server command line.
+       此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1280,41 +1259,31 @@ DO 'elog(WARNING, join ", ", sort keys %INC)' LANGUAGE plperl;
       <term>
        <varname>plperl.on_plperl_init</varname> (<type>string</type>)
        <indexterm>
-        <primary><varname>plperl.on_plperl_init</varname> configuration parameter</primary>
+        <primary><varname>plperl.on_plperl_init</varname> 配置参数</primary>
        </indexterm>
       </term>
       <term>
        <varname>plperl.on_plperlu_init</varname> (<type>string</type>)
        <indexterm>
-        <primary><varname>plperl.on_plperlu_init</varname> configuration parameter</primary>
+        <primary><varname>plperl.on_plperlu_init</varname> 配置参数</primary>
        </indexterm>
       </term>
       <listitem>
        <para>
-        These parameters specify Perl code to be executed when a Perl
-        interpreter is specialized for <literal>plperl</literal> or
-        <literal>plperlu</literal> respectively.  This will happen when a PL/Perl or
-        PL/PerlU function is first executed in a database session, or when
-        an additional interpreter has to be created because the other language
-        is called or a PL/Perl function is called by a new SQL role.  This
-        follows any initialization done by <literal>plperl.on_init</literal>.
-        The SPI functions are not available when this code is executed.
-        The Perl code in <literal>plperl.on_plperl_init</literal> is executed after
-        <quote>locking down</quote> the interpreter, and thus it can only perform
-        trusted operations.
+        这些参数分别指定当 Perl 解释器专门用于 <literal>plperl</literal> 或 <literal>plperlu</literal> 时要执行的 Perl 代码。这会在数据库会话中首次执行 PL/Perl 或 PL/PerlU 函数时发生，或者在因为调用了另一种语言、或某个新的 SQL 角色调用了 PL/Perl 函数而必须创建额外的解释器时发生。此过程在 <literal>plperl.on_init</literal> 完成的任何初始化之后进行。执行此代码时 SPI 函数不可用。<literal>plperl.on_plperl_init</literal> 中的 Perl 代码在<quote>锁定</quote>解释器之后执行，因此它只能执行可信操作。
        </para>
        <para>
-        If the code fails with an error it will abort the initialization and
-        propagate out to the calling query, causing the current transaction or
-        subtransaction to be aborted.  Any actions already done within Perl
-        won't be undone; however, that interpreter won't be used again.
-        If the language is used again the initialization will be attempted
-        again within a fresh Perl interpreter.
+        如果代码失败并产生错误，它将中止初始化并
+        向外传播到调用查询，导致当前事务或
+        子事务被中止。在 Perl 中已经完成的任何操作
+        都不会被撤销；不过，该解释器不会再被使用。
+        如果再次使用该语言，将在新的 Perl 解释器中
+        再次尝试初始化。
        </para>
        <para>
-        Only superusers can change these settings.  Although these settings
-        can be changed within a session, such changes will not affect Perl
-        interpreters that have already been used to execute functions.
+        只有超级用户才能更改这些设置。尽管这些设置
+        可以在会话内更改，但此类更改不会影响已经
+        用于执行函数的 Perl 解释器。
        </para>
       </listitem>
      </varlistentry>
@@ -1323,14 +1292,14 @@ DO 'elog(WARNING, join ", ", sort keys %INC)' LANGUAGE plperl;
       <term>
        <varname>plperl.use_strict</varname> (<type>boolean</type>)
        <indexterm>
-        <primary><varname>plperl.use_strict</varname> configuration parameter</primary>
+        <primary><varname>plperl.use_strict</varname> 配置参数</primary>
        </indexterm>
       </term>
       <listitem>
        <para>
-        When set true subsequent compilations of PL/Perl functions will have
-        the <literal>strict</literal> pragma enabled.  This parameter does not affect
-        functions already compiled in the current session.
+        当设置为 true 时，后续编译的 PL/Perl 函数将
+        启用 <literal>strict</literal> pragma。此参数不会影响当前会话中
+        已经编译的函数。
        </para>
       </listitem>
      </varlistentry>
@@ -1339,49 +1308,36 @@ DO 'elog(WARNING, join ", ", sort keys %INC)' LANGUAGE plperl;
 </sect2>
 
  <sect2 id="plperl-missing">
-  <title>Limitations and Missing Features</title>
+  <title>限制与缺失的功能</title>
 
   <para>
-   The following features are currently missing from PL/Perl, but they
-   would make welcome contributions.
+   PL/Perl 目前缺少以下功能，但欢迎贡献实现。
 
    <itemizedlist>
     <listitem>
      <para>
-      PL/Perl functions cannot call each other directly.
+      PL/Perl 函数不能直接相互调用。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      SPI is not yet fully implemented.
+      SPI 尚未完全实现。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      If you are fetching very large data sets using
-      <literal>spi_exec_query</literal>, you should be aware that
-      these will all go into memory.  You can avoid this by using
-      <literal>spi_query</literal>/<literal>spi_fetchrow</literal> as
-      illustrated earlier.
+      如果你使用 <literal>spi_exec_query</literal> 获取非常大的数据集，应当注意这些数据都会进入内存。你可以按照前面演示的方式使用 <literal>spi_query</literal>/<literal>spi_fetchrow</literal> 来避免这一点。
      </para>
      <para>
-        A similar problem occurs if a set-returning function passes a
-        large set of rows back to PostgreSQL via <literal>return</literal>. You
-        can avoid this problem too by instead using
-        <literal>return_next</literal> for each row returned, as shown
-        previously.
+        如果某个集合返回函数通过 <literal>return</literal> 将大量行返回给 PostgreSQL，也会出现类似的问题。你同样可以按照前面所示，改为对返回的每一行使用 <literal>return_next</literal> 来避免这个问题。
      </para>
     </listitem>
 
      <listitem>
       <para>
-        When a session ends normally, not due to a fatal error, any
-        <literal>END</literal> blocks that have been defined are executed.
-        Currently no other actions are performed. Specifically,
-        file handles are not automatically flushed and objects are
-        not automatically destroyed.
+        当一个会话正常结束（而非因致命错误结束）时，已定义的任何 <literal>END</literal> 块都会被执行。目前不会执行其他操作。具体来说，文件句柄不会自动刷新，对象也不会自动销毁。
       </para>
      </listitem>
    </itemizedlist>
