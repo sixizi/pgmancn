@@ -26,7 +26,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>EXPLAIN</refname>
-  <refpurpose>show the execution plan of a statement</refpurpose>
+  <refpurpose>显示语句的执行计划</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -51,55 +51,23 @@ EXPLAIN [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] <rep
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   This command displays the execution plan that the
-   <productname>PostgreSQL</productname> planner generates for the
-   supplied statement.  The execution plan shows how the table(s)
-   referenced by the statement will be scanned &mdash; by plain sequential scan,
-   index scan, etc. &mdash; and if multiple tables are referenced, what join
-   algorithms will be used to bring together the required rows from
-   each input table.
+   这条命令显示 <productname>PostgreSQL</productname> 规划器为所提供的语句生成的执行计划。执行计划显示语句引用的表将如何被扫描 &mdash; 通过普通顺序扫描、索引扫描等 &mdash;，以及如果引用了多个表，将使用什么连接算法把来自每个输入表的所需行组合起来。
   </para>
 
   <para>
-   The most critical part of the display is the estimated statement execution
-   cost, which is the planner's guess at how long it will take to run the
-   statement (measured in cost units that are arbitrary, but conventionally
-   mean disk page fetches).  Actually two numbers
-   are shown: the start-up cost before the first row can be returned, and
-   the total cost to return all the rows.  For most queries the total cost
-   is what matters, but in contexts such as a subquery in <literal>EXISTS</literal>, the planner
-   will choose the smallest start-up cost instead of the smallest total cost
-   (since the executor will stop after getting one row, anyway).
-   Also, if you limit the number of rows to return with a <literal>LIMIT</literal> clause,
-   the planner makes an appropriate interpolation between the endpoint
-   costs to estimate which plan is really the cheapest.
+   显示中最关键的部分是估计的语句执行代价，即规划器对运行该语句需要多长时间的猜测（以代价单位度量，这些单位是任意的，但习惯上表示磁盘页面读取）。实际上会显示两个数字：返回第一行之前的启动代价，以及返回所有行的总代价。对大多数查询来说，总代价才是关键，但在诸如 <literal>EXISTS</literal> 中的子查询这样的场景中，规划器会选择最小的启动代价而不是最小的总代价（因为执行器无论如何在取到一行后就会停止）。此外，如果你用 <literal>LIMIT</literal> 子句限制要返回的行数，规划器会在端点代价之间进行适当的插值，以估计哪个计划实际上最便宜。
   </para>
 
   <para>
-   The <literal>ANALYZE</literal> option causes the statement to be actually
-   executed, not only planned.  Then actual run time statistics are added to
-   the display, including the total elapsed time expended within each plan
-   node (in milliseconds) and the total number of rows it actually returned.
-   This is useful for seeing whether the planner's estimates
-   are close to reality.
+   <literal>ANALYZE</literal> 选项使语句被实际执行，而不仅仅是做计划。然后会把实际运行时间统计信息添加到显示中，包括在每个计划节点内花费的总耗时（以毫秒计）以及它实际返回的总行数。这对于查看规划器的估计是否接近现实很有用。
   </para>
 
   <important>
    <para>
-    Keep in mind that the statement is actually executed when
-    the <literal>ANALYZE</literal> option is used.  Although
-    <command>EXPLAIN</command> will discard any output that a
-    <command>SELECT</command> would return, other side effects of the
-    statement will happen as usual.  If you wish to use
-    <command>EXPLAIN ANALYZE</command> on an
-    <command>INSERT</command>, <command>UPDATE</command>,
-    <command>DELETE</command>, <command>MERGE</command>,
-    <command>CREATE TABLE AS</command>,
-    or <command>EXECUTE</command> statement
-    without letting the command affect your data, use this approach:
+    请记住，使用 <literal>ANALYZE</literal> 选项时语句会被实际执行。尽管 <command>EXPLAIN</command> 会丢弃 <command>SELECT</command> 会返回的任何输出，但语句的其他副作用会照常发生。如果你希望在不让命令影响数据的情况下对 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command>、<command>MERGE</command>、<command>CREATE TABLE AS</command> 或 <command>EXECUTE</command> 语句使用 <command>EXPLAIN ANALYZE</command>，请采用以下方法：
 <programlisting>
 BEGIN;
 EXPLAIN ANALYZE ...;
@@ -110,15 +78,15 @@ ROLLBACK;
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>ANALYZE</literal></term>
     <listitem>
      <para>
-      Carry out the command and show actual run times and other statistics.
-      This parameter defaults to <literal>FALSE</literal>.
+      执行该命令并显示实际运行时间和其他统计信息。
+      此参数默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -127,14 +95,8 @@ ROLLBACK;
     <term><literal>VERBOSE</literal></term>
     <listitem>
      <para>
-      Display additional information regarding the plan.  Specifically, include
-      the output column list for each node in the plan tree, schema-qualify
-      table and function names, always label variables in expressions with
-      their range table alias, and always print the name of each trigger for
-      which statistics are displayed.  The query identifier will also be
-      displayed if one has been computed, see <xref
-      linkend="guc-compute-query-id"/> for more details.  This parameter
-      defaults to <literal>FALSE</literal>.
+      显示有关计划的额外信息。具体来说，包括计划树中每个节点的输出列列表、用模式限定表和函数名、总是用范围表别名标记表达式中的变量，并且总是打印为其显示统计信息的每个触发器的名称。如果已经计算了查询标识符，也会显示该标识符，更多细节请参见 <xref
+      linkend="guc-compute-query-id"/>。此参数默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -143,10 +105,8 @@ ROLLBACK;
     <term><literal>COSTS</literal></term>
     <listitem>
      <para>
-      Include information on the estimated startup and total cost of each
-      plan node, as well as the estimated number of rows and the estimated
-      width of each row.
-      This parameter defaults to <literal>TRUE</literal>.
+      包括每个计划节点的估计启动成本和总成本、估计的行数以及每行的估计宽度等信息。
+      此参数默认为 <literal>TRUE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -155,9 +115,7 @@ ROLLBACK;
     <term><literal>SETTINGS</literal></term>
     <listitem>
      <para>
-      Include information on configuration parameters.  Specifically, include
-      options affecting query planning with value different from the built-in
-      default value.  This parameter defaults to <literal>FALSE</literal>.
+      包括配置参数的信息。具体来说，包括影响查询规划的、其值与内置默认值不同的选项。此参数默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -166,14 +124,10 @@ ROLLBACK;
     <term><literal>GENERIC_PLAN</literal></term>
     <listitem>
      <para>
-      Allow the statement to contain parameter placeholders like
-      <literal>$1</literal>, and generate a generic plan that does not
-      depend on the values of those parameters.
-      See <link linkend="sql-prepare"><command>PREPARE</command></link>
-      for details about generic plans and the types of statement that
-      support parameters.
-      This parameter cannot be used together with <literal>ANALYZE</literal>.
-      It defaults to <literal>FALSE</literal>.
+      允许语句包含诸如 <literal>$1</literal> 这样的参数占位符，并生成不依赖于这些参数值的通用计划。
+      有关通用计划以及支持参数的语句类型的详细信息，请参见 <link linkend="sql-prepare"><command>PREPARE</command></link>。
+      此参数不能与 <literal>ANALYZE</literal> 一起使用。
+      它默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -182,27 +136,7 @@ ROLLBACK;
     <term><literal>BUFFERS</literal></term>
     <listitem>
      <para>
-      Include information on buffer usage. Specifically, include the number of
-      shared blocks hit, read, dirtied, and written, the number of local blocks
-      hit, read, dirtied, and written, the number of temp blocks read and
-      written, and the time spent reading and writing data file blocks, local
-      blocks and temporary file blocks (in milliseconds) if
-      <xref linkend="guc-track-io-timing"/> is enabled.  A
-      <emphasis>hit</emphasis> means that a read was avoided because the block
-      was found already in cache when needed.
-      Shared blocks contain data from regular tables and indexes;
-      local blocks contain data from temporary tables and indexes;
-      while temporary blocks contain short-term working data used in sorts,
-      hashes, Materialize plan nodes, and similar cases.
-      The number of blocks <emphasis>dirtied</emphasis> indicates the number of
-      previously unmodified blocks that were changed by this query; while the
-      number of blocks <emphasis>written</emphasis> indicates the number of
-      previously-dirtied blocks evicted from cache by this backend during
-      query processing.
-      The number of blocks shown for an
-      upper-level node includes those used by all its child nodes.  In text
-      format, only non-zero values are printed.  Buffers information is
-      automatically included when <literal>ANALYZE</literal> is used.
+      包含缓冲区使用情况的信息。具体来说，包括共享块的命中、读取、弄脏和写入数量，本地块的命中、读取、弄脏和写入数量，临时块的读取和写入数量，以及在启用 <xref linkend="guc-track-io-timing"/> 时读取和写入数据文件块、本地块和临时文件块所花费的时间（以毫秒计）。<emphasis>命中</emphasis>意味着当需要某个块时发现它已在缓存中，从而避免了一次读取。共享块包含来自常规表和索引的数据；本地块包含来自临时表和索引的数据；而临时块包含用于排序、哈希、Materialize 计划节点及类似情况下的短期工作数据。<emphasis>弄脏</emphasis>的块数表示此查询更改的先前未被修改的块数；而<emphasis>写入</emphasis>的块数表示查询处理期间此后端从缓存中逐出的先前已被弄脏的块数。上层节点显示的块数包括其所有子节点使用的块数。在文本格式中，只打印非零值。使用 <literal>ANALYZE</literal> 时会自动包含缓冲区信息。
      </para>
     </listitem>
    </varlistentry>
@@ -211,26 +145,7 @@ ROLLBACK;
     <term><literal>SERIALIZE</literal></term>
     <listitem>
      <para>
-      Include information on the cost
-      of <firstterm>serializing</firstterm> the query's output data, that
-      is converting it to text or binary format to send to the client.
-      This can be a significant part of the time required for regular
-      execution of the query, if the datatype output functions are
-      expensive or if <acronym>TOAST</acronym>ed values must be fetched
-      from out-of-line storage.  <command>EXPLAIN</command>'s default
-      behavior, <literal>SERIALIZE NONE</literal>, does not perform these
-      conversions.  If <literal>SERIALIZE TEXT</literal>
-      or <literal>SERIALIZE BINARY</literal> is specified, the appropriate
-      conversions are performed, and the time spent doing so is measured
-      (unless <literal>TIMING OFF</literal> is specified).  If
-      the <literal>BUFFERS</literal> option is also specified, then any
-      buffer accesses involved in the conversions are counted too.
-      In no case, however, will <command>EXPLAIN</command> actually send
-      the resulting data to the client; hence network transmission costs
-      cannot be investigated this way.
-      Serialization may only be enabled when <literal>ANALYZE</literal> is
-      also enabled.  If <literal>SERIALIZE</literal> is written without an
-      argument, <literal>TEXT</literal> is assumed.
+      包含对查询输出数据进行<firstterm>序列化</firstterm>的成本信息，即将其转换为文本或二进制格式以发送给客户端。如果数据类型输出函数开销很大，或者必须从行外存储中获取 <acronym>TOAST</acronym> 的值，那么这可能占常规执行查询所需时间的很大一部分。<command>EXPLAIN</command> 的默认行为 <literal>SERIALIZE NONE</literal> 不执行这些转换。如果指定了 <literal>SERIALIZE TEXT</literal> 或 <literal>SERIALIZE BINARY</literal>，则会执行相应的转换，并测量所花费的时间（除非指定了 <literal>TIMING OFF</literal>）。如果还指定了 <literal>BUFFERS</literal> 选项，那么转换过程中涉及的任何缓冲区访问也会被计入。然而，在任何情况下 <command>EXPLAIN</command> 都不会真正将结果数据发送给客户端；因此无法通过这种方式考察网络传输成本。只有在同时启用 <literal>ANALYZE</literal> 时才能启用序列化。如果写入 <literal>SERIALIZE</literal> 而不带参数，则假定为 <literal>TEXT</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -239,12 +154,7 @@ ROLLBACK;
     <term><literal>WAL</literal></term>
     <listitem>
      <para>
-      Include information on WAL record generation. Specifically, include the
-      number of records, number of full page images (fpi), the amount of WAL
-      generated in bytes and the number of times the WAL buffers became full.
-      In text format, only non-zero values are printed.
-      This parameter may only be used when <literal>ANALYZE</literal> is also
-      enabled.  It defaults to <literal>FALSE</literal>.
+      包括 WAL 记录生成的信息。具体来说，包括记录数、完整页映像（fpi）数、生成的 WAL 字节数以及 WAL 缓冲区被写满的次数。在文本格式中，只打印非零值。此参数只有在 <literal>ANALYZE</literal> 也启用时才能使用。默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -253,15 +163,7 @@ ROLLBACK;
     <term><literal>TIMING</literal></term>
     <listitem>
      <para>
-      Include actual startup time and time spent in each node in the output.
-      The overhead of repeatedly reading the system clock can slow down the
-      query significantly on some systems, so it may be useful to set this
-      parameter to <literal>FALSE</literal> when only actual row counts, and
-      not exact times, are needed.  Run time of the entire statement is
-      always measured, even when node-level timing is turned off with this
-      option.
-      This parameter may only be used when <literal>ANALYZE</literal> is also
-      enabled.  It defaults to <literal>TRUE</literal>.
+      在输出中包括每个节点的实际启动时间和花费的时间。在某些系统上，重复读取系统时钟的开销会显著减慢查询速度，因此当只需要实际行数而不需要精确时间时，将此参数设置为 <literal>FALSE</literal> 可能很有用。即使使用此选项关闭了节点级计时，整个语句的运行时间也始终会被测量。此参数只有在 <literal>ANALYZE</literal> 也启用时才能使用。默认为 <literal>TRUE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -270,13 +172,7 @@ ROLLBACK;
     <term><literal>SUMMARY</literal></term>
     <listitem>
      <para>
-      Include summary information (e.g., totaled timing information) after the
-      query plan.  Summary information is included by default when
-      <literal>ANALYZE</literal> is used but otherwise is not included by
-      default, but can be enabled using this option.  Planning time in
-      <command>EXPLAIN EXECUTE</command> includes the time required to fetch
-      the plan from the cache and the time required for re-planning, if
-      necessary.
+      在查询计划之后包括摘要信息（例如，总计的计时信息）。当使用 <literal>ANALYZE</literal> 时，默认包含摘要信息，否则默认不包含，但可以使用此选项启用。<command>EXPLAIN EXECUTE</command> 中的规划时间包括从缓存中获取计划所需的时间，以及必要时的重新规划所需的时间。
      </para>
     </listitem>
    </varlistentry>
@@ -285,11 +181,7 @@ ROLLBACK;
     <term><literal>MEMORY</literal></term>
     <listitem>
      <para>
-      Include information on memory consumption by the query planning phase.
-      Specifically, include the precise amount of storage used by planner
-      in-memory structures, as well as total memory considering allocation
-      overhead.
-      This parameter defaults to <literal>FALSE</literal>.
+      包括查询规划阶段的内存消耗信息。具体来说，包括规划器内存结构所使用的精确存储量，以及考虑分配开销后的总内存。此参数默认为 <literal>FALSE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -298,10 +190,7 @@ ROLLBACK;
     <term><literal>FORMAT</literal></term>
     <listitem>
      <para>
-      Specify the output format, which can be TEXT, XML, JSON, or YAML.
-      Non-text output contains the same information as the text output
-      format, but is easier for programs to parse.  This parameter defaults to
-      <literal>TEXT</literal>.
+      指定输出格式，可以是 TEXT、XML、JSON 或 YAML。非文本输出包含与文本输出格式相同的信息，但更易于程序解析。此参数默认为 <literal>TEXT</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -310,12 +199,7 @@ ROLLBACK;
     <term><replaceable class="parameter">boolean</replaceable></term>
     <listitem>
      <para>
-      Specifies whether the selected option should be turned on or off.
-      You can write <literal>TRUE</literal>, <literal>ON</literal>, or
-      <literal>1</literal> to enable the option, and <literal>FALSE</literal>,
-      <literal>OFF</literal>, or <literal>0</literal> to disable it.  The
-      <replaceable class="parameter">boolean</replaceable> value can also
-      be omitted, in which case <literal>TRUE</literal> is assumed.
+      指定所选选项应打开还是关闭。你可以写 <literal>TRUE</literal>、<literal>ON</literal> 或 <literal>1</literal> 来启用该选项，写 <literal>FALSE</literal>、<literal>OFF</literal> 或 <literal>0</literal> 来禁用它。<replaceable class="parameter">boolean</replaceable> 值也可以省略，此时假定为 <literal>TRUE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -324,12 +208,11 @@ ROLLBACK;
     <term><replaceable class="parameter">statement</replaceable></term>
     <listitem>
      <para>
-      Any <command>SELECT</command>, <command>INSERT</command>, <command>UPDATE</command>,
-      <command>DELETE</command>, <command>MERGE</command>,
-      <command>VALUES</command>, <command>EXECUTE</command>,
-      <command>DECLARE</command>, <command>CREATE TABLE AS</command>, or
-      <command>CREATE MATERIALIZED VIEW AS</command> statement, whose execution
-      plan you wish to see.
+      任何 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command>、
+      <command>DELETE</command>、<command>MERGE</command>、
+      <command>VALUES</command>、<command>EXECUTE</command>、
+      <command>DECLARE</command>、<command>CREATE TABLE AS</command> 或
+      <command>CREATE MATERIALIZED VIEW AS</command> 语句，你希望查看其执行计划。
      </para>
     </listitem>
    </varlistentry>
@@ -337,52 +220,46 @@ ROLLBACK;
  </refsect1>
 
  <refsect1>
-  <title>Outputs</title>
+  <title>输出</title>
 
    <para>
-    The command's result is a textual description of the plan selected
-    for the <replaceable class="parameter">statement</replaceable>,
-    optionally annotated with execution statistics.
-    <xref linkend="using-explain"/> describes the information provided.
+    该命令的结果是对为 <replaceable class="parameter">statement</replaceable> 所选计划的文本描述，
+    可选地附带执行统计信息。
+    <xref linkend="using-explain"/> 描述了所提供的信息。
    </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注意事项</title>
 
   <para>
-   In order to allow the <productname>PostgreSQL</productname> query
-   planner to make reasonably informed decisions when optimizing
-   queries, the <link
+   为了让 <productname>PostgreSQL</productname> 查询规划器在优化查询时能够做出合理明智的决策，
+   查询中使用的所有表的 <link
    linkend="catalog-pg-statistic"><structname>pg_statistic</structname></link>
-   data should be up-to-date for all tables used in the query.  Normally
-   the <link linkend="autovacuum">autovacuum daemon</link> will take care
-   of that automatically.  But if a table has recently had substantial
-   changes in its contents, you might need to do a manual
-   <link linkend="sql-analyze"><command>ANALYZE</command></link> rather than wait for autovacuum to catch up
-   with the changes.
+   数据都应是最新的。通常
+   <link linkend="autovacuum">autovacuum 守护进程</link> 会自动处理这一点。
+   但如果某个表的内容最近发生了大量更改，你可能需要手动执行
+   <link linkend="sql-analyze"><command>ANALYZE</command></link>，而不是等待 autovacuum 跟上
+   这些更改。
   </para>
 
   <para>
-   In order to measure the run-time cost of each node in the execution
-   plan, the current implementation of <command>EXPLAIN
-   ANALYZE</command> adds profiling overhead to query execution.
-   As a result, running <command>EXPLAIN ANALYZE</command>
-   on a query can sometimes take significantly longer than executing
-   the query normally. The amount of overhead depends on the nature of
-   the query, as well as the platform being used.  The worst case occurs
-   for plan nodes that in themselves require very little time per
-   execution, and on machines that have relatively slow operating
-   system calls for obtaining the time of day.
+   为了测量执行计划中每个节点的运行时开销，<command>EXPLAIN
+   ANALYZE</command> 的当前实现会为查询执行
+   增加性能剖析开销。
+   因此，对查询运行 <command>EXPLAIN ANALYZE</command>
+   有时会比正常执行该查询耗时明显更长。开销的大小取决于
+   查询的性质以及所使用的平台。最坏的情况出现在
+   每次执行本身耗时极少的计划节点上，以及获取当前时间的
+   操作系统调用相对较慢的机器上。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To show the plan for a simple query on a table with a single
-   <type>integer</type> column and 10000 rows:
+   为了展示对一个具有单个 <type>integer</type> 列和 10000 行的表进行简单查询的计划：
 
 <programlisting>
 EXPLAIN SELECT * FROM foo;
@@ -395,7 +272,7 @@ EXPLAIN SELECT * FROM foo;
   </para>
 
   <para>
-  Here is the same query, with JSON output formatting:
+  下面是同一个查询，使用 JSON 输出格式：
 <programlisting>
 EXPLAIN (FORMAT JSON) SELECT * FROM foo;
            QUERY PLAN
@@ -418,9 +295,7 @@ EXPLAIN (FORMAT JSON) SELECT * FROM foo;
   </para>
 
   <para>
-   If there is an index and we use a query with an indexable
-   <literal>WHERE</literal> condition, <command>EXPLAIN</command>
-   might show a different plan:
+   如果存在一个索引，并且我们使用带有可索引 <literal>WHERE</literal> 条件的查询，<command>EXPLAIN</command> 可能会显示不同的计划：
 
 <programlisting>
 EXPLAIN SELECT * FROM foo WHERE i = 4;
@@ -434,7 +309,7 @@ EXPLAIN SELECT * FROM foo WHERE i = 4;
   </para>
 
   <para>
-  Here is the same query, but in YAML format:
+  下面是同一个查询，但使用 YAML 格式：
 <programlisting>
 EXPLAIN (FORMAT YAML) SELECT * FROM foo WHERE i='4';
           QUERY PLAN
@@ -453,10 +328,10 @@ EXPLAIN (FORMAT YAML) SELECT * FROM foo WHERE i='4';
 (1 row)
 </programlisting>
 
-    XML format is left as an exercise for the reader.
+    XML 格式留给读者作为练习。
   </para>
   <para>
-   Here is the same plan with cost estimates suppressed:
+   下面是同一个计划，但抑制了代价估计：
 
 <programlisting>
 EXPLAIN (COSTS FALSE) SELECT * FROM foo WHERE i = 4;
@@ -470,8 +345,7 @@ EXPLAIN (COSTS FALSE) SELECT * FROM foo WHERE i = 4;
   </para>
 
   <para>
-   Here is an example of a query plan for a query using an aggregate
-   function:
+   下面是一个使用聚合函数的查询的查询计划示例：
 
 <programlisting>
 EXPLAIN SELECT sum(i) FROM foo WHERE i &lt; 10;
@@ -486,8 +360,7 @@ EXPLAIN SELECT sum(i) FROM foo WHERE i &lt; 10;
   </para>
 
   <para>
-   Here is an example of using <command>EXPLAIN EXECUTE</command> to
-   display the execution plan for a prepared query:
+   下面是使用 <command>EXPLAIN EXECUTE</command> 显示预备查询的执行计划的示例：
 
 <programlisting>
 PREPARE query(int, int) AS SELECT sum(bar) FROM test
@@ -513,22 +386,11 @@ EXPLAIN ANALYZE EXECUTE query(100, 200);
   </para>
 
   <para>
-   Of course, the specific numbers shown here depend on the actual
-   contents of the tables involved.  Also note that the numbers, and
-   even the selected query strategy, might vary between
-   <productname>PostgreSQL</productname> releases due to planner
-   improvements. In addition, the <command>ANALYZE</command> command
-   uses random sampling to estimate data statistics; therefore, it is
-   possible for cost estimates to change after a fresh run of
-   <command>ANALYZE</command>, even if the actual distribution of data
-   in the table has not changed.
+   当然，这里显示的具体数字取决于所涉及表的实际内容。另请注意，由于查询规划器的改进，这些数字乃至所选择的查询策略在不同的 <productname>PostgreSQL</productname> 发行版之间可能会有所不同。此外，<command>ANALYZE</command> 命令使用随机采样来估计数据统计信息；因此，即使表中数据的实际分布没有发生变化，在重新运行 <command>ANALYZE</command> 之后成本估计也有可能发生变化。
   </para>
 
   <para>
-   Notice that the previous example showed a <quote>custom</quote> plan
-   for the specific parameter values given in <command>EXECUTE</command>.
-   We might also wish to see the generic plan for a parameterized
-   query, which can be done with <literal>GENERIC_PLAN</literal>:
+   请注意，前面的示例针对 <command>EXECUTE</command> 中给出的特定参数值显示了一个<quote>自定义</quote>计划。我们可能还希望查看参数化查询的通用计划，这可以通过 <literal>GENERIC_PLAN</literal> 来完成：
 
 <programlisting>
 EXPLAIN (GENERIC_PLAN)
@@ -545,12 +407,7 @@ EXPLAIN (GENERIC_PLAN)
 (4 rows)
 </programlisting>
 
-   In this case the parser correctly inferred that <literal>$1</literal>
-   and <literal>$2</literal> should have the same data type
-   as <literal>id</literal>, so the lack of parameter type information
-   from <command>PREPARE</command> was not a problem.  In other cases
-   it might be necessary to explicitly specify types for the parameter
-   symbols, which can be done by casting them, for example:
+在这种情况下，解析器正确地推断出 <literal>$1</literal> 和 <literal>$2</literal> 应当与 <literal>id</literal> 具有相同的数据类型，因此 <command>PREPARE</command> 缺少参数类型信息并不构成问题。在其他情况下，可能有必要为参数符号显式指定类型，这可以通过对它们进行类型转换来实现，例如：
 
 <programlisting>
 EXPLAIN (GENERIC_PLAN)
@@ -562,25 +419,23 @@ EXPLAIN (GENERIC_PLAN)
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>EXPLAIN</command> statement defined in the SQL standard.
+   SQL 标准中没有定义 <command>EXPLAIN</command> 语句。
   </para>
 
   <para>
-   The following syntax was used before <productname>PostgreSQL</productname>
-   version 9.0 and is still supported:
+   以下语法在 <productname>PostgreSQL</productname> 9.0 版本之前使用，目前仍然支持：
 <synopsis>
 EXPLAIN [ ANALYZE ] [ VERBOSE ] <replaceable class="parameter">statement</replaceable>
 </synopsis>
-   Note that in this syntax, the options must be specified in exactly the order
-   shown.
+   请注意，在此语法中，选项必须严格按照所示顺序指定。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-analyze"/></member>
