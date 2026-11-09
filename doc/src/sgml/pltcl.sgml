@@ -224,13 +224,10 @@ $$ LANGUAGE pltcl;
    </sect1>
 
    <sect1 id="pltcl-dbaccess">
-    <title>Database Access from PL/Tcl</title>
+    <title>从 PL/Tcl 访问数据库</title>
 
     <para>
-     In this section, we follow the usual Tcl convention of using question
-     marks, rather than brackets, to indicate an optional element in a
-     syntax synopsis.  The following commands are available to access
-     the database from the body of a PL/Tcl function:
+     本节遵循 Tcl 的通常约定，在语法概要中使用问号而不是方括号来表示可选元素。以下命令可用于从 PL/Tcl 函数体中访问数据库：
 
     <variablelist>
 
@@ -238,66 +235,32 @@ $$ LANGUAGE pltcl;
       <term><literal><function>spi_exec</function> <optional role="tcl">-count <replaceable>n</replaceable></optional> <optional role="tcl">-array <replaceable>name</replaceable></optional> <replaceable>command</replaceable> <optional role="tcl"><replaceable>loop-body</replaceable></optional></literal></term>
       <listitem>
        <para>
-        Executes an SQL command given as a string.  An error in the command
-        causes an error to be raised.  Otherwise, the return value of <function>spi_exec</function>
-        is the number of rows processed (selected, inserted, updated, or
-        deleted) by the command, or zero if the command is a utility
-        statement.  In addition, if the command is a <command>SELECT</command> statement, the
-        values of the selected columns are placed in Tcl variables as
-        described below.
+        执行以字符串形式给出的 SQL 命令。命令出错会引发错误。否则，<function>spi_exec</function> 的返回值是该命令处理（选择、插入、更新或删除）的行数，如果该命令是工具语句则为零。此外，如果该命令是 <command>SELECT</command> 语句，则所选列的值将按下文所述放入 Tcl 变量中。
        </para>
        <para>
-        The optional <literal>-count</literal> value tells
-        <function>spi_exec</function> to stop
-        once <replaceable>n</replaceable> rows have been retrieved,
-        much as if the query included a <literal>LIMIT</literal> clause.
-        If <replaceable>n</replaceable> is zero, the query is run to
-        completion, the same as when <literal>-count</literal> is omitted.
+        可选的 <literal>-count</literal> 值告诉 <function>spi_exec</function> 在检索到 <replaceable>n</replaceable> 行后停止，就像查询中包含 <literal>LIMIT</literal> 子句一样。如果 <replaceable>n</replaceable> 为零，则查询会运行至完成，与省略 <literal>-count</literal> 时相同。
        </para>
        <para>
-        If the command is a <command>SELECT</command> statement, the values of the
-        result columns are placed into Tcl variables named after the columns.
-        If the <literal>-array</literal> option is given, the column values are
-        instead stored into elements of the named associative array, with the
-        column names used as array indexes.  In addition, the current row
-        number within the result (counting from zero) is stored into the array
-        element named <quote><literal>.tupno</literal></quote>, unless that name is
-        in use as a column name in the result.
+        如果该命令是 <command>SELECT</command> 语句，则结果列的值会被放入以列名命名的 Tcl 变量中。如果给出了 <literal>-array</literal> 选项，则列值改为存储在指定关联数组的元素中，并以列名作为数组索引。此外，结果中当前的行号（从零开始计数）会被存储到名为 <quote><literal>.tupno</literal></quote> 的数组元素中，除非该名称已被用作结果中的列名。
        </para>
        <para>
-        If the command is a <command>SELECT</command> statement and no <replaceable>loop-body</replaceable>
-        script is given, then only the first row of results are stored into
-        Tcl variables or array elements; remaining rows, if any, are ignored.
-        No storing occurs if the query returns no rows.  (This case can be
-        detected by checking the result of <function>spi_exec</function>.)
-        For example:
+        如果该命令是 <command>SELECT</command> 语句且未给出 <replaceable>loop-body</replaceable> 脚本，则只将结果的第一行存储到 Tcl 变量或数组元素中；其余行（如果有）将被忽略。如果查询未返回任何行，则不进行存储。（这种情况可以通过检查 <function>spi_exec</function> 的结果来检测。）例如：
 <programlisting>
 spi_exec "SELECT count(*) AS cnt FROM pg_proc"
 </programlisting>
-        will set the Tcl variable <literal>$cnt</literal> to the number of rows in
-        the <structname>pg_proc</structname> system catalog.
+会将 Tcl 变量 <literal>$cnt</literal> 设置为 <structname>pg_proc</structname> 系统目录中的行数。
        </para>
        <para>
-        If the optional <replaceable>loop-body</replaceable> argument is given, it is
-        a piece of Tcl script that is executed once for each row in the
-        query result.  (<replaceable>loop-body</replaceable> is ignored if the given
-        command is not a <command>SELECT</command>.)
-        The values of the current row's columns
-        are stored into Tcl variables or array elements before each iteration.
-        For example:
+        如果给出了可选的 <replaceable>loop-body</replaceable> 参数，它是一段 Tcl 脚本，会针对查询结果中的每一行执行一次。（如果给定的命令不是 <command>SELECT</command>，则忽略 <replaceable>loop-body</replaceable>。）在每次迭代之前，当前行各列的值会被存入 Tcl 变量或数组元素。例如：
 <programlisting>
 spi_exec -array C "SELECT * FROM pg_class" {
     elog DEBUG "have table $C(relname)"
 }
 </programlisting>
-        will print a log message for every row of <literal>pg_class</literal>.  This
-        feature works similarly to other Tcl looping constructs; in
-        particular <literal>continue</literal> and <literal>break</literal> work in the
-        usual way inside the loop body.
+        将为 <literal>pg_class</literal> 的每一行打印一条日志消息。此功能的工作方式与其他 Tcl 循环结构类似；特别是 <literal>continue</literal> 和 <literal>break</literal> 在循环体内以通常的方式工作。
        </para>
        <para>
-        If a column of a query result is null, the target
-        variable for it is <quote>unset</quote> rather than being set.
+        如果查询结果的某一列为空值，则其目标变量会被 <quote>unset</quote>，而不是被赋值。
        </para>
       </listitem>
      </varlistentry>
@@ -306,24 +269,14 @@ spi_exec -array C "SELECT * FROM pg_class" {
       <term><function>spi_prepare</function> <replaceable>query</replaceable> <replaceable>typelist</replaceable></term>
       <listitem>
        <para>
-        Prepares and saves a query plan for later execution.  The
-        saved plan will be retained for the life of the current
-        session.<indexterm><primary>preparing a query</primary>
+        为后续执行准备并保存一个查询计划。保存的计划将在当前会话的整个生命周期内保留。<indexterm><primary>preparing a query</primary>
         <secondary>in PL/Tcl</secondary></indexterm>
        </para>
        <para>
-        The query can use parameters, that is, placeholders for
-        values to be supplied whenever the plan is actually executed.
-        In the query string, refer to parameters
-        by the symbols <literal>$1</literal> ... <literal>$<replaceable>n</replaceable></literal>.
-        If the query uses parameters, the names of the parameter types
-        must be given as a Tcl list.  (Write an empty list for
-        <replaceable>typelist</replaceable> if no parameters are used.)
+        查询可以使用参数，即在实际执行计划时提供值的占位符。在查询字符串中，用符号 <literal>$1</literal> ... <literal>$<replaceable>n</replaceable></literal> 引用参数。如果查询使用了参数，则必须以 Tcl 列表的形式给出参数类型的名称。（如果不使用参数，请为 <replaceable>typelist</replaceable> 写一个空列表。）
        </para>
        <para>
-        The return value from <function>spi_prepare</function> is a query ID
-        to be used in subsequent calls to <function>spi_execp</function>. See
-        <function>spi_execp</function> for an example.
+        <function>spi_prepare</function> 的返回值是一个查询 ID，用于后续对 <function>spi_execp</function> 的调用。有关示例，请参见 <function>spi_execp</function>。
        </para>
       </listitem>
      </varlistentry>
@@ -332,31 +285,16 @@ spi_exec -array C "SELECT * FROM pg_class" {
       <term><literal><function>spi_execp</function> <optional role="tcl">-count <replaceable>n</replaceable></optional> <optional role="tcl">-array <replaceable>name</replaceable></optional> <optional role="tcl">-nulls <replaceable>string</replaceable></optional> <replaceable>queryid</replaceable> <optional role="tcl"><replaceable>value-list</replaceable></optional> <optional role="tcl"><replaceable>loop-body</replaceable></optional></literal></term>
       <listitem>
        <para>
-        Executes a query previously prepared with <function>spi_prepare</function>.
-        <replaceable>queryid</replaceable> is the ID returned by
-        <function>spi_prepare</function>.  If the query references parameters,
-        a <replaceable>value-list</replaceable> must be supplied.  This
-        is a Tcl list of actual values for the parameters.  The list must be
-        the same length as the parameter type list previously given to
-        <function>spi_prepare</function>.  Omit <replaceable>value-list</replaceable>
-        if the query has no parameters.
+        执行先前用 <function>spi_prepare</function> 准备好的查询。<replaceable>queryid</replaceable> 是 <function>spi_prepare</function> 返回的 ID。如果查询引用了参数，则必须提供 <replaceable>value-list</replaceable>。这是一个 Tcl 列表，包含各参数的实际值。该列表的长度必须与先前传给 <function>spi_prepare</function> 的参数类型列表相同。如果查询没有参数，请省略 <replaceable>value-list</replaceable>。
        </para>
        <para>
-        The optional value for <literal>-nulls</literal> is a string of spaces and
-        <literal>'n'</literal> characters telling <function>spi_execp</function>
-        which of the parameters are null values. If given, it must have exactly the
-        same length as the <replaceable>value-list</replaceable>.  If it
-        is not given, all the parameter values are nonnull.
+        <literal>-nulls</literal> 的可选值是一个由空格和 <literal>'n'</literal> 字符组成的字符串，用于告诉 <function>spi_execp</function> 哪些参数是空值。如果提供了该值，它的长度必须与 <replaceable>value-list</replaceable> 完全相同。如果未提供，则所有参数值都非空。
        </para>
        <para>
-        Except for the way in which the query and its parameters are specified,
-        <function>spi_execp</function> works just like <function>spi_exec</function>.
-        The <literal>-count</literal>, <literal>-array</literal>, and
-        <replaceable>loop-body</replaceable> options are the same,
-        and so is the result value.
+        除了查询及其参数的指定方式不同之外，<function>spi_execp</function> 的工作方式与 <function>spi_exec</function> 完全一样。<literal>-count</literal>、<literal>-array</literal> 和 <replaceable>loop-body</replaceable> 选项相同，返回值也相同。
        </para>
        <para>
-        Here's an example of a PL/Tcl function using a prepared plan:
+        下面是一个使用预备计划的 PL/Tcl 函数示例：
 
 <programlisting>
 CREATE FUNCTION t1_count(integer, integer) RETURNS integer AS $$
@@ -371,11 +309,7 @@ CREATE FUNCTION t1_count(integer, integer) RETURNS integer AS $$
 $$ LANGUAGE pltcl;
 </programlisting>
 
-        We need backslashes inside the query string given to
-        <function>spi_prepare</function> to ensure that the
-        <literal>$<replaceable>n</replaceable></literal> markers will be passed
-        through to <function>spi_prepare</function> as-is, and not replaced by Tcl
-        variable substitution.
+我们需要在传给 <function>spi_prepare</function> 的查询字符串中使用反斜杠，以确保 <literal>$<replaceable>n</replaceable></literal> 标记原样传递给 <function>spi_prepare</function>，而不会被 Tcl 变量替换所取代。
 
        </para>
       </listitem>
@@ -385,12 +319,7 @@ $$ LANGUAGE pltcl;
       <term><function>subtransaction</function> <replaceable>command</replaceable></term>
       <listitem>
        <para>
-        The Tcl script contained in <replaceable>command</replaceable> is
-        executed within an SQL subtransaction.  If the script returns an
-        error, that entire subtransaction is rolled back before returning the
-        error out to the surrounding Tcl code.
-        See <xref linkend="pltcl-subtransactions"/> for more details and an
-        example.
+        <replaceable>command</replaceable> 中包含的 Tcl 脚本在一个 SQL 子事务中执行。如果该脚本返回错误，则在把错误返回给外层 Tcl 代码之前，整个子事务会被回滚。更多细节和示例请参见 <xref linkend="pltcl-subtransactions"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -399,43 +328,31 @@ $$ LANGUAGE pltcl;
       <term><function>quote</function> <replaceable>string</replaceable></term>
       <listitem>
        <para>
-        Doubles all occurrences of single quote and backslash characters
-        in the given string.  This can be used to safely quote strings
-        that are to be inserted into SQL commands given
-        to <function>spi_exec</function> or
-        <function>spi_prepare</function>.
-        For example, think about an SQL command string like:
+        将给定字符串中出现的所有单引号和反斜杠字符加倍。这可用于安全地为要插入到传给 <function>spi_exec</function> 或 <function>spi_prepare</function> 的 SQL 命令中的字符串加引号。例如，考虑如下 SQL 命令字符串：
 
 <programlisting>
 "SELECT '$val' AS ret"
 </programlisting>
 
-        where the Tcl variable <literal>val</literal> actually contains
-        <literal>doesn't</literal>. This would result
-        in the final command string:
+其中 Tcl 变量 <literal>val</literal> 实际包含 <literal>doesn't</literal>。这会导致最终的命令字符串为：
 
 <programlisting>
 SELECT 'doesn't' AS ret
 </programlisting>
 
-        which would cause a parse error during
-        <function>spi_exec</function> or
-        <function>spi_prepare</function>.
-        To work properly, the submitted command should contain:
+这将在 <function>spi_exec</function> 或 <function>spi_prepare</function> 期间导致解析错误。为了正常工作，提交的命令应包含：
 
 <programlisting>
 SELECT 'doesn''t' AS ret
 </programlisting>
 
-        which can be formed in PL/Tcl using:
+这可以在 PL/Tcl 中使用以下方式构造：
 
 <programlisting>
 "SELECT '[ quote $val ]' AS ret"
 </programlisting>
 
-        One advantage of <function>spi_execp</function> is that you don't
-        have to quote parameter values like this, since the parameters are never
-        parsed as part of an SQL command string.
+<function>spi_execp</function> 的一个优点是你不必像这样为参数值加引号，因为参数永远不会作为 SQL 命令字符串的一部分被解析。
        </para>
       </listitem>
      </varlistentry>
@@ -443,33 +360,32 @@ SELECT 'doesn''t' AS ret
      <varlistentry>
       <term>
        <function>elog</function> <replaceable>level</replaceable> <replaceable>msg</replaceable>
-       <indexterm>
-        <primary>elog</primary>
-        <secondary>in PL/Tcl</secondary>
-       </indexterm>
+<indexterm>
+<primary>elog</primary>
+<secondary>在 PL/Tcl 中</secondary>
+</indexterm>
       </term>
       <listitem>
        <para>
-        Emits a log or error message. Possible levels are
-        <literal>DEBUG</literal>, <literal>LOG</literal>, <literal>INFO</literal>,
-        <literal>NOTICE</literal>, <literal>WARNING</literal>, <literal>ERROR</literal>, and
-        <literal>FATAL</literal>. <literal>ERROR</literal>
-        raises an error condition; if this is not trapped by the surrounding
-        Tcl code, the error propagates out to the calling query, causing
-        the current transaction or subtransaction to be aborted.  This
-        is effectively the same as the Tcl <literal>error</literal> command.
-        <literal>FATAL</literal> aborts the transaction and causes the current
-        session to shut down.  (There is probably no good reason to use
-        this error level in PL/Tcl functions, but it's provided for
-        completeness.)  The other levels only generate messages of different
-        priority levels.
-        Whether messages of a particular priority are reported to the client,
-        written to the server log, or both is controlled by the
-        <xref linkend="guc-log-min-messages"/> and
-        <xref linkend="guc-client-min-messages"/> configuration
-        variables. See <xref linkend="runtime-config"/>
-        and <xref linkend="pltcl-error-handling"/>
-        for more information.
+        发出日志或错误消息。可能的级别有
+        <literal>DEBUG</literal>、<literal>LOG</literal>、<literal>INFO</literal>、
+        <literal>NOTICE</literal>、<literal>WARNING</literal>、<literal>ERROR</literal> 和
+        <literal>FATAL</literal>。<literal>ERROR</literal>
+        引发一个错误条件；如果它没有被周围的
+        Tcl 代码捕获，该错误会向外传播到调用查询，导致
+        当前事务或子事务被中止。这
+        实际上与 Tcl 的 <literal>error</literal> 命令相同。
+        <literal>FATAL</literal> 会中止事务并导致当前
+        会话关闭。（在 PL/Tcl 函数中使用
+        这个错误级别大概没有什么好理由，但为了
+        完整性还是提供了它。）其他级别只会生成不同
+        优先级的消息。
+        特定优先级的消息是报告给客户端、
+        写入服务器日志，还是两者都做，由
+        <xref linkend="guc-log-min-messages"/> 和
+        <xref linkend="guc-client-min-messages"/> 配置
+        变量控制。更多信息请参见 <xref linkend="runtime-config"/>
+        和 <xref linkend="pltcl-error-handling"/>。
        </para>
       </listitem>
      </varlistentry>
