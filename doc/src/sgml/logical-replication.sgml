@@ -68,100 +68,59 @@
  </para>
 
  <sect1 id="logical-replication-publication">
-  <title>Publication</title>
+  <title>发布</title>
 
   <para>
-   A <firstterm>publication</firstterm> can be defined on any physical
-   replication primary.  The node where a publication is defined is referred to
-   as <firstterm>publisher</firstterm>.  A publication is a set of changes
-   generated from a table or a group of tables, and might also be described as
-   a change set or replication set.  Each publication exists in only one database.
+   可以在任何物理复制主节点上定义<firstterm>发布</firstterm>。定义发布的节点称为<firstterm>发布者</firstterm>。发布是由一个表或一组表生成的一组更改，也可以描述为更改集或复制集。每个发布只存在于一个数据库中。
   </para>
 
   <para>
-   Publications are different from schemas and do not affect how the table is
-   accessed.  Each table can be added to multiple publications if needed.
-   Publications may currently only contain tables and all tables in schema.
-   Objects must be added explicitly, except when a publication is created for
-   <literal>ALL TABLES</literal>.
+   发布与模式不同，不会影响表的访问方式。如果需要，每个表都可以添加到多个发布中。目前发布只能包含表以及模式中的所有表。必须显式添加对象，除非是为 <literal>ALL TABLES</literal> 创建发布。
   </para>
 
   <para>
-   Publications can choose to limit the changes they produce to
-   any combination of <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, and <command>TRUNCATE</command>, similar to how triggers are fired by
-   particular event types. By default, all operation types are replicated.
-   These publication specifications apply only for DML operations; they do not affect the initial
-   data synchronization copy. (Row filters have no effect for
-   <command>TRUNCATE</command>. See <xref linkend="logical-replication-row-filter"/>).
+   发布可以选择将其产生的更改限制为 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 和 <command>TRUNCATE</command> 的任意组合，类似于触发器由特定事件类型触发的方式。默认情况下，所有操作类型都会被复制。这些发布规范仅适用于 DML 操作；它们不影响初始数据同步复制。（行过滤器对 <command>TRUNCATE</command> 没有影响。参见 <xref linkend="logical-replication-row-filter"/>）。
   </para>
 
   <para>
-   Every publication can have multiple subscribers.
+   每个发布可以有多个订阅者。
   </para>
 
   <para>
-   A publication is created using the <link linkend="sql-createpublication"><command>CREATE PUBLICATION</command></link>
-   command and may later be altered or dropped using corresponding commands.
+   发布使用 <link linkend="sql-createpublication"><command>CREATE PUBLICATION</command></link> 命令创建，之后可以使用相应的命令进行修改或删除。
   </para>
 
   <para>
-   The individual tables can be added and removed dynamically using
-   <link linkend="sql-alterpublication"><command>ALTER PUBLICATION</command></link>.  Both the <literal>ADD
-   TABLE</literal> and <literal>DROP TABLE</literal> operations are
-   transactional, so the table will start or stop replicating at the correct
-   snapshot once the transaction has committed.
+   各个表可以使用 <link linkend="sql-alterpublication"><command>ALTER PUBLICATION</command></link> 动态地添加和移除。<literal>ADD
+   TABLE</literal> 和 <literal>DROP TABLE</literal> 操作都是事务性的，因此一旦事务提交，表就会在正确的快照处开始或停止复制。
   </para>
 
   <sect2 id="logical-replication-publication-replica-identity">
-   <title>Replica Identity</title>
+   <title>副本标识</title>
 
    <para>
-    A published table must have a <firstterm>replica identity</firstterm>
-    configured in order to be able to replicate <command>UPDATE</command>
-    and <command>DELETE</command> operations, so that appropriate rows to
-    update or delete can be identified on the subscriber side.
+    已发布的表必须配置<firstterm>副本标识</firstterm>，才能复制 <command>UPDATE</command> 和 <command>DELETE</command> 操作，从而可以在订阅端识别出要更新或删除的相应行。
    </para>
 
    <para>
-    By default, this is the primary key, if there is one. Another unique index
-    (with certain additional requirements) can also be set to be the replica
-    identity.  If the table does not have any suitable key, then it can be set
-    to replica identity <literal>FULL</literal>, which means the entire row
-    becomes the key.  When replica identity <literal>FULL</literal> is
-    specified, indexes can be used on the subscriber side for searching the
-    rows.  Candidate indexes must be btree or hash, non-partial, and the
-    leftmost index field must be a column (not an expression) that references
-    the published table column.  These restrictions on the non-unique index
-    properties adhere to some of the restrictions that are enforced for
-    primary keys.  If there are no such suitable indexes, the search on the
-    subscriber side can be very inefficient, therefore replica identity
-    <literal>FULL</literal> should only be used as a fallback if no other
-    solution is possible.
+    默认情况下，如果有主键，则主键就是副本标识。另一个唯一索引（带有某些额外要求）也可以被设置为副本标识。如果表没有任何合适的键，则可以将其设置为副本标识 <literal>FULL</literal>，这意味着整行成为键。当指定副本标识 <literal>FULL</literal> 时，订阅端可以使用索引来搜索行。候选索引必须是 btree 或 hash、非部分索引，并且最左侧的索引字段必须是引用已发布表列的列（而不是表达式）。这些对非唯一索引属性的限制与对主键强制实施的部分限制一致。如果没有这样合适的索引，订阅端的搜索可能会非常低效，因此只有在没有其他可行方案时，才应将副本标识 <literal>FULL</literal> 用作后备方案。
    </para>
 
    <para>
-    If a replica identity other than <literal>FULL</literal> is set on the
-    publisher side, a replica identity comprising the same or fewer columns
-    must also be set on the subscriber side.
+    如果在发布端设置了 <literal>FULL</literal> 以外的副本标识，则订阅端也必须设置包含相同或更少列的副本标识。
    </para>
 
    <para>
-    Tables with a replica identity defined as <literal>NOTHING</literal>,
-    <literal>DEFAULT</literal> without a primary key, or <literal>USING
-    INDEX</literal> with a dropped index, cannot support
-    <command>UPDATE</command> or <command>DELETE</command> operations when
-    included in a publication replicating these actions. Attempting such
-    operations will result in an error on the publisher.
+    副本标识定义为 <literal>NOTHING</literal>、没有主键的 <literal>DEFAULT</literal>，或索引已被删除的 <literal>USING
+    INDEX</literal> 的表，在包含于复制这些操作的发布中时，无法支持 <command>UPDATE</command> 或 <command>DELETE</command> 操作。尝试此类操作将导致发布端出错。
    </para>
 
    <para>
-    <command>INSERT</command> operations can proceed regardless of any replica identity.
+    <command>INSERT</command> 操作可以在不考虑任何副本标识的情况下进行。
    </para>
 
    <para>
-    See <link linkend="sql-altertable-replica-identity"><literal>ALTER TABLE...REPLICA IDENTITY</literal></link>
-    for details on how to set the replica identity.
+    有关如何设置副本标识的详细信息，请参见 <link linkend="sql-altertable-replica-identity"><literal>ALTER TABLE...REPLICA IDENTITY</literal></link>。
    </para>
   </sect2>
 
