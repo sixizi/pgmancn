@@ -663,13 +663,7 @@ FROM generate_series(-3.5, 3.5, 1) as x;
     </para>
 
     <para>
-     Inexact means that some values cannot be converted exactly to the
-     internal format and are stored as approximations, so that storing
-     and retrieving a value might show slight discrepancies.
-     Managing these errors and how they propagate through calculations
-     is the subject of an entire branch of mathematics and computer
-     science and will not be discussed here, except for the
-     following points:
+     不精确意味着某些值无法精确转换为内部格式，而是以近似值存储，因此存储和检索一个值可能会显示出细微的差异。管理这些误差以及它们如何在计算中传播，是数学和计算机科学中一个完整分支学科的研究主题，这里不予讨论，只说明以下几点：
      <itemizedlist>
       <listitem>
        <para>
@@ -1914,17 +1908,13 @@ TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'
      </indexterm>
 
      <para>
-      <productname>PostgreSQL</productname> supports several
-      special date/time input values for convenience, as shown in <xref
-      linkend="datatype-datetime-special-table"/>.  The values
-      <literal>infinity</literal> and <literal>-infinity</literal>
-      are specially represented inside the system and will be displayed
-      unchanged; but the others are simply notational shorthands
-      that will be converted to ordinary date/time values when read.
-      (In particular, <literal>now</literal> and related strings are converted
-      to a specific time value as soon as they are read.)
-      All of these values need to be enclosed in single quotes when used
-      as constants in SQL commands.
+      为方便起见，<productname>PostgreSQL</productname> 支持几种特殊的日期/时间输入值，如 <xref
+      linkend="datatype-datetime-special-table"/> 所示。值
+      <literal>infinity</literal> 和 <literal>-infinity</literal>
+      在系统内部有特殊的表示形式，并将原样显示；但其他值只是记法上的简写，
+      在读取时会被转换为普通的日期/时间值。
+      （特别是，<literal>now</literal> 及相关字符串一经读取就会转换为一个特定的时间值。）
+      当在 SQL 命令中作为常量使用时，所有这些值都需要用单引号括起来。
      </para>
 
       <table id="datatype-datetime-special-table">
@@ -2124,12 +2114,9 @@ TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'
     </para>
 
     <para>
-     The date/time style can be selected by the user using the
-     <command>SET datestyle</command> command, the <xref
-     linkend="guc-datestyle"/> parameter in the
-     <filename>postgresql.conf</filename> configuration file, or the
-     <envar>PGDATESTYLE</envar> environment variable on the server or
-     client.
+     用户可以通过 <command>SET datestyle</command> 命令、<xref linkend="guc-datestyle"/>
+     参数（该参数位于 <filename>postgresql.conf</filename> 配置文件中），或服务器或客户端上的
+     <envar>PGDATESTYLE</envar> 环境变量来选择日期/时间样式。
     </para>
 
     <para>
@@ -2178,33 +2165,26 @@ TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'
     </para>
 
     <para>
-     <productname>PostgreSQL</productname> allows you to specify time zones in
-     three different forms:
+     <productname>PostgreSQL</productname> 允许以三种不同的形式指定时区：
      <itemizedlist>
       <listitem>
        <para>
-        A full time zone name, for example <literal>America/New_York</literal>.
-        The recognized time zone names are listed in the
-        <literal>pg_timezone_names</literal> view (see <xref
-        linkend="view-pg-timezone-names"/>).
-        <productname>PostgreSQL</productname> uses the widely-used IANA
-        time zone data for this purpose, so the same time zone
-        names are also recognized by other software.
+        完整的时区名称，例如 <literal>America/New_York</literal>。
+        可识别的时区名称列在 <literal>pg_timezone_names</literal> 视图中（参见 <xref
+        linkend="view-pg-timezone-names"/>）。
+        为此，<productname>PostgreSQL</productname> 使用广泛采用的 IANA
+        时区数据，因此其他软件也能识别相同的时区名称。
        </para>
       </listitem>
       <listitem>
        <para>
-        A time zone abbreviation, for example <literal>PST</literal>.  Such a
-        specification merely defines a particular offset from UTC, in
-        contrast to full time zone names which can imply a set of daylight
-        savings transition rules as well.  The recognized abbreviations
-        are listed in the <literal>pg_timezone_abbrevs</literal> view (see <xref
-        linkend="view-pg-timezone-abbrevs"/>).  You cannot set the
-        configuration parameters <xref linkend="guc-timezone"/> or
-        <xref linkend="guc-log-timezone"/> to a time
-        zone abbreviation, but you can use abbreviations in
-        date/time input values and with the <literal>AT TIME ZONE</literal>
-        operator.
+        时区缩写，例如 <literal>PST</literal>。这种指定方式仅定义相对于 UTC 的特定偏移量，
+        而完整的时区名称则不同，它还可以隐含一组夏令时转换规则。
+        可识别的缩写列在 <literal>pg_timezone_abbrevs</literal> 视图中（参见 <xref
+        linkend="view-pg-timezone-abbrevs"/>）。不能将配置参数 <xref linkend="guc-timezone"/> 或
+        <xref linkend="guc-log-timezone"/> 设置为时区缩写，
+        但可以在日期/时间输入值中以及配合 <literal>AT TIME ZONE</literal>
+        运算符使用缩写。
        </para>
       </listitem>
       <listitem>
@@ -2214,16 +2194,7 @@ TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'
       </listitem>
      </itemizedlist>
 
-     In short, this is the difference between abbreviations
-     and full names: abbreviations represent a specific offset from UTC,
-     whereas many of the full names imply a local daylight-savings time
-     rule, and so have two possible UTC offsets.  As an example,
-     <literal>2014-06-04 12:00 America/New_York</literal> represents noon local
-     time in New York, which for this particular date was Eastern Daylight
-     Time (UTC-4).  So <literal>2014-06-04 12:00 EDT</literal> specifies that
-     same time instant.  But <literal>2014-06-04 12:00 EST</literal> specifies
-     noon Eastern Standard Time (UTC-5), regardless of whether daylight
-     savings was nominally in effect on that date.
+     简而言之，这就是缩写与全名之间的区别：缩写表示相对于 UTC 的特定偏移量，而许多全名隐含了本地夏令时规则，因此有两个可能的 UTC 偏移量。例如，<literal>2014-06-04 12:00 America/New_York</literal> 表示纽约的本地正午时间，对于这个特定日期，该时间是东部夏令时（UTC-4）。因此 <literal>2014-06-04 12:00 EDT</literal> 指定了同一时间点。但 <literal>2014-06-04 12:00 EST</literal> 指定的是东部标准时间的正午（UTC-5），无论该日期名义上是否实行夏令时。
     </para>
 
     <note>
@@ -2245,10 +2216,7 @@ TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'
     </para>
 
     <para>
-     The <xref linkend="guc-timezone"/> configuration parameter can
-     be set in the file <filename>postgresql.conf</filename>, or in any of the
-     other standard ways described in <xref linkend="runtime-config"/>.
-     There are also some special ways to set it:
+     <xref linkend="guc-timezone"/> 配置参数可以在文件 <filename>postgresql.conf</filename> 中设置，也可以通过 <xref linkend="runtime-config"/> 中描述的任何其他标准方式设置。还有一些特殊的设置方式：
 
      <itemizedlist>
       <listitem>
@@ -3714,13 +3682,9 @@ a0ee-bc99-9c0b-4ef8-bb6d-6bb9-bd38-0a11
    </indexterm>
 
    <para>
-    The <type>xml</type> data type can be used to store XML data.  Its
-    advantage over storing XML data in a <type>text</type> field is that it
-    checks the input values for well-formedness, and there are support
-    functions to perform type-safe operations on it; see <xref
-    linkend="functions-xml"/>.  Use of this data type requires the
-    installation to have been built with <command>configure
-    --with-libxml</command>.
+    <type>xml</type> 数据类型可用于存储 XML 数据。与将 XML 数据存储在 <type>text</type> 字段中相比，它的优势在于会检查输入值是否格式良好，并且有支持函数可对其执行类型安全的操作；参见 <xref
+    linkend="functions-xml"/>。使用此数据类型要求安装时已使用 <command>configure
+    --with-libxml</command> 构建。
    </para>
 
    <para>
@@ -3784,23 +3748,17 @@ XMLSERIALIZE ( { DOCUMENT | CONTENT } <replaceable>value</replaceable> AS <repla
    </para>
 
    <para>
-    When a character string value is cast to or from type
-    <type>xml</type> without going through <type>XMLPARSE</type> or
-    <type>XMLSERIALIZE</type>, respectively, the choice of
-    <literal>DOCUMENT</literal> versus <literal>CONTENT</literal> is
-    determined by the <quote>XML option</quote>
+    当字符串值被转换为类型 <type>xml</type>，或从该类型转换为字符串值，而没有分别经过 <type>XMLPARSE</type> 或 <type>XMLSERIALIZE</type> 时，选择 <literal>DOCUMENT</literal> 还是 <literal>CONTENT</literal> 由 <quote>XML 选项</quote>
     <indexterm><primary>XML option</primary></indexterm>
-    session configuration parameter, which can be set using the
-    standard command:
+    会话配置参数决定，该参数可以使用标准命令设置：
 <synopsis>
 SET XML OPTION { DOCUMENT | CONTENT };
 </synopsis>
-    or the more PostgreSQL-like syntax
+    或者使用更具 PostgreSQL 风格的语法：
 <synopsis>
 SET xmloption TO { DOCUMENT | CONTENT };
 </synopsis>
-    The default is <literal>CONTENT</literal>, so all forms of XML
-    data are allowed.
+    默认值为 <literal>CONTENT</literal>，因此允许所有形式的 XML 数据。
    </para>
 
    </sect2>
@@ -4166,8 +4124,8 @@ WHERE ...
    </para>
 
    <para>
-    (The system columns are further explained in <xref
-    linkend="ddl-system-columns"/>.)
+    （系统列在 <xref
+    linkend="ddl-system-columns"/> 中有进一步说明。）
    </para>
   </sect1>
 
