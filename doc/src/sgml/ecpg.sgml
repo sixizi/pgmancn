@@ -580,124 +580,80 @@ EXEC SQL DEALLOCATE PREPARE <replaceable>name</replaceable>;
  </sect1>
 
  <sect1 id="ecpg-variables">
-  <title>Using Host Variables</title>
+  <title>使用宿主变量</title>
 
   <para>
-   In <xref linkend="ecpg-commands"/> you saw how you can execute SQL
-   statements from an embedded SQL program.  Some of those statements
-   only used fixed values and did not provide a way to insert
-   user-supplied values into statements or have the program process
-   the values returned by the query.  Those kinds of statements are
-   not really useful in real applications.  This section explains in
-   detail how you can pass data between your C program and the
-   embedded SQL statements using a simple mechanism called
-   <firstterm>host variables</firstterm>. In an embedded SQL program we
-   consider the SQL statements to be <firstterm>guests</firstterm> in the C
-   program code which is the <firstterm>host language</firstterm>. Therefore
-   the variables of the C program are called <firstterm>host
-   variables</firstterm>.
+   在 <xref linkend="ecpg-commands"/> 中，你已经看到了如何从嵌入式 SQL 程序中执行 SQL 语句。其中一些语句只使用了固定值，并没有提供将用户提供的值插入语句中、或者让程序处理查询返回的值的途径。这类语句在实际应用中并不真正有用。本节将详细说明如何通过一种称为<firstterm>宿主变量</firstterm>的简单机制，在 C 程序和嵌入式 SQL 语句之间传递数据。在嵌入式 SQL 程序中，我们把 SQL 语句视为 C 程序代码（即<firstterm>宿主语言</firstterm>）中的<firstterm>访客</firstterm>。因此，C 程序的变量被称为<firstterm>宿主变量</firstterm>。
   </para>
 
   <para>
-   Another way to exchange values between PostgreSQL backends and ECPG
-   applications is the use of SQL descriptors, described
-   in <xref linkend="ecpg-descriptors"/>.
+   在 PostgreSQL 后端与 ECPG 应用程序之间交换值的另一种方式是使用 SQL 描述符，这将在 <xref linkend="ecpg-descriptors"/> 中描述。
   </para>
 
   <sect2 id="ecpg-variables-overview">
-   <title>Overview</title>
+   <title>概述</title>
 
    <para>
-    Passing data between the C program and the SQL statements is
-    particularly simple in embedded SQL.  Instead of having the
-    program paste the data into the statement, which entails various
-    complications, such as properly quoting the value, you can simply
-    write the name of a C variable into the SQL statement, prefixed by
-    a colon.  For example:
+    在嵌入式 SQL 中，在 C 程序和 SQL 语句之间传递数据特别简单。你不需要让程序把数据粘贴到语句中（这会带来各种复杂问题，例如如何正确地引用该值），而只需在 SQL 语句中写入一个 C 变量的名称，并在前面加上冒号。例如：
 <programlisting>
 EXEC SQL INSERT INTO sometable VALUES (:v1, 'foo', :v2);
 </programlisting>
-    This statement refers to two C variables named
-    <varname>v1</varname> and <varname>v2</varname> and also uses a
-    regular SQL string literal, to illustrate that you are not
-    restricted to use one kind of data or the other.
+    这条语句引用了两个名为 <varname>v1</varname> 和 <varname>v2</varname> 的 C 变量，同时还使用了一个常规的 SQL 字符串字面量，以说明你并不局限于只使用其中一种数据。
    </para>
 
    <para>
-    This style of inserting C variables in SQL statements works
-    anywhere a value expression is expected in an SQL statement.
+    这种在 SQL 语句中插入 C 变量的方式，适用于 SQL 语句中任何需要值表达式的位置。
    </para>
   </sect2>
 
   <sect2 id="ecpg-declare-sections">
-   <title>Declare Sections</title>
+   <title>声明段</title>
 
    <para>
-    To pass data from the program to the database, for example as
-    parameters in a query, or to pass data from the database back to
-    the program, the C variables that are intended to contain this
-    data need to be declared in specially marked sections, so the
-    embedded SQL preprocessor is made aware of them.
+    要把数据从程序传到数据库（例如作为查询中的参数），或者把数据从数据库传回程序，打算用来存放这些数据的 C 变量需要声明在特殊标记的段中，这样嵌入式 SQL 预处理器才能知道它们。
    </para>
 
    <para>
-    This section starts with:
+    该段以如下内容开始：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 </programlisting>
-    and ends with:
+    并以如下内容结束：
 <programlisting>
 EXEC SQL END DECLARE SECTION;
 </programlisting>
-    Between those lines, there must be normal C variable declarations,
-    such as:
+    在这些行之间，必须是普通的 C 变量声明，例如：
 <programlisting>
 int   x = 4;
 char  foo[16], bar[16];
 </programlisting>
-    As you can see, you can optionally assign an initial value to the variable.
-    The variable's scope is determined by the location of its declaring
-    section within the program.
-    You can also declare variables with the following syntax which implicitly
-    creates a declare section:
+    如你所见，可以选择为变量赋一个初始值。
+    变量的作用域由其在程序中声明段的位置决定。
+    你也可以用以下语法声明变量，这会隐式创建一个声明段：
 <programlisting>
 EXEC SQL int i = 4;
 </programlisting>
-    You can have as many declare sections in a program as you like.
+    一个程序中可以有任意多个声明段。
    </para>
 
    <para>
-    The declarations are also echoed to the output file as normal C
-    variables, so there's no need to declare them again.  Variables
-    that are not intended to be used in SQL commands can be declared
-    normally outside these special sections.
+    这些声明也会作为普通 C 变量回显到输出文件中，因此无需再次声明。不打算在 SQL 命令中使用的变量可以在这些特殊段之外正常声明。
    </para>
 
    <para>
-    The definition of a structure or union also must be listed inside
-    a <literal>DECLARE</literal> section. Otherwise the preprocessor cannot
-    handle these types since it does not know the definition.
+    结构体或联合体的定义也必须列在 <literal>DECLARE</literal> 段内。否则预处理器无法处理这些类型，因为它不知道其定义。
    </para>
   </sect2>
 
   <sect2 id="ecpg-retrieving">
-   <title>Retrieving Query Results</title>
+   <title>检索查询结果</title>
 
    <para>
-    Now you should be able to pass data generated by your program into
-    an SQL command.  But how do you retrieve the results of a query?
-    For that purpose, embedded SQL provides special variants of the
-    usual commands <command>SELECT</command> and
-    <command>FETCH</command>.  These commands have a special
-    <literal>INTO</literal> clause that specifies which host variables
-    the retrieved values are to be stored in.
-    <command>SELECT</command> is used for a query that returns only
-    single row, and <command>FETCH</command> is used for a query that
-    returns multiple rows, using a cursor.
+    现在你应该能够将程序生成的数据传入 SQL 命令。但如何检索查询的结果呢？为此，嵌入式 SQL 提供了常用命令 <command>SELECT</command> 和 <command>FETCH</command> 的特殊变体。这些命令有一个特殊的 <literal>INTO</literal> 子句，用于指定检索到的值要存储到哪些宿主变量中。<command>SELECT</command> 用于只返回单行的查询，而 <command>FETCH</command> 用于返回多行的查询，使用游标。
    </para>
 
    <para>
-    Here is an example:
+    下面是一个示例：
 <programlisting>
 /*
  * assume this table:
@@ -713,15 +669,11 @@ EXEC SQL END DECLARE SECTION;
 
 EXEC SQL SELECT a, b INTO :v1, :v2 FROM test;
 </programlisting>
-    So the <literal>INTO</literal> clause appears between the select
-    list and the <literal>FROM</literal> clause.  The number of
-    elements in the select list and the list after
-    <literal>INTO</literal> (also called the target list) must be
-    equal.
+    因此 <literal>INTO</literal> 子句出现在选择列表和 <literal>FROM</literal> 子句之间。选择列表中的元素个数与 <literal>INTO</literal> 之后的列表（也称为目标列表）中的元素个数必须相等。
    </para>
 
    <para>
-    Here is an example using the command <command>FETCH</command>:
+    下面是使用命令 <command>FETCH</command> 的示例：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int v1;
@@ -741,50 +693,35 @@ do
     ...
 } while (...);
 </programlisting>
-    Here the <literal>INTO</literal> clause appears after all the
-    normal clauses.
+    这里 <literal>INTO</literal> 子句出现在所有常规子句之后。
    </para>
 
   </sect2>
 
   <sect2 id="ecpg-variables-type-mapping">
-   <title>Type Mapping</title>
+   <title>类型映射</title>
 
    <para>
-    When ECPG applications exchange values between the PostgreSQL
-    server and the C application, such as when retrieving query
-    results from the server or executing SQL statements with input
-    parameters, the values need to be converted between PostgreSQL
-    data types and host language variable types (C language data
-    types, concretely).  One of the main points of ECPG is that it
-    takes care of this automatically in most cases.
+    当 ECPG 应用程序在 PostgreSQL 服务器与 C 应用程序之间交换值时，例如从服务器检索查询结果或执行带输入参数的 SQL 语句时，这些值需要在 PostgreSQL 数据类型与宿主语言变量类型（具体来说是 C 语言数据类型）之间进行转换。ECPG 的主要特点之一是它在大多数情况下会自动处理这一转换。
    </para>
 
    <para>
-    In this respect, there are two kinds of data types: Some simple
-    PostgreSQL data types, such as <type>integer</type>
-    and <type>text</type>, can be read and written by the application
-    directly.  Other PostgreSQL data types, such
-    as <type>timestamp</type> and <type>numeric</type> can only be
-    accessed through special library functions; see
-    <xref linkend="ecpg-special-types"/>.
+    在这方面，有两类数据类型：一些简单的 PostgreSQL 数据类型，例如 <type>integer</type> 和 <type>text</type>，可以由应用程序直接读写。其他 PostgreSQL 数据类型，例如 <type>timestamp</type> 和 <type>numeric</type>，只能通过特殊的库函数访问；参见 <xref linkend="ecpg-special-types"/>。
    </para>
 
    <para>
-    <xref linkend="ecpg-datatype-hostvars-table"/> shows which PostgreSQL
-    data types correspond to which C data types.  When you wish to
-    send or receive a value of a given PostgreSQL data type, you
-    should declare a C variable of the corresponding C data type in
-    the declare section.
+    <xref linkend="ecpg-datatype-hostvars-table"/> 显示了哪些 PostgreSQL
+    数据类型对应于哪些 C 数据类型。当你希望发送或接收给定 PostgreSQL
+    数据类型的值时，应该在声明段中声明一个对应 C 数据类型的 C 变量。
    </para>
 
    <table id="ecpg-datatype-hostvars-table">
-    <title>Mapping Between PostgreSQL Data Types and C Variable Types</title>
+    <title>PostgreSQL 数据类型与 C 变量类型之间的映射</title>
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>PostgreSQL data type</entry>
-       <entry>Host variable type</entry>
+       <entry>PostgreSQL 数据类型</entry>
+       <entry>宿主变量类型</entry>
       </row>
      </thead>
 
@@ -806,7 +743,7 @@ do
 
       <row>
        <entry><type>decimal</type></entry>
-       <entry><type>decimal</type><footnote id="ecpg-datatype-table-fn"><para>This type can only be accessed through special library functions; see <xref linkend="ecpg-special-types"/>.</para></footnote></entry>
+       <entry><type>decimal</type><footnote id="ecpg-datatype-table-fn"><para>此类型只能通过特殊的库函数访问；参见 <xref linkend="ecpg-special-types"/>。</para></footnote></entry>
       </row>
 
       <row>
@@ -871,7 +808,7 @@ do
 
       <row>
        <entry><type>boolean</type></entry>
-       <entry><type>bool</type><footnote><para>declared in <filename>ecpglib.h</filename> if not native</para></footnote></entry>
+       <entry><type>bool</type><footnote><para>若非原生，则在 <filename>ecpglib.h</filename> 中声明</para></footnote></entry>
       </row>
 
       <row>
@@ -883,111 +820,70 @@ do
    </table>
 
    <sect3 id="ecpg-char">
-    <title>Handling Character Strings</title>
+    <title>处理字符串</title>
 
     <para>
-     To handle SQL character string data types, such
-     as <type>varchar</type> and <type>text</type>, there are two
-     possible ways to declare the host variables.
+     要处理 SQL 字符串数据类型，例如 <type>varchar</type> 和 <type>text</type>，有两种可能的方式来声明宿主变量。
     </para>
 
     <para>
-     One way is using <type>char[]</type>, an array
-     of <type>char</type>, which is the most common way to handle
-     character data in C.
+     一种方式是使用 <type>char[]</type>，即一个 <type>char</type> 数组，这是在 C 中处理字符数据最常见的方式。
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
     char str[50];
 EXEC SQL END DECLARE SECTION;
 </programlisting>
-     Note that you have to take care of the length yourself.  If you
-     use this host variable as the target variable of a query which
-     returns a string with more than 49 characters, a buffer overflow
-     occurs.
+     注意你必须自己注意长度。如果你把这个宿主变量用作查询的目标变量，而该查询返回的字符串超过 49 个字符，就会发生缓冲区溢出。
     </para>
 
     <para>
-     The other way is using the <type>VARCHAR</type> type, which is a
-     special type provided by ECPG.  The definition on an array of
-     type <type>VARCHAR</type> is converted into a
-     named <type>struct</type> for every variable. A declaration like:
+     另一种方式是使用 <type>VARCHAR</type> 类型，这是 ECPG 提供的特殊类型。类型为 <type>VARCHAR</type> 的数组的定义会被转换为每个变量一个命名的 <type>struct</type>。像这样的声明：
 <programlisting>
 VARCHAR var[180];
 </programlisting>
-     is converted into:
+     会被转换为：
 <programlisting>
 struct varchar_var { int len; char arr[180]; } var;
 </programlisting>
-     The member <structfield>arr</structfield> hosts the string
-     including a terminating zero byte.  Thus, to store a string in
-     a <type>VARCHAR</type> host variable, the host variable has to be
-     declared with the length including the zero byte terminator.  The
-     member <structfield>len</structfield> holds the length of the
-     string stored in the <structfield>arr</structfield> without the
-     terminating zero byte.  When a host variable is used as input for
-     a query, if <literal>strlen(arr)</literal>
-     and <structfield>len</structfield> are different, the shorter one
-     is used.
+     成员 <structfield>arr</structfield> 存放字符串，包括结尾的零字节。因此，要把字符串存储到 <type>VARCHAR</type> 宿主变量中，声明宿主变量时必须把零字节终止符也计入长度。成员 <structfield>len</structfield> 保存存储在 <structfield>arr</structfield> 中的字符串的长度，不包括终止零字节。当宿主变量用作查询的输入时，如果 <literal>strlen(arr)</literal> 和 <structfield>len</structfield> 不同，则使用较短的那个。
     </para>
 
     <para>
-     <type>VARCHAR</type> can be written in upper or lower case, but
-     not in mixed case.
+     <type>VARCHAR</type> 可以大写或小写书写，但不能大小写混合。
     </para>
 
     <para>
-     <type>char</type> and <type>VARCHAR</type> host variables can
-     also hold values of other SQL types, which will be stored in
-     their string forms.
+     <type>char</type> 和 <type>VARCHAR</type> 宿主变量也可以保存其他 SQL 类型的值，这些值将以字符串形式存储。
     </para>
    </sect3>
 
    <sect3 id="ecpg-special-types">
-    <title>Accessing Special Data Types</title>
+    <title>访问特殊数据类型</title>
 
     <para>
-     ECPG contains some special types that help you to interact easily
-     with some special data types from the PostgreSQL server. In
-     particular, it has implemented support for the
-     <type>numeric</type>, <type>decimal</type>, <type>date</type>, <type>timestamp</type>,
-     and <type>interval</type> types.  These data types cannot usefully be
-     mapped to primitive host variable types (such
-     as <type>int</type>, <type>long long int</type>,
-     or <type>char[]</type>), because they have a complex internal
-     structure.  Applications deal with these types by declaring host
-     variables in special types and accessing them using functions in
-     the pgtypes library.  The pgtypes library, described in detail
-     in <xref linkend="ecpg-pgtypes"/> contains basic functions to deal
-     with those types, such that you do not need to send a query to
-     the SQL server just for adding an interval to a time stamp for
-     example.
+     ECPG 包含一些特殊类型，可帮助你轻松地与 PostgreSQL 服务器中的某些特殊数据类型进行交互。特别是，它实现了对 <type>numeric</type>、<type>decimal</type>、<type>date</type>、<type>timestamp</type>、<type>interval</type> 类型的支持。这些数据类型无法有效地映射到基本宿主变量类型（例如 <type>int</type>、<type>long long int</type> 或 <type>char[]</type>），因为它们具有复杂的内部结构。应用程序通过以特殊类型声明宿主变量，并使用 pgtypes 库中的函数访问它们来处理这些类型。pgtypes 库在 <xref linkend="ecpg-pgtypes"/> 中有详细描述，它包含处理这些类型的基本函数，因此例如你无需仅仅为了给时间戳加上一个 interval 而向 SQL 服务器发送查询。
     </para>
 
     <para>
-     The follow subsections describe these special data types. For
-     more details about pgtypes library functions,
-     see <xref linkend="ecpg-pgtypes"/>.
+     以下小节描述这些特殊数据类型。有关 pgtypes 库函数的更多细节，请参见 <xref linkend="ecpg-pgtypes"/>。
     </para>
 
     <sect4 id="ecpg-special-types-timestamp-date">
-     <title>timestamp, date</title>
+     <title>timestamp、date</title>
 
      <para>
-      Here is a pattern for handling <type>timestamp</type> variables
-      in the ECPG host application.
+      以下是在 ECPG 宿主应用程序中处理 <type>timestamp</type> 变量的模式。
      </para>
 
      <para>
-      First, the program has to include the header file for the
-      <type>timestamp</type> type:
+      首先，程序必须包含 <type>timestamp</type> 类型的头文件：
 <programlisting>
 #include &lt;pgtypes_timestamp.h>
 </programlisting>
      </para>
 
      <para>
-      Next, declare a host variable as type <type>timestamp</type> in
-      the declare section:
+      接下来，在 declare 段中声明一个类型为 <type>timestamp</type> 的主变量：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 timestamp ts;
@@ -996,28 +892,20 @@ EXEC SQL END DECLARE SECTION;
      </para>
 
      <para>
-      And after reading a value into the host variable, process it
-      using pgtypes library functions. In following example, the
-      <type>timestamp</type> value is converted into text (ASCII) form
-      with the <function>PGTYPEStimestamp_to_asc()</function>
-      function:
+      在把值读入主变量之后，使用 pgtypes 库函数处理它。在下面的示例中，<type>timestamp</type> 值使用 <function>PGTYPEStimestamp_to_asc()</function> 函数转换为文本（ASCII）形式：
 <programlisting>
 EXEC SQL SELECT now()::timestamp INTO :ts;
 
 printf("ts = %s\n", PGTYPEStimestamp_to_asc(ts));
 </programlisting>
-      This example will show some result like following:
+该示例将显示类似下面的结果：
 <screen>
 ts = 2010-06-27 18:03:56.949343
 </screen>
      </para>
 
      <para>
-      In addition, the DATE type can be handled in the same way. The
-      program has to include <filename>pgtypes_date.h</filename>, declare a host variable
-      as the date type and convert a DATE value into a text form using
-      <function>PGTYPESdate_to_asc()</function> function. For more details about the
-      pgtypes library functions, see <xref linkend="ecpg-pgtypes"/>.
+      此外，DATE 类型也可以用同样的方式处理。程序必须包含 <filename>pgtypes_date.h</filename>，声明一个 date 类型的主变量，并使用 <function>PGTYPESdate_to_asc()</function> 函数把 DATE 值转换为文本形式。有关 pgtypes 库函数的更多细节，请参见 <xref linkend="ecpg-pgtypes"/>。
      </para>
     </sect4>
 
@@ -1025,16 +913,11 @@ ts = 2010-06-27 18:03:56.949343
      <title>interval</title>
 
      <para>
-      The handling of the <type>interval</type> type is also similar
-      to the <type>timestamp</type> and <type>date</type> types.  It
-      is required, however, to allocate memory for
-      an <type>interval</type> type value explicitly.  In other words,
-      the memory space for the variable has to be allocated in the
-      heap memory, not in the stack memory.
+      <type>interval</type> 类型的处理也类似于 <type>timestamp</type> 和 <type>date</type> 类型。不过，需要显式地为 <type>interval</type> 类型的值分配内存。换句话说，变量的内存空间必须分配在堆内存中，而不是栈内存中。
      </para>
 
      <para>
-      Here is an example program:
+      下面是一个示例程序：
 <programlisting>
 #include &lt;stdio.h>
 #include &lt;stdlib.h>
@@ -1064,28 +947,18 @@ EXEC SQL END DECLARE SECTION;
     </sect4>
 
     <sect4 id="ecpg-type-numeric-decimal">
-     <title>numeric, decimal</title>
+     <title>numeric、decimal</title>
 
      <para>
-      The handling of the <type>numeric</type>
-      and <type>decimal</type> types is similar to the
-      <type>interval</type> type: It requires defining a pointer,
-      allocating some memory space on the heap, and accessing the
-      variable using the pgtypes library functions.  For more details
-      about the pgtypes library functions,
-      see <xref linkend="ecpg-pgtypes"/>.
+      对 <type>numeric</type> 和 <type>decimal</type> 类型的处理与 <type>interval</type> 类型类似：需要定义一个指针，在堆上分配一些内存空间，并使用 pgtypes 库函数访问该变量。有关 pgtypes 库函数的更多细节，请参见 <xref linkend="ecpg-pgtypes"/>。
      </para>
 
      <para>
-      No functions are provided specifically for
-      the <type>decimal</type> type.  An application has to convert it
-      to a <type>numeric</type> variable using a pgtypes library
-      function to do further processing.
+      没有专门为 <type>decimal</type> 类型提供函数。应用程序必须使用 pgtypes 库函数将其转换为 <type>numeric</type> 变量，才能进行进一步处理。
      </para>
 
      <para>
-      Here is an example program handling <type>numeric</type>
-      and <type>decimal</type> type variables.
+      下面是一个处理 <type>numeric</type> 和 <type>decimal</type> 类型变量的示例程序。
 <programlisting>
 #include &lt;stdio.h>
 #include &lt;stdlib.h>
@@ -1138,62 +1011,41 @@ EXEC SQL END DECLARE SECTION;
      <title>bytea</title>
 
      <para>
-      The handling of the <type>bytea</type> type is similar to
-      that of <type>VARCHAR</type>. The definition on an array of type
-      <type>bytea</type> is converted into a named struct for every
-      variable. A declaration like:
+      对 <type>bytea</type> 类型的处理与 <type>VARCHAR</type> 类似。类型为 <type>bytea</type> 的数组定义会为每个变量转换为一个命名结构体。如下声明：
 <programlisting>
 bytea var[180];
 </programlisting>
-     is converted into:
+     会被转换为：
 <programlisting>
 struct bytea_var { int len; char arr[180]; } var;
 </programlisting>
-      The member <structfield>arr</structfield> hosts binary format
-      data. It can also handle <literal>'\0'</literal> as part of
-      data, unlike <type>VARCHAR</type>.
-      The data is converted from/to hex format and sent/received by
-      ecpglib.
+      成员 <structfield>arr</structfield> 承载二进制格式数据。与 <type>VARCHAR</type> 不同，它还可以将 <literal>'\0'</literal> 作为数据的一部分处理。数据在十六进制格式之间转换，并由 ecpglib 发送/接收。
      </para>
 
      <note>
       <para>
-       <type>bytea</type> variable can be used only when
-       <xref linkend="guc-bytea-output"/> is set to <literal>hex</literal>.
+       <type>bytea</type> 变量只能在 <xref linkend="guc-bytea-output"/> 设置为 <literal>hex</literal> 时使用。
       </para>
      </note>
     </sect4>
    </sect3>
 
    <sect3 id="ecpg-variables-nonprimitive-c">
-    <title>Host Variables with Nonprimitive Types</title>
+    <title>非基本类型的主变量</title>
 
     <para>
-     As a host variable you can also use arrays, typedefs, structs, and
-     pointers.
+     作为主变量，你还可以使用数组、typedef、结构体和指针。
     </para>
 
     <sect4 id="ecpg-variables-arrays">
-     <title>Arrays</title>
+     <title>数组</title>
 
      <para>
-      There are two use cases for arrays as host variables.  The first
-      is a way to store some text string in <type>char[]</type>
-      or <type>VARCHAR[]</type>, as
-      explained in <xref linkend="ecpg-char"/>.  The second use case is to
-      retrieve multiple rows from a query result without using a
-      cursor.  Without an array, to process a query result consisting
-      of multiple rows, it is required to use a cursor and
-      the <command>FETCH</command> command.  But with array host
-      variables, multiple rows can be received at once.  The length of
-      the array has to be defined to be able to accommodate all rows,
-      otherwise a buffer overflow will likely occur.
+      数组作为主变量有两种使用场景。第一种是将某些文本字符串存储在 <type>char[]</type> 或 <type>VARCHAR[]</type> 中的方法，如 <xref linkend="ecpg-char"/> 中所述。第二种使用场景是在不使用游标的情况下从查询结果中检索多行。如果不使用数组，要处理由多行组成的查询结果，就需要使用游标和 <command>FETCH</command> 命令。但使用数组主变量，可以一次接收多行。必须定义数组的长度以容纳所有行，否则很可能发生缓冲区溢出。
      </para>
 
      <para>
-      Following example scans the <literal>pg_database</literal>
-      system table and shows all OIDs and names of the available
-      databases:
+      下面的示例扫描 <literal>pg_database</literal> 系统表，并显示所有可用数据库的 OID 和名称：
 <programlisting>
 int
 main(void)
@@ -1222,8 +1074,7 @@ EXEC SQL END DECLARE SECTION;
 }
 </programlisting>
 
-    This example shows following result. (The exact values depend on
-    local circumstances.)
+此示例显示以下结果。（确切的值取决于本地环境。）
 <screen>
 oid=1, dbname=template1
 oid=11510, dbname=template0
@@ -1237,25 +1088,15 @@ oid=0, dbname=
     </sect4>
 
     <sect4 id="ecpg-variables-struct">
-     <title>Structures</title>
+     <title>结构体</title>
 
      <para>
-      A structure whose member names match the column names of a query
-      result, can be used to retrieve multiple columns at once.  The
-      structure enables handling multiple column values in a single
-      host variable.
+      成员名与查询结果的列名匹配的结构体可用于一次检索多个列。该结构体使得可以在单个宿主变量中处理多个列值。
      </para>
 
      <para>
-      The following example retrieves OIDs, names, and sizes of the
-      available databases from the <literal>pg_database</literal>
-      system table and using
-      the <function>pg_database_size()</function> function.  In this
-      example, a structure variable <varname>dbinfo_t</varname> with
-      members whose names match each column in
-      the <literal>SELECT</literal> result is used to retrieve one
-      result row without putting multiple host variables in
-      the <literal>FETCH</literal> statement.
+      以下示例从 <literal>pg_database</literal>
+      系统表中并使用 <function>pg_database_size()</function> 函数检索可用数据库的 OID、名称和大小。在此示例中，使用一个结构体变量 <varname>dbinfo_t</varname>，其成员名与 <literal>SELECT</literal> 结果中的每一列相匹配，从而检索一行结果，而无需在 <literal>FETCH</literal> 语句中放置多个宿主变量。
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
     typedef struct
@@ -1290,8 +1131,7 @@ EXEC SQL END DECLARE SECTION;
      </para>
 
      <para>
-      This example shows following result. (The exact values depend on
-      local circumstances.)
+      此示例显示以下结果。（确切值取决于本地环境。）
 <screen>
 oid=1, datname=template1, size=4324580
 oid=11510, datname=template0, size=4243460
@@ -1301,11 +1141,7 @@ oid=313780, datname=testdb, size=8183012
      </para>
 
      <para>
-      Structure host variables <quote>absorb</quote> as many columns
-      as the structure as fields.  Additional columns can be assigned
-      to other host variables. For example, the above program could
-      also be restructured like this, with the <varname>size</varname>
-      variable outside the structure:
+      结构体宿主变量会<quote>吸收</quote>与其字段数量相同的列。额外的列可以赋值给其他宿主变量。例如，上面的程序也可以像这样重构，将 <varname>size</varname> 变量放在结构体之外：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
     typedef struct
@@ -1341,33 +1177,29 @@ EXEC SQL END DECLARE SECTION;
     </sect4>
 
     <sect4 id="ecpg-variables-nonprimitive-c-typedefs">
-     <title>Typedefs</title>
+     <title>类型定义</title>
      <indexterm>
       <primary>typedef</primary>
       <secondary>in ECPG</secondary>
      </indexterm>
 
      <para>
-      Use the <literal>typedef</literal> keyword to map new types to already
-      existing types.
+      使用 <literal>typedef</literal> 关键字将新类型映射到已存在的类型。
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
     typedef char mychartype[40];
     typedef long serial_t;
 EXEC SQL END DECLARE SECTION;
 </programlisting>
-      Note that you could also use:
+      注意，你也可以使用：
 <programlisting>
 EXEC SQL TYPE serial_t IS long;
 </programlisting>
-      This declaration does not need to be part of a declare section;
-      that is, you can also write typedefs as normal C statements.
+      该声明不必是 declare 段的一部分；也就是说，你也可以像普通 C 语句那样编写 typedef。
      </para>
 
      <para>
-      Any word you declare as a <literal>typedef</literal> cannot be used as
-      an SQL keyword in <literal>EXEC SQL</literal> commands later in the same
-      program. For example, this won't work:
+      你声明为 <literal>typedef</literal> 的任何词，都不能在同一程序后续的 <literal>EXEC SQL</literal> 命令中用作 SQL 关键字。例如，下面的写法不会奏效：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
     typedef int start;
@@ -1375,36 +1207,23 @@ EXEC SQL END DECLARE SECTION;
 ...
 EXEC SQL START TRANSACTION;
 </programlisting>
-      ECPG will report a syntax error for <literal>START
-      TRANSACTION</literal>, because it no longer
-      recognizes <literal>START</literal> as an SQL keyword,
-      only as a typedef.
-      (If you have such a conflict, and renaming the typedef
-      seems impractical, you could write the SQL command
-      using <link linkend="ecpg-dynamic">dynamic SQL</link>.)
+      ECPG 会针对 <literal>START
+      TRANSACTION</literal> 报告语法错误，因为它不再将 <literal>START</literal> 识别为 SQL 关键字，而只将其识别为 typedef。
+      （如果你遇到这种冲突，并且重命名该 typedef 似乎不切实际，你可以使用<link linkend="ecpg-dynamic">动态 SQL</link>来编写该 SQL 命令。）
      </para>
 
      <note>
       <para>
-       In <productname>PostgreSQL</productname> releases before v16, use
-       of SQL keywords as typedef names was likely to result in syntax
-       errors associated with use of the typedef itself, rather than use
-       of the name as an SQL keyword.  The new behavior is less likely to
-       cause problems when an existing ECPG application is recompiled in
-       a new <productname>PostgreSQL</productname> release with new
-       keywords.
+       在 v16 之前的 <productname>PostgreSQL</productname> 发行版中，将 SQL 关键字用作 typedef 名称很可能导致与使用该 typedef 本身（而非将该名称用作 SQL 关键字）相关的语法错误。当现有的 ECPG 应用程序在带有新关键字的 <productname>PostgreSQL</productname> 新发行版中重新编译时，新行为不太可能引发问题。
       </para>
      </note>
     </sect4>
 
     <sect4 id="ecpg-variables-nonprimitive-c-pointers">
-     <title>Pointers</title>
+     <title>指针</title>
 
      <para>
-      You can declare pointers to the most common types. Note however
-      that you cannot use pointers as target variables of queries
-      without auto-allocation. See <xref linkend="ecpg-descriptors"/>
-      for more information on auto-allocation.
+      你可以声明指向最常见类型的指针。但请注意，如果不使用自动分配，你就不能将指针用作查询的目标变量。有关自动分配的更多信息，请参见 <xref linkend="ecpg-descriptors"/>。
      </para>
 
      <para>
@@ -1420,41 +1239,25 @@ EXEC SQL END DECLARE SECTION;
   </sect2>
 
   <sect2 id="ecpg-variables-nonprimitive-sql">
-   <title>Handling Nonprimitive SQL Data Types</title>
+   <title>处理非基本 SQL 数据类型</title>
 
    <para>
-    This section contains information on how to handle nonscalar and
-    user-defined SQL-level data types in ECPG applications.  Note that
-    this is distinct from the handling of host variables of
-    nonprimitive types, described in the previous section.
+    本节包含有关如何在 ECPG 应用程序中处理非标量和用户定义的 SQL 级数据类型的信息。请注意，这与上一节中描述的非原始类型主机变量的处理方式不同。
    </para>
 
    <sect3 id="ecpg-variables-nonprimitive-sql-arrays">
-    <title>Arrays</title>
+    <title>数组</title>
 
     <para>
-     Multi-dimensional SQL-level arrays are not directly supported in ECPG.
-     One-dimensional SQL-level arrays can be mapped into C array host
-     variables and vice-versa.  However, when creating a statement ecpg does
-     not know the types of the columns, so that it cannot check if a C array
-     is input into a corresponding SQL-level array.  When processing the
-     output of an SQL statement, ecpg has the necessary information and thus
-     checks if both are arrays.
+     ECPG 不直接支持多维 SQL 级数组。一维 SQL 级数组可以映射到 C 数组主机变量，反之亦然。但是，在创建语句时，ecpg 并不知道列的类型，因此它无法检查 C 数组是否被输入到相应的 SQL 级数组中。在处理 SQL 语句的输出时，ecpg 拥有必要的信息，因此会检查两者是否都是数组。
     </para>
 
     <para>
-     If a query accesses <emphasis>elements</emphasis> of an array
-     separately, then this avoids the use of arrays in ECPG.  Then, a
-     host variable with a type that can be mapped to the element type
-     should be used.  For example, if a column type is array of
-     <type>integer</type>, a host variable of type <type>int</type>
-     can be used.  Also if the element type is <type>varchar</type>
-     or <type>text</type>, a host variable of type <type>char[]</type>
-     or <type>VARCHAR[]</type> can be used.
+     如果查询分别访问数组的<emphasis>元素</emphasis>，那么这就避免了在 ECPG 中使用数组。此时，应使用类型可映射到该元素类型的主机变量。例如，如果列类型是 <type>integer</type> 的数组，则可以使用类型为 <type>int</type> 的主机变量。另外，如果元素类型是 <type>varchar</type> 或 <type>text</type>，则可以使用类型为 <type>char[]</type> 或 <type>VARCHAR[]</type> 的主机变量。
     </para>
 
     <para>
-     Here is an example.  Assume the following table:
+     下面是一个示例。假设有如下表：
 <programlisting>
 CREATE TABLE t3 (
     ii integer[]
@@ -1467,9 +1270,7 @@ testdb=&gt; SELECT * FROM t3;
 (1 row)
 </programlisting>
 
-     The following example program retrieves the 4th element of the
-     array and stores it into a host variable of
-     type <type>int</type>:
+     以下示例程序检索数组的第 4 个元素，并将其存储到类型为 <type>int</type> 的主机变量中：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int ii;
@@ -1489,17 +1290,14 @@ while (1)
 EXEC SQL CLOSE cur1;
 </programlisting>
 
-     This example shows the following result:
+     此示例显示以下结果：
 <screen>
 ii=4
 </screen>
     </para>
 
     <para>
-     To map multiple array elements to the multiple elements in an
-     array type host variables each element of array column and each
-     element of the host variable array have to be managed separately,
-     for example:
+     要将多个数组元素映射到数组类型主机变量中的多个元素，必须分别管理数组列的每个元素和主机变量数组的每个元素，例如：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int ii_a[8];
@@ -1519,7 +1317,7 @@ while (1)
     </para>
 
     <para>
-     Note again that
+     再次注意，在这种情况下
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int ii_a[8];
@@ -1537,44 +1335,37 @@ while (1)
     ...
 }
 </programlisting>
-     would not work correctly in this case, because you cannot map an
-     array type column to an array host variable directly.
+    无法正确工作，因为不能将数组类型列直接映射到数组宿主变量。
     </para>
 
     <para>
-     Another workaround is to store arrays in their external string
-     representation in host variables of type <type>char[]</type>
-     or <type>VARCHAR[]</type>.  For more details about this
-     representation, see <xref linkend="arrays-input"/>.  Note that
-     this means that the array cannot be accessed naturally as an
-     array in the host program (without further processing that parses
-     the text representation).
+     另一种变通方法是将数组以其外部字符串表示形式存储在类型为 <type>char[]</type>
+    或 <type>VARCHAR[]</type> 的宿主变量中。关于这种表示形式的更多细节，请参见
+    <xref linkend="arrays-input"/>。注意，这意味着在宿主程序中无法将数组自然地
+    作为数组访问（除非进一步处理以解析该文本表示形式）。
     </para>
    </sect3>
 
    <sect3 id="ecpg-variables-nonprimitive-sql-composite">
-    <title>Composite Types</title>
+    <title>复合类型</title>
 
     <para>
-     Composite types are not directly supported in ECPG, but an easy workaround is possible.
-  The
-     available workarounds are similar to the ones described for
-     arrays above: Either access each attribute separately or use the
-     external string representation.
+     ECPG 不直接支持复合类型，但可以采用一种简单的变通方法。
+    可用的变通方法与上文针对数组所述的方法类似：
+    要么分别访问每个属性，要么使用外部字符串表示形式。
     </para>
 
     <para>
-     For the following examples, assume the following type and table:
+     对于以下示例，假设存在如下类型和表：
 <programlisting>
 CREATE TYPE comp_t AS (intval integer, textval varchar(32));
 CREATE TABLE t4 (compval comp_t);
 INSERT INTO t4 VALUES ( (256, 'PostgreSQL') );
 </programlisting>
 
-     The most obvious solution is to access each attribute separately.
-     The following program retrieves data from the example table by
-     selecting each attribute of the type <type>comp_t</type>
-     separately:
+    最明显的解决方案是分别访问每个属性。
+    下面的程序通过分别选择类型 <type>comp_t</type>
+    的每个属性，从示例表中检索数据：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int intval;
@@ -1600,15 +1391,13 @@ EXEC SQL CLOSE cur1;
     </para>
 
     <para>
-     To enhance this example, the host variables to store values in
-     the <command>FETCH</command> command can be gathered into one
-     structure.  For more details about the host variable in the
-     structure form, see <xref linkend="ecpg-variables-struct"/>.
-     To switch to the structure, the example can be modified as below.
-     The two host variables, <varname>intval</varname>
-     and <varname>textval</varname>, become members of
-     the <structname>comp_t</structname> structure, and the structure
-     is specified on the <command>FETCH</command> command.
+     为了改进此示例，可以将 <command>FETCH</command> 命令中用于存储值的
+    宿主变量集中到一个结构中。关于结构形式的宿主变量的更多细节，
+    请参见 <xref linkend="ecpg-variables-struct"/>。
+    要改用结构，可以如下修改该示例。
+    两个宿主变量 <varname>intval</varname>
+    和 <varname>textval</varname> 成为 <structname>comp_t</structname> 结构的成员，
+    并在 <command>FETCH</command> 命令中指定该结构。
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 typedef struct
@@ -1637,11 +1426,10 @@ while (1)
 EXEC SQL CLOSE cur1;
 </programlisting>
 
-     Although a structure is used in the <command>FETCH</command>
-     command, the attribute names in the <command>SELECT</command>
-     clause are specified one by one.  This can be enhanced by using
-     a <literal>*</literal> to ask for all attributes of the composite
-     type value.
+    尽管在 <command>FETCH</command> 命令中使用了结构，
+    但 <command>SELECT</command> 子句中的属性名仍是一个一个指定的。
+    可以通过使用 <literal>*</literal> 来请求复合类型值的所有属性，
+    从而对此加以改进。
 <programlisting>
 ...
 EXEC SQL DECLARE cur1 CURSOR FOR SELECT (compval).* FROM t4;
@@ -1658,42 +1446,24 @@ while (1)
 }
 ...
 </programlisting>
-     This way, composite types can be mapped into structures almost
-     seamlessly, even though ECPG does not understand the composite
-     type itself.
+    这样，即使 ECPG 本身并不理解复合类型，
+    也可以几乎无缝地将复合类型映射到结构中。
     </para>
 
     <para>
-     Finally, it is also possible to store composite type values in
-     their external string representation in host variables of
-     type <type>char[]</type> or <type>VARCHAR[]</type>.  But that
-     way, it is not easily possible to access the fields of the value
-     from the host program.
+     最后，也可以将复合类型值以其外部字符串表示形式存储在类型为 <type>char[]</type> 或 <type>VARCHAR[]</type> 的主机变量中。但这种方式下，不容易从主机程序访问该值的字段。
     </para>
    </sect3>
 
    <sect3 id="ecpg-variables-nonprimitive-sql-user-defined-base-types">
-    <title>User-Defined Base Types</title>
+    <title>用户定义的基本类型</title>
 
     <para>
-     New user-defined base types are not directly supported by ECPG.
-     You can use the external string representation and host variables
-     of type <type>char[]</type> or <type>VARCHAR[]</type>, and this
-     solution is indeed appropriate and sufficient for many types.
+     ECPG 不直接支持新的用户定义基本类型。你可以使用外部字符串表示形式以及类型为 <type>char[]</type> 或 <type>VARCHAR[]</type> 的主机变量，对于许多类型来说，这种解决方案确实合适且足够。
     </para>
 
     <para>
-     Here is an example using the data type <type>complex</type> from
-     the example in <xref linkend="xtypes"/>.  The external string
-     representation of that type is <literal>(%f,%f)</literal>,
-     which is defined in the
-     functions <function>complex_in()</function>
-     and <function>complex_out()</function>
-     in <xref linkend="xtypes"/>.  The following example inserts the
-     complex type values <literal>(1,1)</literal>
-     and <literal>(3,3)</literal> into the
-     columns <literal>a</literal> and <literal>b</literal>, and select
-     them from the table after that.
+     下面是一个使用 <xref linkend="xtypes"/> 中示例的数据类型 <type>complex</type> 的示例。该类型的外部字符串表示形式是 <literal>(%f,%f)</literal>，它定义在 <xref linkend="xtypes"/> 中的函数 <function>complex_in()</function> 和 <function>complex_out()</function> 中。下面的示例将复杂类型值 <literal>(1,1)</literal> 和 <literal>(3,3)</literal> 插入到列 <literal>a</literal> 和 <literal>b</literal> 中，然后从表中查询它们。
 
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
@@ -1717,29 +1487,25 @@ EXEC SQL END DECLARE SECTION;
     EXEC SQL CLOSE cur1;
 </programlisting>
 
-     This example shows following result:
+     此示例显示以下结果：
 <screen>
 a=(1,1), b=(3,3)
 </screen>
    </para>
 
     <para>
-     Another workaround is avoiding the direct use of the user-defined
-     types in ECPG and instead create a function or cast that converts
-     between the user-defined type and a primitive type that ECPG can
-     handle.  Note, however, that type casts, especially implicit
-     ones, should be introduced into the type system very carefully.
+     另一种变通方法是避免在 ECPG 中直接使用用户定义类型，而是创建一个函数或转换，在用户定义类型和 ECPG 能够处理的基本类型之间进行转换。但请注意，类型转换（尤其是隐式转换）应当非常谨慎地引入类型系统。
     </para>
 
     <para>
-     For example,
+     例如，
 <programlisting>
 CREATE FUNCTION create_complex(r double, i double) RETURNS complex
 LANGUAGE SQL
 IMMUTABLE
 AS $$ SELECT $1 * complex '(1,0')' + $2 * complex '(0,1)' $$;
 </programlisting>
-    After this definition, the following
+    在此定义之后，下面的
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 double a, b, c, d;
@@ -1752,7 +1518,7 @@ d = 4;
 
 EXEC SQL INSERT INTO test_complex VALUES (create_complex(:a, :b), create_complex(:c, :d));
 </programlisting>
-    has the same effect as
+    与以下内容具有相同的效果
 <programlisting>
 EXEC SQL INSERT INTO test_complex VALUES ('(1,2)', '(3,4)');
 </programlisting>
@@ -1761,19 +1527,10 @@ EXEC SQL INSERT INTO test_complex VALUES ('(1,2)', '(3,4)');
   </sect2>
 
   <sect2 id="ecpg-indicators">
-   <title>Indicators</title>
+   <title>指示符</title>
 
    <para>
-    The examples above do not handle null values.  In fact, the
-    retrieval examples will raise an error if they fetch a null value
-    from the database.  To be able to pass null values to the database
-    or retrieve null values from the database, you need to append a
-    second host variable specification to each host variable that
-    contains data.  This second host variable is called the
-    <firstterm>indicator</firstterm> and contains a flag that tells
-    whether the datum is null, in which case the value of the real
-    host variable is ignored.  Here is an example that handles the
-    retrieval of null values correctly:
+    上面的示例没有处理空值。事实上，如果检索示例从数据库中取回空值，它们将引发错误。为了能够向数据库传递空值或从数据库检索空值，你需要为每个包含数据的主变量追加第二个主变量声明。这第二个主变量称为<firstterm>指示符</firstterm>，它包含一个标志，用于说明该数据是否为空值，若为空值，则忽略真实主变量的值。下面是一个正确处理空值检索的示例：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 VARCHAR val;
@@ -1784,26 +1541,15 @@ EXEC SQL END DECLARE SECTION:
 
 EXEC SQL SELECT b INTO :val :val_ind FROM test1;
 </programlisting>
-    The indicator variable <varname>val_ind</varname> will be zero if
-    the value was not null, and it will be negative if the value was
-    null.  (See <xref linkend="ecpg-oracle-compat"/> to enable
-    Oracle-specific behavior.)
+    如果值不为空，则指示符变量 <varname>val_ind</varname> 为零；如果值为空，则它为负数。（参见 <xref linkend="ecpg-oracle-compat"/> 以启用 Oracle 特定的行为。）
    </para>
 
    <para>
-    The indicator has another function: if the indicator value is
-    positive, it means that the value is not null, but it was
-    truncated when it was stored in the host variable.
+    指示符还有另一个作用：如果指示符值为正，则表示该值不为空，但它在存储到主变量中时被截断了。
    </para>
 
    <para>
-    If the argument <literal>-r no_indicator</literal> is passed to
-    the preprocessor <command>ecpg</command>, it works in
-    <quote>no-indicator</quote> mode. In no-indicator mode, if no
-    indicator variable is specified, null values are signaled (on
-    input and output) for character string types as empty string and
-    for integer types as the lowest possible value for type (for
-    example, <symbol>INT_MIN</symbol> for <type>int</type>).
+    如果将参数 <literal>-r no_indicator</literal> 传递给预处理器 <command>ecpg</command>，它将以<quote>无指示符</quote>模式工作。在无指示符模式下，如果未指定指示符变量，则空值（在输入和输出时）对于字符串类型以空字符串表示，对于整数类型以该类型可能的最小值表示（例如，<type>int</type> 的 <symbol>INT_MIN</symbol>）。
    </para>
   </sect2>
  </sect1>
