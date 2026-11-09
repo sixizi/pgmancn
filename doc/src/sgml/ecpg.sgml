@@ -8575,77 +8575,57 @@ risnull(CINTTYPE, (char *) &i);
  </sect1>
 
  <sect1 id="ecpg-develop">
-  <title>Internals</title>
+  <title>内部原理</title>
 
   <para>
-   This section explains how <application>ECPG</application> works
-   internally. This information can occasionally be useful to help
-   users understand how to use <application>ECPG</application>.
+   本节说明 <application>ECPG</application> 在内部是如何工作的。
+   这些信息有时有助于帮助用户理解如何使用 <application>ECPG</application>。
   </para>
 
    <para>
-    The first four lines written by <command>ecpg</command> to the
-    output are fixed lines.  Two are comments and two are include
-    lines necessary to interface to the library.  Then the
-    preprocessor reads through the file and writes output.  Normally
-    it just echoes everything to the output.
+    <command>ecpg</command> 写到输出的前四行是固定行。其中两行是注释，两行是连接到该库所需的 include 行。然后预处理器读取整个文件并写出输出。通常它只是把所有内容原样回显到输出。
    </para>
 
    <para>
-    When it sees an <command>EXEC SQL</command> statement, it
-    intervenes and changes it. The command starts with <command>EXEC
-    SQL</command> and ends with <command>;</command>. Everything in
-    between is treated as an <acronym>SQL</acronym> statement and
-    parsed for variable substitution.
+    当它看到一条 <command>EXEC SQL</command> 语句时，它会介入并修改该语句。该命令以 <command>EXEC
+    SQL</command> 开始，以 <command>;</command> 结束。两者之间的所有内容都被当作一条 <acronym>SQL</acronym> 语句处理，并进行变量替换解析。
    </para>
 
    <para>
-    Variable substitution occurs when a symbol starts with a colon
-    (<literal>:</literal>). The variable with that name is looked up
-    among the variables that were previously declared within a
-    <literal>EXEC SQL DECLARE</literal> section.
+    当符号以冒号开头（<literal>:</literal>）时，就会发生变量替换。具有该名称的变量会在先前于 <literal>EXEC SQL DECLARE</literal> 节中声明的变量中查找。
    </para>
 
    <para>
-    The most important function in the library is
-    <function>ECPGdo</function>, which takes care of executing most
-    commands. It takes a variable number of arguments. This can easily
-    add up to 50 or so arguments, and we hope this will not be a
-    problem on any platform.
+    该库中最重要的函数是 <function>ECPGdo</function>，它负责执行大多数命令。它接受可变数量的参数。这些参数很容易达到 50 个左右，我们希望这在任何平台上都不会成为问题。
    </para>
 
    <para>
-    The arguments are:
+    参数是：
 
     <variablelist>
      <varlistentry id="ecpg-develop-line-number">
-      <term>A line number</term>
+      <term>行号</term>
       <listitem>
        <para>
-        This is the line number of the original line; used in error
-        messages only.
+        这是原始行的行号；仅用于错误消息。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-develop-string">
-      <term>A string</term>
+      <term>一个字符串</term>
       <listitem>
        <para>
-        This is the <acronym>SQL</acronym> command that is to be issued.
-        It is modified by the input variables, i.e., the variables that
-        where not known at compile time but are to be entered in the
-        command. Where the variables should go the string contains
-        <literal>?</literal>.
+        这是要发出的 <acronym>SQL</acronym> 命令。它由输入变量修改，即那些在编译时未知但需要在命令中输入的变量。在变量应出现的位置，字符串中包含 <literal>?</literal>。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-develop-input-variables">
-      <term>Input variables</term>
+      <term>输入变量</term>
       <listitem>
        <para>
-        Every input variable causes ten arguments to be created.  (See below.)
+        每个输入变量都会导致创建十个参数。（见下文。）
        </para>
       </listitem>
      </varlistentry>
@@ -8654,18 +8634,16 @@ risnull(CINTTYPE, (char *) &i);
       <term><parameter>ECPGt_EOIT</parameter></term>
       <listitem>
        <para>
-        An <type>enum</type> telling that there are no more input
-        variables.
+        一个 <type>enum</type>，表示没有更多输入变量了。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-develop-output-variables">
-      <term>Output variables</term>
+      <term>输出变量</term>
       <listitem>
        <para>
-        Every output variable causes ten arguments to be created.
-        (See below.)  These variables are filled by the function.
+        每个输出变量都会导致创建十个参数。（见下文。）这些变量由函数填充。
        </para>
       </listitem>
      </varlistentry>
@@ -8674,7 +8652,7 @@ risnull(CINTTYPE, (char *) &i);
        <term><parameter>ECPGt_EORT</parameter></term>
        <listitem>
        <para>
-        An <type>enum</type> telling that there are no more variables.
+        一个 <type>enum</type>，表示没有更多变量了。
        </para>
       </listitem>
      </varlistentry>
@@ -8682,49 +8660,48 @@ risnull(CINTTYPE, (char *) &i);
    </para>
 
    <para>
-    For every variable that is part of the <acronym>SQL</acronym>
-    command, the function gets ten arguments:
+    对于属于 <acronym>SQL</acronym> 命令的每个变量，函数会得到十个参数：
 
     <orderedlist>
      <listitem>
       <para>
-       The type as a special symbol.
+       作为特殊符号的类型。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       A pointer to the value or a pointer to the pointer.
+       指向值的指针或指向指针的指针。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The size of the variable if it is a <type>char</type> or <type>varchar</type>.
+       如果变量是 <type>char</type> 或 <type>varchar</type>，则为该变量的大小。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The number of elements in the array (for array fetches).
+       数组中的元素数量（用于数组提取）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The offset to the next element in the array (for array fetches).
+       数组中下一个元素的偏移量（用于数组提取）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The type of the indicator variable as a special symbol.
+       作为特殊符号的指示符变量的类型。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       A pointer to the indicator variable.
+       指向指示符变量的指针。
       </para>
      </listitem>
 
@@ -8736,34 +8713,28 @@ risnull(CINTTYPE, (char *) &i);
 
      <listitem>
       <para>
-       The number of elements in the indicator array (for array fetches).
+       指示符数组中的元素数量（用于数组读取）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The offset to the next element in the indicator array (for
-       array fetches).
+       指示符数组中下一个元素的偏移量（用于数组读取）。
       </para>
      </listitem>
     </orderedlist>
    </para>
 
    <para>
-    Note that not all SQL commands are treated in this way.  For
-    instance, an open cursor statement like:
+    注意，并非所有 SQL 命令都按这种方式处理。例如，像下面这样的打开游标语句：
 <programlisting>
 EXEC SQL OPEN <replaceable>cursor</replaceable>;
 </programlisting>
-    is not copied to the output. Instead, the cursor's
-    <command>DECLARE</command> command is used at the position of the <command>OPEN</command> command
-    because it indeed opens the cursor.
+不会被复制到输出中。相反，游标的 <command>DECLARE</command> 命令会被用在 <command>OPEN</command> 命令的位置，因为它确实打开了游标。
    </para>
 
    <para>
-    Here is a complete example describing the output of the
-    preprocessor of a file <filename>foo.pgc</filename> (details might
-    change with each particular version of the preprocessor):
+    下面是一个完整的示例，描述预处理器对文件 <filename>foo.pgc</filename> 的输出（细节可能随预处理器的具体版本而有所不同）：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int index;
@@ -8772,7 +8743,7 @@ EXEC SQL END DECLARE SECTION;
 ...
 EXEC SQL SELECT res INTO :result FROM mytable WHERE index = :index;
 </programlisting>
-    is translated into:
+被翻译为：
 <programlisting><![CDATA[
 /* Processed by ecpg (2.6.0) */
 /* These two include files are added by the preprocessor */
@@ -8795,8 +8766,7 @@ ECPGdo(__LINE__, NULL, "SELECT res FROM mytable WHERE index = ?     ",
 #line 147 "foo.pgc"
 ]]>
 </programlisting>
-    (The indentation here is added for readability and not
-    something the preprocessor does.)
+（这里的缩进是为了提高可读性而添加的，并非预处理器所为。）
    </para>
  </sect1>
 </chapter>
