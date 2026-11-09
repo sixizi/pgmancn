@@ -3869,60 +3869,47 @@ const char * SPI_result_code_string(int <parameter>code</parameter>);
  </sect1>
 
  <sect1 id="spi-memory">
-  <title>Memory Management</title>
+  <title>内存管理</title>
 
   <para>
     <indexterm>
      <primary>memory context</primary>
      <secondary>in SPI</secondary>
     </indexterm>
-   <productname>PostgreSQL</productname> allocates memory within
-   <firstterm>memory contexts</firstterm>, which provide a convenient method of
-   managing allocations made in many different places that need to
-   live for differing amounts of time.  Destroying a context releases
-   all the memory that was allocated in it.  Thus, it is not necessary
-   to keep track of individual objects to avoid memory leaks; instead
-   only a relatively small number of contexts have to be managed.
-   <function>palloc</function> and related functions allocate memory
-   from the <quote>current</quote> context.
+   <productname>PostgreSQL</productname> 在
+   <firstterm>内存上下文</firstterm>中分配内存，内存上下文提供了一种便捷的方法，
+   用于管理在许多不同位置进行的、需要存活不同时长的分配。销毁一个上下文会释放
+   其中分配的所有内存。因此，不必跟踪单个对象来避免内存泄漏；相反，
+   只需管理相对少量的上下文。
+   <function>palloc</function> 及相关函数从<quote>当前</quote>上下文分配内存。
   </para>
 
   <para>
-   <function>SPI_connect</function> creates a new memory context and
-   makes it current.  <function>SPI_finish</function> restores the
-   previous current memory context and destroys the context created by
-   <function>SPI_connect</function>.  These actions ensure that
-   transient memory allocations made inside your C function are
-   reclaimed at C function exit, avoiding memory leakage.
+   <function>SPI_connect</function> 创建一个新的内存上下文并将其设为当前上下文。<function>SPI_finish</function> 恢复
+   先前的当前内存上下文并销毁由 <function>SPI_connect</function> 创建的上下文。这些操作确保
+   在你的 C 函数内部进行的临时内存分配在 C 函数退出时被
+   回收，从而避免内存泄漏。
   </para>
 
   <para>
-   However, if your C function needs to return an object in allocated
-   memory (such as a value of a pass-by-reference data type), you
-   cannot allocate that memory using <function>palloc</function>, at
-   least not while you are connected to SPI.  If you try, the object
-   will be deallocated by <function>SPI_finish</function>, and your
-   C function will not work reliably.  To solve this problem, use
-   <function>SPI_palloc</function> to allocate memory for your return
-   object.  <function>SPI_palloc</function> allocates memory in the
-   <quote>upper executor context</quote>, that is, the memory context
-   that was current when <function>SPI_connect</function> was called,
-   which is precisely the right context for a value returned from your
-   C function.  Several of the other utility functions described in
-   this section also return objects created in the upper executor context.
+   然而，如果你的 C 函数需要返回一个位于已分配内存中的对象
+   （例如按引用传递的数据类型的值），则不能使用 <function>palloc</function> 分配该内存，
+   至少在你连接到 SPI 时不能这样做。如果尝试这样做，该对象
+   将被 <function>SPI_finish</function> 释放，你的 C 函数将无法可靠工作。要解决此问题，请使用
+   <function>SPI_palloc</function> 为返回对象分配内存。<function>SPI_palloc</function> 在
+   <quote>上层执行器上下文</quote>中分配内存，也就是说，在调用 <function>SPI_connect</function> 时
+   处于当前状态的内存上下文，这恰好是适合从你的
+   C 函数返回的值的上下文。本节中描述的其他几个工具函数
+   也会返回在上层执行器上下文中创建的对象。
   </para>
 
   <para>
-   When <function>SPI_connect</function> is called, the private
-   context of the C function, which is created by
-   <function>SPI_connect</function>, is made the current context.  All
-   allocations made by <function>palloc</function>,
-   <function>repalloc</function>, or SPI utility functions (except as
-   described in this section) are made in this context.  When a
-   C function disconnects from the SPI manager (via
-   <function>SPI_finish</function>) the current context is restored to
-   the upper executor context, and all allocations made in the
-   C function memory context are freed and cannot be used any more.
+   调用 <function>SPI_connect</function> 时，由 <function>SPI_connect</function> 创建的 C 函数私有上下文
+   被设为当前上下文。由 <function>palloc</function>、
+   <function>repalloc</function> 或 SPI 工具函数进行的所有分配（本节所述情况除外）
+   都在此上下文中进行。当 C 函数从 SPI 管理器断开连接（通过
+   <function>SPI_finish</function>）时，当前上下文恢复为上层执行器上下文，并且在
+   C 函数内存上下文中进行的所有分配都被释放，不能再使用。
   </para>
 
 <!-- *********************************************** -->
