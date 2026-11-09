@@ -158,115 +158,52 @@ createdb -O <replaceable>rolename</replaceable> <replaceable>dbname</replaceable
  </sect1>
 
  <sect1 id="manage-ag-templatedbs">
-  <title>Template Databases</title>
+  <title>模板数据库</title>
 
   <para>
-   <command>CREATE DATABASE</command> actually works by copying an existing
-   database.  By default, it copies the standard system database named
-   <literal>template1</literal>.<indexterm><primary>template1</primary></indexterm> Thus that
-   database is the <quote>template</quote> from which new databases are
-   made.  If you add objects to <literal>template1</literal>, these objects
-   will be copied into subsequently created user databases.  This
-   behavior allows site-local modifications to the standard set of
-   objects in databases.  For example, if you install the procedural
-   language <application>PL/Perl</application> in <literal>template1</literal>, it will
-   automatically be available in user databases without any extra
-   action being taken when those databases are created.
+   <command>CREATE DATABASE</command> 实际上是通过复制一个现有数据库来工作的。默认情况下，它复制名为 <literal>template1</literal> 的标准系统数据库。<indexterm><primary>template1</primary></indexterm> 因此，该数据库就是创建新数据库时所依据的<quote>模板</quote>。如果向 <literal>template1</literal> 中添加对象，这些对象将被复制到随后创建的用户数据库中。这种行为允许对数据库中的标准对象集合进行站点本地修改。例如，如果在 <literal>template1</literal> 中安装过程语言 <application>PL/Perl</application>，那么无需在创建用户数据库时采取任何额外操作，该语言就会自动在这些数据库中可用。
   </para>
 
   <para>
-   However, <command>CREATE DATABASE</command> does not copy database-level
-   <command>GRANT</command> permissions attached to the source database.
-   The new database has default database-level permissions.
+   不过，<command>CREATE DATABASE</command> 不会复制附加在源数据库上的数据库级 <command>GRANT</command> 权限。新数据库具有默认的数据库级权限。
   </para>
 
   <para>
-   There is a second standard system database named
-   <literal>template0</literal>.<indexterm><primary>template0</primary></indexterm> This
-   database contains the same data as the initial contents of
-   <literal>template1</literal>, that is, only the standard objects
-   predefined by your version of
-   <productname>PostgreSQL</productname>.  <literal>template0</literal>
-   should never be changed after the database cluster has been
-   initialized.  By instructing
-   <command>CREATE DATABASE</command> to copy <literal>template0</literal> instead
-   of <literal>template1</literal>, you can create a <quote>pristine</quote> user
-   database (one where no user-defined objects exist and where the system
-   objects have not been altered) that contains none of the site-local additions in
-   <literal>template1</literal>.  This is particularly handy when restoring a
-   <literal>pg_dump</literal> dump: the dump script should be restored in a
-   pristine database to ensure that one recreates the correct contents
-   of the dumped database, without conflicting with objects that
-   might have been added to <literal>template1</literal> later on.
+   还有第二个标准系统数据库，名为 <literal>template0</literal>。<indexterm><primary>template0</primary></indexterm> 该数据库包含的数据与 <literal>template1</literal> 的初始内容相同，也就是说，仅包含由你所使用的 <productname>PostgreSQL</productname> 版本预定义的标准对象。数据库集簇初始化之后，绝不应更改 <literal>template0</literal>。通过指示 <command>CREATE DATABASE</command> 复制 <literal>template0</literal> 而不是 <literal>template1</literal>，你可以创建一个<quote>纯净的</quote>用户数据库（其中不存在用户定义的对象，且系统对象未被改动），它不包含 <literal>template1</literal> 中的任何站点本地新增内容。这在恢复 <literal>pg_dump</literal> 转储时特别方便：转储脚本应在一个纯净数据库中恢复，以确保正确重建被转储数据库的内容，而不会与后来可能添加到 <literal>template1</literal> 中的对象发生冲突。
   </para>
 
   <para>
-   Another common reason for copying <literal>template0</literal> instead
-   of <literal>template1</literal> is that new encoding and locale settings
-   can be specified when copying <literal>template0</literal>, whereas a copy
-   of <literal>template1</literal> must use the same settings it does.
-   This is because <literal>template1</literal> might contain encoding-specific
-   or locale-specific data, while <literal>template0</literal> is known not to.
+   复制 <literal>template0</literal> 而不是 <literal>template1</literal> 的另一个常见原因是，在复制 <literal>template0</literal> 时可以指定新的编码和区域设置，而复制 <literal>template1</literal> 则必须使用与其相同的设置。这是因为 <literal>template1</literal> 可能包含特定于编码或区域设置的数据，而 <literal>template0</literal> 则已知不包含此类数据。
   </para>
 
   <para>
-   To create a database by copying <literal>template0</literal>, use:
+   要通过复制 <literal>template0</literal> 来创建数据库，可使用：
 <programlisting>
 CREATE DATABASE <replaceable>dbname</replaceable> TEMPLATE template0;
 </programlisting>
-   from the SQL environment, or:
+   在 SQL 环境中，或者：
 <programlisting>
 createdb -T template0 <replaceable>dbname</replaceable>
 </programlisting>
-   from the shell.
+   在 shell 中。
   </para>
 
   <para>
-   It is possible to create additional template databases, and indeed
-   one can copy any database in a cluster by specifying its name
-   as the template for <command>CREATE DATABASE</command>.  It is important to
-   understand, however, that this is not (yet) intended as
-   a general-purpose <quote><command>COPY DATABASE</command></quote> facility.
-   The principal limitation is that no other sessions can be connected to
-   the source database while it is being copied.  <command>CREATE
-   DATABASE</command> will fail if any other connection exists when it starts;
-   during the copy operation, new connections to the source database
-   are prevented.
+   可以创建额外的模板数据库，事实上，只要把数据库集簇中任意一个数据库的名字指定为 <command>CREATE DATABASE</command> 的模板，就可以复制该数据库。然而，重要的是要理解，这（目前）并不是作为通用的 <quote><command>COPY DATABASE</command></quote> 设施来设计的。主要的限制是在复制源数据库期间，不能有其他会话连接到该数据库。如果在 <command>CREATE
+   DATABASE</command> 启动时存在任何其他连接，它将会失败；在复制操作期间，会阻止到源数据库的新连接。
   </para>
 
   <para>
-   Two useful flags exist in <literal>pg_database</literal><indexterm><primary>pg_database</primary></indexterm> for each
-   database: the columns <literal>datistemplate</literal> and
-   <literal>datallowconn</literal>.  <literal>datistemplate</literal>
-   can be set to indicate that a database is intended as a template for
-   <command>CREATE DATABASE</command>.  If this flag is set, the database can be
-   cloned by any user with <literal>CREATEDB</literal> privileges; if it is not set,
-   only superusers and the owner of the database can clone it.
-   If <literal>datallowconn</literal> is false, then no new connections
-   to that database will be allowed (but existing sessions are not terminated
-   simply by setting the flag false).  The <literal>template0</literal>
-   database is normally marked <literal>datallowconn = false</literal> to prevent its modification.
-   Both <literal>template0</literal> and <literal>template1</literal>
-   should always be marked with <literal>datistemplate = true</literal>.
+   在 <literal>pg_database</literal><indexterm><primary>pg_database</primary></indexterm> 中，每个数据库都有两个有用的标志：<literal>datistemplate</literal> 和 <literal>datallowconn</literal> 列。可以把 <literal>datistemplate</literal> 设置为表示某个数据库打算作为 <command>CREATE DATABASE</command> 的模板。如果设置了该标志，则任何具有 <literal>CREATEDB</literal> 权限的用户都可以克隆该数据库；如果没有设置，则只有超级用户和该数据库的属主才能克隆它。如果 <literal>datallowconn</literal> 为假，则不允许到该数据库的新连接（但仅仅把该标志设为假并不会终止已有的会话）。<literal>template0</literal> 数据库通常被标记为 <literal>datallowconn = false</literal> 以防止其被修改。<literal>template0</literal> 和 <literal>template1</literal> 都应该始终标记为 <literal>datistemplate = true</literal>。
   </para>
 
   <note>
    <para>
-    <literal>template1</literal> and <literal>template0</literal> do not have any special
-    status beyond the fact that the name <literal>template1</literal> is the default
-    source database name for <command>CREATE DATABASE</command>.
-    For example, one could drop <literal>template1</literal> and recreate it from
-    <literal>template0</literal> without any ill effects.  This course of action
-    might be advisable if one has carelessly added a bunch of junk in
-    <literal>template1</literal>. (To delete <literal>template1</literal>,
-    it must have <literal>pg_database.datistemplate = false</literal>.)
+    除了 <literal>template1</literal> 是 <command>CREATE DATABASE</command> 的默认源数据库名这一事实之外，<literal>template1</literal> 和 <literal>template0</literal> 没有任何特殊地位。例如，可以删除 <literal>template1</literal> 并从 <literal>template0</literal> 重新创建它，而不会产生任何不良影响。如果有人在 <literal>template1</literal> 中不小心添加了一堆垃圾，那么这种做法可能是可取的。（要删除 <literal>template1</literal>，它必须具有 <literal>pg_database.datistemplate = false</literal>。）
    </para>
 
    <para>
-    The <literal>postgres</literal> database is also created when a database
-    cluster is initialized.  This database is meant as a default database for
-    users and applications to connect to. It is simply a copy of
-    <literal>template1</literal> and can be dropped and recreated if necessary.
+    <literal>postgres</literal> 数据库也会在初始化数据库集簇时创建。该数据库旨在作为用户和应用程序连接的默认数据库。它只是 <literal>template1</literal> 的一个副本，如有必要可以删除并重新创建。
    </para>
   </note>
  </sect1>
