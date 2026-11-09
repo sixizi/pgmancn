@@ -2438,7 +2438,7 @@ CONTEXT:  PL/pgSQL function outer_func() line 3 at RETURN
   </sect1>
 
   <sect1 id="plpgsql-cursors">
-   <title>Cursors</title>
+   <title>游标</title>
 
    <indexterm zone="plpgsql-cursors">
     <primary>cursor</primary>
@@ -2446,92 +2446,50 @@ CONTEXT:  PL/pgSQL function outer_func() line 3 at RETURN
    </indexterm>
 
    <para>
-    Rather than executing a whole query at once, it is possible to set
-    up a <firstterm>cursor</firstterm> that encapsulates the query, and then read
-    the query result a few rows at a time. One reason for doing this is
-    to avoid memory overrun when the result contains a large number of
-    rows. (However, <application>PL/pgSQL</application> users do not normally need
-    to worry about that, since <literal>FOR</literal> loops automatically use a cursor
-    internally to avoid memory problems.) A more interesting usage is to
-    return a reference to a cursor that a function has created, allowing the
-    caller to read the rows. This provides an efficient way to return
-    large row sets from functions.
+    与其一次执行整个查询，不如建立一个封装该查询的<firstterm>游标</firstterm>，然后一次读取查询结果的若干行。这样做的一个原因是在结果包含大量行时避免内存溢出。（不过，<application>PL/pgSQL</application> 用户通常不必担心这一点，因为 <literal>FOR</literal> 循环内部会自动使用游标以避免内存问题。）更有意思的用法是返回一个指向函数所创建游标的引用，让调用者读取这些行。这提供了一种从函数返回大型行集的高效方式。
    </para>
 
    <sect2 id="plpgsql-cursor-declarations">
-    <title>Declaring Cursor Variables</title>
+    <title>声明游标变量</title>
 
     <para>
-     All access to cursors in <application>PL/pgSQL</application> goes through
-     cursor variables, which are always of the special data type
-     <type>refcursor</type>.  One way to create a cursor variable
-     is just to declare it as a variable of type <type>refcursor</type>.
-     Another way is to use the cursor declaration syntax,
-     which in general is:
+     在 <application>PL/pgSQL</application> 中，对游标的所有访问都要通过游标变量进行，游标变量始终是特殊数据类型 <type>refcursor</type>。创建游标变量的一种方法是直接把它声明为 <type>refcursor</type> 类型的变量。另一种方法是使用游标声明语法，其一般形式为：
 <synopsis>
 <replaceable>name</replaceable> <optional> <optional> NO </optional> SCROLL </optional> CURSOR <optional> ( <replaceable>arguments</replaceable> ) </optional> FOR <replaceable>query</replaceable>;
 </synopsis>
-     (<literal>FOR</literal> can be replaced by <literal>IS</literal> for
-     <productname>Oracle</productname> compatibility.)
-     If <literal>SCROLL</literal> is specified, the cursor will be capable of
-     scrolling backward; if <literal>NO SCROLL</literal> is specified, backward
-     fetches will be rejected; if neither specification appears, it is
-     query-dependent whether backward fetches will be allowed.
-     <replaceable>arguments</replaceable>, if specified, is a
-     comma-separated list of pairs <literal><replaceable>name</replaceable>
-     <replaceable>datatype</replaceable></literal> that define names to be
-     replaced by parameter values in the given query.  The actual
-     values to substitute for these names will be specified later,
-     when the cursor is opened.
+    （为了与 <productname>Oracle</productname> 兼容，<literal>FOR</literal> 可以替换为 <literal>IS</literal>。）如果指定了 <literal>SCROLL</literal>，游标将能够向后滚动；如果指定了 <literal>NO SCROLL</literal>，向后取行将被拒绝；如果两者都未指定，是否允许向后取行取决于查询。<replaceable>arguments</replaceable>（如果指定）是一个以逗号分隔的 <literal><replaceable>name</replaceable>
+     <replaceable>datatype</replaceable></literal> 对列表，用于定义在给定查询中要被参数值替换的名称。这些名称的实际替换值将在稍后打开游标时指定。
     </para>
     <para>
-     Some examples:
+     一些示例：
 <programlisting>
 DECLARE
     curs1 refcursor;
     curs2 CURSOR FOR SELECT * FROM tenk1;
     curs3 CURSOR (key integer) FOR SELECT * FROM tenk1 WHERE unique1 = key;
 </programlisting>
-     All three of these variables have the data type <type>refcursor</type>,
-     but the first can be used with any query, while the second has
-     a fully specified query already <firstterm>bound</firstterm> to it, and the last
-     has a parameterized query bound to it.  (<literal>key</literal> will be
-     replaced by an integer parameter value when the cursor is opened.)
-     The variable <literal>curs1</literal>
-     is said to be <firstterm>unbound</firstterm> since it is not bound to
-     any particular query.
+    这三个变量都具有数据类型 <type>refcursor</type>，但第一个可用于任何查询，而第二个已经将一个完全指定的查询<firstterm>绑定</firstterm>到它上面，最后一个则绑定了一个参数化查询。（打开游标时，<literal>key</literal> 将被替换为一个整数参数值。）变量 <literal>curs1</literal> 被称为<firstterm>未绑定</firstterm>，因为它没有绑定到任何特定查询。
     </para>
 
     <para>
-     The <literal>SCROLL</literal> option cannot be used when the cursor's
-     query uses <literal>FOR UPDATE/SHARE</literal>.  Also, it is
-     best to use <literal>NO SCROLL</literal> with a query that involves
-     volatile functions.  The implementation of <literal>SCROLL</literal>
-     assumes that re-reading the query's output will give consistent
-     results, which a volatile function might not do.
+     当游标的查询使用 <literal>FOR UPDATE/SHARE</literal> 时，不能使用 <literal>SCROLL</literal> 选项。此外，最好将 <literal>NO SCROLL</literal> 用于涉及易变函数的查询。<literal>SCROLL</literal> 的实现假定重新读取查询的输出将得到一致的结果，而易变函数可能无法做到这一点。
     </para>
    </sect2>
 
    <sect2 id="plpgsql-cursor-opening">
-    <title>Opening Cursors</title>
+    <title>打开游标</title>
 
     <para>
-     Before a cursor can be used to retrieve rows, it must be
-     <firstterm>opened</firstterm>. (This is the equivalent action to the SQL
-     command <link linkend="sql-declare"><command>DECLARE
-     CURSOR</command></link>.)
-     <application>PL/pgSQL</application> has
-     three forms of the <command>OPEN</command> statement, two of which use unbound
-     cursor variables while the third uses a bound cursor variable.
+     在游标可以被用于检索行之前，必须先<firstterm>打开</firstterm>它。（这与 SQL 命令 <link linkend="sql-declare"><command>DECLARE
+     CURSOR</command></link> 是等效的操作。）
+     <application>PL/pgSQL</application> 有三种形式的 <command>OPEN</command> 语句，其中两种使用未绑定游标变量，而第三种使用已绑定游标变量。
     </para>
 
     <note>
      <para>
-      Bound cursor variables can also be used without explicitly opening the cursor,
-      via the <command>FOR</command> statement described in
-      <xref linkend="plpgsql-cursor-for-loop"/>.
-      A <command>FOR</command> loop will open the cursor and then
-      close it again when the loop completes.
+      已绑定的游标变量也可以不显式打开游标而直接使用，
+      通过 <xref linkend="plpgsql-cursor-for-loop"/> 中描述的 <command>FOR</command> 语句来实现。
+      一个 <command>FOR</command> 循环会打开游标，然后在循环结束时再次关闭它。
      </para>
     </note>
 
@@ -2541,15 +2499,7 @@ DECLARE
     </indexterm>
 
     <para>
-     Opening a cursor involves creating a server-internal data structure
-     called a <firstterm>portal</firstterm>, which holds the execution
-     state for the cursor's query.  A portal has a name, which must be
-     unique within the session for the duration of the portal's existence.
-     By default, <application>PL/pgSQL</application> will assign a unique
-     name to each portal it creates.  However, if you assign a non-null
-     string value to a cursor variable, that string will be used as its
-     portal name.  This feature can be used as described in
-     <xref linkend="plpgsql-cursor-returning"/>.
+     打开游标涉及创建一个服务器内部的数据结构，称为<firstterm>门户</firstterm>（portal），它保存游标查询的执行状态。一个门户有一个名称，在该门户存在期间，该名称必须在会话内唯一。默认情况下，<application>PL/pgSQL</application> 会为它创建的每个门户分配一个唯一的名称。不过，如果你为游标变量赋予一个非空字符串值，该字符串将被用作其门户名称。此功能可以按照 <xref linkend="plpgsql-cursor-returning"/> 中所述的方式使用。
     </para>
 
     <sect3 id="plpgsql-cursor-opening-open-for-query">
@@ -2560,26 +2510,11 @@ OPEN <replaceable>unbound_cursorvar</replaceable> <optional> <optional> NO </opt
 </synopsis>
 
        <para>
-        The cursor variable is opened and given the specified query to
-        execute.  The cursor cannot be open already, and it must have been
-        declared as an unbound cursor variable (that is, as a simple
-        <type>refcursor</type> variable).  The query must be a
-        <command>SELECT</command>, or something else that returns rows
-        (such as <command>EXPLAIN</command>).  The query
-        is treated in the same way as other SQL commands in
-        <application>PL/pgSQL</application>: <application>PL/pgSQL</application>
-        variable names are substituted, and the query plan is cached for
-        possible reuse.  When a <application>PL/pgSQL</application>
-        variable is substituted into the cursor query, the value that is
-        substituted is the one it has at the time of the <command>OPEN</command>;
-        subsequent changes to the variable will not affect the cursor's
-        behavior.
-        The <literal>SCROLL</literal> and <literal>NO SCROLL</literal>
-        options have the same meanings as for a bound cursor.
+        打开游标变量并赋予其指定的查询来执行。该游标不能已经处于打开状态，并且它必须被声明为未绑定游标变量（即一个简单的 <type>refcursor</type> 变量）。该查询必须是一个 <command>SELECT</command>，或者其他返回行的东西（例如 <command>EXPLAIN</command>）。该查询的处理方式与 <application>PL/pgSQL</application> 中的其他 SQL 命令相同：<application>PL/pgSQL</application> 变量名会被替换，并且查询计划会被缓存以便可能的重用。当一个 <application>PL/pgSQL</application> 变量被替换到游标查询中时，被替换的值是它在 <command>OPEN</command> 时刻所具有的值；之后对该变量的更改不会影响游标的行为。<literal>SCROLL</literal> 和 <literal>NO SCROLL</literal> 选项的含义与已绑定游标相同。
        </para>
 
        <para>
-        An example:
+        一个例子：
 <programlisting>
 OPEN curs1 FOR SELECT * FROM foo WHERE key = mykey;
 </programlisting>
@@ -2595,70 +2530,39 @@ OPEN <replaceable>unbound_cursorvar</replaceable> <optional> <optional> NO </opt
 </synopsis>
 
          <para>
-          The cursor variable is opened and given the specified query to
-          execute.  The cursor cannot be open already, and it must have been
-          declared as an unbound cursor variable (that is, as a simple
-          <type>refcursor</type> variable).  The query is specified as a string
-          expression, in the same way as in the <command>EXECUTE</command>
-          command.  As usual, this gives flexibility so the query plan can vary
-          from one run to the next (see <xref linkend="plpgsql-plan-caching"/>),
-          and it also means that variable substitution is not done on the
-          command string. As with <command>EXECUTE</command>, parameter values
-          can be inserted into the dynamic command via
-          <literal>format()</literal> and <literal>USING</literal>.
-          The <literal>SCROLL</literal> and
-          <literal>NO SCROLL</literal> options have the same meanings as for a bound
-          cursor.
+          游标变量被打开，并被赋予要执行的指定查询。该游标不能已经处于打开状态，并且它必须已被声明为未绑定的游标变量（即一个简单的 <type>refcursor</type> 变量）。查询以字符串表达式的形式指定，方式与 <command>EXECUTE</command> 命令中相同。像往常一样，这提供了灵活性，使得查询计划可以在每次运行时有所不同（参见 <xref linkend="plpgsql-plan-caching"/>），这也意味着不会对命令字符串进行变量替换。与 <command>EXECUTE</command> 一样，可以通过 <literal>format()</literal> 和 <literal>USING</literal> 将参数值插入到动态命令中。<literal>SCROLL</literal> 和 <literal>NO SCROLL</literal> 选项的含义与绑定游标相同。
          </para>
 
        <para>
-        An example:
+        一个示例：
 <programlisting>
 OPEN curs1 FOR EXECUTE format('SELECT * FROM %I WHERE col1 = $1',tabname) USING keyvalue;
 </programlisting>
-        In this example, the table name is inserted into the query via
-        <function>format()</function>.  The comparison value for <literal>col1</literal>
-        is inserted via a <literal>USING</literal> parameter, so it needs
-        no quoting.
+        在这个示例中，表名通过 <function>format()</function> 插入到查询中。<literal>col1</literal> 的比较值通过 <literal>USING</literal> 参数插入，因此不需要加引号。
        </para>
      </sect3>
 
     <sect3 id="plpgsql-open-bound-cursor">
-     <title>Opening a Bound Cursor</title>
+     <title>打开绑定游标</title>
 
 <synopsis>
 OPEN <replaceable>bound_cursorvar</replaceable> <optional> ( <optional> <replaceable>argument_name</replaceable> { := | =&gt; } </optional> <replaceable>argument_value</replaceable> <optional>, ...</optional> ) </optional>;
 </synopsis>
 
          <para>
-          This form of <command>OPEN</command> is used to open a cursor
-          variable whose query was bound to it when it was declared.  The
-          cursor cannot be open already.  A list of actual argument value
-          expressions must appear if and only if the cursor was declared to
-          take arguments.  These values will be substituted in the query.
+          <command>OPEN</command> 的这种形式用于打开一个游标变量，其查询在声明时已绑定到该变量。该游标不能已经处于打开状态。当且仅当该游标被声明为接受参数时，必须出现一个实际参数值表达式列表。这些值将被替换到查询中。
          </para>
 
          <para>
-          The query plan for a bound cursor is always considered cacheable;
-          there is no equivalent of <command>EXECUTE</command> in this case.
-          Notice that <literal>SCROLL</literal> and <literal>NO SCROLL</literal> cannot be
-          specified in <command>OPEN</command>, as the cursor's scrolling
-          behavior was already determined.
+          绑定游标的查询计划始终被视为可缓存；在这种情况下没有与 <command>EXECUTE</command> 等价的功能。请注意，不能在 <command>OPEN</command> 中指定 <literal>SCROLL</literal> 和 <literal>NO SCROLL</literal>，因为游标的滚动行为已经确定。
          </para>
 
          <para>
-          Argument values can be passed using either <firstterm>positional</firstterm>
-          or <firstterm>named</firstterm> notation.  In positional
-          notation, all arguments are specified in order.  In named notation,
-          each argument's name is specified using <literal>:=</literal>
-          or <literal>=&gt;</literal> to
-          separate it from the argument expression. Similar to calling
-          functions, described in <xref linkend="sql-syntax-calling-funcs"/>, it
-          is also allowed to mix positional and named notation.
+          参数值可以使用<firstterm>位置</firstterm>表示法或<firstterm>命名</firstterm>表示法传递。在位置表示法中，所有参数按顺序指定。在命名表示法中，每个参数的名称使用 <literal>:=</literal> 或 <literal>=&gt;</literal> 指定，以将其与参数表达式分隔开。与 <xref linkend="sql-syntax-calling-funcs"/> 中描述的函数调用类似，也允许混合使用位置表示法和命名表示法。
          </para>
 
          <para>
-          Examples (these use the cursor declaration examples above):
+          示例（这些示例使用上面的游标声明示例）：
 <programlisting>
 OPEN curs2;
 OPEN curs3(42);
@@ -2668,15 +2572,12 @@ OPEN curs3(key =&gt; 42);
          </para>
 
          <para>
-          Because variable substitution is done on a bound cursor's query,
-          there are really two ways to pass values into the cursor: either
-          with an explicit argument to <command>OPEN</command>, or implicitly by
-          referencing a <application>PL/pgSQL</application> variable in the query.
-          However, only variables declared before the bound cursor was
-          declared will be substituted into it.  In either case the value to
-          be passed is determined at the time of the <command>OPEN</command>.
-          For example, another way to get the same effect as the
-          <literal>curs3</literal> example above is
+          由于变量替换是在绑定游标的查询上进行的，
+          所以实际上有两种把值传入游标的方式：要么
+          通过给 <command>OPEN</command> 传入显式参数，要么在查询中
+          引用 <application>PL/pgSQL</application> 变量来隐式传入。
+          不过，只有在该绑定游标声明之前声明的变量才会被替换进去。无论哪种情况，要传入的值都是在执行 <command>OPEN</command> 时确定的。
+          例如，要获得与上面 <literal>curs3</literal> 示例相同的效果，另一种方式是
 <programlisting>
 DECLARE
     key integer;
@@ -2690,27 +2591,24 @@ BEGIN
    </sect2>
 
    <sect2 id="plpgsql-cursor-using">
-    <title>Using Cursors</title>
+    <title>使用游标</title>
 
     <para>
-     Once a cursor has been opened, it can be manipulated with the
-     statements described here.
+     游标一旦被打开，就可以用这里描述的语句来操作它。
     </para>
 
     <para>
-     These manipulations need not occur in the same function that
-     opened the cursor to begin with.  You can return a <type>refcursor</type>
-     value out of a function and let the caller operate on the cursor.
-     (Internally, a <type>refcursor</type> value is simply the string name
-     of the portal containing the active query for the cursor.  This name
-     can be passed around, assigned to other <type>refcursor</type> variables,
-     and so on, without disturbing the portal.)
+     这些操作不必发生在最初打开该游标的同一个函数中。你可以从函数中返回一个 <type>refcursor</type>
+     值，让调用者对该游标进行操作。
+     （在内部，一个 <type>refcursor</type> 值就是包含该游标活动查询的入口（portal）的字符串名称。这个名称
+     可以被四处传递、赋给其他 <type>refcursor</type> 变量，
+     等等，而不会干扰该入口。）
     </para>
 
     <para>
-     All portals are implicitly closed at transaction end.  Therefore
-     a <type>refcursor</type> value is usable to reference an open cursor
-     only until the end of the transaction.
+     所有入口都会在事务结束时隐式关闭。因此，
+     一个 <type>refcursor</type> 值只能用于引用一个打开的游标，
+     直到该事务结束为止。
     </para>
 
     <sect3 id="plpgsql-cursor-using-fetch">
@@ -2721,49 +2619,31 @@ FETCH <optional> <replaceable>direction</replaceable> { FROM | IN } </optional> 
 </synopsis>
 
     <para>
-     <command>FETCH</command> retrieves the next row (in the indicated
-     direction) from the
-     cursor into a target, which might be a row variable, a record
-     variable, or a comma-separated list of simple variables, just like
-     <command>SELECT INTO</command>.  If there is no suitable row, the
-     target is set to NULL(s).  As with <command>SELECT
-     INTO</command>, the special variable <literal>FOUND</literal> can
-     be checked to see whether a row was obtained or not.  If no row is
-     obtained, the cursor is positioned after the last row or before the
-     first row, depending on the movement direction.
+     <command>FETCH</command> 从游标中（按指定方向）检索下一行并将其存入目标，目标可以是一个行变量、一个记录变量，或一个以逗号分隔的简单变量列表，就像 <command>SELECT INTO</command> 一样。如果没有合适的行，则将目标设置为 NULL。与 <command>SELECT
+     INTO</command> 一样，可以检查特殊变量 <literal>FOUND</literal> 以了解是否获取到了行。如果没有获取到行，则根据移动方向，游标被定位在最后一行之后或第一行之前。
     </para>
 
     <para>
-     The <replaceable>direction</replaceable> clause can be any of the
-     variants allowed in the SQL <xref linkend="sql-fetch"/>
-     command except the ones that can fetch
-     more than one row; namely, it can be
-     <literal>NEXT</literal>,
-     <literal>PRIOR</literal>,
-     <literal>FIRST</literal>,
-     <literal>LAST</literal>,
-     <literal>ABSOLUTE</literal> <replaceable>count</replaceable>,
-     <literal>RELATIVE</literal> <replaceable>count</replaceable>,
-     <literal>FORWARD</literal>, or
-     <literal>BACKWARD</literal>.
-     Omitting <replaceable>direction</replaceable> is the same
-     as specifying <literal>NEXT</literal>.
-     In the forms using a <replaceable>count</replaceable>,
-     the <replaceable>count</replaceable> can be any integer-valued
-     expression (unlike the SQL <command>FETCH</command> command,
-     which only allows an integer constant).
-     <replaceable>direction</replaceable> values that require moving
-     backward are likely to fail unless the cursor was declared or opened
-     with the <literal>SCROLL</literal> option.
+     <replaceable>direction</replaceable> 子句可以是 SQL <xref linkend="sql-fetch"/> 命令中允许的任何变体，但那些能获取多行的变体除外；也就是说，它可以是
+     <literal>NEXT</literal>、
+     <literal>PRIOR</literal>、
+     <literal>FIRST</literal>、
+     <literal>LAST</literal>、
+     <literal>ABSOLUTE</literal> <replaceable>count</replaceable>、
+     <literal>RELATIVE</literal> <replaceable>count</replaceable>、
+     <literal>FORWARD</literal> 或
+     <literal>BACKWARD</literal>。
+     省略 <replaceable>direction</replaceable> 等同于指定 <literal>NEXT</literal>。
+     在使用 <replaceable>count</replaceable> 的形式中，<replaceable>count</replaceable> 可以是任何整数值表达式（不同于 SQL <command>FETCH</command> 命令，后者只允许整数常量）。
+     需要向后移动的 <replaceable>direction</replaceable> 值很可能会失败，除非游标在声明或打开时使用了 <literal>SCROLL</literal> 选项。
     </para>
 
     <para>
-     <replaceable>cursor</replaceable> must be the name of a <type>refcursor</type>
-     variable that references an open cursor portal.
+     <replaceable>cursor</replaceable> 必须是一个 <type>refcursor</type> 变量的名称，该变量引用一个已打开的游标门户。
     </para>
 
     <para>
-     Examples:
+     示例：
 <programlisting>
 FETCH curs1 INTO rowvar;
 FETCH curs2 INTO foo, bar, baz;
@@ -2781,30 +2661,16 @@ MOVE <optional> <replaceable>direction</replaceable> { FROM | IN } </optional> <
 </synopsis>
 
     <para>
-     <command>MOVE</command> repositions a cursor without retrieving
-     any data. <command>MOVE</command> works like the
-     <command>FETCH</command> command, except it only repositions the
-     cursor and does not return the row moved to.
-     The <replaceable>direction</replaceable> clause can be any of the
-     variants allowed in the SQL <xref linkend="sql-fetch"/>
-     command, including those that can fetch more than one row;
-     the cursor is positioned to the last such row.
-     (However, the case in which the <replaceable>direction</replaceable>
-     clause is simply a <replaceable>count</replaceable> expression with
-     no key word is deprecated in <application>PL/pgSQL</application>.
-     That syntax is ambiguous with the case where
-     the <replaceable>direction</replaceable> clause is omitted
-     altogether, and hence it may fail if
-     the <replaceable>count</replaceable> is not a constant.)
-     As with <command>SELECT
-     INTO</command>, the special variable <literal>FOUND</literal> can
-     be checked to see whether there was a row to move to.  If there is no
-     such row, the cursor is positioned after the last row or before the
-     first row, depending on the movement direction.
+     <command>MOVE</command> 重新定位游标而不检索任何数据。<command>MOVE</command> 的工作方式与 <command>FETCH</command> 命令类似，只是它仅重新定位游标，而不返回移动到的行。
+     <replaceable>direction</replaceable> 子句可以是 SQL <xref linkend="sql-fetch"/> 命令中允许的任何变体，包括那些能获取多行的变体；游标被定位到最后这样一行。
+     （不过，在 <application>PL/pgSQL</application> 中，<replaceable>direction</replaceable> 子句只是一个不带关键字的 <replaceable>count</replaceable> 表达式的情况已被废弃。
+     该语法与完全省略 <replaceable>direction</replaceable> 子句的情况存在歧义，因此如果 <replaceable>count</replaceable> 不是常量，它可能会失败。）
+     与 <command>SELECT
+     INTO</command> 一样，可以检查特殊变量 <literal>FOUND</literal> 以了解是否有可移动到的行。如果没有这样的行，则根据移动方向，游标被定位在最后一行之后或第一行之前。
     </para>
 
     <para>
-     Examples:
+     示例：
 <programlisting>
 MOVE curs1;
 MOVE LAST FROM curs3;
@@ -2823,17 +2689,11 @@ DELETE FROM <replaceable>table</replaceable> WHERE CURRENT OF <replaceable>curso
 </synopsis>
 
        <para>
-        When a cursor is positioned on a table row, that row can be updated
-        or deleted using the cursor to identify the row.  There are
-        restrictions on what the cursor's query can be (in particular,
-        no grouping) and it's best to use <literal>FOR UPDATE</literal> in the
-        cursor.  For more information see the
-        <xref linkend="sql-declare"/>
-        reference page.
+        当游标定位在表的一行上时，可以使用该游标来标识该行，从而更新或删除该行。对游标的查询内容存在一些限制（特别是不能有分组），并且最好在游标中使用 <literal>FOR UPDATE</literal>。更多信息请参见 <xref linkend="sql-declare"/> 参考页。
        </para>
 
        <para>
-        An example:
+        一个例子：
 <programlisting>
 UPDATE foo SET dataval = myval WHERE CURRENT OF curs1;
 </programlisting>
@@ -2848,13 +2708,11 @@ CLOSE <replaceable>cursor</replaceable>;
 </synopsis>
 
        <para>
-        <command>CLOSE</command> closes the portal underlying an open
-        cursor.  This can be used to release resources earlier than end of
-        transaction, or to free up the cursor variable to be opened again.
+        <command>CLOSE</command> 关闭一个打开的游标底层的门户。这可用于在事务结束之前提前释放资源，或释放游标变量以便再次打开。
        </para>
 
        <para>
-        An example:
+        一个例子：
 <programlisting>
 CLOSE curs1;
 </programlisting>
@@ -2862,46 +2720,24 @@ CLOSE curs1;
      </sect3>
 
     <sect3 id="plpgsql-cursor-returning">
-     <title>Returning Cursors</title>
+     <title>返回游标</title>
 
        <para>
-        <application>PL/pgSQL</application> functions can return cursors to the
-        caller. This is useful to return multiple rows or columns,
-        especially with very large result sets.  To do this, the function
-        opens the cursor and returns the cursor name to the caller (or simply
-        opens the cursor using a portal name specified by or otherwise known
-        to the caller).  The caller can then fetch rows from the cursor. The
-        cursor can be closed by the caller, or it will be closed automatically
-        when the transaction closes.
+        <application>PL/pgSQL</application> 函数可以向调用者返回游标。这对于返回多行或多列很有用，尤其是在结果集非常大的情况下。为此，函数打开游标并将游标名返回给调用者（或者简单地使用由调用者指定或以其他方式已知的门户名打开游标）。然后调用者可以从游标中取出数据行。游标可以由调用者关闭，或者在事务关闭时自动关闭。
        </para>
 
        <para>
-        The portal name used for a cursor can be specified by the
-        programmer or automatically generated.  To specify a portal name,
-        simply assign a string to the <type>refcursor</type> variable before
-        opening it.  The string value of the <type>refcursor</type> variable
-        will be used by <command>OPEN</command> as the name of the underlying portal.
-        However, if the <type>refcursor</type> variable's value is null
-        (as it will be by default), then
-        <command>OPEN</command> automatically generates a name that does not
-        conflict with any existing portal, and assigns it to the
-        <type>refcursor</type> variable.
+        用于游标的 portal 名称可以由程序员指定，也可以自动生成。要指定 portal 名称，只需在打开游标之前给 <type>refcursor</type> 变量赋一个字符串值。<command>OPEN</command> 将使用 <type>refcursor</type> 变量的字符串值作为底层 portal 的名称。不过，如果 <type>refcursor</type> 变量的值为 null（默认情况下就是如此），那么 <command>OPEN</command> 会自动生成一个不与任何现有 portal 冲突的名称，并将其赋给 <type>refcursor</type> 变量。
        </para>
 
        <note>
         <para>
-         Prior to <productname>PostgreSQL</productname> 16, bound cursor
-         variables were initialized to contain their own names, rather
-         than being left as null, so that the underlying portal name would
-         be the same as the cursor variable's name by default.  This was
-         changed because it created too much risk of conflicts between
-         similarly-named cursors in different functions.
+         在 <productname>PostgreSQL</productname> 16 之前，绑定的游标变量会被初始化为包含其自身的名称，而不是保留为 null，这样底层 portal 的名称默认就与游标变量的名称相同。这一行为已被更改，因为它带来了太大的风险：不同函数中名称相似的游标之间可能发生冲突。
         </para>
        </note>
 
        <para>
-        The following example shows one way a cursor name can be supplied by
-        the caller:
+        下面的例子展示了调用者提供游标名称的一种方式：
 
 <programlisting>
 CREATE TABLE test (col text);
@@ -2922,7 +2758,7 @@ COMMIT;
        </para>
 
        <para>
-        The following example uses automatic cursor name generation:
+        下面的例子使用自动生成游标名称的方式：
 
 <programlisting>
 CREATE FUNCTION reffunc2() RETURNS refcursor AS '
@@ -2949,8 +2785,7 @@ COMMIT;
        </para>
 
        <para>
-        The following example shows one way to return multiple cursors
-        from a single function:
+        下面的例子展示了从单个函数返回多个游标的一种方式：
 
 <programlisting>
 CREATE FUNCTION myfunc(refcursor, refcursor) RETURNS SETOF refcursor AS $$
@@ -2976,7 +2811,7 @@ COMMIT;
    </sect2>
 
    <sect2 id="plpgsql-cursor-for-loop">
-    <title>Looping through a Cursor's Result</title>
+    <title>遍历游标的结果</title>
 
     <para>
      There is a variant of the <command>FOR</command> statement that allows
@@ -3000,11 +2835,7 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
    </para>
 
    <para>
-     The variable <replaceable>recordvar</replaceable> is automatically
-     defined as type <type>record</type> and exists only inside the loop (any
-     existing definition of the variable name is ignored within the loop).
-     Each row returned by the cursor is successively assigned to this
-     record variable and the loop body is executed.
+     变量 <replaceable>recordvar</replaceable> 被自动定义为 <type>record</type> 类型，并且只存在于循环内部（循环内会忽略该变量名的任何已有定义）。游标返回的每一行都会依次赋给这个记录变量，并执行循环体。
     </para>
    </sect2>
 
