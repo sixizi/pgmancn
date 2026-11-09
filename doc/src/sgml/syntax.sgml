@@ -17,64 +17,40 @@
  </para>
 
  <sect1 id="sql-syntax-lexical">
-  <title>Lexical Structure</title>
+  <title>词法结构</title>
 
   <indexterm>
    <primary>token</primary>
   </indexterm>
 
   <para>
-   SQL input consists of a sequence of
-   <firstterm>commands</firstterm>.  A command is composed of a
-   sequence of <firstterm>tokens</firstterm>, terminated by a
-   semicolon (<quote>;</quote>).  The end of the input stream also
-   terminates a command.  Which tokens are valid depends on the syntax
-   of the particular command.
+   SQL 输入由一系列<firstterm>命令</firstterm>组成。一条命令由一系列<firstterm>记号</firstterm>构成，以分号（<quote>;</quote>）结束。输入流的结束同样会终止一条命令。哪些记号是有效的取决于具体命令的语法。
   </para>
 
   <para>
-   A token can be a <firstterm>key word</firstterm>, an
-   <firstterm>identifier</firstterm>, a <firstterm>quoted
-   identifier</firstterm>, a <firstterm>literal</firstterm> (or
-   constant), or a special character symbol.  Tokens are normally
-   separated by whitespace (space, tab, newline), but need not be if
-   there is no ambiguity (which is generally only the case if a
-   special character is adjacent to some other token type).
+   记号可以是<firstterm>关键字</firstterm>、<firstterm>标识符</firstterm>、<firstterm>带引号的标识符</firstterm>、<firstterm>字面量</firstterm>（或常量），或者一个特殊字符符号。记号通常由空白（空格、制表符、换行）分隔，但如果没有歧义则不必如此（通常只有在特殊字符与某个其他记号类型相邻时才是这种情况）。
   </para>
 
    <para>
-    For example, the following is (syntactically) valid SQL input:
+    例如，下面是（语法上）有效的 SQL 输入：
 <programlisting>
 SELECT * FROM MY_TABLE;
 UPDATE MY_TABLE SET A = 5;
 INSERT INTO MY_TABLE VALUES (3, 'hi there');
 </programlisting>
-    This is a sequence of three commands, one per line (although this
-    is not required; more than one command can be on a line, and
-    commands can usefully be split across lines).
+    这是一个由三条命令组成的序列，每行一条（尽管这并非必需；一行上可以有多条命令，命令也可以有效地跨行拆分）。
    </para>
 
   <para>
-   Additionally, <firstterm>comments</firstterm> can occur in SQL
-   input.  They are not tokens, they are effectively equivalent to
-   whitespace.
+   此外，SQL 输入中还可以出现<firstterm>注释</firstterm>。它们不是记号，实际上等同于空白。
   </para>
 
   <para>
-   The SQL syntax is not very consistent regarding what tokens
-   identify commands and which are operands or parameters.  The first
-   few tokens are generally the command name, so in the above example
-   we would usually speak of a <quote>SELECT</quote>, an
-   <quote>UPDATE</quote>, and an <quote>INSERT</quote> command.  But
-   for instance the <command>UPDATE</command> command always requires
-   a <token>SET</token> token to appear in a certain position, and
-   this particular variation of <command>INSERT</command> also
-   requires a <token>VALUES</token> in order to be complete.  The
-   precise syntax rules for each command are described in <xref linkend="reference"/>.
+   SQL 语法在哪些记号标识命令、哪些是操作数或参数方面并不十分一致。前几个记号通常就是命令名，因此在上面的例子中我们通常会说一条 <quote>SELECT</quote>、一条 <quote>UPDATE</quote> 和一条 <quote>INSERT</quote> 命令。但例如 <command>UPDATE</command> 命令总是要求某个 <token>SET</token> 记号出现在特定位置，而这种特定形式的 <command>INSERT</command> 也需要一个 <token>VALUES</token> 才算完整。每条命令的精确语法规则在 <xref linkend="reference"/> 中描述。
   </para>
 
   <sect2 id="sql-syntax-identifiers">
-   <title>Identifiers and Key Words</title>
+   <title>标识符和关键词</title>
 
    <indexterm zone="sql-syntax-identifiers">
     <primary>identifier</primary>
@@ -108,30 +84,12 @@ INSERT INTO MY_TABLE VALUES (3, 'hi there');
    </para>
 
    <para>
-    SQL identifiers and key words must begin with a letter
-    (<literal>a</literal>-<literal>z</literal>, but also letters with
-    diacritical marks and non-Latin letters) or an underscore
-    (<literal>_</literal>).  Subsequent characters in an identifier or
-    key word can be letters, underscores, digits
-    (<literal>0</literal>-<literal>9</literal>), or dollar signs
-    (<literal>$</literal>).  Note that dollar signs are not allowed in identifiers
-    according to the letter of the SQL standard, so their use might render
-    applications less portable.
-    The SQL standard will not define a key word that contains
-    digits or starts or ends with an underscore, so identifiers of this
-    form are safe against possible conflict with future extensions of the
-    standard.
+    SQL 标识符和关键词必须以字母（<literal>a</literal>-<literal>z</literal>，也包括带变音符号的字母和非拉丁字母）或下划线（<literal>_</literal>）开头。标识符或关键词中的后续字符可以是字母、下划线、数字（<literal>0</literal>-<literal>9</literal>）或美元符号（<literal>$</literal>）。请注意，按照 SQL 标准的规定，标识符中不允许使用美元符号，因此使用美元符号可能会降低应用程序的可移植性。SQL 标准不会定义包含数字或以数字开头或结尾的关键词，因此这种形式的标识符不会与标准未来的扩展发生冲突。
    </para>
 
    <para>
     <indexterm><primary>identifier</primary><secondary>length</secondary></indexterm>
-    The system uses no more than <symbol>NAMEDATALEN</symbol>-1
-    bytes of an identifier; longer names can be written in
-    commands, but they will be truncated.  By default,
-    <symbol>NAMEDATALEN</symbol> is 64 so the maximum identifier
-    length is 63 bytes. If this limit is problematic, it can be raised by
-    changing the <symbol>NAMEDATALEN</symbol> constant in
-    <filename>src/include/pg_config_manual.h</filename>.
+    系统最多使用标识符的 <symbol>NAMEDATALEN</symbol>-1 个字节；更长的名称可以在命令中书写，但会被截断。默认情况下，<symbol>NAMEDATALEN</symbol> 为 64，因此标识符的最大长度为 63 字节。如果此限制有问题，可以通过修改 <filename>src/include/pg_config_manual.h</filename> 中的 <symbol>NAMEDATALEN</symbol> 常量来提高。
    </para>
 
    <para>
@@ -139,16 +97,15 @@ INSERT INTO MY_TABLE VALUES (3, 'hi there');
      <primary>case sensitivity</primary>
      <secondary>of SQL commands</secondary>
     </indexterm>
-    Key words and unquoted identifiers are case-insensitive.  Therefore:
+    关键词和不带引号的标识符不区分大小写。因此：
 <programlisting>
 UPDATE MY_TABLE SET A = 5;
 </programlisting>
-    can equivalently be written as:
+    可以等价地写成：
 <programlisting>
 uPDaTE my_TabLE SeT a = 5;
 </programlisting>
-    A convention often used is to write key words in upper
-    case and names in lower case, e.g.:
+    一种常用的约定是将关键词大写、名称小写，例如：
 <programlisting>
 UPDATE my_table SET a = 5;
 </programlisting>
@@ -159,46 +116,18 @@ UPDATE my_table SET a = 5;
      <primary>quotation marks</primary>
      <secondary>and identifiers</secondary>
     </indexterm>
-    There is a second kind of identifier:  the <firstterm>delimited
-    identifier</firstterm> or <firstterm>quoted
-    identifier</firstterm>.  It is formed by enclosing an arbitrary
-    sequence of characters in double-quotes
-    (<literal>"</literal>). <!-- " font-lock mania --> A delimited
-    identifier is always an identifier, never a key word.  So
-    <literal>"select"</literal> could be used to refer to a column or
-    table named <quote>select</quote>, whereas an unquoted
-    <literal>select</literal> would be taken as a key word and
-    would therefore provoke a parse error when used where a table or
-    column name is expected.  The example can be written with quoted
-    identifiers like this:
+    还有第二种标识符：<firstterm>定界标识符</firstterm>或<firstterm>带引号的标识符</firstterm>。它由双引号（<literal>"</literal>）包围任意字符序列构成。<!-- " font-lock mania --> 定界标识符始终是标识符，绝不会是关键字。因此 <literal>"select"</literal> 可用于引用名为 <quote>select</quote> 的列或表，而未加引号的 <literal>select</literal> 会被当作关键字，因此在期望表名或列名的位置使用时会引发解析错误。该示例可以用带引号的标识符写成这样：
 <programlisting>
 UPDATE "my_table" SET "a" = 5;
 </programlisting>
    </para>
 
    <para>
-    Quoted identifiers can contain any character, except the character
-    with code zero.  (To include a double quote, write two double quotes.)
-    This allows constructing table or column names that would
-    otherwise not be possible, such as ones containing spaces or
-    ampersands.  The length limitation still applies.
+    带引号的标识符可以包含任何字符，但代码为零的字符除外。（要包含双引号，写两个双引号。）这样就可以构造出原本不可能的表名或列名，例如包含空格或 & 符号的名称。长度限制仍然适用。
    </para>
 
    <para>
-    Quoting an identifier also makes it case-sensitive, whereas
-    unquoted names are always folded to lower case.  For example, the
-    identifiers <literal>FOO</literal>, <literal>foo</literal>, and
-    <literal>"foo"</literal> are considered the same by
-    <productname>PostgreSQL</productname>, but
-    <literal>"Foo"</literal> and <literal>"FOO"</literal> are
-    different from these three and each other.  (The folding of
-    unquoted names to lower case in <productname>PostgreSQL</productname> is
-    incompatible with the SQL standard, which says that unquoted names
-    should be folded to upper case.  Thus, <literal>foo</literal>
-    should be equivalent to <literal>"FOO"</literal> not
-    <literal>"foo"</literal> according to the standard.  If you want
-    to write portable applications you are advised to always quote a
-    particular name or never quote it.)
+    给标识符加引号还会使其区分大小写，而未加引号的名称总是折叠为小写。例如，标识符 <literal>FOO</literal>、<literal>foo</literal> 和 <literal>"foo"</literal> 被 <productname>PostgreSQL</productname> 视为相同，但 <literal>"Foo"</literal> 和 <literal>"FOO"</literal> 与这三个不同，彼此也不同。（在 <productname>PostgreSQL</productname> 中把未加引号的名称折叠为小写与 SQL 标准不兼容，该标准规定未加引号的名称应折叠为大写。因此，按照标准，<literal>foo</literal> 应等价于 <literal>"FOO"</literal> 而不是 <literal>"foo"</literal>。如果你想编写可移植的应用程序，建议始终为特定名称加引号，或者从不加引号。）
    </para>
 
    <indexterm>
@@ -207,86 +136,51 @@ UPDATE "my_table" SET "a" = 5;
    </indexterm>
 
    <para>
-    A variant of quoted
-    identifiers allows including escaped Unicode characters identified
-    by their code points.  This variant starts
-    with <literal>U&amp;</literal> (upper or lower case U followed by
-    ampersand) immediately before the opening double quote, without
-    any spaces in between, for example <literal>U&amp;"foo"</literal>.
-    (Note that this creates an ambiguity with the
-    operator <literal>&amp;</literal>.  Use spaces around the operator to
-    avoid this problem.)  Inside the quotes, Unicode characters can be
-    specified in escaped form by writing a backslash followed by the
-    four-digit hexadecimal code point number or alternatively a
-    backslash followed by a plus sign followed by a six-digit
-    hexadecimal code point number.  For example, the
-    identifier <literal>"data"</literal> could be written as
+    带引号标识符的一种变体允许包含由其码点标识的转义 Unicode 字符。这种变体以 <literal>U&amp;</literal>（大写或小写 U 后跟一个 & 符号）紧接在开头的双引号之前开始，中间不能有任何空格，例如 <literal>U&amp;"foo"</literal>。（注意这会与运算符 <literal>&amp;</literal> 产生歧义。在运算符两侧使用空格可以避免此问题。）在引号内，Unicode 字符可以用转义形式指定：写一个反斜杠后跟四位十六进制码点数字，或者写一个反斜杠后跟一个加号再跟六位十六进制码点数字。例如，标识符 <literal>"data"</literal> 可以写成
 <programlisting>
 U&amp;"d\0061t\+000061"
 </programlisting>
-    The following less trivial example writes the Russian
-    word <quote>slon</quote> (elephant) in Cyrillic letters:
+    下面这个不那么简单的例子用西里尔字母写出俄语单词 <quote>slon</quote>（大象）：
 <programlisting>
 U&amp;"\0441\043B\043E\043D"
 </programlisting>
    </para>
 
    <para>
-    If a different escape character than backslash is desired, it can
-    be specified using
-    the <literal>UESCAPE</literal><indexterm><primary>UESCAPE</primary></indexterm>
-    clause after the string, for example:
+    如果希望使用反斜杠之外的转义字符，可以在字符串之后使用 <literal>UESCAPE</literal><indexterm><primary>UESCAPE</primary></indexterm> 子句来指定，例如：
 <programlisting>
 U&amp;"d!0061t!+000061" UESCAPE '!'
 </programlisting>
-    The escape character can be any single character other than a
-    hexadecimal digit, the plus sign, a single quote, a double quote,
-    or a whitespace character.  Note that the escape character is
-    written in single quotes, not double quotes,
-    after <literal>UESCAPE</literal>.
+    转义字符可以是除十六进制数字、加号、单引号、双引号或空白字符之外的任意单个字符。注意，转义字符在 <literal>UESCAPE</literal> 之后用单引号书写，而不是双引号。
    </para>
 
    <para>
-    To include the escape character in the identifier literally, write
-    it twice.
+    要把转义字符本身按字面包含在标识符中，请写两次。
    </para>
 
    <para>
-    Either the 4-digit or the 6-digit escape form can be used to
-    specify UTF-16 surrogate pairs to compose characters with code
-    points larger than U+FFFF, although the availability of the
-    6-digit form technically makes this unnecessary.  (Surrogate
-    pairs are not stored directly, but are combined into a single
-    code point.)
+    四位或六位转义形式都可以用来指定 UTF-16 代理对，以组合码点大于 U+FFFF 的字符，尽管从技术上讲，六位形式的存在使得这样做没有必要。（代理对不会被直接存储，而是被合并为单个码点。）
    </para>
 
    <para>
-    If the server encoding is not UTF-8, the Unicode code point identified
-    by one of these escape sequences is converted to the actual server
-    encoding; an error is reported if that's not possible.
+    如果服务器编码不是 UTF-8，则这些转义序列之一所标识的 Unicode 码点会被转换为实际的服务器编码；如果无法转换，则报告错误。
    </para>
   </sect2>
 
 
   <sect2 id="sql-syntax-constants">
-   <title>Constants</title>
+   <title>常量</title>
 
    <indexterm zone="sql-syntax-constants">
     <primary>constant</primary>
    </indexterm>
 
    <para>
-    There are three kinds of <firstterm>implicitly-typed
-    constants</firstterm> in <productname>PostgreSQL</productname>:
-    strings, bit strings, and numbers.
-    Constants can also be specified with explicit types, which can
-    enable more accurate representation and more efficient handling by
-    the system. These alternatives are discussed in the following
-    subsections.
+    在 <productname>PostgreSQL</productname> 中有三种<firstterm>隐式类型常量</firstterm>：字符串、位串和数字。常量也可以用显式类型指定，这可以使系统进行更精确的表示和更高效的处理。这些替代方案将在下面的小节中讨论。
    </para>
 
    <sect3 id="sql-syntax-strings">
-    <title>String Constants</title>
+    <title>字符串常量</title>
 
     <indexterm zone="sql-syntax-strings">
      <primary>character string</primary>
@@ -298,41 +192,37 @@ U&amp;"d!0061t!+000061" UESCAPE '!'
       <primary>quotation marks</primary>
       <secondary>escaping</secondary>
      </indexterm>
-     A string constant in SQL is an arbitrary sequence of characters
-     bounded by single quotes (<literal>'</literal>), for example
-     <literal>'This is a string'</literal>.  To include
-     a single-quote character within a string constant,
-     write two adjacent single quotes, e.g.,
-     <literal>'Dianne''s horse'</literal>.
-     Note that this is <emphasis>not</emphasis> the same as a double-quote
-     character (<literal>"</literal>). <!-- font-lock sanity: " -->
+     SQL 中的字符串常量是由单引号（<literal>'</literal>）包围的任意字符序列，例如
+     <literal>'This is a string'</literal>。要在字符串常量中包含单引号字符，
+     请写两个相邻的单引号，例如
+     <literal>'Dianne''s horse'</literal>。
+     请注意，这<emphasis>不</emphasis>等同于双引号字符
+     （<literal>"</literal>）。<!-- font-lock sanity: " -->
     </para>
 
     <para>
-     Two string constants that are only separated by whitespace
-     <emphasis>with at least one newline</emphasis> are concatenated
-     and effectively treated as if the string had been written as one
-     constant.  For example:
+     仅由空白分隔（<emphasis>其中至少包含一个换行符</emphasis>）的两个字符串常量
+     会被拼接起来，实际上等同于将该字符串写成一个
+     常量。例如：
 <programlisting>
 SELECT 'foo'
 'bar';
 </programlisting>
-     is equivalent to:
+     等价于：
 <programlisting>
 SELECT 'foobar';
 </programlisting>
-     but:
+     但是：
 <programlisting>
 SELECT 'foo'      'bar';
 </programlisting>
-     is not valid syntax.  (This slightly bizarre behavior is specified
-     by <acronym>SQL</acronym>; <productname>PostgreSQL</productname> is
-     following the standard.)
+     不是有效的语法。（<acronym>SQL</acronym> 规定了这种略显怪异的行为；<productname>PostgreSQL</productname>
+     遵循标准。）
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-strings-escape">
-    <title>String Constants with C-Style Escapes</title>
+    <title>带 C 风格转义的字符串常量</title>
 
      <indexterm zone="sql-syntax-strings-escape">
       <primary>escape string syntax</primary>
@@ -342,49 +232,46 @@ SELECT 'foo'      'bar';
      </indexterm>
 
     <para>
-     <productname>PostgreSQL</productname> also accepts <quote>escape</quote>
-     string constants, which are an extension to the SQL standard.
-     An escape string constant is specified by writing the letter
-     <literal>E</literal> (upper or lower case) just before the opening single
-     quote, e.g., <literal>E'foo'</literal>.  (When continuing an escape string
-     constant across lines, write <literal>E</literal> only before the first opening
-     quote.)
-     Within an escape string, a backslash character (<literal>\</literal>) begins a
-     C-like <firstterm>backslash escape</firstterm> sequence, in which the combination
-     of backslash and following character(s) represent a special byte
-     value, as shown in <xref linkend="sql-backslash-table"/>.
+     <productname>PostgreSQL</productname> 还接受<quote>转义</quote>
+     字符串常量，这是对 SQL 标准的扩展。
+     转义字符串常量通过在开头的单引号前写上字母
+     <literal>E</literal>（大写或小写）来指定，例如 <literal>E'foo'</literal>。（当跨行续写转义字符串
+     常量时，只在第一个开头的单引号前写 <literal>E</literal>。）
+     在转义字符串中，反斜杠字符（<literal>\</literal>）开始一个
+     类似 C 的<firstterm>反斜杠转义</firstterm>序列，其中反斜杠与后续字符的组合
+     表示一个特殊的字节值，如 <xref linkend="sql-backslash-table"/> 所示。
     </para>
 
      <table id="sql-backslash-table">
-      <title>Backslash Escape Sequences</title>
+      <title>反斜杠转义序列</title>
       <tgroup cols="2">
       <thead>
        <row>
-        <entry>Backslash Escape Sequence</entry>
-        <entry>Interpretation</entry>
+        <entry>反斜杠转义序列</entry>
+        <entry>解释</entry>
        </row>
       </thead>
 
       <tbody>
        <row>
         <entry><literal>\b</literal></entry>
-        <entry>backspace</entry>
+        <entry>退格</entry>
        </row>
        <row>
         <entry><literal>\f</literal></entry>
-        <entry>form feed</entry>
+        <entry>换页</entry>
        </row>
        <row>
         <entry><literal>\n</literal></entry>
-        <entry>newline</entry>
+        <entry>换行</entry>
        </row>
        <row>
         <entry><literal>\r</literal></entry>
-        <entry>carriage return</entry>
+        <entry>回车</entry>
        </row>
        <row>
         <entry><literal>\t</literal></entry>
-        <entry>tab</entry>
+        <entry>制表符</entry>
        </row>
        <row>
         <entry>
@@ -393,7 +280,7 @@ SELECT 'foo'      'bar';
          <literal>\<replaceable>ooo</replaceable></literal>
          (<replaceable>o</replaceable> = 0&ndash;7)
         </entry>
-        <entry>octal byte value</entry>
+        <entry>八进制字节值</entry>
        </row>
        <row>
         <entry>
@@ -401,7 +288,7 @@ SELECT 'foo'      'bar';
          <literal>\x<replaceable>hh</replaceable></literal>
          (<replaceable>h</replaceable> = 0&ndash;9, A&ndash;F)
         </entry>
-        <entry>hexadecimal byte value</entry>
+        <entry>十六进制字节值</entry>
        </row>
        <row>
         <entry>
@@ -409,61 +296,55 @@ SELECT 'foo'      'bar';
          <literal>\U<replaceable>xxxxxxxx</replaceable></literal>
          (<replaceable>x</replaceable> = 0&ndash;9, A&ndash;F)
         </entry>
-        <entry>16 or 32-bit hexadecimal Unicode character value</entry>
+        <entry>16 位或 32 位十六进制 Unicode 字符值</entry>
        </row>
       </tbody>
       </tgroup>
      </table>
 
     <para>
-     Any other
-     character following a backslash is taken literally. Thus, to
-     include a backslash character, write two backslashes (<literal>\\</literal>).
-     Also, a single quote can be included in an escape string by writing
-     <literal>\'</literal>, in addition to the normal way of <literal>''</literal>.
+     反斜杠后面的任何其他字符均按字面处理。因此，要包含一个反斜杠字符，请写两个反斜杠（<literal>\\</literal>）。此外，除了使用 <literal>''</literal> 的常规方式外，还可以通过写 <literal>\'</literal> 在转义字符串中包含单引号。
     </para>
 
     <para>
-     It is your responsibility that the byte sequences you create,
-     especially when using the octal or hexadecimal escapes, compose
-     valid characters in the server character set encoding.
-     A useful alternative is to use Unicode escapes or the
-     alternative Unicode escape syntax, explained
-     in <xref linkend="sql-syntax-strings-uescape"/>; then the server
-     will check that the character conversion is possible.
+     您有责任确保所创建的字节序列（尤其是在使用八进制或十六进制转义时）
+     在服务器字符集编码中构成有效的字符。
+     一个有用的替代方法是使用 Unicode 转义或另一种
+     Unicode 转义语法，详见
+     <xref linkend="sql-syntax-strings-uescape"/>；这样服务器
+     将检查字符转换是否可行。
     </para>
 
     <caution>
     <para>
-     If the configuration parameter
-     <xref linkend="guc-standard-conforming-strings"/> is <literal>off</literal>,
-     then <productname>PostgreSQL</productname> recognizes backslash escapes
-     in both regular and escape string constants.  However, as of
-     <productname>PostgreSQL</productname> 9.1, the default is <literal>on</literal>, meaning
-     that backslash escapes are recognized only in escape string constants.
-     This behavior is more standards-compliant, but might break applications
-     which rely on the historical behavior, where backslash escapes
-     were always recognized.  As a workaround, you can set this parameter
-     to <literal>off</literal>, but it is better to migrate away from using backslash
-     escapes.  If you need to use a backslash escape to represent a special
-     character, write the string constant with an <literal>E</literal>.
+     如果配置参数
+     <xref linkend="guc-standard-conforming-strings"/> 为 <literal>off</literal>，
+     那么 <productname>PostgreSQL</productname> 在普通字符串常量和转义字符串常量中
+     都会识别反斜杠转义。不过，从
+     <productname>PostgreSQL</productname> 9.1 开始，默认值为 <literal>on</literal>，这意味着
+     只在转义字符串常量中识别反斜杠转义。
+     这种行为更符合标准，但可能会破坏那些依赖历史行为
+     （即过去总是识别反斜杠转义）的应用程序。作为一种变通方法，
+     您可以将此参数设置为 <literal>off</literal>，但更好的做法是
+     逐步弃用反斜杠转义。如果需要使用反斜杠转义来表示
+     特殊字符，请使用 <literal>E</literal> 编写字符串常量。
     </para>
 
     <para>
-     In addition to <varname>standard_conforming_strings</varname>, the configuration
-     parameters <xref linkend="guc-escape-string-warning"/> and
-     <xref linkend="guc-backslash-quote"/> govern treatment of backslashes
-     in string constants.
+     除了 <varname>standard_conforming_strings</varname> 之外，配置参数
+     <xref linkend="guc-escape-string-warning"/> 和
+     <xref linkend="guc-backslash-quote"/> 也控制字符串常量中
+     反斜杠的处理方式。
     </para>
     </caution>
 
     <para>
-     The character with the code zero cannot be in a string constant.
+     代码为零的字符不能出现在字符串常量中。
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-strings-uescape">
-    <title>String Constants with Unicode Escapes</title>
+    <title>带 Unicode 转义的字符串常量</title>
 
     <indexterm  zone="sql-syntax-strings-uescape">
      <primary>Unicode escape</primary>
@@ -471,113 +352,82 @@ SELECT 'foo'      'bar';
     </indexterm>
 
     <para>
-     <productname>PostgreSQL</productname> also supports another type
-     of escape syntax for strings that allows specifying arbitrary
-     Unicode characters by code point.  A Unicode escape string
-     constant starts with <literal>U&amp;</literal> (upper or lower case
-     letter U followed by ampersand) immediately before the opening
-     quote, without any spaces in between, for
-     example <literal>U&amp;'foo'</literal>.  (Note that this creates an
-     ambiguity with the operator <literal>&amp;</literal>.  Use spaces
-     around the operator to avoid this problem.)  Inside the quotes,
-     Unicode characters can be specified in escaped form by writing a
-     backslash followed by the four-digit hexadecimal code point
-     number or alternatively a backslash followed by a plus sign
-     followed by a six-digit hexadecimal code point number.  For
-     example, the string <literal>'data'</literal> could be written as
+     <productname>PostgreSQL</productname> 还支持另一种
+     字符串转义语法，允许按码点指定任意
+     Unicode 字符。Unicode 转义字符串
+     常量以 <literal>U&amp;</literal>（大写或小写字母 U 后跟一个 & 符号）紧接在
+     开引号之前开始，中间不能有任何空格，
+     例如 <literal>U&amp;'foo'</literal>。（请注意，这会与运算符 <literal>&amp;</literal> 产生
+     歧义。可在运算符两侧加空格以避免此问题。）在引号内，
+     可以用转义形式指定 Unicode 字符：写一个
+     反斜杠后跟四位十六进制码点数字，或者写一个反斜杠后跟一个加号
+     再跟六位十六进制码点数字。例如，
+     字符串 <literal>'data'</literal> 可以写成
 <programlisting>
 U&amp;'d\0061t\+000061'
 </programlisting>
-     The following less trivial example writes the Russian
-     word <quote>slon</quote> (elephant) in Cyrillic letters:
+     下面这个稍复杂的例子用西里尔字母写出
+     俄语单词 <quote>slon</quote>（大象）：
 <programlisting>
 U&amp;'\0441\043B\043E\043D'
 </programlisting>
     </para>
 
     <para>
-     If a different escape character than backslash is desired, it can
-     be specified using
-     the <literal>UESCAPE</literal><indexterm><primary>UESCAPE</primary></indexterm>
-     clause after the string, for example:
+     如果需要使用反斜线之外的其它转义字符，可以在字符串之后使用
+    <literal>UESCAPE</literal><indexterm><primary>UESCAPE</primary></indexterm>
+    子句来指定，例如：
 <programlisting>
 U&amp;'d!0061t!+000061' UESCAPE '!'
 </programlisting>
-     The escape character can be any single character other than a
-     hexadecimal digit, the plus sign, a single quote, a double quote,
-     or a whitespace character.
+    转义字符可以是除十六进制数字、加号、单引号、双引号
+    或空白字符之外的任何单个字符。
     </para>
 
     <para>
-     To include the escape character in the string literally, write
-     it twice.
+     要在字符串中按字面包含转义字符，请将其写两次。
     </para>
 
     <para>
-     Either the 4-digit or the 6-digit escape form can be used to
-     specify UTF-16 surrogate pairs to compose characters with code
-     points larger than U+FFFF, although the availability of the
-     6-digit form technically makes this unnecessary.  (Surrogate
-     pairs are not stored directly, but are combined into a single
-     code point.)
+     4 位或 6 位转义形式都可以用来指定 UTF-16 代理对，以组合
+    码点大于 U+FFFF 的字符，尽管从技术上讲，6 位形式的可用性
+    使得这样做并无必要。（代理对不会被直接存储，而是
+    合并为单个码点。）
     </para>
 
     <para>
-     If the server encoding is not UTF-8, the Unicode code point identified
-     by one of these escape sequences is converted to the actual server
-     encoding; an error is reported if that's not possible.
+     如果服务器编码不是 UTF-8，则这些转义序列之一所标识的
+    Unicode 码点会被转换为实际的服务器编码；如果无法
+    转换，则报告错误。
     </para>
 
     <para>
-     Also, the Unicode escape syntax for string constants only works
-     when the configuration
-     parameter <xref linkend="guc-standard-conforming-strings"/> is
-     turned on.  This is because otherwise this syntax could confuse
-     clients that parse the SQL statements to the point that it could
-     lead to SQL injections and similar security issues.  If the
-     parameter is set to off, this syntax will be rejected with an
-     error message.
+     此外，字符串常量的 Unicode 转义语法只有在配置
+    参数 <xref linkend="guc-standard-conforming-strings"/> 打开时才有效。
+    这是因为否则该语法可能会使解析 SQL 语句的客户端产生混淆，
+    以至于可能导致 SQL 注入和类似的安全问题。如果
+    该参数设置为 off，则此语法将被拒绝并给出错误消息。
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-dollar-quoting">
-    <title>Dollar-Quoted String Constants</title>
+    <title>美元引用的字符串常量</title>
 
      <indexterm>
       <primary>dollar quoting</primary>
      </indexterm>
 
     <para>
-     While the standard syntax for specifying string constants is usually
-     convenient, it can be difficult to understand when the desired string
-     contains many single quotes, since each of those must
-     be doubled. To allow more readable queries in such situations,
-     <productname>PostgreSQL</productname> provides another way, called
-     <quote>dollar quoting</quote>, to write string constants.
-     A dollar-quoted string constant
-     consists of a dollar sign (<literal>$</literal>), an optional
-     <quote>tag</quote> of zero or more characters, another dollar
-     sign, an arbitrary sequence of characters that makes up the
-     string content, a dollar sign, the same tag that began this
-     dollar quote, and a dollar sign. For example, here are two
-     different ways to specify the string <quote>Dianne's horse</quote>
-     using dollar quoting:
+     虽然指定字符串常量的标准语法通常很方便，但当所需的字符串包含许多单引号时，它可能难以理解，因为每个单引号都必须双写。为了在这种情况下允许更可读的查询，<productname>PostgreSQL</productname> 提供了另一种编写字符串常量的方式，称为<quote>美元引用</quote>。美元引用的字符串常量由以下部分组成：一个美元符号（<literal>$</literal>）、一个可选的由零个或多个字符组成的<quote>标签</quote>、另一个美元符号、构成字符串内容的任意字符序列、一个美元符号、与开始此美元引用时相同的标签，以及一个美元符号。例如，下面是使用美元引用指定字符串 <quote>Dianne's horse</quote> 的两种不同方式：
 <programlisting>
 $$Dianne's horse$$
 $SomeTag$Dianne's horse$SomeTag$
 </programlisting>
-     Notice that inside the dollar-quoted string, single quotes can be
-     used without needing to be escaped.  Indeed, no characters inside
-     a dollar-quoted string are ever escaped: the string content is always
-     written literally.  Backslashes are not special, and neither are
-     dollar signs, unless they are part of a sequence matching the opening
-     tag.
+     请注意，在美元引用的字符串内部，单引号可以直接使用而无需转义。事实上，美元引用字符串内部的任何字符都从不转义：字符串内容始终按字面书写。反斜杠并不特殊，美元符号也不特殊，除非它们属于与开引标签匹配的序列。
     </para>
 
     <para>
-     It is possible to nest dollar-quoted string constants by choosing
-     different tags at each nesting level.  This is most commonly used in
-     writing function definitions.  For example:
+     通过在每个嵌套层级选择不同的标签，可以嵌套美元引用的字符串常量。这最常用于编写函数定义。例如：
 <programlisting>
 $function$
 BEGIN
@@ -585,43 +435,24 @@ BEGIN
 END;
 $function$
 </programlisting>
-     Here, the sequence <literal>$q$[\t\r\n\v\\]$q$</literal> represents a
-     dollar-quoted literal string <literal>[\t\r\n\v\\]</literal>, which will
-     be recognized when the function body is executed by
-     <productname>PostgreSQL</productname>.  But since the sequence does not match
-     the outer dollar quoting delimiter <literal>$function$</literal>, it is
-     just some more characters within the constant so far as the outer
-     string is concerned.
+     这里，序列 <literal>$q$[\t\r\n\v\\]$q$</literal> 表示一个美元引用的字面字符串 <literal>[\t\r\n\v\\]</literal>，当函数体由 <productname>PostgreSQL</productname> 执行时，它将被识别出来。但由于该序列与外侧的美元引用定界符 <literal>$function$</literal> 不匹配，所以就外层字符串而言，它只是常量中的更多一些字符。
     </para>
 
     <para>
-     The tag, if any, of a dollar-quoted string follows the same rules
-     as an unquoted identifier, except that it cannot contain a dollar sign.
-     Tags are case sensitive, so <literal>$tag$String content$tag$</literal>
-     is correct, but <literal>$TAG$String content$tag$</literal> is not.
+     美元引用字符串的标签（如果有）遵循与不加引号的标识符相同的规则，只是不能包含美元符号。标签区分大小写，因此 <literal>$tag$String content$tag$</literal> 是正确的，而 <literal>$TAG$String content$tag$</literal> 则不是。
     </para>
 
     <para>
-     A dollar-quoted string that follows a keyword or identifier must
-     be separated from it by whitespace; otherwise the dollar quoting
-     delimiter would be taken as part of the preceding identifier.
+     跟在关键字或标识符之后的美元引用字符串必须用空白与它分隔开；否则美元引用定界符将被视为前面标识符的一部分。
     </para>
 
     <para>
-     Dollar quoting is not part of the SQL standard, but it is often a more
-     convenient way to write complicated string literals than the
-     standard-compliant single quote syntax.  It is particularly useful when
-     representing string constants inside other constants, as is often needed
-     in procedural function definitions.  With single-quote syntax, each
-     backslash in the above example would have to be written as four
-     backslashes, which would be reduced to two backslashes in parsing the
-     original string constant, and then to one when the inner string constant
-     is re-parsed during function execution.
+     美元引用不是 SQL 标准的一部分，但它通常比符合标准的单引号语法更方便地书写复杂的字符串字面量。当需要在其他常量内部表示字符串常量时，它特别有用，这在过程式函数定义中经常需要。使用单引号语法时，上面示例中的每个反斜杠都必须写成四个反斜杠，在解析原始字符串常量时会被缩减为两个反斜杠，然后在函数执行期间重新解析内部字符串常量时再缩减为一个。
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-bit-strings">
-    <title>Bit-String Constants</title>
+    <title>位串常量</title>
 
     <indexterm zone="sql-syntax-bit-strings">
      <primary>bit string</primary>
@@ -629,30 +460,21 @@ $function$
     </indexterm>
 
     <para>
-     Bit-string constants look like regular string constants with a
-     <literal>B</literal> (upper or lower case) immediately before the
-     opening quote (no intervening whitespace), e.g.,
-     <literal>B'1001'</literal>.  The only characters allowed within
-     bit-string constants are <literal>0</literal> and
-     <literal>1</literal>.
+     位串常量看起来与常规字符串常量相似，只是在开引号之前紧挨着一个 <literal>B</literal>（大写或小写）（中间没有空白），例如 <literal>B'1001'</literal>。位串常量中允许出现的字符只有 <literal>0</literal> 和 <literal>1</literal>。
     </para>
 
     <para>
-     Alternatively, bit-string constants can be specified in hexadecimal
-     notation, using a leading <literal>X</literal> (upper or lower case),
-     e.g., <literal>X'1FF'</literal>.  This notation is equivalent to
-     a bit-string constant with four binary digits for each hexadecimal digit.
+     或者，位串常量可以用十六进制记法指定，使用前导的 <literal>X</literal>（大写或小写），例如 <literal>X'1FF'</literal>。这种记法等价于每个十六进制位对应四个二进制位的位串常量。
     </para>
 
     <para>
-     Both forms of bit-string constant can be continued
-     across lines in the same way as regular string constants.
-     Dollar quoting cannot be used in a bit-string constant.
+     两种形式的位串常量都可以像常规字符串常量那样跨行继续。
+     美元引用不能用于位串常量。
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-constants-numeric">
-    <title>Numeric Constants</title>
+    <title>数值常量</title>
 
     <indexterm>
      <primary>number</primary>
@@ -660,26 +482,18 @@ $function$
     </indexterm>
 
     <para>
-     Numeric constants are accepted in these general forms:
+     数字常量按以下一般形式接受：
 <synopsis>
 <replaceable>digits</replaceable>
 <replaceable>digits</replaceable>.<optional><replaceable>digits</replaceable></optional><optional>e<optional>+-</optional><replaceable>digits</replaceable></optional>
 <optional><replaceable>digits</replaceable></optional>.<replaceable>digits</replaceable><optional>e<optional>+-</optional><replaceable>digits</replaceable></optional>
 <replaceable>digits</replaceable>e<optional>+-</optional><replaceable>digits</replaceable>
 </synopsis>
-     where <replaceable>digits</replaceable> is one or more decimal
-     digits (0 through 9).  At least one digit must be before or after the
-     decimal point, if one is used.  At least one digit must follow the
-     exponent marker (<literal>e</literal>), if one is present.
-     There cannot be any spaces or other characters embedded in the
-     constant, except for underscores, which can be used for visual grouping as
-     described below.  Note that any leading plus or minus sign is not actually
-     considered part of the constant; it is an operator applied to the
-     constant.
+     其中 <replaceable>digits</replaceable> 是一位或多位十进制数字（0 到 9）。如果使用了小数点，则小数点之前或之后至少要有一位数字。如果出现指数标记（<literal>e</literal>），则其后至少要有一位数字。常量中不能嵌入任何空格或其他字符，但下划线除外，下划线可用于视觉分组，如下所述。注意，任何前导的正号或负号实际上并不被视为常量的一部分；它是作用于该常量的运算符。
     </para>
 
     <para>
-     These are some examples of valid numeric constants:
+     以下是一些有效数字常量的示例：
 <literallayout>
 42
 3.5
@@ -691,22 +505,17 @@ $function$
     </para>
 
     <para>
-     Additionally, non-decimal integer constants are accepted in these forms:
+     此外，非十进制整数常量按以下形式接受：
 <synopsis>
 0x<replaceable>hexdigits</replaceable>
 0o<replaceable>octdigits</replaceable>
 0b<replaceable>bindigits</replaceable>
 </synopsis>
-     where <replaceable>hexdigits</replaceable> is one or more hexadecimal digits
-     (0-9, A-F), <replaceable>octdigits</replaceable> is one or more octal
-     digits (0-7), and <replaceable>bindigits</replaceable> is one or more binary
-     digits (0 or 1).  Hexadecimal digits and the radix prefixes can be in
-     upper or lower case.  Note that only integers can have non-decimal forms,
-     not numbers with fractional parts.
+     其中 <replaceable>hexdigits</replaceable> 是一位或多位十六进制数字（0-9、A-F），<replaceable>octdigits</replaceable> 是一位或多位八进制数字（0-7），<replaceable>bindigits</replaceable> 是一位或多位二进制数字（0 或 1）。十六进制数字和基数前缀可以是大写或小写。注意，只有整数才能使用非十进制形式，带小数部分的数字不行。
     </para>
 
     <para>
-     These are some examples of valid non-decimal integer constants:
+     以下是一些有效的非十进制整数常量的示例：
 <literallayout>
 0b100101
 0B10011001
@@ -718,8 +527,7 @@ $function$
     </para>
 
     <para>
-     For visual grouping, underscores can be inserted between digits.  These
-     have no further effect on the value of the constant.  For example:
+     为了便于视觉分组，可以在数字之间插入下划线。这些下划线对常量的值没有进一步影响。例如：
 <literallayout>
 1_500_000_000
 0b10001000_00000000
@@ -727,48 +535,30 @@ $function$
 0xFFFF_FFFF
 1.618_034
 </literallayout>
-     Underscores are not allowed at the start or end of a numeric constant or
-     a group of digits (that is, immediately before or after the decimal point
-     or the exponent marker), and more than one underscore in a row is not
-     allowed.
+     下划线不允许出现在数字常量或一组数字的开头或结尾（即紧邻小数点或指数标记之前或之后），并且不允许连续出现多个下划线。
     </para>
 
     <para>
      <indexterm><primary>integer</primary></indexterm>
      <indexterm><primary>bigint</primary></indexterm>
      <indexterm><primary>numeric</primary></indexterm>
-     A numeric constant that contains neither a decimal point nor an
-     exponent is initially presumed to be type <type>integer</type> if its
-     value fits in type <type>integer</type> (32 bits); otherwise it is
-     presumed to be type <type>bigint</type> if its
-     value fits in type <type>bigint</type> (64 bits); otherwise it is
-     taken to be type <type>numeric</type>.  Constants that contain decimal
-     points and/or exponents are always initially presumed to be type
-     <type>numeric</type>.
+     既不包含小数点也不包含指数的数字常量，如果其值适合类型 <type>integer</type>（32 位），则最初假定为类型 <type>integer</type>；否则，如果其值适合类型 <type>bigint</type>（64 位），则假定为类型 <type>bigint</type>；否则被视为类型 <type>numeric</type>。包含小数点和/或指数的常量总是最初假定为类型 <type>numeric</type>。
     </para>
 
     <para>
-     The initially assigned data type of a numeric constant is just a
-     starting point for the type resolution algorithms.  In most cases
-     the constant will be automatically coerced to the most
-     appropriate type depending on context.  When necessary, you can
-     force a numeric value to be interpreted as a specific data type
-     by casting it.<indexterm><primary>type cast</primary></indexterm>
-     For example, you can force a numeric value to be treated as type
-     <type>real</type> (<type>float4</type>) by writing:
+     数值常量最初被赋予的数据类型只是类型解析算法的起点。在大多数情况下，常量会根据上下文自动被强制转换为最合适的类型。必要时，你可以通过强制类型转换来强制将数值解释为特定的数据类型。<indexterm><primary>类型转换</primary></indexterm>例如，你可以通过写成以下形式来强制将数值按 <type>real</type>（<type>float4</type>）类型处理：
 
 <programlisting>
 REAL '1.23'  -- string style
 1.23::REAL   -- PostgreSQL (historical) style
 </programlisting>
 
-     These are actually just special cases of the general casting
-     notations discussed next.
+     这些实际上只是接下来讨论的一般转换表示法的特例。
     </para>
    </sect3>
 
    <sect3 id="sql-syntax-constants-generic">
-    <title>Constants of Other Types</title>
+    <title>其他类型的常量</title>
 
     <indexterm>
      <primary>data type</primary>
@@ -776,63 +566,44 @@ REAL '1.23'  -- string style
     </indexterm>
 
     <para>
-     A constant of an <emphasis>arbitrary</emphasis> type can be
-     entered using any one of the following notations:
+     <emphasis>任意</emphasis>类型的常量可以使用以下任意一种表示法输入：
 <synopsis>
 <replaceable>type</replaceable> '<replaceable>string</replaceable>'
 '<replaceable>string</replaceable>'::<replaceable>type</replaceable>
 CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
 </synopsis>
-     The string constant's text is passed to the input conversion
-     routine for the type called <replaceable>type</replaceable>. The
-     result is a constant of the indicated type.  The explicit type
-     cast can be omitted if there is no ambiguity as to the type the
-     constant must be (for example, when it is assigned directly to a
-     table column), in which case it is automatically coerced.
+     字符串常量的文本被传递给名为 <replaceable>type</replaceable> 的类型的输入转换例程。结果是所指示类型的常量。如果常量必须是什么类型没有歧义（例如，当它直接赋值给表列时），则可以省略显式类型转换，在这种情况下它会自动被强制转换。
     </para>
 
     <para>
-     The string constant can be written using either regular SQL
-     notation or dollar-quoting.
+     字符串常量可以使用常规 SQL 表示法或美元引用书写。
     </para>
 
     <para>
-     It is also possible to specify a type coercion using a function-like
-     syntax:
+     也可以使用类似函数的语法来指定类型强制转换：
 <synopsis>
 <replaceable>typename</replaceable> ( '<replaceable>string</replaceable>' )
 </synopsis>
-     but not all type names can be used in this way; see <xref
-     linkend="sql-syntax-type-casts"/> for details.
+     但并非所有类型名都能以这种方式使用；详情请参见 <xref
+     linkend="sql-syntax-type-casts"/>。
     </para>
 
     <para>
-     The <literal>::</literal>, <literal>CAST()</literal>, and
-     function-call syntaxes can also be used to specify run-time type
-     conversions of arbitrary expressions, as discussed in <xref
-     linkend="sql-syntax-type-casts"/>.  To avoid syntactic ambiguity, the
-     <literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal>
-     syntax can only be used to specify the type of a simple literal constant.
-     Another restriction on the
-     <literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal>
-     syntax is that it does not work for array types; use <literal>::</literal>
-     or <literal>CAST()</literal> to specify the type of an array constant.
+     <literal>::</literal>、<literal>CAST()</literal> 和函数调用语法也可用于指定任意表达式的运行时类型转换，如 <xref
+     linkend="sql-syntax-type-casts"/> 中所述。为避免语法歧义，<literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal>
+     语法只能用于指定简单字面常量的类型。<literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal>
+     语法的另一个限制是它不适用于数组类型；请使用 <literal>::</literal>
+     或 <literal>CAST()</literal> 来指定数组常量的类型。
     </para>
 
     <para>
-     The <literal>CAST()</literal> syntax conforms to SQL.  The
-     <literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal>
-     syntax is a generalization of the standard: SQL specifies this syntax only
-     for a few data types, but <productname>PostgreSQL</productname> allows it
-     for all types.  The syntax with
-     <literal>::</literal> is historical <productname>PostgreSQL</productname>
-     usage, as is the function-call syntax.
+     <literal>CAST()</literal> 语法符合 SQL。<literal><replaceable>type</replaceable> '<replaceable>string</replaceable>'</literal> 语法是该标准的推广：SQL 只为少数数据类型指定了此语法，但 <productname>PostgreSQL</productname> 允许所有类型使用它。带 <literal>::</literal> 的语法是历史上的 <productname>PostgreSQL</productname> 用法，函数调用语法也是如此。
     </para>
    </sect3>
   </sect2>
 
   <sect2 id="sql-syntax-operators">
-   <title>Operators</title>
+   <title>运算符</title>
 
    <indexterm zone="sql-syntax-operators">
     <primary>operator</primary>
@@ -850,41 +621,33 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
     <itemizedlist>
      <listitem>
       <para>
-       <literal>--</literal> and <literal>/*</literal> cannot appear
-       anywhere in an operator name, since they will be taken as the
-       start of a comment.
+       <literal>--</literal> 和 <literal>/*</literal> 不能出现在运算符名称中的任何位置，因为它们会被当作注释的开头。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       A multiple-character operator name cannot end in <literal>+</literal> or <literal>-</literal>,
-       unless the name also contains at least one of these characters:
+       多字符运算符名称不能以 <literal>+</literal> 或 <literal>-</literal> 结尾，除非该名称还包含这些字符中的至少一个：
 <literallayout>
 ~ ! @ # % ^ &amp; | ` ?
 </literallayout>
-       For example, <literal>@-</literal> is an allowed operator name,
-       but <literal>*-</literal> is not.  This restriction allows
-       <productname>PostgreSQL</productname> to parse SQL-compliant
-       queries without requiring spaces between tokens.
+       例如，<literal>@-</literal> 是允许的运算符名称，但 <literal>*-</literal> 不是。此限制允许 <productname>PostgreSQL</productname> 解析符合 SQL 的查询，而无需在记号之间添加空格。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    When working with non-SQL-standard operator names, you will usually
-    need to separate adjacent operators with spaces to avoid ambiguity.
-    For example, if you have defined a prefix operator named <literal>@</literal>,
-    you cannot write <literal>X*@Y</literal>; you must write
-    <literal>X* @Y</literal> to ensure that
-    <productname>PostgreSQL</productname> reads it as two operator names
-    not one.
+    使用非 SQL 标准的运算符名称时，通常需要用空格分隔相邻的运算符以避免歧义。
+    例如，如果你定义了一个名为 <literal>@</literal> 的前缀运算符，
+    就不能写 <literal>X*@Y</literal>；必须写成
+    <literal>X* @Y</literal>，以确保
+    <productname>PostgreSQL</productname> 将其读作两个运算符名称而不是一个。
    </para>
   </sect2>
 
   <sect2 id="sql-syntax-special-chars">
-   <title>Special Characters</title>
+   <title>特殊字符</title>
 
   <para>
    Some characters that are not alphanumeric have a special meaning
@@ -896,69 +659,50 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
    <itemizedlist>
     <listitem>
      <para>
-      A dollar sign (<literal>$</literal>) followed by digits is used
-      to represent a positional parameter in the body of a function
-      definition or a prepared statement.  In other contexts the
-      dollar sign can be part of an identifier or a dollar-quoted string
-      constant.
+      美元符号（<literal>$</literal>）后跟数字，用于表示函数定义或预备语句主体中的位置参数。在其他上下文中，美元符号可以是标识符或美元引用字符串常量的一部分。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Parentheses (<literal>()</literal>) have their usual meaning to
-      group expressions and enforce precedence.  In some cases
-      parentheses are required as part of the fixed syntax of a
-      particular SQL command.
+      圆括号（<literal>()</literal>）具有其通常含义，用于对表达式进行分组并强制优先级。在某些情况下，特定 SQL 命令的固定语法要求使用圆括号。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Brackets (<literal>[]</literal>) are used to select the elements
-      of an array.  See <xref linkend="arrays"/> for more information
-      on arrays.
+      方括号（<literal>[]</literal>）用于选择数组的元素。有关数组的更多信息，请参见 <xref linkend="arrays"/>。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Commas (<literal>,</literal>) are used in some syntactical
-      constructs to separate the elements of a list.
+      逗号（<literal>,</literal>）在某些语法结构中用于分隔列表的元素。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The semicolon (<literal>;</literal>) terminates an SQL command.
-      It cannot appear anywhere within a command, except within a
-      string constant or quoted identifier.
+      分号（<literal>;</literal>）用于终止 SQL 命令。它不能出现在命令中的任何位置，除非是在字符串常量或带引号的标识符内。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The colon (<literal>:</literal>) is used to select
-      <quote>slices</quote> from arrays. (See <xref
-      linkend="arrays"/>.)  In certain SQL dialects (such as Embedded
-      SQL), the colon is used to prefix variable names.
+      冒号（<literal>:</literal>）用于从数组中选择<quote>切片</quote>。（参见 <xref
+      linkend="arrays"/>。）在某些 SQL 方言（例如嵌入式 SQL）中，冒号用于给变量名加前缀。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The asterisk (<literal>*</literal>) is used in some contexts to denote
-      all the fields of a table row or composite value.  It also
-      has a special meaning when used as the argument of an
-      aggregate function, namely that the aggregate does not require
-      any explicit parameter.
+      星号（<literal>*</literal>）在某些上下文中用于表示表行或复合值的所有字段。当它用作聚合函数的参数时还有特殊含义，即该聚合函数不需要任何显式参数。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The period (<literal>.</literal>) is used in numeric
-      constants, and to separate schema, table, and column names.
+      句点（<literal>.</literal>）用于数值常量中，也用于分隔模式、表和列名。
      </para>
     </listitem>
    </itemizedlist>
@@ -967,7 +711,7 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
   </sect2>
 
   <sect2 id="sql-syntax-comments">
-   <title>Comments</title>
+   <title>注释</title>
 
    <indexterm zone="sql-syntax-comments">
     <primary>comment</primary>
@@ -975,35 +719,29 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
    </indexterm>
 
    <para>
-    A comment is a sequence of characters beginning with
-    double dashes and extending to the end of the line, e.g.:
+    注释是以双横线开头并延伸到行尾的一串字符，例如：
 <programlisting>
 -- This is a standard SQL comment
 </programlisting>
    </para>
 
    <para>
-    Alternatively, C-style block comments can be used:
+    或者，也可以使用 C 风格的块注释：
 <programlisting>
 /* multiline comment
  * with nesting: /* nested block comment */
  */
 </programlisting>
-    where the comment begins with <literal>/*</literal> and extends to
-    the matching occurrence of <literal>*/</literal>. These block
-    comments nest, as specified in the SQL standard but unlike C, so that one can
-    comment out larger blocks of code that might contain existing block
-    comments.
+    其中注释以 <literal>/*</literal> 开始，并延伸到与之匹配的 <literal>*/</literal> 处。这些块注释可以嵌套，这是 SQL 标准的规定，与 C 不同，因此可以把可能包含现有块注释的更大块代码注释掉。
    </para>
 
    <para>
-    A comment is removed from the input stream before further syntax
-    analysis and is effectively replaced by whitespace.
+    注释在进一步语法分析之前就从输入流中移除，并实际上被替换为空白。
    </para>
   </sect2>
 
   <sect2 id="sql-precedence">
-   <title>Operator Precedence</title>
+   <title>运算符优先级</title>
 
    <indexterm zone="sql-precedence">
     <primary>operator</primary>
@@ -1011,17 +749,14 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
    </indexterm>
 
    <para>
-    <xref linkend="sql-precedence-table"/> shows the precedence and
-    associativity of the operators in <productname>PostgreSQL</productname>.
-    Most operators have the same precedence and are left-associative.
-    The precedence and associativity of the operators is hard-wired
-    into the parser.
-    Add parentheses if you want an expression with multiple operators
-    to be parsed in some other way than what the precedence rules imply.
+    <xref linkend="sql-precedence-table"/> 展示了 <productname>PostgreSQL</productname> 中运算符的优先级和结合性。
+    大多数运算符具有相同的优先级，并且是左结合的。
+    运算符的优先级和结合性被硬编码在解析器中。
+    如果你希望包含多个运算符的表达式以优先级规则所暗示之外的其他方式解析，请添加括号。
    </para>
 
    <table id="sql-precedence-table">
-    <title>Operator Precedence (highest to lowest)</title>
+    <title>运算符优先级（从高到低）</title>
 
     <tgroup cols="3">
      <colspec colname="col1" colwidth="2*"/>
@@ -1029,150 +764,129 @@ CAST ( '<replaceable>string</replaceable>' AS <replaceable>type</replaceable> )
      <colspec colname="col3" colwidth="2*"/>
      <thead>
       <row>
-       <entry>Operator/Element</entry>
-       <entry>Associativity</entry>
-       <entry>Description</entry>
+       <entry>运算符/元素</entry>
+       <entry>结合性</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
      <tbody>
       <row>
        <entry><token>.</token></entry>
-       <entry>left</entry>
-       <entry>table/column name separator</entry>
+       <entry>左</entry>
+       <entry>表/列名分隔符</entry>
       </row>
 
       <row>
        <entry><token>::</token></entry>
-       <entry>left</entry>
-       <entry><productname>PostgreSQL</productname>-style typecast</entry>
+       <entry>左</entry>
+       <entry><productname>PostgreSQL</productname> 风格的类型转换</entry>
       </row>
 
       <row>
        <entry><token>[</token> <token>]</token></entry>
-       <entry>left</entry>
-       <entry>array element selection</entry>
+       <entry>左</entry>
+       <entry>数组元素选择</entry>
       </row>
 
       <row>
        <entry><token>+</token> <token>-</token></entry>
-       <entry>right</entry>
-       <entry>unary plus, unary minus</entry>
+       <entry>右</entry>
+       <entry>一元加、一元减</entry>
       </row>
 
       <row>
        <entry><token>COLLATE</token></entry>
-       <entry>left</entry>
-       <entry>collation selection</entry>
+       <entry>左</entry>
+       <entry>排序规则选择</entry>
       </row>
 
       <row>
        <entry><token>AT</token></entry>
-       <entry>left</entry>
+       <entry>左</entry>
        <entry><literal>AT TIME ZONE</literal>, <literal>AT LOCAL</literal></entry>
       </row>
 
       <row>
        <entry><token>^</token></entry>
-       <entry>left</entry>
-       <entry>exponentiation</entry>
+       <entry>左</entry>
+       <entry>幂运算</entry>
       </row>
 
       <row>
        <entry><token>*</token> <token>/</token> <token>%</token></entry>
-       <entry>left</entry>
-       <entry>multiplication, division, modulo</entry>
+       <entry>左</entry>
+       <entry>乘法、除法、取模</entry>
       </row>
 
       <row>
        <entry><token>+</token> <token>-</token></entry>
-       <entry>left</entry>
-       <entry>addition, subtraction</entry>
+       <entry>左</entry>
+       <entry>加法、减法</entry>
       </row>
 
       <row>
-       <entry>(any other operator)</entry>
-       <entry>left</entry>
-       <entry>all other native and user-defined operators</entry>
+       <entry>（任何其他运算符）</entry>
+       <entry>左</entry>
+       <entry>所有其他原生和用户定义的运算符</entry>
       </row>
 
       <row>
        <entry><token>BETWEEN</token> <token>IN</token> <token>LIKE</token> <token>ILIKE</token> <token>SIMILAR</token></entry>
        <entry></entry>
-       <entry>range containment, set membership, string matching</entry>
+       <entry>范围包含、集合成员关系、字符串匹配</entry>
       </row>
 
       <row>
        <entry><token>&lt;</token> <token>&gt;</token> <token>=</token> <token>&lt;=</token> <token>&gt;=</token> <token>&lt;&gt;</token>
 </entry>
        <entry></entry>
-       <entry>comparison operators</entry>
+       <entry>比较运算符</entry>
       </row>
 
       <row>
        <entry><token>IS</token> <token>ISNULL</token> <token>NOTNULL</token></entry>
        <entry></entry>
-       <entry><literal>IS TRUE</literal>, <literal>IS FALSE</literal>, <literal>IS
-       NULL</literal>, <literal>IS DISTINCT FROM</literal>, etc.</entry>
+       <entry><literal>IS TRUE</literal>、<literal>IS FALSE</literal>、<literal>IS
+       NULL</literal>、<literal>IS DISTINCT FROM</literal> 等</entry>
       </row>
 
       <row>
        <entry><token>NOT</token></entry>
-       <entry>right</entry>
-       <entry>logical negation</entry>
+       <entry>右</entry>
+       <entry>逻辑否定</entry>
       </row>
 
       <row>
        <entry><token>AND</token></entry>
-       <entry>left</entry>
-       <entry>logical conjunction</entry>
+       <entry>左</entry>
+       <entry>逻辑合取</entry>
       </row>
 
       <row>
        <entry><token>OR</token></entry>
-       <entry>left</entry>
-       <entry>logical disjunction</entry>
+       <entry>左</entry>
+       <entry>逻辑析取</entry>
       </row>
      </tbody>
     </tgroup>
    </table>
 
    <para>
-    Note that the operator precedence rules also apply to user-defined
-    operators that have the same names as the built-in operators
-    mentioned above.  For example, if you define a
-    <quote>+</quote> operator for some custom data type it will have
-    the same precedence as the built-in <quote>+</quote> operator, no
-    matter what yours does.
+    请注意，运算符优先级规则也适用于与上面提到的内置运算符同名的用户定义运算符。例如，如果你为某个自定义数据类型定义了一个 <quote>+</quote> 运算符，那么无论你的运算符做什么，它都具有与内置 <quote>+</quote> 运算符相同的优先级。
    </para>
 
    <para>
-    When a schema-qualified operator name is used in the
-    <literal>OPERATOR</literal> syntax, as for example in:
+    当在 <literal>OPERATOR</literal> 语法中使用带模式限定的运算符名称时，例如在：
 <programlisting>
 SELECT 3 OPERATOR(pg_catalog.+) 4;
 </programlisting>
-    the <literal>OPERATOR</literal> construct is taken to have the default precedence
-    shown in <xref linkend="sql-precedence-table"/> for
-    <quote>any other operator</quote>.  This is true no matter
-    which specific operator appears inside <literal>OPERATOR()</literal>.
+    中，<literal>OPERATOR</literal> 结构会被视为具有 <xref linkend="sql-precedence-table"/> 中为<quote>任何其他运算符</quote>显示的默认优先级。无论 <literal>OPERATOR()</literal> 内出现的是哪个具体运算符，这一点都成立。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> versions before 9.5 used slightly different
-     operator precedence rules.  In particular, <token>&lt;=</token>
-     <token>&gt;=</token> and <token>&lt;&gt;</token> used to be treated as
-     generic operators; <literal>IS</literal> tests used to have higher priority;
-     and <literal>NOT BETWEEN</literal> and related constructs acted inconsistently,
-     being taken in some cases as having the precedence of <literal>NOT</literal>
-     rather than <literal>BETWEEN</literal>.  These rules were changed for better
-     compliance with the SQL standard and to reduce confusion from
-     inconsistent treatment of logically equivalent constructs.  In most
-     cases, these changes will result in no behavioral change, or perhaps
-     in <quote>no such operator</quote> failures which can be resolved by adding
-     parentheses.  However there are corner cases in which a query might
-     change behavior without any parsing error being reported.
+     9.5 之前的 <productname>PostgreSQL</productname> 版本使用了略有不同的运算符优先级规则。特别是，<token>&lt;=</token> <token>&gt;=</token> 和 <token>&lt;&gt;</token> 过去被当作通用运算符处理；<literal>IS</literal> 测试过去具有更高的优先级；而 <literal>NOT BETWEEN</literal> 及相关结构的行为不一致，在某些情况下被视为具有 <literal>NOT</literal> 的优先级，而不是 <literal>BETWEEN</literal>。更改这些规则是为了更好地符合 SQL 标准，并减少因对逻辑等价结构处理不一致而造成的困惑。在大多数情况下，这些更改不会导致行为变化，或者可能只会导致<quote>没有该运算符</quote>的失败，而这类失败可以通过添加括号来解决。然而，在某些边缘情况下，查询可能会在未报告任何解析错误的情况下改变行为。
     </para>
    </note>
   </sect2>
