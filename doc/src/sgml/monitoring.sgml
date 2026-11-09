@@ -5975,40 +5975,26 @@ FROM pg_stat_get_backend_idset() AS backendid;
  </sect1>
 
  <sect1 id="dynamic-trace">
-  <title>Dynamic Tracing</title>
+  <title>动态跟踪</title>
 
  <indexterm zone="dynamic-trace">
   <primary>DTrace</primary>
  </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> provides facilities to support
-   dynamic tracing of the database server. This allows an external
-   utility to be called at specific points in the code and thereby trace
-   execution.
+   <productname>PostgreSQL</productname> 提供了支持数据库服务器动态跟踪的功能。这允许在代码中的特定位置调用外部工具，从而跟踪执行过程。
   </para>
 
   <para>
-   A number of probes or trace points are already inserted into the source
-   code. These probes are intended to be used by database developers and
-   administrators. By default the probes are not compiled into
-   <productname>PostgreSQL</productname>; the user needs to explicitly tell
-   the configure script to make the probes available.
+   源代码中已经插入了许多探针或跟踪点。这些探针旨在供数据库开发人员和管理员使用。默认情况下，探针不会被编译到 <productname>PostgreSQL</productname> 中；用户需要显式告知 configure 脚本使探针可用。
   </para>
 
   <para>
-   Currently, the
-   <ulink url="https://en.wikipedia.org/wiki/DTrace">DTrace</ulink>
-   utility is supported, which, at the time of this writing, is available
-   on Solaris, macOS, FreeBSD, NetBSD, and Oracle Linux.  The
-   <ulink url="https://sourceware.org/systemtap/">SystemTap</ulink> project
-   for Linux provides a DTrace equivalent and can also be used.  Supporting other dynamic
-   tracing utilities is theoretically possible by changing the definitions for
-   the macros in <filename>src/include/utils/probes.h</filename>.
+   目前支持 <ulink url="https://en.wikipedia.org/wiki/DTrace">DTrace</ulink> 工具，在撰写本文时，该工具可在 Solaris、macOS、FreeBSD、NetBSD 和 Oracle Linux 上使用。Linux 的 <ulink url="https://sourceware.org/systemtap/">SystemTap</ulink> 项目提供了 DTrace 的等价物，也可以使用。理论上，通过更改 <filename>src/include/utils/probes.h</filename> 中宏的定义，可以支持其他动态跟踪工具。
   </para>
 
   <sect2 id="compiling-for-trace">
-   <title>Compiling for Dynamic Tracing</title>
+   <title>为动态跟踪而编译</title>
 
   <para>
    By default, probes are not available, so you will need to
@@ -6020,27 +6006,26 @@ FROM pg_stat_get_backend_idset() AS backendid;
   </sect2>
 
   <sect2 id="trace-points">
-   <title>Built-in Probes</title>
+   <title>内置探针</title>
 
   <para>
-   A number of standard probes are provided in the source code,
-   as shown in <xref linkend="dtrace-probe-point-table"/>;
+   源代码中提供了许多标准探针，
+   如 <xref linkend="dtrace-probe-point-table"/> 所示；
    <xref linkend="typedefs-table"/>
-   shows the types used in the probes.  More probes can certainly be
-   added to enhance <productname>PostgreSQL</productname>'s observability.
+   展示了探针中使用的类型。当然，还可以添加更多探针来增强 <productname>PostgreSQL</productname> 的可观测性。
   </para>
 
  <table id="dtrace-probe-point-table">
-  <title>Built-in DTrace Probes</title>
+  <title>内置 DTrace 探针</title>
   <tgroup cols="3">
    <colspec colname="col1" colwidth="2*"/>
    <colspec colname="col2" colwidth="3*"/>
    <colspec colname="col3" colwidth="3*"/>
    <thead>
     <row>
-     <entry>Name</entry>
-     <entry>Parameters</entry>
-     <entry>Description</entry>
+     <entry>名称</entry>
+     <entry>参数</entry>
+     <entry>描述</entry>
     </row>
    </thead>
 
@@ -6049,419 +6034,331 @@ FROM pg_stat_get_backend_idset() AS backendid;
     <row>
      <entry><literal>transaction-start</literal></entry>
      <entry><literal>(LocalTransactionId)</literal></entry>
-     <entry>Probe that fires at the start of a new transaction.
-      arg0 is the transaction ID.</entry>
+     <entry>在新事务开始时触发的探针。arg0 是事务 ID。</entry>
     </row>
     <row>
      <entry><literal>transaction-commit</literal></entry>
      <entry><literal>(LocalTransactionId)</literal></entry>
-     <entry>Probe that fires when a transaction completes successfully.
-      arg0 is the transaction ID.</entry>
+     <entry>在事务成功完成时触发的探针。arg0 是事务 ID。</entry>
     </row>
     <row>
      <entry><literal>transaction-abort</literal></entry>
      <entry><literal>(LocalTransactionId)</literal></entry>
-     <entry>Probe that fires when a transaction completes unsuccessfully.
-      arg0 is the transaction ID.</entry>
+     <entry>在事务未成功完成时触发的探针。arg0 是事务 ID。</entry>
     </row>
     <row>
      <entry><literal>query-start</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the processing of a query is started.
-      arg0 is the query string.</entry>
+     <entry>在查询处理开始时触发的探针。arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-done</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the processing of a query is complete.
-      arg0 is the query string.</entry>
+     <entry>在查询处理完成时触发的探针。arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-parse-start</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the parsing of a query is started.
-      arg0 is the query string.</entry>
+     <entry>在查询解析开始时触发的探针。arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-parse-done</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the parsing of a query is complete.
-      arg0 is the query string.</entry>
+     <entry>当查询的解析完成时触发的探针。
+      arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-rewrite-start</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the rewriting of a query is started.
-      arg0 is the query string.</entry>
+     <entry>当查询的重写开始时触发的探针。
+      arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-rewrite-done</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires when the rewriting of a query is complete.
-      arg0 is the query string.</entry>
+     <entry>当查询的重写完成时触发的探针。
+      arg0 是查询字符串。</entry>
     </row>
     <row>
      <entry><literal>query-plan-start</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the planning of a query is started.</entry>
+     <entry>当查询的规划开始时触发的探针。</entry>
     </row>
     <row>
      <entry><literal>query-plan-done</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the planning of a query is complete.</entry>
+     <entry>当查询的规划完成时触发的探针。</entry>
     </row>
     <row>
      <entry><literal>query-execute-start</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the execution of a query is started.</entry>
+     <entry>当查询的执行开始时触发的探针。</entry>
     </row>
     <row>
      <entry><literal>query-execute-done</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the execution of a query is complete.</entry>
+     <entry>当查询执行完成时触发的探针。</entry>
     </row>
     <row>
      <entry><literal>statement-status</literal></entry>
      <entry><literal>(const char *)</literal></entry>
-     <entry>Probe that fires anytime the server process updates its
-      <structname>pg_stat_activity</structname>.<structfield>status</structfield>.
-      arg0 is the new status string.</entry>
+     <entry>当服务器进程更新其 <structname>pg_stat_activity</structname>.<structfield>status</structfield> 时随时触发的探针。arg0 是新的状态字符串。</entry>
     </row>
     <row>
      <entry><literal>checkpoint-start</literal></entry>
      <entry><literal>(int)</literal></entry>
-     <entry>Probe that fires when a checkpoint is started.
-      arg0 holds the bitwise flags used to distinguish different checkpoint
-      types, such as shutdown, immediate or force.</entry>
+     <entry>当检查点开始时触发的探针。arg0 保存用于区分不同检查点类型（例如 shutdown、immediate 或 force）的按位标志。</entry>
     </row>
     <row>
      <entry><literal>checkpoint-done</literal></entry>
      <entry><literal>(int, int, int, int, int)</literal></entry>
-     <entry>Probe that fires when a checkpoint is complete.
-      (The probes listed next fire in sequence during checkpoint processing.)
-      arg0 is the number of buffers written. arg1 is the total number of
-      buffers. arg2, arg3 and arg4 contain the number of WAL files added,
-      removed and recycled respectively.</entry>
+     <entry>当检查点完成时触发的探针。（下面列出的探针在检查点处理期间按顺序触发。）arg0 是写入的缓冲区数量。arg1 是缓冲区总数。arg2、arg3 和 arg4 分别包含新增、移除和回收的 WAL 文件数量。</entry>
     </row>
     <row>
      <entry><literal>clog-checkpoint-start</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the CLOG portion of a checkpoint is started.
-      arg0 is true for normal checkpoint, false for shutdown
-      checkpoint.</entry>
+     <entry>当检查点的 CLOG 部分开始时触发的探针。arg0 对于正常检查点为 true，对于关闭检查点为 false。</entry>
     </row>
     <row>
      <entry><literal>clog-checkpoint-done</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the CLOG portion of a checkpoint is
-      complete. arg0 has the same meaning as for <literal>clog-checkpoint-start</literal>.</entry>
+     <entry>当检查点的 CLOG 部分完成时触发的探针。arg0 的含义与 <literal>clog-checkpoint-start</literal> 相同。</entry>
     </row>
     <row>
      <entry><literal>subtrans-checkpoint-start</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the SUBTRANS portion of a checkpoint is
-      started.
-      arg0 is true for normal checkpoint, false for shutdown
-      checkpoint.</entry>
+     <entry>当检查点的 SUBTRANS 部分开始时触发的探针。
+      arg0 对于正常检查点为 true，对于关闭检查点为 false。</entry>
     </row>
     <row>
      <entry><literal>subtrans-checkpoint-done</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the SUBTRANS portion of a checkpoint is
-      complete. arg0 has the same meaning as for
-      <literal>subtrans-checkpoint-start</literal>.</entry>
+     <entry>当检查点的 SUBTRANS 部分完成时触发的探针。arg0 的含义与 <literal>subtrans-checkpoint-start</literal> 相同。</entry>
     </row>
     <row>
      <entry><literal>multixact-checkpoint-start</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the MultiXact portion of a checkpoint is
-      started.
-      arg0 is true for normal checkpoint, false for shutdown
-      checkpoint.</entry>
+     <entry>当检查点的 MultiXact 部分开始时触发的探针。
+      arg0 对于正常检查点为 true，对于关闭检查点为 false。</entry>
     </row>
     <row>
      <entry><literal>multixact-checkpoint-done</literal></entry>
      <entry><literal>(bool)</literal></entry>
-     <entry>Probe that fires when the MultiXact portion of a checkpoint is
-      complete. arg0 has the same meaning as for
-      <literal>multixact-checkpoint-start</literal>.</entry>
+     <entry>当检查点的 MultiXact 部分完成时触发的探针。arg0 的含义与 <literal>multixact-checkpoint-start</literal> 相同。</entry>
     </row>
     <row>
      <entry><literal>buffer-checkpoint-start</literal></entry>
      <entry><literal>(int)</literal></entry>
-     <entry>Probe that fires when the buffer-writing portion of a checkpoint
-      is started.
-      arg0 holds the bitwise flags used to distinguish different checkpoint
-      types, such as shutdown, immediate or force.</entry>
+     <entry>当检查点的缓冲区写入部分开始时触发的探针。
+      arg0 保存用于区分不同检查点类型（例如 shutdown、immediate 或 force）的按位标志。</entry>
     </row>
     <row>
      <entry><literal>buffer-sync-start</literal></entry>
      <entry><literal>(int, int)</literal></entry>
-     <entry>Probe that fires when we begin to write dirty buffers during
-      checkpoint (after identifying which buffers must be written).
-      arg0 is the total number of buffers.
-      arg1 is the number that are currently dirty and need to be written.</entry>
+     <entry>当我们在检查点期间开始写入脏缓冲区时（在确定必须写入哪些缓冲区之后）触发的探针。
+      arg0 是缓冲区的总数。
+      arg1 是当前为脏且需要写入的缓冲区数量。</entry>
     </row>
     <row>
      <entry><literal>buffer-sync-written</literal></entry>
      <entry><literal>(int)</literal></entry>
-     <entry>Probe that fires after each buffer is written during checkpoint.
-      arg0 is the ID number of the buffer.</entry>
+     <entry>在检查点期间，每写入一个缓冲区后触发的探测点。
+      arg0 是该缓冲区的 ID 编号。</entry>
     </row>
     <row>
      <entry><literal>buffer-sync-done</literal></entry>
      <entry><literal>(int, int, int)</literal></entry>
-     <entry>Probe that fires when all dirty buffers have been written.
-      arg0 is the total number of buffers.
-      arg1 is the number of buffers actually written by the checkpoint process.
-      arg2 is the number that were expected to be written (arg1 of
-      <literal>buffer-sync-start</literal>); any difference reflects other processes flushing
-      buffers during the checkpoint.</entry>
+     <entry>当所有脏缓冲区都已写入时触发的探测点。
+      arg0 是缓冲区总数。
+      arg1 是检查点进程实际写入的缓冲区数量。
+      arg2 是预期应写入的数量（<literal>buffer-sync-start</literal> 的 arg1）；任何差异都反映了在检查点期间其他进程刷写缓冲区的情况。</entry>
     </row>
     <row>
      <entry><literal>buffer-checkpoint-sync-start</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires after dirty buffers have been written to the
-      kernel, and before starting to issue fsync requests.</entry>
+     <entry>在脏缓冲区已写入内核之后、开始发出 fsync 请求之前触发的探测点。</entry>
     </row>
     <row>
      <entry><literal>buffer-checkpoint-done</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when syncing of buffers to disk is
-      complete.</entry>
+     <entry>当缓冲区同步到磁盘完成时触发的探测点。</entry>
     </row>
     <row>
      <entry><literal>twophase-checkpoint-start</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the two-phase portion of a checkpoint is
-      started.</entry>
+     <entry>当检查点的两阶段部分开始时触发的探测点。</entry>
     </row>
     <row>
      <entry><literal>twophase-checkpoint-done</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when the two-phase portion of a checkpoint is
-      complete.</entry>
+     <entry>当检查点的两阶段部分完成时触发的探测点。</entry>
     </row>
     <row>
      <entry><literal>buffer-extend-start</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, unsigned int)</literal></entry>
-     <entry>Probe that fires when a relation extension starts.
-       arg0 contains the fork to be extended. arg1, arg2, and arg3 contain the
-       tablespace, database, and relation OIDs identifying the relation.  arg4
-       is the ID of the backend which created the temporary relation for a
-       local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared
-       buffer. arg5 is the number of blocks the caller would like to extend
-       by.</entry>
+     <entry>当关系扩展开始时触发该探针。
+       arg0 包含要扩展的分支。arg1、arg2 和 arg3 包含标识该关系的表空间、数据库和关系 OID。arg4 是为本地缓冲区创建临时关系后端的 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。arg5 是调用者希望扩展的块数。</entry>
     </row>
     <row>
      <entry><literal>buffer-extend-done</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, unsigned int, BlockNumber)</literal></entry>
-     <entry>Probe that fires when a relation extension is complete.
-       arg0 contains the fork to be extended. arg1, arg2, and arg3 contain the
-       tablespace, database, and relation OIDs identifying the relation.  arg4
-       is the ID of the backend which created the temporary relation for a
-       local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared
-       buffer. arg5 is the number of blocks the relation was extended by, this
-       can be less than the number in the
-       <literal>buffer-extend-start</literal> due to resource
-       constraints. arg6 contains the BlockNumber of the first new
-       block.</entry>
+     <entry>当关系扩展完成时触发该探针。
+       arg0 包含要扩展的分支。arg1、arg2 和 arg3 包含标识该关系的表空间、数据库和关系 OID。arg4 是为本地缓冲区创建临时关系后端的 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。arg5 是该关系实际扩展的块数，由于资源限制，这可能小于 <literal>buffer-extend-start</literal> 中的数量。arg6 包含第一个新块的 BlockNumber。</entry>
     </row>
     <row>
      <entry><literal>buffer-read-start</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int)</literal></entry>
-     <entry>Probe that fires when a buffer read is started.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.
+     <entry>当缓冲区读取开始时触发该探针。
+      arg0 和 arg1 包含该页的分支号和块号。
+      arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。
+      arg5 是为本地缓冲区创建临时关系后端的 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。
       </entry>
     </row>
     <row>
      <entry><literal>buffer-read-done</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, bool)</literal></entry>
-     <entry>Probe that fires when a buffer read is complete.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.
-      arg6 is true if the buffer was found in the pool, false if not.</entry>
+     <entry>当缓冲区读取完成时触发该探针。
+      arg0 和 arg1 包含该页的分支号和块号。
+      arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。
+      arg5 是为本地缓冲区创建临时关系后端的 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。
+      arg6 为 true 表示在缓冲池中找到了该缓冲区，否则为 false。</entry>
     </row>
     <row>
      <entry><literal>buffer-flush-start</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid)</literal></entry>
-     <entry>Probe that fires before issuing any write request for a shared
-      buffer.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.</entry>
+     <entry>在发出针对共享缓冲区的任何写请求之前触发该探针。
+      arg0 和 arg1 包含该页的分支号和块号。
+      arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。</entry>
     </row>
     <row>
      <entry><literal>buffer-flush-done</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid)</literal></entry>
-     <entry>Probe that fires when a write request is complete.  (Note
-      that this just reflects the time to pass the data to the kernel;
-      it's typically not actually been written to disk yet.)
-      The arguments are the same as for <literal>buffer-flush-start</literal>.</entry>
+     <entry>当写请求完成时触发该探针。（注意，这仅反映将数据传递给内核的时间；通常此时数据实际上尚未写入磁盘。）
+      参数与 <literal>buffer-flush-start</literal> 相同。</entry>
     </row>
     <row>
      <entry><literal>wal-buffer-write-dirty-start</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when a server process begins to write a
-      dirty WAL buffer because no more WAL buffer space is available.
-      (If this happens often, it implies that
-      <xref linkend="guc-wal-buffers"/> is too small.)</entry>
+     <entry>当服务器进程因为不再有可用的 WAL 缓冲区空间而开始写出脏 WAL 缓冲区时触发此探针。（如果这种情况经常发生，则意味着 <xref linkend="guc-wal-buffers"/> 太小。）</entry>
     </row>
     <row>
      <entry><literal>wal-buffer-write-dirty-done</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when a dirty WAL buffer write is complete.</entry>
+     <entry>当脏 WAL 缓冲区写出完成时触发此探针。</entry>
     </row>
     <row>
      <entry><literal>wal-insert</literal></entry>
      <entry><literal>(unsigned char, unsigned char)</literal></entry>
-     <entry>Probe that fires when a WAL record is inserted.
-      arg0 is the resource manager (rmid) for the record.
-      arg1 contains the info flags.</entry>
+     <entry>当插入一条 WAL 记录时触发此探针。arg0 是该记录的资源管理器（rmid）。arg1 包含信息标志。</entry>
     </row>
     <row>
      <entry><literal>wal-switch</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when a WAL segment switch is requested.</entry>
+     <entry>当请求切换 WAL 段时触发此探针。</entry>
     </row>
     <row>
      <entry><literal>smgr-md-read-start</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int)</literal></entry>
-     <entry>Probe that fires when beginning to read a block from a relation.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.</entry>
+     <entry>当开始从某个关系读取一个块时触发此探针。arg0 和 arg1 包含该页的 fork 号和块号。arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。arg5 是为本地缓冲区创建临时关系的后端 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。</entry>
     </row>
     <row>
      <entry><literal>smgr-md-read-done</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, int, int)</literal></entry>
-     <entry>Probe that fires when a block read is complete.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.
-      arg6 is the number of bytes actually read, while arg7 is the number
-      requested (if these are different it indicates a short read).</entry>
+     <entry>当块读取完成时触发此探针。arg0 和 arg1 包含该页的 fork 号和块号。arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。arg5 是为本地缓冲区创建临时关系的后端 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。arg6 是实际读取的字节数，而 arg7 是请求的字节数（如果二者不同，则表示读取不足）。</entry>
     </row>
     <row>
      <entry><literal>smgr-md-write-start</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int)</literal></entry>
-     <entry>Probe that fires when beginning to write a block to a relation.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.</entry>
+     <entry>探针，在开始向关系写入一个块时触发。
+      arg0 和 arg1 包含该页的分叉号和块号。
+      arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。
+      arg5 是为本地缓冲区创建临时关系的后端 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。</entry>
     </row>
     <row>
      <entry><literal>smgr-md-write-done</literal></entry>
      <entry><literal>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, int, int)</literal></entry>
-     <entry>Probe that fires when a block write is complete.
-      arg0 and arg1 contain the fork and block numbers of the page.
-      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
-      identifying the relation.
-      arg5 is the ID of the backend which created the temporary relation for a
-      local buffer, or <symbol>INVALID_PROC_NUMBER</symbol> (-1) for a shared buffer.
-      arg6 is the number of bytes actually written, while arg7 is the number
-      requested (if these are different it indicates a short write).</entry>
+     <entry>探针，在块写入完成时触发。
+      arg0 和 arg1 包含该页的分叉号和块号。
+      arg2、arg3 和 arg4 包含标识该关系的表空间、数据库和关系 OID。
+      arg5 是为本地缓冲区创建临时关系的后端 ID，对于共享缓冲区则为 <symbol>INVALID_PROC_NUMBER</symbol> (-1)。
+      arg6 是实际写入的字节数，而 arg7 是请求的字节数（如果两者不同，则表示短写）。</entry>
     </row>
     <row>
      <entry><literal>sort-start</literal></entry>
      <entry><literal>(int, bool, int, int, bool, int)</literal></entry>
-     <entry>Probe that fires when a sort operation is started.
-      arg0 indicates heap, index or datum sort.
-      arg1 is true for unique-value enforcement.
-      arg2 is the number of key columns.
-      arg3 is the number of kilobytes of work memory allowed.
-      arg4 is true if random access to the sort result is required.
-      arg5 indicates serial when <literal>0</literal>, parallel worker when
-      <literal>1</literal>, or parallel leader when <literal>2</literal>.</entry>
+     <entry>探针，在排序操作开始时触发。
+      arg0 指示堆排序、索引排序或数据排序。
+      arg1 在强制唯一值时为 true。
+      arg2 是键列的数量。
+      arg3 是允许的工作内存千字节数。
+      arg4 在需要对排序结果进行随机访问时为 true。
+      arg5 在 <literal>0</literal> 时表示串行，在 <literal>1</literal> 时表示并行工作者，在 <literal>2</literal> 时表示并行领导者。</entry>
     </row>
     <row>
      <entry><literal>sort-done</literal></entry>
      <entry><literal>(bool, long)</literal></entry>
-     <entry>Probe that fires when a sort is complete.
-      arg0 is true for external sort, false for internal sort.
-      arg1 is the number of disk blocks used for an external sort,
-      or kilobytes of memory used for an internal sort.</entry>
+     <entry>探针，在排序完成时触发。
+      arg0 对于外部排序为 true，对于内部排序为 false。
+      arg1 是外部排序使用的磁盘块数，或内部排序使用的内存千字节数。</entry>
     </row>
     <row>
      <entry><literal>lwlock-acquire</literal></entry>
      <entry><literal>(char *, LWLockMode)</literal></entry>
-     <entry>Probe that fires when an LWLock has been acquired.
-      arg0 is the LWLock's tranche.
-      arg1 is the requested lock mode, either exclusive or shared.</entry>
+     <entry>探针，在获取 LWLock 时触发。
+      arg0 是该 LWLock 的 tranche。
+      arg1 是请求的锁模式，即排他或共享。</entry>
     </row>
     <row>
      <entry><literal>lwlock-release</literal></entry>
      <entry><literal>(char *)</literal></entry>
-     <entry>Probe that fires when an LWLock has been released (but note
-      that any released waiters have not yet been awakened).
-      arg0 is the LWLock's tranche.</entry>
+     <entry>探针，在 LWLock 被释放时触发（但请注意，任何被释放的等待者尚未被唤醒）。
+      arg0 是该 LWLock 的 tranche。</entry>
     </row>
     <row>
      <entry><literal>lwlock-wait-start</literal></entry>
      <entry><literal>(char *, LWLockMode)</literal></entry>
-     <entry>Probe that fires when an LWLock was not immediately available and
-      a server process has begun to wait for the lock to become available.
-      arg0 is the LWLock's tranche.
-      arg1 is the requested lock mode, either exclusive or shared.</entry>
+     <entry>当 LWLock 无法立即获得且服务器进程已开始等待该锁变为可用时触发的探针。
+      arg0 是该 LWLock 的 tranche。
+      arg1 是请求的锁模式，即排他或共享。</entry>
     </row>
     <row>
      <entry><literal>lwlock-wait-done</literal></entry>
      <entry><literal>(char *, LWLockMode)</literal></entry>
-     <entry>Probe that fires when a server process has been released from its
-      wait for an LWLock (it does not actually have the lock yet).
-      arg0 is the LWLock's tranche.
-      arg1 is the requested lock mode, either exclusive or shared.</entry>
+     <entry>当服务器进程从对 LWLock 的等待中被释放（它实际上尚未持有该锁）时触发的探针。
+      arg0 是该 LWLock 的 tranche。
+      arg1 是请求的锁模式，即排他或共享。</entry>
     </row>
     <row>
      <entry><literal>lwlock-condacquire</literal></entry>
      <entry><literal>(char *, LWLockMode)</literal></entry>
-     <entry>Probe that fires when an LWLock was successfully acquired when the
-      caller specified no waiting.
-      arg0 is the LWLock's tranche.
-      arg1 is the requested lock mode, either exclusive or shared.</entry>
+     <entry>当调用方指定不等待而 LWLock 被成功获取时触发的探针。
+      arg0 是该 LWLock 的 tranche。
+      arg1 是请求的锁模式，即排他或共享。</entry>
     </row>
     <row>
      <entry><literal>lwlock-condacquire-fail</literal></entry>
      <entry><literal>(char *, LWLockMode)</literal></entry>
-     <entry>Probe that fires when an LWLock was not successfully acquired when
-      the caller specified no waiting.
-      arg0 is the LWLock's tranche.
-      arg1 is the requested lock mode, either exclusive or shared.</entry>
+     <entry>当调用方指定不等待而 LWLock 未被成功获取时触发的探针。
+      arg0 是该 LWLock 的 tranche。
+      arg1 是请求的锁模式，即排他或共享。</entry>
     </row>
     <row>
      <entry><literal>lock-wait-start</literal></entry>
      <entry><literal>(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, LOCKMODE)</literal></entry>
-     <entry>Probe that fires when a request for a heavyweight lock (lmgr lock)
-      has begun to wait because the lock is not available.
-      arg0 through arg3 are the tag fields identifying the object being
-      locked.  arg4 indicates the type of object being locked.
-      arg5 indicates the lock type being requested.</entry>
+     <entry>当对重量级锁（lmgr 锁）的请求因该锁不可用而开始等待时触发的探针。
+      arg0 到 arg3 是标识被锁定对象的标签字段。arg4 表示被锁定对象的类型。
+      arg5 表示请求的锁类型。</entry>
     </row>
     <row>
      <entry><literal>lock-wait-done</literal></entry>
      <entry><literal>(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, LOCKMODE)</literal></entry>
-     <entry>Probe that fires when a request for a heavyweight lock (lmgr lock)
-      has finished waiting (i.e., has acquired the lock).
-      The arguments are the same as for <literal>lock-wait-start</literal>.</entry>
+     <entry>当对重量级锁（lmgr 锁）的请求完成等待（即已获得该锁）时触发的探针。
+      参数与 <literal>lock-wait-start</literal> 相同。</entry>
     </row>
     <row>
      <entry><literal>deadlock-found</literal></entry>
      <entry><literal>()</literal></entry>
-     <entry>Probe that fires when a deadlock is found by the deadlock
-      detector.</entry>
+     <entry>当死锁检测器发现死锁时触发的探针。</entry>
     </row>
 
    </tbody>
@@ -6469,12 +6366,12 @@ FROM pg_stat_get_backend_idset() AS backendid;
   </table>
 
  <table id="typedefs-table">
-  <title>Defined Types Used in Probe Parameters</title>
+  <title>探针参数中使用的已定义类型</title>
   <tgroup cols="2">
    <thead>
     <row>
-     <entry>Type</entry>
-     <entry>Definition</entry>
+     <entry>类型</entry>
+     <entry>定义</entry>
     </row>
    </thead>
 
@@ -6517,12 +6414,10 @@ FROM pg_stat_get_backend_idset() AS backendid;
   </sect2>
 
   <sect2 id="using-trace-points">
-   <title>Using Probes</title>
+   <title>使用探针</title>
 
   <para>
-   The example below shows a DTrace script for analyzing transaction
-   counts in the system, as an alternative to snapshotting
-   <structname>pg_stat_database</structname> before and after a performance test:
+   下面的示例展示了一个用于分析系统中事务计数的 DTrace 脚本，作为在性能测试前后对 <structname>pg_stat_database</structname> 进行快照的替代方案：
 <programlisting>
 #!/usr/sbin/dtrace -qs
 
@@ -6545,7 +6440,7 @@ postgresql$1:::transaction-commit
       self->ts=0;
 }
 </programlisting>
-   When executed, the example D script gives output such as:
+   执行时，示例 D 脚本会给出类似如下的输出：
 <screen>
 # ./txn_count.d `pgrep -n postgres` or ./txn_count.d &lt;PID&gt;
 ^C
@@ -6558,98 +6453,75 @@ Total time (ns)                        2312105013
 
   <note>
    <para>
-    SystemTap uses a different notation for trace scripts than DTrace does,
-    even though the underlying trace points are compatible.  One point worth
-    noting is that at this writing, SystemTap scripts must reference probe
-    names using double underscores in place of hyphens.  This is expected to
-    be fixed in future SystemTap releases.
+    SystemTap 使用的跟踪脚本记法与 DTrace 不同，尽管底层的跟踪点是兼容的。值得注意的一点是，在撰写本文时，SystemTap 脚本在引用探针名称时必须用双下划线代替连字符。预计这一问题将在未来的 SystemTap 版本中修复。
    </para>
   </note>
 
   <para>
-   You should remember that DTrace scripts need to be carefully written and
-   debugged, otherwise the trace information collected might
-   be meaningless. In most cases where problems are found it is the
-   instrumentation that is at fault, not the underlying system. When
-   discussing information found using dynamic tracing, be sure to enclose
-   the script used to allow that too to be checked and discussed.
+   应当记住，DTrace 脚本需要仔细编写和调试，否则收集到的跟踪信息可能毫无意义。在大多数发现问题的情况下，问题出在插桩代码上，而不是底层系统。在讨论使用动态跟踪发现的信息时，务必附上所使用的脚本，以便该脚本也能得到检查和讨论。
   </para>
   </sect2>
 
   <sect2 id="defining-trace-points">
-   <title>Defining New Probes</title>
+   <title>定义新探针</title>
 
   <para>
-   New probes can be defined within the code wherever the developer
-   desires, though this will require a recompilation. Below are the steps
-   for inserting new probes:
+   新探针可以在代码中开发者希望的任何位置定义，不过这需要重新编译。以下是插入新探针的步骤：
   </para>
 
   <procedure>
    <step>
     <para>
-     Decide on probe names and data to be made available through the probes
+     确定探针名称以及要通过探针提供的数据
     </para>
    </step>
 
    <step>
     <para>
-     Add the probe definitions to <filename>src/backend/utils/probes.d</filename>
+     将探针定义添加到 <filename>src/backend/utils/probes.d</filename>
     </para>
    </step>
 
    <step>
     <para>
-     Include <filename>pg_trace.h</filename> if it is not already present in the
-     module(s) containing the probe points, and insert
-     <literal>TRACE_POSTGRESQL</literal> probe macros at the desired locations
-     in the source code
+     如果包含探测点的模块中尚未包含 <filename>pg_trace.h</filename>，则将其包含进来，并在源代码中所需的位置插入 <literal>TRACE_POSTGRESQL</literal> 探测宏
     </para>
    </step>
 
    <step>
     <para>
-     Recompile and verify that the new probes are available
+     重新编译并验证新探测点可用
     </para>
    </step>
   </procedure>
 
   <formalpara>
-   <title>Example:</title>
+   <title>示例：</title>
    <para>
-    Here is an example of how you would add a probe to trace all new
-    transactions by transaction ID.
+    下面是一个示例，说明如何添加探测点以按事务 ID 跟踪所有新事务。
    </para>
   </formalpara>
 
   <procedure>
    <step>
     <para>
-     Decide that the probe will be named <literal>transaction-start</literal> and
-     requires a parameter of type <type>LocalTransactionId</type>
+     确定探测点将命名为 <literal>transaction-start</literal>，并且需要一个类型为 <type>LocalTransactionId</type> 的参数
     </para>
    </step>
 
    <step>
     <para>
-     Add the probe definition to <filename>src/backend/utils/probes.d</filename>:
+     将探测点定义添加到 <filename>src/backend/utils/probes.d</filename>：
 <programlisting>
 probe transaction__start(LocalTransactionId);
 </programlisting>
-     Note the use of the double underline in the probe name. In a DTrace
-     script using the probe, the double underline needs to be replaced with a
-     hyphen, so <literal>transaction-start</literal> is the name to document for
-     users.
+     注意探测点名称中使用了双下划线。在使用该探测点的 DTrace 脚本中，双下划线需要替换为连字符，因此 <literal>transaction-start</literal> 是向用户说明的名称。
     </para>
    </step>
 
    <step>
     <para>
-     At compile time, <literal>transaction__start</literal> is converted to a macro
-     called <literal>TRACE_POSTGRESQL_TRANSACTION_START</literal> (notice the
-     underscores are single here), which is available by including
-     <filename>pg_trace.h</filename>.  Add the macro call to the appropriate location
-     in the source code.  In this case, it looks like the following:
+     在编译时，<literal>transaction__start</literal> 会被转换为一个名为 <literal>TRACE_POSTGRESQL_TRANSACTION_START</literal> 的宏（注意这里的下划线是单个的），可以通过包含 <filename>pg_trace.h</filename> 来使用它。把该宏调用添加到源代码中合适的位置。在本例中，它看起来如下所示：
 
 <programlisting>
 TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
@@ -6659,9 +6531,7 @@ TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
 
    <step>
     <para>
-     After recompiling and running the new binary, check that your newly added
-     probe is available by executing the following DTrace command.  You
-     should see similar output:
+     重新编译并运行新的二进制文件后，通过执行以下 DTrace 命令检查你新添加的探测点是否可用。你应该会看到类似的输出：
 <screen>
 # dtrace -ln transaction-start
    ID    PROVIDER          MODULE           FUNCTION NAME
@@ -6676,37 +6546,26 @@ TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
   </procedure>
 
   <para>
-   There are a few things to be careful about when adding trace macros
-   to the C code:
+   在向 C 代码中添加跟踪宏时，有几件事需要注意：
 
    <itemizedlist>
     <listitem>
      <para>
-      You should take care that the data types specified for a probe's
-      parameters match the data types of the variables used in the macro.
-      Otherwise, you will get compilation errors.
+      你应当注意，为探测点参数指定的数据类型要与宏中所用变量的数据类型相匹配。否则，你会遇到编译错误。
      </para>
     </listitem>
 
 
     <listitem>
      <para>
-      On most platforms, if <productname>PostgreSQL</productname> is
-      built with <option>--enable-dtrace</option>, the arguments to a trace
-      macro will be evaluated whenever control passes through the
-      macro, <emphasis>even if no tracing is being done</emphasis>.  This is
-      usually not worth worrying about if you are just reporting the
-      values of a few local variables.  But beware of putting expensive
-      function calls into the arguments.  If you need to do that,
-      consider protecting the macro with a check to see if the trace
-      is actually enabled:
+      在大多数平台上，如果 <productname>PostgreSQL</productname> 是使用 <option>--enable-dtrace</option> 构建的，那么每当控制流经过某个跟踪宏时，该宏的参数都会被求值，<emphasis>即使并未进行任何跟踪</emphasis>。如果你只是报告几个局部变量的值，这通常不值得担心。但要小心不要把开销昂贵的函数调用放进参数中。如果你确实需要这样做，可以考虑用一个检查来保护该宏，判断跟踪是否实际已启用：
 
 <programlisting>
 if (TRACE_POSTGRESQL_TRANSACTION_START_ENABLED())
     TRACE_POSTGRESQL_TRANSACTION_START(some_function(...));
 </programlisting>
 
-      Each trace macro has a corresponding <literal>ENABLED</literal> macro.
+      每个跟踪宏都有一个对应的 <literal>ENABLED</literal> 宏。
      </para>
     </listitem>
    </itemizedlist>
