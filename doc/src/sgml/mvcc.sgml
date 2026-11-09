@@ -1211,7 +1211,7 @@ SELECT pg_advisory_lock(q.id) FROM
   </sect1>
 
   <sect1 id="locking-indexes">
-   <title>Locking and Indexes</title>
+   <title>锁与索引</title>
 
    <indexterm zone="locking-indexes">
     <primary>index</primary>
@@ -1229,45 +1229,33 @@ SELECT pg_advisory_lock(q.id) FROM
     <variablelist>
      <varlistentry>
       <term>
-       B-tree, <acronym>GiST</acronym> and <acronym>SP-GiST</acronym> indexes
+       B-tree、<acronym>GiST</acronym> 和 <acronym>SP-GiST</acronym> 索引
       </term>
       <listitem>
        <para>
-        Short-term share/exclusive page-level locks are used for
-        read/write access. Locks are released immediately after each
-        index row is fetched or inserted.  These index types provide
-        the highest concurrency without deadlock conditions.
+        读/写访问使用短期的共享/排他页级锁。每次取出或插入索引行后立即释放锁。这些索引类型提供最高的并发度，且不会出现死锁情况。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
       <term>
-       Hash indexes
+       哈希索引
       </term>
       <listitem>
        <para>
-        Share/exclusive hash-bucket-level locks are used for read/write
-        access.  Locks are released after the whole bucket is processed.
-        Bucket-level locks provide better concurrency than index-level
-        ones, but deadlock is possible since the locks are held longer
-        than one index operation.
+        读/写访问使用共享/排他哈希桶级锁。处理完整个桶后释放锁。桶级锁比索引级锁提供更好的并发性，但由于锁的持有时间超过一次索引操作，因此可能出现死锁。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
       <term>
-       <acronym>GIN</acronym> indexes
+       <acronym>GIN</acronym> 索引
       </term>
       <listitem>
        <para>
-        Short-term share/exclusive page-level locks are used for
-        read/write access. Locks are released immediately after each
-        index row is fetched or inserted. But note that insertion of a
-        GIN-indexed value usually produces several index key insertions
-        per row, so GIN might do substantial work for a single value's
-        insertion.
+        短期共享/排他页级锁用于读/写访问。每次取出或插入索引行后，锁会立即释放。但请注意，插入一个 GIN 索引值通常会产生每行多个索引键插入，因此 GIN 为插入单个值可能会做大量工作。
        </para>
       </listitem>
      </varlistentry>
@@ -1275,12 +1263,7 @@ SELECT pg_advisory_lock(q.id) FROM
    </para>
 
    <para>
-    Currently, B-tree indexes offer the best performance for concurrent
-    applications; since they also have more features than hash
-    indexes, they are the recommended index type for concurrent
-    applications that need to index scalar data. When dealing with
-    non-scalar data, B-trees are not useful, and GiST, SP-GiST or GIN
-    indexes should be used instead.
+    目前，B-tree 索引为并发应用提供了最佳性能；由于它们比哈希索引具有更多特性，因此对于需要对标量数据建立索引的并发应用来说，它们是推荐的索引类型。在处理非标量数据时，B-tree 并不适用，而应改用 GiST、SP-GiST 或 GIN 索引。
    </para>
   </sect1>
  </chapter>
