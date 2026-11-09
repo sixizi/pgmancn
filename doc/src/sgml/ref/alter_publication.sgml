@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER PUBLICATION</refname>
-  <refpurpose>change the definition of a publication</refpurpose>
+  <refpurpose>更改发布的定义</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -45,72 +45,52 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   The command <command>ALTER PUBLICATION</command> can change the attributes
-   of a publication.
+   命令 <command>ALTER PUBLICATION</command> 可以更改发布的属性。
   </para>
 
   <para>
-   The first three variants change which tables/schemas are part of the
-   publication.  The <literal>SET</literal> clause will replace the list of
-   tables/schemas in the publication with the specified list; the existing
-   tables/schemas that were present in the publication will be removed.  The
-   <literal>ADD</literal> and <literal>DROP</literal> clauses will add and
-   remove one or more tables/schemas from the publication.  Note that adding
-   tables/schemas to a publication that is already subscribed to will require an
-   <link linkend="sql-altersubscription-params-refresh-publication">
-   <literal>ALTER SUBSCRIPTION ... REFRESH PUBLICATION</literal></link> action on the
-   subscribing side in order to become effective. Note also that
-   <literal>DROP TABLES IN SCHEMA</literal> will not drop any schema tables
-   that were specified using
-   <link linkend="sql-createpublication-params-for-table"><literal>FOR TABLE</literal></link>/
-   <literal>ADD TABLE</literal>.
+   前三种变体更改哪些表/模式属于该发布。<literal>SET</literal> 子句将用指定的列表替换发布中的表/模式列表；发布中已有的表/模式将被移除。<literal>ADD</literal> 和 <literal>DROP</literal> 子句将从发布中添加和移除一个或多个表/模式。请注意，向已被订阅的发布中添加表/模式，需要在订阅端执行 <link linkend="sql-altersubscription-params-refresh-publication"><literal>ALTER SUBSCRIPTION ... REFRESH PUBLICATION</literal></link> 操作才能生效。另请注意，<literal>DROP TABLES IN SCHEMA</literal> 不会删除使用 <link linkend="sql-createpublication-params-for-table"><literal>FOR TABLE</literal></link>/<literal>ADD TABLE</literal> 指定的任何模式表。
   </para>
 
   <para>
-   The fourth variant of this command listed in the synopsis can change
-   all of the publication properties specified in
-   <xref linkend="sql-createpublication"/>.  Properties not mentioned in the
-   command retain their previous settings.
+   概要中列出的该命令的第四种变体可以更改 <xref linkend="sql-createpublication"/> 中指定的所有发布属性。命令中未提及的属性保留其先前的设置。
   </para>
 
   <para>
-   The remaining variants change the owner and the name of the publication.
+   其余变体更改发布的所有者和名称。
   </para>
 
   <para>
-   You must own the publication to use <command>ALTER PUBLICATION</command>.
-   Adding a table to a publication additionally requires owning that table.
-   The <literal>ADD TABLES IN SCHEMA</literal> and
-   <literal>SET TABLES IN SCHEMA</literal> to a publication requires the
-   invoking user to be a superuser.
-   To alter the owner, you must be able to <literal>SET ROLE</literal> to the
-   new owning role, and that role must have <literal>CREATE</literal>
-   privilege on the database.
-   Also, the new owner of a
-   <link linkend="sql-createpublication-params-for-all-tables"><literal>FOR ALL TABLES</literal></link>
-   or <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link>
-   publication must be a superuser. However, a superuser can
-   change the ownership of a publication regardless of these restrictions.
+   要使用 <command>ALTER PUBLICATION</command>，您必须拥有该发布。
+   向发布中添加表还要求您拥有该表。
+   对发布执行 <literal>ADD TABLES IN SCHEMA</literal> 和
+   <literal>SET TABLES IN SCHEMA</literal> 要求调用用户是超级用户。
+   要更改所有者，您必须能够 <literal>SET ROLE</literal> 到
+   新的拥有角色，并且该角色必须对数据库具有 <literal>CREATE</literal>
+   权限。
+   此外，<link linkend="sql-createpublication-params-for-all-tables"><literal>FOR ALL TABLES</literal></link>
+   或 <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link>
+   发布的新所有者必须是超级用户。但是，超级用户可以
+   不受这些限制地更改发布的所有权。
   </para>
 
   <para>
-   Adding/Setting any schema when the publication also publishes a table with a
-   column list, and vice versa is not supported.
+   当发布同时还发布带有列清单的表时，不支持添加/设置任何模式，反之亦然。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of an existing publication whose definition is to be altered.
+      要更改其定义的现有发布的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -119,29 +99,23 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
     <term><replaceable class="parameter">table_name</replaceable></term>
     <listitem>
      <para>
-      Name of an existing table.  If <literal>ONLY</literal> is specified before the
-      table name, only that table is affected.  If <literal>ONLY</literal> is not
-      specified, the table and all its descendant tables (if any) are
-      affected.  Optionally, <literal>*</literal> can be specified after the table
-      name to explicitly indicate that descendant tables are included.
+      现有表的名称。如果在表名之前指定了 <literal>ONLY</literal>，
+      则只影响该表。如果未指定 <literal>ONLY</literal>，
+      则影响该表及其所有后代表（如果有）。
+      可选地，可以在表名之后指定 <literal>*</literal>，
+      以明确表示包含后代表。
      </para>
 
      <para>
-      Optionally, a column list can be specified.  See <xref
-      linkend="sql-createpublication"/> for details. Note that a subscription
-      having several publications in which the same table has been published
-      with different column lists is not supported. See
-      <xref linkend="logical-replication-col-list-combining"/> for details of
-      potential problems when altering column lists.
+      可选地，可以指定列清单。详情请参见 <xref
+      linkend="sql-createpublication"/>。注意，不支持一个订阅包含多个发布，
+      且同一张表在这些发布中以不同的列清单发布。有关
+      更改列清单时可能出现的问题的详细信息，请参见
+      <xref linkend="logical-replication-col-list-combining"/>。
      </para>
 
      <para>
-      If the optional <literal>WHERE</literal> clause is specified, rows for
-      which the <replaceable class="parameter">expression</replaceable>
-      evaluates to false or null will not be published. Note that parentheses
-      are required around the expression. The
-      <replaceable class="parameter">expression</replaceable> is evaluated with
-      the role used for the replication connection.
+      如果指定了可选的 <literal>WHERE</literal> 子句，则 <replaceable class="parameter">expression</replaceable> 求值为假或空的行将不会被发布。注意，表达式两侧必须加圆括号。<replaceable class="parameter">expression</replaceable> 使用复制连接所用的角色进行求值。
      </para>
     </listitem>
    </varlistentry>
@@ -150,7 +124,7 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
     <term><replaceable class="parameter">schema_name</replaceable></term>
     <listitem>
      <para>
-      Name of an existing schema.
+      现有模式的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -159,22 +133,14 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
     <term><literal>SET ( <replaceable class="parameter">publication_parameter</replaceable> [= <replaceable class="parameter">value</replaceable>] [, ... ] )</literal></term>
     <listitem>
      <para>
-      This clause alters publication parameters originally set by
-      <xref linkend="sql-createpublication"/>.  See there for more information.
+      此子句用于更改最初由 <xref linkend="sql-createpublication"/> 设置的发布参数。更多信息请参见该处。
      </para>
      <caution>
       <para>
-       Altering the <literal>publish_via_partition_root</literal> parameter can
-       lead to data loss or duplication at the subscriber because it changes
-       the identity and schema of the published tables. Note this happens only
-       when a partition root table is specified as the replication target.
+       更改 <literal>publish_via_partition_root</literal> 参数可能导致订阅端出现数据丢失或重复，因为它会改变已发布表的标识和模式。注意，仅当将分区根表指定为复制目标时才会发生这种情况。
       </para>
       <para>
-       This problem can be avoided by refraining from modifying partition leaf
-       tables after the <command>ALTER PUBLICATION ... SET</command> until the
-       <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION ... REFRESH PUBLICATION</command></link>
-       is executed and by only refreshing using the <literal>copy_data = off</literal>
-       option.
+       要避免此问题，可以在执行 <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION ... REFRESH PUBLICATION</command></link> 之前不对 <command>ALTER PUBLICATION ... SET</command> 之后的分区叶子表进行修改，并且仅使用 <literal>copy_data = off</literal> 选项进行刷新。
       </para>
      </caution>
     </listitem>
@@ -184,7 +150,7 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
     <term><replaceable class="parameter">new_owner</replaceable></term>
     <listitem>
      <para>
-      The user name of the new owner of the publication.
+      发布的新所有者的用户名。
      </para>
     </listitem>
    </varlistentry>
@@ -193,7 +159,7 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
     <term><replaceable class="parameter">new_name</replaceable></term>
     <listitem>
      <para>
-      The new name for the publication.
+      发布的新名称。
      </para>
     </listitem>
    </varlistentry>
@@ -201,57 +167,54 @@ ALTER PUBLICATION <replaceable class="parameter">name</replaceable> RENAME TO <r
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Change the publication to publish only deletes and updates:
+   将发布更改为只发布删除和更新：
 <programlisting>
 ALTER PUBLICATION noinsert SET (publish = 'update, delete');
 </programlisting>
   </para>
 
   <para>
-   Add some tables to the publication:
+   向发布中添加一些表：
 <programlisting>
 ALTER PUBLICATION mypublication ADD TABLE users (user_id, firstname), departments;
 </programlisting></para>
 
   <para>
-   Change the set of columns published for a table:
+   更改表的已发布列集合：
 <programlisting>
 ALTER PUBLICATION mypublication SET TABLE users (user_id, firstname, lastname), TABLE departments;
 </programlisting></para>
 
   <para>
-   Add schemas <structname>marketing</structname> and
-   <structname>sales</structname> to the publication
-   <structname>sales_publication</structname>:
+   将模式 <structname>marketing</structname> 和
+   <structname>sales</structname> 添加到发布
+   <structname>sales_publication</structname>：
 <programlisting>
 ALTER PUBLICATION sales_publication ADD TABLES IN SCHEMA marketing, sales;
 </programlisting>
   </para>
 
   <para>
-   Add tables <structname>users</structname>,
-   <structname>departments</structname> and schema
-   <structname>production</structname> to the publication
-   <structname>production_publication</structname>:
+   将表 <structname>users</structname>、<structname>departments</structname> 和模式 <structname>production</structname> 添加到发布 <structname>production_publication</structname>：
 <programlisting>
 ALTER PUBLICATION production_publication ADD TABLE users, departments, TABLES IN SCHEMA production;
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>ALTER PUBLICATION</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>ALTER PUBLICATION</command> 是一个 <productname>PostgreSQL</productname>
+   扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createpublication"/></member>
