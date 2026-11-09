@@ -10,70 +10,63 @@
 
  <sect1 id="transaction-id">
 
-  <title>Transactions and Identifiers</title>
+  <title>事务与标识符</title>
 
   <para>
-   Transactions can be created explicitly using <command>BEGIN</command>
-   or <command>START TRANSACTION</command> and ended using
-   <command>COMMIT</command> or <command>ROLLBACK</command>.  SQL
-   statements outside of explicit transactions automatically use
-   single-statement transactions.
+   事务可以使用 <command>BEGIN</command>
+   或 <command>START TRANSACTION</command> 显式创建，并使用
+   <command>COMMIT</command> 或 <command>ROLLBACK</command> 结束。显式事务之外的 SQL
+   语句自动使用单语句事务。
   </para>
 
   <para>
-   Every transaction is identified by a unique
-   <literal>VirtualTransactionId</literal> (also called
-   <literal>virtualXID</literal> or <literal>vxid</literal>), which
-   is comprised of a backend's process number (or <literal>procNumber</literal>)
-   and a sequentially-assigned number local to each backend, known as
-   <literal>localXID</literal>.  For example, the virtual transaction
-   ID <literal>4/12532</literal> has a <literal>procNumber</literal>
-   of <literal>4</literal> and a <literal>localXID</literal> of
-   <literal>12532</literal>.
+   每个事务都由一个唯一的
+   <literal>VirtualTransactionId</literal>（也称为
+   <literal>virtualXID</literal> 或 <literal>vxid</literal>）标识，它
+   由后端的进程号（或 <literal>procNumber</literal>）
+   和一个在每个后端本地按顺序分配的编号（称为
+   <literal>localXID</literal>）组成。例如，虚拟事务
+   ID <literal>4/12532</literal> 的 <literal>procNumber</literal>
+   为 <literal>4</literal>，<literal>localXID</literal> 为
+   <literal>12532</literal>。
   </para>
 
   <para>
-   Non-virtual <literal>TransactionId</literal>s (or <type>xid</type>),
-   e.g., <literal>278394</literal>, are assigned sequentially to
-   transactions from a global counter used by all databases within
-   the <productname>PostgreSQL</productname> cluster.  This assignment
-   happens when a transaction first writes to the database. This means
-   lower-numbered xids started writing before higher-numbered xids.
-   Note that the order in which transactions perform their first database
-   write might be different from the order in which the transactions
-   started, particularly if the transaction started with statements that
-   only performed database reads.
+   非虚拟的 <literal>TransactionId</literal>（或 <type>xid</type>），
+   例如 <literal>278394</literal>，是从 <productname>PostgreSQL</productname> 集簇中
+   所有数据库共用的全局计数器按顺序分配给
+   事务的。这种分配发生在事务第一次写入数据库时。
+   这意味着编号较小的 xid 比编号较大的 xid 更早开始写入。
+   请注意，事务执行第一次数据库写入的顺序
+   可能与事务启动的顺序不同，特别是当
+   事务以只执行数据库读取的语句启动时。
   </para>
 
   <para>
-   The internal transaction ID type <type>xid</type> is 32 bits wide
-   and <link linkend="vacuum-for-wraparound">wraps around</link> every
-   4 billion transactions. A 32-bit epoch is incremented during each
-   wraparound. There is also a 64-bit type <type>xid8</type> which
-   includes this epoch and therefore does not wrap around during the
-   life of an installation;  it can be converted to xid by casting.
-   The functions in <xref linkend="functions-pg-snapshot"/>
-   return <type>xid8</type> values.  Xids are used as the
-   basis for <productname>PostgreSQL</productname>'s <link
-   linkend="mvcc">MVCC</link> concurrency mechanism and streaming
-   replication.
+   内部事务 ID 类型 <type>xid</type> 是 32 位宽，
+   每 40 亿个事务会 <link linkend="vacuum-for-wraparound">回卷</link> 一次。每次回卷时，
+   32 位的 epoch 会递增。还有一个 64 位类型 <type>xid8</type>，
+   它包含该 epoch，因此在一次安装的
+   生命周期内不会回卷；可以通过类型转换将其转换为 xid。
+   <xref linkend="functions-pg-snapshot"/>
+   中的函数返回 <type>xid8</type> 值。xid 是
+   <productname>PostgreSQL</productname> 的 <link
+   linkend="mvcc">MVCC</link> 并发机制和流复制
+   的基础。
   </para>
 
   <para>
-   When a top-level transaction with a (non-virtual) xid commits,
-   it is marked as committed in the <filename>pg_xact</filename>
-   directory. Additional information is recorded in the
-   <filename>pg_commit_ts</filename> directory if <xref
-   linkend="guc-track-commit-timestamp"/> is enabled.
+   当一个带有（非虚拟）xid 的顶层事务提交时，
+   它会在 <filename>pg_xact</filename>
+   目录中被标记为已提交。如果启用了
+   <xref
+   linkend="guc-track-commit-timestamp"/>，额外信息会记录在
+   <filename>pg_commit_ts</filename> 目录中。
   </para>
 
   <para>
-   In addition to <literal>vxid</literal> and <literal>xid</literal>,
-   prepared transactions are also assigned Global Transaction
-   Identifiers (<acronym>GID</acronym>). GIDs are string literals up
-   to 200 bytes long, which must be unique amongst other currently
-   prepared transactions.  The mapping of GID to xid is shown in <link
-   linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link>.
+   除 <literal>vxid</literal> 和 <literal>xid</literal> 之外，预备事务还会被分配全局事务标识符（<acronym>GID</acronym>）。GID 是长度最多为 200 字节的字符串字面量，并且在当前其他预备事务中必须唯一。GID 到 xid 的映射显示在 <link
+   linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link> 中。
   </para>
  </sect1>
 
