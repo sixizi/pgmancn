@@ -872,7 +872,7 @@ SELECT target FROM tests WHERE subject = 'some-subject' AND success;
 
 
  <sect1 id="indexes-opclass">
-  <title>Operator Classes and Operator Families</title>
+  <title>运算符类与运算符族</title>
 
   <indexterm zone="indexes-opclass">
    <primary>operator class</primary>
@@ -883,26 +883,11 @@ SELECT target FROM tests WHERE subject = 'some-subject' AND success;
   </indexterm>
 
   <para>
-   An index definition can specify an <firstterm>operator
-   class</firstterm> for each column of an index.
+   索引定义可以为索引的每一列指定一个<firstterm>运算符类</firstterm>。
 <synopsis>
 CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable> (<replaceable>column</replaceable> <replaceable>opclass</replaceable> [ ( <replaceable>opclass_options</replaceable> ) ] <optional><replaceable>sort options</replaceable></optional> <optional>, ...</optional>);
 </synopsis>
-   The operator class identifies the operators to be used by the index
-   for that column.  For example, a B-tree index on the type <type>int4</type>
-   would use the <literal>int4_ops</literal> class; this operator
-   class includes comparison functions for values of type <type>int4</type>.
-   In practice the default operator class for the column's data type is
-   usually sufficient.  The main reason for having operator classes is
-   that for some data types, there could be more than one meaningful
-   index behavior.  For example, we might want to sort a complex-number data
-   type either by absolute value or by real part.  We could do this by
-   defining two operator classes for the data type and then selecting
-   the proper class when making an index.  The operator class determines
-   the basic sort ordering (which can then be modified by adding sort options
-   <literal>COLLATE</literal>,
-   <literal>ASC</literal>/<literal>DESC</literal> and/or
-   <literal>NULLS FIRST</literal>/<literal>NULLS LAST</literal>).
+   运算符类标识该索引列要使用的运算符。例如，类型 <type>int4</type> 上的 B-tree 索引会使用 <literal>int4_ops</literal> 类；该运算符类包含类型 <type>int4</type> 值的比较函数。在实践中，列数据类型的默认运算符类通常就足够了。引入运算符类的主要原因是：对于某些数据类型，可能存在不止一种有意义的索引行为。例如，我们可能希望按绝对值或按实部对复数数据类型排序。我们可以为该数据类型定义两个运算符类，然后在创建索引时选择合适的类来实现这一点。运算符类决定基本的排序顺序（之后可以通过添加排序选项 <literal>COLLATE</literal>、<literal>ASC</literal>/<literal>DESC</literal> 和/或 <literal>NULLS FIRST</literal>/<literal>NULLS LAST</literal> 来修改）。
   </para>
 
   <para>
@@ -911,41 +896,18 @@ CREATE INDEX <replaceable>name</replaceable> ON <replaceable>table</replaceable>
    <itemizedlist>
     <listitem>
      <para>
-      The operator classes <literal>text_pattern_ops</literal>,
-      <literal>varchar_pattern_ops</literal>, and
-      <literal>bpchar_pattern_ops</literal> support B-tree indexes on
-      the types <type>text</type>, <type>varchar</type>, and
-      <type>char</type> respectively.  The
-      difference from the default operator classes is that the values
-      are compared strictly character by character rather than
-      according to the locale-specific collation rules.  This makes
-      these operator classes suitable for use by queries involving
-      pattern matching expressions (<literal>LIKE</literal> or POSIX
-      regular expressions) when the database does not use the standard
-      <quote>C</quote> locale.  As an example, you might index a
-      <type>varchar</type> column like this:
+      运算符类 <literal>text_pattern_ops</literal>、<literal>varchar_pattern_ops</literal> 和 <literal>bpchar_pattern_ops</literal> 分别支持类型 <type>text</type>、<type>varchar</type> 和 <type>char</type> 上的 B-tree 索引。与默认运算符类的区别在于，值是按字符严格逐字符比较的，而不是按照区域设置相关的排序规则进行比较。这使得这些运算符类适用于数据库未使用标准 <quote>C</quote> 区域设置时涉及模式匹配表达式（<literal>LIKE</literal> 或 POSIX 正则表达式）的查询。例如，你可以像这样为 <type>varchar</type> 列建立索引：
 <programlisting>
 CREATE INDEX test_index ON test_table (col varchar_pattern_ops);
 </programlisting>
-      Note that you should also create an index with the default operator
-      class if you want queries involving ordinary <literal>&lt;</literal>,
-      <literal>&lt;=</literal>, <literal>&gt;</literal>, or <literal>&gt;=</literal> comparisons
-      to use an index.  Such queries cannot use the
-      <literal><replaceable>xxx</replaceable>_pattern_ops</literal>
-      operator classes.  (Ordinary equality comparisons can use these
-      operator classes, however.)  It is possible to create multiple
-      indexes on the same column with different operator classes.
-      If you do use the C locale, you do not need the
-      <literal><replaceable>xxx</replaceable>_pattern_ops</literal>
-      operator classes, because an index with the default operator class
-      is usable for pattern-matching queries in the C locale.
+      请注意，如果你希望涉及普通 <literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>&gt;</literal> 或 <literal>&gt;=</literal> 比较的查询使用索引，还应该用默认运算符类创建一个索引。这类查询无法使用 <literal><replaceable>xxx</replaceable>_pattern_ops</literal> 运算符类。（不过，普通的等值比较可以使用这些运算符类。）可以在同一列上使用不同的运算符类创建多个索引。如果你确实使用 C 区域设置，则不需要 <literal><replaceable>xxx</replaceable>_pattern_ops</literal> 运算符类，因为使用默认运算符类的索引在 C 区域设置下可用于模式匹配查询。
      </para>
     </listitem>
    </itemizedlist>
   </para>
 
   <para>
-    The following query shows all defined operator classes:
+    下面的查询显示了所有已定义的运算符类：
 
 <programlisting>
 SELECT am.amname AS index_method,
@@ -959,18 +921,11 @@ SELECT am.amname AS index_method,
   </para>
 
   <para>
-   An operator class is actually just a subset of a larger structure called an
-   <firstterm>operator family</firstterm>.  In cases where several data types have
-   similar behaviors, it is frequently useful to define cross-data-type
-   operators and allow these to work with indexes.  To do this, the operator
-   classes for each of the types must be grouped into the same operator
-   family.  The cross-type operators are members of the family, but are not
-   associated with any single class within the family.
+   运算符类实际上只是一个更大结构的子集，这个更大的结构称为<firstterm>运算符族</firstterm>。当多个数据类型具有相似的行为时，定义跨数据类型的运算符并让它们能用于索引通常很有用。要做到这一点，必须把每个类型的运算符类归入同一个运算符族。跨类型运算符是该族的成员，但不与族中的任何单个类相关联。
   </para>
 
   <para>
-    This expanded version of the previous query shows the operator family
-    each operator class belongs to:
+    上一个查询的这个扩展版本显示了每个运算符类所属的运算符族：
 <programlisting>
 SELECT am.amname AS index_method,
        opc.opcname AS opclass_name,
@@ -985,8 +940,7 @@ SELECT am.amname AS index_method,
   </para>
 
   <para>
-    This query shows all defined operator families and all
-    the operators included in each family:
+    这个查询显示了所有已定义的运算符族以及每个族中包含的所有运算符：
 <programlisting>
 SELECT am.amname AS index_method,
        opf.opfname AS opfamily_name,
@@ -1000,10 +954,7 @@ SELECT am.amname AS index_method,
 
   <tip>
    <para>
-    <xref linkend="app-psql"/> has
-    commands <command>\dAc</command>, <command>\dAf</command>,
-    and <command>\dAo</command>, which provide slightly more sophisticated
-    versions of these queries.
+    <xref linkend="app-psql"/> 提供了命令 <command>\dAc</command>、<command>\dAf</command> 和 <command>\dAo</command>，它们提供了这些查询的稍微更精细的版本。
    </para>
   </tip>
  </sect1>
