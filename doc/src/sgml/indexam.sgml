@@ -49,38 +49,34 @@
   </para>
 
  <sect1 id="index-api">
-  <title>Basic API Structure for Indexes</title>
+  <title>索引的基本 API 结构</title>
 
   <para>
-   Each index access method is described by a row in the
+   每一种索引访问方法都由
    <link linkend="catalog-pg-am"><structname>pg_am</structname></link>
-   system catalog.  The <structname>pg_am</structname> entry
-   specifies a name and a <firstterm>handler function</firstterm> for the index
-   access method.  These entries can be created and deleted using the
-   <xref linkend="sql-create-access-method"/> and
-   <xref linkend="sql-drop-access-method"/> SQL commands.
+   系统目录中的一行来描述。<structname>pg_am</structname> 条目
+   为该索引访问方法指定一个名称和一个<firstterm>处理函数</firstterm>。
+   这些条目可以使用
+   <xref linkend="sql-create-access-method"/> 和
+   <xref linkend="sql-drop-access-method"/> SQL 命令来创建和删除。
   </para>
 
   <para>
-   An index access method handler function must be declared to accept a
-   single argument of type <type>internal</type> and to return the
-   pseudo-type <type>index_am_handler</type>.  The argument is a dummy value that
-   simply serves to prevent handler functions from being called directly from
-   SQL commands.  The result of the function must be a palloc'd struct of
-   type <structname>IndexAmRoutine</structname>, which contains everything
-   that the core code needs to know to make use of the index access method.
-   The <structname>IndexAmRoutine</structname> struct, also called the access
-   method's <firstterm>API struct</firstterm>, includes fields specifying assorted
-   fixed properties of the access method, such as whether it can support
-   multicolumn indexes.  More importantly, it contains pointers to support
-   functions for the access method, which do all of the real work to access
-   indexes.  These support functions are plain C functions and are not
-   visible or callable at the SQL level.  The support functions are described
-   in <xref linkend="index-functions"/>.
+   索引访问方法的处理函数必须声明为接受一个类型为 <type>internal</type> 的
+   参数，并返回伪类型 <type>index_am_handler</type>。该参数是一个哑值，
+   仅仅用于防止处理函数被直接从 SQL 命令中调用。
+   该函数的结果必须是一个由 palloc 分配的类型为 <structname>IndexAmRoutine</structname> 的结构体，
+   其中包含核心代码使用该索引访问方法所需了解的一切信息。
+   <structname>IndexAmRoutine</structname> 结构体也称为该访问方法的 <firstterm>API 结构体</firstterm>，
+   它包含的字段指定了该访问方法的各种固定属性，例如它是否
+   支持多列索引。更重要的是，它包含指向该访问方法的支持函数的
+   指针，这些函数完成访问索引的全部实际工作。这些支持函数是
+   普通的 C 函数，在 SQL 层面上不可见也不可调用。支持函数在
+   <xref linkend="index-functions"/> 中描述。
   </para>
 
   <para>
-   The structure <structname>IndexAmRoutine</structname> is defined thus:
+   结构体 <structname>IndexAmRoutine</structname> 的定义如下：
 <programlisting>
 typedef struct IndexAmRoutine
 {
@@ -175,99 +171,31 @@ typedef struct IndexAmRoutine
   </para>
 
   <para>
-   To be useful, an index access method must also have one or more
-   <firstterm>operator families</firstterm> and
-   <firstterm>operator classes</firstterm> defined in
-   <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>,
-   <link linkend="catalog-pg-opclass"><structname>pg_opclass</structname></link>,
-   <link linkend="catalog-pg-amop"><structname>pg_amop</structname></link>, and
-   <link linkend="catalog-pg-amproc"><structname>pg_amproc</structname></link>.
-   These entries allow the planner
-   to determine what kinds of query qualifications can be used with
-   indexes of this access method.  Operator families and classes are described
-   in <xref linkend="xindex"/>, which is prerequisite material for reading
-   this chapter.
+   为了发挥作用，索引访问方法还必须在
+   <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>、
+   <link linkend="catalog-pg-opclass"><structname>pg_opclass</structname></link>、
+   <link linkend="catalog-pg-amop"><structname>pg_amop</structname></link> 和
+   <link linkend="catalog-pg-amproc"><structname>pg_amproc</structname></link> 中定义一个或多个
+   <firstterm>运算符族</firstterm>和<firstterm>运算符类</firstterm>。
+   这些条目让查询规划器能够确定哪些种类的查询条件可以与该访问方法的
+   索引一起使用。运算符族和运算符类在 <xref linkend="xindex"/> 中描述，
+   这是阅读本章的先决材料。
   </para>
 
   <para>
-   An individual index is defined by a
-   <link linkend="catalog-pg-class"><structname>pg_class</structname></link>
-   entry that describes it as a physical relation, plus a
-   <link linkend="catalog-pg-index"><structname>pg_index</structname></link>
-   entry that shows the logical content of the index &mdash; that is, the set
-   of index columns it has and the semantics of those columns, as captured by
-   the associated operator classes.  The index columns (key values) can be
-   either simple columns of the underlying table or expressions over the table
-   rows.  The index access method normally has no interest in where the index
-   key values come from (it is always handed precomputed key values) but it
-   will be very interested in the operator class information in
-   <structname>pg_index</structname>.  Both of these catalog entries can be
-   accessed as part of the <structname>Relation</structname> data structure that is
-   passed to all operations on the index.
+   单个索引由 <link linkend="catalog-pg-class"><structname>pg_class</structname></link> 条目定义，该条目将其描述为一个物理关系，再加上一个 <link linkend="catalog-pg-index"><structname>pg_index</structname></link> 条目，该条目显示索引的逻辑内容 &mdash; 即它所具有的索引列集合以及这些列的语义，这些语义由关联的运算符类所体现。索引列（键值）可以是底层表的简单列，也可以是表行上的表达式。索引访问方法通常不关心索引键值来自何处（它总是被传入预先计算好的键值），但它会非常关心 <structname>pg_index</structname> 中的运算符类信息。这两个系统目录条目都可以作为 <structname>Relation</structname> 数据结构的一部分被访问，该数据结构会传递给对该索引的所有操作。
   </para>
 
   <para>
-   Some of the flag fields of <structname>IndexAmRoutine</structname> have nonobvious
-   implications.  The requirements of <structfield>amcanunique</structfield>
-   are discussed in <xref linkend="index-unique-checks"/>.
-   The <structfield>amcanmulticol</structfield> flag asserts that the
-   access method supports multi-key-column indexes, while
-   <structfield>amoptionalkey</structfield> asserts that it allows scans
-   where no indexable restriction clause is given for the first index column.
-   When <structfield>amcanmulticol</structfield> is false,
-   <structfield>amoptionalkey</structfield> essentially says whether the
-   access method supports full-index scans without any restriction clause.
-   Access methods that support multiple index columns <emphasis>must</emphasis>
-   support scans that omit restrictions on any or all of the columns after
-   the first; however they are permitted to require some restriction to
-   appear for the first index column, and this is signaled by setting
-   <structfield>amoptionalkey</structfield> false.
-   One reason that an index <acronym>AM</acronym> might set
-   <structfield>amoptionalkey</structfield> false is if it doesn't index
-   null values.  Since most indexable operators are
-   strict and hence cannot return true for null inputs,
-   it is at first sight attractive to not store index entries for null values:
-   they could never be returned by an index scan anyway.  However, this
-   argument fails when an index scan has no restriction clause for a given
-   index column.  In practice this means that
-   indexes that have <structfield>amoptionalkey</structfield> true must
-   index nulls, since the planner might decide to use such an index
-   with no scan keys at all.  A related restriction is that an index
-   access method that supports multiple index columns <emphasis>must</emphasis>
-   support indexing null values in columns after the first, because the planner
-   will assume the index can be used for queries that do not restrict
-   these columns.  For example, consider an index on (a,b) and a query with
-   <literal>WHERE a = 4</literal>.  The system will assume the index can be
-   used to scan for rows with <literal>a = 4</literal>, which is wrong if the
-   index omits rows where <literal>b</literal> is null.
-   It is, however, OK to omit rows where the first indexed column is null.
-   An index access method that does index nulls may also set
-   <structfield>amsearchnulls</structfield>, indicating that it supports
-   <literal>IS NULL</literal> and <literal>IS NOT NULL</literal> clauses as search
-   conditions.
+   <structname>IndexAmRoutine</structname> 的某些标志字段具有并不显而易见的含义。<structfield>amcanunique</structfield> 的要求在 <xref linkend="index-unique-checks"/> 中讨论。<structfield>amcanmulticol</structfield> 标志断言该访问方法支持多键列索引，而 <structfield>amoptionalkey</structfield> 断言它允许在未对第一个索引列给出可索引限制条件的情况下进行扫描。当 <structfield>amcanmulticol</structfield> 为 false 时，<structfield>amoptionalkey</structfield> 实质上表示该访问方法是否支持不带任何限制条件的全索引扫描。支持多个索引列的访问方法<emphasis>必须</emphasis>支持省略对第一个之后任意列或所有列的限制的扫描；但允许它们要求对第一个索引列出现某种限制，这通过将 <structfield>amoptionalkey</structfield> 设为 false 来表示。索引 <acronym>AM</acronym> 可能将 <structfield>amoptionalkey</structfield> 设为 false 的一个原因是它不对空值建立索引。由于大多数可索引运算符都是严格的，因而对空输入无法返回 true，所以乍看之下不为空值存储索引项很有吸引力：反正索引扫描永远不会返回它们。然而，当索引扫描对某个给定索引列没有限制条件时，这一论点就不成立了。在实践中，这意味着 <structfield>amoptionalkey</structfield> 为 true 的索引必须对空值建立索引，因为规划器可能决定在完全没有扫描键的情况下使用这样的索引。一个相关的限制是，支持多个索引列的索引访问方法<emphasis>必须</emphasis>支持对第一个之后各列中的空值建立索引，因为规划器会假定该索引可用于不限制这些列的查询。例如，考虑一个建立在 (a,b) 上的索引以及一个带有 <literal>WHERE a = 4</literal> 的查询。系统会假定该索引可用于扫描满足 <literal>a = 4</literal> 的行，如果该索引省略了 <literal>b</literal> 为空值的行，那就是错误的。不过，省略第一个索引列为空值的行是可以的。对空值建立索引的索引访问方法还可以设置 <structfield>amsearchnulls</structfield>，表示它支持将 <literal>IS NULL</literal> 和 <literal>IS NOT NULL</literal> 子句作为搜索条件。
   </para>
 
   <para>
-   The <structfield>amcaninclude</structfield> flag indicates whether the
-   access method supports <quote>included</quote> columns, that is it can
-   store (without processing) additional columns beyond the key column(s).
-   The requirements of the preceding paragraph apply only to the key
-   columns.  In particular, the combination
-   of <structfield>amcanmulticol</structfield>=<literal>false</literal>
-   and <structfield>amcaninclude</structfield>=<literal>true</literal> is
-   sensible: it means that there can only be one key column, but there can
-   also be included column(s).  Also, included columns must be allowed to be
-   null, independently of <structfield>amoptionalkey</structfield>.
+   <structfield>amcaninclude</structfield> 标志指示访问方法是否支持<quote>包含</quote>列，也就是说，它能否存储（而不处理）键列之外的额外列。上一段的要求仅适用于键列。特别地，<structfield>amcanmulticol</structfield>=<literal>false</literal> 与 <structfield>amcaninclude</structfield>=<literal>true</literal> 的组合是合理的：这意味着只能有一个键列，但也可以有包含列。此外，无论 <structfield>amoptionalkey</structfield> 如何，包含列都必须允许为空。
   </para>
 
   <para>
-   The <structfield>amsummarizing</structfield> flag indicates whether the
-   access method summarizes the indexed tuples, with summarizing granularity
-   of at least per block.
-   Access methods that do not point to individual tuples, but to block ranges
-   (like <acronym>BRIN</acronym>), may allow the <acronym>HOT</acronym> optimization
-   to continue. This does not apply to attributes referenced in index
-   predicates, an update of such an attribute always disables <acronym>HOT</acronym>.
+   <structfield>amsummarizing</structfield> 标志指示访问方法是否对索引元组进行汇总，汇总粒度至少为每个块。不指向单个元组而是指向块范围的访问方法（如 <acronym>BRIN</acronym>）可能允许 <acronym>HOT</acronym> 优化继续进行。这不适用于索引谓词中引用的属性，此类属性的更新总是会禁用 <acronym>HOT</acronym>。
   </para>
 
  </sect1>
