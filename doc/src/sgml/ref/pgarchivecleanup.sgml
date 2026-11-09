@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>pg_archivecleanup</refname>
-  <refpurpose>clean up <productname>PostgreSQL</productname> WAL archive files</refpurpose>
+  <refpurpose>清理 <productname>PostgreSQL</productname> WAL 归档文件</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -29,47 +29,24 @@ PostgreSQL documentation
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
  <para>
-  <application>pg_archivecleanup</application> is designed to be used as an
-  <literal>archive_cleanup_command</literal> to clean up WAL file archives when
-  running as a standby server (see <xref linkend="warm-standby"/>).
-  <application>pg_archivecleanup</application> can also be used as a standalone program to
-  clean WAL file archives.
+  <application>pg_archivecleanup</application> 被设计为在作为后备服务器运行时用作清理 WAL 文件归档的 <literal>archive_cleanup_command</literal>（见 <xref linkend="warm-standby"/>）。<application>pg_archivecleanup</application> 也可以作为独立程序来清理 WAL 文件归档。
  </para>
 
   <para>
-   To configure a standby
-   server to use <application>pg_archivecleanup</application>, put this into its
-   <filename>postgresql.conf</filename> configuration file:
+   要配置后备服务器使用 <application>pg_archivecleanup</application>，请将以下内容放入其 <filename>postgresql.conf</filename> 配置文件中：
 <programlisting>
 archive_cleanup_command = 'pg_archivecleanup <replaceable>archivelocation</replaceable> %r'
 </programlisting>
-   where <replaceable>archivelocation</replaceable> is the directory from which WAL segment
-   files should be removed.
+   其中 <replaceable>archivelocation</replaceable> 是应从中移除 WAL 段文件的目录。
   </para>
   <para>
-   When used within <xref linkend="guc-archive-cleanup-command"/>, all WAL files
-   logically preceding the value of the <literal>%r</literal> argument will be removed
-   from <replaceable>archivelocation</replaceable>. This minimizes the number of files
-   that need to be retained, while preserving crash-restart capability.  Use of
-   this parameter is appropriate if the <replaceable>archivelocation</replaceable> is a
-   transient staging area for this particular standby server, but
-   <emphasis>not</emphasis> when the <replaceable>archivelocation</replaceable> is intended as a
-   long-term WAL archive area, or when multiple standby servers are recovering
-   from the same archive location.
+   当在 <xref linkend="guc-archive-cleanup-command"/> 中使用时，所有在逻辑上早于 <literal>%r</literal> 参数值的 WAL 文件都将从 <replaceable>archivelocation</replaceable> 中移除。这可以最大限度地减少需要保留的文件数，同时保留崩溃重启能力。如果 <replaceable>archivelocation</replaceable> 是此特定后备服务器的临时暂存区，则使用此参数是合适的，但当 <replaceable>archivelocation</replaceable> 旨在作为长期 WAL 归档区时，或者当多个后备服务器从同一归档位置恢复时，则<emphasis>不</emphasis>合适。
   </para>
   <para>
-   When used as a standalone program all WAL files logically preceding the
-   <replaceable>oldestkeptwalfile</replaceable> will be removed from <replaceable>archivelocation</replaceable>.
-   In this mode, if you specify a <filename>.partial</filename> or <filename>.backup</filename>
-   file name, then only the file prefix will be used as the
-   <replaceable>oldestkeptwalfile</replaceable>. This treatment of <filename>.backup</filename>
-   file name allows you to remove
-   all WAL files archived prior to a specific base backup without error.
-   For example, the following example will remove all files older than
-   WAL file name <filename>000000010000003700000010</filename>:
+   当作为独立程序使用时，所有在逻辑上早于 <replaceable>oldestkeptwalfile</replaceable> 的 WAL 文件都将从 <replaceable>archivelocation</replaceable> 中移除。在此模式下，如果指定了 <filename>.partial</filename> 或 <filename>.backup</filename> 文件名，则只有文件前缀会被用作 <replaceable>oldestkeptwalfile</replaceable>。这种对 <filename>.backup</filename> 文件名的处理方式使您可以无错误地移除在特定基础备份之前归档的所有 WAL 文件。例如，以下示例将移除所有早于 WAL 文件名 <filename>000000010000003700000010</filename> 的文件：
 <programlisting>
 pg_archivecleanup -d archive 000000010000003700000010.00000020.backup
 
@@ -79,17 +56,15 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
 </programlisting>
   </para>
   <para>
-   <application>pg_archivecleanup</application> assumes that
-   <replaceable>archivelocation</replaceable> is a directory readable and writable by the
-   server-owning user.
+   <application>pg_archivecleanup</application> 假定 <replaceable>archivelocation</replaceable> 是服务器所属用户可读写的目录。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Options</title>
+  <title>选项</title>
 
    <para>
-    <application>pg_archivecleanup</application> accepts the following command-line arguments:
+    <application>pg_archivecleanup</application> 接受以下命令行参数：
 
     <variablelist>
 
@@ -98,9 +73,8 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--clean-backup-history</option></term>
       <listitem>
        <para>
-         Remove backup history files as well.
-         See <xref linkend="backup-base-backup"/> for details about backup
-         history files.
+         同时删除备份历史文件。
+         有关备份历史文件的详细信息，请参见 <xref linkend="backup-base-backup"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -110,7 +84,7 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--debug</option></term>
       <listitem>
        <para>
-        Print lots of debug logging output on <filename>stderr</filename>.
+        在 <filename>stderr</filename> 上打印大量调试日志输出。
        </para>
       </listitem>
      </varlistentry>
@@ -120,7 +94,7 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--dry-run</option></term>
       <listitem>
        <para>
-        Print the names of the files that would have been removed on <filename>stdout</filename> (performs a dry run).
+        打印在 <filename>stdout</filename> 上将被删除的文件的名称（执行一次试运行）。
        </para>
       </listitem>
      </varlistentry>
@@ -130,7 +104,7 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--version</option></term>
       <listitem>
        <para>
-        Print the <application>pg_archivecleanup</application> version and exit.
+        打印 <application>pg_archivecleanup</application> 版本并退出。
        </para>
       </listitem>
      </varlistentry>
@@ -140,12 +114,9 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--strip-extension=<replaceable class="parameter">extension</replaceable></option></term>
       <listitem>
        <para>
-        Provide an extension
-        that will be stripped from all file names before deciding if they
-        should be deleted.  This is typically useful for cleaning up archives
-        that have been compressed during storage, and therefore have had an
-        extension added by the compression program.  For example: <literal>-x
-        .gz</literal>.
+        提供一个扩展名，
+        在决定是否删除文件之前，会先从所有文件名中剥离该扩展名。这通常用于清理在存储期间被压缩、因而被压缩程序添加了扩展名的归档文件。例如：<literal>-x
+        .gz</literal>。
        </para>
 
       </listitem>
@@ -156,8 +127,7 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
       <term><option>--help</option></term>
       <listitem>
        <para>
-        Show help about <application>pg_archivecleanup</application> command line
-        arguments, and exit.
+        显示关于 <application>pg_archivecleanup</application> 命令行参数的帮助，并退出。
        </para>
       </listitem>
      </varlistentry>
@@ -166,54 +136,44 @@ pg_archivecleanup:  removing file "archive/00000001000000370000000E"
  </refsect1>
 
  <refsect1>
-  <title>Environment</title>
+  <title>环境</title>
 
   <para>
-   The environment variable <envar>PG_COLOR</envar> specifies whether to use
-   color in diagnostic messages. Possible values are
-   <literal>always</literal>, <literal>auto</literal> and
-   <literal>never</literal>.
+   环境变量 <envar>PG_COLOR</envar> 指定是否在诊断消息中使用颜色。可能的值为 <literal>always</literal>、<literal>auto</literal> 和 <literal>never</literal>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>备注</title>
 
   <para>
-   <application>pg_archivecleanup</application> is designed to work with
-   <productname>PostgreSQL</productname> 8.0 and later when used as a standalone utility,
-   or with <productname>PostgreSQL</productname> 9.0 and later when used as an
-   archive cleanup command.
+   <application>pg_archivecleanup</application> 被设计为在作为独立工具使用时，可与 <productname>PostgreSQL</productname> 8.0 及更高版本配合工作；而在作为归档清理命令使用时，可与 <productname>PostgreSQL</productname> 9.0 及更高版本配合工作。
   </para>
 
   <para>
-   <application>pg_archivecleanup</application> is written in C and has an
-   easy-to-modify source code, with specifically designated sections to modify
-   for your own needs
+   <application>pg_archivecleanup</application> 用 C 语言编写，源代码易于修改，其中专门指定了若干区段供你按自身需求进行修改
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
-  <para>On Linux or Unix systems, you might use:
+  <para>在 Linux 或 Unix 系统上，你可能会使用：
 <programlisting>
 archive_cleanup_command = 'pg_archivecleanup -d /mnt/standby/archive %r 2>>cleanup.log'
 </programlisting>
-   where the archive directory is physically located on the standby server,
-   so that the <varname>archive_command</varname> is accessing it across NFS,
-   but the files are local to the standby.
-   This will:
+   其中归档目录在物理上位于后备服务器上，因此 <varname>archive_command</varname> 是通过 NFS 访问它，而这些文件对于后备服务器而言是本地文件。
+   这将：
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     produce debugging output in <filename>cleanup.log</filename>
+     在 <filename>cleanup.log</filename> 中产生调试输出
     </para>
    </listitem>
    <listitem>
     <para>
-     remove no-longer-needed files from the archive directory
+     从归档目录中删除不再需要的文件
     </para>
    </listitem>
   </itemizedlist>
