@@ -68,46 +68,42 @@
   </sect1>
 
   <sect1 id="connect-estab">
-   <title>How Connections Are Established</title>
+   <title>连接是如何建立的</title>
 
    <para>
-    <productname>PostgreSQL</productname> implements a
-    <quote>process per user</quote> client/server model.
-    In this model, every
-    <glossterm linkend="glossary-client">client process</glossterm>
-    connects to exactly one
-    <glossterm linkend="glossary-backend">backend process</glossterm>.
-    As we do not know ahead of time how many connections will be made,
-    we have to use a <quote>supervisor process</quote> that spawns a new
-    backend process every time a connection is requested. This supervisor
-    process is called
+    <productname>PostgreSQL</productname> 实现了
+    <quote>每用户一进程</quote>的客户端/服务器模型。
+    在该模型中，每个
+    <glossterm linkend="glossary-client">客户端进程</glossterm>
+    恰好连接到一个
+    <glossterm linkend="glossary-backend">后端进程</glossterm>。
+    由于我们无法预先知道会建立多少个连接，
+    因此必须使用一个<quote>监督进程</quote>，在每次请求连接时
+    派生一个新的后端进程。这个监督进程被称为
     <glossterm linkend="glossary-postmaster">postmaster</glossterm>
-    and listens at a specified TCP/IP port for incoming connections.
-    Whenever it detects a request for a connection, it spawns a new
-    backend process.  Those backend processes communicate with each
-    other and with other processes of the
-    <glossterm linkend="glossary-instance">instance</glossterm>
-    using <firstterm>semaphores</firstterm> and
-    <glossterm linkend="glossary-shared-memory">shared memory</glossterm>
-    to ensure data integrity throughout concurrent data access.
+    并在指定的 TCP/IP 端口上监听传入的连接。
+    每当它检测到连接请求时，就会派生一个新的
+    后端进程。这些后端进程彼此通信，
+    并与
+    <glossterm linkend="glossary-instance">实例</glossterm>
+    的其他进程使用<firstterm>信号量</firstterm>和
+    <glossterm linkend="glossary-shared-memory">共享内存</glossterm>
+    进行通信，以确保并发数据访问过程中的数据完整性。
    </para>
 
    <para>
-    The client process can be any program that understands the
-    <productname>PostgreSQL</productname> protocol described in
-    <xref linkend="protocol"/>.  Many clients are based on the
-    C-language library <application>libpq</application>, but several independent
-    implementations of the protocol exist, such as the Java
-    <application>JDBC</application> driver.
+    客户端进程可以是任何理解
+    <xref linkend="protocol"/> 中所述 <productname>PostgreSQL</productname> 协议的程序。许多客户端基于
+    C 语言库 <application>libpq</application>，但也存在若干独立的协议实现，例如 Java 的
+    <application>JDBC</application> 驱动程序。
    </para>
 
    <para>
-    Once a connection is established, the client process can send a query
-    to the backend process it's connected to. The query is transmitted using
-    plain text, i.e., there is no parsing done in the client. The backend
-    process parses the query, creates an <firstterm>execution plan</firstterm>,
-    executes the plan, and returns the retrieved rows to the client
-    by transmitting them over the established connection.
+    一旦建立连接，客户端进程就可以向它所连接的后端进程发送查询。查询以
+    纯文本形式传输，也就是说，客户端不做任何解析。后端
+    进程解析该查询，创建一个<firstterm>执行计划</firstterm>，
+    执行该计划，并通过已建立的连接把检索到的行传输给客户端，
+    从而将它们返回给客户端。
    </para>
   </sect1>
 
