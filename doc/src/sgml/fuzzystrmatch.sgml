@@ -1,46 +1,35 @@
 <!-- doc/src/sgml/fuzzystrmatch.sgml -->
 
 <sect1 id="fuzzystrmatch" xreflabel="fuzzystrmatch">
- <title>fuzzystrmatch &mdash; determine string similarities and distance</title>
+ <title>fuzzystrmatch &mdash; 确定字符串相似度和距离</title>
 
  <indexterm zone="fuzzystrmatch">
   <primary>fuzzystrmatch</primary>
  </indexterm>
 
  <para>
-  The <filename>fuzzystrmatch</filename> module provides several
-  functions to determine similarities and distance between strings.
+  <filename>fuzzystrmatch</filename> 模块提供了若干函数来确定字符串之间的相似度和距离。
  </para>
 
  <caution>
   <para>
-   At present, the <function>soundex</function>, <function>metaphone</function>,
-   <function>dmetaphone</function>, and <function>dmetaphone_alt</function> functions do
-   not work well with multibyte encodings (such as UTF-8).
-   Use <function>daitch_mokotoff</function>
-   or <function>levenshtein</function> with such data.
+   目前，<function>soundex</function>、<function>metaphone</function>、<function>dmetaphone</function> 和 <function>dmetaphone_alt</function> 函数在多字节编码（例如 UTF-8）下不能很好地工作。对此类数据请使用 <function>daitch_mokotoff</function> 或 <function>levenshtein</function>。
   </para>
  </caution>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  该模块被视为 <quote>可信</quote>，也就是说，拥有当前数据库 <literal>CREATE</literal> 权限的非超级用户也可以安装它。
  </para>
 
  <sect2 id="fuzzystrmatch-soundex">
   <title>Soundex</title>
 
   <para>
-   The Soundex system is a method of matching similar-sounding names
-   by converting them to the same code.  It was initially used by the
-   United States Census in 1880, 1900, and 1910.  Note that Soundex
-   is not very useful for non-English names.
+   Soundex 系统是一种通过将发音相似的名字转换为相同代码来进行匹配的方法。它最初被美国人口普查局在 1880 年、1900 年和 1910 年使用。请注意，Soundex 对非英语名字不太有用。
   </para>
 
   <para>
-   The <filename>fuzzystrmatch</filename> module provides two functions
-   for working with Soundex codes:
+   <filename>fuzzystrmatch</filename> 模块提供了两个用于处理 Soundex 编码的函数：
   </para>
 
   <indexterm>
@@ -57,17 +46,17 @@ difference(text, text) returns int
 </synopsis>
 
   <para>
-   The <function>soundex</function> function converts a string to its Soundex code.
-   The <function>difference</function> function converts two strings to their Soundex
-   codes and then reports the number of matching code positions.  Since
-   Soundex codes have four characters, the result ranges from zero to four,
-   with zero being no match and four being an exact match.  (Thus, the
-   function is misnamed &mdash; <function>similarity</function> would have been
-   a better name.)
+   <function>soundex</function> 函数把一个字符串转换成它的 Soundex 编码。
+   <function>difference</function> 函数把两个字符串转换成它们的 Soundex
+   编码，然后报告匹配的编码位置数量。由于
+   Soundex 编码有四个字符，结果的范围从零到四，
+   零表示不匹配，四表示完全匹配。（因此，该
+   函数的名字起得并不恰当，&mdash; <function>similarity</function> 会是
+   一个更好的名字。）
   </para>
 
   <para>
-   Here are some usage examples:
+   下面是一些用法示例：
   </para>
 
 <programlisting>
@@ -94,34 +83,31 @@ SELECT * FROM s WHERE difference(s.nm, 'john') &gt; 2;
   <title>Daitch-Mokotoff Soundex</title>
 
   <para>
-   Like the original Soundex system, Daitch-Mokotoff Soundex matches
-   similar-sounding names by converting them to the same code.
-   However, Daitch-Mokotoff Soundex is significantly more useful for
-   non-English names than the original system.
-   Major improvements over the original system include:
+   与原始的 Soundex 系统一样，Daitch-Mokotoff Soundex 通过把
+   发音相似的名称转换成相同的编码来匹配它们。
+   不过，对于非英语名称，Daitch-Mokotoff Soundex 比原始系统
+   有用得多。
+   相对于原始系统的主要改进包括：
 
    <itemizedlist spacing="compact" mark="bullet">
     <listitem>
      <para>
-      The code is based on the first six meaningful letters rather than four.
+      编码基于前六个有意义的字母，而不是四个。
      </para>
     </listitem>
     <listitem>
      <para>
-      A letter or combination of letters maps into ten possible codes rather
-      than seven.
+      一个字母或字母组合会映射到十种可能的代码，而不是七种。
      </para>
     </listitem>
     <listitem>
      <para>
-      Where two consecutive letters have a single sound, they are coded as a
-      single number.
+      当两个连续的字母发一个音时，它们被编码为一个数字。
      </para>
     </listitem>
     <listitem>
      <para>
-      When a letter or combination of letters may have different sounds,
-      multiple codes are emitted to cover all possibilities.
+      当一个字母或字母组合可能有不同的发音时，会输出多个代码以涵盖所有可能性。
      </para>
     </listitem>
    </itemizedlist>
@@ -132,7 +118,7 @@ SELECT * FROM s WHERE difference(s.nm, 'john') &gt; 2;
   </indexterm>
 
   <para>
-   This function generates the Daitch-Mokotoff soundex codes for its input:
+   此函数为其输入生成 Daitch-Mokotoff soundex 代码：
   </para>
 
 <synopsis>
@@ -140,17 +126,15 @@ daitch_mokotoff(<parameter>source</parameter> text) returns text[]
 </synopsis>
 
   <para>
-   The result may contain one or more codes depending on how many plausible
-   pronunciations there are, so it is represented as an array.
+   结果可能包含一个或多个代码，具体取决于有多少种合理的发音，因此它表示为数组。
   </para>
 
   <para>
-   Since a Daitch-Mokotoff soundex code consists of only 6 digits,
-   <parameter>source</parameter> should be preferably a single word or name.
+   由于 Daitch-Mokotoff soundex 代码仅由 6 位数字组成，<parameter>source</parameter> 最好应是单个单词或姓名。
   </para>
 
   <para>
-   Here are some examples:
+   以下是一些示例：
   </para>
 
 <programlisting>
@@ -176,10 +160,7 @@ SELECT daitch_mokotoff('Schwartzenegger');
 </programlisting>
 
   <para>
-   For matching of single names, returned text arrays can be matched
-   directly using the <literal>&amp;&amp;</literal> operator: any overlap
-   can be considered a match.  A GIN index may
-   be used for efficiency, see <xref linkend="gin"/> and this example:
+   对于单个名称的匹配，返回的文本数组可以直接使用 <literal>&amp;&amp;</literal> 运算符进行匹配：任何重叠都可以视为匹配。为提高效率，可以使用 GIN 索引，参见 <xref linkend="gin"/> 以及以下示例：
   </para>
 
 <programlisting>
@@ -199,9 +180,7 @@ SELECT * FROM s WHERE daitch_mokotoff(nm) &amp;&amp; daitch_mokotoff('Jens');
 </programlisting>
 
   <para>
-   For indexing and matching of any number of names in any order, Full Text
-   Search features can be used. See <xref linkend="textsearch"/> and this
-   example:
+   若要对任意数量的名称按任意顺序建立索引并进行匹配，可以使用全文检索功能。参见 <xref linkend="textsearch"/> 以及以下示例：
   </para>
 
 <programlisting>
@@ -236,10 +215,7 @@ SELECT * FROM s WHERE soundex_tsvector(nm) @@ soundex_tsquery('Jameson John');
 </programlisting>
 
   <para>
-   If it is desired to avoid recalculation of soundex codes during index
-   rechecks, an index on a separate column can be used instead of an index on
-   an expression.  A stored generated column can be used for this; see
-   <xref linkend="ddl-generated-columns"/>.
+   如果希望在索引重新检查期间避免重新计算 soundex 代码，可以使用基于单独列的索引来代替基于表达式的索引。为此可以使用存储生成列；参见 <xref linkend="ddl-generated-columns"/>。
   </para>
  </sect2>
 
@@ -247,7 +223,7 @@ SELECT * FROM s WHERE soundex_tsvector(nm) @@ soundex_tsquery('Jameson John');
   <title>Levenshtein</title>
 
   <para>
-   This function calculates the Levenshtein distance between two strings:
+   此函数计算两个字符串之间的 Levenshtein 距离：
   </para>
 
   <indexterm>
@@ -266,25 +242,15 @@ levenshtein_less_equal(source text, target text, max_d int) returns int
 </synopsis>
 
   <para>
-   Both <literal>source</literal> and <literal>target</literal> can be any
-   non-null string, with a maximum of 255 characters.  The cost parameters
-   specify how much to charge for a character insertion, deletion, or
-   substitution, respectively.  You can omit the cost parameters, as in
-   the second version of the function; in that case they all default to 1.
+   <literal>source</literal> 和 <literal>target</literal> 都可以是任意非空字符串，最大长度为 255 个字符。代价参数分别指定字符插入、删除或替换的代价。可以省略代价参数，如函数的第二种形式那样；在这种情况下，它们都默认为 1。
   </para>
 
   <para>
-   <function>levenshtein_less_equal</function> is an accelerated version of the
-   Levenshtein function for use when only small distances are of interest.
-   If the actual distance is less than or equal to <literal>max_d</literal>,
-   then <function>levenshtein_less_equal</function> returns the correct
-   distance; otherwise it returns some value greater than <literal>max_d</literal>.
-   If <literal>max_d</literal> is negative then the behavior is the same as
-   <function>levenshtein</function>.
+   <function>levenshtein_less_equal</function> 是 Levenshtein 函数的加速版本，适用于只关心较小距离的情况。如果实际距离小于或等于 <literal>max_d</literal>，则 <function>levenshtein_less_equal</function> 返回正确的距离；否则它返回某个大于 <literal>max_d</literal> 的值。如果 <literal>max_d</literal> 为负数，则行为与 <function>levenshtein</function> 相同。
   </para>
 
   <para>
-   Examples:
+   示例：
   </para>
 
 <screen>
@@ -318,13 +284,11 @@ test=# SELECT levenshtein_less_equal('extensive', 'exhaustive', 4);
   <title>Metaphone</title>
 
   <para>
-   Metaphone, like Soundex, is based on the idea of constructing a
-   representative code for an input string.  Two strings are then
-   deemed similar if they have the same codes.
+   Metaphone 与 Soundex 一样，基于为输入字符串构造代表性编码的思想。如果两个字符串具有相同的编码，则认为它们相似。
   </para>
 
   <para>
-   This function calculates the metaphone code of an input string:
+   此函数计算输入字符串的 metaphone 编码：
   </para>
 
   <indexterm>
@@ -336,14 +300,11 @@ metaphone(source text, max_output_length int) returns text
 </synopsis>
 
   <para>
-   <literal>source</literal> has to be a non-null string with a maximum of
-   255 characters.  <literal>max_output_length</literal> sets the maximum
-   length of the output metaphone code; if longer, the output is truncated
-   to this length.
+   <literal>source</literal> 必须是一个非空字符串，最大长度为 255 个字符。<literal>max_output_length</literal> 设置输出的 metaphone 代码的最大长度；如果超过该长度，输出将被截断为此长度。
   </para>
 
   <para>
-   Example:
+   示例：
   </para>
 
 <screen>
@@ -359,11 +320,7 @@ test=# SELECT metaphone('GUMBO', 4);
   <title>Double Metaphone</title>
 
   <para>
-   The Double Metaphone system computes two <quote>sounds like</quote> strings
-   for a given input string &mdash; a <quote>primary</quote> and an
-   <quote>alternate</quote>.  In most cases they are the same, but for non-English
-   names especially they can be a bit different, depending on pronunciation.
-   These functions compute the primary and alternate codes:
+   Double Metaphone 系统为给定的输入字符串计算两个 <quote>发音相似</quote> 的字符串 &mdash; 一个 <quote>主</quote> 代码和一个 <quote>备用</quote> 代码。在大多数情况下它们相同，但尤其是对于非英语姓名，根据发音的不同，它们可能会略有差异。以下函数计算主代码和备用代码：
   </para>
 
   <indexterm>
@@ -380,11 +337,11 @@ dmetaphone_alt(source text) returns text
 </synopsis>
 
   <para>
-   There is no length limit on the input strings.
+   输入字符串没有长度限制。
   </para>
 
   <para>
-   Example:
+   示例：
   </para>
 
 <screen>
