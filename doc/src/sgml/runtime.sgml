@@ -1408,43 +1408,29 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
  </sect1>
 
  <sect1 id="encryption-options">
-  <title>Encryption Options</title>
+  <title>加密选项</title>
 
   <indexterm zone="encryption-options">
    <primary>encryption</primary>
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> offers encryption at several
-   levels, and provides flexibility in protecting data from disclosure
-   due to database server theft, unscrupulous administrators, and
-   insecure networks. Encryption might also be required to secure
-   sensitive data such as medical records or financial transactions.
+   <productname>PostgreSQL</productname> 在多个层次提供加密，并灵活地保护数据免遭因数据库服务器被盗、不道德的管理员以及不安全的网络而导致的泄露。对于医疗记录或金融交易等敏感数据，也可能需要加密来保护。
   </para>
 
   <variablelist>
 
   <varlistentry>
-   <term>Password Encryption</term>
+   <term>密码加密</term>
    <listitem>
 
     <para>
-     Database user passwords are stored as hashes (determined by the setting
-     <xref linkend="guc-password-encryption"/>), so the administrator cannot
-     determine the actual password assigned to the user. If SCRAM or MD5
-     encryption is used for client authentication, the unencrypted password is
-     never even temporarily present on the server because the client encrypts
-     it before being sent across the network. SCRAM is preferred, because it
-     is an Internet standard and is more secure than the PostgreSQL-specific
-     MD5 authentication protocol.
+     数据库用户密码以哈希形式存储（由 <xref linkend="guc-password-encryption"/> 设置决定），因此管理员无法确定分配给用户的实际密码。如果客户端认证使用 SCRAM 或 MD5 加密，则未加密的密码甚至不会在服务器上短暂出现，因为客户端在通过网络发送之前会对其进行加密。首选 SCRAM，因为它是互联网标准，并且比 PostgreSQL 特有的 MD5 认证协议更安全。
     </para>
 
     <warning>
      <para>
-      Support for MD5-encrypted passwords is deprecated and will be removed in
-      a future release of <productname>PostgreSQL</productname>.  Refer to
-      <xref linkend="auth-password"/> for details about migrating to another
-      password type.
+      对 MD5 加密密码的支持已被弃用，并将在 <productname>PostgreSQL</productname> 的未来版本中移除。有关迁移到其他密码类型的详细信息，请参阅 <xref linkend="auth-password"/>。
      </para>
     </warning>
 
@@ -1452,116 +1438,69 @@ pg_dumpall -p 5432 | psql -d postgres -p 5433
   </varlistentry>
 
   <varlistentry>
-   <term>Encryption For Specific Columns</term>
+   <term>特定列的加密</term>
 
    <listitem>
     <para>
-     The <xref linkend="pgcrypto"/> module allows certain fields to be
-     stored encrypted.
-     This is useful if only some of the data is sensitive.
-     The client supplies the decryption key and the data is decrypted
-     on the server and then sent to the client.
+     <xref linkend="pgcrypto"/> 模块允许将某些字段加密存储。
+     如果只有部分数据敏感，这会很有用。
+     客户端提供解密密钥，数据在服务器上解密，然后发送给客户端。
     </para>
 
     <para>
-     The decrypted data and the decryption key are present on the
-     server for a brief time while it is being decrypted and
-     communicated between the client and server. This presents a brief
-     moment where the data and keys can be intercepted by someone with
-     complete access to the database server, such as the system
-     administrator.
+     在解密以及客户端与服务器之间通信的过程中，解密后的数据和解密密钥会在服务器上短暂存在。这就产生了一个短暂的时刻，在此期间，对数据库服务器拥有完全访问权限的人（例如系统管理员）可以截获数据和密钥。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Data Partition Encryption</term>
+   <term>数据分区加密</term>
 
    <listitem>
     <para>
-     Storage encryption can be performed at the file system level or the
-     block level.  Linux file system encryption options include eCryptfs
-     and EncFS, while FreeBSD uses PEFS.  Block level or full disk
-     encryption options include dm-crypt + LUKS on Linux and GEOM
-     modules geli and gbde on FreeBSD.  Many other operating systems
-     support this functionality, including Windows.
+     存储加密可以在文件系统级别或块级别进行。Linux 文件系统加密选项包括 eCryptfs 和 EncFS，而 FreeBSD 使用 PEFS。块级别或全盘加密选项包括 Linux 上的 dm-crypt + LUKS 以及 FreeBSD 上的 GEOM 模块 geli 和 gbde。许多其他操作系统也支持此功能，包括 Windows。
     </para>
 
     <para>
-     This mechanism prevents unencrypted data from being read from the
-     drives if the drives or the entire computer is stolen. This does
-     not protect against attacks while the file system is mounted,
-     because when mounted, the operating system provides an unencrypted
-     view of the data. However, to mount the file system, you need some
-     way for the encryption key to be passed to the operating system,
-     and sometimes the key is stored somewhere on the host that mounts
-     the disk.
+     此机制可防止在驱动器或整台计算机被盗时从驱动器中读取未加密的数据。这不能防止文件系统挂载期间的攻击，因为挂载时操作系统会提供数据的未加密视图。但是，要挂载文件系统，你需要某种方式将加密密钥传递给操作系统，而有时密钥存储在挂载磁盘的主机上的某个位置。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Encrypting Data Across A Network</term>
+   <term>跨网络加密数据</term>
 
     <listitem>
      <para>
-      SSL connections encrypt all data sent across the network: the
-      password, the queries, and the data returned. The
-      <filename>pg_hba.conf</filename> file allows administrators to specify
-      which hosts can use non-encrypted connections (<literal>host</literal>)
-      and which require SSL-encrypted connections
-      (<literal>hostssl</literal>). Also, clients can specify that they
-      connect to servers only via SSL.
+      SSL 连接会加密通过网络发送的所有数据：密码、查询以及返回的数据。<filename>pg_hba.conf</filename> 文件允许管理员指定哪些主机可以使用非加密连接（<literal>host</literal>），哪些主机要求使用 SSL 加密连接（<literal>hostssl</literal>）。此外，客户端可以指定只通过 SSL 连接到服务器。
      </para>
 
      <para>
-      GSSAPI-encrypted connections encrypt all data sent across the network,
-      including queries and data returned.  (No password is sent across the
-      network.)  The <filename>pg_hba.conf</filename> file allows
-      administrators to specify which hosts can use non-encrypted connections
-      (<literal>host</literal>) and which require GSSAPI-encrypted connections
-      (<literal>hostgssenc</literal>).  Also, clients can specify that they
-      connect to servers only on GSSAPI-encrypted connections
-      (<literal>gssencmode=require</literal>).
+      GSSAPI 加密连接会加密通过网络发送的所有数据，包括查询和返回的数据。（密码不会通过网络发送。）<filename>pg_hba.conf</filename> 文件允许管理员指定哪些主机可以使用非加密连接（<literal>host</literal>），哪些主机要求使用 GSSAPI 加密连接（<literal>hostgssenc</literal>）。此外，客户端可以指定只通过 GSSAPI 加密连接连接到服务器（<literal>gssencmode=require</literal>）。
      </para>
 
      <para>
-      <application>Stunnel</application> or
-      <application>SSH</application> can also be used to encrypt
-      transmissions.
+      <application>Stunnel</application> 或 <application>SSH</application> 也可用于加密传输。
      </para>
     </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>SSL Host Authentication</term>
+   <term>SSL 主机认证</term>
 
    <listitem>
     <para>
-     It is possible for both the client and server to provide SSL
-     certificates to each other. It takes some extra configuration
-     on each side, but this provides stronger verification of identity
-     than the mere use of passwords. It prevents a computer from
-     pretending to be the server just long enough to read the password
-     sent by the client. It also helps prevent <quote>man in the middle</quote>
-     attacks where a computer between the client and server pretends to
-     be the server and reads and passes all data between the client and
-     server.
+     客户端和服务器可以相互提供 SSL 证书。这需要在每一端进行一些额外配置，但与仅使用密码相比，这能提供更强的身份验证。它可以防止某台计算机冒充服务器，从而骗取客户端发送的密码。它还有助于防止<quote>中间人</quote>攻击，即客户端与服务器之间的某台计算机冒充服务器，读取并转发客户端与服务器之间的所有数据。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Client-Side Encryption</term>
+   <term>客户端加密</term>
 
    <listitem>
     <para>
-     If the system administrator for the server's machine cannot be trusted,
-     it is necessary
-     for the client to encrypt the data; this way, unencrypted data
-     never appears on the database server. Data is encrypted on the
-     client before being sent to the server, and database results have
-     to be decrypted on the client before being used.
+     如果服务器所在机器的系统管理员不可信，客户端就有必要对数据加密；这样，未加密的数据就绝不会出现在数据库服务器上。数据在客户端加密后才发送给服务器，而数据库结果必须在客户端解密后才能使用。
     </para>
    </listitem>
   </varlistentry>
