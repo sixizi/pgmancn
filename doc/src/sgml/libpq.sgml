@@ -8157,7 +8157,7 @@ int PQisthreadsafe();
 
 
  <sect1 id="libpq-build">
-  <title>Building <application>libpq</application> Programs</title>
+  <title>构建 <application>libpq</application> 程序</title>
 
   <indexterm zone="libpq-build">
    <primary>compiling</primary>
@@ -8165,19 +8165,16 @@ int PQisthreadsafe();
   </indexterm>
 
   <para>
-   To build (i.e., compile and link) a program using
-   <application>libpq</application> you need to do all of the following
-   things:
+   要使用 <application>libpq</application> 构建（即编译和链接）一个程序，你需要完成以下所有事情：
 
    <itemizedlist>
     <listitem>
      <para>
-      Include the <filename>libpq-fe.h</filename> header file:
+      包含 <filename>libpq-fe.h</filename> 头文件：
 <programlisting>
 #include &lt;libpq-fe.h&gt;
 </programlisting>
-      If you failed to do that then you will normally get error messages
-      from your compiler similar to:
+      如果你没有这样做，那么通常你会从编译器得到类似下面的错误消息：
 <screen>
 foo.c: In function `main':
 foo.c:34: `PGconn' undeclared (first use in this function)
@@ -8191,18 +8188,11 @@ foo.c:95: `PGRES_TUPLES_OK' undeclared (first use in this function)
 
     <listitem>
      <para>
-      Point your compiler to the directory where the <productname>PostgreSQL</productname> header
-      files were installed, by supplying the
-      <literal>-I<replaceable>directory</replaceable></literal> option
-      to your compiler.  (In some cases the compiler will look into
-      the directory in question by default, so you can omit this
-      option.)  For instance, your compile command line could look
-      like:
+      通过向编译器提供 <literal>-I<replaceable>directory</replaceable></literal> 选项，让编译器指向 <productname>PostgreSQL</productname> 头文件所安装的目录。（在某些情况下，编译器默认会查找该目录，因此你可以省略此选项。）例如，你的编译命令行可能如下所示：
 <programlisting>
 cc -c -I/usr/local/pgsql/include testprog.c
 </programlisting>
-      If you are using makefiles then add the option to the
-      <varname>CPPFLAGS</varname> variable:
+      如果你使用 makefile，则将该选项添加到 <varname>CPPFLAGS</varname> 变量中：
 <programlisting>
 CPPFLAGS += -I/usr/local/pgsql/include
 </programlisting>
@@ -8222,20 +8212,16 @@ CPPFLAGS += -I/usr/local/pgsql/include
      </para>
 
      <para>
-      If you
-      have <command>pkg-config</command><indexterm><primary>pkg-config</primary><secondary sortas="libpq">with
-      libpq</secondary></indexterm> installed, you can run instead:
+      如果你安装了 <command>pkg-config</command><indexterm><primary>pkg-config</primary><secondary sortas="libpq">与 libpq 一起使用</secondary></indexterm>，则可以改为运行：
 <screen>
 <prompt>$</prompt> pkg-config --cflags libpq
 <computeroutput>-I/usr/local/include</computeroutput>
 </screen>
-      Note that this will already include the <option>-I</option> in front of
-      the path.
+      请注意，这已经会在路径前面包含 <option>-I</option>。
      </para>
 
      <para>
-      Failure to specify the correct option to the compiler will
-      result in an error message such as:
+      如果没有给编译器指定正确的选项，将会导致类似这样的错误消息：
 <screen>
 testlibpq.c:8:22: libpq-fe.h: No such file or directory
 </screen>
@@ -8244,23 +8230,14 @@ testlibpq.c:8:22: libpq-fe.h: No such file or directory
 
     <listitem>
      <para>
-      When linking the final program, specify the option
-      <literal>-lpq</literal> so that the <application>libpq</application>
-      library gets pulled in, as well as the option
-      <literal>-L<replaceable>directory</replaceable></literal> to point
-      the compiler to the directory where the
-      <application>libpq</application> library resides.  (Again, the
-      compiler will search some directories by default.)  For maximum
-      portability, put the <option>-L</option> option before the
-      <option>-lpq</option> option.  For example:
+      在链接最终程序时，请指定 <literal>-lpq</literal> 选项以便引入 <application>libpq</application> 库，同时指定 <literal>-L<replaceable>directory</replaceable></literal> 选项，让编译器指向 <application>libpq</application> 库所在的目录。（同样，编译器会在默认情况下搜索某些目录。）为了获得最大的可移植性，请把 <option>-L</option> 选项放在 <option>-lpq</option> 选项之前。例如：
 <programlisting>
 cc -o testprog testprog1.o testprog2.o -L/usr/local/pgsql/lib -lpq
 </programlisting>
      </para>
 
      <para>
-      You can find out the library directory using
-      <command>pg_config</command> as well:
+      你也可以用 <command>pg_config</command> 找出库目录：
 <screen>
 <prompt>$</prompt> pg_config --libdir
 <computeroutput>/usr/local/pgsql/lib</computeroutput>
@@ -8268,29 +8245,27 @@ cc -o testprog testprog1.o testprog2.o -L/usr/local/pgsql/lib -lpq
      </para>
 
      <para>
-      Or again use <command>pkg-config</command>:
+      或者同样使用 <command>pkg-config</command>：
 <screen>
 <prompt>$</prompt> pkg-config --libs libpq
 <computeroutput>-L/usr/local/pgsql/lib -lpq</computeroutput>
 </screen>
-      Note again that this prints the full options, not only the path.
+      再次注意，这会打印完整的选项，而不只是路径。
      </para>
 
      <para>
-      Error messages that point to problems in this area could look like
-      the following:
+      指出这方面问题的错误消息可能如下所示：
 <screen>
 testlibpq.o: In function `main':
 testlibpq.o(.text+0x60): undefined reference to `PQsetdbLogin'
 testlibpq.o(.text+0x71): undefined reference to `PQstatus'
 testlibpq.o(.text+0xa4): undefined reference to `PQerrorMessage'
 </screen>
-      This means you forgot <option>-lpq</option>.
+      这意味着你忘记了 <option>-lpq</option>。
 <screen>
 /usr/bin/ld: cannot find -lpq
 </screen>
-      This means you forgot the <option>-L</option> option or did not
-      specify the right directory.
+      这意味着你忘记了 <option>-L</option> 选项，或者没有指定正确的目录。
      </para>
     </listitem>
    </itemizedlist>
