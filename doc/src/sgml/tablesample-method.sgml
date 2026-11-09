@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/tablesample-method.sgml -->
 
 <chapter id="tablesample-method">
- <title>Writing a Table Sampling Method</title>
+ <title>编写表采样方法</title>
 
  <indexterm zone="tablesample-method">
   <primary>table sampling method</primary>
@@ -12,33 +12,19 @@
  </indexterm>
 
  <para>
-  <productname>PostgreSQL</productname>'s implementation of the <literal>TABLESAMPLE</literal>
-  clause supports custom table sampling methods, in addition to
-  the <literal>BERNOULLI</literal> and <literal>SYSTEM</literal> methods that are required
-  by the SQL standard.  The sampling method determines which rows of the
-  table will be selected when the <literal>TABLESAMPLE</literal> clause is used.
+  <productname>PostgreSQL</productname> 对 <literal>TABLESAMPLE</literal> 子句的实现除了支持 SQL 标准所要求的 <literal>BERNOULLI</literal> 和 <literal>SYSTEM</literal> 方法之外，还支持自定义表采样方法。采样方法决定了在使用 <literal>TABLESAMPLE</literal> 子句时，表中的哪些行会被选中。
  </para>
 
  <para>
-  At the SQL level, a table sampling method is represented by a single SQL
-  function, typically implemented in C, having the signature
+  在 SQL 层面上，表采样方法由单个 SQL 函数表示，通常用 C 实现，其签名如下：
 <programlisting>
 method_name(internal) RETURNS tsm_handler
 </programlisting>
-  The name of the function is the same method name appearing in the
-  <literal>TABLESAMPLE</literal> clause.  The <type>internal</type> argument is a dummy
-  (always having value zero) that simply serves to prevent this function from
-  being called directly from an SQL command.
-  The result of the function must be a palloc'd struct of
-  type <type>TsmRoutine</type>, which contains pointers to support functions for
-  the sampling method.  These support functions are plain C functions and
-  are not visible or callable at the SQL level.  The support functions are
-  described in <xref linkend="tablesample-support-functions"/>.
+  函数名就是出现在 <literal>TABLESAMPLE</literal> 子句中的方法名。<type>internal</type> 参数是一个哑元（值始终为零），其作用仅仅是防止该函数被直接从 SQL 命令中调用。函数的结果必须是一个 palloc 分配的 <type>TsmRoutine</type> 类型结构体，其中包含指向该采样方法的支撑函数的指针。这些支撑函数是普通的 C 函数，在 SQL 层面不可见，也无法调用。支撑函数在 <xref linkend="tablesample-support-functions"/> 中描述。
  </para>
 
  <para>
-  In addition to function pointers, the <type>TsmRoutine</type> struct must
-  provide these additional fields:
+  除了函数指针之外，<type>TsmRoutine</type> 结构体还必须提供以下附加字段：
  </para>
 
  <variablelist>
@@ -46,12 +32,7 @@ method_name(internal) RETURNS tsm_handler
    <term><literal>List *parameterTypes</literal></term>
    <listitem>
     <para>
-     This is an OID list containing the data type OIDs of the parameter(s)
-     that will be accepted by the <literal>TABLESAMPLE</literal> clause when this
-     sampling method is used.  For example, for the built-in methods, this
-     list contains a single item with value <literal>FLOAT4OID</literal>, which
-     represents the sampling percentage.  Custom sampling methods can have
-     more or different parameters.
+     这是一个 OID 列表，其中包含使用该采样方法时 <literal>TABLESAMPLE</literal> 子句所接受的参数的数据类型 OID。例如，对于内置方法，该列表只包含一个值为 <literal>FLOAT4OID</literal> 的项，它表示采样百分比。自定义采样方法可以具有更多或不同的参数。
     </para>
    </listitem>
   </varlistentry>
@@ -60,12 +41,7 @@ method_name(internal) RETURNS tsm_handler
    <term><literal>bool repeatable_across_queries</literal></term>
    <listitem>
     <para>
-     If <literal>true</literal>, the sampling method can deliver identical samples
-     across successive queries, if the same parameters
-     and <literal>REPEATABLE</literal> seed value are supplied each time and the
-     table contents have not changed.  When this is <literal>false</literal>,
-     the <literal>REPEATABLE</literal> clause is not accepted for use with the
-     sampling method.
+     如果为 <literal>true</literal>，那么只要每次提供相同的参数和 <literal>REPEATABLE</literal> 种子值，并且表内容没有发生变化，该采样方法就能在连续多次查询中给出相同的样本。当此项为 <literal>false</literal> 时，该采样方法不接受使用 <literal>REPEATABLE</literal> 子句。
     </para>
    </listitem>
   </varlistentry>
@@ -74,29 +50,24 @@ method_name(internal) RETURNS tsm_handler
    <term><literal>bool repeatable_across_scans</literal></term>
    <listitem>
     <para>
-     If <literal>true</literal>, the sampling method can deliver identical samples
-     across successive scans in the same query (assuming unchanging
-     parameters, seed value, and snapshot).
-     When this is <literal>false</literal>, the planner will not select plans that
-     would require scanning the sampled table more than once, since that
-     might result in inconsistent query output.
+     如果 <literal>true</literal>，则采样方法可以在同一查询的连续扫描中产生完全相同的样本
+     （假设参数、种子值和快照保持不变）。
+     当此项为 <literal>false</literal> 时，规划器将不会选择需要多次扫描被采样表的计划，
+     因为那可能导致查询输出不一致。
     </para>
    </listitem>
   </varlistentry>
  </variablelist>
 
  <para>
-  The <type>TsmRoutine</type> struct type is declared
-  in <filename>src/include/access/tsmapi.h</filename>, which see for additional
-  details.
+  <type>TsmRoutine</type> 结构体类型声明在
+  <filename>src/include/access/tsmapi.h</filename> 中，更多细节请参阅该处。
  </para>
 
  <para>
-  The table sampling methods included in the standard distribution are good
-  references when trying to write your own.  Look into
-  the <filename>src/backend/access/tablesample</filename> subdirectory of the source
-  tree for the built-in sampling methods, and into the <filename>contrib</filename>
-  subdirectory for add-on methods.
+  标准发行版中包含的表采样方法在编写自己的采样方法时是很好的参考。
+  请查看源码树中的 <filename>src/backend/access/tablesample</filename> 子目录以了解内置采样方法，并查看 <filename>contrib</filename>
+  子目录以了解附加方法。
  </para>
 
  <sect1 id="tablesample-support-functions">
