@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>COMMENT</refname>
-  <refpurpose>define or change the comment of an object</refpurpose>
+  <refpurpose>定义或修改对象的注释</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -77,50 +77,35 @@ COMMENT ON
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>COMMENT</command> stores, replaces, or removes the comment on a
-   database object.
+   <command>COMMENT</command> 存储、替换或删除数据库对象上的注释。
   </para>
 
   <para>
-   Only one comment string is stored for each object.  Issuing a new
-   <command>COMMENT</command> command for the same object replaces the
-   existing comment.  Specifying <literal>NULL</literal> or an empty
-   string (<literal>''</literal>) removes the comment.  Comments are
-   automatically dropped when their object is dropped.
+   每个对象只存储一个注释字符串。对同一对象发出新的 <command>COMMENT</command> 命令会替换现有的注释。指定 <literal>NULL</literal> 或空字符串（<literal>''</literal>）会删除注释。当对象被删除时，其注释会自动删除。
   </para>
 
   <para>
-   A <literal>SHARE UPDATE EXCLUSIVE</literal> lock is acquired on the
-   object to be commented.
+   在要添加注释的对象上会获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
   </para>
 
   <para>
-   For most kinds of object, only the object's owner can set the comment.
-   Roles don't have owners, so the rule for <literal>COMMENT ON ROLE</literal> is
-   that you must be superuser to comment on a superuser role, or have the
-   <literal>CREATEROLE</literal> privilege and have been granted
-   <literal>ADMIN OPTION</literal> on the target role.
-   Likewise, access methods don't have owners either; you must be superuser
-   to comment on an access method.
-   Of course, a superuser can comment on anything.
+   对于大多数类型的对象，只有对象的所有者才能设置注释。角色没有所有者，因此对于 <literal>COMMENT ON ROLE</literal> 的规则是：你必须超级用户才能为超级用户角色添加注释，或者具有 <literal>CREATEROLE</literal> 权限并且已被授予目标角色上的 <literal>ADMIN OPTION</literal>。同样，访问方法也没有所有者；你必须超级用户才能为访问方法添加注释。当然，超级用户可以为任何对象添加注释。
   </para>
 
   <para>
-    Comments can be viewed using <application>psql</application>'s
-    <command>\d</command> family of commands.
-    Other user interfaces to retrieve comments can be built atop
-    the same built-in functions that <application>psql</application> uses, namely
-    <function>obj_description</function>, <function>col_description</function>,
-    and <function>shobj_description</function>
-    (see <xref linkend="functions-info-comment-table"/>).
+    注释可以使用 <application>psql</application> 的 <command>\d</command> 系列命令查看。
+    其他用于检索注释的用户界面可以构建在 <application>psql</application> 所使用的同一组内置函数之上，即
+    <function>obj_description</function>、<function>col_description</function>
+    和 <function>shobj_description</function>
+    （参见 <xref linkend="functions-info-comment-table"/>）。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
@@ -137,11 +122,9 @@ COMMENT ON
     <term><replaceable class="parameter">trigger_name</replaceable></term>
     <listitem>
      <para>
-      The name of the object to be commented.  Names of objects that reside in
-      schemas (tables, functions, etc.) can be
-      schema-qualified. When commenting on a column,
-      <replaceable class="parameter">relation_name</replaceable> must refer
-      to a table, view, composite type, or foreign table.
+      要为其添加注释的对象的名称。位于模式中的对象（表、函数等）的名称
+      可以用模式限定。在为列添加注释时，
+      <replaceable class="parameter">relation_name</replaceable> 必须引用表、视图、复合类型或外部表。
      </para>
     </listitem>
    </varlistentry>
@@ -151,9 +134,8 @@ COMMENT ON
     <term><replaceable class="parameter">domain_name</replaceable></term>
     <listitem>
      <para>
-      When creating a comment on a constraint, a trigger, a rule or
-      a policy these parameters specify the name of the table or domain on
-      which that object is defined.
+      在为约束、触发器、规则或策略创建注释时，这些参数指定
+      该对象所定义于其上的表或域的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -162,7 +144,7 @@ COMMENT ON
      <term><replaceable>source_type</replaceable></term>
      <listitem>
       <para>
-       The name of the source data type of the cast.
+       该转换的源数据类型的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -171,7 +153,7 @@ COMMENT ON
      <term><replaceable>target_type</replaceable></term>
      <listitem>
       <para>
-       The name of the target data type of the cast.
+       该转换的目标数据类型的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -180,15 +162,10 @@ COMMENT ON
     <term><replaceable class="parameter">argmode</replaceable></term>
     <listitem>
      <para>
-      The mode of a function, procedure, or aggregate
-      argument: <literal>IN</literal>, <literal>OUT</literal>,
-      <literal>INOUT</literal>, or <literal>VARIADIC</literal>.
-      If omitted, the default is <literal>IN</literal>.
-      Note that <command>COMMENT</command> does not actually pay
-      any attention to <literal>OUT</literal> arguments, since only the input
-      arguments are needed to determine the function's identity.
-      So it is sufficient to list the <literal>IN</literal>, <literal>INOUT</literal>,
-      and <literal>VARIADIC</literal> arguments.
+      函数、过程或聚合参数的模式：<literal>IN</literal>、<literal>OUT</literal>、<literal>INOUT</literal> 或 <literal>VARIADIC</literal>。
+      如果省略，默认为 <literal>IN</literal>。
+      请注意，<command>COMMENT</command> 实际上并不关注 <literal>OUT</literal> 参数，因为只需要输入参数即可确定函数的身份。
+      因此，只需列出 <literal>IN</literal>、<literal>INOUT</literal> 和 <literal>VARIADIC</literal> 参数即可。
      </para>
     </listitem>
    </varlistentry>
@@ -197,10 +174,8 @@ COMMENT ON
     <term><replaceable class="parameter">argname</replaceable></term>
     <listitem>
      <para>
-      The name of a function, procedure, or aggregate argument.
-      Note that <command>COMMENT</command> does not actually pay
-      any attention to argument names, since only the argument data
-      types are needed to determine the function's identity.
+      函数、过程或聚合参数的名称。
+      请注意，<command>COMMENT</command> 实际上并不关注参数名称，因为只需要参数数据类型即可确定函数的身份。
      </para>
     </listitem>
    </varlistentry>
@@ -209,7 +184,7 @@ COMMENT ON
     <term><replaceable class="parameter">argtype</replaceable></term>
     <listitem>
      <para>
-      The data type of a function, procedure, or aggregate argument.
+      函数、过程或聚合参数的数据类型。
      </para>
     </listitem>
    </varlistentry>
@@ -218,7 +193,7 @@ COMMENT ON
     <term><replaceable class="parameter">large_object_oid</replaceable></term>
     <listitem>
      <para>
-      The OID of the large object.
+      大对象的 OID。
      </para>
     </listitem>
    </varlistentry>
@@ -228,9 +203,7 @@ COMMENT ON
     <term><replaceable class="parameter">right_type</replaceable></term>
     <listitem>
      <para>
-      The data type(s) of the operator's arguments (optionally
-      schema-qualified).  Write <literal>NONE</literal> for the missing argument
-      of a prefix operator.
+      运算符参数的数据类型（可选带模式限定）。对于前缀运算符缺失的参数，请写 <literal>NONE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -239,7 +212,7 @@ COMMENT ON
      <term><literal>PROCEDURAL</literal></term>
      <listitem>
       <para>
-       This is a noise word.
+       这是一个噪声词。
       </para>
      </listitem>
     </varlistentry>
@@ -249,7 +222,7 @@ COMMENT ON
 
      <listitem>
       <para>
-       The name of the data type of the transform.
+       转换的数据类型的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -259,7 +232,7 @@ COMMENT ON
 
      <listitem>
       <para>
-       The name of the language of the transform.
+       转换的语言的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -268,8 +241,7 @@ COMMENT ON
     <term><replaceable class="parameter">string_literal</replaceable></term>
     <listitem>
      <para>
-      The new comment contents, written as a string literal.  An empty string
-      (<literal>''</literal>) removes the comment.
+      新的注释内容，写成一个字符串字面量。空字符串（<literal>''</literal>）会移除注释。
      </para>
     </listitem>
    </varlistentry>
@@ -278,7 +250,7 @@ COMMENT ON
     <term><literal>NULL</literal></term>
     <listitem>
      <para>
-      Write <literal>NULL</literal> to remove the comment.
+      写 <literal>NULL</literal> 以移除注释。
      </para>
     </listitem>
    </varlistentry>
@@ -287,30 +259,24 @@ COMMENT ON
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   There is presently no security mechanism for viewing comments: any user
-   connected to a database can see all the comments for objects in
-   that database.  For shared objects such as
-   databases, roles, and tablespaces, comments are stored globally so any
-   user connected to any database in the cluster can see all the comments
-   for shared objects.  Therefore, don't put security-critical
-   information in comments.
+   目前没有用于查看注释的安全机制：任何连接到某个数据库的用户都能看到该数据库中对象的所有注释。对于数据库、角色和表空间等共享对象，注释是全局存储的，因此连接到集簇中任何数据库的任何用户都能看到共享对象的所有注释。因此，不要把安全关键信息放在注释中。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Attach a comment to the table <literal>mytable</literal>:
+   给表 <literal>mytable</literal> 附加一个注释：
 
 <programlisting>
 COMMENT ON TABLE mytable IS 'This is my table.';
 </programlisting>
 
-   Remove it again:
+   再次删除它：
 
 <programlisting>
 COMMENT ON TABLE mytable IS NULL;
@@ -318,7 +284,7 @@ COMMENT ON TABLE mytable IS NULL;
   </para>
 
   <para>
-   Some more examples:
+   更多示例：
 
 <programlisting>
 COMMENT ON ACCESS METHOD gin IS 'GIN index access method';
@@ -370,10 +336,10 @@ COMMENT ON VIEW my_view IS NULL;
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>COMMENT</command> command in the SQL standard.
+   SQL 标准中没有 <command>COMMENT</command> 命令。
   </para>
  </refsect1>
 </refentry>
