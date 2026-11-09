@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE POLICY</refname>
-  <refpurpose>define a new row-level security policy for a table</refpurpose>
+  <refpurpose>为表定义一个新的行级安全策略</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -31,84 +31,54 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   The <command>CREATE POLICY</command> command defines a new row-level
-   security policy for a table.  Note that row-level security must be
-   enabled on the table (using <command>ALTER TABLE ... ENABLE ROW LEVEL
-   SECURITY</command>) in order for created policies to be applied.
+   <command>CREATE POLICY</command> 命令为表定义一个新的行级安全策略。注意，必须在表上启用行级安全（使用 <command>ALTER TABLE ... ENABLE ROW LEVEL
+   SECURITY</command>），所创建的策略才会生效。
   </para>
 
   <para>
-   A policy grants the permission to select, insert, update, or delete rows
-   that match the relevant policy expression.  Existing table rows are
-   checked against the expression specified in <literal>USING</literal>,
-   while new rows that would be created via <literal>INSERT</literal>
-   or <literal>UPDATE</literal> are checked against the expression specified
-   in <literal>WITH CHECK</literal>.  When a <literal>USING</literal>
-   expression returns true for a given row then that row is visible to the
-   user, while if false or null is returned then the row is not visible.
-   Typically, no error occurs when a row is not visible, but see
-   <xref linkend="sql-createpolicy-summary"/> for exceptions.
-   When a <literal>WITH CHECK</literal> expression returns true for a row
-   then that row is inserted or updated, while if false or null is returned
-   then an error occurs.
+   策略授予对匹配相关策略表达式的行进行 SELECT、INSERT、UPDATE 或 DELETE 的权限。现有表行会与 <literal>USING</literal> 中指定的表达式进行核对，而通过 <literal>INSERT</literal> 或 <literal>UPDATE</literal> 将要创建的新行则会与 <literal>WITH CHECK</literal> 中指定的表达式进行核对。当某个 <literal>USING</literal> 表达式对给定行返回 true 时，该行对用户可见；如果返回 false 或 null，则该行不可见。通常，行不可见时不会发生错误，但例外情况请参见 <xref linkend="sql-createpolicy-summary"/>。当某个 <literal>WITH CHECK</literal> 表达式对某行返回 true 时，该行会被插入或更新；如果返回 false 或 null，则会发生错误。
   </para>
 
   <para>
-   For <command>INSERT</command>, <command>UPDATE</command>, and
-   <command>MERGE</command> statements,
-   <literal>WITH CHECK</literal> expressions are enforced after
-   <literal>BEFORE</literal> triggers are fired, and before any actual data
-   modifications are made.  Thus a <literal>BEFORE ROW</literal> trigger may
-   modify the data to be inserted, affecting the result of the security
-   policy check.  <literal>WITH CHECK</literal> expressions are enforced
-   before any other constraints.
+   对于 <command>INSERT</command>、<command>UPDATE</command> 和 <command>MERGE</command> 语句，<literal>WITH CHECK</literal> 表达式在 <literal>BEFORE</literal> 触发器被触发之后、任何实际数据修改发生之前强制执行。因此，<literal>BEFORE ROW</literal> 触发器可以修改要插入的数据，从而影响安全检查的结果。<literal>WITH CHECK</literal> 表达式在任何其他约束之前强制执行。
   </para>
 
   <para>
-   Policy names are per-table.  Therefore, one policy name can be used for many
-   different tables and have a definition for each table which is appropriate to
-   that table.
+   策略名称是按表区分的。因此，一个策略名称可以用于许多不同的表，并为每个表提供适合该表的定义。
   </para>
 
   <para>
-   Policies can be applied for specific commands or for specific roles.  The
-   default for newly created policies is that they apply for all commands and
-   roles, unless otherwise specified.  Multiple policies may apply to a single
-   command; see below for more details.
-   <xref linkend="sql-createpolicy-summary"/> summarizes how the different types
-   of policy apply to specific commands.
+   策略可以针对特定命令或特定角色应用。新建策略的默认行为是：除非另有指定，否则它们适用于所有命令和角色。多个策略可以应用于同一条命令；详见下文。
+   <xref linkend="sql-createpolicy-summary"/> 总结了不同类型的策略如何应用于特定命令。
   </para>
 
   <para>
-   For policies that can have both <literal>USING</literal>
-   and <literal>WITH CHECK</literal> expressions (<literal>ALL</literal>
-   and <literal>UPDATE</literal>), if no <literal>WITH CHECK</literal>
-   expression is defined, then the <literal>USING</literal> expression will be
-   used both to determine which rows are visible (normal
-   <literal>USING</literal> case) and which new rows will be allowed to be
-   added (<literal>WITH CHECK</literal> case).
+   对于可以同时具有 <literal>USING</literal>
+   和 <literal>WITH CHECK</literal> 表达式（<literal>ALL</literal>
+   和 <literal>UPDATE</literal>）的策略，如果没有定义 <literal>WITH CHECK</literal>
+   表达式，那么 <literal>USING</literal> 表达式将同时用于确定哪些行可见（普通的
+   <literal>USING</literal> 情形）以及允许添加哪些新行（<literal>WITH CHECK</literal>
+   情形）。
   </para>
 
   <para>
-   If row-level security is enabled for a table, but no applicable policies
-   exist, a <quote>default deny</quote> policy is assumed, so that no rows will
-   be visible or updatable.
+   如果为表启用了行级安全性，但不存在适用的策略，
+   则假定采用<quote>默认拒绝</quote>策略，因此任何行都不可见或不可更新。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of the policy to be created.  This must be distinct from the
-      name of any other policy for the table.
+      要创建的策略的名称。该名称必须与该表的任何其他策略的名称不同。
      </para>
     </listitem>
    </varlistentry>
@@ -117,8 +87,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><replaceable class="parameter">table_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the table the
-      policy applies to.
+      该策略所适用的表的名称（可选择使用模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -127,11 +96,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><literal>PERMISSIVE</literal></term>
     <listitem>
      <para>
-      Specify that the policy is to be created as a permissive policy.
-      All permissive policies which are applicable to a given query will
-      be combined together using the Boolean <quote>OR</quote> operator.  By creating
-      permissive policies, administrators can add to the set of records
-      which can be accessed.  Policies are permissive by default.
+      指定该策略将创建为宽容策略。所有适用于给定查询的宽容策略将使用布尔 <quote>OR</quote> 运算符组合在一起。通过创建宽容策略，管理员可以增加可访问的记录集合。策略默认是宽容的。
      </para>
     </listitem>
    </varlistentry>
@@ -140,22 +105,11 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><literal>RESTRICTIVE</literal></term>
     <listitem>
      <para>
-      Specify that the policy is to be created as a restrictive policy.
-      All restrictive policies which are applicable to a given query will
-      be combined together using the Boolean <quote>AND</quote> operator.  By creating
-      restrictive policies, administrators can reduce the set of records
-      which can be accessed as all restrictive policies must be passed for
-      each record.
+      指定该策略将创建为限制性策略。所有适用于给定查询的限制性策略将使用布尔 <quote>AND</quote> 运算符组合在一起。通过创建限制性策略，管理员可以减少可访问的记录集合，因为每条记录都必须通过所有限制性策略。
      </para>
 
      <para>
-      Note that there needs to be at least one permissive policy to grant
-      access to records before restrictive policies can be usefully used to
-      reduce that access. If only restrictive policies exist, then no records
-      will be accessible. When a mix of permissive and restrictive policies
-      are present, a record is only accessible if at least one of the
-      permissive policies passes, in addition to all the restrictive
-      policies.
+      请注意，在限制性策略能够有效地用于减少访问之前，至少需要有一个宽容策略来授予对记录的访问权限。如果只存在限制性策略，则没有任何记录可访问。当同时存在宽容策略和限制性策略时，只有当至少一个宽容策略通过，并且所有限制性策略都通过时，记录才可访问。
      </para>
     </listitem>
    </varlistentry>
@@ -164,12 +118,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><replaceable class="parameter">command</replaceable></term>
     <listitem>
      <para>
-      The command to which the policy applies.  Valid options are
-      <command>ALL</command>, <command>SELECT</command>,
-      <command>INSERT</command>, <command>UPDATE</command>,
-      and <command>DELETE</command>.
-      <command>ALL</command> is the default.
-      See below for specifics regarding how these are applied.
+      该策略适用的命令。有效选项为 <command>ALL</command>、<command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command> 和 <command>DELETE</command>。默认为 <command>ALL</command>。有关这些选项如何应用的具体细节，请参见下文。
      </para>
     </listitem>
    </varlistentry>
@@ -178,8 +127,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><replaceable class="parameter">role_name</replaceable></term>
     <listitem>
      <para>
-      The role(s) to which the policy is to be applied.  The default is
-      <literal>PUBLIC</literal>, which will apply the policy to all roles.
+      该策略要应用到的角色。默认为 <literal>PUBLIC</literal>，这会将策略应用到所有角色。
      </para>
     </listitem>
    </varlistentry>
@@ -188,17 +136,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><replaceable class="parameter">using_expression</replaceable></term>
     <listitem>
      <para>
-      Any <acronym>SQL</acronym> conditional expression (returning
-      <type>boolean</type>).  The conditional expression cannot contain
-      any aggregate or window functions.  This expression will be added
-      to queries that refer to the table if row-level security is enabled.
-      Rows for which the expression returns true will be visible.  Any
-      rows for which the expression returns false or null will not be
-      visible to the user (in a <command>SELECT</command>), and will not be
-      available for modification (in an <command>UPDATE</command>
-      or <command>DELETE</command>).  Typically, such rows are silently
-      suppressed; no error is reported (but see
-      <xref linkend="sql-createpolicy-summary"/> for exceptions).
+      任意 <acronym>SQL</acronym> 条件表达式（返回 <type>boolean</type>）。该条件表达式不能包含任何聚合函数或窗口函数。如果启用了行级安全性，该表达式将被添加到引用该表的查询中。表达式返回 true 的行将可见。表达式返回 false 或 null 的任何行对用户不可见（在 <command>SELECT</command> 中），并且不可用于修改（在 <command>UPDATE</command> 或 <command>DELETE</command> 中）。通常，此类行会被静默抑制；不会报告错误（但例外情况请参见 <xref linkend="sql-createpolicy-summary"/>）。
      </para>
     </listitem>
    </varlistentry>
@@ -207,17 +145,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
     <term><replaceable class="parameter">check_expression</replaceable></term>
     <listitem>
      <para>
-      Any <acronym>SQL</acronym> conditional expression (returning
-      <type>boolean</type>).  The conditional expression cannot contain
-      any aggregate or window functions.  This expression will be used in
-      <command>INSERT</command> and <command>UPDATE</command> queries against
-      the table if row-level security is enabled.  Only rows for which the
-      expression evaluates to true will be allowed.  An error will be thrown
-      if the expression evaluates to false or null for any of the records
-      inserted or any of the records that result from the update.  Note that
-      the <replaceable class="parameter">check_expression</replaceable> is
-      evaluated against the proposed new contents of the row, not the
-      original contents.
+      任意 <acronym>SQL</acronym> 条件表达式（返回 <type>boolean</type>）。该条件表达式不能包含任何聚合函数或窗口函数。如果启用了行级安全，该表达式将用于针对该表的 <command>INSERT</command> 和 <command>UPDATE</command> 查询。只有表达式求值为 true 的行才会被允许。如果对于插入的任何记录或更新产生的任何记录，表达式求值为 false 或 null，则会抛出错误。注意，<replaceable class="parameter">check_expression</replaceable> 是针对该行的拟议新内容求值的，而不是原始内容。
      </para>
     </listitem>
    </varlistentry>
@@ -225,7 +153,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
   </variablelist>
 
   <refsect2>
-   <title>Per-Command Policies</title>
+   <title>按命令的策略</title>
 
    <variablelist>
 
@@ -233,31 +161,10 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <term><literal>ALL</literal></term>
       <listitem>
        <para>
-         Using <literal>ALL</literal> for a policy means that it will apply
-         to all commands, regardless of the type of command.  If an
-         <literal>ALL</literal> policy exists and more specific policies
-         exist, then both the <literal>ALL</literal> policy and the more
-         specific policy (or policies) will be applied.
-         Additionally, <literal>ALL</literal> policies will be applied to
-         both the selection side of a query and the modification side, using
-         the <literal>USING</literal> expression for both cases if only
-         a <literal>USING</literal> expression has been defined.
+         对策略使用 <literal>ALL</literal> 意味着它将应用于所有命令，无论命令类型如何。如果存在 <literal>ALL</literal> 策略并且存在更具体的策略，那么 <literal>ALL</literal> 策略和更具体的策略都将被应用。此外，<literal>ALL</literal> 策略将同时应用于查询的选择侧和修改侧，如果只定义了 <literal>USING</literal> 表达式，则两种情况都使用 <literal>USING</literal> 表达式。
        </para>
        <para>
-         As an example, if an <literal>UPDATE</literal> is issued, then the
-         <literal>ALL</literal> policy will be applicable both to what the
-         <literal>UPDATE</literal> will be able to select as rows to be
-         updated (applying the <literal>USING</literal> expression),
-         and to the resulting updated rows, to check if they are permitted
-         to be added to the table (applying the <literal>WITH CHECK</literal>
-         expression, if defined, and the <literal>USING</literal> expression
-         otherwise).  If an <command>INSERT</command>
-         or <command>UPDATE</command> command attempts to add rows to the
-         table that do not pass the <literal>ALL</literal>
-         policy's <literal>WITH CHECK</literal> expression (or its
-         <literal>USING</literal> expression, if it does not have a
-         <literal>WITH CHECK</literal> expression), the entire command will
-         be aborted.
+         举例来说，如果发出一个 <literal>UPDATE</literal>，那么 <literal>ALL</literal> 策略将既适用于 <literal>UPDATE</literal> 能够选择为待更新行的内容（应用 <literal>USING</literal> 表达式），也适用于更新后的结果行，以检查它们是否被允许添加到表中（如果定义了 <literal>WITH CHECK</literal> 表达式则应用它，否则应用 <literal>USING</literal> 表达式）。如果 <command>INSERT</command> 或 <command>UPDATE</command> 命令试图向表中添加不满足 <literal>ALL</literal> 策略的 <literal>WITH CHECK</literal> 表达式（或者在其没有 <literal>WITH CHECK</literal> 表达式时，不满足其 <literal>USING</literal> 表达式）的行，则整个命令将被中止。
        </para>
       </listitem>
      </varlistentry>
@@ -266,59 +173,19 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <term><literal>SELECT</literal></term>
       <listitem>
        <para>
-         Using <literal>SELECT</literal> for a policy means that it will apply
-         to <literal>SELECT</literal> queries and whenever
-         <literal>SELECT</literal> permissions are required on the relation the
-         policy is defined for.  The result is that only those records from the
-         relation that pass the <literal>SELECT</literal> policy will be
-         returned during a <literal>SELECT</literal> query, and that queries
-         that require <literal>SELECT</literal> permissions, such as
-         <literal>UPDATE</literal>, <literal>DELETE</literal>, and
-         <literal>MERGE</literal>, will also only see those records
-         that are allowed by the <literal>SELECT</literal> policy.
-         A <literal>SELECT</literal> policy cannot have a <literal>WITH
-         CHECK</literal> expression, as it only applies in cases where
-         records are being retrieved from the relation, except as described
-         below.
+         对策略使用 <literal>SELECT</literal> 意味着它将应用于 <literal>SELECT</literal> 查询，并且每当在定义该策略的关系上需要 <literal>SELECT</literal> 权限时也会应用。其结果是，在 <literal>SELECT</literal> 查询期间，只有来自该关系中通过 <literal>SELECT</literal> 策略的那些记录才会被返回，而需要 <literal>SELECT</literal> 权限的查询（例如 <literal>UPDATE</literal>、<literal>DELETE</literal> 和 <literal>MERGE</literal>）也将只能看到 <literal>SELECT</literal> 策略所允许的那些记录。<literal>SELECT</literal> 策略不能带有 <literal>WITH
+         CHECK</literal> 表达式，因为它只适用于从关系检索记录的情况，除非如下所述。
        </para>
        <para>
-         If a data-modifying query has a <literal>RETURNING</literal> clause,
-         <literal>SELECT</literal> permissions are required on the relation,
-         and any newly inserted or updated rows from the relation must satisfy
-         the relation's <literal>SELECT</literal> policies in order to be
-         available to the <literal>RETURNING</literal> clause.  If a newly
-         inserted or updated row does not satisfy the relation's
-         <literal>SELECT</literal> policies, an error will be thrown (inserted
-         or updated rows to be returned are <emphasis>never</emphasis>
-         silently ignored).
+         如果数据修改查询带有 <literal>RETURNING</literal> 子句，则需要对关系具有 <literal>SELECT</literal> 权限，并且来自该关系的任何新插入或更新的行都必须满足该关系的 <literal>SELECT</literal> 策略，才能对 <literal>RETURNING</literal> 子句可用。如果新插入或更新的行不满足该关系的 <literal>SELECT</literal> 策略，则会抛出错误（要返回的插入或更新行<emphasis>绝不会</emphasis>被静默忽略）。
        </para>
        <para>
-         If an <literal>INSERT</literal> has an <literal>ON CONFLICT DO
-         UPDATE</literal> clause, or an <literal>ON CONFLICT DO
-         NOTHING</literal> clause with an arbiter index or constraint
-         specification, then <literal>SELECT</literal>
-         permissions are required on the relation, and the rows proposed for
-         insertion are checked using the relation's <literal>SELECT</literal>
-         policies.  If a row proposed for insertion does not satisfy the
-         relation's <literal>SELECT</literal> policies, an error is thrown
-         (the <literal>INSERT</literal> is <emphasis>never</emphasis> silently
-         avoided).  In addition, if the <literal>UPDATE</literal> path is
-         taken, the row to be updated and the new updated row are checked
-         against the relation's <literal>SELECT</literal> policies, and an
-         error is thrown if they are not satisfied (an auxiliary
-         <literal>UPDATE</literal> is <emphasis>never</emphasis> silently
-         avoided).
+         如果 <literal>INSERT</literal> 带有 <literal>ON CONFLICT DO
+         UPDATE</literal> 子句，或带有指定仲裁索引或约束的 <literal>ON CONFLICT DO
+         NOTHING</literal> 子句，则需要对关系具有 <literal>SELECT</literal> 权限，并且拟插入的行会使用该关系的 <literal>SELECT</literal> 策略进行检查。如果拟插入的行不满足该关系的 <literal>SELECT</literal> 策略，则会抛出错误（<emphasis>绝不会</emphasis>静默地避开 <literal>INSERT</literal>）。此外，如果走的是 <literal>UPDATE</literal> 路径，则待更新的行和更新后的新行都会依据该关系的 <literal>SELECT</literal> 策略进行检查，若不满足则抛出错误（<emphasis>绝不会</emphasis>静默地避开辅助的 <literal>UPDATE</literal>）。
        </para>
        <para>
-         A <literal>MERGE</literal> command requires <literal>SELECT</literal>
-         permissions on both the source and target relations, and so each
-         relation's <literal>SELECT</literal> policies are applied before they
-         are joined, and the <literal>MERGE</literal> actions will only see
-         those records that are allowed by those policies.  In addition, if
-         an <literal>UPDATE</literal> action is executed, the target relation's
-         <literal>SELECT</literal> policies are applied to the updated row, as
-         for a standalone <literal>UPDATE</literal>, except that an error is
-         thrown if they are not satisfied.
+         <literal>MERGE</literal> 命令需要对源关系和目标关系都具有 <literal>SELECT</literal> 权限，因此每个关系的 <literal>SELECT</literal> 策略会在它们被连接之前应用，并且 <literal>MERGE</literal> 动作只会看到这些策略所允许的那些记录。此外，如果执行 <literal>UPDATE</literal> 动作，则目标关系的 <literal>SELECT</literal> 策略会应用于更新后的行，就像独立的 <literal>UPDATE</literal> 一样，不同之处在于若不满足则会抛出错误。
        </para>
       </listitem>
      </varlistentry>
@@ -327,22 +194,11 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <term><literal>INSERT</literal></term>
       <listitem>
        <para>
-         Using <literal>INSERT</literal> for a policy means that it will apply
-         to <literal>INSERT</literal> commands and <literal>MERGE</literal>
-         commands that contain <literal>INSERT</literal> actions.
-         Rows being inserted that do
-         not pass this policy will result in a policy violation error, and the
-         entire <literal>INSERT</literal> command will be aborted.
-         An <literal>INSERT</literal> policy cannot have
-         a <literal>USING</literal> expression, as it only applies in cases
-         where records are being added to the relation.
+         对策略使用 <literal>INSERT</literal> 意味着它将应用于包含 <literal>INSERT</literal> 动作的 <literal>INSERT</literal> 命令和 <literal>MERGE</literal> 命令。被插入的行如果不通过此策略，将导致策略违规错误，并且整个 <literal>INSERT</literal> 命令将被中止。<literal>INSERT</literal> 策略不能有 <literal>USING</literal> 表达式，因为它只适用于向关系中添加记录的情况。
        </para>
        <para>
-         Note that an <literal>INSERT</literal> with an <literal>ON CONFLICT
-         DO NOTHING/UPDATE</literal> clause will check the
-         <literal>INSERT</literal> policies' <literal>WITH CHECK</literal>
-         expressions for all rows proposed for insertion, regardless of
-         whether or not they end up being inserted.
+         请注意，带有 <literal>ON CONFLICT
+         DO NOTHING/UPDATE</literal> 子句的 <literal>INSERT</literal> 会针对所有拟插入的行检查 <literal>INSERT</literal> 策略的 <literal>WITH CHECK</literal> 表达式，无论这些行最终是否被插入。
        </para>
       </listitem>
      </varlistentry>
@@ -351,60 +207,19 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <term><literal>UPDATE</literal></term>
       <listitem>
        <para>
-         Using <literal>UPDATE</literal> for a policy means that it will apply
-         to <literal>UPDATE</literal>, <literal>SELECT FOR UPDATE</literal>,
-         and <literal>SELECT FOR SHARE</literal> commands, as well as
-         auxiliary <literal>ON CONFLICT DO UPDATE</literal> clauses of
-         <literal>INSERT</literal> commands, and <literal>MERGE</literal>
-         commands containing <literal>UPDATE</literal> actions.
-         Since an <literal>UPDATE</literal> command
-         involves pulling an existing record and replacing it with a new
-         modified record, <literal>UPDATE</literal>
-         policies accept both a <literal>USING</literal> expression and
-         a <literal>WITH CHECK</literal> expression.
-         The <literal>USING</literal> expression determines which records
-         the <literal>UPDATE</literal> command will see to operate against,
-         while the <literal>WITH CHECK</literal> expression defines which
-         modified rows are allowed to be stored back into the relation.
+         对策略使用 <literal>UPDATE</literal> 意味着它将应用于 <literal>UPDATE</literal>、<literal>SELECT FOR UPDATE</literal> 和 <literal>SELECT FOR SHARE</literal> 命令，以及 <literal>INSERT</literal> 命令的辅助 <literal>ON CONFLICT DO UPDATE</literal> 子句，还有包含 <literal>UPDATE</literal> 动作的 <literal>MERGE</literal> 命令。由于 <literal>UPDATE</literal> 命令涉及取出已有记录并用修改后的新记录替换它，<literal>UPDATE</literal> 策略同时接受 <literal>USING</literal> 表达式和 <literal>WITH CHECK</literal> 表达式。<literal>USING</literal> 表达式决定 <literal>UPDATE</literal> 命令能看到哪些记录并对其操作，而 <literal>WITH CHECK</literal> 表达式定义哪些修改后的行允许被存回关系中。
        </para>
 
        <para>
-         Any rows whose updated values do not pass the
-         <literal>WITH CHECK</literal> expression will cause an error, and the
-         entire command will be aborted.  If only a <literal>USING</literal>
-         clause is specified, then that clause will be used for both
-         <literal>USING</literal> and <literal>WITH CHECK</literal> cases.
+         任何更新后的值不通过 <literal>WITH CHECK</literal> 表达式的行都将导致错误，并且整个命令将被中止。如果只指定了 <literal>USING</literal> 子句，那么该子句将同时用于 <literal>USING</literal> 和 <literal>WITH CHECK</literal> 两种情况。
        </para>
 
        <para>
-         Typically an <literal>UPDATE</literal> command also needs to read
-         data from columns in the relation being updated (e.g., in a
-         <literal>WHERE</literal> clause or a <literal>RETURNING</literal>
-         clause, or in an expression on the right hand side of the
-         <literal>SET</literal> clause).  In this case,
-         <literal>SELECT</literal> rights are also required on the relation
-         being updated, and the appropriate <literal>SELECT</literal> or
-         <literal>ALL</literal> policies will be applied in addition to
-         the <literal>UPDATE</literal> policies.  Thus the user must have
-         access to the row(s) being updated through a <literal>SELECT</literal>
-         or <literal>ALL</literal> policy in addition to being granted
-         permission to update the row(s) via an <literal>UPDATE</literal>
-         or <literal>ALL</literal> policy.
+         通常，<literal>UPDATE</literal> 命令还需要从被更新关系的列中读取数据（例如，在 <literal>WHERE</literal> 子句或 <literal>RETURNING</literal> 子句中，或者在 <literal>SET</literal> 子句右侧的表达式中）。在这种情况下，还需要对被更新的关系具有 <literal>SELECT</literal> 权限，并且除了 <literal>UPDATE</literal> 策略之外，还将应用相应的 <literal>SELECT</literal> 或 <literal>ALL</literal> 策略。因此，除了通过 <literal>UPDATE</literal> 或 <literal>ALL</literal> 策略被授予更新行的权限之外，用户还必须能够通过 <literal>SELECT</literal> 或 <literal>ALL</literal> 策略访问被更新的行。
        </para>
 
        <para>
-         When an <literal>INSERT</literal> command has an auxiliary
-         <literal>ON CONFLICT DO UPDATE</literal> clause, if the
-         <literal>UPDATE</literal> path is taken, the row to be updated is
-         first checked against the <literal>USING</literal> expressions of
-         any <literal>UPDATE</literal> policies, and then the new updated row
-         is checked against the <literal>WITH CHECK</literal> expressions.
-         Note, however, that unlike a standalone <literal>UPDATE</literal>
-         command, if the existing row does not pass the
-         <literal>USING</literal> expressions, an error will be thrown (the
-         <literal>UPDATE</literal> path will <emphasis>never</emphasis> be silently
-         avoided).  The same applies to an <literal>UPDATE</literal> action
-         of a <command>MERGE</command> command.
+         当 <literal>INSERT</literal> 命令带有辅助的 <literal>ON CONFLICT DO UPDATE</literal> 子句时，如果走 <literal>UPDATE</literal> 路径，则首先用任何 <literal>UPDATE</literal> 策略的 <literal>USING</literal> 表达式检查要更新的行，然后用 <literal>WITH CHECK</literal> 表达式检查更新后的新行。但请注意，与独立的 <literal>UPDATE</literal> 命令不同，如果现有行未通过 <literal>USING</literal> 表达式，则会抛出错误（<literal>UPDATE</literal> 路径<emphasis>绝不会</emphasis>被静默地避开）。这同样适用于 <command>MERGE</command> 命令的 <literal>UPDATE</literal> 动作。
        </para>
       </listitem>
      </varlistentry>
@@ -413,41 +228,16 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <term><literal>DELETE</literal></term>
       <listitem>
        <para>
-         Using <literal>DELETE</literal> for a policy means that it will apply
-         to <literal>DELETE</literal> commands and <literal>MERGE</literal>
-         commands containing <literal>DELETE</literal> actions.  For a
-         <literal>DELETE</literal> command, only rows that pass this policy
-         will be seen by the <literal>DELETE</literal> command.  There can
-         be rows that are visible through a <literal>SELECT</literal> policy
-         that are not available for deletion, if they do not pass the
-         <literal>USING</literal> expression for the <literal>DELETE</literal>
-         policy.  Note, however, that a <literal>DELETE</literal> action in a
-         <literal>MERGE</literal> command will see rows that are visible
-         through <literal>SELECT</literal> policies, and if the
-         <literal>DELETE</literal> policy does not pass for such a row, an
-         error will be thrown.
+         为策略使用 <literal>DELETE</literal> 意味着它将应用于 <literal>DELETE</literal> 命令以及包含 <literal>DELETE</literal> 动作的 <literal>MERGE</literal> 命令。对于 <literal>DELETE</literal> 命令，<literal>DELETE</literal> 命令只能看到通过该策略的行。可能存在通过 <literal>SELECT</literal> 策略可见但不可删除的行，如果它们未通过 <literal>DELETE</literal> 策略的 <literal>USING</literal> 表达式。但请注意，<literal>MERGE</literal> 命令中的 <literal>DELETE</literal> 动作将看到通过 <literal>SELECT</literal> 策略可见的行，如果 <literal>DELETE</literal> 策略对这样的行不通过，则会抛出错误。
        </para>
 
        <para>
-         In most cases a <literal>DELETE</literal> command also needs to read
-         data from columns in the relation that it is deleting from (e.g.,
-         in a <literal>WHERE</literal> clause or a
-         <literal>RETURNING</literal> clause). In this case,
-         <literal>SELECT</literal> rights are also required on the relation,
-         and the appropriate <literal>SELECT</literal> or
-         <literal>ALL</literal> policies will be applied in addition to
-         the <literal>DELETE</literal> policies.  Thus the user must have
-         access to the row(s) being deleted through a <literal>SELECT</literal>
-         or <literal>ALL</literal> policy in addition to being granted
-         permission to delete the row(s) via a <literal>DELETE</literal> or
-         <literal>ALL</literal> policy.
+         在大多数情况下，<literal>DELETE</literal> 命令还需要从其删除数据的关系的列中读取数据（例如，在 <literal>WHERE</literal> 子句或 <literal>RETURNING</literal> 子句中）。在这种情况下，还需要对该关系具有 <literal>SELECT</literal> 权限，并且除了 <literal>DELETE</literal> 策略之外，还将应用相应的 <literal>SELECT</literal> 或 <literal>ALL</literal> 策略。因此，除了通过 <literal>DELETE</literal> 或 <literal>ALL</literal> 策略被授予删除行的权限之外，用户还必须能够通过 <literal>SELECT</literal> 或 <literal>ALL</literal> 策略访问正在被删除的行。
        </para>
 
        <para>
-         A <literal>DELETE</literal> policy cannot have a <literal>WITH
-         CHECK</literal> expression, as it only applies in cases where
-         records are being deleted from the relation, so that there is no
-         new row to check.
+         <literal>DELETE</literal> 策略不能有 <literal>WITH
+         CHECK</literal> 表达式，因为它只适用于从关系中删除记录的情况，因此没有要检查的新行。
        </para>
       </listitem>
      </varlistentry>
@@ -455,23 +245,18 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
    </variablelist>
 
    <para>
-    <xref linkend="sql-createpolicy-summary"/> summarizes how the different
-    types of policy apply to specific commands.  In the table,
-    <quote>check</quote> means that the policy expression is checked and an
-    error is thrown if it returns false or null, whereas <quote>filter</quote>
-    means that the row is silently ignored if the policy expression returns
-    false or null.
+    <xref linkend="sql-createpolicy-summary"/> 总结了不同类型的策略如何应用于特定命令。在表中，<quote>检查</quote> 表示检查策略表达式，如果它返回 false 或 null 则抛出错误；而 <quote>过滤</quote> 表示如果策略表达式返回 false 或 null，则静默忽略该行。
    </para>
 
    <table id="sql-createpolicy-summary">
-    <title>Policies Applied by Command Type</title>
+    <title>按命令类型应用的策略</title>
     <tgroup cols="6">
      <colspec colnum="4" colname="update-using"/>
      <colspec colnum="5" colname="update-check"/>
      <spanspec namest="update-using" nameend="update-check" spanname="update"/>
      <thead>
       <row>
-       <entry morerows="1">Command</entry>
+       <entry morerows="1">命令</entry>
        <entry><literal>SELECT/ALL policy</literal></entry>
        <entry><literal>INSERT/ALL policy</literal></entry>
        <entry spanname="update"><literal>UPDATE/ALL policy</literal></entry>
@@ -488,7 +273,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
      <tbody>
       <row>
        <entry><command>SELECT</command> / <command>COPY ... TO</command></entry>
-       <entry>Filter existing row</entry>
+       <entry>过滤现有行</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
@@ -496,24 +281,24 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       </row>
       <row>
        <entry><command>SELECT FOR UPDATE/SHARE</command></entry>
-       <entry>Filter existing row</entry>
+       <entry>过滤现有行</entry>
        <entry>&mdash;</entry>
-       <entry>Filter existing row</entry>
+       <entry>过滤现有行</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
       </row>
       <row>
        <entry><command>INSERT</command></entry>
        <entry>
-        Check new row&nbsp;<footnote id="rls-select-priv">
+        检查新行&nbsp;<footnote id="rls-select-priv">
          <para>
-          If read access is required to either the existing or new row (for
-          example, a <literal>WHERE</literal> or <literal>RETURNING</literal>
-          clause that refers to columns from the relation).
+          如果需要对现有行或新行进行读访问（例如，引用了关系中列的
+          <literal>WHERE</literal> 或 <literal>RETURNING</literal>
+          子句）。
          </para>
         </footnote>
        </entry>
-       <entry>Check new row</entry>
+       <entry>检查新行</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
@@ -521,40 +306,39 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <row>
        <entry><command>UPDATE</command></entry>
        <entry>
-        Filter existing row&nbsp;<footnoteref linkend="rls-select-priv"/> &amp;
-        check new row&nbsp;<footnoteref linkend="rls-select-priv"/>
+        过滤现有行&nbsp;<footnoteref linkend="rls-select-priv"/> &amp;
+        检查新行&nbsp;<footnoteref linkend="rls-select-priv"/>
        </entry>
        <entry>&mdash;</entry>
-       <entry>Filter existing row</entry>
-       <entry>Check new row</entry>
+       <entry>过滤现有行</entry>
+       <entry>检查新行</entry>
        <entry>&mdash;</entry>
       </row>
       <row>
        <entry><command>DELETE</command></entry>
        <entry>
-        Filter existing row&nbsp;<footnoteref linkend="rls-select-priv"/>
+        过滤现有行&nbsp;<footnoteref linkend="rls-select-priv"/>
        </entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
-       <entry>Filter existing row</entry>
+       <entry>过滤现有行</entry>
       </row>
       <row>
        <entry><command>INSERT ... ON CONFLICT</command></entry>
        <entry>
-        Check new row&nbsp;<footnote>
+        检查新行&nbsp;<footnote>
          <para>
-          If an arbiter index or constraint is specified.
+          如果指定了仲裁索引或约束。
          </para>
         </footnote><footnote id="rls-on-conflict-priv">
          <para>
-          Row proposed for insertion is checked regardless of whether or not a
-          conflict occurs.
+          无论是否发生冲突，都会检查建议插入的行。
          </para>
         </footnote>
        </entry>
        <entry>
-        Check new row&nbsp;<footnoteref linkend="rls-on-conflict-priv"/>
+        检查新行&nbsp;<footnoteref linkend="rls-on-conflict-priv"/>
        </entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
@@ -563,24 +347,23 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <row>
        <entry><command>ON CONFLICT DO UPDATE</command></entry>
        <entry>
-        Check existing &amp; new rows&nbsp;<footnote id="rls-on-conflict-update-priv">
+        检查现有 &amp; 新行&nbsp;<footnote id="rls-on-conflict-update-priv">
          <para>
-          New row of the auxiliary <command>UPDATE</command> command, which
-          might be different from the new row of the original
-          <command>INSERT</command> command.
+          辅助 <command>UPDATE</command> 命令的新行，它可能与原始
+          <command>INSERT</command> 命令的新行不同。
          </para>
         </footnote>
        </entry>
        <entry>&mdash;</entry>
-       <entry>Check existing row</entry>
+       <entry>检查现有行</entry>
        <entry>
-        Check new row&nbsp;<footnoteref linkend="rls-on-conflict-update-priv"/>
+        检查新行&nbsp;<footnoteref linkend="rls-on-conflict-update-priv"/>
        </entry>
        <entry>&mdash;</entry>
       </row>
       <row>
        <entry><command>MERGE</command></entry>
-       <entry>Filter source &amp; target rows</entry>
+       <entry>过滤源 &amp; 目标行</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
@@ -589,19 +372,19 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
       <row>
        <entry><command>MERGE ... THEN INSERT</command></entry>
        <entry>
-        Check new row&nbsp;<footnoteref linkend="rls-select-priv"/>
+        检查新行&nbsp;<footnoteref linkend="rls-select-priv"/>
        </entry>
-       <entry>Check new row</entry>
+       <entry>检查新行</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
       </row>
       <row>
        <entry><command>MERGE ... THEN UPDATE</command></entry>
-       <entry>Check new row</entry>
+       <entry>检查新行</entry>
        <entry>&mdash;</entry>
-       <entry>Check existing row</entry>
-       <entry>Check new row</entry>
+       <entry>检查现有行</entry>
+       <entry>检查新行</entry>
        <entry>&mdash;</entry>
       </row>
       <row>
@@ -610,7 +393,7 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
        <entry>&mdash;</entry>
-       <entry>Check existing row</entry>
+       <entry>检查现有行</entry>
       </row>
      </tbody>
     </tgroup>
@@ -619,41 +402,22 @@ CREATE POLICY <replaceable class="parameter">name</replaceable> ON <replaceable 
   </refsect2>
 
   <refsect2>
-   <title>Application of Multiple Policies</title>
+   <title>多个策略的应用</title>
 
    <para>
-    When multiple policies of different command types apply to the same command
-    (for example, <literal>SELECT</literal> and <literal>UPDATE</literal>
-    policies applied to an <literal>UPDATE</literal> command), then the user
-    must have both types of permissions (for example, permission to select rows
-    from the relation as well as permission to update them).  Thus the
-    expressions for one type of policy are combined with the expressions for
-    the other type of policy using the <literal>AND</literal> operator.
+    当不同类型的命令的多个策略应用于同一个命令时（例如，<literal>SELECT</literal> 和 <literal>UPDATE</literal> 策略应用于一条 <literal>UPDATE</literal> 命令），用户必须同时具有这两种权限（例如，从关系中选取行的权限以及更新这些行的权限）。因此，一种类型策略的表达式与另一种类型策略的表达式使用 <literal>AND</literal> 运算符组合。
    </para>
 
    <para>
-    When multiple policies of the same command type apply to the same command,
-    then there must be at least one <literal>PERMISSIVE</literal> policy
-    granting access to the relation, and all of the
-    <literal>RESTRICTIVE</literal> policies must pass.  Thus all the
-    <literal>PERMISSIVE</literal> policy expressions are combined using
-    <literal>OR</literal>, all the <literal>RESTRICTIVE</literal> policy
-    expressions are combined using <literal>AND</literal>, and the results are
-    combined using <literal>AND</literal>.  If there are no
-    <literal>PERMISSIVE</literal> policies, then access is denied.
+    当同一命令类型的多个策略应用于同一个命令时，必须至少有一个 <literal>PERMISSIVE</literal> 策略授予对该关系的访问权限，并且所有 <literal>RESTRICTIVE</literal> 策略都必须通过。因此，所有 <literal>PERMISSIVE</literal> 策略表达式使用 <literal>OR</literal> 组合，所有 <literal>RESTRICTIVE</literal> 策略表达式使用 <literal>AND</literal> 组合，然后这些结果使用 <literal>AND</literal> 组合。如果没有 <literal>PERMISSIVE</literal> 策略，则拒绝访问。
    </para>
 
    <para>
-    Note that, for the purposes of combining multiple policies,
-    <literal>ALL</literal> policies are treated as having the same type as
-    whichever other type of policy is being applied.
+    请注意，为了合并多个策略，<literal>ALL</literal> 策略被视为与所应用的任何其他类型的策略具有相同的类型。
    </para>
 
    <para>
-    For example, in an <literal>UPDATE</literal> command requiring both
-    <literal>SELECT</literal> and <literal>UPDATE</literal> permissions, if
-    there are multiple applicable policies of each type, they will be combined
-    as follows:
+    例如，在同时需要 <literal>SELECT</literal> 和 <literal>UPDATE</literal> 权限的 <literal>UPDATE</literal> 命令中，如果每种类型都有多个适用的策略，它们将按如下方式合并：
 
 <programlisting>
 <replaceable>expression</replaceable> from RESTRICTIVE SELECT/ALL policy 1
@@ -689,82 +453,44 @@ AND
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注意</title>
 
   <para>
-   You must be the owner of a table to create or change policies for it.
+   您必须是表的所有者，才能为该表创建或更改策略。
   </para>
 
   <para>
-   While policies will be applied for explicit queries against tables
-   in the database, they are not applied when the system is performing internal
-   referential integrity checks or validating constraints.  This means there are
-   indirect ways to determine that a given value exists.  An example of this is
-   attempting to insert a duplicate value into a column that is a primary key
-   or has a unique constraint.  If the insert fails then the user can infer that
-   the value already exists. (This example assumes that the user is permitted by
-   policy to insert records which they are not allowed to see.)  Another example
-   is where a user is allowed to insert into a table which references another,
-   otherwise hidden table.  Existence can be determined by the user inserting
-   values into the referencing table, where success would indicate that the
-   value exists in the referenced table.  These issues can be addressed by
-   carefully crafting policies to prevent users from being able to insert,
-   delete, or update records at all which might possibly indicate a value they
-   are not otherwise able to see, or by using generated values (e.g., surrogate
-   keys) instead of keys with external meanings.
+   虽然策略会应用于针对数据库中表的显式查询，但当系统执行内部引用完整性检查或验证约束时，它们不会被应用。这意味着存在一些间接方式可以确定某个给定值是否存在。一个例子是尝试向作为主键或具有唯一约束的列中插入重复值。如果插入失败，那么用户可以推断该值已经存在。（此示例假设策略允许该用户插入其不被允许看到的记录。）另一个例子是允许用户向一个引用了另一个原本隐藏的表的表执行插入。用户可以通过向引用表插入值来确定值是否存在，插入成功则表明被引用表中存在该值。可以通过精心设计策略，防止用户插入、删除或更新任何可能表明其原本无法看到的值的记录，或者使用生成的值（例如代理键）代替具有外部含义的键，来解决这些问题。
   </para>
 
   <para>
-   Generally, the system will enforce filter conditions imposed using
-   security policies prior to qualifications that appear in user queries,
-   in order to prevent inadvertent exposure of the protected data to
-   user-defined functions which might not be trustworthy.  However,
-   functions and operators marked by the system (or the system
-   administrator) as <literal>LEAKPROOF</literal> may be evaluated before
-   policy expressions, as they are assumed to be trustworthy.
+   通常，系统会在用户查询中出现的限定条件之前强制执行使用安全策略施加的过滤条件，以防止受保护数据被意外暴露给可能不可信的用户定义函数。但是，被系统（或系统管理员）标记为 <literal>LEAKPROOF</literal> 的函数和运算符可能会在策略表达式之前求值，因为它们被假定为可信的。
   </para>
 
   <para>
-   Since policy expressions
-   are added to the user's query directly, they will be run with the rights of
-   the user running the overall query.  Therefore, users who are using a given
-   policy must be able to access any tables or functions referenced in the
-   expression or they will simply receive a permission denied error when
-   attempting to query the table that has row-level security enabled.
-   This does not change how views
-   work, however.  As with normal queries and views, permission checks and
-   policies for the tables which are referenced by a view will use the view
-   owner's rights and any policies which apply to the view owner, except if
-   the view is defined using the <literal>security_invoker</literal> option
-   (see <link linkend="sql-createview"><command>CREATE VIEW</command></link>).
+   由于策略表达式被直接添加到用户的查询中，因此它们将以运行整个查询的用户的权限执行。所以，使用给定策略的用户必须能够访问该表达式中引用的任何表或函数，否则在尝试查询启用了行级安全性的表时，他们只会收到权限被拒绝的错误。不过，这不会改变视图的工作方式。与普通查询和视图一样，视图所引用的表的权限检查和策略将使用视图所有者的权限以及适用于视图所有者的任何策略，除非该视图是使用 <literal>security_invoker</literal> 选项定义的（参见 <link linkend="sql-createview"><command>CREATE VIEW</command></link>）。
   </para>
 
   <para>
-   No separate policy exists for <command>MERGE</command>. Instead, the policies
-   defined for <command>SELECT</command>, <command>INSERT</command>,
-   <command>UPDATE</command>, and <command>DELETE</command> are applied
-   while executing <command>MERGE</command>, depending on the actions that are
-   performed.
+   <command>MERGE</command> 没有单独的策略。相反，在执行 <command>MERGE</command> 时，会根据所执行的操作，应用为 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command> 和 <command>DELETE</command> 定义的策略。
   </para>
 
   <para>
-   Additional discussion and practical examples can be found
-   in <xref linkend="ddl-rowsecurity"/>.
+   更多讨论和实践示例可以在 <xref linkend="ddl-rowsecurity"/> 中找到。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE POLICY</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>CREATE POLICY</command> 是一个 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterpolicy"/></member>
