@@ -3162,57 +3162,42 @@ void PGTYPESdecimal_free(decimal *var);
  </sect1>
 
  <sect1 id="ecpg-descriptors">
-  <title>Using Descriptor Areas</title>
+  <title>使用描述符区域</title>
 
   <para>
-   An SQL descriptor area is a more sophisticated method for processing
-   the result of a <command>SELECT</command>, <command>FETCH</command> or
-   a <command>DESCRIBE</command> statement. An SQL descriptor area groups
-   the data of one row of data together with metadata items into one
-   data structure.  The metadata is particularly useful when executing
-   dynamic SQL statements, where the nature of the result columns might
-   not be known ahead of time. PostgreSQL provides two ways to use
-   Descriptor Areas: the named SQL Descriptor Areas and the C-structure
-   SQLDAs.
+   SQL 描述符区域是处理 <command>SELECT</command>、<command>FETCH</command> 或
+   <command>DESCRIBE</command> 语句结果的一种更精细的方法。SQL 描述符区域将一行数据的数据与元数据项组合到一个数据结构中。在执行动态 SQL 语句时，元数据特别有用，因为此时结果列的性质可能无法预先得知。PostgreSQL 提供了两种使用描述符区域的方式：命名 SQL 描述符区域和 C 结构体 SQLDA。
   </para>
 
   <sect2 id="ecpg-named-descriptors">
-   <title>Named SQL Descriptor Areas</title>
+   <title>命名 SQL 描述符区域</title>
 
    <para>
-    A named SQL descriptor area consists of a header, which contains
-    information concerning the entire descriptor, and one or more item
-    descriptor areas, which basically each describe one column in the
-    result row.
+    命名 SQL 描述符区域由一个头部（包含有关整个描述符的信息）和一个或多个项描述符区域组成，后者基本上每个都描述结果行中的一列。
    </para>
 
    <para>
-    Before you can use an SQL descriptor area, you need to allocate one:
+    在使用 SQL 描述符区域之前，需要先分配一个：
 <programlisting>
 EXEC SQL ALLOCATE DESCRIPTOR <replaceable>identifier</replaceable>;
 </programlisting>
-    The identifier serves as the <quote>variable name</quote> of the
-    descriptor area.  <!-- The scope of the allocated descriptor is WHAT?. -->
-    When you don't need the descriptor anymore, you should deallocate
-    it:
+    该标识符充当描述符区域的<quote>变量名</quote>。<!-- The scope of the allocated descriptor is WHAT?. -->
+    当不再需要该描述符时，应将其释放：
 <programlisting>
 EXEC SQL DEALLOCATE DESCRIPTOR <replaceable>identifier</replaceable>;
 </programlisting>
    </para>
 
    <para>
-    To use a descriptor area, specify it as the storage target in an
-    <literal>INTO</literal> clause, instead of listing host variables:
+    要使用描述符区域，请在 <literal>INTO</literal> 子句中将其指定为存储目标，而不是列出宿主变量：
 <programlisting>
 EXEC SQL FETCH NEXT FROM mycursor INTO SQL DESCRIPTOR mydesc;
 </programlisting>
-    If the result set is empty, the Descriptor Area will still contain
-    the metadata from the query, i.e., the field names.
+    如果结果集为空，描述符区域仍将包含来自查询的元数据，即字段名。
    </para>
 
    <para>
-    For not yet executed prepared queries, the <command>DESCRIBE</command>
-    statement can be used to get the metadata of the result set:
+    对于尚未执行的预备查询，可以使用 <command>DESCRIBE</command> 语句获取结果集的元数据：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 char *sql_stmt = "SELECT * FROM table1";
@@ -3224,46 +3209,30 @@ EXEC SQL DESCRIBE stmt1 INTO SQL DESCRIPTOR mydesc;
    </para>
 
    <para>
-    Before PostgreSQL 9.0, the <literal>SQL</literal> keyword was optional,
-    so using <literal>DESCRIPTOR</literal> and <literal>SQL DESCRIPTOR</literal>
-    produced named SQL Descriptor Areas. Now it is mandatory, omitting
-    the <literal>SQL</literal> keyword produces SQLDA Descriptor Areas,
-    see <xref linkend="ecpg-sqlda-descriptors"/>.
+    在 PostgreSQL 9.0 之前，<literal>SQL</literal> 关键字是可选的，因此使用 <literal>DESCRIPTOR</literal> 和 <literal>SQL DESCRIPTOR</literal> 会产生命名的 SQL 描述符区域。现在它是必需的，省略 <literal>SQL</literal> 关键字会产生 SQLDA 描述符区域，参见 <xref linkend="ecpg-sqlda-descriptors"/>。
    </para>
 
    <para>
-    In <command>DESCRIBE</command> and <command>FETCH</command> statements,
-    the <literal>INTO</literal> and <literal>USING</literal> keywords can be
-    used to similarly: they produce the result set and the metadata in a
-    Descriptor Area.
+    在 <command>DESCRIBE</command> 和 <command>FETCH</command> 语句中，可以类似地使用 <literal>INTO</literal> 和 <literal>USING</literal> 关键字：它们会在描述符区域中产生结果集和元数据。
    </para>
 
    <para>
-    Now how do you get the data out of the descriptor area?  You can
-    think of the descriptor area as a structure with named fields.  To
-    retrieve the value of a field from the header and store it into a
-    host variable, use the following command:
+    那么如何从描述符区域中取出数据呢？你可以把描述符区域看作一个带有命名字段的结构体。要从头部中取出某个字段的值并存入宿主变量，请使用以下命令：
 <programlisting>
 EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> :<replaceable>hostvar</replaceable> = <replaceable>field</replaceable>;
 </programlisting>
-    Currently, there is only one header field defined:
-    <replaceable>COUNT</replaceable>, which tells how many item
-    descriptor areas exist (that is, how many columns are contained in
-    the result).  The host variable needs to be of an integer type.  To
-    get a field from the item descriptor area, use the following
-    command:
+    目前只定义了一个头部字段：<replaceable>COUNT</replaceable>，它指出存在多少个项描述符区域（即结果中包含多少列）。宿主变量必须是整数类型。要从项描述符区域中获取字段，请使用以下命令：
 <programlisting>
 EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</replaceable> :<replaceable>hostvar</replaceable> = <replaceable>field</replaceable>;
 </programlisting>
-    <replaceable>num</replaceable> can be a literal integer or a host
-    variable containing an integer. Possible fields are:
+    <replaceable>num</replaceable> 可以是一个整数字面量，也可以是包含整数的宿主变量。可能的字段有：
 
     <variablelist>
      <varlistentry id="ecpg-named-descriptors-cardinality">
-      <term><literal>CARDINALITY</literal> (integer)</term>
+      <term><literal>CARDINALITY</literal>（整数）</term>
       <listitem>
        <para>
-        number of rows in the result set
+        结果集中的行数
        </para>
       </listitem>
      </varlistentry>
@@ -3272,41 +3241,40 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>DATA</literal></term>
       <listitem>
        <para>
-        actual data item (therefore, the data type of this field
-        depends on the query)
+        实际数据项（因此，该字段的数据类型取决于查询）
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-named-descriptors-datetime-interval-code">
-      <term><literal>DATETIME_INTERVAL_CODE</literal> (integer)</term>
+      <term><literal>DATETIME_INTERVAL_CODE</literal>（整数）</term>
       <listitem>
        <para>
-        When <literal>TYPE</literal> is <literal>9</literal>,
-        <literal>DATETIME_INTERVAL_CODE</literal> will have a value of
-        <literal>1</literal> for <literal>DATE</literal>,
-        <literal>2</literal> for <literal>TIME</literal>,
-        <literal>3</literal> for <literal>TIMESTAMP</literal>,
-        <literal>4</literal> for <literal>TIME WITH TIME ZONE</literal>, or
-        <literal>5</literal> for <literal>TIMESTAMP WITH TIME ZONE</literal>.
+        当 <literal>TYPE</literal> 为 <literal>9</literal> 时，
+        <literal>DATETIME_INTERVAL_CODE</literal> 的值将为：
+        对于 <literal>DATE</literal> 为 <literal>1</literal>，
+        对于 <literal>TIME</literal> 为 <literal>2</literal>，
+        对于 <literal>TIMESTAMP</literal> 为 <literal>3</literal>，
+        对于 <literal>TIME WITH TIME ZONE</literal> 为 <literal>4</literal>，或
+        对于 <literal>TIMESTAMP WITH TIME ZONE</literal> 为 <literal>5</literal>。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-named-descriptors-datetime-interval-precision">
-      <term><literal>DATETIME_INTERVAL_PRECISION</literal> (integer)</term>
+      <term><literal>DATETIME_INTERVAL_PRECISION</literal>（整数）</term>
       <listitem>
        <para>
-        not implemented
+        未实现
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-named-descriptors-indicator">
-      <term><literal>INDICATOR</literal> (integer)</term>
+      <term><literal>INDICATOR</literal>（整数）</term>
       <listitem>
        <para>
-        the indicator (indicating a null value or a value truncation)
+        指示符（指示空值或值被截断）
        </para>
       </listitem>
      </varlistentry>
@@ -3315,7 +3283,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>KEY_MEMBER</literal> (integer)</term>
       <listitem>
        <para>
-        not implemented
+        未实现
        </para>
       </listitem>
      </varlistentry>
@@ -3324,7 +3292,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>LENGTH</literal> (integer)</term>
       <listitem>
        <para>
-        length of the datum in characters
+        数据项的字符长度
        </para>
       </listitem>
      </varlistentry>
@@ -3333,7 +3301,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>NAME</literal> (string)</term>
       <listitem>
        <para>
-        name of the column
+        列的名称
        </para>
       </listitem>
      </varlistentry>
@@ -3342,7 +3310,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>NULLABLE</literal> (integer)</term>
       <listitem>
        <para>
-        not implemented
+        未实现
        </para>
       </listitem>
      </varlistentry>
@@ -3351,7 +3319,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>OCTET_LENGTH</literal> (integer)</term>
       <listitem>
        <para>
-        length of the character representation of the datum in bytes
+        该数据值的字符表示的长度（以字节计）
        </para>
       </listitem>
      </varlistentry>
@@ -3360,7 +3328,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>PRECISION</literal> (integer)</term>
       <listitem>
        <para>
-        precision (for type <type>numeric</type>)
+        精度（用于类型 <type>numeric</type>）
        </para>
       </listitem>
      </varlistentry>
@@ -3369,7 +3337,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>RETURNED_LENGTH</literal> (integer)</term>
       <listitem>
        <para>
-        length of the datum in characters
+        数据值的字符长度
        </para>
       </listitem>
      </varlistentry>
@@ -3378,7 +3346,7 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>RETURNED_OCTET_LENGTH</literal> (integer)</term>
       <listitem>
        <para>
-        length of the character representation of the datum in bytes
+        数据值的字符表示形式的字节长度
        </para>
       </listitem>
      </varlistentry>
@@ -3387,16 +3355,16 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
       <term><literal>SCALE</literal> (integer)</term>
       <listitem>
        <para>
-        scale (for type <type>numeric</type>)
+        标度（用于类型 <type>numeric</type>）
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="ecpg-named-descriptors-type">
-      <term><literal>TYPE</literal> (integer)</term>
+      <term><literal>TYPE</literal>（integer）</term>
       <listitem>
        <para>
-        numeric code of the data type of the column
+        列的数据类型的数字代码
        </para>
       </listitem>
      </varlistentry>
@@ -3404,22 +3372,19 @@ EXEC SQL GET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</
    </para>
 
    <para>
-    In <command>EXECUTE</command>, <command>DECLARE</command> and <command>OPEN</command>
-    statements, the effect of the <literal>INTO</literal> and <literal>USING</literal>
-    keywords are different. A Descriptor Area can also be manually built to
-    provide the input parameters for a query or a cursor and
+    在 <command>EXECUTE</command>、<command>DECLARE</command> 和 <command>OPEN</command>
+    语句中，<literal>INTO</literal> 和 <literal>USING</literal>
+    关键字的作用有所不同。也可以手工构建描述符区域来为查询或游标提供输入参数，而
     <literal>USING SQL DESCRIPTOR <replaceable>name</replaceable></literal>
-    is the way to pass the input parameters into a parameterized query. The statement
-    to build a named SQL Descriptor Area is below:
+    则是将输入参数传入参数化查询的方式。构建一个命名 SQL 描述符区域的语句如下：
 <programlisting>
 EXEC SQL SET DESCRIPTOR <replaceable>name</replaceable> VALUE <replaceable>num</replaceable> <replaceable>field</replaceable> = :<replaceable>hostvar</replaceable>;
 </programlisting>
    </para>
 
    <para>
-    PostgreSQL supports retrieving more that one record in one <command>FETCH</command>
-    statement and storing the data in host variables in this case assumes that the
-    variable is an array. E.g.:
+    PostgreSQL 支持在一条 <command>FETCH</command>
+    语句中检索多条记录，此时将数据存储到宿主变量中假定该变量是一个数组。例如：
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 int id[5];
@@ -3435,23 +3400,17 @@ EXEC SQL GET DESCRIPTOR mydesc VALUE 1 :id = DATA;
   </sect2>
 
   <sect2 id="ecpg-sqlda-descriptors">
-   <title>SQLDA Descriptor Areas</title>
+   <title>SQLDA 描述符区域</title>
 
    <para>
-    An SQLDA Descriptor Area is a C language structure which can be also used
-    to get the result set and the metadata of a query. One structure stores one
-    record from the result set.
+    SQLDA 描述符区域是一种 C 语言结构，也可用于获取查询的结果集和元数据。一个结构存储结果集中的一条记录。
 <programlisting>
 EXEC SQL include sqlda.h;
 sqlda_t         *mysqlda;
 
 EXEC SQL FETCH 3 FROM mycursor INTO DESCRIPTOR mysqlda;
 </programlisting>
-    Note that the <literal>SQL</literal> keyword is omitted. The paragraphs about
-    the use cases of the <literal>INTO</literal> and <literal>USING</literal>
-    keywords in <xref linkend="ecpg-named-descriptors"/> also apply here with an addition.
-    In a <command>DESCRIBE</command> statement the <literal>DESCRIPTOR</literal>
-    keyword can be completely omitted if the <literal>INTO</literal> keyword is used:
+    注意 <literal>SQL</literal> 关键字被省略。关于 <xref linkend="ecpg-named-descriptors"/> 中 <literal>INTO</literal> 和 <literal>USING</literal> 关键字用例的段落在此处也同样适用，并有一点补充。在 <command>DESCRIBE</command> 语句中，如果使用了 <literal>INTO</literal> 关键字，则可以完全省略 <literal>DESCRIPTOR</literal> 关键字：
 <programlisting>
 EXEC SQL DESCRIBE prepared_statement INTO mysqlda;
 </programlisting>
@@ -3459,52 +3418,41 @@ EXEC SQL DESCRIBE prepared_statement INTO mysqlda;
 
     <procedure>
      <para>
-      The general flow of a program that uses SQLDA is:
+      使用 SQLDA 的程序的一般流程是：
      </para>
-     <step><simpara>Prepare a query, and declare a cursor for it.</simpara></step>
-     <step><simpara>Declare an SQLDA for the result rows.</simpara></step>
-     <step><simpara>Declare an SQLDA for the input parameters, and initialize them (memory allocation, parameter settings).</simpara></step>
-     <step><simpara>Open a cursor with the input SQLDA.</simpara></step>
-     <step><simpara>Fetch rows from the cursor, and store them into an output SQLDA.</simpara></step>
-     <step><simpara>Read values from the output SQLDA into the host variables (with conversion if necessary).</simpara></step>
-     <step><simpara>Close the cursor.</simpara></step>
-     <step><simpara>Free the memory area allocated for the input SQLDA.</simpara></step>
+     <step><simpara>准备一个查询，并为其声明一个游标。</simpara></step>
+     <step><simpara>为结果行声明一个 SQLDA。</simpara></step>
+     <step><simpara>为输入参数声明一个 SQLDA，并初始化它们（内存分配、参数设置）。</simpara></step>
+     <step><simpara>使用输入 SQLDA 打开一个游标。</simpara></step>
+     <step><simpara>从游标中取出数据行，并将它们存储到输出 SQLDA 中。</simpara></step>
+     <step><simpara>从输出 SQLDA 中读取值到宿主变量中（必要时进行转换）。</simpara></step>
+     <step><simpara>关闭游标。</simpara></step>
+     <step><simpara>释放为输入 SQLDA 分配的内存区域。</simpara></step>
     </procedure>
 
    <sect3 id="ecpg-sqlda-descriptors-sqlda">
-    <title>SQLDA Data Structure</title>
+    <title>SQLDA 数据结构</title>
 
     <para>
-     SQLDA uses three data structure
-     types: <type>sqlda_t</type>, <type>sqlvar_t</type>,
-     and <type>struct sqlname</type>.
+     SQLDA 使用三种数据结构类型：<type>sqlda_t</type>、<type>sqlvar_t</type>
+     和 <type>struct sqlname</type>。
     </para>
 
     <tip>
      <para>
-      PostgreSQL's SQLDA has a similar data structure to the one in
-      IBM DB2 Universal Database, so some technical information on
-      DB2's SQLDA could help understanding PostgreSQL's one better.
+      PostgreSQL 的 SQLDA 具有与 IBM DB2 Universal Database 中类似的数据结构，因此了解一些关于 DB2 的 SQLDA 的技术信息有助于更好地理解 PostgreSQL 的 SQLDA。
      </para>
     </tip>
 
     <sect4 id="ecpg-sqlda-sqlda">
-     <title>sqlda_t Structure</title>
+     <title>sqlda_t 结构</title>
 
      <para>
-      The structure type <type>sqlda_t</type> is the type of the
-      actual SQLDA.  It holds one record.  And two or
-      more <type>sqlda_t</type> structures can be connected in a
-      linked list with the pointer in
-      the <structfield>desc_next</structfield> field, thus
-      representing an ordered collection of rows.  So, when two or
-      more rows are fetched, the application can read them by
-      following the <structfield>desc_next</structfield> pointer in
-      each <type>sqlda_t</type> node.
+      结构类型 <type>sqlda_t</type> 是实际 SQLDA 的类型。它保存一条记录。两个或更多 <type>sqlda_t</type> 结构可以通过 <structfield>desc_next</structfield> 字段中的指针连接成一个链表，从而表示一个有序的行集合。因此，当获取两行或更多行时，应用程序可以通过沿着每个 <type>sqlda_t</type> 节点中的 <structfield>desc_next</structfield> 指针来读取它们。
      </para>
 
      <para>
-      The definition of <type>sqlda_t</type> is:
+      <type>sqlda_t</type> 的定义为：
 <programlisting>
 struct sqlda_struct
 {
@@ -3519,14 +3467,14 @@ struct sqlda_struct
 typedef struct sqlda_struct sqlda_t;
 </programlisting>
 
-      The meaning of the fields is:
+      各字段的含义如下：
 
     <variablelist>
      <varlistentry id="ecpg-sqlda-sqlda-sqldaid">
       <term><literal>sqldaid</literal></term>
       <listitem>
        <para>
-        It contains the literal string <literal>"SQLDA  "</literal>.
+        它包含字面字符串 <literal>"SQLDA  "</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -3535,7 +3483,7 @@ typedef struct sqlda_struct sqlda_t;
       <term><literal>sqldabc</literal></term>
       <listitem>
        <para>
-        It contains the size of the allocated space in bytes.
+        它包含已分配空间的大小（以字节为单位）。
        </para>
       </listitem>
      </varlistentry>
@@ -3544,13 +3492,7 @@ typedef struct sqlda_struct sqlda_t;
       <term><literal>sqln</literal></term>
       <listitem>
        <para>
-        It contains the number of input parameters for a parameterized query in
-        case it's passed into <command>OPEN</command>, <command>DECLARE</command> or
-        <command>EXECUTE</command> statements using the <literal>USING</literal>
-        keyword. In case it's used as output of <command>SELECT</command>,
-        <command>EXECUTE</command> or <command>FETCH</command> statements,
-        its value is the same as <literal>sqld</literal>
-        statement
+        它包含参数化查询的输入参数个数，前提是该查询通过 <literal>USING</literal> 关键字被传入 <command>OPEN</command>、<command>DECLARE</command> 或 <command>EXECUTE</command> 语句。如果它被用作 <command>SELECT</command>、<command>EXECUTE</command> 或 <command>FETCH</command> 语句的输出，则其值与 <literal>sqld</literal> 语句相同。
        </para>
       </listitem>
      </varlistentry>
@@ -3559,7 +3501,7 @@ typedef struct sqlda_struct sqlda_t;
       <term><literal>sqld</literal></term>
       <listitem>
        <para>
-        It contains the number of fields in a result set.
+        它包含结果集中的字段数。
        </para>
       </listitem>
      </varlistentry>
@@ -3568,9 +3510,7 @@ typedef struct sqlda_struct sqlda_t;
       <term><literal>desc_next</literal></term>
       <listitem>
        <para>
-        If the query returns more than one record, multiple linked
-        SQLDA structures are returned, and <literal>desc_next</literal> holds
-        a pointer to the next entry in the list.
+        如果查询返回多条记录，则会返回多个链接的 SQLDA 结构，并且 <literal>desc_next</literal> 保存指向列表中下一个条目的指针。
        </para>
       </listitem>
      </varlistentry>
@@ -3578,7 +3518,7 @@ typedef struct sqlda_struct sqlda_t;
       <term><literal>sqlvar</literal></term>
       <listitem>
        <para>
-        This is the array of the columns in the result set.
+        这是结果集中各列的数组。
        </para>
       </listitem>
      </varlistentry>
@@ -3587,12 +3527,10 @@ typedef struct sqlda_struct sqlda_t;
     </sect4>
 
     <sect4 id="ecpg-sqlda-sqlvar">
-     <title>sqlvar_t Structure</title>
+     <title>sqlvar_t 结构</title>
 
      <para>
-      The structure type <type>sqlvar_t</type> holds a column value
-      and metadata such as type and length. The definition of the type
-      is:
+      结构类型 <type>sqlvar_t</type> 保存列值以及类型和长度等元数据。该类型的定义为：
 
 <programlisting>
 struct sqlvar_struct
@@ -3607,15 +3545,14 @@ struct sqlvar_struct
 typedef struct sqlvar_struct sqlvar_t;
 </programlisting>
 
-      The meaning of the fields is:
+      各字段的含义如下：
 
         <variablelist>
          <varlistentry id="ecpg-sqlda-sqlvar-sqltype">
          <term><literal>sqltype</literal></term>
           <listitem>
            <para>
-            Contains the type identifier of the field. For values,
-            see <literal>enum ECPGttype</literal> in <literal>ecpgtype.h</literal>.
+            包含该字段的类型标识符。有关取值，请参见 <literal>ecpgtype.h</literal> 中的 <literal>enum ECPGttype</literal>。
            </para>
           </listitem>
          </varlistentry>
@@ -3624,7 +3561,7 @@ typedef struct sqlvar_struct sqlvar_t;
          <term><literal>sqllen</literal></term>
           <listitem>
            <para>
-            Contains the binary length of the field. e.g., 4 bytes for <type>ECPGt_int</type>.
+            包含该字段的二进制长度。例如，<type>ECPGt_int</type> 为 4 字节。
            </para>
           </listitem>
          </varlistentry>
@@ -3633,8 +3570,7 @@ typedef struct sqlvar_struct sqlvar_t;
          <term><literal>sqldata</literal></term>
           <listitem>
            <para>
-            Points to the data.  The format of the data is described
-            in <xref linkend="ecpg-variables-type-mapping"/>.
+            指向数据。数据的格式在 <xref linkend="ecpg-variables-type-mapping"/> 中描述。
            </para>
           </listitem>
          </varlistentry>
@@ -3643,8 +3579,7 @@ typedef struct sqlvar_struct sqlvar_t;
          <term><literal>sqlind</literal></term>
           <listitem>
            <para>
-            Points to the null indicator.  0 means not null, -1 means
-            null.
+            指向空值指示符。0 表示非空，-1 表示空。
            </para>
           </listitem>
          </varlistentry>
@@ -3653,7 +3588,7 @@ typedef struct sqlvar_struct sqlvar_t;
          <term><literal>sqlname</literal></term>
           <listitem>
            <para>
-            The name of the field.
+            字段的名称。
            </para>
           </listitem>
          </varlistentry>
@@ -3662,12 +3597,10 @@ typedef struct sqlvar_struct sqlvar_t;
     </sect4>
 
     <sect4 id="ecpg-sqlda-sqlname">
-     <title>struct sqlname Structure</title>
+     <title>struct sqlname 结构</title>
 
      <para>
-      A <type>struct sqlname</type> structure holds a column name.  It
-      is used as a member of the <type>sqlvar_t</type> structure.  The
-      definition of the structure is:
+      <type>struct sqlname</type> 结构保存一个列名。它被用作 <type>sqlvar_t</type> 结构的成员。该结构的定义是：
 <programlisting>
 #define NAMEDATALEN 64
 
@@ -3677,13 +3610,13 @@ struct sqlname
         char            data[NAMEDATALEN];
 };
 </programlisting>
-      The meaning of the fields is:
+      各字段的含义是：
             <variablelist>
              <varlistentry id="ecpg-sqlda-sqlname-length">
               <term><literal>length</literal></term>
                <listitem>
                 <para>
-                 Contains the length of the field name.
+                 包含字段名的长度。
                 </para>
                </listitem>
               </varlistentry>
@@ -3691,7 +3624,7 @@ struct sqlname
               <term><literal>data</literal></term>
                <listitem>
                 <para>
-                 Contains the actual field name.
+                 包含实际的字段名。
                 </para>
                </listitem>
               </varlistentry>
@@ -3701,42 +3634,40 @@ struct sqlname
    </sect3>
 
    <sect3 id="ecpg-sqlda-output">
-    <title>Retrieving a Result Set Using an SQLDA</title>
+    <title>使用 SQLDA 检索结果集</title>
 
     <procedure>
      <para>
-      The general steps to retrieve a query result set through an
-      SQLDA are:
+      通过 SQLDA 检索查询结果集的一般步骤如下：
      </para>
-     <step><simpara>Declare an <type>sqlda_t</type> structure to receive the result set.</simpara></step>
-     <step><simpara>Execute <command>FETCH</command>/<command>EXECUTE</command>/<command>DESCRIBE</command> commands to process a query specifying the declared SQLDA.</simpara></step>
-     <step><simpara>Check the number of records in the result set by looking at <structfield>sqln</structfield>, a member of the <type>sqlda_t</type> structure.</simpara></step>
-     <step><simpara>Get the values of each column from <literal>sqlvar[0]</literal>, <literal>sqlvar[1]</literal>, etc., members of the <type>sqlda_t</type> structure.</simpara></step>
-     <step><simpara>Go to next row (<type>sqlda_t</type> structure) by following the <structfield>desc_next</structfield> pointer, a member of the <type>sqlda_t</type> structure.</simpara></step>
-     <step><simpara>Repeat above as you need.</simpara></step>
+     <step><simpara>声明一个 <type>sqlda_t</type> 结构以接收结果集。</simpara></step>
+     <step><simpara>执行 <command>FETCH</command>/<command>EXECUTE</command>/<command>DESCRIBE</command> 命令来处理指定已声明 SQLDA 的查询。</simpara></step>
+     <step><simpara>通过查看 <structfield>sqln</structfield>（<type>sqlda_t</type> 结构的一个成员）来检查结果集中的记录数。</simpara></step>
+     <step><simpara>从 <literal>sqlvar[0]</literal>、<literal>sqlvar[1]</literal> 等 <type>sqlda_t</type> 结构的成员中获取每一列的值。</simpara></step>
+     <step><simpara>沿着 <structfield>desc_next</structfield> 指针（<type>sqlda_t</type> 结构的一个成员）转到下一行（<type>sqlda_t</type> 结构）。</simpara></step>
+     <step><simpara>根据需要重复上述步骤。</simpara></step>
     </procedure>
 
     <para>
-     Here is an example retrieving a result set through an SQLDA.
+     下面是一个通过 SQLDA 检索结果集的示例。
     </para>
 
     <para>
-     First, declare a <type>sqlda_t</type> structure to receive the result set.
+     首先，声明一个 <type>sqlda_t</type> 结构来接收结果集。
 <programlisting>
 sqlda_t *sqlda1;
 </programlisting>
     </para>
 
     <para>
-     Next, specify the SQLDA in a command.  This is
-     a <command>FETCH</command> command example.
+     接下来，在命令中指定 SQLDA。这是一个 <command>FETCH</command> 命令示例。
 <programlisting>
 EXEC SQL FETCH NEXT FROM cur1 INTO DESCRIPTOR sqlda1;
 </programlisting>
     </para>
 
     <para>
-     Run a loop following the linked list to retrieve the rows.
+     沿着链表运行一个循环以检索行。
 <programlisting>
 sqlda_t *cur_sqlda;
 
@@ -3750,8 +3681,7 @@ for (cur_sqlda = sqlda1;
     </para>
 
     <para>
-     Inside the loop, run another loop to retrieve each column data
-     (<type>sqlvar_t</type> structure) of the row.
+     在该循环内部，再运行一个循环来检索该行的每一列数据（<type>sqlvar_t</type> 结构）。
 <programlisting>
 for (i = 0; i &lt; cur_sqlda->sqld; i++)
 {
@@ -3764,10 +3694,7 @@ for (i = 0; i &lt; cur_sqlda->sqld; i++)
     </para>
 
     <para>
-     To get a column value, check the <structfield>sqltype</structfield> value,
-     a member of the <type>sqlvar_t</type> structure.  Then, switch
-     to an appropriate way, depending on the column type, to copy
-     data from the <structfield>sqlvar</structfield> field to a host variable.
+     要获取列值，请检查 <structfield>sqltype</structfield> 值，它是 <type>sqlvar_t</type> 结构的成员。然后，根据列类型切换到合适的方式，将数据从 <structfield>sqlvar</structfield> 字段复制到宿主变量。
 <programlisting>
 char var_buf[1024];
 
@@ -3790,26 +3717,25 @@ switch (v.sqltype)
    </sect3>
 
    <sect3 id="ecpg-sqlda-input">
-    <title>Passing Query Parameters Using an SQLDA</title>
+    <title>使用 SQLDA 传递查询参数</title>
 
     <procedure>
      <para>
-      The general steps to use an SQLDA to pass input
-      parameters to a prepared query are:
+      使用 SQLDA 向预备查询传递输入参数的一般步骤如下：
      </para>
-     <step><simpara>Create a prepared query (prepared statement)</simpara></step>
-     <step><simpara>Declare an sqlda_t structure as an input SQLDA.</simpara></step>
-     <step><simpara>Allocate memory area (as sqlda_t structure) for the input SQLDA.</simpara></step>
-     <step><simpara>Set (copy) input values in the allocated memory.</simpara></step>
-     <step><simpara>Open a cursor with specifying the input SQLDA.</simpara></step>
+     <step><simpara>创建一个预备查询（预备语句）</simpara></step>
+     <step><simpara>声明一个 sqlda_t 结构作为输入 SQLDA。</simpara></step>
+     <step><simpara>为输入 SQLDA 分配内存区域（作为 sqlda_t 结构）。</simpara></step>
+     <step><simpara>在已分配的内存中设置（复制）输入值。</simpara></step>
+     <step><simpara>打开游标并指定输入 SQLDA。</simpara></step>
     </procedure>
 
     <para>
-     Here is an example.
+     这里是一个示例。
     </para>
 
     <para>
-     First, create a prepared statement.
+     首先，创建一个预备语句。
 <programlisting>
 EXEC SQL BEGIN DECLARE SECTION;
 char query[1024] = "SELECT d.oid, * FROM pg_database d, pg_stat_database s WHERE d.oid = s.datid AND (d.datname = ? OR d.oid = ?)";
@@ -3820,13 +3746,7 @@ EXEC SQL PREPARE stmt1 FROM :query;
     </para>
 
     <para>
-     Next, allocate memory for an SQLDA, and set the number of input
-     parameters in <structfield>sqln</structfield>, a member variable of
-     the <type>sqlda_t</type> structure.  When two or more input
-     parameters are required for the prepared query, the application
-     has to allocate additional memory space which is calculated by
-     (nr. of params - 1) * sizeof(sqlvar_t).  The example shown here
-     allocates memory space for two input parameters.
+     接下来，为 SQLDA 分配内存，并在 <structfield>sqln</structfield>（<type>sqlda_t</type> 结构的一个成员变量）中设置输入参数的数量。当预备查询需要两个或更多输入参数时，应用程序必须分配额外的内存空间，其大小按 (nr. of params - 1) * sizeof(sqlvar_t) 计算。此处展示的示例为两个输入参数分配了内存空间。
 <programlisting>
 sqlda_t *sqlda2;
 
@@ -3838,12 +3758,7 @@ sqlda2->sqln = 2; /* number of input variables */
     </para>
 
     <para>
-     After memory allocation, store the parameter values into the
-     <literal>sqlvar[]</literal> array.  (This is same array used for
-     retrieving column values when the SQLDA is receiving a result
-     set.)  In this example, the input parameters
-     are <literal>"postgres"</literal>, having a string type,
-     and <literal>1</literal>, having an integer type.
+     分配内存之后，将参数值存储到 <literal>sqlvar[]</literal> 数组中。（这与 SQLDA 接收结果集时用于获取列值的数组相同。）在此示例中，输入参数为 <literal>"postgres"</literal>（字符串类型）和 <literal>1</literal>（整数类型）。
 <programlisting>
 sqlda2->sqlvar[0].sqltype = ECPGt_char;
 sqlda2->sqlvar[0].sqldata = "postgres";
@@ -3857,18 +3772,14 @@ sqlda2->sqlvar[1].sqllen  = sizeof(intval);
     </para>
 
     <para>
-     By opening a cursor and specifying the SQLDA that was set up
-     beforehand, the input parameters are passed to the prepared
-     statement.
+     通过打开游标并指定事先设置好的 SQLDA，输入参数被传递给预备语句。
 <programlisting>
 EXEC SQL OPEN cur1 USING DESCRIPTOR sqlda2;
 </programlisting>
     </para>
 
     <para>
-     Finally, after using input SQLDAs, the allocated memory space
-     must be freed explicitly, unlike SQLDAs used for receiving query
-     results.
+     最后，使用完输入 SQLDA 之后，必须显式释放已分配的内存空间，这一点与用于接收查询结果的 SQLDA 不同。
 <programlisting>
 free(sqlda2);
 </programlisting>
@@ -3876,23 +3787,18 @@ free(sqlda2);
    </sect3>
 
    <sect3 id="ecpg-sqlda-example">
-    <title>A Sample Application Using SQLDA</title>
+    <title>使用 SQLDA 的示例应用程序</title>
 
     <para>
-     Here is an example program, which describes how to fetch access
-     statistics of the databases, specified by the input parameters,
-     from the system catalogs.
+     这里给出一个示例程序，它描述了如何从系统目录中获取由输入参数指定的数据库的访问统计信息。
     </para>
 
     <para>
-     This application joins two system tables, pg_database and
-     pg_stat_database on the database OID, and also fetches and shows
-     the database statistics which are retrieved by two input
-     parameters (a database <literal>postgres</literal>, and OID <literal>1</literal>).
+     该应用程序按数据库 OID 连接两个系统表 pg_database 和 pg_stat_database，并且还获取并显示由两个输入参数（数据库 <literal>postgres</literal> 和 OID <literal>1</literal>）检索到的数据库统计信息。
     </para>
 
     <para>
-     First, declare an SQLDA for input and an SQLDA for output.
+     首先，声明一个用于输入的 SQLDA 和一个用于输出的 SQLDA。
 <programlisting>
 EXEC SQL include sqlda.h;
 
@@ -3902,8 +3808,7 @@ sqlda_t *sqlda2; /* an input descriptor  */
     </para>
 
     <para>
-     Next, connect to the database, prepare a statement, and declare a
-     cursor for the prepared statement.
+     接下来，连接到数据库，预备一条语句，并为该预备语句声明一个游标。
 <programlisting>
 int
 main(void)
@@ -3921,12 +3826,7 @@ main(void)
     </para>
 
     <para>
-     Next, put some values in the input SQLDA for the input
-     parameters.  Allocate memory for the input SQLDA, and set the
-     number of input parameters to <literal>sqln</literal>.  Store
-     type, value, and value length into <literal>sqltype</literal>,
-     <literal>sqldata</literal>, and <literal>sqllen</literal> in the
-     <literal>sqlvar</literal> structure.
+     接下来，为输入参数在输入 SQLDA 中放入一些值。为输入 SQLDA 分配内存，并将输入参数的数量设置为 <literal>sqln</literal>。将类型、值和值长度分别存储到 <literal>sqlvar</literal> 结构中的 <literal>sqltype</literal>、<literal>sqldata</literal> 和 <literal>sqllen</literal> 中。
 
 <programlisting>
     /* Create SQLDA structure for input parameters. */
@@ -3946,8 +3846,7 @@ main(void)
     </para>
 
     <para>
-     After setting up the input SQLDA, open a cursor with the input
-     SQLDA.
+     设置好输入 SQLDA 之后，用该输入 SQLDA 打开一个游标。
 
 <programlisting>
     /* Open a cursor with input parameters. */
@@ -3956,9 +3855,7 @@ main(void)
     </para>
 
     <para>
-     Fetch rows into the output SQLDA from the opened cursor.
-     (Generally, you have to call <command>FETCH</command> repeatedly
-     in the loop, to fetch all rows in the result set.)
+     从已打开的游标中把行取到输出 SQLDA 中。（通常，你必须在循环中反复调用 <command>FETCH</command>，以取出结果集中的所有行。）
 <programlisting>
     while (1)
     {
@@ -3970,8 +3867,7 @@ main(void)
     </para>
 
     <para>
-     Next, retrieve the fetched records from the SQLDA, by following
-     the linked list of the <type>sqlda_t</type> structure.
+     接下来，通过沿着 <type>sqlda_t</type> 结构的链表进行遍历，从 SQLDA 中取出已获取的记录。
 <programlisting>
     for (cur_sqlda = sqlda1 ;
          cur_sqlda != NULL ;
@@ -3982,10 +3878,7 @@ main(void)
     </para>
 
     <para>
-     Read each columns in the first record.  The number of columns is
-     stored in <structfield>sqld</structfield>, the actual data of the first
-     column is stored in <literal>sqlvar[0]</literal>, both members of
-     the <type>sqlda_t</type> structure.
+     读取第一条记录中的每一列。列数存储在 <structfield>sqld</structfield> 中，第一列的实际数据存储在 <literal>sqlvar[0]</literal> 中，二者都是 <type>sqlda_t</type> 结构的成员。
 
 <programlisting>
         /* Print every column in a row. */
@@ -4001,9 +3894,7 @@ main(void)
     </para>
 
     <para>
-     Now, the column data is stored in the variable <varname>v</varname>.
-     Copy every datum into host variables, looking
-     at <literal>v.sqltype</literal> for the type of the column.
+     现在，列数据存储在变量 <varname>v</varname> 中。参照 <literal>v.sqltype</literal> 中给出的列类型，把每个数据项复制到宿主变量中。
 <programlisting>
             switch (v.sqltype) {
                 int intval;
@@ -4032,8 +3923,7 @@ main(void)
     </para>
 
     <para>
-     Close the cursor after processing all of records, and disconnect
-     from the database.
+     处理完所有记录后关闭游标，并断开与数据库的连接。
 <programlisting>
     EXEC SQL CLOSE cur1;
     EXEC SQL COMMIT;
@@ -4043,12 +3933,11 @@ main(void)
     </para>
 
     <para>
-     The whole program is shown
-     in <xref linkend="ecpg-sqlda-example-example"/>.
+     完整的程序显示在 <xref linkend="ecpg-sqlda-example-example"/> 中。
     </para>
 
     <example id="ecpg-sqlda-example-example">
-     <title>Example SQLDA Program</title>
+     <title>示例 SQLDA 程序</title>
 <programlisting>
 #include &lt;stdlib.h>
 #include &lt;string.h>
@@ -4170,8 +4059,7 @@ main(void)
 </programlisting>
 
      <para>
-      The output of this example should look something like the
-      following (some numbers will vary).
+      这个示例的输出应该类似于下面这样（某些数字会有所不同）。
      </para>
 
 <screen>
