@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/hash.sgml -->
 
 <sect1 id="hash-index">
-<title>Hash Indexes</title>
+<title>哈希索引</title>
 
    <indexterm>
     <primary>index</primary>
@@ -9,151 +9,76 @@
    </indexterm>
 
 <sect2 id="hash-intro">
- <title>Overview</title>
+ <title>概述</title>
 
  <para>
   <productname>PostgreSQL</productname>
-  includes an implementation of persistent on-disk hash indexes,
-  which are fully crash recoverable. Any data type can be indexed by a
-  hash index, including data types that do not have a well-defined linear
-  ordering. Hash indexes store only the hash value of the data being
-  indexed, thus there are no restrictions on the size of the data column
-  being indexed.
+  包含持久化磁盘哈希索引的实现，这些索引完全可崩溃恢复。任何数据类型都可以被哈希索引索引，包括没有明确定义线性顺序的数据类型。哈希索引只存储被索引数据的哈希值，因此对被索引数据列的大小没有限制。
  </para>
 
  <para>
-  Hash indexes support only single-column indexes and do not allow
-  uniqueness checking.
+  哈希索引只支持单列索引，并且不允许进行唯一性检查。
  </para>
 
  <para>
-  Hash indexes support only the <literal>=</literal> operator,
-  so WHERE clauses that specify range operations will not be able to take
-  advantage of hash indexes.
+  哈希索引只支持 <literal>=</literal> 运算符，因此指定范围操作的 WHERE 子句将无法利用哈希索引。
  </para>
 
  <para>
-  Each hash index tuple stores just the 4-byte hash value, not the actual
-  column value. As a result, hash indexes may be much smaller than B-trees
-  when indexing longer data items such as UUIDs, URLs, etc. The absence of
-  the column value also makes all hash index scans lossy. Hash indexes may
-  take part in bitmap index scans and backward scans.
+  每个哈希索引元组只存储 4 字节的哈希值，而不是实际的列值。因此，在索引 UUID、URL 等较长的数据项时，哈希索引可能比 B-tree 小得多。由于不存储列值，所有哈希索引扫描都是有损的。哈希索引可以参与位图索引扫描和反向扫描。
  </para>
 
  <para>
-  Hash indexes are best optimized for SELECT and UPDATE-heavy workloads
-  that use equality scans on larger tables. In a B-tree index, searches must
-  descend through the tree until the leaf page is found. In tables with
-  millions of rows, this descent can increase access time to data. The
-  equivalent of a leaf page in a hash index is referred to as a bucket page. In
-  contrast, a hash index allows accessing the bucket pages directly,
-  thereby potentially reducing index access time in larger tables. This
-  reduction in "logical I/O" becomes even more pronounced on indexes/data
-  larger than shared_buffers/RAM.
+  哈希索引最适合针对较大表使用等值扫描的 SELECT 和以 UPDATE 为主的工作负载。在 B-tree 索引中，搜索必须向下遍历树，直到找到叶子页。在拥有数百万行的表中，这种向下遍历会增加数据访问时间。哈希索引中相当于叶子页的结构称为桶页。相比之下，哈希索引允许直接访问桶页，从而有可能减少较大表中的索引访问时间。当索引/数据大于 shared_buffers/RAM 时，这种“逻辑 I/O”的减少会变得更加明显。
  </para>
 
  <para>
-  Hash indexes have been designed to cope with uneven distributions of
-  hash values. Direct access to the bucket pages works well if the hash
-  values are evenly distributed. When inserts mean that the bucket page
-  becomes full, additional overflow pages are chained to that specific
-  bucket page, locally expanding the storage for index tuples that match
-  that hash value. When scanning a hash bucket during queries, we need to
-  scan through all of the overflow pages. Thus an unbalanced hash index
-  might actually be worse than a B-tree in terms of number of block
-  accesses required, for some data.
+  哈希索引的设计目标是应对哈希值分布不均匀的情况。如果哈希值分布均匀，直接访问桶页的效果很好。当插入导致桶页变满时，额外的溢出页会链接到该特定桶页上，从而在局部扩展用于存储与该哈希值匹配的索引元组的空间。在查询期间扫描哈希桶时，我们需要扫描所有溢出页。因此，对于某些数据，就所需的块访问次数而言，不平衡的哈希索引实际上可能比 B-tree 更差。
  </para>
 
  <para>
-  As a result of the overflow cases, we can say that hash indexes are
-  most suitable for unique, nearly unique data or data with a low number
-  of rows per hash bucket.
-  One possible way to avoid problems is to exclude highly non-unique
-  values from the index using a partial index condition, but this may
-  not be suitable in many cases.
+  由于存在溢出情况，我们可以说哈希索引最适合唯一、几乎唯一的数据，或者每个哈希桶行数较少的数据。避免问题的一种可能方法是使用部分索引条件将高度非唯一的值排除在索引之外，但这在许多情况下可能并不合适。
  </para>
 
  <para>
-  Like B-Trees, hash indexes perform simple index tuple deletion. This
-  is a deferred maintenance operation that deletes index tuples that are
-  known to be safe to delete (those whose item identifier's LP_DEAD bit
-  is already set). If an insert finds no space is available on a page we
-  try to avoid creating a new overflow page by attempting to remove dead
-  index tuples. Removal cannot occur if the page is pinned at that time.
-  Deletion of dead index pointers also occurs during VACUUM.
+  与 B-tree 一样，哈希索引执行简单的索引元组删除。这是一种延迟的维护操作，删除已知可以安全删除的索引元组（即其项标识符的 LP_DEAD 位已置位的元组）。如果插入操作发现页上没有可用空间，我们会尝试删除死索引元组，以避免创建新的溢出页。如果此时该页被钉住，则无法进行删除。死索引指针的删除也会在 VACUUM 期间进行。
  </para>
 
  <para>
-  If it can, VACUUM will also try to squeeze the index tuples onto as
-  few overflow pages as possible, minimizing the overflow chain. If an
-  overflow page becomes empty, overflow pages can be recycled for reuse
-  in other buckets, though we never return them to the operating system.
-  There is currently no provision to shrink a hash index, other than by
-  rebuilding it with REINDEX.
-  There is no provision for reducing the number of buckets, either.
+  如果可能，VACUUM 还会尝试将索引元组压缩到尽可能少的溢出页上，从而最小化溢出链。如果某个溢出页变为空，溢出页可以被回收以供其他桶重用，尽管我们从不将它们归还给操作系统。目前没有收缩哈希索引的方法，除非使用 REINDEX 重建它。也没有减少桶数量的方法。
  </para>
 
  <para>
-  Hash indexes may expand the number of bucket pages as the number of
-  rows indexed grows. The hash key-to-bucket-number mapping is chosen so that
-  the index can be incrementally expanded. When a new bucket is to be added to
-  the index, exactly one existing bucket will need to be "split", with some of
-  its tuples being transferred to the new bucket according to the updated
-  key-to-bucket-number mapping.
+  随着被索引行数的增长，哈希索引可能会扩充桶页的数量。哈希键到桶号的映射经过精心选择，使得索引可以增量式地扩充。当需要向索引中添加一个新桶时，恰好有一个现有桶需要被“分裂”，其中的部分元组会按照更新后的键到桶号映射转移到新桶中。
  </para>
 
  <para>
-  The expansion occurs in the foreground, which could increase execution
-  time for user inserts. Thus, hash indexes may not be suitable for tables
-  with rapidly increasing number of rows.
+  扩充在前台进行，这可能会增加用户插入操作的执行时间。因此，哈希索引可能不适合行数快速增长的表。
  </para>
 
 </sect2>
 
 <sect2 id="hash-implementation">
- <title>Implementation</title>
+ <title>实现</title>
 
  <para>
-  There are four kinds of pages in a hash index: the meta page (page zero),
-  which contains statically allocated control information; primary bucket
-  pages; overflow pages; and bitmap pages, which keep track of overflow
-  pages that have been freed and are available for re-use. For addressing
-  purposes, bitmap pages are regarded as a subset of the overflow pages.
+  哈希索引中有四种页面：元页（第零页），其中包含静态分配的控制信息；主桶页；溢出页；以及位图页，它记录已被释放、可供重新使用的溢出页。为寻址目的，位图页被视为溢出页的一个子集。
  </para>
 
  <para>
-  Both scanning the index and inserting tuples require locating the bucket
-  where a given tuple ought to be located. To do this, we need the bucket
-  count, highmask, and lowmask from the metapage; however, it's undesirable
-  for performance reasons to have to lock and pin the metapage for every such
-  operation. Instead, we retain a cached copy of the metapage in each
-  backend's relcache entry. This will produce the correct bucket mapping as
-  long as the target bucket hasn't been split since the last cache refresh.
+  无论是扫描索引还是插入元组，都需要定位给定元组应当所在的桶。为此，我们需要从元页中获取桶计数、highmask 和 lowmask；然而，出于性能考虑，每次此类操作都要锁定并钉住元页是不可取的。取而代之的是，我们在每个后端的 relcache 条目中保留一份元页的缓存副本。只要目标桶自上次缓存刷新以来未被分裂，这就能产生正确的桶映射。
  </para>
 
  <para>
-  Primary bucket pages and overflow pages are allocated independently since
-  any given index might need more or fewer overflow pages relative to its
-  number of buckets. The hash code uses an interesting set of addressing
-  rules to support a variable number of overflow pages while not having to
-  move primary bucket pages around after they are created.
+  主桶页和溢出页是独立分配的，因为任何给定索引相对于其桶数可能需要更多或更少的溢出页。哈希索引的代码使用了一套有趣的寻址规则，以支持数量可变的溢出页，同时不必在创建主桶页之后再移动它们。
  </para>
 
  <para>
-  Each row in the table indexed is represented by a single index tuple in
-  the hash index. Hash index tuples are stored in bucket pages, and if
-  they exist, overflow pages. We speed up searches by keeping the index entries
-  in any one index page sorted by hash code, thus allowing binary search to be
-  used within an index page. Note however that there is *no* assumption about
-  the relative ordering of hash codes across different index pages of a bucket.
+  哈希索引中，被索引表中的每一行都由一个索引元组表示。哈希索引元组存储在桶页面中，如果存在溢出页面，也存储在溢出页面中。我们通过让任一索引页面内的索引项按哈希码排序来加速搜索，从而允许在索引页面内使用二分查找。但请注意，对于同一个桶的不同索引页面之间的哈希码相对顺序，*没有*任何假设。
  </para>
 
  <para>
-  The bucket splitting algorithms to expand the hash index are too complex to
-  be worthy of mention here, though are described in more detail in
-  <filename>src/backend/access/hash/README</filename>.
-  The split algorithm is crash safe and can be restarted if not completed
-  successfully.
+  用于扩展哈希索引的桶分裂算法过于复杂，此处不值得提及，不过在 <filename>src/backend/access/hash/README</filename> 中有更详细的描述。分裂算法是崩溃安全的，如果未能成功完成，可以重新启动。
  </para>
 
 </sect2>
