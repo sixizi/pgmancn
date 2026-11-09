@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>DROP SUBSCRIPTION</refname>
-  <refpurpose>remove a subscription</refpurpose>
+  <refpurpose>删除订阅</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -26,35 +26,30 @@ DROP SUBSCRIPTION [ IF EXISTS ] <replaceable class="parameter">name</replaceable
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>DROP SUBSCRIPTION</command> removes a subscription from the
-   database cluster.
+   <command>DROP SUBSCRIPTION</command> 从数据库集簇中删除一个订阅。
   </para>
 
   <para>
-   To execute this command the user must be the owner of the subscription.
+   要执行此命令，用户必须是该订阅的拥有者。
   </para>
 
   <para>
-   <command>DROP SUBSCRIPTION</command> cannot be executed inside a
-   transaction block if the subscription is associated with a replication
-   slot.  (You can use <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link> to unset the
-   slot.)
+   如果订阅与复制槽相关联，则不能在事务块内执行 <command>DROP SUBSCRIPTION</command>。（可以使用 <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link> 取消该槽。）
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>IF EXISTS</literal></term>
     <listitem>
      <para>
-      Do not throw an error if the subscription does not exist. A notice is
-      issued in this case.
+      如果订阅不存在，则不抛出错误。这种情况下会发出一个提示。
      </para>
     </listitem>
    </varlistentry>
@@ -63,7 +58,7 @@ DROP SUBSCRIPTION [ IF EXISTS ] <replaceable class="parameter">name</replaceable
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of a subscription to be dropped.
+      要删除的订阅的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -74,8 +69,7 @@ DROP SUBSCRIPTION [ IF EXISTS ] <replaceable class="parameter">name</replaceable
 
     <listitem>
      <para>
-      These key words do not have any effect, since there are no dependencies
-      on subscriptions.
+      这些关键字没有任何效果，因为订阅上不存在任何依赖关系。
      </para>
     </listitem>
    </varlistentry>
@@ -84,61 +78,52 @@ DROP SUBSCRIPTION [ IF EXISTS ] <replaceable class="parameter">name</replaceable
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   When dropping a subscription that is associated with a replication slot on
-   the remote host (the normal state), <command>DROP SUBSCRIPTION</command>
-   will connect to the remote host and try to drop the replication slot (and
-   any remaining table synchronization slots) as
-   part of its operation.  This is necessary so that the resources allocated
-   for the subscription on the remote host are released.  If this fails,
-   either because the remote host is not reachable or because the remote
-   replication slot cannot be dropped or does not exist or never existed,
-   the <command>DROP SUBSCRIPTION</command> command will fail.  To proceed
-   in this situation, first disable the subscription by executing
+   当删除一个与远程主机上的复制槽关联的订阅时（这是正常状态），<command>DROP SUBSCRIPTION</command>
+   将连接到远程主机，并尝试作为其操作的一部分删除该复制槽（以及任何剩余的表同步槽）。
+   这是必要的，以便释放为远程主机上的订阅分配的资源。如果此操作失败，
+   无论是因为远程主机不可达，还是因为远程复制槽无法删除、不存在或从未存在过，
+   <command>DROP SUBSCRIPTION</command> 命令都将失败。要在这种情况下继续操作，请先通过执行
    <link linkend="sql-altersubscription-params-disable">
-   <literal>ALTER SUBSCRIPTION ... DISABLE</literal></link>, and then disassociate
-   it from the replication slot by executing
+   <literal>ALTER SUBSCRIPTION ... DISABLE</literal></link> 禁用该订阅，然后通过执行
    <link linkend="sql-altersubscription-params-set">
-   <literal>ALTER SUBSCRIPTION ... SET (slot_name = NONE)</literal></link>.
-   After that, <command>DROP SUBSCRIPTION</command> will not attempt to drop
-   the subscription's own replication slot.  It may still connect to the publisher
-   to drop internally-created table synchronization slots if some table
-   synchronization is left unfinished; if the publisher is unreachable, those
-   slots (and the main slot, if it still exists) must be dropped manually.  Otherwise
-   it/they will continue to reserve WAL and might eventually cause the disk to
-   fill up.  See also
-   <xref linkend="logical-replication-subscription-slot"/>.
+   <literal>ALTER SUBSCRIPTION ... SET (slot_name = NONE)</literal></link> 将其与复制槽解除关联。
+   此后，<command>DROP SUBSCRIPTION</command> 将不会尝试删除订阅自身的复制槽。如果某些表同步尚未完成，
+   它仍可能连接到发布者以删除内部创建的表同步槽；如果发布者不可达，
+   则必须手动删除这些槽（以及主槽，如果它仍然存在）。否则，
+   它/它们将继续保留 WAL，并可能最终导致磁盘被填满。另请参阅
+   <xref linkend="logical-replication-subscription-slot"/>。
   </para>
 
   <para>
-   If a subscription is associated with a replication slot, then <command>DROP
-   SUBSCRIPTION</command> cannot be executed inside a transaction block.
+   如果订阅与复制槽关联，则 <command>DROP
+   SUBSCRIPTION</command> 不能在事务块内执行。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Drop a subscription:
+   删除一个订阅：
 <programlisting>
 DROP SUBSCRIPTION mysub;
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>DROP SUBSCRIPTION</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>DROP SUBSCRIPTION</command> 是一个 <productname>PostgreSQL</productname>
+   扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createsubscription"/></member>
