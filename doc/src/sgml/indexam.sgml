@@ -201,11 +201,10 @@ typedef struct IndexAmRoutine
  </sect1>
 
  <sect1 id="index-functions">
-  <title>Index Access Method Functions</title>
+  <title>索引访问方法函数</title>
 
   <para>
-   The index construction and maintenance functions that an index access
-   method must provide in <structname>IndexAmRoutine</structname> are:
+   索引访问方法必须在 <structname>IndexAmRoutine</structname> 中提供的索引构建和维护函数包括：
   </para>
 
   <para>
@@ -215,19 +214,7 @@ ambuild (Relation heapRelation,
          Relation indexRelation,
          IndexInfo *indexInfo);
 </programlisting>
-   Build a new index.  The index relation has been physically created,
-   but is empty.  It must be filled in with whatever fixed data the
-   access method requires, plus entries for all tuples already existing
-   in the table.  Ordinarily the <function>ambuild</function> function will call
-   <function>table_index_build_scan()</function> to scan the table for existing tuples
-   and compute the keys that need to be inserted into the index.
-   The function must return a palloc'd struct containing statistics about
-   the new index.
-   The <structfield>amcanbuildparallel</structfield> flag indicates whether
-   the access method supports parallel index builds. When set to <literal>true</literal>,
-   the system will attempt to allocate parallel workers for the build.
-   Access methods supporting only non-parallel index builds should leave
-   this flag set to <literal>false</literal>.
+   构建一个新索引。索引关系已在物理上创建，但为空。必须用访问方法所需的任何固定数据以及表中已存在的所有元组的条目来填充它。通常，<function>ambuild</function> 函数会调用 <function>table_index_build_scan()</function> 来扫描表中已有的元组，并计算需要插入索引的键。该函数必须返回一个 palloc 分配的结构体，其中包含有关新索引的统计信息。<structfield>amcanbuildparallel</structfield> 标志指示访问方法是否支持并行索引构建。当设置为 <literal>true</literal> 时，系统将尝试为构建分配并行工作者。仅支持非并行索引构建的访问方法应将该标志保留为 <literal>false</literal>。
   </para>
 
   <para>
@@ -235,10 +222,7 @@ ambuild (Relation heapRelation,
 void
 ambuildempty (Relation indexRelation);
 </programlisting>
-   Build an empty index, and write it to the initialization fork (<symbol>INIT_FORKNUM</symbol>)
-   of the given relation.  This method is called only for unlogged indexes; the
-   empty index written to the initialization fork will be copied over the main
-   relation fork on each server restart.
+   构建一个空索引，并将其写入给定关系的初始化 fork（<symbol>INIT_FORKNUM</symbol>）。此方法仅对未记录索引调用；写入初始化 fork 的空索引将在每次服务器重启时复制到主关系 fork 上。
   </para>
 
   <para>
@@ -253,58 +237,23 @@ aminsert (Relation indexRelation,
           bool indexUnchanged,
           IndexInfo *indexInfo);
 </programlisting>
-   Insert a new tuple into an existing index.  The <literal>values</literal> and
-   <literal>isnull</literal> arrays give the key values to be indexed, and
-   <literal>heap_tid</literal> is the TID to be indexed.
-   If the access method supports unique indexes (its
-   <structfield>amcanunique</structfield> flag is true) then
-   <literal>checkUnique</literal> indicates the type of uniqueness check to
-   perform.  This varies depending on whether the unique constraint is
-   deferrable; see <xref linkend="index-unique-checks"/> for details.
-   Normally the access method only needs the <literal>heapRelation</literal>
-   parameter when performing uniqueness checking (since then it will have to
-   look into the heap to verify tuple liveness).
+   将一个新元组插入现有索引。<literal>values</literal> 和 <literal>isnull</literal> 数组给出要索引的键值，<literal>heap_tid</literal> 是要索引的 TID。如果访问方法支持唯一索引（其 <structfield>amcanunique</structfield> 标志为 true），则 <literal>checkUnique</literal> 指示要执行的唯一性检查类型。这取决于唯一约束是否可延迟；详情请参见 <xref linkend="index-unique-checks"/>。通常，访问方法仅在执行唯一性检查时才需要 <literal>heapRelation</literal> 参数（因为此时它必须查看堆以验证元组的存活性）。
   </para>
 
   <para>
-   The <literal>indexUnchanged</literal> Boolean value gives a hint
-   about the nature of the tuple to be indexed.  When it is true,
-   the tuple is a duplicate of some existing tuple in the index.  The
-   new tuple is a logically unchanged successor MVCC tuple version.  This
-   happens when an <command>UPDATE</command> takes place that does not
-   modify any columns covered by the index, but nevertheless requires a
-   new version in the index.  The index AM may use this hint to decide
-   to apply bottom-up index deletion in parts of the index where many
-   versions of the same logical row accumulate.  Note that updating a non-key
-   column or a column that only appears in a partial index predicate does not
-   affect the value of <literal>indexUnchanged</literal>.  The core code
-   determines each tuple's <literal>indexUnchanged</literal> value using a low
-   overhead approach that allows both false positives and false negatives.
-   Index AMs must not treat <literal>indexUnchanged</literal> as an
-   authoritative source of information about tuple visibility or versioning.
+   <literal>indexUnchanged</literal> 布尔值给出了关于待索引元组性质的一个提示。当它为 true 时，该元组是索引中某个已存在元组的重复。新元组是逻辑上未改变的后续 MVCC 元组版本。当发生一次 <command>UPDATE</command> 且未修改索引所覆盖的任何列、但仍然需要在索引中产生一个新版本时，就会出现这种情况。索引 AM 可以利用该提示，决定在索引中同一逻辑行的多个版本大量累积的部分应用自底向上索引删除。注意，更新非键列或仅出现在部分索引谓词中的列不会影响 <literal>indexUnchanged</literal> 的值。核心代码使用一种低开销的方法来确定每个元组的 <literal>indexUnchanged</literal> 值，该方法允许假阳性和假阴性。索引 AM 不得将 <literal>indexUnchanged</literal> 视为关于元组可见性或版本信息的权威来源。
   </para>
 
   <para>
-   The function's Boolean result value is significant only when
-   <literal>checkUnique</literal> is <literal>UNIQUE_CHECK_PARTIAL</literal>.
-   In this case a true result means the new entry is known unique, whereas
-   false means it might be non-unique (and a deferred uniqueness check must
-   be scheduled).  For other cases a constant false result is recommended.
+   仅当 <literal>checkUnique</literal> 为 <literal>UNIQUE_CHECK_PARTIAL</literal> 时，该函数的布尔结果值才有意义。在这种情况下，true 结果表示已知新条目是唯一的，而 false 表示它可能不唯一（并且必须安排一次延迟的唯一性检查）。对于其他情况，建议返回常量 false。
   </para>
 
   <para>
-   Some indexes might not index all tuples.  If the tuple is not to be
-   indexed, <function>aminsert</function> should just return without doing anything.
+   有些索引可能不会索引所有元组。如果该元组不应被索引，<function>aminsert</function> 应当直接返回，不做任何事。
   </para>
 
   <para>
-   If the index AM wishes to cache data across successive index insertions
-   within an SQL statement, it can allocate space
-   in <literal>indexInfo-&gt;ii_Context</literal> and store a pointer to the
-   data in <literal>indexInfo-&gt;ii_AmCache</literal> (which will be NULL
-   initially).  If resources other than memory have to be released after
-   index insertions, <function>aminsertcleanup</function> may be provided,
-   which will be called before the memory is released.
+   如果索引 AM 希望在一条 SQL 语句内跨连续的索引插入缓存数据，它可以在 <literal>indexInfo-&gt;ii_Context</literal> 中分配空间，并将指向该数据的指针存储在 <literal>indexInfo-&gt;ii_AmCache</literal> 中（该指针初始为 NULL）。如果在索引插入之后必须释放内存以外的资源，可以提供 <function>aminsertcleanup</function>，它将在内存被释放之前被调用。
   </para>
 
   <para>
@@ -313,10 +262,7 @@ void
 aminsertcleanup (Relation indexRelation,
                  IndexInfo *indexInfo);
 </programlisting>
-   Clean up state that was maintained across successive inserts in
-   <literal>indexInfo-&gt;ii_AmCache</literal>. This is useful if the data
-   requires additional cleanup steps (e.g., releasing pinned buffers), and
-   simply releasing the memory is not sufficient.
+   清理在 <literal>indexInfo-&gt;ii_AmCache</literal> 中跨连续插入所维护的状态。如果数据需要额外的清理步骤（例如释放被固定的缓冲区），而仅仅释放内存还不够，那么这很有用。
   </para>
 
   <para>
@@ -327,27 +273,13 @@ ambulkdelete (IndexVacuumInfo *info,
               IndexBulkDeleteCallback callback,
               void *callback_state);
 </programlisting>
-   Delete tuple(s) from the index.  This is a <quote>bulk delete</quote> operation
-   that is intended to be implemented by scanning the whole index and checking
-   each entry to see if it should be deleted.
-   The passed-in <literal>callback</literal> function must be called, in the style
-   <literal>callback(<replaceable>TID</replaceable>, callback_state) returns bool</literal>,
-   to determine whether any particular index entry, as identified by its
-   referenced TID, is to be deleted.  Must return either NULL or a palloc'd
-   struct containing statistics about the effects of the deletion operation.
-   It is OK to return NULL if no information needs to be passed on to
-   <function>amvacuumcleanup</function>.
+   从索引中删除元组。这是一个 <quote>批量删除</quote> 操作，其实现方式是扫描整个索引并检查每个条目是否应被删除。
+   必须以 <literal>callback(<replaceable>TID</replaceable>, callback_state) returns bool</literal> 的方式调用传入的 <literal>callback</literal> 函数，以确定由其所引用的 TID 标识的某个索引条目是否要被删除。必须返回 NULL 或一个 palloc 分配的结构体，其中包含有关删除操作影响的统计信息。
+   如果不需要向 <function>amvacuumcleanup</function> 传递任何信息，返回 NULL 是可以的。
   </para>
 
   <para>
-   Because of limited <varname>maintenance_work_mem</varname>,
-   <function>ambulkdelete</function> might need to be called more than once when many
-   tuples are to be deleted.  The <literal>stats</literal> argument is the result
-   of the previous call for this index (it is NULL for the first call within a
-   <command>VACUUM</command> operation).  This allows the AM to accumulate statistics
-   across the whole operation.  Typically, <function>ambulkdelete</function> will
-   modify and return the same struct if the passed <literal>stats</literal> is not
-   null.
+   由于 <varname>maintenance_work_mem</varname> 有限，当需要删除大量元组时，<function>ambulkdelete</function> 可能需要被调用多次。<literal>stats</literal> 参数是此前对该索引调用的结果（在 <command>VACUUM</command> 操作中的第一次调用时为 NULL）。这允许 AM 在整个操作过程中累积统计信息。通常，如果传入的 <literal>stats</literal> 不为 null，<function>ambulkdelete</function> 将修改并返回同一个结构体。
   </para>
 
   <para>
@@ -356,27 +288,11 @@ IndexBulkDeleteResult *
 amvacuumcleanup (IndexVacuumInfo *info,
                  IndexBulkDeleteResult *stats);
 </programlisting>
-   Clean up after a <command>VACUUM</command> operation (zero or more
-   <function>ambulkdelete</function> calls).  This does not have to do anything
-   beyond returning index statistics, but it might perform bulk cleanup
-   such as reclaiming empty index pages.  <literal>stats</literal> is whatever the
-   last <function>ambulkdelete</function> call returned, or NULL if
-   <function>ambulkdelete</function> was not called because no tuples needed to be
-   deleted.  If the result is not NULL it must be a palloc'd struct.
-   The statistics it contains will be used to update <structname>pg_class</structname>,
-   and will be reported by <command>VACUUM</command> if <literal>VERBOSE</literal> is given.
-   It is OK to return NULL if the index was not changed at all during the
-   <command>VACUUM</command> operation, but otherwise correct stats should
-   be returned.
+   在 <command>VACUUM</command> 操作（零次或多次 <function>ambulkdelete</function> 调用）之后进行清理。除了返回索引统计信息之外，这不必做任何事情，但它可能会执行批量清理，例如回收空的索引页。<literal>stats</literal> 是最后一次 <function>ambulkdelete</function> 调用返回的内容；如果因为没有元组需要删除而未调用 <function>ambulkdelete</function>，则为 NULL。如果结果不为 NULL，它必须是一个 palloc 分配的结构体。其中包含的统计信息将用于更新 <structname>pg_class</structname>，如果给出了 <literal>VERBOSE</literal>，还将由 <command>VACUUM</command> 报告。如果在 <command>VACUUM</command> 操作期间索引完全没有改变，返回 NULL 是可以的，否则应返回正确的统计信息。
   </para>
 
   <para>
-   <function>amvacuumcleanup</function> will also be called at completion of an
-   <command>ANALYZE</command> operation.  In this case <literal>stats</literal> is always
-   NULL and any return value will be ignored.  This case can be distinguished
-   by checking <literal>info-&gt;analyze_only</literal>.  It is recommended
-   that the access method do nothing except post-insert cleanup in such a
-   call, and that only in an autovacuum worker process.
+   在 <command>ANALYZE</command> 操作完成时也会调用 <function>amvacuumcleanup</function>。在这种情况下，<literal>stats</literal> 始终为 NULL，任何返回值都将被忽略。可以通过检查 <literal>info-&gt;analyze_only</literal> 来区分这种情况。建议访问方法在此类调用中除了插入后清理之外不做任何事情，并且仅在自动清理工作进程中这样做。
   </para>
 
   <para>
@@ -384,17 +300,15 @@ amvacuumcleanup (IndexVacuumInfo *info,
 bool
 amcanreturn (Relation indexRelation, int attno);
 </programlisting>
-   Check whether the index can support <link
-   linkend="indexes-index-only-scans"><firstterm>index-only scans</firstterm></link> on
-   the given column, by returning the column's original indexed value.
-   The attribute number is 1-based, i.e., the first column's attno is 1.
-   Returns true if supported, else false.
-   This function should always return true for included columns
-   (if those are supported), since there's little point in an included
-   column that can't be retrieved.
-   If the access method does not support index-only scans at all,
-   the <structfield>amcanreturn</structfield> field in its <structname>IndexAmRoutine</structname>
-   struct can be set to NULL.
+   检查索引能否在给定列上支持 <link
+   linkend="indexes-index-only-scans"><firstterm>仅索引扫描</firstterm></link>，
+   方法是返回该列原始的已索引值。
+   属性编号从 1 开始，即第一列的 attno 为 1。
+   如果支持则返回 true，否则返回 false。
+   对于包含列（如果支持包含列），此函数应始终返回 true，
+   因为无法检索的包含列没有意义。
+   如果访问方法完全不支持仅索引扫描，
+   则其 <structname>IndexAmRoutine</structname> 结构中的 <structfield>amcanreturn</structfield> 字段可以设置为 NULL。
   </para>
 
   <para>
@@ -409,8 +323,8 @@ amcostestimate (PlannerInfo *root,
                 double *indexCorrelation,
                 double *indexPages);
 </programlisting>
-   Estimate the costs of an index scan.  This function is described fully
-   in <xref linkend="index-cost-estimation"/>, below.
+   估算索引扫描的代价。此函数在下文的
+   <xref linkend="index-cost-estimation"/> 中有完整描述。
   </para>
 
   <para>
@@ -418,14 +332,12 @@ amcostestimate (PlannerInfo *root,
 int
 amgettreeheight (Relation rel);
 </programlisting>
-   Compute the height of a tree-shaped index.  This information is supplied to
-   the <function>amcostestimate</function> function in
-   <literal>path->indexinfo->tree_height</literal> and can be used to support
-   the cost estimation.  The result is not used anywhere else, so this
-   function can actually be used to compute any kind of data (that fits into
-   an integer) about the index that the cost estimation function might want to
-   know.  If the computation is expensive, it could be useful to cache the
-   result as part of <literal>RelationData.rd_amcache</literal>.
+   计算树形索引的高度。此信息会提供给
+   <literal>path->indexinfo->tree_height</literal> 中的 <function>amcostestimate</function> 函数，
+   可用于支持代价估算。该结果不会在其他任何地方使用，因此此函数
+   实际上可用于计算代价估算函数可能想了解的有关索引的任何类型的数据
+   （只要该数据能放入一个整数）。如果计算开销很大，
+   将结果缓存为 <literal>RelationData.rd_amcache</literal> 的一部分可能会很有用。
   </para>
 
   <para>
@@ -434,23 +346,20 @@ bytea *
 amoptions (ArrayType *reloptions,
            bool validate);
 </programlisting>
-   Parse and validate the reloptions array for an index.  This is called only
-   when a non-null reloptions array exists for the index.
-   <parameter>reloptions</parameter> is a <type>text</type> array containing entries of the
-   form <replaceable>name</replaceable><literal>=</literal><replaceable>value</replaceable>.
-   The function should construct a <type>bytea</type> value, which will be copied
-   into the <structfield>rd_options</structfield> field of the index's relcache entry.
-   The data contents of the <type>bytea</type> value are open for the access
-   method to define; most of the standard access methods use struct
-   <structname>StdRdOptions</structname>.
-   When <parameter>validate</parameter> is true, the function should report a suitable
-   error message if any of the options are unrecognized or have invalid
-   values; when <parameter>validate</parameter> is false, invalid entries should be
-   silently ignored.  (<parameter>validate</parameter> is false when loading options
-   already stored in <structname>pg_catalog</structname>; an invalid entry could only
-   be found if the access method has changed its rules for options, and in
-   that case ignoring obsolete entries is appropriate.)
-   It is OK to return NULL if default behavior is wanted.
+   解析并验证索引的 reloptions 数组。仅当索引存在非空的
+   reloptions 数组时才会调用此函数。
+   <parameter>reloptions</parameter> 是一个 <type>text</type> 数组，包含形式为
+   <replaceable>name</replaceable><literal>=</literal><replaceable>value</replaceable> 的条目。
+   该函数应构造一个 <type>bytea</type> 值，该值将被复制到
+   索引的 relcache 条目的 <structfield>rd_options</structfield> 字段中。
+   <type>bytea</type> 值的数据内容由访问方法自行定义；
+   大多数标准访问方法使用结构体 <structname>StdRdOptions</structname>。
+   当 <parameter>validate</parameter> 为 true 时，如果任何选项无法识别或值无效，
+   函数应报告合适的错误消息；当 <parameter>validate</parameter> 为 false 时，
+   应静默忽略无效条目。（当加载已存储在 <structname>pg_catalog</structname> 中的选项时，
+   <parameter>validate</parameter> 为 false；只有在访问方法更改了其选项规则时
+   才会发现无效条目，在这种情况下忽略过时条目是合适的。）
+   如果需要默认行为，返回 NULL 是可以的。
   </para>
 
   <para>
@@ -460,46 +369,35 @@ amproperty (Oid index_oid, int attno,
             IndexAMProperty prop, const char *propname,
             bool *res, bool *isnull);
 </programlisting>
-   The <function>amproperty</function> method allows index access methods to override
-   the default behavior of <function>pg_index_column_has_property</function>
-   and related functions.
-   If the access method does not have any special behavior for index property
-   inquiries, the <structfield>amproperty</structfield> field in
-   its <structname>IndexAmRoutine</structname> struct can be set to NULL.
-   Otherwise, the <function>amproperty</function> method will be called with
-   <parameter>index_oid</parameter> and <parameter>attno</parameter> both zero for
-   <function>pg_indexam_has_property</function> calls,
-   or with <parameter>index_oid</parameter> valid and <parameter>attno</parameter> zero for
-   <function>pg_index_has_property</function> calls,
-   or with <parameter>index_oid</parameter> valid and <parameter>attno</parameter> greater than
-   zero for <function>pg_index_column_has_property</function> calls.
-   <parameter>prop</parameter> is an enum value identifying the property being tested,
-   while <parameter>propname</parameter> is the original property name string.
-   If the core code does not recognize the property name
-   then <parameter>prop</parameter> is <literal>AMPROP_UNKNOWN</literal>.
-   Access methods can define custom property names by
-   checking <parameter>propname</parameter> for a match (use <function>pg_strcasecmp</function>
-   to match, for consistency with the core code); for names known to the core
-   code, it's better to inspect <parameter>prop</parameter>.
-   If the <structfield>amproperty</structfield> method returns <literal>true</literal> then
-   it has determined the property test result: it must set <literal>*res</literal>
-   to the Boolean value to return, or set <literal>*isnull</literal>
-   to <literal>true</literal> to return a NULL.  (Both of the referenced variables
-   are initialized to <literal>false</literal> before the call.)
-   If the <structfield>amproperty</structfield> method returns <literal>false</literal> then
-   the core code will proceed with its normal logic for determining the
-   property test result.
+   <function>amproperty</function> 方法允许索引访问方法覆盖 <function>pg_index_column_has_property</function> 及相关函数的默认行为。
+   如果访问方法对索引属性查询没有任何特殊行为，
+   则 <structfield>amproperty</structfield> 字段（位于其 <structname>IndexAmRoutine</structname> 结构体中）可以设置为 NULL。
+   否则，对于 <function>pg_indexam_has_property</function> 调用，将以 <parameter>index_oid</parameter> 和 <parameter>attno</parameter> 均为零来调用 <function>amproperty</function> 方法，
+   或者对于 <function>pg_index_has_property</function> 调用，将以 <parameter>index_oid</parameter> 有效且 <parameter>attno</parameter> 为零来调用，
+   或者对于 <function>pg_index_column_has_property</function> 调用，将以 <parameter>index_oid</parameter> 有效且 <parameter>attno</parameter> 大于零来调用。
+   <parameter>prop</parameter> 是标识所测试属性的枚举值，
+   而 <parameter>propname</parameter> 是原始的属性名称字符串。
+   如果核心代码无法识别该属性名称，
+   则 <parameter>prop</parameter> 为 <literal>AMPROP_UNKNOWN</literal>。
+   访问方法可以通过检查 <parameter>propname</parameter> 是否匹配来定义自定义属性名称
+   （为与核心代码保持一致，使用 <function>pg_strcasecmp</function> 进行匹配）；
+   对于核心代码已知的名称，最好检查 <parameter>prop</parameter>。
+   如果 <structfield>amproperty</structfield> 方法返回 <literal>true</literal>，
+   则说明它已确定属性测试结果：它必须将 <literal>*res</literal>
+   设置为要返回的布尔值，或将 <literal>*isnull</literal>
+   设置为 <literal>true</literal> 以返回 NULL。（所引用的两个变量
+   在调用前都初始化为 <literal>false</literal>。）
+   如果 <structfield>amproperty</structfield> 方法返回 <literal>false</literal>，
+   则核心代码将继续按其常规逻辑确定属性测试结果。
   </para>
 
   <para>
-   Access methods that support ordering operators should
-   implement <literal>AMPROP_DISTANCE_ORDERABLE</literal> property testing, as the
-   core code does not know how to do that and will return NULL.  It may
-   also be advantageous to implement <literal>AMPROP_RETURNABLE</literal> testing,
-   if that can be done more cheaply than by opening the index and calling
-   <function>amcanreturn</function>, which is the core code's default behavior.
-   The default behavior should be satisfactory for all other standard
-   properties.
+   支持排序运算符的访问方法应实现 <literal>AMPROP_DISTANCE_ORDERABLE</literal> 属性测试，
+   因为核心代码不知道如何执行该测试，将返回 NULL。
+   实现 <literal>AMPROP_RETURNABLE</literal> 测试也可能是有利的，
+   前提是这样做比打开索引并调用 <function>amcanreturn</function> 更廉价，
+   而后者是核心代码的默认行为。
+   对于所有其他标准属性，默认行为应该足够。
   </para>
 
   <para>
@@ -507,11 +405,9 @@ amproperty (Oid index_oid, int attno,
 char *
 ambuildphasename (int64 phasenum);
 </programlisting>
-   Return the textual name of the given build phase number.
-   The phase numbers are those reported during an index build via the
-   <function>pgstat_progress_update_param</function> interface.
-   The phase names are then exposed in the
-   <structname>pg_stat_progress_create_index</structname> view.
+   返回给定构建阶段编号的文本名称。
+   这些阶段编号是在索引构建期间通过 <function>pgstat_progress_update_param</function> 接口报告的。
+   随后阶段名称会在 <structname>pg_stat_progress_create_index</structname> 视图中暴露。
   </para>
 
   <para>
@@ -519,12 +415,10 @@ ambuildphasename (int64 phasenum);
 bool
 amvalidate (Oid opclassoid);
 </programlisting>
-   Validate the catalog entries for the specified operator class, so far as
-   the access method can reasonably do that.  For example, this might include
-   testing that all required support functions are provided.
-   The <function>amvalidate</function> function must return false if the opclass is
-   invalid.  Problems should be reported with <function>ereport</function>
-   messages, typically at <literal>INFO</literal> level.
+   在访问方法能够合理做到的范围内，验证指定运算符类的系统目录项。
+   例如，这可能包括测试是否提供了所有必需的支持函数。
+   如果 opclass 无效，<function>amvalidate</function> 函数必须返回 false。
+   问题应通过 <function>ereport</function> 消息报告，通常使用 <literal>INFO</literal> 级别。
   </para>
 
   <para>
@@ -535,47 +429,16 @@ amadjustmembers (Oid opfamilyoid,
                  List *operators,
                  List *functions);
 </programlisting>
-   Validate proposed new operator and function members of an operator family,
-   so far as the access method can reasonably do that, and set their
-   dependency types if the default is not satisfactory.  This is called
-   during <command>CREATE OPERATOR CLASS</command> and during
-   <command>ALTER OPERATOR FAMILY ADD</command>; in the latter
-   case <parameter>opclassoid</parameter> is <literal>InvalidOid</literal>.
-   The <type>List</type> arguments are lists
-   of <structname>OpFamilyMember</structname> structs, as defined
-   in <filename>amapi.h</filename>.
+   在访问方法能够合理做到的范围内，验证运算符族中拟新增的运算符和函数成员，并在默认依赖类型不合适时设置它们的依赖类型。此函数在 <command>CREATE OPERATOR CLASS</command> 期间以及 <command>ALTER OPERATOR FAMILY ADD</command> 期间被调用；在后一种情况下，<parameter>opclassoid</parameter> 为 <literal>InvalidOid</literal>。<type>List</type> 参数是 <structname>OpFamilyMember</structname> 结构体的列表，如 <filename>amapi.h</filename> 中所定义。
 
-   Tests done by this function will typically be a subset of those
-   performed by <function>amvalidate</function>,
-   since <function>amadjustmembers</function> cannot assume that it is
-   seeing a complete set of members.  For example, it would be reasonable
-   to check the signature of a support function, but not to check whether
-   all required support functions are provided.  Any problems can be
-   reported by throwing an error.
+   此函数执行的测试通常是 <function>amvalidate</function> 所执行测试的子集，因为 <function>amadjustmembers</function> 不能假定自己看到的是完整的成员集合。例如，检查某个支持函数的签名是合理的，但检查是否提供了所有必需的支持函数则不合理。任何问题都可以通过抛出错误来报告。
 
-   The dependency-related fields of
-   the <structname>OpFamilyMember</structname> structs are initialized by
-   the core code to create hard dependencies on the opclass if this
-   is <command>CREATE OPERATOR CLASS</command>, or soft dependencies on the
-   opfamily if this is <command>ALTER OPERATOR FAMILY ADD</command>.
-   <function>amadjustmembers</function> can adjust these fields if some other
-   behavior is more appropriate.  For example, GIN, GiST, and SP-GiST
-   always set operator members to have soft dependencies on the opfamily,
-   since the connection between an operator and an opclass is relatively
-   weak in these index types; so it is reasonable to allow operator members
-   to be added and removed freely.  Optional support functions are typically
-   also given soft dependencies, so that they can be removed if necessary.
+   <structname>OpFamilyMember</structname> 结构体中与依赖相关的字段由核心代码初始化：如果这是 <command>CREATE OPERATOR CLASS</command>，则创建对 opclass 的硬依赖；如果这是 <command>ALTER OPERATOR FAMILY ADD</command>，则创建对 opfamily 的软依赖。如果其他行为更合适，<function>amadjustmembers</function> 可以调整这些字段。例如，GIN、GiST 和 SP-GiST 总是将运算符成员设置为对 opfamily 具有软依赖，因为在这些索引类型中，运算符与 opclass 之间的联系相对较弱；因此允许自由地添加和删除运算符成员是合理的。可选的支持函数通常也被赋予软依赖，以便在必要时可以删除它们。
   </para>
 
 
   <para>
-   The purpose of an index, of course, is to support scans for tuples matching
-   an indexable <literal>WHERE</literal> condition, often called a
-   <firstterm>qualifier</firstterm> or <firstterm>scan key</firstterm>.  The semantics of
-   index scanning are described more fully in <xref linkend="index-scanning"/>,
-   below.  An index access method can support <quote>plain</quote> index scans,
-   <quote>bitmap</quote> index scans, or both.  The scan-related functions that an
-   index access method must or may provide are:
+   当然，索引的目的是支持对匹配可索引 <literal>WHERE</literal> 条件的元组进行扫描，这种条件通常称为 <firstterm>限定符</firstterm> 或 <firstterm>扫描键</firstterm>。索引扫描的语义在下文的 <xref linkend="index-scanning"/> 中有更完整的描述。索引访问方法可以支持<quote>普通</quote>索引扫描、<quote>位图</quote>索引扫描，或两者兼支持。索引访问方法必须或可以提供的与扫描相关的函数包括：
   </para>
 
   <para>
@@ -585,17 +448,7 @@ ambeginscan (Relation indexRelation,
              int nkeys,
              int norderbys);
 </programlisting>
-   Prepare for an index scan.  The <literal>nkeys</literal> and <literal>norderbys</literal>
-   parameters indicate the number of quals and ordering operators that will be
-   used in the scan; these may be useful for space allocation purposes.
-   Note that the actual values of the scan keys aren't provided yet.
-   The result must be a palloc'd struct.
-   For implementation reasons the index access method
-   <emphasis>must</emphasis> create this struct by calling
-   <function>RelationGetIndexScan()</function>.  In most cases
-   <function>ambeginscan</function> does little beyond making that call and perhaps
-   acquiring locks;
-   the interesting parts of index-scan startup are in <function>amrescan</function>.
+   准备进行索引扫描。<literal>nkeys</literal> 和 <literal>norderbys</literal> 参数分别表示扫描中将使用的条件（quals）和排序运算符的数量；这些信息可能有助于空间分配。注意，扫描键的实际值尚未提供。结果必须是一个由 palloc 分配的结构体。出于实现原因，索引访问方法<emphasis>必须</emphasis>通过调用 <function>RelationGetIndexScan()</function> 来创建该结构体。在大多数情况下，<function>ambeginscan</function> 除了进行该调用以及可能获取锁之外几乎不做其他事情；索引扫描启动中有趣的部分位于 <function>amrescan</function> 中。
   </para>
 
   <para>
@@ -607,14 +460,7 @@ amrescan (IndexScanDesc scan,
           ScanKey orderbys,
           int norderbys);
 </programlisting>
-   Start or restart an index scan, possibly with new scan keys.  (To restart
-   using previously-passed keys, NULL is passed for <literal>keys</literal> and/or
-   <literal>orderbys</literal>.)  Note that it is not allowed for
-   the number of keys or order-by operators to be larger than
-   what was passed to <function>ambeginscan</function>.  In practice the restart
-   feature is used when a new outer tuple is selected by a nested-loop join
-   and so a new key comparison value is needed, but the scan key structure
-   remains the same.
+   启动或重新启动索引扫描，可能使用新的扫描键。（要使用先前传入的键重新启动，则为 <literal>keys</literal> 和/或 <literal>orderbys</literal> 传入 NULL。）注意，键或排序运算符的数量不允许大于传递给 <function>ambeginscan</function> 的数量。在实践中，当嵌套循环连接选中一个新的外部元组从而需要新的键比较值时，会使用重新启动功能，但扫描键结构保持不变。
   </para>
 
   <para>
@@ -623,49 +469,15 @@ bool
 amgettuple (IndexScanDesc scan,
             ScanDirection direction);
 </programlisting>
-   Fetch the next tuple in the given scan, moving in the given
-   direction (forward or backward in the index).  Returns true if a tuple was
-   obtained, false if no matching tuples remain.  In the true case the tuple
-   TID is stored into the <literal>scan</literal> structure.  Note that
-   <quote>success</quote> means only that the index contains an entry that matches
-   the scan keys, not that the tuple necessarily still exists in the heap or
-   will pass the caller's snapshot test.  On success, <function>amgettuple</function>
-   must also set <literal>scan-&gt;xs_recheck</literal> to true or false.
-   False means it is certain that the index entry matches the scan keys.
-   True means this is not certain, and the conditions represented by the
-   scan keys must be rechecked against the heap tuple after fetching it.
-   This provision supports <quote>lossy</quote> index operators.
-   Note that rechecking will extend only to the scan conditions; a partial
-   index predicate (if any) is never rechecked by <function>amgettuple</function>
-   callers.
+   在给定扫描中按给定方向（在索引中向前或向后）获取下一个元组。如果获得元组则返回 true，如果没有匹配的元组剩余则返回 false。在返回 true 的情况下，元组 TID 会被存储到 <literal>scan</literal> 结构中。注意，<quote>成功</quote>仅意味着索引中包含与扫描键匹配的条目，并不意味着该元组一定仍然存在于堆中或能通过调用者的快照测试。成功时，<function>amgettuple</function> 还必须将 <literal>scan-&gt;xs_recheck</literal> 设置为 true 或 false。False 表示可以确定索引条目与扫描键匹配。True 表示这并不确定，在获取堆元组后必须针对该元组重新检查扫描键所表示的条件。此机制支持<quote>有损</quote>索引运算符。注意，重新检查仅涉及扫描条件；<function>amgettuple</function> 的调用者从不重新检查部分索引谓词（如果有）。
   </para>
 
   <para>
-   If the index supports <link linkend="indexes-index-only-scans">index-only
-   scans</link> (i.e., <function>amcanreturn</function> returns true for any
-   of its columns),
-   then on success the AM must also check <literal>scan-&gt;xs_want_itup</literal>,
-   and if that is true it must return the originally indexed data for the
-   index entry.  Columns for which <function>amcanreturn</function> returns
-   false can be returned as nulls.
-   The data can be returned in the form of an
-   <structname>IndexTuple</structname> pointer stored at <literal>scan-&gt;xs_itup</literal>,
-   with tuple descriptor <literal>scan-&gt;xs_itupdesc</literal>; or in the form of
-   a <structname>HeapTuple</structname> pointer stored at <literal>scan-&gt;xs_hitup</literal>,
-   with tuple descriptor <literal>scan-&gt;xs_hitupdesc</literal>.  (The latter
-   format should be used when reconstructing data that might possibly not fit
-   into an <structname>IndexTuple</structname>.)  In either case,
-   management of the data referenced by the pointer is the access method's
-   responsibility.  The data must remain good at least until the next
-   <function>amgettuple</function>, <function>amrescan</function>, or <function>amendscan</function>
-   call for the scan.
+   如果索引支持 <link linkend="indexes-index-only-scans">仅索引扫描</link>（即 <function>amcanreturn</function> 对其任意列返回 true），那么在成功时，访问方法还必须检查 <literal>scan-&gt;xs_want_itup</literal>，如果为 true，则必须返回该索引项最初被索引的数据。对于 <function>amcanreturn</function> 返回 false 的列，可以作为空值返回。数据可以以存储在 <literal>scan-&gt;xs_itup</literal> 中的 <structname>IndexTuple</structname> 指针的形式返回，元组描述符为 <literal>scan-&gt;xs_itupdesc</literal>；或者以存储在 <literal>scan-&gt;xs_hitup</literal> 中的 <structname>HeapTuple</structname> 指针的形式返回，元组描述符为 <literal>scan-&gt;xs_hitupdesc</literal>。（当重建的数据可能无法放入 <structname>IndexTuple</structname> 时，应使用后一种格式。）无论哪种情况，指针所引用数据的管理都是访问方法的责任。数据必须至少保持有效，直到对该扫描的下一次 <function>amgettuple</function>、<function>amrescan</function> 或 <function>amendscan</function> 调用。
   </para>
 
   <para>
-   The <function>amgettuple</function> function need only be provided if the access
-   method supports <quote>plain</quote> index scans.  If it doesn't, the
-   <structfield>amgettuple</structfield> field in its <structname>IndexAmRoutine</structname>
-   struct must be set to NULL.
+   只有当访问方法支持<quote>普通</quote>索引扫描时，才需要提供 <function>amgettuple</function> 函数。如果不支持，则其 <structname>IndexAmRoutine</structname> 结构中的 <structfield>amgettuple</structfield> 字段必须设置为 NULL。
   </para>
 
   <para>
@@ -674,29 +486,11 @@ int64
 amgetbitmap (IndexScanDesc scan,
              TIDBitmap *tbm);
 </programlisting>
-   Fetch all tuples in the given scan and add them to the caller-supplied
-   <type>TIDBitmap</type> (that is, OR the set of tuple IDs into whatever set is already
-   in the bitmap).  The number of tuples fetched is returned (this might be
-   just an approximate count, for instance some AMs do not detect duplicates).
-   While inserting tuple IDs into the bitmap, <function>amgetbitmap</function> can
-   indicate that rechecking of the scan conditions is required for specific
-   tuple IDs.  This is analogous to the <literal>xs_recheck</literal> output parameter
-   of <function>amgettuple</function>.  Note: in the current implementation, support
-   for this feature is conflated with support for lossy storage of the bitmap
-   itself, and therefore callers recheck both the scan conditions and the
-   partial index predicate (if any) for recheckable tuples.  That might not
-   always be true, however.
-   <function>amgetbitmap</function> and
-   <function>amgettuple</function> cannot be used in the same index scan; there
-   are other restrictions too when using <function>amgetbitmap</function>, as explained
-   in <xref linkend="index-scanning"/>.
+   取出给定扫描中的所有元组，并将它们添加到调用者提供的 <type>TIDBitmap</type> 中（也就是说，将元组 ID 集合按位或到该位图中已有的集合中）。返回取出的元组数量（这可能只是一个近似计数，例如某些访问方法不检测重复项）。在将元组 ID 插入位图时，<function>amgetbitmap</function> 可以指示需要对特定元组 ID 重新检查扫描条件。这类似于 <function>amgettuple</function> 的 <literal>xs_recheck</literal> 输出参数。注意：在当前实现中，对该特性的支持与对位图本身有损存储的支持混在一起，因此调用者会对可重新检查的元组同时重新检查扫描条件和部分索引谓词（如果有）。然而，情况并非总是如此。<function>amgetbitmap</function> 和 <function>amgettuple</function> 不能用于同一次索引扫描；使用 <function>amgetbitmap</function> 时还有其他限制，如 <xref linkend="index-scanning"/> 中所述。
   </para>
 
   <para>
-   The <function>amgetbitmap</function> function need only be provided if the access
-   method supports <quote>bitmap</quote> index scans.  If it doesn't, the
-   <structfield>amgetbitmap</structfield> field in its <structname>IndexAmRoutine</structname>
-   struct must be set to NULL.
+   只有当访问方法支持<quote>位图</quote>索引扫描时，才需要提供 <function>amgetbitmap</function> 函数。如果不支持，则其 <structname>IndexAmRoutine</structname> 结构中的 <structfield>amgetbitmap</structfield> 字段必须设置为 NULL。
   </para>
 
   <para>
@@ -704,10 +498,7 @@ amgetbitmap (IndexScanDesc scan,
 void
 amendscan (IndexScanDesc scan);
 </programlisting>
-   End a scan and release resources.  The <literal>scan</literal> struct itself
-   should not be freed, but any locks or pins taken internally by the
-   access method must be released, as well as any other memory allocated
-   by <function>ambeginscan</function> and other scan-related functions.
+   结束扫描并释放资源。不应释放 <literal>scan</literal> 结构本身，但必须释放访问方法内部获取的任何锁或 pin，以及由 <function>ambeginscan</function> 和其他与扫描相关的函数分配的任何其他内存。
   </para>
 
   <para>
@@ -715,15 +506,11 @@ amendscan (IndexScanDesc scan);
 void
 ammarkpos (IndexScanDesc scan);
 </programlisting>
-   Mark current scan position.  The access method need only support one
-   remembered scan position per scan.
+   标记当前扫描位置。访问方法只需为每次扫描支持一个被记住的扫描位置。
   </para>
 
   <para>
-   The <function>ammarkpos</function> function need only be provided if the access
-   method supports ordered scans.  If it doesn't,
-   the <structfield>ammarkpos</structfield> field in its <structname>IndexAmRoutine</structname>
-   struct may be set to NULL.
+   仅当访问方法支持有序扫描时，才需要提供 <function>ammarkpos</function> 函数。如果不支持，其 <structname>IndexAmRoutine</structname> 结构体中的 <structfield>ammarkpos</structfield> 字段可以设置为 NULL。
   </para>
 
   <para>
@@ -731,29 +518,15 @@ ammarkpos (IndexScanDesc scan);
 void
 amrestrpos (IndexScanDesc scan);
 </programlisting>
-   Restore the scan to the most recently marked position.
+   将扫描恢复到最近标记的位置。
   </para>
 
   <para>
-   The <function>amrestrpos</function> function need only be provided if the access
-   method supports ordered scans.  If it doesn't,
-   the <structfield>amrestrpos</structfield> field in its <structname>IndexAmRoutine</structname>
-   struct may be set to NULL.
+   仅当访问方法支持有序扫描时，才需要提供 <function>amrestrpos</function> 函数。如果不支持，其 <structname>IndexAmRoutine</structname> 结构体中的 <structfield>amrestrpos</structfield> 字段可以设置为 NULL。
   </para>
 
   <para>
-   In addition to supporting ordinary index scans, some types of index
-   may wish to support <firstterm>parallel index scans</firstterm>, which allow
-   multiple backends to cooperate in performing an index scan.  The
-   index access method should arrange things so that each cooperating
-   process returns a subset of the tuples that would be performed by
-   an ordinary, non-parallel index scan, but in such a way that the
-   union of those subsets is equal to the set of tuples that would be
-   returned by an ordinary, non-parallel index scan.  Furthermore, while
-   there need not be any global ordering of tuples returned by a parallel
-   scan, the ordering of that subset of tuples returned within each
-   cooperating backend must match the requested ordering.  The following
-   functions may be implemented to support parallel index scans:
+   除了支持普通的索引扫描外，某些类型的索引可能还希望支持<firstterm>并行索引扫描</firstterm>，它允许多个后端协同执行一次索引扫描。索引访问方法应做出安排，使每个协作进程返回普通非并行索引扫描所返回元组的一个子集，但要使得这些子集的并集等于普通非并行索引扫描所返回的元组集合。此外，虽然并行扫描返回的元组不必有任何全局顺序，但在每个协作后端内返回的该元组子集的顺序必须与所请求的顺序一致。可以实现以下函数来支持并行索引扫描：
   </para>
 
   <para>
@@ -763,23 +536,15 @@ amestimateparallelscan (Relation indexRelation,
                         int nkeys,
                         int norderbys);
 </programlisting>
-   Estimate and return the number of bytes of dynamic shared memory which
-   the access method will be needed to perform a parallel scan.  (This number
-   is in addition to, not in lieu of, the amount of space needed for
-   AM-independent data in <structname>ParallelIndexScanDescData</structname>.)
+   估计并返回访问方法执行并行扫描所需的动态共享内存字节数。（该数目是在 <structname>ParallelIndexScanDescData</structname> 中与访问方法无关的数据所需空间之外的额外数量，而非替代该空间。）
   </para>
 
   <para>
-   The <literal>nkeys</literal> and <literal>norderbys</literal>
-   parameters indicate the number of quals and ordering operators that will be
-   used in the scan; the same values will be passed to <function>amrescan</function>.
-   Note that the actual values of the scan keys aren't provided yet.
+   <literal>nkeys</literal> 和 <literal>norderbys</literal> 参数表示扫描中将使用的 quals 和排序运算符的数目；相同的值将被传递给 <function>amrescan</function>。注意，扫描键的实际值尚未提供。
   </para>
 
   <para>
-   It is not necessary to implement this function for access methods which
-   do not support parallel scans or for which the number of additional bytes
-   of storage required is zero.
+   对于不支持并行扫描的访问方法，或者所需的额外存储字节数为零的访问方法，不必实现此函数。
   </para>
 
   <para>
@@ -787,17 +552,11 @@ amestimateparallelscan (Relation indexRelation,
 void
 aminitparallelscan (void *target);
 </programlisting>
-   This function will be called to initialize dynamic shared memory at the
-   beginning of a parallel scan.  <parameter>target</parameter> will point to at least
-   the number of bytes previously returned by
-   <function>amestimateparallelscan</function>, and this function may use that
-   amount of space to store whatever data it wishes.
+   此函数将在并行扫描开始时被调用，用于初始化动态共享内存。<parameter>target</parameter> 将指向至少由 <function>amestimateparallelscan</function> 先前返回的字节数那么多的空间，此函数可以使用该大小的空间来存储它希望存储的任何数据。
   </para>
 
   <para>
-   It is not necessary to implement this function for access methods which
-   do not support parallel scans or in cases where the shared memory space
-   required needs no initialization.
+   对于不支持并行扫描的访问方法，或者在所需的共享内存空间不需要初始化的情况下，不必实现此函数。
   </para>
 
   <para>
@@ -805,10 +564,7 @@ aminitparallelscan (void *target);
 void
 amparallelrescan (IndexScanDesc scan);
 </programlisting>
-   This function, if implemented, will be called when a parallel index scan
-   must be restarted.  It should reset any shared state set up by
-   <function>aminitparallelscan</function> such that the scan will be restarted from
-   the beginning.
+   此函数如果实现，将在并行索引扫描必须重新启动时被调用。它应重置由 <function>aminitparallelscan</function> 建立的任何共享状态，以便扫描从头重新开始。
   </para>
 
   <para>
@@ -819,18 +575,7 @@ amtranslatestrategy (StrategyNumber strategy, Oid opfamily, Oid opcintype);
 StrategyNumber
 amtranslatecmptype (CompareType cmptype, Oid opfamily, Oid opcintype);
 </programlisting>
-   These functions, if implemented, will be called by the planner and executor
-   to convert between fixed <type>CompareType</type> values and the specific
-   strategy numbers used by the access method.  These functions can be
-   implemented by access methods that implement functionality similar to the
-   built-in btree or hash access methods, and by implementing these
-   translations, the system can learn about the semantics of the access
-   method's operations and can use them in place of btree or hash indexes in
-   various places.  If the functionality of the access method is not similar
-   to those built-in access methods, these functions do not need to be
-   implemented.  If the functions are not implemented, the access method will
-   be ignored for certain planner and executor decisions, but is otherwise
-   fully functional.
+   这些函数如果实现，将由查询规划器和执行器调用，用于在固定的 <type>CompareType</type> 值与访问方法所使用的特定策略编号之间进行转换。这些函数可以由实现了与内置 btree 或 hash 访问方法类似功能的访问方法来实现，通过实现这些转换，系统可以了解该访问方法操作的语义，并可以在各种场合使用它们来代替 btree 或 hash 索引。如果访问方法的功能与那些内置访问方法不相似，则不需要实现这些函数。如果未实现这些函数，该访问方法在某些查询规划器和执行器决策中将被忽略，但在其他方面完全可用。
   </para>
 
  </sect1>
