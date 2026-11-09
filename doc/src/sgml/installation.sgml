@@ -2668,10 +2668,10 @@ ninja install
  </sect1>
 
  <sect1 id="install-post">
-  <title>Post-Installation Setup</title>
+  <title>安装后设置</title>
 
   <sect2 id="install-post-shlibs">
-   <title>Shared Libraries</title>
+   <title>共享库</title>
 
    <indexterm>
     <primary>shared library</primary>
@@ -2690,100 +2690,92 @@ ninja install
    </para>
 
    <para>
-    The method to set the shared library search path varies between
-    platforms, but the most widely-used method is to set the
-    environment variable <envar>LD_LIBRARY_PATH</envar> like so: In Bourne
-    shells (<command>sh</command>, <command>ksh</command>, <command>bash</command>, <command>zsh</command>):
+    设置共享库搜索路径的方法因平台而异，但最常用的方法是
+    像下面这样设置环境变量 <envar>LD_LIBRARY_PATH</envar>：在 Bourne
+    shell（<command>sh</command>、<command>ksh</command>、<command>bash</command>、<command>zsh</command>）中：
 <programlisting>
 LD_LIBRARY_PATH=/usr/local/pgsql/lib
 export LD_LIBRARY_PATH
 </programlisting>
-    or in <command>csh</command> or <command>tcsh</command>:
+    或者在 <command>csh</command> 或 <command>tcsh</command> 中：
 <programlisting>
 setenv LD_LIBRARY_PATH /usr/local/pgsql/lib
 </programlisting>
-    Replace <literal>/usr/local/pgsql/lib</literal> with whatever you set
-    <option><literal>--libdir</literal></option> to in <xref linkend="configure"/>.
-    You should put these commands into a shell start-up file such as
-    <filename>/etc/profile</filename> or <filename>~/.bash_profile</filename>.  Some
-    good information about the caveats associated with this method can
-    be found at <ulink
-    url="http://xahlee.info/UnixResource_dir/_/ldpath.html"></ulink>.
+    将 <literal>/usr/local/pgsql/lib</literal> 替换为你在 <xref linkend="configure"/> 中为
+    <option><literal>--libdir</literal></option> 设置的值。
+    你应该把这些命令放入 shell 启动文件，例如
+    <filename>/etc/profile</filename> 或 <filename>~/.bash_profile</filename>。关于此方法相关注意事项的一些
+    有用信息可以在 <ulink
+    url="http://xahlee.info/UnixResource_dir/_/ldpath.html"></ulink> 找到。
    </para>
 
    <para>
-    On some systems it might be preferable to set the environment
-    variable <envar>LD_RUN_PATH</envar> <emphasis>before</emphasis>
-    building.
+    在某些系统上，可能最好在构建<emphasis>之前</emphasis>
+    设置环境变量 <envar>LD_RUN_PATH</envar>。
    </para>
 
    <para>
-    On <systemitem class="osname">Cygwin</systemitem>, put the library
-    directory in the <envar>PATH</envar> or move the
-    <filename>.dll</filename> files into the <filename>bin</filename>
-    directory.
+    在 <systemitem class="osname">Cygwin</systemitem> 上，将库目录放入 <envar>PATH</envar>，或者将
+    <filename>.dll</filename> 文件移动到 <filename>bin</filename>
+    目录中。
    </para>
 
    <para>
-    If in doubt, refer to the manual pages of your system (perhaps
-    <command>ld.so</command> or <command>rld</command>). If you later
-    get a message like:
+    如有疑问，请参考系统的手册页（也许是
+    <command>ld.so</command> 或 <command>rld</command>）。如果之后你收到类似这样的消息：
 <screen>
 psql: error in loading shared libraries
 libpq.so.2.1: cannot open shared object file: No such file or directory
 </screen>
-    then this step was necessary.  Simply take care of it then.
+    那么这一步就是必要的。届时处理一下即可。
    </para>
 
    <para>
     <indexterm>
      <primary>ldconfig</primary>
     </indexterm>
-    If you are on <systemitem class="osname">Linux</systemitem> and you have root
-    access, you can run:
+    如果你使用的是 <systemitem class="osname">Linux</systemitem> 并且拥有 root
+    访问权限，可以在安装后运行：
 <programlisting>
 /sbin/ldconfig /usr/local/pgsql/lib
 </programlisting>
-    (or equivalent directory) after installation to enable the
-    run-time linker to find the shared libraries faster.  Refer to the
-    manual page of <command>ldconfig</command> for more information.  On
-    <systemitem class="osname">FreeBSD</systemitem>, <systemitem
-    class="osname">NetBSD</systemitem>, and <systemitem
-    class="osname">OpenBSD</systemitem> the command is:
+    （或相应的目录），以便运行时链接器能更快地找到共享库。更多信息请参考
+    <command>ldconfig</command> 的手册页。在
+    <systemitem class="osname">FreeBSD</systemitem>、<systemitem
+    class="osname">NetBSD</systemitem> 和 <systemitem
+    class="osname">OpenBSD</systemitem> 上，相应的命令是：
 <programlisting>
 /sbin/ldconfig -m /usr/local/pgsql/lib
 </programlisting>
-    instead.  Other systems are not known to have an equivalent
-    command.
+    其他系统则未知有等效的命令。
    </para>
   </sect2>
 
   <sect2 id="install-post-env-vars">
-   <title>Environment Variables</title>
+   <title>环境变量</title>
 
    <indexterm>
     <primary><envar>PATH</envar></primary>
    </indexterm>
 
    <para>
-    If you installed into <filename>/usr/local/pgsql</filename> or some other
-    location that is not searched for programs by default, you should
-    add <filename>/usr/local/pgsql/bin</filename> (or whatever you set
-    <option><literal>--bindir</literal></option> to in <xref linkend="configure"/>)
-    into your <envar>PATH</envar>.  Strictly speaking, this is not
-    necessary, but it will make the use of <productname>PostgreSQL</productname>
-    much more convenient.
+    如果你安装到了 <filename>/usr/local/pgsql</filename> 或其他默认不会搜索程序的
+    位置，你应该把 <filename>/usr/local/pgsql/bin</filename>（或你在
+    <xref linkend="configure"/> 中为
+    <option><literal>--bindir</literal></option> 设置的值）加入你的 <envar>PATH</envar>。严格来说，这并非
+    必需，但它会让 <productname>PostgreSQL</productname>
+    的使用方便得多。
    </para>
 
    <para>
-    To do this, add the following to your shell start-up file, such as
-    <filename>~/.bash_profile</filename> (or <filename>/etc/profile</filename>, if you
-    want it to affect all users):
+    为此，请将以下内容加入你的 shell 启动文件，例如
+    <filename>~/.bash_profile</filename>（或者 <filename>/etc/profile</filename>，如果你
+    希望它对所有用户生效）：
 <programlisting>
 PATH=/usr/local/pgsql/bin:$PATH
 export PATH
 </programlisting>
-    If you are using <command>csh</command> or <command>tcsh</command>, then use this command:
+    如果你使用的是 <command>csh</command> 或 <command>tcsh</command>，则使用这条命令：
 <programlisting>
 set path = ( /usr/local/pgsql/bin $path )
 </programlisting>
@@ -2793,10 +2785,8 @@ set path = ( /usr/local/pgsql/bin $path )
     <indexterm>
      <primary><envar>MANPATH</envar></primary>
     </indexterm>
-    To enable your system to find the <application>man</application>
-    documentation, you need to add lines like the following to a
-    shell start-up file unless you installed into a location that is
-    searched by default:
+    要让你的系统能够找到 <application>man</application>
+    文档，你需要把类似下面这样的行加入 shell 启动文件，除非你安装到了默认会被搜索的位置：
 <programlisting>
 MANPATH=/usr/local/pgsql/share/man:$MANPATH
 export MANPATH
@@ -2804,13 +2794,13 @@ export MANPATH
    </para>
 
    <para>
-    The environment variables <envar>PGHOST</envar> and <envar>PGPORT</envar>
-    specify to client applications the host and port of the database
-    server, overriding the compiled-in defaults. If you are going to
-    run client applications remotely then it is convenient if every
-    user that plans to use the database sets <envar>PGHOST</envar>.  This
-    is not required, however; the settings can be communicated via command
-    line options to most client programs.
+    环境变量 <envar>PGHOST</envar> 和 <envar>PGPORT</envar>
+    向客户端应用指定数据库服务器的主机和端口，
+    覆盖编译时内置的默认值。如果你打算
+    远程运行客户端应用，那么如果每个计划
+    使用数据库的用户都设置 <envar>PGHOST</envar> 会很方便。不过，
+    这并不是必需的；大多数客户端程序都可以通过
+    命令行选项来传递这些设置。
    </para>
   </sect2>
  </sect1>
