@@ -94,221 +94,133 @@ SELECT rolname FROM pg_roles WHERE rolcanlogin;
  </sect1>
 
  <sect1 id="role-attributes">
-  <title>Role Attributes</title>
+  <title>角色属性</title>
 
    <para>
-    A database role can have a number of attributes that define its
-    privileges and interact with the client authentication system.
+    一个数据库角色可以具有若干属性，这些属性定义其权限并与客户端认证系统交互。
 
     <variablelist>
      <varlistentry>
-      <term>login privilege<indexterm><primary>login privilege</primary></indexterm></term>
+      <term>登录权限<indexterm><primary>登录权限</primary></indexterm></term>
       <listitem>
        <para>
-        Only roles that have the <literal>LOGIN</literal> attribute can be used
-        as the initial role name for a database connection.  A role with
-        the <literal>LOGIN</literal> attribute can be considered the same
-        as a <quote>database user</quote>.  To create a role with login privilege,
-        use either:
+        只有具有 <literal>LOGIN</literal> 属性的角色才能用作数据库连接的初始角色名。具有
+        <literal>LOGIN</literal> 属性的角色可以视为<quote>数据库用户</quote>。要创建具有登录权限的角色，
+        可使用以下任一方式：
 <programlisting>
 CREATE ROLE <replaceable>name</replaceable> LOGIN;
 CREATE USER <replaceable>name</replaceable>;
 </programlisting>
-        (<command>CREATE USER</command> is equivalent to <command>CREATE ROLE</command>
-        except that <command>CREATE USER</command> includes <literal>LOGIN</literal> by
-        default, while <command>CREATE ROLE</command> does not.)
+        （<command>CREATE USER</command> 等价于 <command>CREATE ROLE</command>，
+        区别在于 <command>CREATE USER</command> 默认包含 <literal>LOGIN</literal>，而 <command>CREATE ROLE</command> 不包含。）
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>superuser status<indexterm><primary>superuser</primary></indexterm></term>
+      <term>超级用户状态<indexterm><primary>超级用户</primary></indexterm></term>
       <listitem>
        <para>
-        A database superuser bypasses all permission checks, except the right
-        to log in.  This is a dangerous privilege and should not be used
-        carelessly; it is best to do most of your work as a role that is not a
-        superuser.  To create a new database superuser, use <literal>CREATE
-        ROLE <replaceable>name</replaceable> SUPERUSER</literal>.  You must do
-        this as a role that is already a superuser.
+        数据库超级用户会绕过所有权限检查，但登录权限除外。这是一种危险的权限，
+        不应随意使用；最好以非超级用户的角色完成你的大部分工作。要创建新的数据库
+        超级用户，请使用 <literal>CREATE
+        ROLE <replaceable>name</replaceable> SUPERUSER</literal>。你必须以已经是超级用户的角色执行此操作。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>database creation<indexterm><primary>database</primary><secondary>privilege to create</secondary></indexterm></term>
+      <term>数据库创建<indexterm><primary>database</primary><secondary>privilege to create</secondary></indexterm></term>
       <listitem>
        <para>
-        A role must be explicitly given permission to create databases
-        (except for superusers, since those bypass all permission
-        checks). To create such a role, use <literal>CREATE ROLE
-        <replaceable>name</replaceable> CREATEDB</literal>.
+        必须显式地授予角色创建数据库的权限（超级用户除外，因为超级用户会绕过所有权限检查）。要创建这样的角色，请使用 <literal>CREATE ROLE
+        <replaceable>name</replaceable> CREATEDB</literal>。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term id="role-creation">role creation<indexterm><primary>role</primary><secondary>privilege to create</secondary></indexterm></term>
+      <term id="role-creation">角色创建<indexterm><primary>role</primary><secondary>privilege to create</secondary></indexterm></term>
       <listitem>
        <para>
-        A role must be explicitly given permission to create more roles
-        (except for superusers, since those bypass all permission
-        checks). To create such a role, use <literal>CREATE ROLE
-        <replaceable>name</replaceable> CREATEROLE</literal>.
-        A role with <literal>CREATEROLE</literal> privilege can alter and drop
-        roles which have been granted to the <literal>CREATEROLE</literal>
-        user with the <literal>ADMIN</literal> option. Such a grant occurs
-        automatically when a <literal>CREATEROLE</literal> user that is not
-        a superuser creates a new role, so that by default, a
-        <literal>CREATEROLE</literal> user can alter and drop the roles
-        which they have created.
-        Altering a role includes most changes that can be made using
-        <literal>ALTER ROLE</literal>, including, for example, changing
-        passwords.  It also includes modifications to a role that can
-        be made using the <literal>COMMENT</literal> and
-        <literal>SECURITY LABEL</literal> commands.
+        必须显式地授予角色创建更多角色的权限（超级用户除外，因为超级用户会绕过所有权限检查）。要创建这样的角色，请使用 <literal>CREATE ROLE
+        <replaceable>name</replaceable> CREATEROLE</literal>。
+        具有 <literal>CREATEROLE</literal> 权限的角色可以更改和删除通过 <literal>ADMIN</literal> 选项授予 <literal>CREATEROLE</literal> 用户的角色。当非超级用户的 <literal>CREATEROLE</literal> 用户创建新角色时，这种授予会自动发生，因此默认情况下，<literal>CREATEROLE</literal> 用户可以更改和删除他们创建的角色。
+        更改角色包括使用 <literal>ALTER ROLE</literal> 可以完成的大多数更改，例如更改密码。它还包括使用 <literal>COMMENT</literal> 和 <literal>SECURITY LABEL</literal> 命令可以对角色进行的修改。
        </para>
        <para>
-        However, <literal>CREATEROLE</literal> does not convey the ability to
-        create <literal>SUPERUSER</literal> roles, nor does it convey any
-        power over <literal>SUPERUSER</literal> roles that already exist.
-        Furthermore, <literal>CREATEROLE</literal> does not convey the power
-        to create <literal>REPLICATION</literal> users, nor the ability to
-        grant or revoke the <literal>REPLICATION</literal> privilege, nor the
-        ability to modify the role properties of such users.  However, it does
-        allow <literal>ALTER ROLE ... SET</literal> and
-        <literal>ALTER ROLE ... RENAME</literal> to be used on
-        <literal>REPLICATION</literal> roles, as well as the use of
-        <literal>COMMENT ON ROLE</literal>,
-        <literal>SECURITY LABEL ON ROLE</literal>,
-        and <literal>DROP ROLE</literal>.
-        Finally, <literal>CREATEROLE</literal> does not
-        confer the ability to grant or revoke the <literal>BYPASSRLS</literal>
-        privilege.
+        但是，<literal>CREATEROLE</literal> 并不赋予创建 <literal>SUPERUSER</literal> 角色的能力，也不赋予对已存在的 <literal>SUPERUSER</literal> 角色的任何权力。
+        此外，<literal>CREATEROLE</literal> 不赋予创建 <literal>REPLICATION</literal> 用户的权力，也不赋予授予或撤销 <literal>REPLICATION</literal> 权限的能力，也不赋予修改此类用户角色属性的能力。但是，它确实允许对 <literal>REPLICATION</literal> 角色使用 <literal>ALTER ROLE ... SET</literal> 和 <literal>ALTER ROLE ... RENAME</literal>，以及使用 <literal>COMMENT ON ROLE</literal>、<literal>SECURITY LABEL ON ROLE</literal> 和 <literal>DROP ROLE</literal>。
+        最后，<literal>CREATEROLE</literal> 不授予授予或撤销 <literal>BYPASSRLS</literal> 权限的能力。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>initiating replication<indexterm><primary>role</primary><secondary>privilege to initiate replication</secondary></indexterm></term>
+      <term>发起复制<indexterm><primary>role</primary><secondary>privilege to initiate replication</secondary></indexterm></term>
       <listitem>
        <para>
-        A role must explicitly be given permission to initiate streaming
-        replication (except for superusers, since those bypass all permission
-        checks). A role used for streaming replication must
-        have <literal>LOGIN</literal> permission as well. To create such a role, use
-        <literal>CREATE ROLE <replaceable>name</replaceable> REPLICATION
-        LOGIN</literal>.
+        角色必须被显式授予发起流复制的权限（超级用户除外，因为它们会绕过所有权限检查）。用于流复制的角色还必须具有 <literal>LOGIN</literal> 权限。要创建这样的角色，请使用 <literal>CREATE ROLE <replaceable>name</replaceable> REPLICATION
+        LOGIN</literal>。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>password<indexterm><primary>password</primary></indexterm></term>
+      <term>密码<indexterm><primary>密码</primary></indexterm></term>
       <listitem>
        <para>
-        A password is only significant if the client authentication
-        method requires the user to supply a password when connecting
-        to the database. The <option>password</option> and
-        <option>md5</option> authentication methods
-        make use of passwords. Database passwords are separate from
-        operating system passwords. Specify a password upon role
-        creation with <literal>CREATE ROLE
-        <replaceable>name</replaceable> PASSWORD '<replaceable>string</replaceable>'</literal>.
+        只有当客户端认证方法要求用户在连接数据库时提供密码时，密码才有意义。<option>password</option> 和 <option>md5</option> 认证方法会使用密码。数据库密码与操作系统密码是分开的。在创建角色时用 <literal>CREATE ROLE
+        <replaceable>name</replaceable> PASSWORD '<replaceable>string</replaceable>'</literal> 指定密码。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>inheritance of privileges<indexterm><primary>role</primary><secondary>privilege to inherit</secondary></indexterm></term>
+      <term>权限继承<indexterm><primary>角色</primary><secondary>继承权限</secondary></indexterm></term>
       <listitem>
        <para>
-        A role inherits the privileges of roles it is a member of, by default.
-        However, to create a role which does not inherit privileges by
-        default, use <literal>CREATE ROLE <replaceable>name</replaceable>
-        NOINHERIT</literal>.  Alternatively, inheritance can be overridden
-        for individual grants by using <literal>WITH INHERIT TRUE</literal>
-        or <literal>WITH INHERIT FALSE</literal>.
+        默认情况下，角色会继承它所属角色的权限。不过，要创建一个默认不继承权限的角色，请使用 <literal>CREATE ROLE <replaceable>name</replaceable>
+        NOINHERIT</literal>。另外，也可以通过使用 <literal>WITH INHERIT TRUE</literal> 或 <literal>WITH INHERIT FALSE</literal> 对单个授权覆盖继承行为。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>bypassing row-level security<indexterm><primary>role</primary><secondary>privilege to bypass</secondary></indexterm></term>
+      <term>绕过行级安全性<indexterm><primary>角色</primary><secondary>绕过权限</secondary></indexterm></term>
       <listitem>
        <para>
-        A role must be explicitly given permission to bypass every row-level security (RLS) policy
-        (except for superusers, since those bypass all permission checks).
-        To create such a role, use <literal>CREATE ROLE <replaceable>name</replaceable> BYPASSRLS</literal> as a superuser.
+        必须显式地授予一个角色绕过每一个行级安全（RLS）策略的权限（超级用户除外，因为超级用户会绕过所有权限检查）。要创建这样一个角色，请以超级用户身份使用 <literal>CREATE ROLE <replaceable>name</replaceable> BYPASSRLS</literal>。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>connection limit<indexterm><primary>role</primary><secondary>privilege to limit connection</secondary></indexterm></term>
+      <term>连接限制<indexterm><primary>角色</primary><secondary>限制连接的权限</secondary></indexterm></term>
       <listitem>
        <para>
-        Connection limit can specify how many concurrent connections a role can make.
-        -1 (the default) means no limit. Specify connection limit upon role creation with
-        <literal>CREATE ROLE <replaceable>name</replaceable> CONNECTION LIMIT '<replaceable>integer</replaceable>'</literal>.
+        连接限制可以指定一个角色能建立多少个并发连接。-1（默认值）表示没有限制。在创建角色时用 <literal>CREATE ROLE <replaceable>name</replaceable> CONNECTION LIMIT '<replaceable>integer</replaceable>'</literal> 指定连接限制。
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    A role's attributes can be modified after creation with
-    <command>ALTER ROLE</command>.<indexterm><primary>ALTER ROLE</primary></indexterm>
-    See the reference pages for the <xref linkend="sql-createrole"/>
-    and <xref linkend="sql-alterrole"/> commands for details.
+    角色的属性可以在创建之后用 <command>ALTER ROLE</command> 修改。<indexterm><primary>ALTER ROLE</primary></indexterm> 有关细节请参阅 <xref linkend="sql-createrole"/> 和 <xref linkend="sql-alterrole"/> 命令的参考页。
    </para>
 
   <para>
-   A role can also have role-specific defaults for many of the run-time
-   configuration settings described in <xref
-   linkend="runtime-config"/>.  For example, if for some reason you
-   want to disable index scans (hint: not a good idea) anytime you
-   connect, you can use:
+   一个角色还可以为 <xref
+   linkend="runtime-config"/> 中描述的许多运行时配置设置提供角色特定的默认值。例如，如果由于某种原因你想在每次连接时禁用索引扫描（提示：这不是个好主意），你可以使用：
 <programlisting>
 ALTER ROLE myname SET enable_indexscan TO off;
 </programlisting>
-   This will save the setting (but not set it immediately).  In
-   subsequent connections by this role it will appear as though
-   <literal>SET enable_indexscan TO off</literal> had been executed
-   just before the session started.
-   You can still alter this setting during the session; it will only
-   be the default. To remove a role-specific default setting, use
-   <literal>ALTER ROLE <replaceable>rolename</replaceable> RESET <replaceable>varname</replaceable></literal>.
-   Note that role-specific defaults attached to roles without
-   <literal>LOGIN</literal> privilege are fairly useless, since they will never
-   be invoked.
+   这会保存该设置（但不会立即设置它）。在该角色后续的连接中，看起来就像在会话开始之前刚刚执行了 <literal>SET enable_indexscan TO off</literal> 一样。你仍然可以在会话期间更改此设置；它只会作为默认值。要移除角色特定的默认设置，请使用 <literal>ALTER ROLE <replaceable>rolename</replaceable> RESET <replaceable>varname</replaceable></literal>。请注意，附加到没有 <literal>LOGIN</literal> 权限的角色上的角色特定默认值相当无用，因为它们永远不会被调用。
   </para>
 
   <para>
-   When a non-superuser creates a role using the <literal>CREATEROLE</literal>
-   privilege, the created role is automatically granted back to the creating
-   user, just as if the bootstrap superuser had executed the command
-   <literal>GRANT created_user TO creating_user WITH ADMIN TRUE, SET FALSE,
-   INHERIT FALSE</literal>. Since a <literal>CREATEROLE</literal> user can
-   only exercise special privileges with regard to an existing role if they
-   have <literal>ADMIN OPTION</literal> on it, this grant is just sufficient
-   to allow a <literal>CREATEROLE</literal> user to administer the roles they
-   created. However, because it is created with <literal>INHERIT FALSE, SET
-   FALSE</literal>, the <literal>CREATEROLE</literal> user doesn't inherit the
-   privileges of the created role, nor can it access the privileges of that
-   role using <literal>SET ROLE</literal>. However, since any user who has
-   <literal>ADMIN OPTION</literal> on a role can grant membership in that
-   role to any other user, the <literal>CREATEROLE</literal> user can gain
-   access to the created role by simply granting that role back to
-   themselves with the <literal>INHERIT</literal> and/or <literal>SET</literal>
-   options. Thus, the fact that privileges are not inherited by default nor
-   is <literal>SET ROLE</literal> granted by default is a safeguard against
-   accidents, not a security feature. Also note that, because this automatic
-   grant is granted by the bootstrap superuser, it cannot be removed or changed by
-   the <literal>CREATEROLE</literal> user; however, any superuser could
-   revoke it, modify it, and/or issue additional such grants to other
-   <literal>CREATEROLE</literal> users. Whichever <literal>CREATEROLE</literal>
-   users have <literal>ADMIN OPTION</literal> on a role at any given time
-   can administer it.
+   当非超级用户使用 <literal>CREATEROLE</literal> 权限创建角色时，所创建的角色会自动授予回创建该角色的用户，就如同引导超级用户执行了命令 <literal>GRANT created_user TO creating_user WITH ADMIN TRUE, SET FALSE,
+   INHERIT FALSE</literal> 一样。由于 <literal>CREATEROLE</literal> 用户只有在对现有角色具有 <literal>ADMIN OPTION</literal> 时才能对该角色行使特殊权限，因此这一授予恰好足以允许 <literal>CREATEROLE</literal> 用户管理其创建的角色。然而，由于该角色是以 <literal>INHERIT FALSE, SET
+   FALSE</literal> 创建的，<literal>CREATEROLE</literal> 用户不会继承所创建角色的权限，也不能使用 <literal>SET ROLE</literal> 访问该角色的权限。不过，由于任何对某个角色具有 <literal>ADMIN OPTION</literal> 的用户都可以将该角色的成员资格授予任何其他用户，<literal>CREATEROLE</literal> 用户只需使用 <literal>INHERIT</literal> 和/或 <literal>SET</literal> 选项将该角色授予回自己，就可以获得对所创建角色的访问权限。因此，默认不继承权限且默认不授予 <literal>SET ROLE</literal> 这一事实，是一种防止意外事故的保障措施，而不是安全特性。另请注意，由于这一自动授予是由引导超级用户授予的，因此 <literal>CREATEROLE</literal> 用户无法移除或更改它；但是，任何超级用户都可以撤销它、修改它，和/或向其他 <literal>CREATEROLE</literal> 用户发出更多此类授予。在任何给定时间，对某个角色具有 <literal>ADMIN OPTION</literal> 的任何 <literal>CREATEROLE</literal> 用户都可以管理该角色。
   </para>
  </sect1>
 
