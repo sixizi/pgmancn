@@ -920,75 +920,53 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
   </sect1>
 
  <sect1 id="hot-standby">
-  <title>Hot Standby</title>
+  <title>热备</title>
 
   <indexterm zone="high-availability">
    <primary>hot standby</primary>
   </indexterm>
 
    <para>
-    Hot standby is the term used to describe the ability to connect to
-    the server and run read-only queries while the server is in archive
-    recovery or standby mode. This
-    is useful both for replication purposes and for restoring a backup
-    to a desired state with great precision.
-    The term hot standby also refers to the ability of the server to move
-    from recovery through to normal operation while users continue running
-    queries and/or keep their connections open.
+    热备（Hot standby）这个术语用于描述在服务器处于归档恢复或备用模式时连接到服务器并运行只读查询的能力。这对于复制目的以及将备份精确恢复到所需状态都很有用。热备这个术语也指服务器在用户继续运行查询和/或保持连接打开的同时，从恢复状态转入正常运行状态的能力。
    </para>
 
    <para>
-    Running queries in hot standby mode is similar to normal query operation,
-    though there are several usage and administrative differences
-    explained below.
+    在热备模式下运行查询与正常的查询操作类似，不过下面会说明若干使用和管理上的差异。
    </para>
 
   <sect2 id="hot-standby-users">
-   <title>User's Overview</title>
+   <title>用户概述</title>
 
    <para>
-    When the <xref linkend="guc-hot-standby"/> parameter is set to true on a
-    standby server, it will begin accepting connections once the recovery has
-    brought the system to a consistent state and be ready for hot standby.
-    All such connections are
-    strictly read-only; not even temporary tables may be written.
+    当备用服务器上的 <xref linkend="guc-hot-standby"/> 参数被设置为 true 时，一旦恢复过程将系统带到一致状态并准备好进行热备，它就会开始接受连接。所有此类连接都是严格只读的；甚至不能写入临时表。
    </para>
 
    <para>
-    The data on the standby takes some time to arrive from the primary server
-    so there will be a measurable delay between primary and standby. Running the
-    same query nearly simultaneously on both primary and standby might therefore
-    return differing results. We say that data on the standby is
-    <firstterm>eventually consistent</firstterm> with the primary.  Once the
-    commit record for a transaction is replayed on the standby, the changes
-    made by that transaction will be visible to any new snapshots taken on
-    the standby.  Snapshots may be taken at the start of each query or at the
-    start of each transaction, depending on the current transaction isolation
-    level.  For more details, see <xref linkend="transaction-iso"/>.
+    备用服务器上的数据需要一些时间才能从主服务器到达，因此主服务器与备用服务器之间会存在可测量的延迟。因此，在主服务器和备用服务器上几乎同时运行相同的查询可能会返回不同的结果。我们说备用服务器上的数据与主服务器是<firstterm>最终一致的</firstterm>。一旦某个事务的提交记录在备用服务器上被重放，该事务所做的更改将对备用服务器上取得的任何新快照可见。快照可以在每个查询开始时或每个事务开始时取得，具体取决于当前的事务隔离级别。更多细节请参见 <xref linkend="transaction-iso"/>。
    </para>
 
    <para>
-    Transactions started during hot standby may issue the following commands:
+    在热备期间启动的事务可以发出以下命令：
 
     <itemizedlist>
      <listitem>
       <para>
-       Query access: <command>SELECT</command>, <command>COPY TO</command>
+       查询访问：<command>SELECT</command>、<command>COPY TO</command>
       </para>
      </listitem>
      <listitem>
       <para>
-       Cursor commands: <command>DECLARE</command>, <command>FETCH</command>, <command>CLOSE</command>
+       游标命令：<command>DECLARE</command>、<command>FETCH</command>、<command>CLOSE</command>
       </para>
      </listitem>
      <listitem>
       <para>
-       Settings: <command>SHOW</command>, <command>SET</command>, <command>RESET</command>
+       设置：<command>SHOW</command>、<command>SET</command>、<command>RESET</command>
       </para>
      </listitem>
      <listitem>
       <para>
-       Transaction management commands:
+       事务管理命令：
         <itemizedlist>
          <listitem>
           <para>
@@ -1002,7 +980,7 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
          </listitem>
          <listitem>
           <para>
-           <command>EXCEPTION</command> blocks and other internal subtransactions
+           <command>EXCEPTION</command> 块及其他内部子事务
           </para>
          </listitem>
         </itemizedlist>
@@ -1010,19 +988,19 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
      </listitem>
      <listitem>
       <para>
-       <command>LOCK TABLE</command>, though only when explicitly in one of these modes:
-       <literal>ACCESS SHARE</literal>, <literal>ROW SHARE</literal> or <literal>ROW EXCLUSIVE</literal>.
+       <command>LOCK TABLE</command>，但仅当显式处于以下模式之一时：
+       <literal>ACCESS SHARE</literal>、<literal>ROW SHARE</literal> 或 <literal>ROW EXCLUSIVE</literal>。
       </para>
      </listitem>
      <listitem>
       <para>
-       Plans and resources: <command>PREPARE</command>, <command>EXECUTE</command>,
-       <command>DEALLOCATE</command>, <command>DISCARD</command>
+       计划和资源：<command>PREPARE</command>、<command>EXECUTE</command>、
+       <command>DEALLOCATE</command>、<command>DISCARD</command>
       </para>
      </listitem>
      <listitem>
       <para>
-       Plugins and extensions: <command>LOAD</command>
+       插件和扩展：<command>LOAD</command>
       </para>
      </listitem>
      <listitem>
@@ -1034,56 +1012,51 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    Transactions started during hot standby will never be assigned a
-    transaction ID and cannot write to the system write-ahead log.
-    Therefore, the following actions will produce error messages:
+    在热备期间启动的事务永远不会被分配事务 ID，也不能写入系统预写式日志。
+    因此，以下操作将产生错误消息：
 
     <itemizedlist>
      <listitem>
       <para>
-       Data Manipulation Language (DML): <command>INSERT</command>,
-       <command>UPDATE</command>, <command>DELETE</command>,
-       <command>MERGE</command>, <command>COPY FROM</command>,
-       <command>TRUNCATE</command>.
-       Note that there are no allowed actions that result in a trigger
-       being executed during recovery.  This restriction applies even to
-       temporary tables, because table rows cannot be read or written without
-       assigning a transaction ID, which is currently not possible in a
-       hot standby environment.
+       数据操纵语言（DML）：<command>INSERT</command>、
+       <command>UPDATE</command>、<command>DELETE</command>、
+       <command>MERGE</command>、<command>COPY FROM</command>、
+       <command>TRUNCATE</command>。
+       请注意，在恢复期间不允许任何会导致触发器被执行的操作。此限制
+       甚至适用于临时表，因为不分配事务 ID 就无法读取或写入表行，而这
+       在热备环境中目前是不可能的。
       </para>
      </listitem>
      <listitem>
       <para>
-       Data Definition Language (DDL): <command>CREATE</command>,
-       <command>DROP</command>, <command>ALTER</command>, <command>COMMENT</command>.
-       This restriction applies even to temporary tables, because carrying
-       out these operations would require updating the system catalog tables.
+       数据定义语言（DDL）：<command>CREATE</command>、
+       <command>DROP</command>、<command>ALTER</command>、<command>COMMENT</command>。
+       此限制甚至适用于临时表，因为执行这些操作需要更新系统目录表。
       </para>
      </listitem>
      <listitem>
       <para>
-       <command>SELECT ... FOR SHARE | UPDATE</command>, because row locks cannot be
-       taken without updating the underlying data files.
+       <command>SELECT ... FOR SHARE | UPDATE</command>，因为不更新底层数据文件就无法取得行锁。
       </para>
      </listitem>
      <listitem>
       <para>
-       Rules on <command>SELECT</command> statements that generate DML commands.
+       针对会生成 DML 命令的 <command>SELECT</command> 语句的规则。
       </para>
      </listitem>
      <listitem>
       <para>
-       <command>LOCK</command> that explicitly requests a mode higher than <literal>ROW EXCLUSIVE MODE</literal>.
+       显式请求高于 <literal>ROW EXCLUSIVE MODE</literal> 的模式的 <command>LOCK</command>。
       </para>
      </listitem>
      <listitem>
       <para>
-       <command>LOCK</command> in short default form, since it requests <literal>ACCESS EXCLUSIVE MODE</literal>.
+       采用简短默认形式的 <command>LOCK</command>，因为它请求的是 <literal>ACCESS EXCLUSIVE MODE</literal>。
       </para>
      </listitem>
      <listitem>
       <para>
-       Transaction management commands that explicitly set non-read-only state:
+       显式设置非只读状态的事务管理命令：
         <itemizedlist>
          <listitem>
           <para>
@@ -1107,15 +1080,13 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
      </listitem>
      <listitem>
       <para>
-       Two-phase commit commands: <command>PREPARE TRANSACTION</command>,
-       <command>COMMIT PREPARED</command>, <command>ROLLBACK PREPARED</command>
-       because even read-only transactions need to write WAL in the
-       prepare phase (the first phase of two phase commit).
+       两阶段提交命令：<command>PREPARE TRANSACTION</command>、<command>COMMIT PREPARED</command>、<command>ROLLBACK PREPARED</command>，
+       因为即使是只读事务也需要在准备阶段（两阶段提交的第一阶段）写入 WAL。
       </para>
      </listitem>
      <listitem>
       <para>
-       Sequence updates: <function>nextval()</function>, <function>setval()</function>
+       序列更新：<function>nextval()</function>、<function>setval()</function>
       </para>
      </listitem>
      <listitem>
@@ -1127,119 +1098,64 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    In normal operation, <quote>read-only</quote> transactions are allowed to
-    use <command>LISTEN</command> and <command>NOTIFY</command>,
-    so hot standby sessions operate under slightly tighter
-    restrictions than ordinary read-only sessions.  It is possible that some
-    of these restrictions might be loosened in a future release.
+    在正常运行中，<quote>只读</quote>事务允许使用 <command>LISTEN</command> 和 <command>NOTIFY</command>，因此热备会话所受到的限制比普通只读会话略为严格。这些限制中的某些可能会在未来的版本中放宽。
    </para>
 
    <para>
-    During hot standby, the parameter <varname>transaction_read_only</varname> is always
-    true and may not be changed.  But as long as no attempt is made to modify
-    the database, connections during hot standby will act much like any other
-    database connection.  If failover or switchover occurs, the database will
-    switch to normal processing mode.  Sessions will remain connected while the
-    server changes mode.  Once hot standby finishes, it will be possible to
-    initiate read-write transactions (even from a session begun during
-    hot standby).
+    在热备期间，参数 <varname>transaction_read_only</varname> 始终为真且不可更改。但只要不尝试修改数据库，热备期间的连接行为就与任何其他数据库连接非常相似。如果发生故障转移或切换，数据库将切换到正常处理模式。在服务器更改模式期间，会话将保持连接。一旦热备结束，就可以启动读写事务（甚至可以从热备期间开始的会话中启动）。
    </para>
 
    <para>
-    Users can determine whether hot standby is currently active for their
-    session by issuing <command>SHOW in_hot_standby</command>.
-    (In server versions before 14, the <varname>in_hot_standby</varname>
-    parameter did not exist; a workable substitute method for older servers
-    is <command>SHOW transaction_read_only</command>.)  In addition, a set of
-    functions (<xref linkend="functions-recovery-info-table"/>) allow users to
-    access information about the standby server. These allow you to write
-    programs that are aware of the current state of the database. These
-    can be used to monitor the progress of recovery, or to allow you to
-    write complex programs that restore the database to particular states.
+    用户可以通过发出 <command>SHOW in_hot_standby</command> 来确定其会话当前是否处于热备状态。（在 14 之前的服务器版本中，<varname>in_hot_standby</varname> 参数不存在；对于较旧的服务器，一种可行的替代方法是 <command>SHOW transaction_read_only</command>。）此外，一组函数（<xref linkend="functions-recovery-info-table"/>）允许用户访问有关备用服务器的信息。这些函数使您能够编写了解数据库当前状态的程序。它们可用于监控恢复进度，或让您编写将数据库恢复到特定状态的复杂程序。
    </para>
   </sect2>
 
   <sect2 id="hot-standby-conflict">
-   <title>Handling Query Conflicts</title>
+   <title>处理查询冲突</title>
 
    <para>
-    The primary and standby servers are in many ways loosely connected. Actions
-    on the primary will have an effect on the standby. As a result, there is
-    potential for negative interactions or conflicts between them. The easiest
-    conflict to understand is performance: if a huge data load is taking place
-    on the primary then this will generate a similar stream of WAL records on the
-    standby, so standby queries may contend for system resources, such as I/O.
+    主服务器和备用服务器在许多方面只是松散连接的。主服务器上的操作会对备用服务器产生影响。因此，它们之间可能存在负面交互或冲突。最容易理解的冲突是性能方面的：如果主服务器上正在进行大量数据加载，那么这将在备用服务器上生成类似的 WAL 记录流，因此备用服务器上的查询可能会争用系统资源，例如 I/O。
    </para>
 
    <para>
-    There are also additional types of conflict that can occur with hot standby.
-    These conflicts are <emphasis>hard conflicts</emphasis> in the sense that queries
-    might need to be canceled and, in some cases, sessions disconnected to resolve them.
-    The user is provided with several ways to handle these
-    conflicts. Conflict cases include:
+    热备期间还可能发生其他类型的冲突。这些冲突属于<emphasis>硬冲突</emphasis>，也就是说可能需要取消查询，某些情况下还需要断开会话才能解决。系统为用户提供了若干种处理这些冲突的方法。冲突情形包括：
 
       <itemizedlist>
        <listitem>
         <para>
-         Access Exclusive locks taken on the primary server, including both
-         explicit <command>LOCK</command> commands and various <acronym>DDL</acronym>
-         actions, conflict with table accesses in standby queries.
+         在主服务器上取得的 Access Exclusive 锁（包括显式的 <command>LOCK</command> 命令以及各种 <acronym>DDL</acronym> 操作）会与备库查询中的表访问发生冲突。
         </para>
        </listitem>
        <listitem>
         <para>
-         Dropping a tablespace on the primary conflicts with standby queries
-         using that tablespace for temporary work files.
+         在主库上删除表空间会与备库上使用该表空间存放临时工作文件的查询发生冲突。
         </para>
        </listitem>
        <listitem>
         <para>
-         Dropping a database on the primary conflicts with sessions connected
-         to that database on the standby.
+         在主库上删除数据库会与备库上连接到该数据库的会话发生冲突。
         </para>
        </listitem>
        <listitem>
         <para>
-         Application of a vacuum cleanup record from WAL conflicts with
-         standby transactions whose snapshots can still <quote>see</quote> any of
-         the rows to be removed.
+         应用来自 WAL 的 vacuum 清理记录会与快照仍能<quote>看到</quote>待删除行的备库事务发生冲突。
         </para>
        </listitem>
        <listitem>
         <para>
-         Application of a vacuum cleanup record from WAL conflicts with
-         queries accessing the target page on the standby, whether or not
-         the data to be removed is visible.
+         应用来自 WAL 的 vacuum 清理记录会与备库上访问目标页的查询发生冲突，无论待删除的数据是否可见。
         </para>
        </listitem>
       </itemizedlist>
    </para>
 
    <para>
-    On the primary server, these cases simply result in waiting; and the
-    user might choose to cancel either of the conflicting actions.  However,
-    on the standby there is no choice: the WAL-logged action already occurred
-    on the primary so the standby must not fail to apply it.  Furthermore,
-    allowing WAL application to wait indefinitely may be very undesirable,
-    because the standby's state will become increasingly far behind the
-    primary's.  Therefore, a mechanism is provided to forcibly cancel standby
-    queries that conflict with to-be-applied WAL records.
+    在主服务器上，这些情况只会导致等待；用户可以选择取消两个冲突操作中的任意一个。然而，在备机上则没有选择：已写入 WAL 的操作已经在主服务器上发生，因此备机不能应用失败。此外，允许 WAL 应用无限期等待可能非常不可取，因为备机的状态会越来越落后于主服务器。因此，提供了一种机制来强制取消与待应用 WAL 记录冲突的备机查询。
    </para>
 
    <para>
-    An example of the problem situation is an administrator on the primary
-    server running <command>DROP TABLE</command> on a table that is currently being
-    queried on the standby server.  Clearly the standby query cannot continue
-    if the <command>DROP TABLE</command> is applied on the standby. If this situation
-    occurred on the primary, the <command>DROP TABLE</command> would wait until the
-    other query had finished. But when <command>DROP TABLE</command> is run on the
-    primary, the primary doesn't have information about what queries are
-    running on the standby, so it will not wait for any such standby
-    queries. The WAL change records come through to the standby while the
-    standby query is still running, causing a conflict.  The standby server
-    must either delay application of the WAL records (and everything after
-    them, too) or else cancel the conflicting query so that the <command>DROP
-    TABLE</command> can be applied.
+    问题情形的一个例子是：主服务器上的管理员对某个表执行 <command>DROP TABLE</command>，而该表当前正在备机服务器上被查询。显然，如果 <command>DROP TABLE</command> 在备机上被应用，备机查询就无法继续。如果这种情况发生在主服务器上，<command>DROP TABLE</command> 会等待另一个查询完成。但是当 <command>DROP TABLE</command> 在主服务器上运行时，主服务器并不知道备机上正在运行哪些查询，因此它不会等待任何此类备机查询。WAL 变更记录在备机查询仍在运行时传到备机，从而导致冲突。备机服务器必须要么延迟 WAL 记录的应用（以及它们之后的所有内容），要么取消冲突查询，以便可以应用 <command>DROP
+    TABLE</command>。
    </para>
 
    <para>
@@ -1258,50 +1174,23 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    In a standby server that exists primarily for high availability, it's
-    best to set the delay parameters relatively short, so that the server
-    cannot fall far behind the primary due to delays caused by standby
-    queries.  However, if the standby server is meant for executing
-    long-running queries, then a high or even infinite delay value may be
-    preferable.  Keep in mind however that a long-running query could
-    cause other sessions on the standby server to not see recent changes
-    on the primary, if it delays application of WAL records.
+    在主要用于高可用性的后备服务器上，最好将延迟参数设置得相对较短，这样服务器就不会因为后备查询造成的延迟而落后主服务器太多。不过，如果后备服务器是用来执行长时间运行的查询的，那么较高的甚至无限的延迟值可能更合适。但请记住，如果长时间运行的查询延迟了 WAL 记录的应用，它可能导致后备服务器上的其他会话看不到主服务器上的最新更改。
    </para>
 
    <para>
-    Once the delay specified by <varname>max_standby_archive_delay</varname> or
-    <varname>max_standby_streaming_delay</varname> has been exceeded, conflicting
-    queries will be canceled.  This usually results just in a cancellation
-    error, although in the case of replaying a <command>DROP DATABASE</command>
-    the entire conflicting session will be terminated.  Also, if the conflict
-    is over a lock held by an idle transaction, the conflicting session is
-    terminated (this behavior might change in the future).
+    一旦超过 <varname>max_standby_archive_delay</varname> 或 <varname>max_standby_streaming_delay</varname> 指定的延迟，冲突的查询将被取消。这通常只会导致一个取消错误，不过在重放 <command>DROP DATABASE</command> 的情况下，整个冲突会话将被终止。此外，如果冲突是针对一个空闲事务持有的锁，则冲突会话会被终止（此行为将来可能会改变）。
    </para>
 
    <para>
-    Canceled queries may be retried immediately (after beginning a new
-    transaction, of course).  Since query cancellation depends on
-    the nature of the WAL records being replayed, a query that was
-    canceled may well succeed if it is executed again.
+    被取消的查询可以立即重试（当然，要在开始一个新事务之后）。由于查询取消取决于正在重放的 WAL 记录的性质，一个被取消的查询如果再次执行，很可能会成功。
    </para>
 
    <para>
-    Keep in mind that the delay parameters are compared to the elapsed time
-    since the WAL data was received by the standby server.  Thus, the grace
-    period allowed to any one query on the standby is never more than the
-    delay parameter, and could be considerably less if the standby has already
-    fallen behind as a result of waiting for previous queries to complete, or
-    as a result of being unable to keep up with a heavy update load.
+    请记住，延迟参数是与自后备服务器收到 WAL 数据以来经过的时间进行比较的。因此，后备服务器上任何一个查询所允许的宽限期都不会超过延迟参数，而且如果后备服务器由于等待之前的查询完成或由于无法跟上繁重的更新负载而已经落后，则宽限期可能会短得多。
    </para>
 
    <para>
-    The most common reason for conflict between standby queries and WAL replay
-    is <quote>early cleanup</quote>.  Normally, <productname>PostgreSQL</productname> allows
-    cleanup of old row versions when there are no transactions that need to
-    see them to ensure correct visibility of data according to MVCC rules.
-    However, this rule can only be applied for transactions executing on the
-    primary.  So it is possible that cleanup on the primary will remove row
-    versions that are still visible to a transaction on the standby.
+    后备查询与 WAL 重放之间发生冲突最常见的原因是<quote>过早清理</quote>。正常情况下，当没有事务需要看到旧行版本以确保按照 MVCC 规则正确可见数据时，<productname>PostgreSQL</productname> 允许清理这些旧行版本。然而，这条规则只能应用于在主服务器上执行的事务。因此，主服务器上的清理有可能删除那些对后备服务器上的事务仍然可见的行版本。
    </para>
 
    <para>
@@ -1318,64 +1207,36 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    Users should be clear that tables that are regularly and heavily updated
-    on the primary server will quickly cause cancellation of longer running
-    queries on the standby. In such cases the setting of a finite value for
-    <varname>max_standby_archive_delay</varname> or
-    <varname>max_standby_streaming_delay</varname> can be considered similar to
-    setting <varname>statement_timeout</varname>.
+    用户应当清楚，在主服务器上被定期且大量更新的表会很快导致后备服务器上运行时间较长的查询被取消。在这种情况下，为 <varname>max_standby_archive_delay</varname> 或 <varname>max_standby_streaming_delay</varname> 设置有限值可以视为类似于设置 <varname>statement_timeout</varname>。
    </para>
 
    <para>
-    Remedial possibilities exist if the number of standby-query cancellations
-    is found to be unacceptable.  The first option is to set the parameter
-    <varname>hot_standby_feedback</varname>, which prevents <command>VACUUM</command> from
-    removing recently-dead rows and so cleanup conflicts do not occur.
-    If you do this, you
-    should note that this will delay cleanup of dead rows on the primary,
-    which may result in undesirable table bloat. However, the cleanup
-    situation will be no worse than if the standby queries were running
-    directly on the primary server, and you are still getting the benefit of
-    off-loading execution onto the standby.
-    If standby servers connect and disconnect frequently, you
-    might want to make adjustments to handle the period when
-    <varname>hot_standby_feedback</varname> feedback is not being provided.
-    For example, consider increasing <varname>max_standby_archive_delay</varname>
-    so that queries are not rapidly canceled by conflicts in WAL archive
-    files during disconnected periods.  You should also consider increasing
-    <varname>max_standby_streaming_delay</varname> to avoid rapid cancellations
-    by newly-arrived streaming WAL entries after reconnection.
+    如果发现后备查询被取消的次数不可接受，则存在补救办法。第一种选择是设置参数 <varname>hot_standby_feedback</varname>，这会阻止 <command>VACUUM</command> 移除最近死亡的行，因此不会发生清理冲突。如果这样做，你应当注意，这会延迟主服务器上死亡行的清理，可能导致不理想的表膨胀。不过，清理状况不会比后备查询直接在主服务器上运行时更糟，而且你仍然能获得将执行卸载到后备服务器的好处。如果后备服务器频繁连接和断开，你可能需要做出调整，以应对未提供 <varname>hot_standby_feedback</varname> 反馈的时期。例如，考虑增大 <varname>max_standby_archive_delay</varname>，以便在断开期间查询不会因 WAL 归档文件中的冲突而被迅速取消。你还应考虑增大 <varname>max_standby_streaming_delay</varname>，以避免重新连接后新到达的流式 WAL 条目导致迅速取消。
    </para>
 
    <para>
-    The number of query cancels and the reason for them can be viewed using
-    the <structname>pg_stat_database_conflicts</structname> system view on the standby
-    server. The <structname>pg_stat_database</structname> system view also contains
-    summary information.
+    查询取消的次数及其原因可以通过后备服务器上的 <structname>pg_stat_database_conflicts</structname> 系统视图查看。<structname>pg_stat_database</structname> 系统视图也包含汇总信息。
    </para>
 
    <para>
-    Users can control whether a log message is produced when WAL replay is waiting
-    longer than <varname>deadlock_timeout</varname> for conflicts. This
-    is controlled by the <xref linkend="guc-log-recovery-conflict-waits"/> parameter.
+    用户可以控制当 WAL 重放因冲突等待时间超过 <varname>deadlock_timeout</varname> 时是否产生日志消息。这由 <xref linkend="guc-log-recovery-conflict-waits"/> 参数控制。
    </para>
   </sect2>
 
   <sect2 id="hot-standby-admin">
-   <title>Administrator's Overview</title>
+   <title>管理员概述</title>
 
    <para>
-    If <varname>hot_standby</varname> is <literal>on</literal> in <filename>postgresql.conf</filename>
-    (the default value) and there is a
-    <link linkend="file-standby-signal"><filename>standby.signal</filename></link><indexterm><primary>standby.signal</primary><secondary>for hot standby</secondary></indexterm>
-    file present, the server will run in hot standby mode.
-    However, it may take some time for hot standby connections to be allowed,
-    because the server will not accept connections until it has completed
-    sufficient recovery to provide a consistent state against which queries
-    can run.  During this period,
-    clients that attempt to connect will be refused with an error message.
-    To confirm the server has come up, either loop trying to connect from
-    the application, or look for these messages in the server logs:
+    如果 <varname>hot_standby</varname> 在 <filename>postgresql.conf</filename> 中为 <literal>on</literal>
+    （默认值），并且存在
+    <link linkend="file-standby-signal"><filename>standby.signal</filename></link><indexterm><primary>standby.signal</primary><secondary>用于热备</secondary></indexterm>
+    文件，服务器将以热备模式运行。
+    不过，允许热备连接可能需要等待一段时间，
+    因为服务器在完成足够的恢复、能够提供可运行查询的一致性状态之前，
+    不会接受连接。在此期间，
+    尝试连接的客户端会被拒绝并收到一条错误消息。
+    要确认服务器已经启动，可以从应用程序中循环尝试连接，
+    或者在服务器日志中查找以下消息：
 
 <programlisting>
 LOG:  entering standby mode
@@ -1386,43 +1247,39 @@ LOG:  consistent recovery state reached
 LOG:  database system is ready to accept read-only connections
 </programlisting>
 
-    Consistency information is recorded once per checkpoint on the primary.
-    It is not possible to enable hot standby when reading WAL
-    written during a period when <varname>wal_level</varname> was not set to
-    <literal>replica</literal> or <literal>logical</literal> on the primary.
-    Even after reaching a consistent state, the recovery snapshot may not
-    be ready for hot standby if both of the following conditions are met,
-    delaying accepting read-only connections.  To enable hot standby,
-    long-lived write transactions with more than 64 subtransactions
-    need to be closed on the primary.
+    一致性信息在主库上每个检查点记录一次。
+    如果在主库上 <varname>wal_level</varname> 未设置为
+    <literal>replica</literal> 或 <literal>logical</literal> 的期间写入了 WAL，
+    那么读取这些 WAL 时无法启用热备。
+    即使已经达到一致状态，如果同时满足以下两个条件，
+    恢复快照也可能尚未准备好用于热备，
+    从而延迟接受只读连接。要启用热备，
+    需要在主库上关闭子事务超过 64 个的长期写事务。
 
       <itemizedlist>
        <listitem>
         <para>
-         A write transaction has more than 64 subtransactions
+         一个写事务拥有超过 64 个子事务
         </para>
        </listitem>
        <listitem>
         <para>
-         Very long-lived write transactions
+         生命周期非常长的写事务
         </para>
        </listitem>
       </itemizedlist>
 
-    If you are running file-based log shipping ("warm standby"), you might need
-    to wait until the next WAL file arrives, which could be as long as the
-    <varname>archive_timeout</varname> setting on the primary.
+    如果您运行的是基于文件的日志传送（“温备”），可能需要
+    等到下一个 WAL 文件到达，这段等待时间可能长达主库上的
+    <varname>archive_timeout</varname> 设置值。
    </para>
 
    <para>
-    The settings of some parameters determine the size of shared memory for
-    tracking transaction IDs, locks, and prepared transactions.  These shared
-    memory structures must be no smaller on a standby than on the primary in
-    order to ensure that the standby does not run out of shared memory during
-    recovery.  For example, if the primary had used a prepared transaction but
-    the standby had not allocated any shared memory for tracking prepared
-    transactions, then recovery could not continue until the standby's
-    configuration is changed.  The parameters affected are:
+    某些参数的设置决定了用于跟踪事务 ID、锁和预备事务的共享内存大小。
+    为了保证备库在恢复期间不会耗尽共享内存，这些共享内存结构在备库上
+    不能小于主库上的相应结构。例如，如果主库使用过预备事务，
+    而备库没有为跟踪预备事务分配任何共享内存，
+    那么在更改备库的配置之前，恢复将无法继续。受影响的参数包括：
 
       <itemizedlist>
        <listitem>
@@ -1452,24 +1309,11 @@ LOG:  database system is ready to accept read-only connections
        </listitem>
       </itemizedlist>
 
-    The easiest way to ensure this does not become a problem is to have these
-    parameters set on the standbys to values equal to or greater than on the
-    primary.  Therefore, if you want to increase these values, you should do
-    so on all standby servers first, before applying the changes to the
-    primary server.  Conversely, if you want to decrease these values, you
-    should do so on the primary server first, before applying the changes to
-    all standby servers.  Keep in mind that when a standby is promoted, it
-    becomes the new reference for the required parameter settings for the
-    standbys that follow it.  Therefore, to avoid this becoming a problem
-    during a switchover or failover, it is recommended to keep these settings
-    the same on all standby servers.
+    确保这不会成为问题的最简单方法，是在备机上将这些参数设置为等于或大于主机的值。因此，如果你想增大这些值，应当先在所有备用服务器上进行更改，然后再对主服务器应用更改。反之，如果你想减小这些值，应当先在主服务器上进行更改，然后再对所有备用服务器应用更改。请记住，当备机被提升时，它将成为其后续备机所需参数设置的新参照。因此，为避免在切换或故障转移期间出现问题，建议在所有备用服务器上保持这些设置相同。
    </para>
 
    <para>
-    The WAL tracks changes to these parameters on the
-    primary.  If a hot standby processes WAL that indicates that the current
-    value on the primary is higher than its own value, it will log a warning
-    and pause recovery, for example:
+    WAL 会跟踪主机上对这些参数的更改。如果热备机处理到 WAL 表明主机上的当前值高于其自身的值时，它将记录一条警告并暂停恢复，例如：
 <screen>
 WARNING:  hot standby is not possible because of insufficient parameter settings
 DETAIL:  max_connections = 80 is a lower setting than on the primary server, where its value was 100.
@@ -1477,11 +1321,7 @@ LOG:  recovery has paused
 DETAIL:  If recovery is unpaused, the server will shut down.
 HINT:  You can then restart the server after making the necessary configuration changes.
 </screen>
-    At that point, the settings on the standby need to be updated and the
-    instance restarted before recovery can continue.  If the standby is not a
-    hot standby, then when it encounters the incompatible parameter change, it
-    will shut down immediately without pausing, since there is then no value
-    in keeping it up.
+此时需要更新备机上的设置并重启该实例，恢复才能继续。如果该备机不是热备机，那么当它遇到不兼容的参数更改时，它会立即关闭而不会暂停，因为此时保持其运行已没有意义。
    </para>
 
    <para>
@@ -1497,78 +1337,55 @@ HINT:  You can then restart the server after making the necessary configuration 
    </para>
 
    <para>
-    Transaction status "hint bits" written on the primary are not WAL-logged,
-    so data on the standby will likely re-write the hints again on the standby.
-    Thus, the standby server will still perform disk writes even though
-    all users are read-only; no changes occur to the data values
-    themselves.  Users will still write large sort temporary files and
-    re-generate relcache info files, so no part of the database
-    is truly read-only during hot standby mode.
-    Note also that writes to remote databases using
-    <application>dblink</application> module, and other operations outside the
-    database using PL functions will still be possible, even though the
-    transaction is read-only locally.
+    主库上写入的事务状态“提示位”不会记录到 WAL 中，因此备库上的数据很可能会在备库上再次重写这些提示位。因此，即使所有用户都是只读的，备库服务器仍然会执行磁盘写入；数据值本身不会发生任何变化。用户仍然会写入大型排序临时文件并重新生成 relcache 信息文件，因此在热备模式下数据库的任何部分都不是真正只读的。另请注意，即使事务在本地是只读的，仍然可以使用 <application>dblink</application> 模块向远程数据库写入，以及使用 PL 函数执行数据库之外的其他操作。
    </para>
 
    <para>
-    The following types of administration commands are not accepted
-    during recovery mode:
+    在恢复模式下不接受以下类型的管理命令：
 
       <itemizedlist>
        <listitem>
         <para>
-         Data Definition Language (DDL): e.g., <command>CREATE INDEX</command>
+         数据定义语言（DDL）：例如 <command>CREATE INDEX</command>
         </para>
        </listitem>
        <listitem>
         <para>
-         Privilege and Ownership: <command>GRANT</command>, <command>REVOKE</command>,
-         <command>REASSIGN</command>
+         权限和所有权：<command>GRANT</command>、<command>REVOKE</command>、<command>REASSIGN</command>
         </para>
        </listitem>
        <listitem>
         <para>
-         Maintenance commands: <command>ANALYZE</command>, <command>VACUUM</command>,
-         <command>CLUSTER</command>, <command>REINDEX</command>
+         维护命令：<command>ANALYZE</command>、<command>VACUUM</command>、<command>CLUSTER</command>、<command>REINDEX</command>
         </para>
        </listitem>
       </itemizedlist>
    </para>
 
    <para>
-    Again, note that some of these commands are actually allowed during
-    "read only" mode transactions on the primary.
+    再次提醒，其中某些命令在主库上的“只读”模式事务中实际上是允许的。
    </para>
 
    <para>
-    As a result, you cannot create additional indexes that exist solely
-    on the standby, nor statistics that exist solely on the standby.
-    If these administration commands are needed, they should be executed
-    on the primary, and eventually those changes will propagate to the
-    standby.
+    因此，你无法创建仅存在于备库上的额外索引，也无法创建仅存在于备库上的统计信息。
+    如果需要执行这些管理命令，应在主库上执行，最终这些更改会传播到备库。
    </para>
 
    <para>
     <function>pg_cancel_backend()</function>
-    and <function>pg_terminate_backend()</function> will work on user backends,
-    but not the startup process, which performs
-    recovery. <structname>pg_stat_activity</structname> does not show
-    recovering transactions as active. As a result,
-    <structname>pg_prepared_xacts</structname> is always empty during
-    recovery. If you wish to resolve in-doubt prepared transactions, view
-    <literal>pg_prepared_xacts</literal> on the primary and issue commands to
-    resolve transactions there or resolve them after the end of recovery.
+    和 <function>pg_terminate_backend()</function> 将在用户后端上工作，
+    但不会在启动进程（执行恢复的进程）上工作。<structname>pg_stat_activity</structname> 不会将
+    正在恢复的事务显示为活动状态。因此，
+    在恢复期间 <structname>pg_prepared_xacts</structname> 始终为空。如果你希望解决存疑的预备事务，请在主库上查看
+    <literal>pg_prepared_xacts</literal> 并在那里发出命令来解决事务，或者在恢复结束后再解决它们。
    </para>
 
    <para>
-    <structname>pg_locks</structname> will show locks held by backends,
-    as normal. <structname>pg_locks</structname> also shows
-    a virtual transaction managed by the startup process that owns all
-    <literal>AccessExclusiveLocks</literal> held by transactions being replayed by recovery.
-    Note that the startup process does not acquire locks to
-    make database changes, and thus locks other than <literal>AccessExclusiveLocks</literal>
-    do not show in <structname>pg_locks</structname> for the Startup
-    process; they are just presumed to exist.
+    <structname>pg_locks</structname> 将照常显示后端持有的锁。
+    <structname>pg_locks</structname> 还会显示由启动进程管理的一个虚拟事务，该事务拥有恢复过程重放的事务所持有的所有
+    <literal>AccessExclusiveLocks</literal>。
+    请注意，启动进程不会为修改数据库而获取锁，因此在 <structname>pg_locks</structname> 中
+    不会显示启动进程持有的 <literal>AccessExclusiveLocks</literal> 以外的锁；这些锁只是被假定为存在。
    </para>
 
    <para>
@@ -1582,176 +1399,111 @@ HINT:  You can then restart the server after making the necessary configuration 
    </para>
 
    <para>
-    WAL file control commands will not work during recovery,
-    e.g., <function>pg_backup_start</function>, <function>pg_switch_wal</function> etc.
+    WAL 文件控制命令在恢复期间将无法工作，
+    例如 <function>pg_backup_start</function>、<function>pg_switch_wal</function> 等。
    </para>
 
    <para>
-    Dynamically loadable modules work, including <structname>pg_stat_statements</structname>.
+    动态可加载模块可以工作，包括 <structname>pg_stat_statements</structname>。
    </para>
 
    <para>
-    Advisory locks work normally in recovery, including deadlock detection.
-    Note that advisory locks are never WAL logged, so it is impossible for
-    an advisory lock on either the primary or the standby to conflict with WAL
-    replay. Nor is it possible to acquire an advisory lock on the primary
-    and have it initiate a similar advisory lock on the standby. Advisory
-    locks relate only to the server on which they are acquired.
+    咨询锁在恢复期间正常工作，包括死锁检测。
+    注意，咨询锁从不记录 WAL，因此主库或备库上的咨询锁不可能与 WAL 重放冲突。也不可能在主库上获取咨询锁并让其在备库上发起类似的咨询锁。咨询锁只与获取它的服务器相关。
    </para>
 
    <para>
-    Trigger-based replication systems such as <productname>Slony</productname>,
-    <productname>Londiste</productname> and <productname>Bucardo</productname> won't run on the
-    standby at all, though they will run happily on the primary server as
-    long as the changes are not sent to standby servers to be applied.
-    WAL replay is not trigger-based so you cannot relay from the
-    standby to any system that requires additional database writes or
-    relies on the use of triggers.
+    基于触发器的复制系统（例如 <productname>Slony</productname>、<productname>Londiste</productname> 和 <productname>Bucardo</productname>）根本不会在备库上运行，不过只要更改不发送到备库去应用，它们就会在主库服务器上正常运行。WAL 重放不是基于触发器的，因此你无法从备库中继到任何需要额外数据库写入或依赖触发器使用的系统。
    </para>
 
    <para>
-    New OIDs cannot be assigned, though some <acronym>UUID</acronym> generators may still
-    work as long as they do not rely on writing new status to the database.
+    不能分配新的 OID，不过某些 <acronym>UUID</acronym> 生成器只要不依赖于向数据库写入新状态，仍可能正常工作。
    </para>
 
    <para>
-    Currently, temporary table creation is not allowed during read-only
-    transactions, so in some cases existing scripts will not run correctly.
-    This restriction might be relaxed in a later release. This is
-    both an SQL standard compliance issue and a technical issue.
+    目前，只读事务期间不允许创建临时表，因此在某些情况下现有脚本将无法正确运行。此限制可能会在后续版本中放宽。这既是 SQL 标准符合性问题，也是技术问题。
    </para>
 
    <para>
-    <command>DROP TABLESPACE</command> can only succeed if the tablespace is empty.
-    Some standby users may be actively using the tablespace via their
-    <varname>temp_tablespaces</varname> parameter. If there are temporary files in the
-    tablespace, all active queries are canceled to ensure that temporary
-    files are removed, so the tablespace can be removed and WAL replay
-    can continue.
+    只有当表空间为空时 <command>DROP TABLESPACE</command> 才能成功。某些备库用户可能通过其 <varname>temp_tablespaces</varname> 参数正在积极使用该表空间。如果表空间中有临时文件，所有活动查询都会被取消以确保临时文件被删除，从而可以移除该表空间并继续 WAL 重放。
    </para>
 
    <para>
-    Running <command>DROP DATABASE</command> or <command>ALTER DATABASE ... SET
-    TABLESPACE</command> on the primary
-    will generate a WAL entry that will cause all users connected to that
-    database on the standby to be forcibly disconnected. This action occurs
-    immediately, whatever the setting of
-    <varname>max_standby_streaming_delay</varname>. Note that
-    <command>ALTER DATABASE ... RENAME</command> does not disconnect users, which
-    in most cases will go unnoticed, though might in some cases cause a
-    program confusion if it depends in some way upon database name.
+    在主库上运行 <command>DROP DATABASE</command> 或 <command>ALTER DATABASE ... SET
+    TABLESPACE</command> 会生成一条 WAL 记录，该记录将导致备库上连接到该数据库的所有用户被强制断开连接。无论 <varname>max_standby_streaming_delay</varname> 的设置如何，此操作都会立即发生。注意，<command>ALTER DATABASE ... RENAME</command> 不会断开用户连接，在大多数情况下这不会被注意到，不过在某些情况下，如果程序在某种程度上依赖于数据库名称，则可能会引起程序混乱。
    </para>
 
    <para>
-    In normal (non-recovery) mode, if you issue <command>DROP USER</command> or <command>DROP ROLE</command>
-    for a role with login capability while that user is still connected then
-    nothing happens to the connected user &mdash; they remain connected. The user cannot
-    reconnect however. This behavior applies in recovery also, so a
-    <command>DROP USER</command> on the primary does not disconnect that user on the standby.
+    在正常（非恢复）模式下，如果你对一个具有登录能力的角色执行 <command>DROP USER</command> 或 <command>DROP ROLE</command>，而该用户仍处于连接状态，那么已连接的用户不会发生任何事情 &mdash; 他们保持连接。但是该用户无法重新连接。此行为在恢复期间同样适用，因此在主库上执行 <command>DROP USER</command> 不会断开备库上的该用户。
    </para>
 
    <para>
-    The cumulative statistics system is active during recovery. All scans,
-    reads, blocks, index usage, etc., will be recorded normally on the
-    standby. However, WAL replay will not increment relation and database
-    specific counters. I.e. replay will not increment
-    <structname>pg_stat_all_tables</structname> columns (like <structfield>n_tup_ins</structfield>),
-    nor will reads or writes performed by the startup process be tracked in the
-    <structname>pg_statio_</structname> views, nor will associated
-    <structname>pg_stat_database</structname> columns be incremented.
+    累积统计系统在恢复期间是活动的。所有扫描、读取、块、索引使用等都会在备库上正常记录。但是，WAL 重放不会增加关系和数据库特定的计数器。也就是说，重放不会增加 <structname>pg_stat_all_tables</structname> 列（例如 <structfield>n_tup_ins</structfield>），启动进程执行的读或写也不会在 <structname>pg_statio_</structname> 视图中被跟踪，相关的 <structname>pg_stat_database</structname> 列也不会被增加。
    </para>
 
    <para>
-    Autovacuum is not active during recovery.  It will start normally at the
-    end of recovery.
+    自动清理在恢复期间不活动。它将在恢复结束时正常启动。
    </para>
 
    <para>
-    The checkpointer process and the background writer process are active during
-    recovery. The checkpointer process will perform restartpoints (similar to
-    checkpoints on the primary) and the background writer process will perform
-    normal block cleaning activities. This can include updates of the hint bit
-    information stored on the standby server.
-    The <command>CHECKPOINT</command> command is accepted during recovery,
-    though it performs a restartpoint rather than a new checkpoint.
+    检查点进程和后台写入进程在恢复期间是活动的。检查点进程将执行重启点（类似于主库上的检查点），后台写入进程将执行正常的块清理活动。这可能包括更新存储在备库服务器上的提示位信息。<command>CHECKPOINT</command> 命令在恢复期间会被接受，尽管它执行的是重启点而不是新的检查点。
    </para>
   </sect2>
 
   <sect2 id="hot-standby-parameters">
-   <title>Hot Standby Parameter Reference</title>
+   <title>热备参数参考</title>
 
    <para>
-    Various parameters have been mentioned above in
-    <xref linkend="hot-standby-conflict"/> and
-    <xref linkend="hot-standby-admin"/>.
+    上文 <xref linkend="hot-standby-conflict"/> 和
+    <xref linkend="hot-standby-admin"/> 中提到了各种参数。
    </para>
 
    <para>
-    On the primary, the <xref linkend="guc-wal-level"/> parameter can be used.
-    <xref linkend="guc-max-standby-archive-delay"/> and
-    <xref linkend="guc-max-standby-streaming-delay"/> have no effect if set on
-    the primary.
+    在主库上，可以使用 <xref linkend="guc-wal-level"/> 参数。
+    如果在主库上设置 <xref linkend="guc-max-standby-archive-delay"/> 和
+    <xref linkend="guc-max-standby-streaming-delay"/>，则不会产生任何效果。
    </para>
 
    <para>
-    On the standby, parameters <xref linkend="guc-hot-standby"/>,
-    <xref linkend="guc-max-standby-archive-delay"/> and
-    <xref linkend="guc-max-standby-streaming-delay"/> can be used.
+    在备库上，可以使用参数 <xref linkend="guc-hot-standby"/>、
+    <xref linkend="guc-max-standby-archive-delay"/> 和
+    <xref linkend="guc-max-standby-streaming-delay"/>。
    </para>
   </sect2>
 
   <sect2 id="hot-standby-caveats">
-   <title>Caveats</title>
+   <title>注意事项</title>
 
    <para>
-    There are several limitations of hot standby.
-    These can and probably will be fixed in future releases:
+    热备有几个限制。
+    这些限制可以并且很可能会在未来的版本中修复：
 
   <itemizedlist>
    <listitem>
     <para>
-     Full knowledge of running transactions is required before snapshots
-     can be taken. Transactions that use large numbers of subtransactions
-     (currently greater than 64) will delay the start of read-only
-     connections until the completion of the longest running write transaction.
-     If this situation occurs, explanatory messages will be sent to the server log.
+     在拍摄快照之前，需要完全掌握正在运行的事务的信息。使用大量子事务
+     （当前大于 64）的事务将延迟只读连接的启动，直到运行时间最长的写事务
+     完成。如果出现这种情况，将向服务器日志发送说明性消息。
     </para>
    </listitem>
    <listitem>
     <para>
-     Valid starting points for standby queries are generated at each
-     checkpoint on the primary. If the standby is shut down while the primary
-     is in a shutdown state, it might not be possible to re-enter hot standby
-     until the primary is started up, so that it generates further starting
-     points in the WAL logs.  This situation isn't a problem in the most
-     common situations where it might happen. Generally, if the primary is
-     shut down and not available anymore, that's likely due to a serious
-     failure that requires the standby being converted to operate as
-     the new primary anyway.  And in situations where the primary is
-     being intentionally taken down, coordinating to make sure the standby
-     becomes the new primary smoothly is also standard procedure.
+     备库查询的有效起始点在主库的每个检查点生成。如果备库在主库处于
+     关闭状态时被关闭，那么在主库启动之前可能无法重新进入热备状态，
+     因为主库启动后会在 WAL 日志中生成更多起始点。在可能发生这种情况的
+     最常见情形中，这并不算问题。通常，如果主库被关闭且不再可用，那很可能是
+     由于严重故障，无论如何都需要将备库转换为新的主库来运行。而在主库被
+     有意关闭的情况下，协调以确保备库顺利成为新的主库也是标准流程。
     </para>
    </listitem>
    <listitem>
     <para>
-     At the end of recovery, <literal>AccessExclusiveLocks</literal> held by prepared transactions
-     will require twice the normal number of lock table entries. If you plan
-     on running either a large number of concurrent prepared transactions
-     that normally take <literal>AccessExclusiveLocks</literal>, or you plan on having one
-     large transaction that takes many <literal>AccessExclusiveLocks</literal>, you are
-     advised to select a larger value of <varname>max_locks_per_transaction</varname>,
-     perhaps as much as twice the value of the parameter on
-     the primary server. You need not consider this at all if
-     your setting of <varname>max_prepared_transactions</varname> is 0.
+     在恢复结束时，预备事务持有的 <literal>AccessExclusiveLocks</literal> 将需要正常数量两倍的锁表项。如果你计划运行大量通常占用 <literal>AccessExclusiveLocks</literal> 的并发预备事务，或者计划运行一个占用许多 <literal>AccessExclusiveLocks</literal> 的大事务，建议你选择更大的 <varname>max_locks_per_transaction</varname> 值，或许可以取主服务器上该参数值的两倍。如果你的 <varname>max_prepared_transactions</varname> 设置为 0，则完全不需要考虑这一点。
     </para>
    </listitem>
    <listitem>
     <para>
-     The Serializable transaction isolation level is not yet available in hot
-     standby.  (See <xref linkend="xact-serializable"/> and
-     <xref linkend="serializable-consistency"/> for details.)
-     An attempt to set a transaction to the serializable isolation level in
-     hot standby mode will generate an error.
+     热备中尚不支持可串行化事务隔离级别。（详情请参见 <xref linkend="xact-serializable"/> 和 <xref linkend="serializable-consistency"/>。）在热备模式下尝试将事务设置为可串行化隔离级别将产生一个错误。
     </para>
    </listitem>
   </itemizedlist>
