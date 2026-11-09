@@ -699,27 +699,19 @@
   </indexterm>
 
   <para>
-   The catalog <structname>pg_amop</structname> stores information about
-   operators associated with access method operator families.  There is one
-   row for each operator that is a member of an operator family.  A family
-   member can be either a <firstterm>search</firstterm> operator or an
-   <firstterm>ordering</firstterm> operator.  An operator
-   can appear in more than one family, but cannot appear in more than one
-   search position nor more than one ordering position within a family.
-   (It is allowed, though unlikely, for an operator to be used for both
-   search and ordering purposes.)
+   系统目录 <structname>pg_amop</structname> 存储与访问方法运算符族相关联的运算符的信息。每个属于某个运算符族的运算符都有一行。族成员可以是<firstterm>搜索</firstterm>运算符，也可以是<firstterm>排序</firstterm>运算符。一个运算符可以出现在多个族中，但在同一个族内不能出现在多个搜索位置，也不能出现在多个排序位置。（虽然不太可能，但允许一个运算符同时用于搜索和排序目的。）
   </para>
 
   <table>
-   <title><structname>pg_amop</structname> Columns</title>
+   <title><structname>pg_amop</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -730,37 +722,37 @@
        <structfield>oid</structfield> <type>oid</type>
       </para>
       <para>
-       Row identifier
+       行标识符
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amopfamily</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The operator family this entry is for
+       此条目所属的运算符族
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amoplefttype</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       Left-hand input data type of operator
+       运算符的左手输入数据类型
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amoprighttype</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       Right-hand input data type of operator
+       运算符的右手输入数据类型
       </para></entry>
      </row>
 
@@ -769,7 +761,7 @@
        <structfield>amopstrategy</structfield> <type>int2</type>
       </para>
       <para>
-       Operator strategy number
+       运算符策略编号
       </para></entry>
      </row>
 
@@ -778,39 +770,37 @@
        <structfield>amoppurpose</structfield> <type>char</type>
       </para>
       <para>
-       Operator purpose, either <literal>s</literal> for search or
-       <literal>o</literal> for ordering
+       运算符用途，<literal>s</literal> 表示搜索，<literal>o</literal> 表示排序
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amopopr</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-operator"><structname>pg_operator</structname></link>.<structfield>oid</structfield>)
+      （引用 <link linkend="catalog-pg-operator"><structname>pg_operator</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the operator
+       运算符的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amopmethod</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-am"><structname>pg_am</structname></link>.<structfield>oid</structfield>)
+      （引用 <link linkend="catalog-pg-am"><structname>pg_am</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       Index access method operator family is for
+       该运算符族所属的索引访问方法
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>amopsortfamily</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>.<structfield>oid</structfield>)
+      （引用 <link linkend="catalog-pg-opfamily"><structname>pg_opfamily</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The B-tree operator family this entry sorts according to, if an
-       ordering operator; zero if a search operator
+       如果本项是排序运算符，则表示本项排序所依据的 B-tree 运算符族；如果是搜索运算符，则为零
       </para></entry>
      </row>
     </tbody>
@@ -818,47 +808,44 @@
   </table>
 
   <para>
-   A <quote>search</quote> operator entry indicates that an index of this operator
-   family can be searched to find all rows satisfying
+   <quote>搜索</quote>运算符项表示可以搜索该运算符族的索引，以找出满足
    <literal>WHERE</literal>
    <replaceable>indexed_column</replaceable>
    <replaceable>operator</replaceable>
-   <replaceable>constant</replaceable>.
-   Obviously, such an operator must return <type>boolean</type>, and its left-hand input
-   type must match the index's column data type.
+   <replaceable>constant</replaceable> 的所有行。
+   显然，这样的运算符必须返回 <type>boolean</type>，并且其左侧输入类型
+   必须与索引的列数据类型匹配。
   </para>
 
   <para>
-   An <quote>ordering</quote> operator entry indicates that an index of this
-   operator family can be scanned to return rows in the order represented by
+   <quote>排序</quote>运算符项表示可以扫描该运算符族的索引，以
    <literal>ORDER BY</literal>
    <replaceable>indexed_column</replaceable>
    <replaceable>operator</replaceable>
-   <replaceable>constant</replaceable>.
-   Such an operator could return any sortable data type, though again
-   its left-hand input type must match the index's column data type.
-   The exact semantics of the <literal>ORDER BY</literal> are specified by the
-   <structfield>amopsortfamily</structfield> column, which must reference
-   a B-tree operator family for the operator's result type.
+   <replaceable>constant</replaceable> 所表示的顺序返回行。
+   这样的运算符可以返回任何可排序的数据类型，不过同样，
+   其左侧输入类型必须与索引的列数据类型匹配。
+   <literal>ORDER BY</literal> 的确切语义由
+   <structfield>amopsortfamily</structfield> 列指定，该列必须引用
+   该运算符结果类型对应的 B-tree 运算符族。
   </para>
 
   <note>
    <para>
-    At present, it's assumed that the sort order for an ordering operator
-    is the default for the referenced operator family, i.e., <literal>ASC NULLS
-    LAST</literal>.  This might someday be relaxed by adding additional columns
-    to specify sort options explicitly.
+    目前，假定排序运算符的排序顺序是所引用运算符族的默认顺序，
+    即 <literal>ASC NULLS
+    LAST</literal>。将来可能会通过添加额外的列来显式指定排序选项，
+    从而放宽这一限制。
    </para>
   </note>
 
   <para>
-   An entry's <structfield>amopmethod</structfield> must match the
-   <structfield>opfmethod</structfield> of its containing operator family (including
-   <structfield>amopmethod</structfield> here is an intentional denormalization of the
-   catalog structure for performance reasons).  Also,
-   <structfield>amoplefttype</structfield> and <structfield>amoprighttype</structfield> must match
-   the <structfield>oprleft</structfield> and <structfield>oprright</structfield> fields of the
-   referenced <link linkend="catalog-pg-operator"><structname>pg_operator</structname></link> entry.
+   项的 <structfield>amopmethod</structfield> 必须与其所属运算符族的
+   <structfield>opfmethod</structfield> 匹配（此处包含 <structfield>amopmethod</structfield>
+   是出于性能原因对系统目录结构的有意反规范化）。此外，
+   <structfield>amoplefttype</structfield> 和 <structfield>amoprighttype</structfield> 必须与
+   所引用的 <link linkend="catalog-pg-operator"><structname>pg_operator</structname></link> 项的
+   <structfield>oprleft</structfield> 和 <structfield>oprright</structfield> 字段匹配。
   </para>
 
  </sect1>
