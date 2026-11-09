@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/xtypes.sgml -->
 
  <sect1 id="xtypes">
-  <title>User-Defined Types</title>
+  <title>用户定义的类型</title>
 
   <indexterm zone="xtypes">
    <primary>data type</primary>
@@ -9,45 +9,25 @@
   </indexterm>
 
   <para>
-   As described in <xref linkend="extend-type-system"/>,
-   <productname>PostgreSQL</productname> can be extended to support new
-   data types.  This section describes how to define new base types,
-   which are data types defined below the level of the <acronym>SQL</acronym>
-   language.  Creating a new base type requires implementing functions
-   to operate on the type in a low-level language, usually C.
+   如 <xref linkend="extend-type-system"/> 所述，<productname>PostgreSQL</productname> 可以被扩展以支持新的数据类型。本节介绍如何定义新的基础类型，这些数据类型定义在 <acronym>SQL</acronym> 语言层面之下。创建新的基础类型需要用低级语言（通常是 C）实现操作该类型的函数。
   </para>
 
   <para>
-   The examples in this section can be found in
-   <filename>complex.sql</filename> and <filename>complex.c</filename>
-   in the <filename>src/tutorial</filename> directory of the source distribution.
-   See the <filename>README</filename> file in that directory for instructions
-   about running the examples.
+   本节中的示例可以在源码发行版的 <filename>src/tutorial</filename> 目录下的 <filename>complex.sql</filename> 和 <filename>complex.c</filename> 中找到。关于如何运行这些示例的说明，请参见该目录中的 <filename>README</filename> 文件。
   </para>
 
  <para>
   <indexterm>
-   <primary>input function</primary>
+   <primary>输入函数</primary>
   </indexterm>
   <indexterm>
-   <primary>output function</primary>
+   <primary>输出函数</primary>
   </indexterm>
-  A user-defined type must always have input and output functions.
-  These functions determine how the type appears in strings (for input
-  by the user and output to the user) and how the type is organized in
-  memory.  The input function takes a null-terminated character string
-  as its argument and returns the internal (in memory) representation
-  of the type.  The output function takes the internal representation
-  of the type as argument and returns a null-terminated character
-  string.  If we want to do anything more with the type than merely
-  store it, we must provide additional functions to implement whatever
-  operations we'd like to have for the type.
+  用户定义的类型必须始终有输入函数和输出函数。这些函数决定该类型在字符串中如何出现（供用户输入和向用户输出）以及该类型在内存中如何组织。输入函数接受一个以空字符结尾的字符串作为参数，并返回该类型的内部（内存中）表示。输出函数接受该类型的内部表示作为参数，并返回一个以空字符结尾的字符串。如果我们想对该类型做比单纯存储更多的事情，就必须提供额外的函数来实现我们想要为该类型提供的任何操作。
  </para>
 
  <para>
-  Suppose we want to define a type <type>complex</type> that represents
-  complex numbers. A natural way to represent a complex number in
-  memory would be the following C structure:
+  假设我们想定义一个表示复数的类型 <type>complex</type>。在内存中表示复数的一种自然方式是下面这样的 C 结构体：
 
 <programlisting>
 typedef struct Complex {
@@ -56,21 +36,15 @@ typedef struct Complex {
 } Complex;
 </programlisting>
 
-  We will need to make this a pass-by-reference type, since it's too
-  large to fit into a single <type>Datum</type> value.
+  我们需要把它做成传引用类型，因为它太大，无法放入单个 <type>Datum</type> 值中。
  </para>
 
  <para>
-  As the external string representation of the type, we choose a
-  string of the form <literal>(x,y)</literal>.
+  作为该类型的外部字符串表示，我们选择形如 <literal>(x,y)</literal> 的字符串。
  </para>
 
  <para>
-  The input and output functions are usually not hard to write,
-  especially the output function.  But when defining the external
-  string representation of the type, remember that you must eventually
-  write a complete and robust parser for that representation as your
-  input function.  For instance:
+  输入和输出函数通常并不难写，尤其是输出函数。但是在定义该类型的外部字符串表示时，请记住，最终你必须为这种表示编写一个完整且健壮的解析器，作为你的输入函数。例如：
 
 <programlisting><![CDATA[
 PG_FUNCTION_INFO_V1(complex_in);
@@ -97,7 +71,7 @@ complex_in(PG_FUNCTION_ARGS)
 ]]>
 </programlisting>
 
-  The output function can simply be:
+输出函数可以简单地写成：
 
 <programlisting><![CDATA[
 PG_FUNCTION_INFO_V1(complex_out);
@@ -116,21 +90,11 @@ complex_out(PG_FUNCTION_ARGS)
  </para>
 
  <para>
-  You should be careful to make the input and output functions inverses of
-  each other.  If you do not, you will have severe problems when you
-  need to dump your data into a file and then read it back in.  This
-  is a particularly common problem when floating-point numbers are
-  involved.
+  你应当注意让输入函数和输出函数互为逆运算。否则，当你需要把数据转储到文件中再读回来时，就会遇到严重问题。在涉及浮点数时，这是一个特别常见的问题。
  </para>
 
  <para>
-  Optionally, a user-defined type can provide binary input and output
-  routines.  Binary I/O is normally faster but less portable than textual
-  I/O.  As with textual I/O, it is up to you to define exactly what the
-  external binary representation is.  Most of the built-in data types
-  try to provide a machine-independent binary representation.  For
-  <type>complex</type>, we will piggy-back on the binary I/O converters
-  for type <type>float8</type>:
+  可选地，用户定义类型可以提供二进制输入和输出例程。二进制 I/O 通常比文本 I/O 更快，但可移植性较差。与文本 I/O 一样，外部二进制表示究竟是什么，由你自行定义。大多数内置数据类型都尽量提供与机器无关的二进制表示。对于 <type>complex</type>，我们将借用类型 <type>float8</type> 的二进制 I/O 转换器：
 
 <programlisting><![CDATA[
 PG_FUNCTION_INFO_V1(complex_recv);
@@ -165,16 +129,13 @@ complex_send(PG_FUNCTION_ARGS)
  </para>
 
  <para>
-  Once we have written the I/O functions and compiled them into a shared
-  library, we can define the <type>complex</type> type in SQL.
-  First we declare it as a shell type:
+  一旦我们编写好 I/O 函数并将它们编译到共享库中，就可以在 SQL 中定义 <type>complex</type> 类型了。首先我们把它声明为 shell 类型：
 
 <programlisting>
 CREATE TYPE complex;
 </programlisting>
 
-  This serves as a placeholder that allows us to reference the type while
-  defining its I/O functions.  Now we can define the I/O functions:
+这充当一个占位符，使我们能够在定义其 I/O 函数时引用该类型。现在我们可以定义 I/O 函数了：
 
 <programlisting>
 CREATE FUNCTION complex_in(cstring)
@@ -200,7 +161,7 @@ CREATE FUNCTION complex_send(complex)
  </para>
 
  <para>
-  Finally, we can provide the full definition of the data type:
+  最后，我们可以提供该数据类型的完整定义：
 <programlisting>
 CREATE TYPE complex (
    internallength = 16,
@@ -218,39 +179,23 @@ CREATE TYPE complex (
     <primary>array</primary>
     <secondary>of user-defined type</secondary>
   </indexterm>
-  When you define a new base type,
-  <productname>PostgreSQL</productname> automatically provides support
-  for arrays of that type.  The array type typically
-  has the same name as the base type with the underscore character
-  (<literal>_</literal>) prepended.
+当你定义一个新的基础类型时，<productname>PostgreSQL</productname> 会自动提供对该类型数组的支持。数组类型通常与基础类型同名，只是前面加上了下划线字符（<literal>_</literal>）。
  </para>
 
  <para>
-  Once the data type exists, we can declare additional functions to
-  provide useful operations on the data type.  Operators can then be
-  defined atop the functions, and if needed, operator classes can be
-  created to support indexing of the data type.  These additional
-  layers are discussed in following sections.
+  一旦数据类型存在，我们就可以声明额外的函数，为该数据类型提供有用的操作。然后可以在这些函数之上定义运算符，如果需要，还可以创建运算符类来支持该数据类型的索引。这些额外的层次将在后续章节中讨论。
  </para>
 
  <para>
-  If the internal representation of the data type is variable-length, the
-  internal representation must follow the standard layout for variable-length
-  data: the first four bytes must be a <type>char[4]</type> field which is
-  never accessed directly (customarily named <structfield>vl_len_</structfield>). You
-  must use the <function>SET_VARSIZE()</function> macro to store the total
-  size of the datum (including the length field itself) in this field
-  and <function>VARSIZE()</function> to retrieve it.  (These macros exist
-  because the length field may be encoded depending on platform.)
+  如果数据类型的内部表示是变长的，那么内部表示必须遵循变长数据的标准布局：前四个字节必须是一个 <type>char[4]</type> 字段，该字段从不被直接访问（习惯上命名为 <structfield>vl_len_</structfield>）。你必须使用 <function>SET_VARSIZE()</function> 宏将数据项的总大小（包括长度字段本身）存储在该字段中，并使用 <function>VARSIZE()</function> 来获取它。（存在这些宏是因为长度字段的编码可能因平台而异。）
  </para>
 
  <para>
-  For further details see the description of the
-  <xref linkend="sql-createtype"/> command.
+  更多细节请参见 <xref linkend="sql-createtype"/> 命令的描述。
  </para>
 
  <sect2 id="xtypes-toast">
-  <title>TOAST Considerations</title>
+  <title>TOAST 注意事项</title>
    <indexterm>
     <primary>TOAST</primary>
     <secondary>and user-defined types</secondary>
@@ -266,109 +211,37 @@ CREATE TYPE complex (
  </para>
 
  <para>
-  To support <acronym>TOAST</acronym> storage, the C functions operating on the data
-  type must always be careful to unpack any toasted values they are handed
-  by using <function>PG_DETOAST_DATUM</function>.  (This detail is customarily hidden
-  by defining type-specific <function>GETARG_DATATYPE_P</function> macros.)
-  Then, when running the <command>CREATE TYPE</command> command, specify the
-  internal length as <literal>variable</literal> and select some appropriate storage
-  option other than <literal>plain</literal>.
+  为了支持 <acronym>TOAST</acronym> 存储，操作该数据类型的 C 函数必须始终小心地使用 <function>PG_DETOAST_DATUM</function> 来解包传递给它们的任何已 TOAST 的值。（这个细节通常通过定义特定于类型的 <function>GETARG_DATATYPE_P</function> 宏来隐藏。）然后，在运行 <command>CREATE TYPE</command> 命令时，将内部长度指定为 <literal>variable</literal>，并选择除 <literal>plain</literal> 之外的某个合适的存储选项。
  </para>
 
  <para>
-  If data alignment is unimportant (either just for a specific function or
-  because the data type specifies byte alignment anyway) then it's possible
-  to avoid some of the overhead of <function>PG_DETOAST_DATUM</function>. You can use
-  <function>PG_DETOAST_DATUM_PACKED</function> instead (customarily hidden by
-  defining a <function>GETARG_DATATYPE_PP</function> macro) and using the macros
-  <function>VARSIZE_ANY_EXHDR</function> and <function>VARDATA_ANY</function> to access
-  a potentially-packed datum.
-  Again, the data returned by these macros is not aligned even if the data
-  type definition specifies an alignment. If the alignment is important you
-  must go through the regular <function>PG_DETOAST_DATUM</function> interface.
+  如果数据对齐不重要（要么只是针对某个特定函数，要么是因为数据类型本身就指定了字节对齐），那么就有可能避免 <function>PG_DETOAST_DATUM</function> 的某些开销。你可以改用 <function>PG_DETOAST_DATUM_PACKED</function>（通常通过定义 <function>GETARG_DATATYPE_PP</function> 宏来隐藏它），并使用宏 <function>VARSIZE_ANY_EXHDR</function> 和 <function>VARDATA_ANY</function> 来访问可能紧凑存储的数据。同样，即使数据类型定义指定了对齐方式，这些宏返回的数据也不是对齐的。如果对齐很重要，你必须走常规的 <function>PG_DETOAST_DATUM</function> 接口。
  </para>
 
  <note>
   <para>
-   Older code frequently declares <structfield>vl_len_</structfield> as an
-   <type>int32</type> field instead of <type>char[4]</type>.  This is OK as long as
-   the struct definition has other fields that have at least <type>int32</type>
-   alignment.  But it is dangerous to use such a struct definition when
-   working with a potentially unaligned datum; the compiler may take it as
-   license to assume the datum actually is aligned, leading to core dumps on
-   architectures that are strict about alignment.
+   较旧的代码经常把 <structfield>vl_len_</structfield> 声明为 <type>int32</type> 字段，而不是 <type>char[4]</type>。只要结构体定义中还有其他至少具有 <type>int32</type> 对齐的字段，这样做就没问题。但在处理可能未对齐的数据时，使用这样的结构体定义是危险的；编译器可能会借此假定该数据实际上是对齐的，从而在对对齐要求严格的架构上导致核心转储。
   </para>
  </note>
 
  <para>
-  Another feature that's enabled by <acronym>TOAST</acronym> support is the
-  possibility of having an <firstterm>expanded</firstterm> in-memory data
-  representation that is more convenient to work with than the format that
-  is stored on disk.  The regular or <quote>flat</quote> varlena storage format
-  is ultimately just a blob of bytes; it cannot for example contain
-  pointers, since it may get copied to other locations in memory.
-  For complex data types, the flat format may be quite expensive to work
-  with, so <productname>PostgreSQL</productname> provides a way to <quote>expand</quote>
-  the flat format into a representation that is more suited to computation,
-  and then pass that format in-memory between functions of the data type.
+  <acronym>TOAST</acronym> 支持所启用的另一项特性是，可以使用一种<firstterm>展开的</firstterm>内存数据表示，它比存储在磁盘上的格式更便于使用。常规的或<quote>扁平</quote>的 varlena 存储格式归根结底只是一块字节；例如它不能包含指针，因为它可能会被复制到内存中的其他位置。对于复杂的数据类型，使用扁平格式可能相当昂贵，因此 <productname>PostgreSQL</productname> 提供了一种方法，把扁平格式<quote>展开</quote>成更适合计算的表示，然后在数据类型的各函数之间以内存形式传递该格式。
  </para>
 
  <para>
-  To use expanded storage, a data type must define an expanded format that
-  follows the rules given in <filename>src/include/utils/expandeddatum.h</filename>,
-  and provide functions to <quote>expand</quote> a flat varlena value into
-  expanded format and <quote>flatten</quote> the expanded format back to the
-  regular varlena representation.  Then ensure that all C functions for
-  the data type can accept either representation, possibly by converting
-  one into the other immediately upon receipt.  This does not require fixing
-  all existing functions for the data type at once, because the standard
-  <function>PG_DETOAST_DATUM</function> macro is defined to convert expanded inputs
-  into regular flat format.  Therefore, existing functions that work with
-  the flat varlena format will continue to work, though slightly
-  inefficiently, with expanded inputs; they need not be converted until and
-  unless better performance is important.
+  要使用展开存储，数据类型必须定义一个遵循 <filename>src/include/utils/expandeddatum.h</filename> 中给出的规则的展开格式，并提供函数来把扁平的 varlena 值<quote>展开</quote>为展开格式，以及把展开格式<quote>展平</quote>回常规的 varlena 表示。然后确保该数据类型的所有 C 函数都能接受这两种表示，可能的方式是在收到输入后立即将一种转换为另一种。这并不要求一次性修改该数据类型的所有现有函数，因为标准的 <function>PG_DETOAST_DATUM</function> 宏被定义为把展开的输入转换为常规扁平格式。因此，处理扁平 varlena 格式的现有函数将继续能处理展开的输入，尽管效率略低；除非更好的性能很重要，否则不必转换它们。
  </para>
 
  <para>
-  C functions that know how to work with an expanded representation
-  typically fall into two categories: those that can only handle expanded
-  format, and those that can handle either expanded or flat varlena inputs.
-  The former are easier to write but may be less efficient overall, because
-  converting a flat input to expanded form for use by a single function may
-  cost more than is saved by operating on the expanded format.
-  When only expanded format need be handled, conversion of flat inputs to
-  expanded form can be hidden inside an argument-fetching macro, so that
-  the function appears no more complex than one working with traditional
-  varlena input.
-  To handle both types of input, write an argument-fetching function that
-  will detoast external, short-header, and compressed varlena inputs, but
-  not expanded inputs.  Such a function can be defined as returning a
-  pointer to a union of the flat varlena format and the expanded format.
-  Callers can use the <function>VARATT_IS_EXPANDED_HEADER()</function> macro to
-  determine which format they received.
+  了解如何处理扩展表示形式的 C 函数通常分为两类：只能处理扩展格式的函数，以及既能处理扩展格式又能处理扁平 varlena 输入的函数。前者更容易编写，但总体上可能效率较低，因为把扁平输入转换为扩展形式以供单个函数使用，其开销可能超过在扩展格式上操作所节省的开销。当只需要处理扩展格式时，可以把扁平输入到扩展形式的转换隐藏在获取参数的宏中，这样该函数看起来就不比处理传统 varlena 输入的函数更复杂。要处理这两种类型的输入，请编写一个获取参数的函数，它会解 TOAST 外部、短头部和压缩的 varlena 输入，但不处理扩展输入。这样的函数可以定义为返回一个指针，指向扁平 varlena 格式与扩展格式的联合体。调用者可以使用 <function>VARATT_IS_EXPANDED_HEADER()</function> 宏来确定自己收到的是哪种格式。
  </para>
 
  <para>
-  The <acronym>TOAST</acronym> infrastructure not only allows regular varlena
-  values to be distinguished from expanded values, but also
-  distinguishes <quote>read-write</quote> and <quote>read-only</quote> pointers to
-  expanded values.  C functions that only need to examine an expanded
-  value, or will only change it in safe and non-semantically-visible ways,
-  need not care which type of pointer they receive.  C functions that
-  produce a modified version of an input value are allowed to modify an
-  expanded input value in-place if they receive a read-write pointer, but
-  must not modify the input if they receive a read-only pointer; in that
-  case they have to copy the value first, producing a new value to modify.
-  A C function that has constructed a new expanded value should always
-  return a read-write pointer to it.  Also, a C function that is modifying
-  a read-write expanded value in-place should take care to leave the value
-  in a sane state if it fails partway through.
+  <acronym>TOAST</acronym> 基础设施不仅允许将常规 varlena 值与扩展值区分开，还能区分指向扩展值的<quote>读写</quote>指针和<quote>只读</quote>指针。只需要检查扩展值、或只会以安全的且不产生语义可见变化的方式修改它的 C 函数，无需关心自己收到的是哪种类型的指针。产生输入值修改版本的 C 函数，如果收到的是读写指针，可以就地修改扩展输入值；但如果收到的是只读指针，则不得修改输入；在这种情况下，它们必须先复制该值，产生一个新值再修改。构造了新扩展值的 C 函数应始终返回指向它的读写指针。此外，就地修改读写扩展值的 C 函数应注意，如果中途失败，要让该值保持在正常状态。
  </para>
 
  <para>
-  For examples of working with expanded values, see the standard array
-  infrastructure, particularly
-  <filename>src/backend/utils/adt/array_expanded.c</filename>.
+  关于处理扩展值的示例，请参阅标准数组基础设施，特别是 <filename>src/backend/utils/adt/array_expanded.c</filename>。
  </para>
 
  </sect2>
