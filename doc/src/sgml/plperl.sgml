@@ -864,16 +864,14 @@ CALL transaction_test1();
  </sect1>
 
  <sect1 id="plperl-global">
-  <title>Global Values in PL/Perl</title>
+  <title>PL/Perl 中的全局值</title>
 
   <para>
-    You can use the global hash <varname>%_SHARED</varname> to store
-    data, including code references, between function calls for the
-    lifetime of the current session.
+    你可以使用全局哈希 <varname>%_SHARED</varname> 在当前会话的生命周期内、在函数调用之间存储数据，包括代码引用。
   </para>
 
   <para>
-    Here is a simple example for shared data:
+    下面是一个共享数据的简单示例：
 <programlisting>
 CREATE OR REPLACE FUNCTION set_var(name text, val text) RETURNS text AS $$
     if ($_SHARED{$_[0]} = $_[1]) {
@@ -893,7 +891,7 @@ SELECT get_var('sample');
   </para>
 
   <para>
-   Here is a slightly more complicated example using a code reference:
+   下面是一个使用代码引用的稍复杂一些的示例：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION myfuncs() RETURNS void AS $$
@@ -915,26 +913,11 @@ CREATE OR REPLACE FUNCTION use_quote(TEXT) RETURNS text AS $$
 $$ LANGUAGE plperl;
 </programlisting>
 
-   (You could have replaced the above with the one-liner
-   <literal>return $_SHARED{myquote}-&gt;($_[0]);</literal>
-   at the expense of readability.)
+   （你也可以用一行代码 <literal>return $_SHARED{myquote}-&gt;($_[0]);</literal> 替换上面的写法，代价是可读性。）
   </para>
 
   <para>
-   For security reasons, PL/Perl executes functions called by any one SQL role
-   in a separate Perl interpreter for that role.  This prevents accidental or
-   malicious interference by one user with the behavior of another user's
-   PL/Perl functions.  Each such interpreter has its own value of the
-   <varname>%_SHARED</varname> variable and other global state.  Thus, two
-   PL/Perl functions will share the same value of <varname>%_SHARED</varname>
-   if and only if they are executed by the same SQL role.  In an application
-   wherein a single session executes code under multiple SQL roles (via
-   <literal>SECURITY DEFINER</literal> functions, use of <command>SET ROLE</command>, etc.)
-   you may need to take explicit steps to ensure that PL/Perl functions can
-   share data via <varname>%_SHARED</varname>.  To do that, make sure that
-   functions that should communicate are owned by the same user, and mark
-   them <literal>SECURITY DEFINER</literal>.  You must of course take care that
-   such functions can't be used to do anything unintended.
+   出于安全原因，PL/Perl 会为每个 SQL 角色在独立的 Perl 解释器中执行该角色所调用的函数。这可以防止某个用户意外或恶意地干扰另一个用户的 PL/Perl 函数的行为。每个这样的解释器都有自己独立的 <varname>%_SHARED</varname> 变量值和其他全局状态。因此，两个 PL/Perl 函数当且仅当由同一个 SQL 角色执行时，才会共享相同的 <varname>%_SHARED</varname> 值。在单个会话通过多个 SQL 角色执行代码的应用中（通过 <literal>SECURITY DEFINER</literal> 函数、使用 <command>SET ROLE</command> 等），你可能需要采取明确的步骤来确保 PL/Perl 函数能够通过 <varname>%_SHARED</varname> 共享数据。为此，请确保应当相互通信的函数由同一个用户拥有，并将它们标记为 <literal>SECURITY DEFINER</literal>。当然，你必须注意这类函数不能被用来做任何非预期的事情。
   </para>
  </sect1>
 
