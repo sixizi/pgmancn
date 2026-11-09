@@ -131,17 +131,8 @@ VACUUM [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <re
     <term><literal>DISABLE_PAGE_SKIPPING</literal></term>
     <listitem>
      <para>
-      Normally, <command>VACUUM</command> will skip pages based on the <link
-      linkend="vacuum-for-visibility-map">visibility map</link>.  Pages where
-      all tuples are known to be frozen can always be skipped, and those
-      where all tuples are known to be visible to all transactions may be
-      skipped except when performing an aggressive vacuum.  Furthermore,
-      except when performing an aggressive vacuum, some pages may be skipped
-      in order to avoid waiting for other sessions to finish using them.
-      This option disables all page-skipping behavior, and is intended to
-      be used only when the contents of the visibility map are
-      suspect, which should happen only if there is a hardware or software
-      issue causing database corruption.
+      通常，<command>VACUUM</command> 会基于<link
+      linkend="vacuum-for-visibility-map">可见性映射</link>跳过页面。所有元组均已知已冻结的页面总是可以被跳过，而所有元组均已知对所有事务可见的页面也可以被跳过，但在执行激进清理时除外。此外，除执行激进清理时外，还可以跳过某些页面，以避免等待其他会话完成对它们的使用。此选项会禁用所有页面跳过行为，并且只应在可见性映射内容可疑时使用；这种情况只应发生在硬件或软件问题导致数据库损坏时。
      </para>
     </listitem>
    </varlistentry>
@@ -162,21 +153,12 @@ VACUUM [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ] [ <re
       通常，当表中的死元组非常少时，<command>VACUUM</command> 会跳过索引清理。在这种情况下，处理表的所有索引的代价预计将大大超过移除死索引元组所带来的好处。此选项可用于强制 <command>VACUUM</command> 在死元组数量大于零时处理索引。默认值为 <literal>AUTO</literal>，它允许 <command>VACUUM</command> 在适当时跳过索引清理。如果 <literal>INDEX_CLEANUP</literal> 被设置为 <literal>ON</literal>，<command>VACUUM</command> 将保守地从索引中移除所有死元组。这对于与早期版本的 <productname>PostgreSQL</productname> 保持向后兼容可能有用，在那些版本中这是标准行为。
      </para>
      <para>
-      <literal>INDEX_CLEANUP</literal> can also be set to
-      <literal>OFF</literal> to force <command>VACUUM</command> to
-      <emphasis>always</emphasis> skip index vacuuming, even when
-      there are many dead tuples in the table.  This may be useful
-      when it is necessary to make <command>VACUUM</command> run as
-      quickly as possible to avoid imminent transaction ID wraparound
-      (see <xref linkend="vacuum-for-wraparound"/>).  However, the
-      wraparound failsafe mechanism controlled by <xref
-       linkend="guc-vacuum-failsafe-age"/>  will generally trigger
-      automatically to avoid transaction ID wraparound failure, and
-      should be preferred.  If index cleanup is not performed
-      regularly, performance may suffer, because as the table is
-      modified indexes will accumulate dead tuples and the table
-      itself will accumulate dead line pointers that cannot be removed
-      until index cleanup is completed.
+      <literal>INDEX_CLEANUP</literal> 也可以设置为
+      <literal>OFF</literal>，以强制 <command>VACUUM</command>
+      <emphasis>始终</emphasis>跳过索引清理，即使表中存在大量死元组也是如此。当需要让
+      <command>VACUUM</command> 尽可能快地运行以避免即将发生的事务 ID 回卷时，这可能很有用（参见
+      <xref linkend="vacuum-for-wraparound"/>）。不过，由
+      <xref linkend="guc-vacuum-failsafe-age"/> 控制的事务 ID 回卷故障保护机制通常会自动触发，以避免事务 ID 回卷失败，因此应优先使用该机制。如果不定期执行索引清理，性能可能会下降，因为在表被修改时，索引会积累死元组，而表本身会积累死行指针，这些死行指针在完成索引清理之前无法被移除。
      </para>
      <para>
       对于没有索引的表，此选项无效；如果使用了 <literal>FULL</literal> 选项，则忽略此选项。它对事务 ID 回卷故障保护机制也没有影响。当触发该机制时，它将跳过索引清理，即使 <literal>INDEX_CLEANUP</literal> 被设置为 <literal>ON</literal>。
