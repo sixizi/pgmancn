@@ -1279,19 +1279,15 @@ Publications:
  </sect1>
 
  <sect1 id="logical-replication-gencols">
-  <title>Generated Column Replication</title>
+  <title>生成列复制</title>
 
   <para>
-   Typically, a table at the subscriber will be defined the same as the
-   publisher table, so if the publisher table has a <link linkend="ddl-generated-columns">
-   <literal>GENERATED column</literal></link> then the subscriber table will
-   have a matching generated column. In this case, it is always the subscriber
-   table generated column value that is used.
+   通常，订阅端的表会定义得与发布端的表相同，因此如果发布端的表有一个 <link linkend="ddl-generated-columns">
+   <literal>GENERATED column</literal></link>，那么订阅端的表也会有一个与之匹配的生成列。在这种情况下，始终使用订阅端表的生成列值。
   </para>
 
   <para>
-   For example, note below that subscriber table generated column value comes from the
-   subscriber column's calculation.
+   例如，请注意下面订阅端表的生成列值来自订阅端列的计算。
 <programlisting>
 /* pub # */ CREATE TABLE tab_gen_to_gen (a int, b int GENERATED ALWAYS AS (a + 1) STORED);
 /* pub # */ INSERT INTO tab_gen_to_gen VALUES (1),(2),(3);
@@ -1317,51 +1313,45 @@ Publications:
   </para>
 
   <para>
-   In fact, prior to version 18.0, logical replication does not publish
-   <literal>GENERATED</literal> columns at all.
+   事实上，在 18.0 版本之前，逻辑复制根本不会发布
+   <literal>GENERATED</literal> 列。
   </para>
 
   <para>
-   But, replicating a generated column to a regular column can sometimes be
-   desirable.
+   但是，有时将生成列复制到普通列可能是合乎需要的。
    <tip>
     <para>
-     This feature may be useful when replicating data to a
-     non-PostgreSQL database via output plugin, especially if the target database
-     does not support generated columns.
+     当通过输出插件将数据复制到非 PostgreSQL 数据库时，此功能可能很有用，尤其是当目标数据库不支持生成列时。
     </para>
   </tip>
   </para>
 
   <para>
-   Generated columns are not published by default, but users can opt to
-   publish stored generated columns just like regular ones.
+   生成列默认不会被发布，但用户可以选择像发布普通列一样发布存储生成列。
   </para>
 
   <para>
-   There are two ways to do this:
+   有两种方法可以做到这一点：
    <itemizedlist>
      <listitem>
       <para>
-       Set the <command>PUBLICATION</command> parameter
+       将 <command>PUBLICATION</command> 参数
        <link linkend="sql-createpublication-params-with-publish-generated-columns">
-       <literal>publish_generated_columns</literal></link> to <literal>stored</literal>.
-       This instructs PostgreSQL logical replication to publish current and
-       future stored generated columns of the publication's tables.
+       <literal>publish_generated_columns</literal></link> 设置为 <literal>stored</literal>。
+       这会指示 PostgreSQL 逻辑复制发布该发布的表的当前和未来的存储生成列。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Specify a table <link linkend="logical-replication-col-lists">column list</link>
-       to explicitly nominate which stored generated columns will be published.
+       指定表的 <link linkend="logical-replication-col-lists">列列表</link>，
+       以明确指定将发布哪些存储生成列。
       </para>
 
       <note>
        <para>
-        When determining which table columns will be published, a column list
-        takes precedence, overriding the effect of the
-        <literal>publish_generated_columns</literal> parameter.
+        在确定将发布哪些表列时，列列表优先，
+        会覆盖 <literal>publish_generated_columns</literal> 参数的效果。
        </para>
       </note>
      </listitem>
@@ -1369,66 +1359,64 @@ Publications:
   </para>
 
   <para>
-   The following table summarizes behavior when there are generated columns
-   involved in the logical replication. Results are shown for when
-   publishing generated columns is not enabled, and for when it is
-   enabled.
+   下表总结了逻辑复制中涉及生成列时的行为。结果分别显示了
+   未启用发布生成列和启用发布生成列时的情况。
   </para>
 
   <table id="logical-replication-gencols-table-summary">
-   <title>Replication Result Summary</title>
+   <title>复制结果摘要</title>
    <tgroup cols="4">
 
     <thead>
      <row>
-      <entry>Publish generated columns?</entry>
-      <entry>Publisher table column</entry>
-      <entry>Subscriber table column</entry>
-      <entry>Result</entry>
+      <entry>发布生成的列？</entry>
+      <entry>发布者表列</entry>
+      <entry>订阅者表列</entry>
+      <entry>结果</entry>
      </row>
     </thead>
 
     <tbody>
      <row>
-      <entry>No</entry>
+      <entry>否</entry>
       <entry>GENERATED</entry>
       <entry>GENERATED</entry>
-      <entry>Publisher table column is not replicated. Use the subscriber table generated column value.</entry>
+      <entry>发布者表的列不会被复制。请使用订阅者表的生成列值。</entry>
      </row>
 
      <row>
-      <entry>No</entry>
+      <entry>否</entry>
       <entry>GENERATED</entry>
-      <entry>regular</entry>
-      <entry>Publisher table column is not replicated. Use the subscriber table regular column default value.</entry>
+      <entry>常规</entry>
+      <entry>发布者表的列不会被复制。使用订阅者表普通列的默认值。</entry>
      </row>
 
      <row>
-      <entry>No</entry>
+      <entry>否</entry>
+      <entry>GENERATED</entry>
+      <entry>--缺失--</entry>
+      <entry>发布者表的列不会被复制。不会发生任何操作。</entry>
+     </row>
+
+     <row>
+      <entry>是</entry>
+      <entry>已生成</entry>
+      <entry>已生成</entry>
+      <entry>错误。不支持。</entry>
+     </row>
+
+     <row>
+      <entry>是</entry>
+      <entry>已生成</entry>
+      <entry>常规</entry>
+      <entry>发布端表的列值会被复制到订阅端表的列。</entry>
+     </row>
+
+     <row>
+      <entry>是</entry>
       <entry>GENERATED</entry>
       <entry>--missing--</entry>
-      <entry>Publisher table column is not replicated. Nothing happens.</entry>
-     </row>
-
-     <row>
-      <entry>Yes</entry>
-      <entry>GENERATED</entry>
-      <entry>GENERATED</entry>
-      <entry>ERROR. Not supported.</entry>
-     </row>
-
-     <row>
-      <entry>Yes</entry>
-      <entry>GENERATED</entry>
-      <entry>regular</entry>
-      <entry>Publisher table column value is replicated to the subscriber table column.</entry>
-     </row>
-
-     <row>
-      <entry>Yes</entry>
-      <entry>GENERATED</entry>
-      <entry>--missing--</entry>
-      <entry>ERROR. The column is reported as missing from the subscriber table.</entry>
+      <entry>错误。该列被报告为在订阅端表中缺失。</entry>
      </row>
     </tbody>
    </tgroup>
@@ -1436,23 +1424,17 @@ Publications:
 
   <warning>
    <para>
-    There's currently no support for subscriptions comprising several
-    publications where the same table has been published with different column
-    lists. See <xref linkend="logical-replication-col-lists"/>.
+    目前不支持由多个发布组成的订阅中同一个表以不同列列表发布的情况。参见 <xref linkend="logical-replication-col-lists"/>。
    </para>
 
    <para>
-    This same situation can occur if one publication is publishing generated
-    columns, while another publication in the same subscription is not
-    publishing generated columns for the same table.
+    如果某个发布正在发布生成列，而同一订阅中的另一个发布没有为同一张表发布生成列，也可能出现同样的情况。
    </para>
   </warning>
 
   <note>
    <para>
-    If the subscriber is from a release prior to 18, then initial table
-    synchronization won't copy generated columns even if they are defined in
-    the publisher.
+    如果订阅端来自 18 之前的版本，那么初始表同步不会复制生成列，即使这些列已在发布端定义。
    </para>
   </note>
  </sect1>
