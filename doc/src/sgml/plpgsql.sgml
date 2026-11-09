@@ -4202,7 +4202,7 @@ HINT:  Make sure the query returns the exact list of columns.
   <!-- **** Porting from Oracle PL/SQL **** -->
 
  <sect1 id="plpgsql-porting">
-  <title>Porting from <productname>Oracle</productname> PL/SQL</title>
+  <title>从 <productname>Oracle</productname> PL/SQL 移植</title>
 
   <indexterm zone="plpgsql-porting">
    <primary>Oracle</primary>
@@ -4215,36 +4215,16 @@ HINT:  Make sure the query returns the exact list of columns.
   </indexterm>
 
   <para>
-   This section explains differences between
-   <productname>PostgreSQL</productname>'s <application>PL/pgSQL</application>
-   language and Oracle's <application>PL/SQL</application> language,
-   to help developers who port applications from
-   <trademark class="registered">Oracle</trademark> to <productname>PostgreSQL</productname>.
+   本节说明 <productname>PostgreSQL</productname> 的 <application>PL/pgSQL</application> 语言与 Oracle 的 <application>PL/SQL</application> 语言之间的差异，以帮助那些将应用程序从 <trademark class="registered">Oracle</trademark> 移植到 <productname>PostgreSQL</productname> 的开发者。
   </para>
 
   <para>
-   <application>PL/pgSQL</application> is similar to PL/SQL in many
-   aspects. It is a block-structured, imperative language, and all
-   variables have to be declared.  Assignments, loops, and conditionals
-   are similar.  The main differences you should keep in mind when
-   porting from <application>PL/SQL</application> to
-   <application>PL/pgSQL</application> are:
+   <application>PL/pgSQL</application> 在许多方面与 PL/SQL 相似。它是一种块结构的命令式语言，所有变量都必须声明。赋值、循环和条件语句都很相似。从 <application>PL/SQL</application> 移植到 <application>PL/pgSQL</application> 时，你应牢记的主要差异如下：
 
     <itemizedlist>
      <listitem>
       <para>
-       If a name used in an SQL command could be either a column name of a
-       table used in the command or a reference to a variable of the function,
-       <application>PL/SQL</application> treats it as a column name.
-       By default, <application>PL/pgSQL</application> will throw an error
-       complaining that the name is ambiguous.  You can specify
-       <literal>plpgsql.variable_conflict</literal> = <literal>use_column</literal>
-       to change this behavior to match <application>PL/SQL</application>,
-       as explained in <xref linkend="plpgsql-var-subst"/>.
-       It's often best to avoid such ambiguities in the first place,
-       but if you have to port a large amount of code that depends on
-       this behavior, setting <literal>variable_conflict</literal> may be the
-       best solution.
+       如果 SQL 命令中使用的某个名称既可能是该命令中所用表的列名，也可能是对函数变量的引用，那么 <application>PL/SQL</application> 会将其视为列名。默认情况下，<application>PL/pgSQL</application> 会抛出错误，抱怨该名称有歧义。你可以指定 <literal>plpgsql.variable_conflict</literal> = <literal>use_column</literal> 来改变这一行为，使其与 <application>PL/SQL</application> 一致，如 <xref linkend="plpgsql-var-subst"/> 中所述。通常最好一开始就避免这类歧义，但如果你必须移植大量依赖此行为的代码，那么设置 <literal>variable_conflict</literal> 可能是最好的解决方案。
       </para>
      </listitem>
 
@@ -4259,56 +4239,38 @@ HINT:  Make sure the query returns the exact list of columns.
 
      <listitem>
       <para>
-       Data type names often need translation.  For example, in Oracle string
-       values are commonly declared as being of type <type>varchar2</type>, which
-       is a non-SQL-standard type.  In <productname>PostgreSQL</productname>,
-       use type <type>varchar</type> or <type>text</type> instead.  Similarly, replace
-       type <type>number</type> with <type>numeric</type>, or use some other numeric
-       data type if there's a more appropriate one.
+       数据类型名称通常需要转换。例如，在 Oracle 中字符串值通常被声明为 <type>varchar2</type> 类型，这是一种非 SQL 标准类型。在 <productname>PostgreSQL</productname> 中，应改用 <type>varchar</type> 或 <type>text</type> 类型。同样，将 <type>number</type> 类型替换为 <type>numeric</type>，或者如果有更合适的类型，也可以使用其他数值数据类型。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Instead of packages, use schemas to organize your functions
-       into groups.
+       与其使用包，不如使用模式来将函数组织成组。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Since there are no packages, there are no package-level variables
-       either. This is somewhat annoying.  You can keep per-session state
-       in temporary tables instead.
+       由于没有包，因此也没有包级变量。这多少有些麻烦。你可以改用临时表来保存会话级的状态。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Integer <command>FOR</command> loops with <literal>REVERSE</literal> work
-       differently: <application>PL/SQL</application> counts down from the second
-       number to the first, while <application>PL/pgSQL</application> counts down
-       from the first number to the second, requiring the loop bounds
-       to be swapped when porting.  This incompatibility is unfortunate
-       but is unlikely to be changed. (See <xref
-       linkend="plpgsql-integer-for"/>.)
+       带 <literal>REVERSE</literal> 的整数 <command>FOR</command> 循环工作方式不同：<application>PL/SQL</application> 从第二个数字向下计数到第一个数字，而 <application>PL/pgSQL</application> 从第一个数字向下计数到第二个数字，因此在移植时需要交换循环边界。这种不兼容性令人遗憾，但不太可能改变。（参见 <xref
+       linkend="plpgsql-integer-for"/>。）
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <command>FOR</command> loops over queries (other than cursors) also work
-       differently: the target variable(s) must have been declared,
-       whereas <application>PL/SQL</application> always declares them implicitly.
-       An advantage of this is that the variable values are still accessible
-       after the loop exits.
+       针对查询（游标除外）的 <command>FOR</command> 循环工作方式也不同：目标变量必须已经声明，而 <application>PL/SQL</application> 总是隐式声明它们。这样做的一个优点是，循环退出后变量值仍然可以访问。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       There are various notational differences for the use of cursor
-       variables.
+       游标变量的使用存在各种记法上的差异。
       </para>
      </listitem>
 
@@ -4316,18 +4278,17 @@ HINT:  Make sure the query returns the exact list of columns.
    </para>
 
   <sect2 id="plpgsql-porting-examples">
-   <title>Porting Examples</title>
+   <title>移植示例</title>
 
    <para>
-    <xref linkend="pgsql-porting-ex1"/> shows how to port a simple
-    function from <application>PL/SQL</application> to <application>PL/pgSQL</application>.
+    <xref linkend="pgsql-porting-ex1"/> 展示了如何将一个简单函数从 <application>PL/SQL</application> 移植到 <application>PL/pgSQL</application>。
    </para>
 
    <example id="pgsql-porting-ex1">
-    <title>Porting a Simple Function from <application>PL/SQL</application> to <application>PL/pgSQL</application></title>
+    <title>将简单函数从 <application>PL/SQL</application> 移植到 <application>PL/pgSQL</application></title>
 
     <para>
-     Here is an <productname>Oracle</productname> <application>PL/SQL</application> function:
+     下面是一个 <productname>Oracle</productname> <application>PL/SQL</application> 函数：
 <programlisting>
 CREATE OR REPLACE FUNCTION cs_fmt_browser_version(v_name varchar2,
                                                   v_version varchar2)
@@ -4344,53 +4305,37 @@ show errors;
     </para>
 
     <para>
-     Let's go through this function and see the differences compared to
-     <application>PL/pgSQL</application>:
+     让我们逐一分析这个函数，看看与 <application>PL/pgSQL</application> 相比有哪些差异：
 
      <itemizedlist>
       <listitem>
        <para>
-        The type name <type>varchar2</type> has to be changed to <type>varchar</type>
-        or <type>text</type>.  In the examples in this section, we'll
-        use <type>varchar</type>, but <type>text</type> is often a better choice if
-        you do not need specific string length limits.
+        类型名 <type>varchar2</type> 必须改为 <type>varchar</type> 或 <type>text</type>。在本节的示例中，我们将使用 <type>varchar</type>，但如果你不需要特定的字符串长度限制，<type>text</type> 通常是更好的选择。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        The <literal>RETURN</literal> key word in the function
-        prototype (not the function body) becomes
-        <literal>RETURNS</literal> in
-        <productname>PostgreSQL</productname>.
-        Also, <literal>IS</literal> becomes <literal>AS</literal>, and you need to
-        add a <literal>LANGUAGE</literal> clause because <application>PL/pgSQL</application>
-        is not the only possible function language.
+        函数原型（而非函数体）中的 <literal>RETURN</literal> 关键字在 <productname>PostgreSQL</productname> 中变为 <literal>RETURNS</literal>。此外，<literal>IS</literal> 变为 <literal>AS</literal>，并且你需要添加 <literal>LANGUAGE</literal> 子句，因为 <application>PL/pgSQL</application> 并不是唯一可能的函数语言。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        In <productname>PostgreSQL</productname>, the function body is considered
-        to be a string literal, so you need to use quote marks or dollar
-        quotes around it.  This substitutes for the terminating <literal>/</literal>
-        in the Oracle approach.
+        在 <productname>PostgreSQL</productname> 中，函数体被视为一个字符串字面量，因此需要在它周围使用引号或美元引号。这替代了 Oracle 方法中结尾的 <literal>/</literal>。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        The <literal>show errors</literal> command does not exist in
-        <productname>PostgreSQL</productname>, and is not needed since errors are
-        reported automatically.
+        <literal>show errors</literal> 命令在 <productname>PostgreSQL</productname> 中不存在，而且也不需要，因为错误会自动报告。
        </para>
       </listitem>
      </itemizedlist>
     </para>
 
     <para>
-     This is how this function would look when ported to
-     <productname>PostgreSQL</productname>:
+     将该函数移植到 <productname>PostgreSQL</productname> 后如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION cs_fmt_browser_version(v_name varchar,
@@ -4408,23 +4353,18 @@ $$ LANGUAGE plpgsql;
    </example>
 
    <para>
-    <xref linkend="plpgsql-porting-ex2"/> shows how to port a
-    function that creates another function and how to handle the
-    ensuing quoting problems.
+    <xref linkend="plpgsql-porting-ex2"/> 展示了如何移植一个创建另一个函数的函数，以及如何处理随之而来的引号问题。
    </para>
 
    <example id="plpgsql-porting-ex2">
-    <title>Porting a Function that Creates Another Function from <application>PL/SQL</application> to <application>PL/pgSQL</application></title>
+    <title>将创建另一个函数的函数从 <application>PL/SQL</application> 移植到 <application>PL/pgSQL</application></title>
 
     <para>
-     The following procedure grabs rows from a
-     <command>SELECT</command> statement and builds a large function
-     with the results in <literal>IF</literal> statements, for the
-     sake of efficiency.
+     出于效率考虑，下面的过程从 <command>SELECT</command> 语句中抓取行，并用结果在 <literal>IF</literal> 语句中构建一个大函数。
     </para>
 
     <para>
-     This is the Oracle version:
+     这是 Oracle 版本：
 <programlisting>
 CREATE OR REPLACE PROCEDURE cs_update_referrer_type_proc IS
     CURSOR referrer_keys IS
@@ -4453,7 +4393,7 @@ show errors;
     </para>
 
     <para>
-     Here is how this function would end up in <productname>PostgreSQL</productname>:
+     下面说明这个函数最终在 <productname>PostgreSQL</productname> 中是什么样子：
 <programlisting>
 CREATE OR REPLACE PROCEDURE cs_update_referrer_type_proc() AS $func$
 DECLARE
@@ -4487,45 +4427,32 @@ BEGIN
 END;
 $func$ LANGUAGE plpgsql;
 </programlisting>
-     Notice how the body of the function is built separately and passed
-     through <literal>quote_literal</literal> to double any quote marks in it.  This
-     technique is needed because we cannot safely use dollar quoting for
-     defining the new function: we do not know for sure what strings will
-     be interpolated from the <structfield>referrer_key.key_string</structfield> field.
-     (We are assuming here that <structfield>referrer_key.kind</structfield> can be
-     trusted to always be <literal>host</literal>, <literal>domain</literal>, or
-     <literal>url</literal>, but <structfield>referrer_key.key_string</structfield> might be
-     anything, in particular it might contain dollar signs.) This function
-     is actually an improvement on the Oracle original, because it will
-     not generate broken code when <structfield>referrer_key.key_string</structfield> or
-     <structfield>referrer_key.referrer_type</structfield> contain quote marks.
+     请注意，函数体是单独构建的，并通过 <literal>quote_literal</literal> 传递，以将其中的引号加倍。之所以需要这种技术，是因为我们无法安全地使用美元引用来定义新函数：我们无法确定会从 <structfield>referrer_key.key_string</structfield> 字段中插入哪些字符串。
+    （这里我们假定可以信任 <structfield>referrer_key.kind</structfield> 始终是 <literal>host</literal>、<literal>domain</literal> 或
+    <literal>url</literal>，但 <structfield>referrer_key.key_string</structfield> 可能是任何内容，特别是它可能包含美元符号。）这个函数实际上是对 Oracle 原版的改进，因为当 <structfield>referrer_key.key_string</structfield> 或
+    <structfield>referrer_key.referrer_type</structfield> 包含引号时，它不会生成有问题的代码。
     </para>
    </example>
 
    <para>
-    <xref linkend="plpgsql-porting-ex3"/> shows how to port a function
-    with <literal>OUT</literal> parameters and string manipulation.
-    <productname>PostgreSQL</productname> does not have a built-in
-    <function>instr</function> function, but you can create one
-    using a combination of other
-    functions. In <xref linkend="plpgsql-porting-appendix"/> there is a
-    <application>PL/pgSQL</application> implementation of
-    <function>instr</function> that you can use to make your porting
-    easier.
+    <xref linkend="plpgsql-porting-ex3"/> 展示了如何移植一个带有 <literal>OUT</literal> 参数并进行字符串操作的函数。
+    <productname>PostgreSQL</productname> 没有内置的
+    <function>instr</function> 函数，但你可以组合其他函数来创建一个。在 <xref linkend="plpgsql-porting-appendix"/> 中有一个
+    <application>PL/pgSQL</application> 实现的
+    <function>instr</function>，你可以用它来让移植工作更轻松。
    </para>
 
    <example id="plpgsql-porting-ex3">
-    <title>Porting a Procedure With String Manipulation and
-    <literal>OUT</literal> Parameters from <application>PL/SQL</application> to
+    <title>将带有字符串操作和
+    <literal>OUT</literal> 参数的过程从 <application>PL/SQL</application> 移植到
     <application>PL/pgSQL</application></title>
 
     <para>
-     The following <productname>Oracle</productname> PL/SQL procedure is used
-     to parse a URL and return several elements (host, path, and query).
+     下面的 <productname>Oracle</productname> PL/SQL 过程用于解析 URL 并返回若干元素（主机、路径和查询）。
     </para>
 
     <para>
-     This is the Oracle version:
+     这是 Oracle 版本：
 <programlisting>
 CREATE OR REPLACE PROCEDURE cs_parse_url(
     v_url IN VARCHAR2,
@@ -4568,7 +4495,7 @@ show errors;
     </para>
 
     <para>
-     Here is a possible translation into <application>PL/pgSQL</application>:
+     下面是一个可能的翻译为 <application>PL/pgSQL</application> 的版本：
 <programlisting>
 CREATE OR REPLACE FUNCTION cs_parse_url(
     v_url IN VARCHAR,
@@ -4609,7 +4536,7 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-     This function could be used like this:
+     这个函数可以这样使用：
 <programlisting>
 SELECT * FROM cs_parse_url('http://foobar.com/query.cgi?baz');
 </programlisting>
@@ -4617,15 +4544,14 @@ SELECT * FROM cs_parse_url('http://foobar.com/query.cgi?baz');
    </example>
 
    <para>
-    <xref linkend="plpgsql-porting-ex4"/> shows how to port a procedure
-    that uses numerous features that are specific to Oracle.
+    <xref linkend="plpgsql-porting-ex4"/> 展示了如何移植一个使用了大量 Oracle 特有功能的过程。
    </para>
 
    <example id="plpgsql-porting-ex4">
-    <title>Porting a Procedure from <application>PL/SQL</application> to <application>PL/pgSQL</application></title>
+    <title>将过程从 <application>PL/SQL</application> 移植到 <application>PL/pgSQL</application></title>
 
     <para>
-     The Oracle version:
+     Oracle 版本：
 
 <programlisting>
 CREATE OR REPLACE PROCEDURE cs_create_job(v_job_id IN INTEGER) IS
@@ -4657,7 +4583,7 @@ show errors
    </para>
 
    <para>
-    This is how we could port this procedure to <application>PL/pgSQL</application>:
+    我们可以这样将此过程移植到 <application>PL/pgSQL</application>：
 
 <programlisting>
 CREATE OR REPLACE PROCEDURE cs_create_job(v_job_id integer) AS $$
@@ -4690,19 +4616,13 @@ $$ LANGUAGE plpgsql;
     <calloutlist>
      <callout arearefs="co.plpgsql-porting-raise">
       <para>
-       The syntax of <literal>RAISE</literal> is considerably different from
-       Oracle's statement, although the basic case <literal>RAISE</literal>
-       <replaceable class="parameter">exception_name</replaceable> works
-       similarly.
+       <literal>RAISE</literal> 的语法与 Oracle 的语句有相当大的不同，尽管基本情形 <literal>RAISE</literal>
+      <replaceable class="parameter">exception_name</replaceable> 的工作方式类似。
       </para>
      </callout>
      <callout arearefs="co.plpgsql-porting-exception">
       <para>
-       The exception names supported by <application>PL/pgSQL</application> are
-       different from Oracle's.  The set of built-in exception names
-       is much larger (see <xref linkend="errcodes-appendix"/>).  There
-       is not currently a way to declare user-defined exception names,
-       although you can throw user-chosen SQLSTATE values instead.
+       <application>PL/pgSQL</application> 支持的异常名称与 Oracle 的不同。内置异常名称的集合要大得多（参见 <xref linkend="errcodes-appendix"/>）。目前还没有办法声明用户定义的异常名称，不过你可以改为抛出用户选择的 SQLSTATE 值。
       </para>
      </callout>
     </calloutlist>
@@ -4711,22 +4631,17 @@ $$ LANGUAGE plpgsql;
   </sect2>
 
   <sect2 id="plpgsql-porting-other">
-   <title>Other Things to Watch For</title>
+   <title>其他需要注意的事项</title>
 
    <para>
-    This section explains a few other things to watch for when porting
-    Oracle <application>PL/SQL</application> functions to
-    <productname>PostgreSQL</productname>.
+    本节说明在将 Oracle <application>PL/SQL</application> 函数移植到 <productname>PostgreSQL</productname> 时需要注意的其他一些事项。
    </para>
 
    <sect3 id="plpgsql-porting-exceptions">
-    <title>Implicit Rollback after Exceptions</title>
+    <title>异常之后的隐式回滚</title>
 
     <para>
-     In <application>PL/pgSQL</application>, when an exception is caught by an
-     <literal>EXCEPTION</literal> clause, all database changes since the block's
-     <literal>BEGIN</literal> are automatically rolled back.  That is, the behavior
-     is equivalent to what you'd get in Oracle with:
+     在 <application>PL/pgSQL</application> 中，当异常被 <literal>EXCEPTION</literal> 子句捕获时，自该块的 <literal>BEGIN</literal> 以来所做的所有数据库更改都会自动回滚。也就是说，其行为等同于在 Oracle 中执行以下操作所得到的结果：
 
 <programlisting>
 BEGIN
@@ -4742,12 +4657,7 @@ EXCEPTION
 END;
 </programlisting>
 
-     If you are translating an Oracle procedure that uses
-     <command>SAVEPOINT</command> and <command>ROLLBACK TO</command> in this style,
-     your task is easy: just omit the <command>SAVEPOINT</command> and
-     <command>ROLLBACK TO</command>.  If you have a procedure that uses
-     <command>SAVEPOINT</command> and <command>ROLLBACK TO</command> in a different way
-     then some actual thought will be required.
+     如果你要转换的 Oracle 过程以这种方式使用 <command>SAVEPOINT</command> 和 <command>ROLLBACK TO</command>，那么你的任务很简单：只需省略 <command>SAVEPOINT</command> 和 <command>ROLLBACK TO</command> 即可。如果你的过程以不同的方式使用 <command>SAVEPOINT</command> 和 <command>ROLLBACK TO</command>，那就需要认真思考一番了。
     </para>
    </sect3>
 
@@ -4755,34 +4665,23 @@ END;
     <title><command>EXECUTE</command></title>
 
     <para>
-     The <application>PL/pgSQL</application> version of
-     <command>EXECUTE</command> works similarly to the
-     <application>PL/SQL</application> version, but you have to remember to use
-     <function>quote_literal</function> and
-     <function>quote_ident</function> as described in <xref
-     linkend="plpgsql-statements-executing-dyn"/>.  Constructs of the
-     type <literal>EXECUTE 'SELECT * FROM $1';</literal> will not work
-     reliably unless you use these functions.
+     <command>EXECUTE</command> 的 <application>PL/pgSQL</application> 版本与 <application>PL/SQL</application> 版本的工作方式类似，但你必须记得按照 <xref
+     linkend="plpgsql-statements-executing-dyn"/> 中所述使用 <function>quote_literal</function> 和 <function>quote_ident</function>。除非使用这些函数，否则 <literal>EXECUTE 'SELECT * FROM $1';</literal> 类型的构造将无法可靠地工作。
     </para>
    </sect3>
 
    <sect3 id="plpgsql-porting-optimization">
-    <title>Optimizing <application>PL/pgSQL</application> Functions</title>
+    <title>优化 <application>PL/pgSQL</application> 函数</title>
 
     <para>
-     <productname>PostgreSQL</productname> gives you two function creation
-     modifiers to optimize execution: <quote>volatility</quote> (whether
-     the function always returns the same result when given the same
-     arguments) and <quote>strictness</quote> (whether the function
-     returns null if any argument is null).  Consult the <xref
+     <productname>PostgreSQL</productname> 提供了两个函数创建修饰符来优化执行：<quote>易变性</quote>（即给定相同参数时函数是否总是返回相同结果）和 <quote>严格性</quote>（即只要任一参数为 null，函数是否就返回 null）。详情请参阅 <xref
      linkend="sql-createfunction"/>
-     reference page for details.
+     参考页。
     </para>
 
     <para>
-     When making use of these optimization attributes, your
-     <command>CREATE FUNCTION</command> statement might look something
-     like this:
+     在使用这些优化属性时，你的
+     <command>CREATE FUNCTION</command> 语句可能类似如下所示：
 
 <programlisting>
 CREATE FUNCTION foo(...) RETURNS integer AS $$
@@ -4794,12 +4693,11 @@ $$ LANGUAGE plpgsql STRICT IMMUTABLE;
   </sect2>
 
   <sect2 id="plpgsql-porting-appendix">
-   <title>Appendix</title>
+   <title>附录</title>
 
    <para>
-    This section contains the code for a set of Oracle-compatible
-    <function>instr</function> functions that you can use to simplify
-    your porting efforts.
+    本节包含一组与 Oracle 兼容的 <function>instr</function> 函数的代码，你可以使用它们来简化
+    你的移植工作。
    </para>
 
    <indexterm>
