@@ -140,30 +140,21 @@
  </sect1>
 
  <sect1 id="plpgsql-structure">
-  <title>Structure of <application>PL/pgSQL</application></title>
+  <title><application>PL/pgSQL</application> 的结构</title>
 
   <para>
-   Functions written in <application>PL/pgSQL</application> are defined
-   to the server by executing <xref linkend="sql-createfunction"/> commands.
-   Such a command would normally look like, say,
+   用 <application>PL/pgSQL</application> 编写的函数通过执行 <xref linkend="sql-createfunction"/> 命令定义到服务器。这样的命令通常看起来像这样：
 <programlisting>
 CREATE FUNCTION somefunc(integer, text) RETURNS integer
 AS '<replaceable>function body text</replaceable>'
 LANGUAGE plpgsql;
 </programlisting>
-   The function body is simply a string literal so far as <command>CREATE
-   FUNCTION</command> is concerned.  It is often helpful to use dollar quoting
-   (see <xref linkend="sql-syntax-dollar-quoting"/>) to write the function
-   body, rather than the normal single quote syntax.  Without dollar quoting,
-   any single quotes or backslashes in the function body must be escaped by
-   doubling them.  Almost all the examples in this chapter use dollar-quoted
-   literals for their function bodies.
+   就 <command>CREATE
+   FUNCTION</command> 而言，函数体只是一个字符串字面量。使用美元引用（参见 <xref linkend="sql-syntax-dollar-quoting"/>）来编写函数体通常很有帮助，而不是使用普通的单引号语法。如果不使用美元引用，函数体中的任何单引号或反斜杠都必须通过双写来转义。本章中几乎所有的示例都使用美元引用字面量来编写函数体。
   </para>
 
   <para>
-   <application>PL/pgSQL</application> is a block-structured language.
-   The complete text of a function body must be a
-   <firstterm>block</firstterm>. A block is defined as:
+   <application>PL/pgSQL</application> 是一种块结构语言。函数体的完整文本必须是一个<firstterm>块</firstterm>。块的定义如下：
 
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
@@ -176,50 +167,29 @@ END <optional> <replaceable>label</replaceable> </optional>;
     </para>
 
     <para>
-     Each declaration and each statement within a block is terminated
-     by a semicolon.  A block that appears within another block must
-     have a semicolon after <literal>END</literal>, as shown above;
-     however the final <literal>END</literal> that
-     concludes a function body does not require a semicolon.
+     块中的每个声明和每条语句都以分号终止。出现在另一个块内部的块必须在 <literal>END</literal> 之后带一个分号，如上所示；然而，结束函数体的最后一个 <literal>END</literal> 不需要分号。
     </para>
 
     <tip>
      <para>
-      A common mistake is to write a semicolon immediately after
-      <literal>BEGIN</literal>.  This is incorrect and will result in a syntax error.
+      一个常见的错误是在 <literal>BEGIN</literal> 之后立即写一个分号。这是不正确的，会导致语法错误。
      </para>
     </tip>
 
     <para>
-     A <replaceable>label</replaceable> is only needed if you want to
-     identify the block for use
-     in an <literal>EXIT</literal> statement, or to qualify the names of the
-     variables declared in the block.  If a label is given after
-     <literal>END</literal>, it must match the label at the block's beginning.
+     只有当您想要标识该块以便在 <literal>EXIT</literal> 语句中使用，或者想要限定该块中声明的变量名时，才需要 <replaceable>label</replaceable>。如果在 <literal>END</literal> 之后给出了标签，它必须与块开头的标签匹配。
     </para>
 
     <para>
-     All key words are case-insensitive.
-     Identifiers are implicitly converted to lower case
-     unless double-quoted, just as they are in ordinary SQL commands.
+     所有关键词大小写不敏感。标识符会被隐式转换为小写，除非用双引号引用，这与普通 SQL 命令中的情况相同。
     </para>
 
     <para>
-     Comments work the same way in <application>PL/pgSQL</application> code as in
-     ordinary SQL.  A double dash (<literal>--</literal>) starts a comment
-     that extends to the end of the line. A <literal>/*</literal> starts a
-     block comment that extends to the matching occurrence of
-     <literal>*/</literal>.  Block comments nest.
+     注释在 <application>PL/pgSQL</application> 代码中的工作方式与普通 SQL 中相同。双连字符（<literal>--</literal>）开始一条延伸到行尾的注释。<literal>/*</literal> 开始一条块注释，该注释延伸到与之匹配的 <literal>*/</literal> 出现处。块注释可以嵌套。
     </para>
 
     <para>
-     Any statement in the statement section of a block
-     can be a <firstterm>subblock</firstterm>.  Subblocks can be used for
-     logical grouping or to localize variables to a small group
-     of statements.  Variables declared in a subblock mask any
-     similarly-named variables of outer blocks for the duration
-     of the subblock; but you can access the outer variables anyway
-     if you qualify their names with their block's label. For example:
+     块中语句部分的任何语句都可以是一个<firstterm>子块</firstterm>。子块可用于逻辑分组，或将变量局部化到一小组语句中。在子块中声明的变量会在该子块持续期间遮蔽外层块中任何同名的变量；但如果你用变量所属块的标签限定其名称，仍然可以访问外层变量。例如：
 <programlisting>
 CREATE FUNCTION somefunc() RETURNS integer AS $$
 &lt;&lt; outerblock &gt;&gt;
@@ -248,29 +218,13 @@ $$ LANGUAGE plpgsql;
 
     <note>
      <para>
-      There is actually a hidden <quote>outer block</quote> surrounding the body
-      of any <application>PL/pgSQL</application> function.  This block provides the
-      declarations of the function's parameters (if any), as well as some
-      special variables such as <literal>FOUND</literal> (see
-      <xref linkend="plpgsql-statements-diagnostics"/>).  The outer block is
-      labeled with the function's name, meaning that parameters and special
-      variables can be qualified with the function's name.
+      实际上，任何 <application>PL/pgSQL</application> 函数的主体周围都有一个隐藏的<quote>外层块</quote>。这个块提供了函数参数（如果有）的声明，以及一些特殊变量，例如 <literal>FOUND</literal>（参见 <xref linkend="plpgsql-statements-diagnostics"/>）。外层块以函数名作为标签，这意味着参数和特殊变量可以用函数名来限定。
      </para>
     </note>
 
     <para>
-     It is important not to confuse the use of
-     <command>BEGIN</command>/<command>END</command> for grouping statements in
-     <application>PL/pgSQL</application> with the similarly-named SQL commands
-     for transaction
-     control.  <application>PL/pgSQL</application>'s <command>BEGIN</command>/<command>END</command>
-     are only for grouping; they do not start or end a transaction.
-     See <xref linkend="plpgsql-transactions"/> for information on managing
-     transactions in <application>PL/pgSQL</application>.
-     Also, a block containing an <literal>EXCEPTION</literal> clause effectively
-     forms a subtransaction that can be rolled back without affecting the
-     outer transaction.  For more about that see <xref
-     linkend="plpgsql-error-trapping"/>.
+     重要的是，不要将 <application>PL/pgSQL</application> 中用 <command>BEGIN</command>/<command>END</command> 对语句进行分组与名称相似的用于事务控制的 SQL 命令混淆。<application>PL/pgSQL</application> 的 <command>BEGIN</command>/<command>END</command> 仅用于分组；它们不会开始或结束一个事务。有关在 <application>PL/pgSQL</application> 中管理事务的信息，请参见 <xref linkend="plpgsql-transactions"/>。此外，包含 <literal>EXCEPTION</literal> 子句的块实际上会形成一个子事务，该子事务可以回滚而不影响外层事务。有关更多信息，请参见 <xref
+     linkend="plpgsql-error-trapping"/>。
     </para>
   </sect1>
 
