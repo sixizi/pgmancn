@@ -17627,34 +17627,31 @@ COLUMNS (
  </sect1>
 
  <sect1 id="functions-sequence">
-  <title>Sequence Manipulation Functions</title>
+  <title>序列操作函数</title>
 
   <indexterm>
    <primary>sequence</primary>
   </indexterm>
 
   <para>
-   This section describes functions for operating on <firstterm>sequence
-   objects</firstterm>, also called sequence generators or just sequences.
-   Sequence objects are special single-row tables created with <xref
-   linkend="sql-createsequence"/>.
-   Sequence objects are commonly used to generate unique identifiers
-   for rows of a table.  The sequence functions, listed in <xref
-   linkend="functions-sequence-table"/>, provide simple, multiuser-safe
-   methods for obtaining successive sequence values from sequence
-   objects.
+   本节描述用于操作<firstterm>序列对象</firstterm>的函数，序列对象也称为序列生成器或简称序列。
+   序列对象是用 <xref
+   linkend="sql-createsequence"/> 创建的特殊单行表。
+   序列对象通常用于为表的行生成唯一标识符。
+   <xref
+   linkend="functions-sequence-table"/> 中列出的序列函数提供了简单、多用户安全的方法，用于从序列对象中获取连续的序列值。
   </para>
 
    <table id="functions-sequence-table">
-    <title>Sequence Functions</title>
+    <title>序列函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para></entry>
       </row>
      </thead>
@@ -17669,19 +17666,12 @@ COLUMNS (
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Advances the sequence object to its next value and returns that value.
-        This is done atomically: even if multiple sessions
-        execute <function>nextval</function> concurrently, each will safely
-        receive a distinct sequence value.
-        If the sequence object has been created with default parameters,
-        successive <function>nextval</function> calls will return successive
-        values beginning with 1.  Other behaviors can be obtained by using
-        appropriate parameters in the <xref linkend="sql-createsequence"/>
-        command.
+        把序列对象推进到它的下一个值并返回该值。
+        此操作是原子性的：即使多个会话并发执行 <function>nextval</function>，每个会话也会安全地收到一个不同的序列值。
+        如果序列对象是用默认参数创建的，连续的 <function>nextval</function> 调用将返回从 1 开始的连续值。通过在 <xref linkend="sql-createsequence"/> 命令中使用适当的参数，可以获得其他行为。
       </para>
        <para>
-        This function requires <literal>USAGE</literal>
-        or <literal>UPDATE</literal> privilege on the sequence.
+        此函数需要序列上的 <literal>USAGE</literal> 或 <literal>UPDATE</literal> 权限。
        </para></entry>
       </row>
 
@@ -17694,34 +17684,16 @@ COLUMNS (
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Sets the sequence object's current value, and optionally
-        its <literal>is_called</literal> flag.  The two-parameter
-        form sets the sequence's <literal>last_value</literal> field to the
-        specified value and sets its <literal>is_called</literal> field to
-        <literal>true</literal>, meaning that the next
-        <function>nextval</function> will advance the sequence before
-        returning a value.  The value that will be reported
-        by <function>currval</function> is also set to the specified value.
-        In the three-parameter form, <literal>is_called</literal> can be set
-        to either <literal>true</literal>
-        or <literal>false</literal>.  <literal>true</literal> has the same
-        effect as the two-parameter form. If it is set
-        to <literal>false</literal>, the next <function>nextval</function>
-        will return exactly the specified value, and sequence advancement
-        commences with the following <function>nextval</function>.
-        Furthermore, the value reported by <function>currval</function> is not
-        changed in this case.  For example,
+        设置序列对象的当前值，并可选地设置其 <literal>is_called</literal> 标志。双参数形式把序列的 <literal>last_value</literal> 字段设置为指定值，并把其 <literal>is_called</literal> 字段设置为 <literal>true</literal>，这意味着下一次 <function>nextval</function> 会在返回值之前推进序列。<function>currval</function> 将报告的值也被设置为指定值。在三参数形式中，<literal>is_called</literal> 可以设置为 <literal>true</literal> 或 <literal>false</literal>。<literal>true</literal> 与双参数形式效果相同。如果把它设置为 <literal>false</literal>，下一次 <function>nextval</function> 将正好返回指定的值，而序列推进从随后的 <function>nextval</function> 开始。此外，在这种情况下 <function>currval</function> 报告的值不会改变。例如，
 <programlisting>
 SELECT setval('myseq', 42);           <lineannotation>Next <function>nextval</function> will return 43</lineannotation>
 SELECT setval('myseq', 42, true);     <lineannotation>Same as above</lineannotation>
 SELECT setval('myseq', 42, false);    <lineannotation>Next <function>nextval</function> will return 42</lineannotation>
 </programlisting>
-        The result returned by <function>setval</function> is just the value of its
-        second argument.
+        <function>setval</function> 返回的结果就是其第二个参数的值。
        </para>
        <para>
-        This function requires <literal>UPDATE</literal> privilege on the
-        sequence.
+        此函数需要序列上的 <literal>UPDATE</literal> 权限。
        </para></entry>
       </row>
 
@@ -17734,17 +17706,10 @@ SELECT setval('myseq', 42, false);    <lineannotation>Next <function>nextval</fu
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Returns the value most recently obtained
-        by <function>nextval</function> for this sequence in the current
-        session.  (An error is reported if <function>nextval</function> has
-        never been called for this sequence in this session.)  Because this is
-        returning a session-local value, it gives a predictable answer whether
-        or not other sessions have executed <function>nextval</function> since
-        the current session did.
+        返回当前会话中该序列最近一次由 <function>nextval</function> 获得的值。（如果当前会话中从未对该序列调用过 <function>nextval</function>，则报告错误。）由于返回的是会话本地值，因此无论其他会话在当前会话之后是否执行过 <function>nextval</function>，它都会给出可预测的答案。
        </para>
        <para>
-        This function requires <literal>USAGE</literal>
-        or <literal>SELECT</literal> privilege on the sequence.
+        该函数需要对序列具有 <literal>USAGE</literal> 或 <literal>SELECT</literal> 权限。
        </para></entry>
       </row>
 
@@ -17757,18 +17722,10 @@ SELECT setval('myseq', 42, false);    <lineannotation>Next <function>nextval</fu
         <returnvalue>bigint</returnvalue>
        </para>
        <para>
-        Returns the value most recently returned by
-        <function>nextval</function> in the current session. This function is
-        identical to <function>currval</function>, except that instead
-        of taking the sequence name as an argument it refers to whichever
-        sequence <function>nextval</function> was most recently applied to
-        in the current session. It is an error to call
-        <function>lastval</function> if <function>nextval</function>
-        has not yet been called in the current session.
+        返回当前会话中 <function>nextval</function> 最近一次返回的值。该函数与 <function>currval</function> 相同，区别在于它不接受序列名作为参数，而是引用当前会话中最近应用过 <function>nextval</function> 的那个序列。如果在当前会话中尚未调用过 <function>nextval</function>，则调用 <function>lastval</function> 会报错。
        </para>
        <para>
-        This function requires <literal>USAGE</literal>
-        or <literal>SELECT</literal> privilege on the last used sequence.
+        该函数需要对最近使用的序列具有 <literal>USAGE</literal> 或 <literal>SELECT</literal> 权限。
        </para></entry>
       </row>
      </tbody>
@@ -17777,48 +17734,28 @@ SELECT setval('myseq', 42, false);    <lineannotation>Next <function>nextval</fu
 
   <caution>
    <para>
-    To avoid blocking concurrent transactions that obtain numbers from
-    the same sequence, the value obtained by <function>nextval</function>
-    is not reclaimed for re-use if the calling transaction later aborts.
-    This means that transaction aborts or database crashes can result in
-    gaps in the sequence of assigned values.  That can happen without a
-    transaction abort, too.  For example an <command>INSERT</command> with
-    an <literal>ON CONFLICT</literal> clause will compute the to-be-inserted
-    tuple, including doing any required <function>nextval</function>
-    calls, before detecting any conflict that would cause it to follow
-    the <literal>ON CONFLICT</literal> rule instead.
-    Thus, <productname>PostgreSQL</productname> sequence
-    objects <emphasis>cannot be used to obtain <quote>gapless</quote>
-    sequences</emphasis>.
+    为了避免阻塞从同一序列获取数值的并发事务，如果调用事务随后中止，<function>nextval</function> 获得的值不会被回收以供重用。这意味着事务中止或数据库崩溃可能导致已分配值的序列中出现空隙。即使没有事务中止，也可能发生这种情况。例如，带有 <literal>ON CONFLICT</literal> 子句的 <command>INSERT</command> 会在检测到任何会导致其改为遵循 <literal>ON CONFLICT</literal> 规则的冲突之前，先计算要插入的元组，包括执行任何所需的 <function>nextval</function> 调用。因此，<productname>PostgreSQL</productname> 序列对象<emphasis>不能用于获得<quote>无空隙</quote>的序列</emphasis>。
    </para>
 
    <para>
-    Likewise, sequence state changes made by <function>setval</function>
-    are immediately visible to other transactions, and are not undone if
-    the calling transaction rolls back.
+    同样，由 <function>setval</function> 所做的序列状态更改会立即对其他事务可见，并且如果调用事务回滚，这些更改不会被撤销。
    </para>
 
    <para>
-    If the database cluster crashes before committing a transaction
-    containing a <function>nextval</function>
-    or <function>setval</function> call, the sequence state change might
-    not have made its way to persistent storage, so that it is uncertain
-    whether the sequence will have its original or updated state after the
-    cluster restarts.  This is harmless for usage of the sequence within
-    the database, since other effects of uncommitted transactions will not
-    be visible either.  However, if you wish to use a sequence value for
-    persistent outside-the-database purposes, make sure that the
-    <function>nextval</function> call has been committed before doing so.
+    如果数据库集簇在提交包含 <function>nextval</function>
+    或 <function>setval</function> 调用的事务之前崩溃，序列状态更改可能尚未写入持久存储，
+    因此在集簇重启后，序列将处于原始状态还是更新后的状态是不确定的。
+    这对于数据库内序列的使用是无害的，因为未提交事务的其他影响也将不可见。
+    但是，如果你希望将序列值用于数据库外部的持久用途，请确保在执行此操作之前
+    <function>nextval</function> 调用已经提交。
    </para>
   </caution>
 
   <para>
-   The sequence to be operated on by a sequence function is specified by
-   a <type>regclass</type> argument, which is simply the OID of the sequence in the
-   <structname>pg_class</structname> system catalog.  You do not have to look up the
-   OID by hand, however, since the <type>regclass</type> data type's input
-   converter will do the work for you.  See <xref linkend="datatype-oid"/>
-   for details.
+   序列函数要操作的序列由一个 <type>regclass</type> 参数指定，该参数就是
+   <structname>pg_class</structname> 系统目录中该序列的 OID。不过，你不必手工查找
+   OID，因为 <type>regclass</type> 数据类型的输入转换器会为你完成这项工作。
+   详情请参见 <xref linkend="datatype-oid"/>。
   </para>
  </sect1>
 
