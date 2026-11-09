@@ -1158,7 +1158,7 @@ SELECT pg_advisory_lock(q.id) FROM
   </sect1>
 
   <sect1 id="mvcc-serialization-failure-handling">
-   <title>Serialization Failure Handling</title>
+   <title>序列化失败处理</title>
 
    <indexterm>
     <primary>serialization failure</primary>
@@ -1168,58 +1168,29 @@ SELECT pg_advisory_lock(q.id) FROM
    </indexterm>
 
    <para>
-    Both Repeatable Read and Serializable isolation levels can produce
-    errors that are designed to prevent serialization anomalies.  As
-    previously stated, applications using these levels must be prepared to
-    retry transactions that fail due to serialization errors.  Such an
-    error's message text will vary according to the precise circumstances,
-    but it will always have the SQLSTATE code <literal>40001</literal>
-    (<literal>serialization_failure</literal>).
+    Repeatable Read 和 Serializable 两种隔离级别都可能产生旨在防止序列化异常的错误。如前所述，使用这些级别的应用程序必须准备好重试因序列化错误而失败的事务。此类错误的消息文本会因具体情况而异，但它始终带有 SQLSTATE 代码 <literal>40001</literal>
+    （<literal>serialization_failure</literal>）。
    </para>
 
    <para>
-    It may also be advisable to retry deadlock failures.
-    These have the SQLSTATE code <literal>40P01</literal>
-    (<literal>deadlock_detected</literal>).
+    同样建议重试死锁失败。
+    这类错误的 SQLSTATE 代码为 <literal>40P01</literal>
+    （<literal>deadlock_detected</literal>）。
    </para>
 
    <para>
-    In some cases it is also appropriate to retry unique-key failures,
-    which have SQLSTATE code <literal>23505</literal>
-    (<literal>unique_violation</literal>), and exclusion constraint
-    failures, which have SQLSTATE code <literal>23P01</literal>
-    (<literal>exclusion_violation</literal>).  For example, if the
-    application selects a new value for a primary key column after
-    inspecting the currently stored keys, it could get a unique-key
-    failure because another application instance selected the same new key
-    concurrently.  This is effectively a serialization failure, but the
-    server will not detect it as such because it cannot <quote>see</quote>
-    the connection between the inserted value and the previous reads.
-    There are also some corner cases in which the server will issue a
-    unique-key or exclusion constraint error even though in principle it
-    has enough information to determine that a serialization problem
-    is the underlying cause.  While it's recommendable to just
-    retry <literal>serialization_failure</literal> errors unconditionally,
-    more care is needed when retrying these other error codes, since they
-    might represent persistent error conditions rather than transient
-    failures.
+    在某些情况下，重试唯一键失败（其 SQLSTATE 代码为 <literal>23505</literal>
+    （<literal>unique_violation</literal>））以及排除约束失败（其 SQLSTATE 代码为 <literal>23P01</literal>
+    （<literal>exclusion_violation</literal>））也是合适的。例如，如果应用程序在检查当前存储的键之后为主键列选择了一个新值，它可能会遇到唯一键失败，因为另一个应用程序实例并发地选择了相同的新键。这实际上是一种序列化失败，但服务器不会这样检测它，因为它无法<quote>看到</quote>插入值与先前读取之间的联系。还有一些边角情况，服务器会发出唯一键或排除约束错误，尽管原则上它已有足够的信息来确定根本原因是序列化问题。虽然建议无条件地重试 <literal>serialization_failure</literal> 错误，但在重试这些其他错误代码时需要更加谨慎，因为它们可能代表持久性的错误状况，而不是暂时性的失败。
    </para>
 
    <para>
-    It is important to retry the complete transaction, including all logic
-    that decides which SQL to issue and/or which values to use.
-    Therefore, <productname>PostgreSQL</productname> does not offer an
-    automatic retry facility, since it cannot do so with any guarantee of
-    correctness.
+    重要的是要重试完整的事务，包括决定发出哪些 SQL 和/或使用哪些值的所有逻辑。
+    因此，<productname>PostgreSQL</productname> 不提供自动重试功能，因为它无法在保证正确性的前提下做到这一点。
    </para>
 
    <para>
-    Transaction retry does not guarantee that the retried transaction will
-    complete; multiple retries may be needed.  In cases with very high
-    contention, it is possible that completion of a transaction may take
-    many attempts.  In cases involving a conflicting prepared transaction,
-    it may not be possible to make progress until the prepared transaction
-    commits or rolls back.
+    事务重试并不保证被重试的事务一定会完成；可能需要多次重试。在争用非常激烈的情况下，一个事务的完成可能需要许多次尝试。在涉及冲突的预备事务的情况下，在预备事务提交或回滚之前可能无法取得进展。
    </para>
   </sect1>
 
