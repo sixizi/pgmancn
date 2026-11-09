@@ -656,59 +656,40 @@ SELECT substr(CAST (1234 AS text), 3);
 </sect1>
 
 <sect1 id="typeconv-query">
-<title>Value Storage</title>
+<title>值存储</title>
 
   <para>
-   Values to be inserted into a table are converted to the destination
-   column's data type according to the
-   following steps.
+   插入到表中的值会按照以下步骤转换为目标列的数据类型。
   </para>
 
 <procedure>
-<title>Value Storage Type Conversion</title>
+<title>值存储类型转换</title>
 
 <step performance="required">
 <para>
-Check for an exact match with the target.
+检查与目标类型是否完全匹配。
 </para>
 </step>
 
 <step performance="required">
 <para>
-Otherwise, try to convert the expression to the target type.  This is possible
-if an <firstterm>assignment cast</firstterm> between the two types is registered in the
-<structname>pg_cast</structname> catalog (see <xref linkend="sql-createcast"/>).
-Alternatively, if the expression is an unknown-type literal, the contents of
-the literal string will be fed to the input conversion routine for the target
-type.
+否则，尝试将表达式转换为目标类型。如果两种类型之间的<firstterm>赋值转换</firstterm>已在 <structname>pg_cast</structname> 目录中注册（参见 <xref linkend="sql-createcast"/>），则可以进行这种转换。或者，如果表达式是未知类型的字面量，则字面量字符串的内容将被送入目标类型的输入转换例程。
 </para>
 </step>
 
 <step performance="required">
 <para>
-Check to see if there is a sizing cast for the target type.  A sizing
-cast is a cast from that type to itself.  If one is found in the
-<structname>pg_cast</structname> catalog, apply it to the expression before storing
-into the destination column.  The implementation function for such a cast
-always takes an extra parameter of type <type>integer</type>, which receives
-the destination column's <structfield>atttypmod</structfield> value (typically its
-declared length, although the interpretation of <structfield>atttypmod</structfield>
-varies for different data types), and it may take a third <type>boolean</type>
-parameter that says whether the cast is explicit or implicit.  The cast
-function
-is responsible for applying any length-dependent semantics such as size
-checking or truncation.
+检查目标类型是否存在尺寸转换。尺寸转换是从该类型到其自身的转换。如果在 <structname>pg_cast</structname> 目录中找到这样的转换，则在存储到目标列之前将其应用于表达式。此类转换的实现函数总是接受一个类型为 <type>integer</type> 的额外参数，该参数接收目标列的 <structfield>atttypmod</structfield> 值（通常是其声明的长度，尽管 <structfield>atttypmod</structfield> 的解释因数据类型而异），并且它可能接受第三个 <type>boolean</type> 参数，用于说明该转换是显式还是隐式。转换函数负责应用任何依赖于长度的语义，例如大小检查或截断。
 </para>
 </step>
 
 </procedure>
 
 <example>
-<title><type>character</type> Storage Type Conversion</title>
+<title><type>character</type> 存储类型转换</title>
 
 <para>
-For a target column declared as <type>character(20)</type> the following
-statement shows that the stored value is sized correctly:
+对于一个声明为 <type>character(20)</type> 的目标列，下面的语句展示了存储的值被正确地设置了长度：
 
 <screen>
 CREATE TABLE vv (v character(20));
@@ -723,18 +704,7 @@ SELECT v, octet_length(v) FROM vv;
 </para>
 
 <para>
-What has really happened here is that the two unknown literals are resolved
-to <type>text</type> by default, allowing the <literal>||</literal> operator
-to be resolved as <type>text</type> concatenation.  Then the <type>text</type>
-result of the operator is converted to <type>bpchar</type> (<quote>blank-padded
-char</quote>, the internal name of the <type>character</type> data type) to match the target
-column type.  (Since the conversion from <type>text</type> to
-<type>bpchar</type> is binary-coercible, this conversion does
-not insert any real function call.)  Finally, the sizing function
-<literal>bpchar(bpchar, integer, boolean)</literal> is found in the system catalog
-and applied to the operator's result and the stored column length.  This
-type-specific function performs the required length check and addition of
-padding spaces.
+这里实际发生的情况是，两个未知字面量默认被解析为 <type>text</type>，从而使得 <literal>||</literal> 运算符可以被解析为 <type>text</type> 连接。然后，该运算符的 <type>text</type> 结果被转换为 <type>bpchar</type>（<quote>空白填充字符</quote>，即 <type>character</type> 数据类型的内部名称），以匹配目标列的类型。（由于从 <type>text</type> 到 <type>bpchar</type> 的转换是二进制可强制的，该转换不会插入任何真正的函数调用。）最后，长度设置函数 <literal>bpchar(bpchar, integer, boolean)</literal> 在系统目录中被找到，并应用于该运算符的结果和存储的列长度。这个类型相关的函数执行所需的长度检查并添加填充空格。
 </para>
 </example>
 </sect1>
