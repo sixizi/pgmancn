@@ -21,349 +21,222 @@
   </para>
 
   <sect1 id="trigger-definition">
-   <title>Overview of Trigger Behavior</title>
+   <title>触发器行为概述</title>
 
    <para>
-    A trigger is a specification that the database should automatically
-    execute a particular function whenever a certain type of operation is
-    performed.  Triggers can be attached to tables (partitioned or not),
-    views, and foreign tables.
+    触发器是一种规范，它规定每当执行某一类操作时，数据库应自动执行某个特定的函数。触发器可以附加到表（分区表或非分区表）、视图和外部表上。
   </para>
 
   <para>
-    On tables and foreign tables, triggers can be defined to execute either
-    before or after any <command>INSERT</command>, <command>UPDATE</command>,
-    or <command>DELETE</command> operation, either once per modified row,
-    or once per <acronym>SQL</acronym> statement.
-    <command>UPDATE</command> triggers can moreover be set to fire only if
-    certain columns are mentioned in the <literal>SET</literal> clause of
-    the <command>UPDATE</command> statement.  Triggers can also fire
-    for <command>TRUNCATE</command> statements.  If a trigger event occurs,
-    the trigger's function is called at the appropriate time to handle the
-    event.
+    在表和外部表上，可以定义触发器在任意 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command> 操作之前或之后执行，既可以每个被修改的行执行一次，也可以每个 <acronym>SQL</acronym> 语句执行一次。
+    <command>UPDATE</command> 触发器还可以设置为仅当 <command>UPDATE</command> 语句的 <literal>SET</literal> 子句中提及某些列时才触发。触发器也可以针对 <command>TRUNCATE</command> 语句触发。如果发生了触发器事件，就会在适当的时间调用触发器的函数来处理该事件。
    </para>
 
    <para>
-    On views, triggers can be defined to execute instead of
-    <command>INSERT</command>, <command>UPDATE</command>, or
-    <command>DELETE</command> operations.
-    Such <literal>INSTEAD OF</literal> triggers
-    are fired once for each row that needs to be modified in the view.
-    It is the responsibility of the
-    trigger's function to perform the necessary modifications to the view's
-    underlying base table(s) and, where appropriate, return the modified
-    row as it will appear in the view.  Triggers on views can also be defined
-    to execute once per <acronym>SQL</acronym> statement, before or after
-    <command>INSERT</command>, <command>UPDATE</command>, or
-    <command>DELETE</command> operations.
-    However, such triggers are fired only if there is also
-    an <literal>INSTEAD OF</literal> trigger on the view.  Otherwise,
-    any statement targeting the view must be rewritten into a statement
-    affecting its underlying base table(s), and then the triggers
-    that will be fired are the ones attached to the base table(s).
+    在视图上，可以定义触发器来替代 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command> 操作。
+    这类 <literal>INSTEAD OF</literal> 触发器会针对视图中需要修改的每一行触发一次。
+    触发器函数负责对视图的底层基表执行必要的修改，并在适当情况下返回修改后的行（即该行在视图中的样子）。视图上的触发器也可以定义为每个 <acronym>SQL</acronym> 语句执行一次，在 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command> 操作之前或之后执行。
+    但是，只有当视图上还存在 <literal>INSTEAD OF</literal> 触发器时，这类触发器才会被触发。否则，任何以该视图为目标的语句都必须重写为影响其底层基表的语句，此时被触发的将是附加在基表上的触发器。
    </para>
 
    <para>
-    The trigger function must be defined before the trigger itself can be
-    created.  The trigger function must be declared as a
-    function taking no arguments and returning type <literal>trigger</literal>.
-    (The trigger function receives its input through a specially-passed
-    <structname>TriggerData</structname> structure, not in the form of ordinary function
-    arguments.)
+    必须先定义触发器函数，然后才能创建触发器本身。触发器函数必须声明为不接受参数并返回 <literal>trigger</literal> 类型的函数。
+    （触发器函数通过专门传递的 <structname>TriggerData</structname> 结构接收输入，而不是以普通函数参数的形式。）
    </para>
 
    <para>
-    Once a suitable trigger function has been created, the trigger is
-    established with
-    <xref linkend="sql-createtrigger"/>.
-    The same trigger function can be used for multiple triggers.
+    创建了合适的触发器函数后，即可使用
+    <xref linkend="sql-createtrigger"/> 建立触发器。
+    同一个触发器函数可用于多个触发器。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> offers both <firstterm>per-row</firstterm>
-    triggers and <firstterm>per-statement</firstterm> triggers.  With a per-row
-    trigger, the trigger function
-    is invoked once for each row that is affected by the statement
-    that fired the trigger. In contrast, a per-statement trigger is
-    invoked only once when an appropriate statement is executed,
-    regardless of the number of rows affected by that statement. In
-    particular, a statement that affects zero rows will still result
-    in the execution of any applicable per-statement triggers. These
-    two types of triggers are sometimes called <firstterm>row-level</firstterm>
-    triggers and <firstterm>statement-level</firstterm> triggers,
-    respectively. Triggers on <command>TRUNCATE</command> may only be
-    defined at statement level, not per-row.
+    <productname>PostgreSQL</productname> 同时提供<firstterm>逐行</firstterm>触发器和<firstterm>逐语句</firstterm>触发器。对于逐行触发器，触发器函数会针对触发该触发器的语句所影响的每一行被调用一次。相比之下，逐语句触发器只在执行相应语句时被调用一次，而不管该语句影响了多少行。特别是，影响零行的语句仍会导致执行任何适用的逐语句触发器。这两种类型的触发器有时分别称为<firstterm>行级</firstterm>触发器和<firstterm>语句级</firstterm>触发器。<command>TRUNCATE</command> 上的触发器只能定义为语句级，不能定义为逐行。
    </para>
 
    <para>
-    Triggers are also classified according to whether they fire
-    <firstterm>before</firstterm>, <firstterm>after</firstterm>, or
-    <firstterm>instead of</firstterm> the operation. These are referred to
-    as <literal>BEFORE</literal> triggers, <literal>AFTER</literal> triggers, and
-    <literal>INSTEAD OF</literal> triggers respectively.
-    Statement-level <literal>BEFORE</literal> triggers naturally fire before the
-    statement starts to do anything, while statement-level <literal>AFTER</literal>
-    triggers fire at the very end of the statement.  These types of
-    triggers may be defined on tables, views, or foreign tables.  Row-level
-    <literal>BEFORE</literal> triggers fire immediately before a particular row is
-    operated on, while row-level <literal>AFTER</literal> triggers fire at the end of
-    the statement (but before any statement-level <literal>AFTER</literal> triggers).
-    These types of triggers may only be defined on tables and
-    foreign tables, not views.
-    <literal>INSTEAD OF</literal> triggers may only be
-    defined on views, and only at row level; they fire immediately as each
-    row in the view is identified as needing to be operated on.
+    触发器还根据其是在操作<firstterm>之前</firstterm>、<firstterm>之后</firstterm>还是<firstterm>代替</firstterm>操作触发来进行分类。这些分别称为 <literal>BEFORE</literal> 触发器、<literal>AFTER</literal> 触发器和 <literal>INSTEAD OF</literal> 触发器。语句级 <literal>BEFORE</literal> 触发器自然会在语句开始执行任何操作之前触发，而语句级 <literal>AFTER</literal> 触发器会在语句的最末尾触发。这些类型的触发器可以定义在表、视图或外部表上。行级 <literal>BEFORE</literal> 触发器会在对特定行进行操作之前立即触发，而行级 <literal>AFTER</literal> 触发器会在语句结束时（但在任何语句级 <literal>AFTER</literal> 触发器之前）触发。这些类型的触发器只能定义在表和外部表上，不能定义在视图上。<literal>INSTEAD OF</literal> 触发器只能定义在视图上，并且只能在行级定义；当视图中的每一行被识别为需要操作时，它们会立即触发。
    </para>
 
    <para>
-    The execution of an <literal>AFTER</literal> trigger can be deferred
-    to the end of the transaction, rather than the end of the statement,
-    if it was defined as a <firstterm>constraint trigger</firstterm>.
-    In all cases, a trigger is executed as part of the same transaction as
-    the statement that triggered it, so if either the statement or the
-    trigger causes an error, the effects of both will be rolled back.
-    Also, the trigger will always run as the role that queued the trigger
-    event, unless the trigger function is marked as <literal>SECURITY
-    DEFINER</literal>, in which case it will run as the function owner.
+    如果 <literal>AFTER</literal> 触发器被定义为<firstterm>约束触发器</firstterm>，其执行可以推迟到事务结束时，而不是语句结束时。在所有情况下，触发器都作为触发它的语句所在同一事务的一部分执行，因此如果语句或触发器导致错误，两者的效果都将被回滚。此外，触发器将始终以排队该触发器事件的角色运行，除非触发器函数被标记为 <literal>SECURITY
+    DEFINER</literal>，在这种情况下，它将作为函数所有者运行。
    </para>
 
    <para>
-    If an <command>INSERT</command> contains an <literal>ON CONFLICT
-    DO UPDATE</literal> clause, it is possible for row-level
-    <literal>BEFORE</literal> <command>INSERT</command> and then
-    <literal>BEFORE</literal> <command>UPDATE</command> triggers
-    to be executed on triggered rows.  Such interactions can be
-    complex if the triggers are not idempotent because change made by
-    <literal>BEFORE</literal> <command>INSERT</command> triggers will be
-    seen by <literal>BEFORE</literal> <command>UPDATE</command> triggers,
-    including changes to <varname>EXCLUDED</varname> columns.
+    如果一个 <command>INSERT</command> 包含 <literal>ON CONFLICT
+    DO UPDATE</literal> 子句，则有可能在触发的行上执行行级
+    <literal>BEFORE</literal> <command>INSERT</command> 触发器，然后执行
+    <literal>BEFORE</literal> <command>UPDATE</command> 触发器。如果触发器不是幂等的，这种交互可能会
+    很复杂，因为由 <literal>BEFORE</literal> <command>INSERT</command> 触发器所做的更改
+    将被 <literal>BEFORE</literal> <command>UPDATE</command> 触发器看到，
+    包括对 <varname>EXCLUDED</varname> 列的更改。
    </para>
 
    <para>
-    Note that statement-level
-    <command>UPDATE</command> triggers are executed when <literal>ON
-    CONFLICT DO UPDATE</literal> is specified, regardless of whether or not
-    any rows were affected by the <command>UPDATE</command> (and
-    regardless of whether the alternative <command>UPDATE</command>
-    path was ever taken).  An <command>INSERT</command> with an
-    <literal>ON CONFLICT DO UPDATE</literal> clause will execute
-    statement-level <literal>BEFORE</literal> <command>INSERT</command>
-    triggers first, then statement-level <literal>BEFORE</literal>
-    <command>UPDATE</command> triggers, followed by statement-level
-    <literal>AFTER</literal> <command>UPDATE</command> triggers and finally
-    statement-level <literal>AFTER</literal> <command>INSERT</command>
-    triggers.
+    请注意，当指定 <literal>ON
+    CONFLICT DO UPDATE</literal> 时，语句级
+    <command>UPDATE</command> 触发器会被执行，无论
+    <command>UPDATE</command> 是否影响了任何行（也
+    无论是否曾经走过备选的 <command>UPDATE</command>
+    路径）。带有
+    <literal>ON CONFLICT DO UPDATE</literal> 子句的 <command>INSERT</command> 将首先执行
+    语句级 <literal>BEFORE</literal> <command>INSERT</command>
+    触发器，然后执行语句级 <literal>BEFORE</literal>
+    <command>UPDATE</command> 触发器，接着执行语句级
+    <literal>AFTER</literal> <command>UPDATE</command> 触发器，最后执行
+    语句级 <literal>AFTER</literal> <command>INSERT</command>
+    触发器。
    </para>
 
    <para>
-    A statement that targets a parent table in an inheritance or partitioning
-    hierarchy does not cause the statement-level triggers of affected child
-    tables to be fired; only the parent table's statement-level triggers are
-    fired.  However, row-level triggers of any affected child tables will be
-    fired.
+    针对继承或分区层次结构中的父表的语句
+    不会导致受影响子表的语句级触发器被触发；
+    只有父表的语句级触发器会被触发。
+    但是，任何受影响子表的行级触发器
+    都会被触发。
    </para>
 
    <para>
-    If an <command>UPDATE</command> on a partitioned table causes a row to move
-    to another partition, it will be performed as a <command>DELETE</command>
-    from the original partition followed by an <command>INSERT</command> into
-    the new partition. In this case, all row-level <literal>BEFORE</literal>
-    <command>UPDATE</command> triggers and all row-level
-    <literal>BEFORE</literal> <command>DELETE</command> triggers are fired on
-    the original partition. Then all row-level <literal>BEFORE</literal>
-    <command>INSERT</command> triggers are fired on the destination partition.
-    The possibility of surprising outcomes should be considered when all these
-    triggers affect the row being moved. As far as <literal>AFTER ROW</literal>
-    triggers are concerned, <literal>AFTER</literal> <command>DELETE</command>
-    and <literal>AFTER</literal> <command>INSERT</command> triggers are
-    applied; but <literal>AFTER</literal> <command>UPDATE</command> triggers
-    are not applied because the <command>UPDATE</command> has been converted to
-    a <command>DELETE</command> and an <command>INSERT</command>. As far as
-    statement-level triggers are concerned, none of the
-    <command>DELETE</command> or <command>INSERT</command> triggers are fired,
-    even if row movement occurs; only the <command>UPDATE</command> triggers
-    defined on the target table used in the <command>UPDATE</command> statement
-    will be fired.
+    如果对分区表执行 <command>UPDATE</command> 导致某一行移动到
+    另一个分区，则该操作将作为从原分区执行
+    <command>DELETE</command>、然后向新分区执行 <command>INSERT</command>
+    来执行。在这种情况下，所有行级 <literal>BEFORE</literal>
+    <command>UPDATE</command> 触发器和所有行级
+    <literal>BEFORE</literal> <command>DELETE</command> 触发器都会在原分区上触发。
+    然后，所有行级 <literal>BEFORE</literal>
+    <command>INSERT</command> 触发器都会在目标分区上触发。
+    当所有这些触发器都影响被移动的行时，应考虑
+    可能出现令人意外的结果。就 <literal>AFTER ROW</literal>
+    触发器而言，会应用 <literal>AFTER</literal> <command>DELETE</command>
+    和 <literal>AFTER</literal> <command>INSERT</command> 触发器；
+    但不会应用 <literal>AFTER</literal> <command>UPDATE</command> 触发器，
+    因为 <command>UPDATE</command> 已被转换为
+    <command>DELETE</command> 和 <command>INSERT</command>。就
+    语句级触发器而言，即使发生行移动，
+    也不会触发任何
+    <command>DELETE</command> 或 <command>INSERT</command> 触发器；
+    只会触发在 <command>UPDATE</command> 语句中使用的目标表上
+    定义的 <command>UPDATE</command> 触发器。
    </para>
 
    <para>
-    No separate triggers are defined for <command>MERGE</command>. Instead,
-    statement-level or row-level <command>UPDATE</command>,
-    <command>DELETE</command>, and <command>INSERT</command> triggers are fired
-    depending on (for statement-level triggers) what actions are specified in
-    the <command>MERGE</command> query and (for row-level triggers) what
-    actions are performed.
+    没有为 <command>MERGE</command> 定义单独的触发器。相反，
+    会触发语句级或行级的 <command>UPDATE</command>、
+    <command>DELETE</command> 和 <command>INSERT</command> 触发器，
+    具体取决于（对于语句级触发器）<command>MERGE</command> 查询中
+    指定了哪些操作，以及（对于行级触发器）
+    执行了哪些操作。
    </para>
 
    <para>
-    While running a <command>MERGE</command> command, statement-level
-    <literal>BEFORE</literal> and <literal>AFTER</literal> triggers are
-    fired for events specified in the actions of the <command>MERGE</command>
-    command, irrespective of whether or not the action is ultimately performed.
-    This is the same as an <command>UPDATE</command> statement that updates
-    no rows, yet statement-level triggers are fired.
-    The row-level triggers are fired only when a row is actually updated,
-    inserted or deleted. So it's perfectly legal that while statement-level
-    triggers are fired for certain types of action, no row-level triggers
-    are fired for the same kind of action.
+    在执行 <command>MERGE</command> 命令时，语句级
+    <literal>BEFORE</literal> 和 <literal>AFTER</literal> 触发器会针对 <command>MERGE</command>
+    命令的动作中所指定的事件被触发，无论该动作最终是否被执行。
+    这与一条不更新任何行的 <command>UPDATE</command> 语句相同，但语句级触发器仍会被触发。
+    行级触发器仅在行实际被更新、插入或删除时才会被触发。因此，
+    对于某类动作触发了语句级触发器、而同一类动作没有触发行级触发器，
+    这完全是合法的。
    </para>
 
    <para>
-    Trigger functions invoked by per-statement triggers should always
-    return <symbol>NULL</symbol>. Trigger functions invoked by per-row
-    triggers can return a table row (a value of
-    type <structname>HeapTuple</structname>) to the calling executor,
-    if they choose.  A row-level trigger fired before an operation has
-    the following choices:
+    由语句级触发器调用的触发器函数应始终
+    返回 <symbol>NULL</symbol>。由行级触发器调用的触发器函数
+    可以选择向调用它的执行器返回一个表行
+    （类型为 <structname>HeapTuple</structname> 的值）。
+    在操作之前触发的行级触发器
+    有以下选择：
 
     <itemizedlist>
      <listitem>
       <para>
-       It can return <symbol>NULL</symbol> to skip the operation for the
-       current row. This instructs the executor to not perform the
-       row-level operation that invoked the trigger (the insertion,
-       modification, or deletion of a particular table row).
+       它可以返回 <symbol>NULL</symbol> 以跳过对当前行的
+       操作。这会指示执行器不执行
+       调用该触发器的行级操作（即对特定
+       表行的插入、修改或删除）。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       For row-level <command>INSERT</command>
-       and <command>UPDATE</command> triggers only, the returned row
-       becomes the row that will be inserted or will replace the row
-       being updated.  This allows the trigger function to modify the
-       row being inserted or updated.
+       仅对于行级 <command>INSERT</command>
+       和 <command>UPDATE</command> 触发器，返回的行
+       将成为将被插入的行，或替换正在被更新的行。
+       这允许触发器函数修改
+       正在被插入或更新的行。
       </para>
      </listitem>
     </itemizedlist>
 
-    A row-level <literal>BEFORE</literal> trigger that does not intend to cause
-    either of these behaviors must be careful to return as its result the same
-    row that was passed in (that is, the <varname>NEW</varname> row
-    for <command>INSERT</command> and <command>UPDATE</command>
-    triggers, the <varname>OLD</varname> row for
-    <command>DELETE</command> triggers).
+    不打算造成上述任一行为的行级 <literal>BEFORE</literal>
+    触发器必须注意将其结果返回为传入的
+    同一行（即对于 <command>INSERT</command> 和 <command>UPDATE</command>
+    触发器为 <varname>NEW</varname> 行，对于
+    <command>DELETE</command> 触发器为 <varname>OLD</varname> 行）。
    </para>
 
    <para>
-    A row-level <literal>INSTEAD OF</literal> trigger should either return
-    <symbol>NULL</symbol> to indicate that it did not modify any data from
-    the view's underlying base tables, or it should return the view
-    row that was passed in (the <varname>NEW</varname> row
-    for <command>INSERT</command> and <command>UPDATE</command>
-    operations, or the <varname>OLD</varname> row for
-    <command>DELETE</command> operations). A nonnull return value is
-    used to signal that the trigger performed the necessary data
-    modifications in the view.  This will cause the count of the number
-    of rows affected by the command to be incremented. For
-    <command>INSERT</command> and <command>UPDATE</command> operations only, the trigger
-    may modify the <varname>NEW</varname> row before returning it.  This will
-    change the data returned by
-    <command>INSERT RETURNING</command> or <command>UPDATE RETURNING</command>,
-    and is useful when the view will not show exactly the same data
-    that was provided.
+    行级 <literal>INSTEAD OF</literal> 触发器应返回
+    <symbol>NULL</symbol> 以表示它没有修改视图底层基表的
+    任何数据，或者它应返回传入的视图
+    行（对于 <command>INSERT</command> 和 <command>UPDATE</command>
+    操作为 <varname>NEW</varname> 行，对于
+    <command>DELETE</command> 操作为 <varname>OLD</varname> 行）。非空返回值
+    用于表示该触发器在视图中执行了必要的数据
+    修改。这将使受该命令影响的行数
+    计数增加。仅对于
+    <command>INSERT</command> 和 <command>UPDATE</command> 操作，触发器
+    可以在返回 <varname>NEW</varname> 行之前修改它。这将
+    改变 <command>INSERT RETURNING</command> 或 <command>UPDATE RETURNING</command>
+    返回的数据，当视图不会显示与所提供的数据
+    完全相同时，这很有用。
    </para>
 
    <para>
-    The return value is ignored for row-level triggers fired after an
-    operation, and so they can return <symbol>NULL</symbol>.
+    对于在操作之后触发的行级触发器，返回值会被忽略，因此它们可以返回 <symbol>NULL</symbol>。
    </para>
 
    <para>
-    Some considerations apply for generated
-    columns.<indexterm><primary>generated column</primary><secondary>in
-    triggers</secondary></indexterm>  Stored generated columns are computed after
-    <literal>BEFORE</literal> triggers and before <literal>AFTER</literal>
-    triggers.  Therefore, the generated value can be inspected in
-    <literal>AFTER</literal> triggers.  In <literal>BEFORE</literal> triggers,
-    the <literal>OLD</literal> row contains the old generated value, as one
-    would expect, but the <literal>NEW</literal> row does not yet contain the
-    new generated value and should not be accessed.  In the C language
-    interface, the content of the column is undefined at this point; a
-    higher-level programming language should prevent access to a stored
-    generated column in the <literal>NEW</literal> row in a
-    <literal>BEFORE</literal> trigger.  Changes to the value of a generated
-    column in a <literal>BEFORE</literal> trigger are ignored and will be
-    overwritten.
-    Virtual generated columns are never computed when triggers fire.  In the C
-    language interface, their content is undefined in a trigger function.
-    Higher-level programming languages should prevent access to virtual
-    generated columns in triggers.
+    生成列有一些需要注意的地方。<indexterm><primary>生成列</primary><secondary>在触发器中</secondary></indexterm> 存储生成列在 <literal>BEFORE</literal> 触发器之后、<literal>AFTER</literal>
+    触发器之前计算。因此，可以在
+    <literal>AFTER</literal> 触发器中检查生成的值。在 <literal>BEFORE</literal> 触发器中，
+    <literal>OLD</literal> 行包含旧的生成值，这符合预期，但 <literal>NEW</literal> 行尚未包含
+    新的生成值，不应被访问。在 C 语言
+    接口中，此时该列的内容是未定义的；
+    更高级别的编程语言应阻止在
+    <literal>BEFORE</literal> 触发器中访问 <literal>NEW</literal> 行中的存储
+    生成列。在 <literal>BEFORE</literal> 触发器中对该生成列
+    值的更改会被忽略，并会被覆盖。
+    虚拟生成列在触发器触发时从不计算。在 C
+    语言接口中，它们在触发器函数中的内容是未定义的。
+    更高级别的编程语言应阻止在触发器中访问虚拟
+    生成列。
    </para>
 
    <para>
-    If more than one trigger is defined for the same event on the same
-    relation, the triggers will be fired in alphabetical order by
-    trigger name.  In the case of <literal>BEFORE</literal> and
-    <literal>INSTEAD OF</literal> triggers, the possibly-modified row returned by
-    each trigger becomes the input to the next trigger.  If any
-    <literal>BEFORE</literal> or <literal>INSTEAD OF</literal> trigger returns
-    <symbol>NULL</symbol>, the operation is abandoned for that row and subsequent
-    triggers are not fired (for that row).
+    如果在同一个关系上为同一个事件定义了多个触发器，
+    这些触发器将按触发器名称的字母顺序触发。对于 <literal>BEFORE</literal> 和
+    <literal>INSTEAD OF</literal> 触发器，每个触发器返回的可能已被修改的行
+    将成为下一个触发器的输入。如果任何
+    <literal>BEFORE</literal> 或 <literal>INSTEAD OF</literal> 触发器返回
+    <symbol>NULL</symbol>，则该行的操作被放弃，后续触发器
+    （对该行）不再触发。
    </para>
 
    <para>
-    A trigger definition can also specify a Boolean <literal>WHEN</literal>
-    condition, which will be tested to see whether the trigger should
-    be fired.  In row-level triggers the <literal>WHEN</literal> condition can
-    examine the old and/or new values of columns of the row.  (Statement-level
-    triggers can also have <literal>WHEN</literal> conditions, although the feature
-    is not so useful for them.)  In a <literal>BEFORE</literal> trigger, the
-    <literal>WHEN</literal>
-    condition is evaluated just before the function is or would be executed,
-    so using <literal>WHEN</literal> is not materially different from testing the
-    same condition at the beginning of the trigger function.  However, in
-    an <literal>AFTER</literal> trigger, the <literal>WHEN</literal> condition is evaluated
-    just after the row update occurs, and it determines whether an event is
-    queued to fire the trigger at the end of statement.  So when an
-    <literal>AFTER</literal> trigger's
-    <literal>WHEN</literal> condition does not return true, it is not necessary
-    to queue an event nor to re-fetch the row at end of statement.  This
-    can result in significant speedups in statements that modify many
-    rows, if the trigger only needs to be fired for a few of the rows.
-    <literal>INSTEAD OF</literal> triggers do not support
-    <literal>WHEN</literal> conditions.
+    触发器定义还可以指定一个布尔 <literal>WHEN</literal> 条件，将测试该条件以确定触发器是否应被触发。在行级触发器中，<literal>WHEN</literal> 条件可以检查该行各列的旧值和/或新值。（语句级触发器也可以有 <literal>WHEN</literal> 条件，尽管该特性对它们不那么有用。）在 <literal>BEFORE</literal> 触发器中，<literal>WHEN</literal> 条件在函数被执行或将要执行之前立即求值，因此使用 <literal>WHEN</literal> 与在触发器函数开头测试相同的条件并无实质区别。然而，在 <literal>AFTER</literal> 触发器中，<literal>WHEN</literal> 条件在行更新发生之后立即求值，它决定是否排队一个事件以便在语句结束时触发触发器。因此，当 <literal>AFTER</literal> 触发器的 <literal>WHEN</literal> 条件不返回真时，就不需要排队事件，也不需要在语句结束时重新获取该行。如果触发器只需要对少数行触发，这可以在修改许多行的语句中带来显著的速度提升。<literal>INSTEAD OF</literal> 触发器不支持 <literal>WHEN</literal> 条件。
    </para>
 
    <para>
-    Typically, row-level <literal>BEFORE</literal> triggers are used for checking or
-    modifying the data that will be inserted or updated.  For example,
-    a <literal>BEFORE</literal> trigger might be used to insert the current time into a
-    <type>timestamp</type> column, or to check that two elements of the row are
-    consistent. Row-level <literal>AFTER</literal> triggers are most sensibly
-    used to propagate the updates to other tables, or make consistency
-    checks against other tables.  The reason for this division of labor is
-    that an <literal>AFTER</literal> trigger can be certain it is seeing the final
-    value of the row, while a <literal>BEFORE</literal> trigger cannot; there might
-    be other <literal>BEFORE</literal> triggers firing after it.  If you have no
-    specific reason to make a trigger <literal>BEFORE</literal> or
-    <literal>AFTER</literal>, the <literal>BEFORE</literal> case is more efficient, since
-    the information about
-    the operation doesn't have to be saved until end of statement.
+    通常，行级 <literal>BEFORE</literal> 触发器用于检查或修改将要插入或更新的数据。例如，<literal>BEFORE</literal> 触发器可用于将当前时间插入到 <type>timestamp</type> 列，或检查该行的两个元素是否一致。行级 <literal>AFTER</literal> 触发器最合理的用途是将更新传播到其他表，或对其他表进行一致性检查。这种分工的原因在于，<literal>AFTER</literal> 触发器可以确定它看到的是该行的最终值，而 <literal>BEFORE</literal> 触发器则不能；在它之后可能还有其他 <literal>BEFORE</literal> 触发器触发。如果你没有特定理由把触发器设为 <literal>BEFORE</literal> 或 <literal>AFTER</literal>，<literal>BEFORE</literal> 情形更高效，因为关于该操作的信息不必保存到语句结束。
    </para>
 
    <para>
-    If a trigger function executes SQL commands then these
-    commands might fire triggers again. This is known as cascading
-    triggers.  There is no direct limitation on the number of cascade
-    levels.  It is possible for cascades to cause a recursive invocation
-    of the same trigger; for example, an <command>INSERT</command>
-    trigger might execute a command that inserts an additional row
-    into the same table, causing the <command>INSERT</command> trigger
-    to be fired again.  It is the trigger programmer's responsibility
-    to avoid infinite recursion in such scenarios.
+    如果一个触发器函数执行 SQL 命令，那么这些命令可能会再次触发触发器。这被称为级联触发器。对级联层数没有直接限制。级联有可能导致同一触发器的递归调用；例如，一个 <command>INSERT</command> 触发器可能执行一条命令，向同一个表插入额外的一行，从而导致 <command>INSERT</command> 触发器再次被触发。在这种场景下避免无限递归是触发器程序员的责任。
    </para>
 
    <para>
-    If a foreign key constraint specifies referential actions (that
-    is, cascading updates or deletes), those actions are performed via
-    ordinary SQL <command>UPDATE</command> or <command>DELETE</command>
-    commands on the referencing table.
-    In particular, any triggers that exist on the referencing table
-    will be fired for those changes.  If such a trigger modifies or
-    blocks the effect of one of these commands, the end result could
-    be to break referential integrity.  It is the trigger programmer's
-    responsibility to avoid that.
+    如果一个外键约束指定了引用动作（即级联更新或删除），这些动作是通过在引用表上执行普通的 SQL <command>UPDATE</command> 或 <command>DELETE</command> 命令来完成的。特别是，引用表上存在的任何触发器都会因这些更改而被触发。如果这样的触发器修改或阻止了其中某条命令的效果，最终结果可能会破坏引用完整性。避免这种情况是触发器程序员的责任。
    </para>
 
    <para>
@@ -371,46 +244,16 @@
      <primary>trigger</primary>
      <secondary>arguments for trigger functions</secondary>
     </indexterm>
-    When a trigger is being defined, arguments can be specified for
-    it. The purpose of including arguments in the
-    trigger definition is to allow different triggers with similar
-    requirements to call the same function.  As an example, there
-    could be a generalized trigger function that takes as its
-    arguments two column names and puts the current user in one and
-    the current time stamp in the other.  Properly written, this
-    trigger function would be independent of the specific table it is
-    triggering on.  So the same function could be used for
-    <command>INSERT</command> events on any table with suitable
-    columns, to automatically track creation of records in a
-    transaction table for example. It could also be used to track
-    last-update events if defined as an <command>UPDATE</command>
-    trigger.
+    在定义触发器时，可以为它指定参数。在触发器定义中包含参数的目的是允许具有相似需求的不同触发器调用同一个函数。例如，可以有一个通用的触发器函数，它接受两个列名作为参数，并把当前用户放入其中一个列，把当前时间戳放入另一个列。如果编写得当，这个触发器函数将独立于它所触发的具体表。因此，同一个函数可以用于任何具有合适列的表的 <command>INSERT</command> 事件，例如自动跟踪事务表中记录的创建。如果定义为 <command>UPDATE</command> 触发器，它也可以用于跟踪最后更新事件。
    </para>
 
    <para>
-    Each programming language that supports triggers has its own method
-    for making the trigger input data available to the trigger function.
-    This input data includes the type of trigger event (e.g.,
-    <command>INSERT</command> or <command>UPDATE</command>) as well as any
-    arguments that were listed in <command>CREATE TRIGGER</command>.
-    For a row-level trigger, the input data also includes the
-    <varname>NEW</varname> row for <command>INSERT</command> and
-    <command>UPDATE</command> triggers, and/or the <varname>OLD</varname> row
-    for <command>UPDATE</command> and <command>DELETE</command> triggers.
+    每种支持触发器的编程语言都有自己的方法，使触发器输入数据可供触发器函数使用。这些输入数据包括触发器事件的类型（例如 <command>INSERT</command> 或 <command>UPDATE</command>）以及 <command>CREATE TRIGGER</command> 中列出的任何参数。对于行级触发器，输入数据还包括 <command>INSERT</command> 和 <command>UPDATE</command> 触发器的 <varname>NEW</varname> 行，和/或 <command>UPDATE</command> 和 <command>DELETE</command> 触发器的 <varname>OLD</varname> 行。
    </para>
 
    <para>
-    By default, statement-level triggers do not have any way to examine the
-    individual row(s) modified by the statement.  But an <literal>AFTER
-    STATEMENT</literal> trigger can request that <firstterm>transition tables</firstterm>
-    be created to make the sets of affected rows available to the trigger.
-    <literal>AFTER ROW</literal> triggers can also request transition tables, so
-    that they can see the total changes in the table as well as the change in
-    the individual row they are currently being fired for.  The method for
-    examining the transition tables again depends on the programming language
-    that is being used, but the typical approach is to make the transition
-    tables act like read-only temporary tables that can be accessed by SQL
-    commands issued within the trigger function.
+    默认情况下，语句级触发器无法检查该语句所修改的各个行。但 <literal>AFTER
+    STATEMENT</literal> 触发器可以请求创建<firstterm>转换表</firstterm>，以便让触发器能够访问受影响行的集合。<literal>AFTER ROW</literal> 触发器也可以请求转换表，这样它们既能查看表中的总体变化，也能查看当前触发所针对的单个行的变化。检查转换表的方法同样取决于所使用的编程语言，但典型做法是让转换表表现得像只读临时表，可由在触发器函数内发出的 SQL 命令访问。
    </para>
 
   </sect1>
