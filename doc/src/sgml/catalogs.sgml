@@ -7135,33 +7135,27 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </indexterm>
 
   <para>
-   The catalog <structname>pg_subscription</structname> contains all existing
-   logical replication subscriptions.  For more information about logical
-   replication see <xref linkend="logical-replication"/>.
+   系统目录 <structname>pg_subscription</structname> 包含所有现有的逻辑复制订阅。有关逻辑复制的更多信息，请参见 <xref linkend="logical-replication"/>。
   </para>
 
   <para>
-   Unlike most system catalogs, <structname>pg_subscription</structname> is
-   shared across all databases of a cluster: there is only one copy
-   of <structname>pg_subscription</structname> per cluster, not one per
-   database.
+   与大多数系统目录不同，<structname>pg_subscription</structname> 在一个数据库集簇的所有数据库之间共享：每个数据库集簇只有一份 <structname>pg_subscription</structname> 的副本，而不是每个数据库一份。
   </para>
 
   <para>
-   Access to the column <structfield>subconninfo</structfield> is revoked from
-   normal users, because it could contain plain-text passwords.
+   普通用户对列 <structfield>subconninfo</structfield> 的访问权限已被撤销，因为它可能包含明文密码。
   </para>
 
   <table>
-   <title><structname>pg_subscription</structname> Columns</title>
+   <title><structname>pg_subscription</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -7172,17 +7166,17 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>oid</structfield> <type>oid</type>
       </para>
       <para>
-       Row identifier
+       行标识符
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>subdbid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>)
+（引用 <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the database that the subscription resides in
+       订阅所在数据库的 OID
       </para></entry>
      </row>
 
@@ -7191,8 +7185,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subskiplsn</structfield> <type>pg_lsn</type>
       </para>
       <para>
-       Finish LSN of the transaction whose changes are to be skipped, if a valid
-       LSN; otherwise <literal>0/0</literal>.
+       要跳过其更改的事务的结束 LSN（如果 LSN 有效）；否则为 <literal>0/0</literal>。
       </para></entry>
      </row>
 
@@ -7201,17 +7194,17 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subname</structfield> <type>name</type>
       </para>
       <para>
-       Name of the subscription
+       订阅的名称
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>subowner</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-authid"><structname>pg_authid</structname></link>.<structfield>oid</structfield>)
+（引用 <link linkend="catalog-pg-authid"><structname>pg_authid</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       Owner of the subscription
+       订阅的所有者
       </para></entry>
      </row>
 
@@ -7220,7 +7213,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subenabled</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the subscription is enabled and should be replicating
+       如果为 true，则订阅已启用并且应该正在进行复制
       </para></entry>
      </row>
 
@@ -7229,8 +7222,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subbinary</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the subscription will request that the publisher send data
-       in binary format
+       如果为 true，订阅将请求发布者以二进制格式发送数据
       </para></entry>
      </row>
 
@@ -7239,14 +7231,10 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>substream</structfield> <type>char</type>
       </para>
       <para>
-       Controls how to handle the streaming of in-progress transactions:
-       <literal>f</literal> = disallow streaming of in-progress transactions,
-       <literal>t</literal> = spill the changes of in-progress transactions to
-       disk and apply at once after the transaction is committed on the
-       publisher and received by the subscriber,
-       <literal>p</literal> = apply changes directly using a parallel apply
-       worker if available (same as <literal>t</literal> if no worker is
-       available)
+       控制如何处理进行中事务的流式传输：
+<literal>f</literal> = 不允许进行中事务的流式传输，
+<literal>t</literal> = 将进行中事务的更改溢出到磁盘，并在事务在发布者上提交且被订阅者接收后立即应用，
+<literal>p</literal> = 如果可用，使用并行应用工作者直接应用更改（如果没有可用工作者，则与 <literal>t</literal> 相同）
       </para></entry>
      </row>
 
@@ -7255,10 +7243,10 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subtwophasestate</structfield> <type>char</type>
       </para>
       <para>
-       State codes for two-phase mode:
-       <literal>d</literal> = disabled,
-       <literal>p</literal> = pending enablement,
-       <literal>e</literal> = enabled
+       两阶段模式的状态代码：
+<literal>d</literal> = 已禁用，
+<literal>p</literal> = 待启用，
+<literal>e</literal> = 已启用
       </para></entry>
      </row>
 
@@ -7267,8 +7255,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subdisableonerr</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the subscription will be disabled if one of its workers
-       detects an error
+       如果为 true，则当其某个工作者检测到错误时，订阅将被禁用
       </para></entry>
      </row>
 
@@ -7277,8 +7264,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subpasswordrequired</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the subscription will be required to specify a password
-       for authentication
+       如果为真，则订阅将被要求指定用于认证的密码
       </para></entry>
      </row>
 
@@ -7287,8 +7273,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subrunasowner</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the subscription will be run with the permissions
-       of the subscription owner
+       如果为真，则订阅将以订阅所有者的权限运行
       </para></entry>
      </row>
 
@@ -7297,9 +7282,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subfailover</structfield> <type>bool</type>
       </para>
       <para>
-       If true, the associated replication slots (i.e. the main slot and the
-       table synchronization slots) in the upstream database are enabled to be
-       synchronized to the standbys
+       如果为真，则上游数据库中关联的复制槽（即主槽和表同步槽）将被允许同步到备库
       </para></entry>
      </row>
 
@@ -7308,7 +7291,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subconninfo</structfield> <type>text</type>
       </para>
       <para>
-       Connection string to the upstream database
+       到上游数据库的连接串
       </para></entry>
      </row>
 
@@ -7317,9 +7300,8 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subslotname</structfield> <type>name</type>
       </para>
       <para>
-       Name of the replication slot in the upstream database (also used
-       for the local replication origin name);
-       null represents <literal>NONE</literal>
+       上游数据库中复制槽的名称（也用作本地复制原点的名称）；
+       null 表示 <literal>NONE</literal>
       </para></entry>
      </row>
 
@@ -7328,8 +7310,8 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subsynccommit</structfield> <type>text</type>
       </para>
       <para>
-       The <varname>synchronous_commit</varname>
-       setting for the subscription's workers to use
+       供订阅的工作进程使用的 <varname>synchronous_commit</varname>
+       设置
       </para></entry>
      </row>
 
@@ -7338,9 +7320,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>subpublications</structfield> <type>text[]</type>
       </para>
       <para>
-       Array of subscribed publication names. These reference
-       publications defined in the upstream database. For more on publications
-       see <xref linkend="logical-replication-publication"/>.
+       已订阅发布的数组。这些名称引用在上游数据库中定义的发布。关于发布的更多信息，请参见 <xref linkend="logical-replication-publication"/>。
       </para></entry>
      </row>
 
@@ -7349,12 +7329,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>suborigin</structfield> <type>text</type>
       </para>
       <para>
-       The origin value must be either <literal>none</literal> or
-       <literal>any</literal>. The default is <literal>any</literal>.
-       If <literal>none</literal>, the subscription will request the publisher
-       to only send changes that don't have an origin. If
-       <literal>any</literal>, the publisher sends changes regardless of their
-       origin.
+       origin 值必须是 <literal>none</literal> 或 <literal>any</literal>。默认值为 <literal>any</literal>。如果为 <literal>none</literal>，订阅将请求发布者只发送没有 origin 的更改。如果为 <literal>any</literal>，发布者将发送更改，而不考虑其 origin。
       </para></entry>
      </row>
     </tbody>
