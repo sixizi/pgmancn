@@ -405,7 +405,7 @@ CREATE INDEX test2_mm_idx ON test2 (major, minor);
 
 
  <sect1 id="indexes-ordering">
-  <title>Indexes and <literal>ORDER BY</literal></title>
+  <title>索引与 <literal>ORDER BY</literal></title>
 
   <indexterm zone="indexes-ordering">
    <primary>index</primary>
@@ -413,77 +413,32 @@ CREATE INDEX test2_mm_idx ON test2 (major, minor);
   </indexterm>
 
   <para>
-   In addition to simply finding the rows to be returned by a query,
-   an index may be able to deliver them in a specific sorted order.
-   This allows a query's <literal>ORDER BY</literal> specification to be honored
-   without a separate sorting step.  Of the index types currently
-   supported by <productname>PostgreSQL</productname>, only B-tree
-   can produce sorted output &mdash; the other index types return
-   matching rows in an unspecified, implementation-dependent order.
+   除了简单地找出查询要返回的行之外，索引还可能以特定的排序顺序返回它们。这使得查询的 <literal>ORDER BY</literal> 规范无需单独的排序步骤即可得到满足。在 <productname>PostgreSQL</productname> 目前支持的索引类型中，只有 B-tree 能产生有序输出 &mdash; 其他索引类型以未指定的、依赖于实现的顺序返回匹配的行。
   </para>
 
   <para>
-   The planner will consider satisfying an <literal>ORDER BY</literal> specification
-   either by scanning an available index that matches the specification,
-   or by scanning the table in physical order and doing an explicit
-   sort.  For a query that requires scanning a large fraction of the
-   table, an explicit sort is likely to be faster than using an index
-   because it requires
-   less disk I/O due to following a sequential access pattern.  Indexes are
-   more useful when only a few rows need be fetched.  An important
-   special case is <literal>ORDER BY</literal> in combination with
-   <literal>LIMIT</literal> <replaceable>n</replaceable>: an explicit sort will have to process
-   all the data to identify the first <replaceable>n</replaceable> rows, but if there is
-   an index matching the <literal>ORDER BY</literal>, the first <replaceable>n</replaceable>
-   rows can be retrieved directly, without scanning the remainder at all.
+   规划器会考虑通过扫描匹配该规范的可用索引，或者通过按物理顺序扫描表并进行显式排序，来满足 <literal>ORDER BY</literal> 规范。对于需要扫描表中很大一部分的查询，显式排序很可能比使用索引更快，因为它遵循顺序访问模式，所需的磁盘 I/O 更少。当只需要获取少量行时，索引更有用。一个重要的特殊情况是 <literal>ORDER BY</literal> 与 <literal>LIMIT</literal> <replaceable>n</replaceable> 的组合：显式排序必须处理所有数据才能找出前 <replaceable>n</replaceable> 行，但如果有匹配 <literal>ORDER BY</literal> 的索引，则可以直接检索前 <replaceable>n</replaceable> 行，而完全无需扫描其余部分。
   </para>
 
   <para>
-   By default, B-tree indexes store their entries in ascending order
-   with nulls last (table TID is treated as a tiebreaker column among
-   otherwise equal entries).  This means that a forward scan of an
-   index on column <literal>x</literal> produces output satisfying <literal>ORDER BY x</literal>
-   (or more verbosely, <literal>ORDER BY x ASC NULLS LAST</literal>).  The
-   index can also be scanned backward, producing output satisfying
-   <literal>ORDER BY x DESC</literal>
-   (or more verbosely, <literal>ORDER BY x DESC NULLS FIRST</literal>, since
-   <literal>NULLS FIRST</literal> is the default for <literal>ORDER BY DESC</literal>).
+   默认情况下，B-tree 索引按升序存储其条目，空值排在最后（表 TID 在其他方面相等的条目之间被当作决胜列）。这意味着对列 <literal>x</literal> 上的索引进行正向扫描会产生满足 <literal>ORDER BY x</literal>（或者更详细地说，<literal>ORDER BY x ASC NULLS LAST</literal>）的输出。该索引也可以反向扫描，产生满足 <literal>ORDER BY x DESC</literal>（或者更详细地说，<literal>ORDER BY x DESC NULLS FIRST</literal>，因为 <literal>NULLS FIRST</literal> 是 <literal>ORDER BY DESC</literal> 的默认值）的输出。
   </para>
 
   <para>
-   You can adjust the ordering of a B-tree index by including the
-   options <literal>ASC</literal>, <literal>DESC</literal>, <literal>NULLS FIRST</literal>,
-   and/or <literal>NULLS LAST</literal> when creating the index; for example:
+   你可以在创建索引时包含 <literal>ASC</literal>、<literal>DESC</literal>、<literal>NULLS FIRST</literal> 和/或 <literal>NULLS LAST</literal> 选项来调整 B-tree 索引的排序；例如：
 <programlisting>
 CREATE INDEX test2_info_nulls_low ON test2 (info NULLS FIRST);
 CREATE INDEX test3_desc_index ON test3 (id DESC NULLS LAST);
 </programlisting>
-   An index stored in ascending order with nulls first can satisfy
-   either <literal>ORDER BY x ASC NULLS FIRST</literal> or
-   <literal>ORDER BY x DESC NULLS LAST</literal> depending on which direction
-   it is scanned in.
+   以升序存储且空值排在最前的索引可以满足 <literal>ORDER BY x ASC NULLS FIRST</literal> 或 <literal>ORDER BY x DESC NULLS LAST</literal>，具体取决于扫描的方向。
   </para>
 
   <para>
-   You might wonder why bother providing all four options, when two
-   options together with the possibility of backward scan would cover
-   all the variants of <literal>ORDER BY</literal>.  In single-column indexes
-   the options are indeed redundant, but in multicolumn indexes they can be
-   useful.  Consider a two-column index on <literal>(x, y)</literal>: this can
-   satisfy <literal>ORDER BY x, y</literal> if we scan forward, or
-   <literal>ORDER BY x DESC, y DESC</literal> if we scan backward.
-   But it might be that the application frequently needs to use
-   <literal>ORDER BY x ASC, y DESC</literal>.  There is no way to get that
-   ordering from a plain index, but it is possible if the index is defined
-   as <literal>(x ASC, y DESC)</literal> or <literal>(x DESC, y ASC)</literal>.
+   你可能会想，既然两个选项加上向后扫描的可能性就能覆盖 <literal>ORDER BY</literal> 的所有变体，为什么还要费心提供全部四个选项。在单列索引中这些选项确实是冗余的，但在多列索引中它们可能很有用。考虑一个在 <literal>(x, y)</literal> 上的两列索引：如果我们向前扫描，它可以满足 <literal>ORDER BY x, y</literal>；如果向后扫描，则可以满足 <literal>ORDER BY x DESC, y DESC</literal>。但应用程序可能经常需要使用 <literal>ORDER BY x ASC, y DESC</literal>。普通索引无法得到这种排序，但如果把索引定义为 <literal>(x ASC, y DESC)</literal> 或 <literal>(x DESC, y ASC)</literal>，就可以做到。
   </para>
 
   <para>
-   Obviously, indexes with non-default sort orderings are a fairly
-   specialized feature, but sometimes they can produce tremendous
-   speedups for certain queries.  Whether it's worth maintaining such an
-   index depends on how often you use queries that require a special
-   sort ordering.
+   显然，具有非默认排序顺序的索引是一种相当专门化的特性，但有时它们能为某些查询带来巨大的速度提升。是否值得维护这样的索引，取决于你使用需要特殊排序顺序的查询的频率。
   </para>
  </sect1>
 
