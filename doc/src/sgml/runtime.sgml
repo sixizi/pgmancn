@@ -32,7 +32,7 @@
  </sect1>
 
  <sect1 id="creating-cluster">
-  <title>Creating a Database Cluster</title>
+  <title>创建数据库集簇</title>
 
   <indexterm>
    <primary>database cluster</primary>
@@ -44,92 +44,42 @@
   </indexterm>
 
   <para>
-   Before you can do anything, you must initialize a database storage
-   area on disk. We call this a <firstterm>database cluster</firstterm>.
-   (The <acronym>SQL</acronym> standard uses the term catalog cluster.) A
-   database cluster is a collection of databases that is managed by a
-   single instance of a running database server. After initialization, a
-   database cluster will contain a database named <literal>postgres</literal>,
-   which is meant as a default database for use by utilities, users and third
-   party applications.  The database server itself does not require the
-   <literal>postgres</literal> database to exist, but many external utility
-   programs assume it exists.  There are two more databases created within
-   each cluster during initialization, named <literal>template1</literal>
-   and <literal>template0</literal>.  As the names suggest, these will be
-   used as templates for subsequently-created databases; they should not be
-   used for actual work.  (See <xref linkend="managing-databases"/> for
-   information about creating new databases within a cluster.)
+   在做任何事情之前，你必须先在磁盘上初始化一个数据库存储区域。我们称之为<firstterm>数据库集簇</firstterm>。（<acronym>SQL</acronym> 标准中使用术语 catalog cluster。）数据库集簇是由一个正在运行的数据库服务器实例所管理的一组数据库的集合。初始化之后，数据库集簇将包含一个名为 <literal>postgres</literal> 的数据库，它旨在作为供工具、用户和第三方应用程序使用的默认数据库。数据库服务器本身并不要求 <literal>postgres</literal> 数据库存在，但许多外部工具程序假定它存在。在初始化期间，每个集簇中还会创建另外两个数据库，分别名为 <literal>template1</literal> 和 <literal>template0</literal>。顾名思义，它们将被用作后续创建的数据库的模板；它们不应用于实际工作。（有关在集簇中创建新数据库的信息，请参见 <xref linkend="managing-databases"/>。）
   </para>
 
   <para>
-   In file system terms, a database cluster is a single directory
-   under which all data will be stored. We call this the <firstterm>data
-   directory</firstterm> or <firstterm>data area</firstterm>. It is
-   completely up to you where you choose to store your data.  There is no
-   default, although locations such as
-   <filename>/usr/local/pgsql/data</filename> or
-   <filename>/var/lib/pgsql/data</filename> are popular.
-   The data directory must be initialized before being used, using the program
-   <xref linkend="app-initdb"/><indexterm><primary>initdb</primary></indexterm>
-   which is installed with <productname>PostgreSQL</productname>.
+   从文件系统的角度来看，数据库集簇是一个单独的目录，所有数据都将存储在其下。我们称之为<firstterm>数据目录</firstterm>或<firstterm>数据区域</firstterm>。数据存储在哪里完全由你决定。没有默认值，不过 <filename>/usr/local/pgsql/data</filename> 或 <filename>/var/lib/pgsql/data</filename> 之类的位置比较常用。数据目录在使用之前必须初始化，使用的程序是随 <productname>PostgreSQL</productname> 一起安装的 <xref linkend="app-initdb"/><indexterm><primary>initdb</primary></indexterm>。
   </para>
 
   <para>
-   If you are using a pre-packaged version
-   of <productname>PostgreSQL</productname>, it may well have a specific
-   convention for where to place the data directory, and it may also
-   provide a script for creating the data directory.  In that case you
-   should use that script in preference to
-   running <command>initdb</command> directly.
-   Consult the package-level documentation for details.
+   如果你使用的是 <productname>PostgreSQL</productname> 的预打包版本，它很可能对数据目录的放置位置有特定的约定，并且可能还提供了一个用于创建数据目录的脚本。在这种情况下，你应该优先使用该脚本，而不是直接运行 <command>initdb</command>。详情请查阅包级别的文档。
   </para>
 
   <para>
-   To initialize a database cluster manually,
-   run <command>initdb</command> and specify the desired
-   file system location of the database cluster with the
-   <option>-D</option> option, for example:
+   要手动初始化数据库集簇，请运行 <command>initdb</command> 并使用 <option>-D</option> 选项指定数据库集簇所需的文件系统位置，例如：
 <screen>
 <prompt>$</prompt> <userinput>initdb -D /usr/local/pgsql/data</userinput>
 </screen>
-   Note that you must execute this command while logged into the
-   <productname>PostgreSQL</productname> user account, which is
-   described in the previous section.
+   请注意，你必须在登录到 <productname>PostgreSQL</productname> 用户账户的情况下执行此命令，该账户已在上一节中描述。
   </para>
 
   <tip>
    <para>
-    As an alternative to the <option>-D</option> option, you can set
-    the environment variable <envar>PGDATA</envar>.
+    作为 <option>-D</option> 选项的替代方案，你可以设置环境变量 <envar>PGDATA</envar>。
     <indexterm><primary><envar>PGDATA</envar></primary></indexterm>
    </para>
   </tip>
 
   <para>
-   Alternatively, you can run <command>initdb</command> via
-   the <xref linkend="app-pg-ctl"/>
-   program<indexterm><primary>pg_ctl</primary></indexterm> like so:
+   或者，你也可以通过 <xref linkend="app-pg-ctl"/> 程序<indexterm><primary>pg_ctl</primary></indexterm>来运行 <command>initdb</command>，如下所示：
 <screen>
 <prompt>$</prompt> <userinput>pg_ctl -D /usr/local/pgsql/data initdb</userinput>
 </screen>
-   This may be more intuitive if you are
-   using <command>pg_ctl</command> for starting and stopping the
-   server (see <xref linkend="server-start"/>), so
-   that <command>pg_ctl</command> would be the sole command you use
-   for managing the database server instance.
+   如果你使用 <command>pg_ctl</command> 来启动和停止服务器（参见 <xref linkend="server-start"/>），这种方式可能更直观，因为这样 <command>pg_ctl</command> 就会成为你管理数据库服务器实例所使用的唯一命令。
   </para>
 
   <para>
-   <command>initdb</command> will attempt to create the directory you
-   specify if it does not already exist.  Of course, this will fail if
-   <command>initdb</command> does not have permissions to write in the
-   parent directory.  It's generally recommendable that the
-   <productname>PostgreSQL</productname> user own not just the data
-   directory but its parent directory as well, so that this should not
-   be a problem.  If the desired parent directory doesn't exist either,
-   you will need to create it first, using root privileges if the
-   grandparent directory isn't writable.  So the process might look
-   like this:
+   <command>initdb</command> 会尝试创建你指定的目录（如果它尚不存在）。当然，如果 <command>initdb</command> 没有在父目录中写入的权限，这将失败。通常建议 <productname>PostgreSQL</productname> 用户不仅拥有数据目录，还拥有其父目录，这样就不会有问题。如果所需的父目录也不存在，你需要先创建它；如果祖父目录不可写，则需要使用 root 权限。因此整个过程可能如下所示：
 <screen>
 root# <userinput>mkdir /usr/local/pgsql</userinput>
 root# <userinput>chown postgres /usr/local/pgsql</userinput>
@@ -139,118 +89,58 @@ postgres$ <userinput>initdb -D /usr/local/pgsql/data</userinput>
   </para>
 
   <para>
-   <command>initdb</command> will refuse to run if the data directory
-   exists and already contains files; this is to prevent accidentally
-   overwriting an existing installation.
+   如果数据目录已存在并且已经包含文件，<command>initdb</command> 将拒绝运行；这是为了防止意外覆盖已有的安装。
   </para>
 
   <para>
-   Because the data directory contains all the data stored in the
-   database, it is essential that it be secured from unauthorized
-   access. <command>initdb</command> therefore revokes access
-   permissions from everyone but the
-   <productname>PostgreSQL</productname> user, and optionally, group.
-   Group access, when enabled, is read-only.  This allows an unprivileged
-   user in the same group as the cluster owner to take a backup of the
-   cluster data or perform other operations that only require read access.
+   由于数据目录包含数据库中存储的所有数据，因此必须确保其免受未经授权的访问。因此，<command>initdb</command> 会撤销除 <productname>PostgreSQL</productname> 用户以及可选的组之外所有人的访问权限。启用组访问时，组访问是只读的。这允许与数据库集簇所有者同组的非特权用户对集簇数据进行备份，或执行其他只需要读访问的操作。
   </para>
 
   <para>
-   Note that enabling or disabling group access on an existing cluster requires
-   the cluster to be shut down and the appropriate mode to be set on all
-   directories and files before restarting
-   <productname>PostgreSQL</productname>.  Otherwise, a mix of modes might
-   exist in the data directory.  For clusters that allow access only by the
-   owner, the appropriate modes are <literal>0700</literal> for directories
-   and <literal>0600</literal> for files.  For clusters that also allow
-   reads by the group, the appropriate modes are <literal>0750</literal>
-   for directories and <literal>0640</literal> for files.
+   请注意，在现有数据库集簇上启用或禁用组访问需要关闭数据库集簇，并在重新启动 <productname>PostgreSQL</productname> 之前在所有目录和文件上设置适当的模式。否则，数据目录中可能会存在混合的模式。对于只允许所有者访问的数据库集簇，目录的适当模式是 <literal>0700</literal>，文件的适当模式是 <literal>0600</literal>。对于还允许组读取的数据库集簇，目录的适当模式是 <literal>0750</literal>，文件的适当模式是 <literal>0640</literal>。
   </para>
 
   <para>
-   However, while the directory contents are secure, the default
-   client authentication setup allows any local user to connect to the
-   database and even become the database superuser. If you do not
-   trust other local users, we recommend you use one of
-   <command>initdb</command>'s <option>-W</option>, <option>--pwprompt</option>
-   or <option>--pwfile</option> options to assign a password to the
-   database superuser.<indexterm>
+   不过，尽管目录内容是安全的，默认的客户端认证设置仍允许任何本地用户连接到数据库，甚至可以成为数据库超级用户。如果您不信任其他本地用户，我们建议您使用 <command>initdb</command> 的 <option>-W</option>、<option>--pwprompt</option> 或 <option>--pwfile</option> 选项之一为数据库超级用户分配密码。<indexterm>
      <primary>password</primary>
      <secondary>of the superuser</secondary>
    </indexterm>
-   Also, specify <option>-A scram-sha-256</option>
-   so that the default <literal>trust</literal> authentication
-   mode is not used; or modify the generated <filename>pg_hba.conf</filename>
-   file after running <command>initdb</command>, but
-   <emphasis>before</emphasis> you start the server for the first time. (Other
-   reasonable approaches include using <literal>peer</literal> authentication
-   or file system permissions to restrict connections. See <xref
-   linkend="client-authentication"/> for more information.)
+   另外，请指定 <option>-A scram-sha-256</option>，以便不使用默认的 <literal>trust</literal> 认证模式；或者在运行 <command>initdb</command> 之后、但在第一次启动服务器<emphasis>之前</emphasis>修改生成的 <filename>pg_hba.conf</filename> 文件。（其他合理的方法包括使用 <literal>peer</literal> 认证或文件系统权限来限制连接。有关更多信息，请参见 <xref
+   linkend="client-authentication"/>。）
   </para>
 
   <para>
-   <command>initdb</command> also initializes the default
-   locale<indexterm><primary>locale</primary></indexterm> for the database cluster.
-   Normally, it will just take the locale settings in the environment
-   and apply them to the initialized database.  It is possible to
-   specify a different locale for the database; more information about
-   that can be found in <xref linkend="locale"/>.  The default sort order used
-   within the particular database cluster is set by
-   <command>initdb</command>, and while you can create new databases using
-   different sort order, the order used in the template databases that initdb
-   creates cannot be changed without dropping and recreating them.
-   There is also a performance impact for using locales
-   other than <literal>C</literal> or <literal>POSIX</literal>. Therefore, it is
-   important to make this choice correctly the first time.
+   <command>initdb</command> 还会为数据库集簇初始化默认的
+   区域设置<indexterm><primary>locale</primary></indexterm>。
+   通常，它只是采用环境中的区域设置并将它们应用到所初始化的数据库。可以为数据库指定不同的区域设置；有关这方面的更多信息可以在 <xref linkend="locale"/> 中找到。特定数据库集簇内使用的默认排序顺序由 <command>initdb</command> 设置，虽然您可以使用不同的排序顺序创建新数据库，但 initdb 所创建的模板数据库中使用的顺序无法更改，除非删除并重新创建它们。使用 <literal>C</literal> 或 <literal>POSIX</literal> 以外的区域设置还会带来性能影响。因此，第一次就正确做出这一选择非常重要。
   </para>
 
   <para>
-   <command>initdb</command> also sets the default character set encoding
-   for the database cluster.  Normally this should be chosen to match the
-   locale setting.  For details see <xref linkend="multibyte"/>.
+   <command>initdb</command> 还会设置数据库集簇的默认字符集编码。通常应选择与区域设置相匹配的编码。详情请参见 <xref linkend="multibyte"/>。
   </para>
 
   <para>
-   Non-<literal>C</literal> and non-<literal>POSIX</literal> locales rely on the
-   operating system's collation library for character set ordering.
-   This controls the ordering of keys stored in indexes.  For this reason,
-   a cluster cannot switch to an incompatible collation library version,
-   either through snapshot restore, binary streaming replication, a
-   different operating system, or an operating system upgrade.
+   非 <literal>C</literal> 和非 <literal>POSIX</literal> 区域设置依赖操作系统的排序规则库来进行字符集排序。这控制着索引中所存储键的顺序。因此，数据库集簇无法切换到不兼容的排序规则库版本，无论是通过快照恢复、二进制流复制、不同的操作系统，还是操作系统升级。
   </para>
 
   <sect2 id="creating-cluster-mount-points">
-   <title>Use of Secondary File Systems</title>
+   <title>使用辅助文件系统</title>
 
    <indexterm zone="creating-cluster-mount-points">
     <primary>file system mount points</primary>
    </indexterm>
 
    <para>
-    Many installations create their database clusters on file systems
-    (volumes) other than the machine's <quote>root</quote> volume.  If you
-    choose to do this, it is not advisable to try to use the secondary
-    volume's topmost directory (mount point) as the data directory.
-    Best practice is to create a directory within the mount-point
-    directory that is owned by the <productname>PostgreSQL</productname>
-    user, and then create the data directory within that.  This avoids
-    permissions problems, particularly for operations such
-    as <application>pg_upgrade</application>, and it also ensures clean failures if
-    the secondary volume is taken offline.
+    许多安装会把它们的数据库集簇创建在机器的 <quote>根</quote> 卷之外的文件系统（卷）上。如果你选择这样做，不建议尝试使用次要卷的最顶层目录（挂载点）作为数据目录。最佳实践是在挂载点目录内创建一个归 <productname>PostgreSQL</productname> 用户所有的目录，然后在该目录内创建数据目录。这样可以避免权限问题，特别是对于 <application>pg_upgrade</application> 之类的操作，并且还能确保在次要卷离线时干净地失败。
    </para>
 
   </sect2>
 
   <sect2 id="creating-cluster-filesystem">
-   <title>File Systems</title>
+   <title>文件系统</title>
 
    <para>
-    Generally, any file system with POSIX semantics can be used for
-    PostgreSQL.  Users prefer different file systems for a variety of reasons,
-    including vendor support, performance, and familiarity.  Experience
-    suggests that, all other things being equal, one should not expect major
-    performance or behavior changes merely from switching file systems or
-    making minor file system configuration changes.
+    一般来说，任何具有 POSIX 语义的文件系统都可以用于 PostgreSQL。用户出于各种原因偏好不同的文件系统，包括厂商支持、性能和熟悉程度。经验表明，在其他条件相同的情况下，不应期望仅仅通过更换文件系统或对文件系统配置做细微改动就能获得显著的性能或行为变化。
    </para>
 
    <sect3 id="creating-cluster-nfs">
@@ -261,27 +151,11 @@ postgres$ <userinput>initdb -D /usr/local/pgsql/data</userinput>
     </indexterm>
 
     <para>
-     It is possible to use an <acronym>NFS</acronym> file system for storing
-     the <productname>PostgreSQL</productname> data directory.
-     <productname>PostgreSQL</productname> does nothing special for
-     <acronym>NFS</acronym> file systems, meaning it assumes
-     <acronym>NFS</acronym> behaves exactly like locally-connected drives.
-     <productname>PostgreSQL</productname> does not use any functionality that
-     is known to have nonstandard behavior on <acronym>NFS</acronym>, such as
-     file locking.
+     可以使用 <acronym>NFS</acronym> 文件系统来存储 <productname>PostgreSQL</productname> 数据目录。<productname>PostgreSQL</productname> 对 <acronym>NFS</acronym> 文件系统不做任何特殊处理，也就是说它假定 <acronym>NFS</acronym> 的行为与本地连接的驱动器完全一样。<productname>PostgreSQL</productname> 不使用任何已知在 <acronym>NFS</acronym> 上行为不标准的功能，例如文件锁定。
     </para>
 
     <para>
-     The only firm requirement for using <acronym>NFS</acronym> with
-     <productname>PostgreSQL</productname> is that the file system is mounted
-     using the <literal>hard</literal> option.  With the
-     <literal>hard</literal> option, processes can <quote>hang</quote>
-     indefinitely if there are network problems, so this configuration will
-     require a careful monitoring setup.  The <literal>soft</literal> option
-     will interrupt system calls in case of network problems, but
-     <productname>PostgreSQL</productname> will not repeat system calls
-     interrupted in this way, so any such interruption will result in an I/O
-     error being reported.
+     将 <acronym>NFS</acronym> 与 <productname>PostgreSQL</productname> 一起使用的唯一硬性要求是，该文件系统使用 <literal>hard</literal> 选项挂载。使用 <literal>hard</literal> 选项时，如果出现网络问题，进程可能会无限期地 <quote>挂起</quote>，因此这种配置需要仔细的监控设置。<literal>soft</literal> 选项会在出现网络问题时中断系统调用，但 <productname>PostgreSQL</productname> 不会重复这样被中断的系统调用，因此任何此类中断都会导致报告 I/O 错误。
     </para>
 
     <para>
@@ -302,12 +176,7 @@ postgres$ <userinput>initdb -D /usr/local/pgsql/data</userinput>
     </para>
 
     <para>
-     In some cases, an external storage product can be accessed either via NFS
-     or a lower-level protocol such as iSCSI.  In the latter case, the storage
-     appears as a block device and any available file system can be created on
-     it.  That approach might relieve the DBA from having to deal with some of
-     the idiosyncrasies of NFS, but of course the complexity of managing
-     remote storage then happens at other levels.
+     在某些情况下，外部存储产品既可以通过 NFS 访问，也可以通过 iSCSI 等较低层协议访问。在后一种情况下，存储表现为块设备，可以在其上创建任何可用的文件系统。这种方法可能使 DBA 免于处理 NFS 的某些特殊之处，但当然，管理远程存储的复杂性随后会出现在其他层面。
     </para>
    </sect3>
   </sect2>
