@@ -973,56 +973,26 @@ OutputPluginWrite(ctx, true);
   </sect1>
 
   <sect1 id="logicaldecoding-streaming">
-   <title>Streaming of Large Transactions for Logical Decoding</title>
+   <title>逻辑解码的大事务流式传输</title>
 
    <para>
-    The basic output plugin callbacks (e.g., <function>begin_cb</function>,
-    <function>change_cb</function>, <function>commit_cb</function> and
-    <function>message_cb</function>) are only invoked when the transaction
-    actually commits. The changes are still decoded from the transaction
-    log, but are only passed to the output plugin at commit (and discarded
-    if the transaction aborts).
+    基本的输出插件回调（例如 <function>begin_cb</function>、<function>change_cb</function>、<function>commit_cb</function> 和 <function>message_cb</function>）仅在事务实际提交时才会被调用。更改仍然从事务日志中解码，但只在提交时传递给输出插件（如果事务中止则被丢弃）。
    </para>
 
    <para>
-    This means that while the decoding happens incrementally, and may spill
-    to disk to keep memory usage under control, all the decoded changes have
-    to be transmitted when the transaction finally commits (or more precisely,
-    when the commit is decoded from the transaction log). Depending on the
-    size of the transaction and network bandwidth, the transfer time may
-    significantly increase the apply lag.
+    这意味着，虽然解码是增量进行的，并且可能会溢出到磁盘以控制内存使用量，但所有已解码的更改必须在事务最终提交时（更准确地说，是在从事务日志中解码到提交时）传输。根据事务的大小和网络带宽，传输时间可能会显著增加应用延迟。
    </para>
 
    <para>
-    To reduce the apply lag caused by large transactions, an output plugin
-    may provide additional callback to support incremental streaming of
-    in-progress transactions. There are multiple required streaming callbacks
-    (<function>stream_start_cb</function>, <function>stream_stop_cb</function>,
-    <function>stream_abort_cb</function>, <function>stream_commit_cb</function>
-    and <function>stream_change_cb</function>) and two optional callbacks
-    (<function>stream_message_cb</function> and <function>stream_truncate_cb</function>).
-    Also, if streaming of two-phase commands is to be supported, then additional
-    callbacks must be provided. (See <xref linkend="logicaldecoding-two-phase-commits"/>
-    for details).
+    为了减少大事务造成的应用延迟，输出插件可以提供额外的回调来支持进行中事务的增量流式传输。有多个必需的流式回调（<function>stream_start_cb</function>、<function>stream_stop_cb</function>、<function>stream_abort_cb</function>、<function>stream_commit_cb</function> 和 <function>stream_change_cb</function>）以及两个可选回调（<function>stream_message_cb</function> 和 <function>stream_truncate_cb</function>）。此外，如果要支持两阶段命令的流式传输，则必须提供额外的回调。（详情参见 <xref linkend="logicaldecoding-two-phase-commits"/>）。
    </para>
 
    <para>
-    When streaming an in-progress transaction, the changes (and messages) are
-    streamed in blocks demarcated by <function>stream_start_cb</function>
-    and <function>stream_stop_cb</function> callbacks. Once all the decoded
-    changes are transmitted, the transaction can be committed using the
-    <function>stream_commit_cb</function> callback
-    (or possibly aborted using the <function>stream_abort_cb</function> callback).
-    If two-phase commits are supported, the transaction can be prepared using the
-    <function>stream_prepare_cb</function> callback,
-    <command>COMMIT PREPARED</command> using the
-    <function>commit_prepared_cb</function> callback or aborted using the
-    <function>rollback_prepared_cb</function>.
+    在流式传输进行中的事务时，更改（和消息）以由 <function>stream_start_cb</function> 和 <function>stream_stop_cb</function> 回调划分的块进行流式传输。一旦所有已解码的更改都被传输，事务就可以使用 <function>stream_commit_cb</function> 回调提交（或者可能使用 <function>stream_abort_cb</function> 回调中止）。如果支持两阶段提交，则可以使用 <function>stream_prepare_cb</function> 回调预备事务，使用 <function>commit_prepared_cb</function> 回调执行 <command>COMMIT PREPARED</command>，或者使用 <function>rollback_prepared_cb</function> 中止事务。
    </para>
 
    <para>
-    One example sequence of streaming callback calls for one transaction may
-    look like this:
+    一个事务的流式回调调用序列示例可能如下所示：
 <programlisting>
 stream_start_cb(...);   &lt;-- start of first block of changes
   stream_change_cb(...);
@@ -1053,26 +1023,17 @@ commit_prepared_cb(...);  &lt;-- commit of the prepared transaction
    </para>
 
    <para>
-    The actual sequence of callback calls may be more complicated, of course.
-    There may be blocks for multiple streamed transactions, some of the
-    transactions may get aborted, etc.
+    当然，回调调用的实际顺序可能更复杂。
+    可能存在多个流式事务的块，其中一些事务可能被中止，等等。
    </para>
 
    <para>
-    Similar to spill-to-disk behavior, streaming is triggered when the total
-    amount of changes decoded from the WAL (for all in-progress transactions)
-    exceeds the limit defined by <varname>logical_decoding_work_mem</varname> setting.
-    At that point, the largest top-level transaction (measured by the amount of memory
-    currently used for decoded changes) is selected and streamed.  However, in
-    some cases we still have to spill to disk even if streaming is enabled
-    because we exceed the memory threshold but still have not decoded the
-    complete tuple e.g., only decoded toast table insert but not the main table
-    insert.
+    与溢出到磁盘的行为类似，当从 WAL 解码出的更改总量（针对所有进行中的事务）超过由 <varname>logical_decoding_work_mem</varname> 设置定义的限值时，就会触发流式处理。
+    此时，会选择最大的顶层事务（以当前用于已解码更改的内存量衡量）并将其流式传输。然而，在某些情况下，即使启用了流式处理，我们仍然必须溢出到磁盘，因为虽然超过了内存阈值，但尚未解码完整的元组，例如，只解码了 toast 表插入，但未解码主表插入。
    </para>
 
    <para>
-    Even when streaming large transactions, the changes are still applied in
-    commit order, preserving the same guarantees as the non-streaming mode.
+    即使流式处理大事务，更改仍按提交顺序应用，从而保持与非流式模式相同的保证。
    </para>
 
   </sect1>
