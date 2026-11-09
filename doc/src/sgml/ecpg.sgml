@@ -1667,14 +1667,10 @@ EXEC SQL DISCONNECT ALL;
  </sect1>
 
  <sect1 id="ecpg-pgtypes">
-  <title>pgtypes Library</title>
+  <title>pgtypes 库</title>
 
   <para>
-   The pgtypes library maps <productname>PostgreSQL</productname> database
-   types to C equivalents that can be used in C programs. It also offers
-   functions to do basic calculations with those types within C, i.e., without
-   the help of the <productname>PostgreSQL</productname> server. See the
-   following example:
+   pgtypes 库将 <productname>PostgreSQL</productname> 数据库类型映射为可在 C 程序中使用的 C 等价类型。它还提供了一些函数，用于在 C 中直接对这些类型进行基本计算，即无需借助 <productname>PostgreSQL</productname> 服务器。参见以下示例：
 <programlisting><![CDATA[
 EXEC SQL BEGIN DECLARE SECTION;
    date date1;
@@ -1694,37 +1690,25 @@ PGTYPESchar_free(out);
   </para>
 
   <sect2 id="ecpg-pgtypes-cstrings">
-   <title>Character Strings</title>
+   <title>字符串</title>
    <para>
-   Some functions such as <function>PGTYPESnumeric_to_asc</function> return
-   a pointer to a freshly allocated character string. These results should be
-   freed with <function>PGTYPESchar_free</function> instead of
-   <function>free</function>. (This is important only on Windows, where
-   memory allocation and release sometimes need to be done by the same
-   library.)
+   某些函数（例如 <function>PGTYPESnumeric_to_asc</function>）会返回指向新分配字符串的指针。这些结果应使用 <function>PGTYPESchar_free</function> 而不是 <function>free</function> 来释放。（这一点仅在 Windows 上很重要，因为在 Windows 上内存的分配和释放有时需要由同一个库完成。）
    </para>
   </sect2>
 
   <sect2 id="ecpg-pgtypes-numeric">
-   <title>The numeric Type</title>
+   <title>numeric 类型</title>
    <para>
-    The numeric type offers to do calculations with arbitrary precision. See
-    <xref linkend="datatype-numeric"/> for the equivalent type in the
-    <productname>PostgreSQL</productname> server. Because of the arbitrary precision this
-    variable needs to be able to expand and shrink dynamically. That's why you
-    can only create numeric variables on the heap, by means of the
-    <function>PGTYPESnumeric_new</function> and <function>PGTYPESnumeric_free</function>
-    functions. The decimal type, which is similar but limited in precision,
-    can be created on the stack as well as on the heap.
+    numeric 类型可用于进行任意精度的计算。有关 <productname>PostgreSQL</productname> 服务器中对应类型的信息，请参见 <xref linkend="datatype-numeric"/>。由于具有任意精度，该变量需要能够动态扩展和收缩。因此，你只能通过 <function>PGTYPESnumeric_new</function> 和 <function>PGTYPESnumeric_free</function> 函数在堆上创建 numeric 变量。decimal 类型与之类似，但精度有限，既可以在栈上创建，也可以在堆上创建。
    </para>
    <para>
-   The following functions can be used to work with the numeric type:
+   以下函数可用于处理 numeric 类型：
    <variablelist>
     <varlistentry id="ecpg-pgtypes-numeric-new">
      <term><function>PGTYPESnumeric_new</function></term>
      <listitem>
       <para>
-      Request a pointer to a newly allocated numeric variable.
+      请求一个指向新分配的 numeric 变量的指针。
 <synopsis>
 numeric *PGTYPESnumeric_new(void);
 </synopsis>
@@ -1736,7 +1720,7 @@ numeric *PGTYPESnumeric_new(void);
      <term><function>PGTYPESnumeric_free</function></term>
      <listitem>
       <para>
-      Free a numeric type, release all of its memory.
+      释放一个 numeric 类型，释放其所有内存。
 <synopsis>
 void PGTYPESnumeric_free(numeric *var);
 </synopsis>
@@ -1748,21 +1732,21 @@ void PGTYPESnumeric_free(numeric *var);
      <term><function>PGTYPESnumeric_from_asc</function></term>
      <listitem>
       <para>
-       Parse a numeric type from its string notation.
+       从字符串表示形式解析一个 numeric 类型。
 <synopsis>
 numeric *PGTYPESnumeric_from_asc(char *str, char **endptr);
 </synopsis>
-       Valid formats are for example:
-        <literal>-2</literal>,
-        <literal>.794</literal>,
-        <literal>+3.44</literal>,
-        <literal>592.49E07</literal> or
-        <literal>-32.84e-4</literal>.
-       If the value could be parsed successfully, a valid pointer is returned,
-       else the NULL pointer. At the moment ECPG always parses the complete
-       string and so it currently does not support to store the address of the
-       first invalid character in <literal>*endptr</literal>. You can safely
-       set <literal>endptr</literal> to NULL.
+       有效格式例如：
+        <literal>-2</literal>、
+        <literal>.794</literal>、
+        <literal>+3.44</literal>、
+        <literal>592.49E07</literal> 或
+        <literal>-32.84e-4</literal>。
+       如果该值能够成功解析，则返回一个有效指针，
+       否则返回 NULL 指针。目前 ECPG 总是解析完整的
+       字符串，因此它目前不支持将第一个无效字符的地址
+       存入 <literal>*endptr</literal>。你可以安全地
+       将 <literal>endptr</literal> 设置为 NULL。
       </para>
      </listitem>
     </varlistentry>
@@ -1771,14 +1755,14 @@ numeric *PGTYPESnumeric_from_asc(char *str, char **endptr);
      <term><function>PGTYPESnumeric_to_asc</function></term>
      <listitem>
       <para>
-       Returns a pointer to a string allocated by <function>malloc</function> that contains the string
-       representation of the numeric type <literal>num</literal>.
+       返回一个由 <function>malloc</function> 分配的字符串指针，该字符串包含
+       numeric 类型 <literal>num</literal> 的字符串表示形式。
 <synopsis>
 char *PGTYPESnumeric_to_asc(numeric *num, int dscale);
 </synopsis>
-       The numeric value will be printed with <literal>dscale</literal> decimal
-       digits, with rounding applied if necessary.
-       The result must be freed with <function>PGTYPESchar_free()</function>.
+       numeric 值将按 <literal>dscale</literal> 位小数
+       打印，必要时会进行舍入。
+       结果必须用 <function>PGTYPESchar_free()</function> 释放。
       </para>
      </listitem>
     </varlistentry>
@@ -1787,14 +1771,14 @@ char *PGTYPESnumeric_to_asc(numeric *num, int dscale);
      <term><function>PGTYPESnumeric_add</function></term>
      <listitem>
       <para>
-       Add two numeric variables into a third one.
+       将两个 numeric 变量相加到第三个变量中。
 <synopsis>
 int PGTYPESnumeric_add(numeric *var1, numeric *var2, numeric *result);
 </synopsis>
-       The function adds the variables <literal>var1</literal> and
-       <literal>var2</literal> into the result variable
-       <literal>result</literal>.
-       The function returns 0 on success and -1 in case of error.
+       该函数将变量 <literal>var1</literal> 和
+       <literal>var2</literal> 相加，结果存入结果变量
+       <literal>result</literal>。
+       该函数成功时返回 0，出错时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1803,14 +1787,12 @@ int PGTYPESnumeric_add(numeric *var1, numeric *var2, numeric *result);
      <term><function>PGTYPESnumeric_sub</function></term>
      <listitem>
       <para>
-       Subtract two numeric variables and return the result in a third one.
+       将两个数值变量相减，并将结果存入第三个变量。
 <synopsis>
 int PGTYPESnumeric_sub(numeric *var1, numeric *var2, numeric *result);
 </synopsis>
-       The function subtracts the variable <literal>var2</literal> from
-       the variable <literal>var1</literal>. The result of the operation is
-       stored in the variable <literal>result</literal>.
-       The function returns 0 on success and -1 in case of error.
+       该函数从变量 <literal>var1</literal> 中减去变量 <literal>var2</literal>。运算结果存储在变量 <literal>result</literal> 中。
+       函数成功时返回 0，出错时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1819,14 +1801,12 @@ int PGTYPESnumeric_sub(numeric *var1, numeric *var2, numeric *result);
      <term><function>PGTYPESnumeric_mul</function></term>
      <listitem>
       <para>
-       Multiply two numeric variables and return the result in a third one.
+       将两个数值变量相乘，并将结果存入第三个变量。
 <synopsis>
 int PGTYPESnumeric_mul(numeric *var1, numeric *var2, numeric *result);
 </synopsis>
-       The function multiplies the variables <literal>var1</literal> and
-       <literal>var2</literal>. The result of the operation is stored in the
-       variable <literal>result</literal>.
-       The function returns 0 on success and -1 in case of error.
+       该函数将变量 <literal>var1</literal> 与 <literal>var2</literal> 相乘。运算结果存储在变量 <literal>result</literal> 中。
+       函数成功时返回 0，出错时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1835,14 +1815,12 @@ int PGTYPESnumeric_mul(numeric *var1, numeric *var2, numeric *result);
      <term><function>PGTYPESnumeric_div</function></term>
      <listitem>
       <para>
-       Divide two numeric variables and return the result in a third one.
+       将两个数值变量相除，并将结果存入第三个变量。
 <synopsis>
 int PGTYPESnumeric_div(numeric *var1, numeric *var2, numeric *result);
 </synopsis>
-       The function divides the variables <literal>var1</literal> by
-       <literal>var2</literal>. The result of the operation is stored in the
-       variable <literal>result</literal>.
-       The function returns 0 on success and -1 in case of error.
+       该函数将变量 <literal>var1</literal> 除以 <literal>var2</literal>。运算结果存储在变量 <literal>result</literal> 中。
+       函数成功时返回 0，出错时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1851,27 +1829,25 @@ int PGTYPESnumeric_div(numeric *var1, numeric *var2, numeric *result);
      <term><function>PGTYPESnumeric_cmp</function></term>
      <listitem>
       <para>
-       Compare two numeric variables.
+       比较两个数值变量。
 <synopsis>
 int PGTYPESnumeric_cmp(numeric *var1, numeric *var2)
 </synopsis>
-       This function compares two numeric variables. In case of error,
-       <literal>INT_MAX</literal> is returned. On success, the function
-       returns one of three possible results:
+       该函数比较两个数值变量。若出错，则返回 <literal>INT_MAX</literal>。成功时，函数返回以下三种可能结果之一：
        <itemizedlist>
         <listitem>
          <para>
-          1, if <literal>var1</literal> is bigger than <literal>var2</literal>
+          1，如果 <literal>var1</literal> 大于 <literal>var2</literal>
          </para>
         </listitem>
         <listitem>
          <para>
-          -1, if <literal>var1</literal> is smaller than <literal>var2</literal>
+          -1，如果 <literal>var1</literal> 小于 <literal>var2</literal>
          </para>
         </listitem>
         <listitem>
          <para>
-          0, if <literal>var1</literal> and <literal>var2</literal> are equal
+          0，如果 <literal>var1</literal> 和 <literal>var2</literal> 相等
          </para>
         </listitem>
        </itemizedlist>
@@ -1883,13 +1859,13 @@ int PGTYPESnumeric_cmp(numeric *var1, numeric *var2)
      <term><function>PGTYPESnumeric_from_int</function></term>
      <listitem>
       <para>
-       Convert an int variable to a numeric variable.
+       将 int 变量转换为 numeric 变量。
 <synopsis>
 int PGTYPESnumeric_from_int(signed int int_val, numeric *var);
 </synopsis>
-       This function accepts a variable of type signed int and stores it
-       in the numeric variable <literal>var</literal>. Upon success, 0 is returned and
-       -1 in case of a failure.
+       此函数接受一个 signed int 类型的变量，并将其存储到
+       numeric 变量 <literal>var</literal> 中。成功时返回 0，
+       失败时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1898,13 +1874,13 @@ int PGTYPESnumeric_from_int(signed int int_val, numeric *var);
      <term><function>PGTYPESnumeric_from_long</function></term>
      <listitem>
       <para>
-       Convert a long int variable to a numeric variable.
+       将 long int 变量转换为 numeric 变量。
 <synopsis>
 int PGTYPESnumeric_from_long(signed long int long_val, numeric *var);
 </synopsis>
-       This function accepts a variable of type signed long int and stores it
-       in the numeric variable <literal>var</literal>. Upon success, 0 is returned and
-       -1 in case of a failure.
+       此函数接受一个 signed long int 类型的变量，并将其存储到
+       numeric 变量 <literal>var</literal> 中。成功时返回 0，
+       失败时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1913,13 +1889,13 @@ int PGTYPESnumeric_from_long(signed long int long_val, numeric *var);
      <term><function>PGTYPESnumeric_copy</function></term>
      <listitem>
       <para>
-       Copy over one numeric variable into another one.
+       将一个 numeric 变量复制到另一个 numeric 变量。
 <synopsis>
 int PGTYPESnumeric_copy(numeric *src, numeric *dst);
 </synopsis>
-       This function copies over the value of the variable that
-       <literal>src</literal> points to into the variable that <literal>dst</literal>
-       points to. It returns 0 on success and -1 if an error occurs.
+       此函数将 <literal>src</literal> 所指向变量的值复制到
+       <literal>dst</literal> 所指向的变量中。成功时返回 0，
+       发生错误时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1928,13 +1904,13 @@ int PGTYPESnumeric_copy(numeric *src, numeric *dst);
      <term><function>PGTYPESnumeric_from_double</function></term>
      <listitem>
       <para>
-       Convert a variable of type double to a numeric.
+       将 double 类型的变量转换为 numeric。
 <synopsis>
 int  PGTYPESnumeric_from_double(double d, numeric *dst);
 </synopsis>
-       This function accepts a variable of type double and stores the result
-       in the variable that <literal>dst</literal> points to. It returns 0 on success
-       and -1 if an error occurs.
+       此函数接受一个 double 类型的变量，并将结果
+       存储到 <literal>dst</literal> 所指向的变量中。成功时返回 0，
+       发生错误时返回 -1。
       </para>
      </listitem>
     </varlistentry>
@@ -1943,15 +1919,15 @@ int  PGTYPESnumeric_from_double(double d, numeric *dst);
      <term><function>PGTYPESnumeric_to_double</function></term>
      <listitem>
       <para>
-       Convert a variable of type numeric to double.
+       将 numeric 类型的变量转换为 double。
 <synopsis>
 int PGTYPESnumeric_to_double(numeric *nv, double *dp)
 </synopsis>
-       The function converts the numeric value from the variable that
-       <literal>nv</literal> points to into the double variable that <literal>dp</literal> points
-       to. It returns 0 on success and -1 if an error occurs, including
-       overflow. On overflow, the global variable <literal>errno</literal> will be set
-       to <literal>PGTYPES_NUM_OVERFLOW</literal> additionally.
+       该函数将 <literal>nv</literal> 所指向变量中的 numeric 值
+       转换为 <literal>dp</literal> 所指向的 double 变量。
+       成功时返回 0，发生错误（包括溢出）时返回 -1。
+       发生溢出时，全局变量 <literal>errno</literal> 还会被
+       设置为 <literal>PGTYPES_NUM_OVERFLOW</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -1960,15 +1936,11 @@ int PGTYPESnumeric_to_double(numeric *nv, double *dp)
      <term><function>PGTYPESnumeric_to_int</function></term>
      <listitem>
       <para>
-       Convert a variable of type numeric to int.
+       将 numeric 类型的变量转换为 int。
 <synopsis>
 int PGTYPESnumeric_to_int(numeric *nv, int *ip);
 </synopsis>
-       The function converts the numeric value from the variable that
-       <literal>nv</literal> points to into the integer variable that <literal>ip</literal>
-       points to. It returns 0 on success and -1 if an error occurs, including
-       overflow. On overflow, the global variable <literal>errno</literal> will be set
-       to <literal>PGTYPES_NUM_OVERFLOW</literal> additionally.
+该函数将 <literal>nv</literal> 所指向变量中的 numeric 值转换为 <literal>ip</literal> 所指向的整数变量。成功时返回 0，发生错误（包括溢出）时返回 -1。发生溢出时，全局变量 <literal>errno</literal> 还会被设置为 <literal>PGTYPES_NUM_OVERFLOW</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -1977,17 +1949,11 @@ int PGTYPESnumeric_to_int(numeric *nv, int *ip);
      <term><function>PGTYPESnumeric_to_long</function></term>
      <listitem>
       <para>
-       Convert a variable of type numeric to long.
+       将 numeric 类型的变量转换为 long。
 <synopsis>
 int PGTYPESnumeric_to_long(numeric *nv, long *lp);
 </synopsis>
-       The function converts the numeric value from the variable that
-       <literal>nv</literal> points to into the long integer variable that
-       <literal>lp</literal> points to. It returns 0 on success and -1 if an error
-       occurs, including overflow and underflow. On overflow, the global variable
-       <literal>errno</literal> will be set to <literal>PGTYPES_NUM_OVERFLOW</literal>
-       and on underflow <literal>errno</literal> will be set to
-       <literal>PGTYPES_NUM_UNDERFLOW</literal>.
+该函数将 <literal>nv</literal> 所指向变量中的 numeric 值转换为 <literal>lp</literal> 所指向的长整型变量。成功时返回 0，发生错误（包括溢出和下溢）时返回 -1。发生溢出时，全局变量 <literal>errno</literal> 将被设置为 <literal>PGTYPES_NUM_OVERFLOW</literal>；发生下溢时，<literal>errno</literal> 将被设置为 <literal>PGTYPES_NUM_UNDERFLOW</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -1996,16 +1962,11 @@ int PGTYPESnumeric_to_long(numeric *nv, long *lp);
      <term><function>PGTYPESnumeric_to_decimal</function></term>
      <listitem>
       <para>
-       Convert a variable of type numeric to decimal.
+       将 numeric 类型的变量转换为 decimal。
 <synopsis>
 int PGTYPESnumeric_to_decimal(numeric *src, decimal *dst);
 </synopsis>
-       The function converts the numeric value from the variable that
-       <literal>src</literal> points to into the decimal variable that
-       <literal>dst</literal> points to. It returns 0 on success and -1 if an error
-       occurs, including overflow. On overflow, the global variable
-       <literal>errno</literal> will be set to <literal>PGTYPES_NUM_OVERFLOW</literal>
-       additionally.
+该函数将 <literal>src</literal> 所指向变量中的 numeric 值转换为 <literal>dst</literal> 所指向的 decimal 变量。成功时返回 0，发生错误（包括溢出）时返回 -1。发生溢出时，全局变量 <literal>errno</literal> 还会被设置为 <literal>PGTYPES_NUM_OVERFLOW</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -2014,15 +1975,11 @@ int PGTYPESnumeric_to_decimal(numeric *src, decimal *dst);
      <term><function>PGTYPESnumeric_from_decimal</function></term>
      <listitem>
       <para>
-       Convert a variable of type decimal to numeric.
+       将 decimal 类型的变量转换为 numeric。
 <synopsis>
 int PGTYPESnumeric_from_decimal(decimal *src, numeric *dst);
 </synopsis>
-       The function converts the decimal value from the variable that
-       <literal>src</literal> points to into the numeric variable that
-       <literal>dst</literal> points to. It returns 0 on success and -1 if an error
-       occurs. Since the decimal type is implemented as a limited version of
-       the numeric type, overflow cannot occur with this conversion.
+该函数将 <literal>src</literal> 所指向变量中的 decimal 值转换为 <literal>dst</literal> 所指向的 numeric 变量。成功时返回 0，发生错误时返回 -1。由于 decimal 类型是作为 numeric 类型的受限版本实现的，因此这种转换不会发生溢出。
       </para>
      </listitem>
     </varlistentry>
@@ -2031,25 +1988,22 @@ int PGTYPESnumeric_from_decimal(decimal *src, numeric *dst);
   </sect2>
 
   <sect2 id="ecpg-pgtypes-date">
-   <title>The date Type</title>
+   <title>date 类型</title>
    <para>
-    The date type in C enables your programs to deal with data of the SQL type
-    date. See <xref linkend="datatype-datetime"/> for the equivalent type in the
-    <productname>PostgreSQL</productname> server.
+    C 中的 date 类型使您的程序能够处理 SQL 类型 date 的数据。有关 <productname>PostgreSQL</productname> 服务器中的等效类型，请参见 <xref linkend="datatype-datetime"/>。
    </para>
    <para>
-    The following functions can be used to work with the date type:
+    以下函数可用于处理 date 类型：
     <variablelist>
      <varlistentry id="pgtypesdatefromtimestamp">
       <term><function>PGTYPESdate_from_timestamp</function></term>
       <listitem>
        <para>
-        Extract the date part from a timestamp.
+        从 timestamp 中抽取日期部分。
 <synopsis>
 date PGTYPESdate_from_timestamp(timestamp dt);
 </synopsis>
-        The function receives a timestamp as its only argument and returns the
-        extracted date part from this timestamp.
+        该函数接收一个 timestamp 作为其唯一参数，并返回从该 timestamp 中抽取的日期部分。
        </para>
       </listitem>
      </varlistentry>
@@ -2058,30 +2012,25 @@ date PGTYPESdate_from_timestamp(timestamp dt);
       <term><function>PGTYPESdate_from_asc</function></term>
       <listitem>
        <para>
-       Parse a date from its textual representation.
+       从文本表示中解析日期。
 <synopsis>
 date PGTYPESdate_from_asc(char *str, char **endptr);
 </synopsis>
-        The function receives a C char* string <literal>str</literal> and a pointer to
-        a C char* string <literal>endptr</literal>. At the moment ECPG always parses
-        the complete string and so it currently does not support to store the
-        address of the first invalid character in <literal>*endptr</literal>.
-        You can safely set <literal>endptr</literal> to NULL.
+        该函数接收一个 C char* 字符串 <literal>str</literal> 和一个指向 C char* 字符串 <literal>endptr</literal> 的指针。目前 ECPG 总是解析完整字符串，因此它目前不支持将第一个无效字符的地址存储到 <literal>*endptr</literal> 中。你可以安全地将 <literal>endptr</literal> 设置为 NULL。
        </para>
        <para>
-        Note that the function always assumes MDY-formatted dates and there is
-        currently no variable to change that within ECPG.
+        请注意，该函数始终假定日期为 MDY 格式，目前 ECPG 中没有变量可以改变这一点。
        </para>
        <para>
-        <xref linkend="ecpg-pgtypesdate-from-asc-table"/> shows the allowed input formats.
+        <xref linkend="ecpg-pgtypesdate-from-asc-table"/> 显示了允许的输入格式。
        </para>
         <table id="ecpg-pgtypesdate-from-asc-table">
-         <title>Valid Input Formats for <function>PGTYPESdate_from_asc</function></title>
+         <title><function>PGTYPESdate_from_asc</function> 的有效输入格式</title>
          <tgroup cols="2">
           <thead>
            <row>
-            <entry>Input</entry>
-            <entry>Result</entry>
+            <entry>输入</entry>
+            <entry>结果</entry>
            </row>
           </thead>
           <tbody>
@@ -2163,14 +2112,14 @@ date PGTYPESdate_from_asc(char *str, char **endptr);
       <term><function>PGTYPESdate_to_asc</function></term>
       <listitem>
        <para>
-        Return the textual representation of a date variable.
+        返回日期变量的文本表示。
 <synopsis>
 char *PGTYPESdate_to_asc(date dDate);
 </synopsis>
-        The function receives the date <literal>dDate</literal> as its only parameter.
-        It will output the date in the form <literal>1999-01-18</literal>, i.e., in the
-        <literal>YYYY-MM-DD</literal> format.
-        The result must be freed with <function>PGTYPESchar_free()</function>.
+        该函数接收日期 <literal>dDate</literal> 作为其唯一参数。
+        它将以 <literal>1999-01-18</literal> 的形式输出日期，即采用
+        <literal>YYYY-MM-DD</literal> 格式。
+        结果必须用 <function>PGTYPESchar_free()</function> 释放。
        </para>
       </listitem>
      </varlistentry>
@@ -2179,17 +2128,15 @@ char *PGTYPESdate_to_asc(date dDate);
       <term><function>PGTYPESdate_julmdy</function></term>
       <listitem>
        <para>
-        Extract the values for the day, the month and the year from a variable
-        of type date.
+        从 date 类型的变量中提取日、月和年的值。
 <synopsis>
 void PGTYPESdate_julmdy(date d, int *mdy);
 </synopsis>
        <!-- almost same description as for rjulmdy() -->
-        The function receives the date <literal>d</literal> and a pointer to an array
-        of 3 integer values <literal>mdy</literal>. The variable name indicates
-        the sequential order: <literal>mdy[0]</literal> will be set to contain the
-        number of the month, <literal>mdy[1]</literal> will be set to the value of the
-        day and <literal>mdy[2]</literal> will contain the year.
+        该函数接收日期 <literal>d</literal> 以及一个指向包含 3 个整数值的数组的指针 <literal>mdy</literal>。
+        变量名表明了顺序：<literal>mdy[0]</literal> 将被设置为包含
+        月份的数字，<literal>mdy[1]</literal> 将被设置为日的值，
+        <literal>mdy[2]</literal> 将包含年份。
        </para>
       </listitem>
      </varlistentry>
@@ -2198,14 +2145,13 @@ void PGTYPESdate_julmdy(date d, int *mdy);
       <term><function>PGTYPESdate_mdyjul</function></term>
       <listitem>
        <para>
-        Create a date value from an array of 3 integers that specify the
-        day, the month and the year of the date.
+        从指定日期的日、月和年的 3 个整数数组创建日期值。
 <synopsis>
 void PGTYPESdate_mdyjul(int *mdy, date *jdate);
 </synopsis>
-        The function receives the array of the 3 integers (<literal>mdy</literal>) as
-        its first argument and as its second argument a pointer to a variable
-        of type date that should hold the result of the operation.
+        该函数接收 3 个整数的数组（<literal>mdy</literal>）作为
+        其第一个参数，并接收一个指向 date 类型变量的指针作为第二个参数，
+        该变量应保存操作的结果。
        </para>
       </listitem>
      </varlistentry>
@@ -2214,47 +2160,46 @@ void PGTYPESdate_mdyjul(int *mdy, date *jdate);
       <term><function>PGTYPESdate_dayofweek</function></term>
       <listitem>
        <para>
-        Return a number representing the day of the week for a date value.
+        返回表示某个日期值对应星期几的数字。
 <synopsis>
 int PGTYPESdate_dayofweek(date d);
 </synopsis>
-        The function receives the date variable <literal>d</literal> as its only
-        argument and returns an integer that indicates the day of the week for
-        this date.
+        该函数接收日期变量 <literal>d</literal> 作为其唯一
+        参数，并返回一个整数，表示该日期对应的星期几。
         <itemizedlist>
          <listitem>
           <para>
-           0 - Sunday
+           0 - 星期日
           </para>
          </listitem>
          <listitem>
           <para>
-           1 - Monday
+           1 - 星期一
           </para>
          </listitem>
          <listitem>
           <para>
-           2 - Tuesday
+           2 - 星期二
           </para>
          </listitem>
          <listitem>
           <para>
-           3 - Wednesday
+           3 - 星期三
           </para>
          </listitem>
          <listitem>
           <para>
-           4 - Thursday
+           4 - 星期四
           </para>
          </listitem>
          <listitem>
           <para>
-           5 - Friday
+           5 - 星期五
           </para>
          </listitem>
          <listitem>
           <para>
-           6 - Saturday
+           6 - 星期六
           </para>
          </listitem>
         </itemizedlist>
@@ -2266,12 +2211,12 @@ int PGTYPESdate_dayofweek(date d);
       <term><function>PGTYPESdate_today</function></term>
       <listitem>
        <para>
-        Get the current date.
+        获取当前日期。
 <synopsis>
 void PGTYPESdate_today(date *d);
 </synopsis>
-        The function receives a pointer to a date variable (<literal>d</literal>)
-        that it sets to the current date.
+        该函数接收一个指向日期变量的指针（<literal>d</literal>），
+        并将其设置为当前日期。
        </para>
       </listitem>
      </varlistentry>
@@ -2280,66 +2225,62 @@ void PGTYPESdate_today(date *d);
       <term><function>PGTYPESdate_fmt_asc</function></term>
       <listitem>
        <para>
-        Convert a variable of type date to its textual representation using a
-        format mask.
+        使用格式掩码将 date 类型的变量转换为其文本表示形式。
 <synopsis>
 int PGTYPESdate_fmt_asc(date dDate, char *fmtstring, char *outbuf);
 </synopsis>
-        The function receives the date to convert (<literal>dDate</literal>), the
-        format mask (<literal>fmtstring</literal>) and the string that will hold the
-        textual representation of the date (<literal>outbuf</literal>).
+        该函数接收要转换的日期（<literal>dDate</literal>）、
+        格式掩码（<literal>fmtstring</literal>）以及用于保存该日期文本表示形式的字符串（<literal>outbuf</literal>）。
        </para>
        <para>
-        On success, 0 is returned and a negative value if an error occurred.
+        成功时返回 0，发生错误时返回负值。
        </para>
        <para>
-        The following literals are the field specifiers you can use:
+        以下字面量是您可以使用的字段说明符：
         <itemizedlist>
          <listitem>
           <para>
-           <literal>dd</literal> - The number of the day of the month.
+           <literal>dd</literal> - 一个月中的第几天。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>mm</literal> - The number of the month of the year.
+           <literal>mm</literal> - 一年中的月份编号。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>yy</literal> - The number of the year as a two digit number.
+           <literal>yy</literal> - 以两位数字表示的年份。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>yyyy</literal> - The number of the year as a four digit number.
+           <literal>yyyy</literal> - 以四位数字表示的年份。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>ddd</literal> - The name of the day (abbreviated).
+           <literal>ddd</literal> - 星期几的名称（缩写）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>mmm</literal> - The name of the month (abbreviated).
+           <literal>mmm</literal> - 月份的名称（缩写）。
           </para>
          </listitem>
         </itemizedlist>
-        All other characters are copied 1:1 to the output string.
+        所有其他字符按 1:1 复制到输出字符串。
        </para>
        <para>
-        <xref linkend="ecpg-pgtypesdate-fmt-asc-example-table"/> indicates a few possible formats. This will give
-        you an idea of how to use this function. All output lines are based on
-        the same date: November 23, 1959.
+        <xref linkend="ecpg-pgtypesdate-fmt-asc-example-table"/> 给出了几种可能的格式。这可以让你了解如何使用这个函数。所有输出行都基于同一个日期：1959 年 11 月 23 日。
        </para>
         <table id="ecpg-pgtypesdate-fmt-asc-example-table">
-         <title>Valid Input Formats for <function>PGTYPESdate_fmt_asc</function></title>
+         <title><function>PGTYPESdate_fmt_asc</function> 的有效输入格式</title>
          <tgroup cols="2">
           <thead>
            <row>
-            <entry>Format</entry>
-            <entry>Result</entry>
+            <entry>格式</entry>
+            <entry>结果</entry>
            </row>
           </thead>
           <tbody>
@@ -2401,36 +2342,24 @@ int PGTYPESdate_fmt_asc(date dDate, char *fmtstring, char *outbuf);
       <term><function>PGTYPESdate_defmt_asc</function></term>
       <listitem>
        <para>
-        Use a format mask to convert a C <type>char*</type> string to a value of type
-        date.
+        使用格式掩码把 C 的 <type>char*</type> 字符串转换为 date 类型的值。
 <synopsis>
 int PGTYPESdate_defmt_asc(date *d, char *fmt, char *str);
 </synopsis>
         <!-- same description as rdefmtdate -->
-        The function receives a pointer to the date value that should hold the
-        result of the operation (<literal>d</literal>), the format mask to use for
-        parsing the date (<literal>fmt</literal>) and the C char* string containing
-        the textual representation of the date (<literal>str</literal>). The textual
-        representation is expected to match the format mask. However you do not
-        need to have a 1:1 mapping of the string to the format mask. The
-        function only analyzes the sequential order and looks for the literals
-        <literal>yy</literal> or <literal>yyyy</literal> that indicate the
-        position of the year, <literal>mm</literal> to indicate the position of
-        the month and <literal>dd</literal> to indicate the position of the
-        day.
+        该函数接收一个指向用于保存操作结果的日期值的指针（<literal>d</literal>）、用于解析日期的格式掩码（<literal>fmt</literal>），以及包含日期文本表示的 C char* 字符串（<literal>str</literal>）。该文本表示应当与格式掩码相匹配。不过，字符串与格式掩码之间并不需要一一对应。该函数只分析顺序，并查找表示年份位置的文字 <literal>yy</literal> 或 <literal>yyyy</literal>、表示月份位置的 <literal>mm</literal>，以及表示日期位置的 <literal>dd</literal>。
        </para>
        <para>
-        <xref linkend="ecpg-rdefmtdate-example-table"/> indicates a few possible formats. This will give
-        you an idea of how to use this function.
+        <xref linkend="ecpg-rdefmtdate-example-table"/> 给出了几种可能的格式。这可以让你了解如何使用这个函数。
        </para>
         <table id="ecpg-rdefmtdate-example-table">
-         <title>Valid Input Formats for <function>rdefmtdate</function></title>
+         <title><function>rdefmtdate</function> 的有效输入格式</title>
          <tgroup cols="3">
           <thead>
            <row>
-            <entry>Format</entry>
-            <entry>String</entry>
-            <entry>Result</entry>
+            <entry>格式</entry>
+            <entry>字符串</entry>
+            <entry>结果</entry>
            </row>
           </thead>
           <tbody>
@@ -2509,54 +2438,41 @@ int PGTYPESdate_defmt_asc(date *d, char *fmt, char *str);
   </sect2>
 
   <sect2 id="ecpg-pgtypes-timestamp">
-   <title>The timestamp Type</title>
+   <title>timestamp 类型</title>
    <para>
-    The timestamp type in C enables your programs to deal with data of the SQL
-    type timestamp. See <xref linkend="datatype-datetime"/> for the equivalent
-    type in the <productname>PostgreSQL</productname> server.
+    C 中的 timestamp 类型使你的程序能够处理 SQL 类型 timestamp 的数据。关于 <productname>PostgreSQL</productname> 服务器中的等价类型，请参见 <xref linkend="datatype-datetime"/>。
    </para>
    <para>
-    The following functions can be used to work with the timestamp type:
+    以下函数可用于处理 timestamp 类型：
     <variablelist>
      <varlistentry id="pgtypestimestampfromasc">
       <term><function>PGTYPEStimestamp_from_asc</function></term>
       <listitem>
        <para>
-        Parse a timestamp from its textual representation into a timestamp
-        variable.
+        将 timestamp 从其文本表示解析为 timestamp 变量。
 <synopsis>
 timestamp PGTYPEStimestamp_from_asc(char *str, char **endptr);
 </synopsis>
-        The function receives the string to parse (<literal>str</literal>) and a
-        pointer to a C char* (<literal>endptr</literal>).
-        At the moment ECPG always parses
-        the complete string and so it currently does not support to store the
-        address of the first invalid character in <literal>*endptr</literal>.
-        You can safely set <literal>endptr</literal> to NULL.
+        该函数接收要解析的字符串（<literal>str</literal>）和一个指向 C char* 的指针（<literal>endptr</literal>）。
+        目前 ECPG 总是解析完整的字符串，因此它当前不支持将第一个无效字符的地址存储到 <literal>*endptr</literal> 中。
+        可以安全地将 <literal>endptr</literal> 设置为 NULL。
        </para>
        <para>
-        The function returns the parsed timestamp on success. On error,
-        <literal>PGTYPESInvalidTimestamp</literal> is returned and <varname>errno</varname> is
-        set to <literal>PGTYPES_TS_BAD_TIMESTAMP</literal>. See <xref linkend="pgtypesinvalidtimestamp"/> for important notes on this value.
+        成功时该函数返回解析后的 timestamp。出错时返回 <literal>PGTYPESInvalidTimestamp</literal>，并将 <varname>errno</varname> 设置为 <literal>PGTYPES_TS_BAD_TIMESTAMP</literal>。关于此值的重要说明，请参见 <xref linkend="pgtypesinvalidtimestamp"/>。
        </para>
        <para>
-        In general, the input string can contain any combination of an allowed
-        date specification, a whitespace character and an allowed time
-        specification. Note that time zones are not supported by ECPG. It can
-        parse them but does not apply any calculation as the
-        <productname>PostgreSQL</productname> server does for example. Timezone
-        specifiers are silently discarded.
+        通常，输入字符串可以包含允许的日期说明、空白字符和允许的时间说明的任意组合。请注意，ECPG 不支持时区。它可以解析时区，但不会像 <productname>PostgreSQL</productname> 服务器那样进行任何计算。时区说明符会被静默丢弃。
        </para>
        <para>
-        <xref linkend="ecpg-pgtypestimestamp-from-asc-example-table"/> contains a few examples for input strings.
+        <xref linkend="ecpg-pgtypestimestamp-from-asc-example-table"/> 包含几个输入字符串的示例。
        </para>
         <table id="ecpg-pgtypestimestamp-from-asc-example-table">
-         <title>Valid Input Formats for <function>PGTYPEStimestamp_from_asc</function></title>
+         <title><function>PGTYPEStimestamp_from_asc</function> 的有效输入格式</title>
          <tgroup cols="2">
           <thead>
            <row>
-            <entry>Input</entry>
-            <entry>Result</entry>
+            <entry>输入</entry>
+            <entry>结果</entry>
            </row>
           </thead>
           <tbody>
@@ -2586,14 +2502,12 @@ timestamp PGTYPEStimestamp_from_asc(char *str, char **endptr);
       <term><function>PGTYPEStimestamp_to_asc</function></term>
       <listitem>
        <para>
-        Converts a date to a C char* string.
+        将日期转换为 C char* 字符串。
 <synopsis>
 char *PGTYPEStimestamp_to_asc(timestamp tstamp);
 </synopsis>
-        The function receives the timestamp <literal>tstamp</literal> as
-        its only argument and returns an allocated string that contains the
-        textual representation of the timestamp.
-        The result must be freed with <function>PGTYPESchar_free()</function>.
+        该函数接收时间戳 <literal>tstamp</literal> 作为其唯一参数，并返回一个已分配的字符串，其中包含该时间戳的文本表示。
+        结果必须用 <function>PGTYPESchar_free()</function> 释放。
        </para>
       </listitem>
      </varlistentry>
@@ -2602,12 +2516,11 @@ char *PGTYPEStimestamp_to_asc(timestamp tstamp);
       <term><function>PGTYPEStimestamp_current</function></term>
       <listitem>
        <para>
-        Retrieve the current timestamp.
+        获取当前时间戳。
 <synopsis>
 void PGTYPEStimestamp_current(timestamp *ts);
 </synopsis>
-        The function retrieves the current timestamp and saves it into the
-        timestamp variable that <literal>ts</literal> points to.
+        该函数获取当前时间戳，并将其保存到 <literal>ts</literal> 所指向的时间戳变量中。
        </para>
       </listitem>
      </varlistentry>
@@ -2616,81 +2529,64 @@ void PGTYPEStimestamp_current(timestamp *ts);
       <term><function>PGTYPEStimestamp_fmt_asc</function></term>
       <listitem>
        <para>
-        Convert a timestamp variable to a C char* using a format mask.
+        使用格式掩码将时间戳变量转换为 C char*。
 <synopsis>
 int PGTYPEStimestamp_fmt_asc(timestamp *ts, char *output, int str_len, char *fmtstr);
 </synopsis>
-        The function receives a pointer to the timestamp to convert as its
-        first argument (<literal>ts</literal>), a pointer to the output buffer
-        (<literal>output</literal>), the maximal length that has been allocated for
-        the output buffer (<literal>str_len</literal>) and the format mask to
-        use for the conversion (<literal>fmtstr</literal>).
+        该函数接收一个指向要转换的时间戳的指针作为其第一个参数（<literal>ts</literal>）、一个指向输出缓冲区的指针（<literal>output</literal>）、为输出缓冲区分配的最大长度（<literal>str_len</literal>）以及用于转换的格式掩码（<literal>fmtstr</literal>）。
        </para>
        <para>
-        Upon success, the function returns 0 and a negative value if an
-        error occurred.
+        成功时，该函数返回 0；如果发生错误，则返回负值。
        </para>
        <para>
-        You can use the following format specifiers for the format mask. The
-        format specifiers are the same ones that are used in the
-        <function>strftime</function> function in <productname>libc</productname>. Any
-        non-format specifier will be copied into the output buffer.
+        你可以为格式掩码使用下列格式说明符。这些格式说明符与 <productname>libc</productname> 中 <function>strftime</function> 函数所使用的相同。任何非格式说明符都会被复制到输出缓冲区中。
         <!-- This is from the FreeBSD man page:
              http://www.freebsd.org/cgi/man.cgi?query=strftime&apropos=0&sektion=3&manpath=FreeBSD+7.0-current&format=html
         -->
         <itemizedlist>
          <listitem>
           <para>
-           <literal>%A</literal> - is replaced by national representation of
-           the full weekday name.
+           <literal>%A</literal> - 替换为完整星期名称的本地化表示。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%a</literal> - is replaced by national representation of
-           the abbreviated weekday name.
+           <literal>%a</literal> - 替换为缩写星期名称的本地化表示。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%B</literal> - is replaced by national representation of
-           the full month name.
+           <literal>%B</literal> - 替换为完整月份名称的本地化表示。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%b</literal> - is replaced by national representation of
-           the abbreviated month name.
+           <literal>%b</literal> - 替换为缩写月份名称的本地化表示。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%C</literal> - is replaced by (year / 100) as decimal
-           number; single digits are preceded by a zero.
+           <literal>%C</literal> - 替换为（年份 / 100）的十进制数字；单个数字前面补零。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%c</literal> - is replaced by national representation of
-           time and date.
+           <literal>%c</literal> - 被替换为时间和日期的本地表示形式。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%D</literal> - is equivalent to
-           <literal>%m/%d/%y</literal>.
+           <literal>%D</literal> - 等价于 <literal>%m/%d/%y</literal>。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%d</literal> - is replaced by the day of the month as a
-           decimal number (01&ndash;31).
+           <literal>%d</literal> - 被替换为以十进制数表示的月份中的日期（01&ndash;31）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%E*</literal> <literal>%O*</literal> -  POSIX locale
-           extensions. The sequences
+           <literal>%E*</literal> <literal>%O*</literal> - POSIX 区域设置扩展。序列
            <literal>%Ec</literal>
            <literal>%EC</literal>
            <literal>%Ex</literal>
@@ -2710,236 +2606,208 @@ int PGTYPEStimestamp_fmt_asc(timestamp *ts, char *output, int str_len, char *fmt
            <literal>%Ow</literal>
            <literal>%OW</literal>
            <literal>%Oy</literal>
-           are supposed to provide alternative representations.
+           应当提供替代的表示形式。
           </para>
           <para>
-           Additionally <literal>%OB</literal> implemented to represent
-           alternative months names (used standalone, without day mentioned).
-          </para>
-         </listitem>
-         <listitem>
-          <para>
-           <literal>%e</literal> - is replaced by the day of month as a decimal
-           number (1&ndash;31); single digits are preceded by a blank.
+           此外，还实现了 <literal>%OB</literal> 以表示替代的月份名称（单独使用，不提及日期）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%F</literal> - is equivalent to <literal>%Y-%m-%d</literal>.
+           <literal>%e</literal> - 被替换为以十进制数表示的月份中的日期（1&ndash;31）；单个数字前面有一个空格。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%G</literal> - is replaced by a year as a decimal number
-           with century. This year is the one that contains the greater part of
-           the week (Monday as the first day of the week).
+           <literal>%F</literal> - 等价于 <literal>%Y-%m-%d</literal>。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%g</literal> - is replaced by the same year as in
-           <literal>%G</literal>, but as a decimal number without century
-           (00&ndash;99).
+           <literal>%G</literal> - 替换为带世纪的十进制数字表示的年份。该年份是包含该周大部分天数（以星期一为一周的第一天）的那一年。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%H</literal> - is replaced by the hour (24-hour clock) as a
-           decimal number (00&ndash;23).
+           <literal>%g</literal> - 替换为与 <literal>%G</literal> 相同的年份，但为不带世纪的十进制数字（00&ndash;99）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%h</literal> - the same as <literal>%b</literal>.
+           <literal>%H</literal> - 替换为以十进制数字表示的小时（24 小时制）（00&ndash;23）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%I</literal> - is replaced by the hour (12-hour clock) as a
-           decimal number (01&ndash;12).
+           <literal>%h</literal> - 与 <literal>%b</literal> 相同。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%j</literal> - is replaced by the day of the year as a
-           decimal number (001&ndash;366).
+           <literal>%I</literal> - 替换为以十进制数字表示的小时（12 小时制）（01&ndash;12）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%k</literal> - is replaced by the hour (24-hour clock) as a
-           decimal number (0&ndash;23); single digits are preceded by a blank.
+           <literal>%j</literal> - 被替换为一年中的第几天，以十进制数表示（001&ndash;366）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%l</literal> - is replaced by the hour (12-hour clock) as a
-           decimal number (1&ndash;12); single digits are preceded by a blank.
+           <literal>%k</literal> - 被替换为小时（24 小时制），以十进制数表示（0&ndash;23）；个位数前面补一个空格。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%M</literal> - is replaced by the minute as a decimal
-           number (00&ndash;59).
+           <literal>%l</literal> - 被替换为小时（12 小时制），以十进制数表示（1&ndash;12）；个位数前面补一个空格。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%m</literal> - is replaced by the month as a decimal number
-           (01&ndash;12).
+           <literal>%M</literal> - 被替换为分钟，以十进制数表示（00&ndash;59）。
           </para>
          </listitem>
          <listitem>
           <para>
-          <literal>%n</literal> - is replaced by a newline.
+           <literal>%m</literal> - 被替换为月份，以十进制数表示（01&ndash;12）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%O*</literal> - the same as <literal>%E*</literal>.
+          <literal>%n</literal> - 被替换为换行符。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%p</literal> - is replaced by national representation of
-           either <quote>ante meridiem</quote> or <quote>post meridiem</quote> as appropriate.
+           <literal>%O*</literal> - 与 <literal>%E*</literal> 相同。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%R</literal> - is equivalent to <literal>%H:%M</literal>.
+           <literal>%p</literal> - 被替换为 <quote>ante meridiem</quote> 或 <quote>post meridiem</quote> 的本地化表示，视情况而定。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%r</literal> - is equivalent to <literal>%I:%M:%S
-           %p</literal>.
+           <literal>%R</literal> - 等价于 <literal>%H:%M</literal>。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%S</literal> - is replaced by the second as a decimal
-           number (00&ndash;60).
+           <literal>%r</literal> - 等价于 <literal>%I:%M:%S
+           %p</literal>。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%s</literal> - is replaced by the number of seconds since
-           the Epoch, UTC.
+           <literal>%S</literal> - 被替换为秒的十进制数字表示（00&ndash;60）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%T</literal> - is equivalent to <literal>%H:%M:%S</literal>
+           <literal>%s</literal> - 被替换为自 UTC 纪元以来的秒数。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%t</literal> - is replaced by a tab.
+           <literal>%T</literal> - 等价于 <literal>%H:%M:%S</literal>
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%U</literal> - is replaced by the week number of the year
-           (Sunday as the first day of the week) as a decimal number (00&ndash;53).
+           <literal>%t</literal> - 被替换为一个制表符。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%u</literal> - is replaced by the weekday (Monday as the
-           first day of the week) as a decimal number (1&ndash;7).
+           <literal>%U</literal> - 被替换为一年中的周数
+           （以星期日为一周的第一天），以十进制数表示（00&ndash;53）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%V</literal> - is replaced by the week number of the year
-           (Monday as the first day of the week) as a decimal number (01&ndash;53).
-           If the week containing January 1 has four or more days in the new
-           year, then it is week 1; otherwise it is the last week of the
-           previous year, and the next week is week 1.
+           <literal>%u</literal> - 被替换为星期几（以星期一为
+           一周的第一天），以十进制数表示（1&ndash;7）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%v</literal> - is equivalent to
-           <literal>%e-%b-%Y</literal>.
+           <literal>%V</literal> - 被替换为一年中的周数
+           （以星期一为一周的第一天），以十进制数表示（01&ndash;53）。
+           如果包含 1 月 1 日的那一周在新的一年中有四天或更多天，
+           那么它就是第 1 周；否则它就是上一年的最后一周，
+           而下一周是第 1 周。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%W</literal> - is replaced by the week number of the year
-           (Monday as the first day of the week) as a decimal number (00&ndash;53).
+           <literal>%v</literal> - 等价于
+           <literal>%e-%b-%Y</literal>。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%w</literal> - is replaced by the weekday (Sunday as the
-           first day of the week) as a decimal number (0&ndash;6).
+           <literal>%W</literal> - 替换为一年中的周数（以星期一为一周的第一天），以十进制数表示（00&ndash;53）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%X</literal> - is replaced by national representation of
-           the time.
+           <literal>%w</literal> - 替换为星期几（以星期日为一周的第一天），以十进制数表示（0&ndash;6）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%x</literal> - is replaced by national representation of
-           the date.
+           <literal>%X</literal> - 替换为时间的本地化表示形式。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%Y</literal> - is replaced by the year with century as a
-           decimal number.
+           <literal>%x</literal> - 替换为日期的本地化表示形式。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%y</literal> - is replaced by the year without century as a
-           decimal number (00&ndash;99).
+           <literal>%Y</literal> - 替换为带世纪的年份，以十进制数表示。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%Z</literal> - is replaced by the time zone name.
+           <literal>%y</literal> - 替换为不带世纪的年份，以十进制数表示（00&ndash;99）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%z</literal> - is replaced by the time zone offset from
-           UTC; a leading plus sign stands for east of UTC, a minus sign for
-           west of UTC, hours and minutes follow with two digits each and no
-           delimiter between them (common form for <ulink url="https://datatracker.ietf.org/doc/html/rfc822">RFC 822</ulink> date headers).
+           <literal>%Z</literal> - 替换为时区名称。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%+</literal> - is replaced by national representation of
-           the date and time.
+           <literal>%z</literal> - 替换为相对于 UTC 的时区偏移量；前导加号表示 UTC 以东，减号表示 UTC 以西，其后为小时和分钟，各两位数字，之间没有分隔符（<ulink url="https://datatracker.ietf.org/doc/html/rfc822">RFC 822</ulink> 日期头的常见形式）。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%-*</literal> - GNU libc extension. Do not do any padding
-           when performing numerical outputs.
+           <literal>%+</literal> - 替换为日期和时间的本地化表示形式。
           </para>
          </listitem>
          <listitem>
           <para>
-           $_* - GNU libc extension.    Explicitly specify space for padding.
+           <literal>%-*</literal> - GNU libc 扩展。执行数值输出时不进行任何填充。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%0*</literal> - GNU libc extension. Explicitly specify zero
-           for padding.
+           $_* - GNU libc 扩展。显式指定用空格填充。
           </para>
          </listitem>
          <listitem>
           <para>
-           <literal>%%</literal> - is replaced by <literal>%</literal>.
+           <literal>%0*</literal> - GNU libc 扩展。显式指定用零填充。
+          </para>
+         </listitem>
+         <listitem>
+          <para>
+           <literal>%%</literal> - 被替换为 <literal>%</literal>。
           </para>
          </listitem>
         </itemizedlist>
@@ -2951,19 +2819,17 @@ int PGTYPEStimestamp_fmt_asc(timestamp *ts, char *output, int str_len, char *fmt
       <term><function>PGTYPEStimestamp_sub</function></term>
       <listitem>
        <para>
-        Subtract one timestamp from another one and save the result in a
-        variable of type interval.
+        从一个 timestamp 中减去另一个 timestamp，并将结果保存在一个
+        interval 类型的变量中。
 <synopsis>
 int PGTYPEStimestamp_sub(timestamp *ts1, timestamp *ts2, interval *iv);
 </synopsis>
-        The function will subtract the timestamp variable that <literal>ts2</literal>
-        points to from the timestamp variable that <literal>ts1</literal> points to
-        and will store the result in the interval variable that <literal>iv</literal>
-        points to.
+        该函数将从 <literal>ts1</literal> 所指向的 timestamp 变量中减去 <literal>ts2</literal>
+        所指向的 timestamp 变量，并将结果存储在 <literal>iv</literal>
+        所指向的 interval 变量中。
        </para>
        <para>
-        Upon success, the function returns 0 and a negative value if an
-        error occurred.
+        成功时，该函数返回 0；如果发生错误，则返回负值。
        </para>
       </listitem>
      </varlistentry>
@@ -2972,25 +2838,23 @@ int PGTYPEStimestamp_sub(timestamp *ts1, timestamp *ts2, interval *iv);
       <term><function>PGTYPEStimestamp_defmt_asc</function></term>
       <listitem>
        <para>
-        Parse a timestamp value from its textual representation using a
-        formatting mask.
+        使用格式化掩码从 timestamp 的文本表示中解析出 timestamp 值。
 <synopsis>
 int PGTYPEStimestamp_defmt_asc(char *str, char *fmt, timestamp *d);
 </synopsis>
-        The function receives the textual representation of a timestamp in the
-        variable <literal>str</literal> as well as the formatting mask to use in the
-        variable <literal>fmt</literal>. The result will be stored in the variable
-        that <literal>d</literal> points to.
+        该函数接收变量 <literal>str</literal> 中 timestamp 的文本表示，
+        以及变量 <literal>fmt</literal> 中要使用的格式化掩码。结果将存储在
+        <literal>d</literal> 所指向的变量中。
        </para>
        <para>
-        If the formatting mask <literal>fmt</literal> is NULL, the function will fall
-        back to the default formatting mask which is <literal>%Y-%m-%d
-        %H:%M:%S</literal>.
+        如果格式化掩码 <literal>fmt</literal> 为 NULL，该函数将回退到
+        默认格式化掩码，即 <literal>%Y-%m-%d
+        %H:%M:%S</literal>。
        </para>
        <para>
-        This is the reverse function to <xref
-        linkend="pgtypestimestampfmtasc"/>.  See the documentation there in
-        order to find out about the possible formatting mask entries.
+        这是 <xref
+        linkend="pgtypestimestampfmtasc"/> 的逆函数。请参阅该处的
+        文档，以了解可用的格式化掩码项。
        </para>
       </listitem>
      </varlistentry>
@@ -2999,18 +2863,17 @@ int PGTYPEStimestamp_defmt_asc(char *str, char *fmt, timestamp *d);
       <term><function>PGTYPEStimestamp_add_interval</function></term>
       <listitem>
        <para>
-        Add an interval variable to a timestamp variable.
+        将一个 interval 变量加到一个 timestamp 变量上。
 <synopsis>
 int PGTYPEStimestamp_add_interval(timestamp *tin, interval *span, timestamp *tout);
 </synopsis>
-        The function receives a pointer to a timestamp variable <literal>tin</literal>
-        and a pointer to an interval variable <literal>span</literal>. It adds the
-        interval to the timestamp and saves the resulting timestamp in the
-        variable that <literal>tout</literal> points to.
+        该函数接收一个指向 timestamp 变量的指针 <literal>tin</literal>
+        和一个指向 interval 变量的指针 <literal>span</literal>。它把该 interval
+        加到 timestamp 上，并将得到的时间戳保存到
+        <literal>tout</literal> 所指向的变量中。
        </para>
        <para>
-        Upon success, the function returns 0 and a negative value if an
-        error occurred.
+        成功时，函数返回 0；如果发生错误，则返回负值。
        </para>
       </listitem>
      </varlistentry>
@@ -3019,18 +2882,16 @@ int PGTYPEStimestamp_add_interval(timestamp *tin, interval *span, timestamp *tou
       <term><function>PGTYPEStimestamp_sub_interval</function></term>
       <listitem>
        <para>
-        Subtract an interval variable from a timestamp variable.
+        从一个 timestamp 变量中减去一个 interval 变量。
 <synopsis>
 int PGTYPEStimestamp_sub_interval(timestamp *tin, interval *span, timestamp *tout);
 </synopsis>
-        The function subtracts the interval variable that <literal>span</literal>
-        points to from the timestamp variable that <literal>tin</literal> points to
-        and saves the result into the variable that <literal>tout</literal> points
-        to.
+        该函数从 <literal>tin</literal> 所指向的 timestamp 变量中减去
+        <literal>span</literal> 所指向的 interval 变量，
+        并将结果保存到 <literal>tout</literal> 所指向的变量中。
        </para>
        <para>
-        Upon success, the function returns 0 and a negative value if an
-        error occurred.
+        成功时，函数返回 0；如果发生错误，则返回负值。
        </para>
       </listitem>
      </varlistentry>
@@ -3039,21 +2900,21 @@ int PGTYPEStimestamp_sub_interval(timestamp *tin, interval *span, timestamp *tou
   </sect2>
 
   <sect2 id="ecpg-pgtypes-interval">
-   <title>The interval Type</title>
+   <title>interval 类型</title>
    <para>
-    The interval type in C enables your programs to deal with data of the SQL
-    type interval. See <xref linkend="datatype-datetime"/> for the equivalent
-    type in the <productname>PostgreSQL</productname> server.
+    C 语言中的 interval 类型使你的程序能够处理 SQL 类型 interval
+    的数据。关于 <productname>PostgreSQL</productname> 服务器中的等价类型，请参见
+    <xref linkend="datatype-datetime"/>。
    </para>
    <para>
-    The following functions can be used to work with the interval type:
+    以下函数可用于处理 interval 类型：
     <variablelist>
 
      <varlistentry id="pgtypesintervalnew">
       <term><function>PGTYPESinterval_new</function></term>
       <listitem>
        <para>
-        Return a pointer to a newly allocated interval variable.
+        返回一个指向新分配的 interval 变量的指针。
 <synopsis>
 interval *PGTYPESinterval_new(void);
 </synopsis>
@@ -3065,7 +2926,7 @@ interval *PGTYPESinterval_new(void);
       <term><function>PGTYPESinterval_free</function></term>
       <listitem>
        <para>
-        Release the memory of a previously allocated interval variable.
+        释放先前分配的 interval 变量的内存。
 <synopsis>
 void PGTYPESinterval_free(interval *intvl);
 </synopsis>
@@ -3077,16 +2938,13 @@ void PGTYPESinterval_free(interval *intvl);
       <term><function>PGTYPESinterval_from_asc</function></term>
       <listitem>
        <para>
-        Parse an interval from its textual representation.
+        从 interval 的文本表示解析出 interval。
 <synopsis>
 interval *PGTYPESinterval_from_asc(char *str, char **endptr);
 </synopsis>
-        The function parses the input string <literal>str</literal> and returns a
-        pointer to an allocated interval variable.
-        At the moment ECPG always parses
-        the complete string and so it currently does not support to store the
-        address of the first invalid character in <literal>*endptr</literal>.
-        You can safely set <literal>endptr</literal> to NULL.
+        该函数解析输入字符串 <literal>str</literal>，并返回一个指向已分配的 interval 变量的指针。
+        目前 ECPG 总是解析完整的字符串，因此它当前不支持将第一个无效字符的地址存储到 <literal>*endptr</literal> 中。
+        你可以安全地将 <literal>endptr</literal> 设置为 NULL。
        </para>
       </listitem>
      </varlistentry>
@@ -3095,14 +2953,13 @@ interval *PGTYPESinterval_from_asc(char *str, char **endptr);
       <term><function>PGTYPESinterval_to_asc</function></term>
       <listitem>
        <para>
-        Convert a variable of type interval to its textual representation.
+        将 interval 类型的变量转换为其文本表示。
 <synopsis>
 char *PGTYPESinterval_to_asc(interval *span);
 </synopsis>
-        The function converts the interval variable that <literal>span</literal>
-        points to into a C char*. The output looks like this example:
-        <literal>@ 1 day 12 hours 59 mins 10 secs</literal>.
-        The result must be freed with <function>PGTYPESchar_free()</function>.
+        该函数将 <literal>span</literal> 所指向的 interval 变量转换为 C char*。输出类似于以下示例：
+        <literal>@ 1 day 12 hours 59 mins 10 secs</literal>。
+        结果必须用 <function>PGTYPESchar_free()</function> 释放。
        </para>
       </listitem>
      </varlistentry>
@@ -3111,14 +2968,12 @@ char *PGTYPESinterval_to_asc(interval *span);
       <term><function>PGTYPESinterval_copy</function></term>
       <listitem>
        <para>
-        Copy a variable of type interval.
+        复制一个 interval 类型的变量。
 <synopsis>
 int PGTYPESinterval_copy(interval *intvlsrc, interval *intvldest);
 </synopsis>
-        The function copies the interval variable that <literal>intvlsrc</literal>
-        points to into the variable that <literal>intvldest</literal> points to. Note
-        that you need to allocate the memory for the destination variable
-        before.
+        该函数将 <literal>intvlsrc</literal> 所指向的 interval 变量复制到 <literal>intvldest</literal> 所指向的变量中。请注意，
+        你需要事先为目标变量分配内存。
        </para>
       </listitem>
      </varlistentry>
@@ -3127,27 +2982,22 @@ int PGTYPESinterval_copy(interval *intvlsrc, interval *intvldest);
   </sect2>
 
   <sect2 id="ecpg-pgtypes-decimal">
-   <title>The decimal Type</title>
+   <title>decimal 类型</title>
    <para>
-     The decimal type is similar to the numeric type. However it is limited to
-     a maximum precision of 30 significant digits. In contrast to the numeric
-     type which can be created on the heap only, the decimal type can be
-     created either on the stack or on the heap (by means of the functions
-     <function>PGTYPESdecimal_new</function> and
-     <function>PGTYPESdecimal_free</function>).
-     There are a lot of other functions that deal with the decimal type in the
-     <productname>Informix</productname> compatibility mode described in <xref
-     linkend="ecpg-informix-compat"/>.
+     decimal 类型与 numeric 类型相似。但是它的精度被限制为最多 30 位有效数字。与只能在堆上创建的 numeric 类型不同，decimal 类型既可以在栈上创建，也可以在堆上创建（通过函数
+     <function>PGTYPESdecimal_new</function> 和
+     <function>PGTYPESdecimal_free</function>）。
+     在 <xref
+     linkend="ecpg-informix-compat"/> 中描述的 <productname>Informix</productname> 兼容模式下，还有许多其他函数可以处理 decimal 类型。
    </para>
    <para>
-    The following functions can be used to work with the decimal type and are
-    not only contained in the <literal>libcompat</literal> library.
+    以下函数可用于处理 decimal 类型，它们并非只包含在 <literal>libcompat</literal> 库中。
     <variablelist>
      <varlistentry id="ecpg-pgtypes-decimal-new">
       <term><function>PGTYPESdecimal_new</function></term>
       <listitem>
        <para>
-       Request a pointer to a newly allocated decimal variable.
+       请求一个指向新分配的 decimal 变量的指针。
 <synopsis>
 decimal *PGTYPESdecimal_new(void);
 </synopsis>
@@ -3159,7 +3009,7 @@ decimal *PGTYPESdecimal_new(void);
       <term><function>PGTYPESdecimal_free</function></term>
       <listitem>
        <para>
-       Free a decimal type, release all of its memory.
+       释放一个 decimal 类型，释放其所有内存。
 <synopsis>
 void PGTYPESdecimal_free(decimal *var);
 </synopsis>
@@ -3171,15 +3021,14 @@ void PGTYPESdecimal_free(decimal *var);
   </sect2>
 
    <sect2 id="ecpg-pgtypes-errno">
-    <title>errno Values of pgtypeslib</title>
+    <title>pgtypeslib 的 errno 值</title>
    <para>
     <variablelist>
      <varlistentry id="ecpg-pgtypes-errno-pgtypes-num-bad-numeric">
       <term><literal>PGTYPES_NUM_BAD_NUMERIC</literal></term>
       <listitem>
        <para>
-        An argument should contain a numeric variable (or point to a numeric
-        variable) but in fact its in-memory representation was invalid.
+        参数应当包含一个数值变量（或指向一个数值变量），但实际上其内存中的表示是无效的。
        </para>
       </listitem>
      </varlistentry>
@@ -3188,9 +3037,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_NUM_OVERFLOW</literal></term>
       <listitem>
        <para>
-        An overflow occurred. Since the numeric type can deal with almost
-        arbitrary precision, converting a numeric variable into other types
-        might cause overflow.
+        发生了溢出。由于 numeric 类型几乎可以处理任意精度，将 numeric 变量转换为其他类型时可能会导致溢出。
        </para>
       </listitem>
      </varlistentry>
@@ -3199,9 +3046,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_NUM_UNDERFLOW</literal></term>
       <listitem>
        <para>
-        An underflow occurred. Since the numeric type can deal with almost
-        arbitrary precision, converting a numeric variable into other types
-        might cause underflow.
+        发生了下溢。由于 numeric 类型几乎可以处理任意精度，将 numeric 变量转换为其他类型时可能会导致下溢。
        </para>
       </listitem>
      </varlistentry>
@@ -3210,7 +3055,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_NUM_DIVIDE_ZERO</literal></term>
       <listitem>
        <para>
-        A division by zero has been attempted.
+        尝试进行了除以零的运算。
        </para>
       </listitem>
      </varlistentry>
@@ -3219,8 +3064,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_BAD_DATE</literal></term>
       <listitem>
        <para>
-        An invalid date string was passed to
-        the <function>PGTYPESdate_from_asc</function> function.
+        向 <function>PGTYPESdate_from_asc</function> 函数传递了无效的日期字符串。
        </para>
       </listitem>
      </varlistentry>
@@ -3229,8 +3073,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_ERR_EARGS</literal></term>
       <listitem>
        <para>
-        Invalid arguments were passed to the
-        <function>PGTYPESdate_defmt_asc</function> function.
+        向 <function>PGTYPESdate_defmt_asc</function> 函数传递了无效的参数。
        </para>
       </listitem>
      </varlistentry>
@@ -3239,8 +3082,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_ERR_ENOSHORTDATE</literal></term>
       <listitem>
        <para>
-        An invalid token in the input string was found by the
-        <function>PGTYPESdate_defmt_asc</function> function.
+        输入字符串中存在无效记号，被 <function>PGTYPESdate_defmt_asc</function> 函数发现。
        </para>
       </listitem>
      </varlistentry>
@@ -3249,10 +3091,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_INTVL_BAD_INTERVAL</literal></term>
       <listitem>
        <para>
-        An invalid interval string was passed to the
-        <function>PGTYPESinterval_from_asc</function> function, or an
-        invalid interval value was passed to the
-        <function>PGTYPESinterval_to_asc</function> function.
+        向 <function>PGTYPESinterval_from_asc</function> 函数传递了无效的间隔字符串，或向 <function>PGTYPESinterval_to_asc</function> 函数传递了无效的间隔值。
        </para>
       </listitem>
      </varlistentry>
@@ -3261,8 +3100,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_ERR_ENOTDMY</literal></term>
       <listitem>
        <para>
-        There was a mismatch in the day/month/year assignment in the
-        <function>PGTYPESdate_defmt_asc</function> function.
+        <function>PGTYPESdate_defmt_asc</function> 函数中的日/月/年赋值不匹配。
        </para>
       </listitem>
      </varlistentry>
@@ -3271,8 +3109,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_BAD_DAY</literal></term>
       <listitem>
        <para>
-        An invalid day of the month value was found by
-        the <function>PGTYPESdate_defmt_asc</function> function.
+        <function>PGTYPESdate_defmt_asc</function> 函数发现了无效的月内日期值。
        </para>
       </listitem>
      </varlistentry>
@@ -3281,8 +3118,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_DATE_BAD_MONTH</literal></term>
       <listitem>
        <para>
-        An invalid month value was found by
-        the <function>PGTYPESdate_defmt_asc</function> function.
+        <function>PGTYPESdate_defmt_asc</function> 函数发现了无效的月份值。
        </para>
       </listitem>
      </varlistentry>
@@ -3291,10 +3127,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_TS_BAD_TIMESTAMP</literal></term>
       <listitem>
        <para>
-        An invalid timestamp string pass passed to
-        the <function>PGTYPEStimestamp_from_asc</function> function,
-        or an invalid timestamp value was passed to
-        the <function>PGTYPEStimestamp_to_asc</function> function.
+        向 <function>PGTYPEStimestamp_from_asc</function> 函数传递了无效的时间戳字符串，或向 <function>PGTYPEStimestamp_to_asc</function> 函数传递了无效的时间戳值。
        </para>
       </listitem>
      </varlistentry>
@@ -3303,8 +3136,7 @@ void PGTYPESdecimal_free(decimal *var);
       <term><literal>PGTYPES_TS_ERR_EINFTIME</literal></term>
       <listitem>
        <para>
-        An infinite timestamp value was encountered in a context that
-        cannot handle it.
+        在无法处理无限 timestamp 值的上下文中遇到了一个无限 timestamp 值。
        </para>
       </listitem>
      </varlistentry>
@@ -3313,23 +3145,14 @@ void PGTYPESdecimal_free(decimal *var);
   </sect2>
 
    <sect2 id="ecpg-pgtypes-constants">
-    <title>Special Constants of pgtypeslib</title>
+    <title>pgtypeslib 的特殊常量</title>
    <para>
     <variablelist>
      <varlistentry id="pgtypesinvalidtimestamp">
       <term><literal>PGTYPESInvalidTimestamp</literal></term>
       <listitem>
        <para>
-        A value of type timestamp representing an invalid time stamp. This is
-        returned by the function <function>PGTYPEStimestamp_from_asc</function> on
-        parse error.
-        Note that due to the internal representation of the <type>timestamp</type> data type,
-        <literal>PGTYPESInvalidTimestamp</literal> is also a valid timestamp at
-        the same time. It is set to <literal>1899-12-31 23:59:59</literal>. In order
-        to detect errors, make sure that your application does not only test
-        for <literal>PGTYPESInvalidTimestamp</literal> but also for
-        <literal>errno != 0</literal> after each call to
-        <function>PGTYPEStimestamp_from_asc</function>.
+        一个 timestamp 类型的值，表示无效的时间戳。当解析出错时，函数 <function>PGTYPEStimestamp_from_asc</function> 会返回该值。请注意，由于 <type>timestamp</type> 数据类型的内部表示方式，<literal>PGTYPESInvalidTimestamp</literal> 同时也是有效的时间戳。它被设置为 <literal>1899-12-31 23:59:59</literal>。为了检测错误，请确保你的应用程序在每次调用 <function>PGTYPEStimestamp_from_asc</function> 之后不仅检查 <literal>PGTYPESInvalidTimestamp</literal>，还要检查 <literal>errno != 0</literal>。
        </para>
       </listitem>
      </varlistentry>
