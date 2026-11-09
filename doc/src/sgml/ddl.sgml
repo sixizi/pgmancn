@@ -2633,7 +2633,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
  </sect1>
 
  <sect1 id="ddl-inherit">
-  <title>Inheritance</title>
+  <title>继承</title>
 
   <indexterm>
    <primary>inheritance</primary>
@@ -2645,23 +2645,12 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> implements table inheritance,
-   which can be a useful tool for database designers.  (SQL:1999 and
-   later define a type inheritance feature, which differs in many
-   respects from the features described here.)
+   <productname>PostgreSQL</productname> 实现了表继承，
+   这对数据库设计者来说是一种有用的工具。（SQL:1999 及之后的标准定义了类型继承特性，它与这里描述的特性在许多方面都有所不同。）
   </para>
 
   <para>
-   Let's start with an example: suppose we are trying to build a data
-   model for cities.  Each state has many cities, but only one
-   capital. We want to be able to quickly retrieve the capital city
-   for any particular state. This can be done by creating two tables,
-   one for state capitals and one for cities that are not
-   capitals. However, what happens when we want to ask for data about
-   a city, regardless of whether it is a capital or not? The
-   inheritance feature can help to resolve this problem. We define the
-   <structname>capitals</structname> table so that it inherits from
-   <structname>cities</structname>:
+   让我们从一个例子开始：假设我们正在尝试为城市建立一个数据模型。每个州都有很多城市，但只有一个首府。我们希望能够快速地检索出任何特定州的首府城市。这可以通过创建两个表来实现，一个用于州首府，另一个用于非首府的城市。然而，当我们想要查询某个城市的数据时，无论它是不是首府，该怎么办呢？继承特性可以帮助解决这个问题。我们定义 <structname>capitals</structname> 表，让它继承自 <structname>cities</structname>：
 
 <programlisting>
 CREATE TABLE cities (
@@ -2675,20 +2664,11 @@ CREATE TABLE capitals (
 ) INHERITS (cities);
 </programlisting>
 
-   In this case, the <structname>capitals</structname> table <firstterm>inherits</firstterm>
-   all the columns of its parent table, <structname>cities</structname>. State
-   capitals also have an extra column, <structfield>state</structfield>, that shows
-   their state.
+   在本例中，<structname>capitals</structname> 表<firstterm>继承</firstterm>了其父表 <structname>cities</structname> 的所有列。州首府还有一个额外的列 <structfield>state</structfield>，用来表示它们所属的州。
   </para>
 
   <para>
-   In <productname>PostgreSQL</productname>, a table can inherit from
-   zero or more other tables, and a query can reference either all
-   rows of a table or all rows of a table plus all of its descendant tables.
-   The latter behavior is the default.
-   For example, the following query finds the names of all cities,
-   including state capitals, that are located at an elevation over
-   500 feet:
+   在 <productname>PostgreSQL</productname> 中，一个表可以从零个或多个其他表继承，并且一个查询既可以引用一个表的所有行，也可以引用一个表及其所有后代表的所有行。后一种行为是默认行为。例如，下面的查询找出所有海拔超过 500 英尺的城市的名称，包括州首府：
 
 <programlisting>
 SELECT name, elevation
@@ -2696,8 +2676,7 @@ SELECT name, elevation
     WHERE elevation &gt; 500;
 </programlisting>
 
-   Given the sample data from the <productname>PostgreSQL</productname>
-   tutorial (see <xref linkend="tutorial-sql-intro"/>), this returns:
+   给定 <productname>PostgreSQL</productname> 教程中的示例数据（参见 <xref linkend="tutorial-sql-intro"/>），该查询返回：
 
 <programlisting>
    name    | elevation
@@ -2709,8 +2688,7 @@ SELECT name, elevation
   </para>
 
   <para>
-   On the other hand, the following query finds all the cities that
-   are not state capitals and are situated at an elevation over 500 feet:
+   另一方面，下面的查询找出所有不是州首府且海拔超过 500 英尺的城市：
 
 <programlisting>
 SELECT name, elevation
@@ -2725,18 +2703,11 @@ SELECT name, elevation
   </para>
 
   <para>
-   Here the <literal>ONLY</literal> keyword indicates that the query
-   should apply only to <structname>cities</structname>, and not any tables
-   below <structname>cities</structname> in the inheritance hierarchy.  Many
-   of the commands that we have already discussed &mdash;
-   <command>SELECT</command>, <command>UPDATE</command> and
-   <command>DELETE</command> &mdash; support the
-   <literal>ONLY</literal> keyword.
+   这里的 <literal>ONLY</literal> 关键字表示该查询只应作用于 <structname>cities</structname>，而不应作用于继承层次中 <structname>cities</structname> 之下的任何表。我们前面已经讨论过的许多命令 &mdash; <command>SELECT</command>、<command>UPDATE</command> 和 <command>DELETE</command> &mdash; 都支持 <literal>ONLY</literal> 关键字。
   </para>
 
   <para>
-   You can also write the table name with a trailing <literal>*</literal>
-   to explicitly specify that descendant tables are included:
+   你也可以在表名后面加上 <literal>*</literal>，以显式指定包含后代表：
 
 <programlisting>
 SELECT name, elevation
@@ -2744,16 +2715,11 @@ SELECT name, elevation
     WHERE elevation &gt; 500;
 </programlisting>
 
-   Writing <literal>*</literal> is not necessary, since this behavior is always
-   the default.  However, this syntax is still supported for
-   compatibility with older releases where the default could be changed.
+   写 <literal>*</literal> 并非必需，因为这种行为始终是默认的。不过，为了兼容旧版本（在旧版本中默认行为可以改变），仍然支持这种语法。
   </para>
 
   <para>
-   In some cases you might wish to know which table a particular row
-   originated from. There is a system column called
-   <structfield>tableoid</structfield> in each table which can tell you the
-   originating table:
+   有时你可能想知道某一行来自哪个表。每个表中都有一个名为 <structfield>tableoid</structfield> 的系统列，可以告诉你来源表：
 
 <programlisting>
 SELECT c.tableoid, c.name, c.elevation
@@ -2761,7 +2727,7 @@ FROM cities c
 WHERE c.elevation &gt; 500;
 </programlisting>
 
-   which returns:
+   它返回：
 
 <programlisting>
  tableoid |   name    | elevation
@@ -2771,9 +2737,7 @@ WHERE c.elevation &gt; 500;
    139798 | Madison   |       845
 </programlisting>
 
-   (If you try to reproduce this example, you will probably get
-   different numeric OIDs.)  By doing a join with
-   <structname>pg_class</structname> you can see the actual table names:
+   （如果你尝试重现这个例子，可能会得到不同的数字 OID。）通过与 <structname>pg_class</structname> 做连接，可以看到实际的表名：
 
 <programlisting>
 SELECT p.relname, c.name, c.elevation
@@ -2781,7 +2745,7 @@ FROM cities c, pg_class p
 WHERE c.elevation &gt; 500 AND c.tableoid = p.oid;
 </programlisting>
 
-   which returns:
+   它返回：
 
 <programlisting>
  relname  |   name    | elevation
@@ -2793,8 +2757,7 @@ WHERE c.elevation &gt; 500 AND c.tableoid = p.oid;
   </para>
 
   <para>
-   Another way to get the same effect is to use the <type>regclass</type>
-   alias type, which will print the table OID symbolically:
+   获得同样效果的另一种方法是使用 <type>regclass</type> 别名类型，它会以符号形式打印表 OID：
 
 <programlisting>
 SELECT c.tableoid::regclass, c.name, c.elevation
@@ -2804,138 +2767,55 @@ WHERE c.elevation &gt; 500;
   </para>
 
   <para>
-   Inheritance does not automatically propagate data from
-   <command>INSERT</command> or <command>COPY</command> commands to
-   other tables in the inheritance hierarchy. In our example, the
-   following <command>INSERT</command> statement will fail:
+   继承不会自动将 <command>INSERT</command> 或 <command>COPY</command> 命令的数据传播到继承层次中的其他表。在我们的例子中，下面的 <command>INSERT</command> 语句将失败：
 <programlisting>
 INSERT INTO cities (name, population, elevation, state)
 VALUES ('Albany', NULL, NULL, 'NY');
 </programlisting>
-   We might hope that the data would somehow be routed to the
-   <structname>capitals</structname> table, but this does not happen:
-   <command>INSERT</command> always inserts into exactly the table
-   specified.  In some cases it is possible to redirect the insertion
-   using a rule (see <xref linkend="rules"/>).  However that does not
-   help for the above case because the <structname>cities</structname> table
-   does not contain the column <structfield>state</structfield>, and so the
-   command will be rejected before the rule can be applied.
+   我们可能希望数据会以某种方式路由到 <structname>capitals</structname> 表，但这不会发生：<command>INSERT</command> 总是恰好插入到指定的表中。在某些情况下，可以使用规则重定向插入（参见 <xref linkend="rules"/>）。然而，这对上面的情况没有帮助，因为 <structname>cities</structname> 表不包含 <structfield>state</structfield> 列，所以命令会在规则应用之前被拒绝。
   </para>
 
   <para>
-   All check constraints and not-null constraints on a parent table are
-   automatically inherited by its children, unless explicitly specified
-   otherwise with <literal>NO INHERIT</literal> clauses.  Other types of constraints
-   (unique, primary key, and foreign key constraints) are not inherited.
+   父表上的所有检查约束和非空约束都会自动被子表继承，除非通过 <literal>NO INHERIT</literal> 子句显式指定为其他情况。其他类型的约束（唯一、主键和外键约束）不会被继承。
   </para>
 
   <para>
-   A table can inherit from more than one parent table, in which case it has
-   the union of the columns defined by the parent tables.  Any columns
-   declared in the child table's definition are added to these.  If the
-   same column name appears in multiple parent tables, or in both a parent
-   table and the child's definition, then these columns are <quote>merged</quote>
-   so that there is only one such column in the child table.  To be merged,
-   columns must have the same data types, else an error is raised.
-   Inheritable check constraints and not-null constraints are merged in a
-   similar fashion.  Thus, for example, a merged column will be marked
-   not-null if any one of the column definitions it came from is marked
-   not-null.  Check constraints are merged if they have the same name,
-   and the merge will fail if their conditions are different.
+   一个表可以从多于一个父表继承，在这种情况下，它拥有父表所定义列的并集。子表定义中声明的任何列都会被添加到这些列中。如果相同的列名出现在多个父表中，或者同时出现在父表和子表的定义中，那么这些列会被<quote>合并</quote>，以便子表中只有一个这样的列。要合并，列必须具有相同的数据类型，否则会引发错误。可继承的检查约束和非空约束以类似的方式合并。因此，例如，如果合并列的来源列定义中有任何一个被标记为非空，则合并后的列将被标记为非空。如果检查约束具有相同的名称，则它们会被合并；如果它们的条件不同，则合并将失败。
   </para>
 
   <para>
-   Table inheritance is typically established when the child table is
-   created, using the <literal>INHERITS</literal> clause of the
-   <link linkend="sql-createtable"><command>CREATE TABLE</command></link>
-   statement.
-   Alternatively, a table which is already defined in a compatible way can
-   have a new parent relationship added, using the <literal>INHERIT</literal>
-   variant of <link linkend="sql-altertable"><command>ALTER TABLE</command></link>.
-   To do this the new child table must already include columns with
-   the same names and types as the columns of the parent. It must also include
-   check constraints with the same names and check expressions as those of the
-   parent. Similarly an inheritance link can be removed from a child using the
-   <literal>NO INHERIT</literal> variant of <command>ALTER TABLE</command>.
-   Dynamically adding and removing inheritance links like this can be useful
-   when the inheritance relationship is being used for table
-   partitioning (see <xref linkend="ddl-partitioning"/>).
+   表继承通常在创建子表时建立，使用 <link linkend="sql-createtable"><command>CREATE TABLE</command></link> 语句的 <literal>INHERITS</literal> 子句。或者，已经以兼容方式定义的表可以添加新的父关系，使用 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 的 <literal>INHERIT</literal> 变体。为此，新的子表必须已经包含与父表列具有相同名称和类型的列。它还必须包含与父表具有相同名称和检查表达式的检查约束。类似地，可以使用 <command>ALTER TABLE</command> 的 <literal>NO INHERIT</literal> 变体从子表中移除继承链接。当继承关系用于表分区时，像这样动态地添加和移除继承链接会很有用（参见 <xref linkend="ddl-partitioning"/>）。
   </para>
 
   <para>
-   One convenient way to create a compatible table that will later be made
-   a new child is to use the <literal>LIKE</literal> clause in <command>CREATE
-   TABLE</command>. This creates a new table with the same columns as
-   the source table. If there are any <literal>CHECK</literal>
-   constraints defined on the source table, the <literal>INCLUDING
-   CONSTRAINTS</literal> option to <literal>LIKE</literal> should be
-   specified, as the new child must have constraints matching the parent
-   to be considered compatible.
+   创建稍后将成为新子表的兼容表的一种便捷方式是在 <command>CREATE
+   TABLE</command> 中使用 <literal>LIKE</literal> 子句。这会创建一个与源表具有相同列的新表。如果源表上定义了任何 <literal>CHECK</literal> 约束，则应指定 <literal>LIKE</literal> 的 <literal>INCLUDING
+   CONSTRAINTS</literal> 选项，因为新子表必须具有与父表匹配的约束才被视为兼容。
   </para>
 
   <para>
-   A parent table cannot be dropped while any of its children remain. Neither
-   can columns or check constraints of child tables be dropped or altered
-   if they are inherited
-   from any parent tables. If you wish to remove a table and all of its
-   descendants, one easy way is to drop the parent table with the
-   <literal>CASCADE</literal> option (see <xref linkend="ddl-depend"/>).
+   当父表的任何子表仍然存在时，不能删除父表。如果子表的列或检查约束是从任何父表继承的，则它们也不能被删除或修改。如果希望删除一个表及其所有后代，一种简单的方法是使用 <literal>CASCADE</literal> 选项删除父表（参见 <xref linkend="ddl-depend"/>）。
   </para>
 
   <para>
-   <command>ALTER TABLE</command> will
-   propagate any changes in column data definitions and check
-   constraints down the inheritance hierarchy.  Again, dropping
-   columns that are depended on by other tables is only possible when using
-   the <literal>CASCADE</literal> option. <command>ALTER
-   TABLE</command> follows the same rules for duplicate column merging
-   and rejection that apply during <command>CREATE TABLE</command>.
+   <command>ALTER TABLE</command> 会把列数据定义和检查约束的任何更改向下传播到继承层次结构。同样，只有当使用 <literal>CASCADE</literal> 选项时，才能删除被其他表依赖的列。<command>ALTER
+   TABLE</command> 遵循与 <command>CREATE TABLE</command> 期间相同的重复列合并和拒绝规则。
   </para>
 
   <para>
-   Inherited queries perform access permission checks on the parent table
-   only.  Thus, for example, granting <literal>UPDATE</literal> permission on
-   the <structname>cities</structname> table implies permission to update rows in
-   the <structname>capitals</structname> table as well, when they are
-   accessed through <structname>cities</structname>.  This preserves the appearance
-   that the data is (also) in the parent table.  But
-   the <structname>capitals</structname> table could not be updated directly
-   without an additional grant.  In a similar way, the parent table's row
-   security policies (see <xref linkend="ddl-rowsecurity"/>) are applied to
-   rows coming from child tables during an inherited query.  A child table's
-   policies, if any, are applied only when it is the table explicitly named
-   in the query; and in that case, any policies attached to its parent(s) are
-   ignored.
+   继承查询只对父表执行访问权限检查。因此，例如，在 <structname>cities</structname> 表上授予 <literal>UPDATE</literal> 权限意味着也允许更新 <structname>capitals</structname> 表中的行（当通过 <structname>cities</structname> 访问它们时）。这保持了数据（也）位于父表中的表象。但如果没有额外的授权，就无法直接更新 <structname>capitals</structname> 表。类似地，在继承查询期间，父表的行安全策略（参见 <xref linkend="ddl-rowsecurity"/>）会应用于来自子表的行。子表的策略（如果有）仅在它是查询中显式命名的表时才应用；在这种情况下，附加到其父表上的任何策略都会被忽略。
   </para>
 
   <para>
-   Foreign tables (see <xref linkend="ddl-foreign-data"/>) can also
-   be part of inheritance hierarchies, either as parent or child
-   tables, just as regular tables can be.  If a foreign table is part
-   of an inheritance hierarchy then any operations not supported by
-   the foreign table are not supported on the whole hierarchy either.
+   外部表（参见 <xref linkend="ddl-foreign-data"/>）也可以作为父表或子表成为继承层次结构的一部分，就像常规表一样。如果外部表是继承层次结构的一部分，那么该外部表不支持的任何操作在整个层次结构上也不受支持。
   </para>
 
  <sect2 id="ddl-inherit-caveats">
-  <title>Caveats</title>
+  <title>注意事项</title>
 
   <para>
-   Note that not all SQL commands are able to work on
-   inheritance hierarchies.  Commands that are used for data querying,
-   data modification, or schema modification
-   (e.g., <literal>SELECT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>,
-   most variants of <literal>ALTER TABLE</literal>, but
-   not <literal>INSERT</literal> or <literal>ALTER TABLE ...
-   RENAME</literal>) typically default to including child tables and
-   support the <literal>ONLY</literal> notation to exclude them.
-   The majority of commands that do database maintenance and tuning
-   (e.g., <literal>REINDEX</literal>) only work on individual, physical
-   tables and do not support recursing over inheritance hierarchies.
-   However, both <literal>VACUUM</literal> and <literal>ANALYZE</literal>
-   commands default to including child tables and the <literal>ONLY</literal>
-   notation is supported to allow them to be excluded.  The respective
-   behavior of each individual command is documented in its reference page
-   (<xref linkend="sql-commands"/>).
+   请注意，并非所有 SQL 命令都能在继承层次结构上工作。用于数据查询、数据修改或模式修改的命令（例如 <literal>SELECT</literal>、<literal>UPDATE</literal>、<literal>DELETE</literal>、<literal>ALTER TABLE</literal> 的大多数变体，但不包括 <literal>INSERT</literal> 或 <literal>ALTER TABLE ...
+   RENAME</literal>）通常默认包含子表，并支持 <literal>ONLY</literal> 记号来排除它们。大多数执行数据库维护和调优的命令（例如 <literal>REINDEX</literal>）只作用于单个物理表，不支持在继承层次结构上递归。但是，<literal>VACUUM</literal> 和 <literal>ANALYZE</literal> 命令都默认包含子表，并且支持 <literal>ONLY</literal> 记号以允许排除它们。每个命令各自的行为记录在其参考页（<xref linkend="sql-commands"/>）中。
   </para>
 
   <para>
@@ -2948,34 +2828,33 @@ VALUES ('Albany', NULL, NULL, 'NY');
    <itemizedlist>
     <listitem>
      <para>
-      If we declared <structname>cities</structname>.<structfield>name</structfield> to be
-      <literal>UNIQUE</literal> or a <literal>PRIMARY KEY</literal>, this would not stop the
-      <structname>capitals</structname> table from having rows with names duplicating
-      rows in <structname>cities</structname>.  And those duplicate rows would by
-      default show up in queries from <structname>cities</structname>.  In fact, by
-      default <structname>capitals</structname> would have no unique constraint at all,
-      and so could contain multiple rows with the same name.
-      You could add a unique constraint to <structname>capitals</structname>, but this
-      would not prevent duplication compared to <structname>cities</structname>.
+      如果我们声明 <structname>cities</structname>.<structfield>name</structfield> 为
+      <literal>UNIQUE</literal> 或 <literal>PRIMARY KEY</literal>，这并不能阻止
+      <structname>capitals</structname> 表中出现与 <structname>cities</structname> 中行重名的行。
+      而且这些重复的行默认会出现在来自 <structname>cities</structname> 的查询中。事实上，默认情况下
+      <structname>capitals</structname> 根本没有任何唯一约束，
+      因此可能包含多个同名的行。
+      你可以为 <structname>capitals</structname> 添加唯一约束，但这
+      并不能防止与 <structname>cities</structname> 相比出现重复。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Similarly, if we were to specify that
-      <structname>cities</structname>.<structfield>name</structfield> <literal>REFERENCES</literal> some
-      other table, this constraint would not automatically propagate to
-      <structname>capitals</structname>.  In this case you could work around it by
-      manually adding the same <literal>REFERENCES</literal> constraint to
-      <structname>capitals</structname>.
+      同样，如果我们指定
+      <structname>cities</structname>.<structfield>name</structfield> <literal>REFERENCES</literal> 某个
+      其他表，这个约束不会自动传播到
+      <structname>capitals</structname>。在这种情况下，你可以通过
+      手动向 <structname>capitals</structname> 添加相同的 <literal>REFERENCES</literal> 约束来
+      绕过这个问题。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Specifying that another table's column <literal>REFERENCES
-      cities(name)</literal> would allow the other table to contain city names, but
-      not capital names.  There is no good workaround for this case.
+      指定另一个表的列 <literal>REFERENCES
+      cities(name)</literal> 将允许该另一个表包含城市名，但
+      不能包含首府名。对于这种情况没有好的变通办法。
      </para>
     </listitem>
    </itemizedlist>
