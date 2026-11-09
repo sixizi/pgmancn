@@ -699,7 +699,7 @@ SELECT mleast(arr =&gt; ARRAY[10, -1, 5, 4.4]);
    </sect2>
 
    <sect2 id="xfunc-sql-parameter-defaults">
-    <title><acronym>SQL</acronym> Functions with Default Values for Arguments</title>
+    <title><acronym>SQL</acronym> 带有参数默认值的函数</title>
 
     <indexterm>
      <primary>function</primary>
@@ -1148,37 +1148,26 @@ SELECT concat_values('|', 1, 4, 2);
     </indexterm>
 
     <para>
-     When an SQL function has one or more parameters of collatable data types,
-     a collation is identified for each function call depending on the
-     collations assigned to the actual arguments, as described in <xref
-     linkend="collation"/>.  If a collation is successfully identified
-     (i.e., there are no conflicts of implicit collations among the arguments)
-     then all the collatable parameters are treated as having that collation
-     implicitly.  This will affect the behavior of collation-sensitive
-     operations within the function.  For example, using the
-     <function>anyleast</function> function described above, the result of
-<programlisting>
+     当 SQL 函数具有一个或多个可排序规则数据类型的参数时，每次函数调用都会根据分配给实际参数的排序规则来确定一个排序规则，如 <xref
+     linkend="collation"/> 中所述。如果成功确定了排序规则（即参数之间不存在隐式排序规则的冲突），那么所有可排序规则的参数都被视为隐式具有该排序规则。这会影响函数中排序规则敏感操作的行为。例如，使用上文所述的
+     <function>anyleast</function> 函数，<programlisting>
 SELECT anyleast('abc'::text, 'ABC');
 </programlisting>
-     will depend on the database's default collation.  In <literal>C</literal> locale
-     the result will be <literal>ABC</literal>, but in many other locales it will
-     be <literal>abc</literal>.  The collation to use can be forced by adding
-     a <literal>COLLATE</literal> clause to any of the arguments, for example
+     的结果将取决于数据库的默认排序规则。在 <literal>C</literal> 区域设置下结果将是 <literal>ABC</literal>，但在许多其他区域设置下将是
+     <literal>abc</literal>。可以通过向任意参数添加
+     <literal>COLLATE</literal> 子句来强制使用指定的排序规则，例如
 <programlisting>
 SELECT anyleast('abc'::text, 'ABC' COLLATE "C");
 </programlisting>
-     Alternatively, if you wish a function to operate with a particular
-     collation regardless of what it is called with, insert
-     <literal>COLLATE</literal> clauses as needed in the function definition.
-     This version of <function>anyleast</function> would always use <literal>en_US</literal>
-     locale to compare strings:
+     或者，如果你希望函数无论以何种排序规则被调用都使用特定的排序规则运行，可在函数定义中按需插入
+     <literal>COLLATE</literal> 子句。这个版本的 <function>anyleast</function> 将始终使用 <literal>en_US</literal>
+     区域设置来比较字符串：
 <programlisting>
 CREATE FUNCTION anyleast (VARIADIC anyarray) RETURNS anyelement AS $$
     SELECT min($1[i] COLLATE "en_US") FROM generate_subscripts($1, 1) g(i);
 $$ LANGUAGE SQL;
 </programlisting>
-     But note that this will throw an error if applied to a non-collatable
-     data type.
+     但请注意，如果将其应用于不可排序规则的数据类型，则会抛出错误。
     </para>
 
     <para>
@@ -1294,17 +1283,13 @@ CREATE FUNCTION test(int, int) RETURNS int
    </para>
 
    <para>
-    There is relatively little difference between <literal>STABLE</literal> and
-    <literal>IMMUTABLE</literal> categories when considering simple interactive
-    queries that are planned and immediately executed: it doesn't matter
-    a lot whether a function is executed once during planning or once during
-    query execution startup.  But there is a big difference if the plan is
-    saved and reused later.  Labeling a function <literal>IMMUTABLE</literal> when
-    it really isn't might allow it to be prematurely folded to a constant during
-    planning, resulting in a stale value being re-used during subsequent uses
-    of the plan.  This is a hazard when using prepared statements or when
-    using function languages that cache plans (such as
-    <application>PL/pgSQL</application>).
+    对于规划后立即执行的简单交互式查询，<literal>STABLE</literal> 和
+    <literal>IMMUTABLE</literal> 类别差别较小：函数是在规划期间执行一次，
+    还是在查询执行启动时执行一次，影响不大。但如果计划被保存并稍后重用，
+    差别就很大。将实际并非 <literal>IMMUTABLE</literal> 的函数标记为
+    该类别，可能使其在规划期间被过早折叠为常量，
+    导致后续使用该计划时重用过期值。在使用预备语句或缓存计划的函数语言
+    （例如 <application>PL/pgSQL</application>）时，这是一种风险。
    </para>
 
    <para>
@@ -2052,13 +2037,8 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
     </para>
 
     <para>
-     Finally, the version-1 function call conventions make it possible
-     to return set results (<xref linkend="xfunc-c-return-set"/>) and
-     implement trigger functions (<xref linkend="triggers"/>) and
-     procedural-language call handlers (<xref
-     linkend="plhandler"/>).  For more details
-     see <filename>src/backend/utils/fmgr/README</filename> in the
-     source distribution.
+     最后，版本 1 的函数调用约定使得返回集合结果（<xref linkend="xfunc-c-return-set"/>）以及实现触发器函数（<xref linkend="triggers"/>）和过程语言调用处理器（<xref
+     linkend="plhandler"/>）成为可能。更多细节请参阅源代码分发中的 <filename>src/backend/utils/fmgr/README</filename>。
     </para>
    </sect2>
 
@@ -2173,10 +2153,8 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
       </para>
 
       <para>
-       When a change <emphasis>is</emphasis> required, it will be carefully
-       managed, taking the requirements of extensions into account. Such
-       changes will be communicated in the release notes (<xref
-       linkend="release"/>).
+       当<emphasis>确实</emphasis>需要更改时，将会谨慎地管理这些更改，并考虑扩展的需求。此类更改将在发行说明（<xref
+       linkend="release"/>）中说明。
       </para>
      </sect4>
     </sect3>
@@ -2202,12 +2180,7 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
       </para>
 
       <para>
-       When a change <emphasis>is</emphasis> required,
-       <productname>PostgreSQL</productname> will choose the least invasive
-       change possible, for example by squeezing a new field into padding
-       space or appending it to the end of a struct. These sorts of changes
-       should not impact extensions unless they use very unusual code
-       patterns.
+       当<emphasis>确实</emphasis>需要更改时，<productname>PostgreSQL</productname> 将选择尽可能侵入性最小的更改，例如将新字段塞入填充空间或将其追加到结构体末尾。除非扩展使用了非常特殊的代码模式，否则这类更改不应影响扩展。
       </para>
 
       <para>
@@ -2694,28 +2667,16 @@ CREATE OR REPLACE FUNCTION retcomposite(IN integer, IN integer,
     <title>多态参数与返回类型</title>
 
     <para>
-     C-language functions can be declared to accept and
-     return the polymorphic types described in <xref
-     linkend="extend-types-polymorphic"/>.
-     When a function's arguments or return types
-     are defined as polymorphic types, the function author cannot know
-     in advance what data type it will be called with, or
-     need to return. There are two routines provided in <filename>fmgr.h</filename>
-     to allow a version-1 C function to discover the actual data types
-     of its arguments and the type it is expected to return. The routines are
-     called <literal>get_fn_expr_rettype(FmgrInfo *flinfo)</literal> and
-     <literal>get_fn_expr_argtype(FmgrInfo *flinfo, int argnum)</literal>.
-     They return the result or argument type OID, or <symbol>InvalidOid</symbol> if the
-     information is not available.
-     The structure <literal>flinfo</literal> is normally accessed as
-     <literal>fcinfo-&gt;flinfo</literal>. The parameter <literal>argnum</literal>
-     is zero based.  <function>get_call_result_type</function> can also be used
-     as an alternative to <function>get_fn_expr_rettype</function>.
-     There is also <function>get_fn_expr_variadic</function>, which can be used to
-     find out whether variadic arguments have been merged into an array.
-     This is primarily useful for <literal>VARIADIC "any"</literal> functions,
-     since such merging will always have occurred for variadic functions
-     taking ordinary array types.
+     C 语言函数可以声明为接受并返回 <xref
+     linkend="extend-types-polymorphic"/> 中所述的多态类型。
+     当函数的参数或返回类型被定义为多态类型时，函数作者无法预先知道调用该函数时传入的数据类型，也无法预先知道需要返回的数据类型。<filename>fmgr.h</filename> 中提供了两个例程，使版本 1 的 C 函数能够发现其参数的实际数据类型以及期望它返回的类型。这两个例程称为 <literal>get_fn_expr_rettype(FmgrInfo *flinfo)</literal> 和
+     <literal>get_fn_expr_argtype(FmgrInfo *flinfo, int argnum)</literal>。
+     它们返回结果或参数类型的 OID，如果信息不可用则返回 <symbol>InvalidOid</symbol>。
+     结构体 <literal>flinfo</literal> 通常通过
+     <literal>fcinfo-&gt;flinfo</literal> 访问。参数 <literal>argnum</literal>
+     从零开始计数。<function>get_call_result_type</function> 也可以作为 <function>get_fn_expr_rettype</function> 的替代方案使用。
+     还有 <function>get_fn_expr_variadic</function>，可用于查明可变参数是否已合并到数组中。
+     这主要对 <literal>VARIADIC "any"</literal> 函数有用，因为对于接受普通数组类型的可变参数函数，这种合并总是会发生。
     </para>
 
     <para>
