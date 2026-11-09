@@ -610,7 +610,7 @@ CREATE EVENT TRIGGER tcl_a_snitch ON ddl_command_start EXECUTE FUNCTION tclsnitc
    </sect1>
 
    <sect1 id="pltcl-error-handling">
-    <title>Error Handling in PL/Tcl</title>
+    <title>PL/Tcl 中的错误处理</title>
 
     <indexterm>
      <primary>exceptions</primary>
@@ -618,55 +618,47 @@ CREATE EVENT TRIGGER tcl_a_snitch ON ddl_command_start EXECUTE FUNCTION tclsnitc
     </indexterm>
 
     <para>
-     Tcl code within or called from a PL/Tcl function can raise an error,
-     either by executing some invalid operation or by generating an error
-     using the Tcl <function>error</function> command or
-     PL/Tcl's <function>elog</function> command.  Such errors can be caught
-     within Tcl using the Tcl <function>catch</function> command.  If an
-     error is not caught but is allowed to propagate out to the top level of
-     execution of the PL/Tcl function, it is reported as an SQL error in the
-     function's calling query.
+     在 PL/Tcl 函数内部或由 PL/Tcl 函数调用的 Tcl 代码可以引发错误，
+     方式可以是执行某些非法操作，也可以是使用 Tcl 的 <function>error</function> 命令或
+     PL/Tcl 的 <function>elog</function> 命令生成一个错误。这类错误可以在 Tcl 内部
+     使用 Tcl 的 <function>catch</function> 命令捕获。如果错误未被捕获，而是被允许传播到
+     PL/Tcl 函数执行的最顶层，那么它会在调用该函数的查询中作为 SQL 错误报告。
     </para>
 
     <para>
-     Conversely, SQL errors that occur within PL/Tcl's
-     <function>spi_exec</function>, <function>spi_prepare</function>,
-     and <function>spi_execp</function> commands are reported as Tcl errors,
-     so they are catchable by Tcl's <function>catch</function> command.
-     (Each of these PL/Tcl commands runs its SQL operation in a
-     subtransaction, which is rolled back on error, so that any
-     partially-completed operation is automatically cleaned up.)
-     Again, if an error propagates out to the top level without being caught,
-     it turns back into an SQL error.
+     反过来，在 PL/Tcl 的
+     <function>spi_exec</function>、<function>spi_prepare</function>
+     和 <function>spi_execp</function> 命令中出现的 SQL 错误会作为 Tcl 错误报告，
+     因此可以被 Tcl 的 <function>catch</function> 命令捕获。
+     （这些 PL/Tcl 命令中的每一个都在一个子事务中执行其 SQL 操作，
+     出错时该子事务会被回滚，因此任何部分完成的操作都会被自动清理。）
+     同样，如果错误未被捕获而传播到最顶层，它又会变回 SQL 错误。
     </para>
 
     <para>
-     Tcl provides an <varname>errorCode</varname> variable that can represent
-     additional information about an error in a form that is easy for Tcl
-     programs to interpret.  The contents are in Tcl list format, and the
-     first word identifies the subsystem or library reporting the error;
-     beyond that the contents are left to the individual subsystem or
-     library.  For database errors reported by PL/Tcl commands, the first
-     word is <literal>POSTGRES</literal>, the second word is the PostgreSQL
-     version number, and additional words are field name/value pairs
-     providing detailed information about the error.
-     Fields <varname>SQLSTATE</varname>, <varname>condition</varname>,
-     and <varname>message</varname> are always supplied
-     (the first two represent the error code and condition name as shown
-     in <xref linkend="errcodes-appendix"/>).
-     Fields that may be present include
-     <varname>detail</varname>, <varname>hint</varname>, <varname>context</varname>,
-     <varname>schema</varname>, <varname>table</varname>, <varname>column</varname>,
-     <varname>datatype</varname>, <varname>constraint</varname>,
-     <varname>statement</varname>, <varname>cursor_position</varname>,
-     <varname>filename</varname>, <varname>lineno</varname>, and
-     <varname>funcname</varname>.
+     Tcl 提供了一个 <varname>errorCode</varname> 变量，它可以以一种便于 Tcl 程序解释的形式
+     表示关于错误的附加信息。其内容采用 Tcl 列表格式，第一个词标识
+     报告错误的子系统或库；除此之外的内容由各个子系统或库自行决定。
+     对于由 PL/Tcl 命令报告的数据库错误，第一个词是 <literal>POSTGRES</literal>，
+     第二个词是 PostgreSQL 版本号，其余的词语是字段名/值对，
+     提供关于该错误的详细信息。
+     字段 <varname>SQLSTATE</varname>、<varname>condition</varname>
+     和 <varname>message</varname> 总是会提供
+     （前两个分别表示错误代码和条件名称，如
+     <xref linkend="errcodes-appendix"/> 所示）。
+     可能出现的字段包括
+     <varname>detail</varname>、<varname>hint</varname>、<varname>context</varname>、
+     <varname>schema</varname>、<varname>table</varname>、<varname>column</varname>、
+     <varname>datatype</varname>、<varname>constraint</varname>、
+     <varname>statement</varname>、<varname>cursor_position</varname>、
+     <varname>filename</varname>、<varname>lineno</varname> 和
+     <varname>funcname</varname>。
     </para>
 
     <para>
-     A convenient way to work with PL/Tcl's <varname>errorCode</varname>
-     information is to load it into an array, so that the field names become
-     array subscripts.  Code for doing that might look like
+     处理 PL/Tcl 的 <varname>errorCode</varname>
+     信息的一种便捷方式是将其加载到一个数组中，这样字段名就成为
+     数组下标。实现这一点的代码可能如下所示
 <programlisting>
 if {[catch { spi_exec $sql_command }]} {
     if {[lindex $::errorCode 0] == "POSTGRES"} {
@@ -679,8 +671,8 @@ if {[catch { spi_exec $sql_command }]} {
     }
 }
 </programlisting>
-     (The double colons explicitly specify that <varname>errorCode</varname>
-     is a global variable.)
+     （双冒号明确指定 <varname>errorCode</varname>
+     是一个全局变量。）
     </para>
    </sect1>
 
