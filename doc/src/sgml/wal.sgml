@@ -159,7 +159,7 @@
  </sect1>
 
   <sect1 id="wal-intro">
-   <title>Write-Ahead Logging (<acronym>WAL</acronym>)</title>
+   <title>预写式日志（<acronym>WAL</acronym>）</title>
 
    <indexterm zone="wal">
     <primary>WAL</primary>
@@ -171,61 +171,46 @@
    </indexterm>
 
    <para>
-    <firstterm>Write-Ahead Logging</firstterm> (<acronym>WAL</acronym>)
-    is a standard method for ensuring data integrity.  A detailed
-    description can be found in most (if not all) books about
-    transaction processing. Briefly, <acronym>WAL</acronym>'s central
-    concept is that changes to data files (where tables and indexes
-    reside) must be written only after those changes have been logged,
-    that is, after WAL records describing the changes have been flushed
-    to permanent storage. If we follow this procedure, we do not need
-    to flush data pages to disk on every transaction commit, because we
-    know that in the event of a crash we will be able to recover the
-    database using the log: any changes that have not been applied to
-    the data pages can be redone from the WAL records.  (This is
-    roll-forward recovery, also known as REDO.)
+    <firstterm>预写式日志</firstterm>（<acronym>WAL</acronym>）
+    是确保数据完整性的标准方法。详细描述可以在大多数（即使不是全部）关于
+    事务处理的书籍中找到。简而言之，<acronym>WAL</acronym> 的核心
+    概念是：对数据文件（表和索引所在之处）的修改必须
+    在记录日志之后才能写入，也就是说，在描述这些修改的 WAL 记录被刷写到
+    永久存储之后才能写入。如果遵循这一过程，我们就不需要在每次事务提交时
+    把数据页刷写到磁盘，因为我们
+    知道在发生崩溃时可以使用日志恢复
+    数据库：任何尚未应用到数据页的修改都可以
+    从 WAL 记录中重做。（这就是
+    前滚恢复，也称为 REDO。）
    </para>
 
    <tip>
     <para>
-     Because <acronym>WAL</acronym> restores database file
-     contents after a crash, journaled file systems are not necessary for
-     reliable storage of the data files or WAL files.  In fact, journaling
-     overhead can reduce performance, especially if journaling
-     causes file system <emphasis>data</emphasis> to be flushed
-     to disk.  Fortunately, data flushing during journaling can
-     often be disabled with a file system mount option, e.g.,
-     <literal>data=writeback</literal> on a Linux ext3 file system.
-     Journaled file systems do improve boot speed after a crash.
+     由于 <acronym>WAL</acronym> 在崩溃后恢复数据库文件
+     内容，因此对于数据文件或 WAL 文件的可靠存储来说，日志文件系统并非必需。
+     事实上，日志记录的开销可能会降低性能，尤其是当日志记录
+     导致文件系统<emphasis>数据</emphasis>被刷写到磁盘时。幸运的是，日志记录期间的数据刷写
+     通常可以通过文件系统挂载选项禁用，例如，
+     在 Linux ext3 文件系统上使用 <literal>data=writeback</literal>。
+     日志文件系统确实能提高崩溃后的启动速度。
     </para>
    </tip>
 
 
    <para>
-    Using <acronym>WAL</acronym> results in a
-    significantly reduced number of disk writes, because only the WAL
-    file needs to be flushed to disk to guarantee that a transaction is
-    committed, rather than every data file changed by the transaction.
-    The WAL file is written sequentially,
-    and so the cost of syncing the WAL is much less than the cost of
-    flushing the data pages.  This is especially true for servers
-    handling many small transactions touching different parts of the data
-    store.  Furthermore, when the server is processing many small concurrent
-    transactions, one <function>fsync</function> of the WAL file may
-    suffice to commit many transactions.
+    使用 <acronym>WAL</acronym> 会显著减少磁盘写入次数，因为只需将 WAL
+    文件刷写到磁盘即可保证事务已
+    提交，而不必刷写该事务修改的每个数据文件。
+    WAL 文件是顺序写入的，
+    因此同步 WAL 的开销远小于刷写数据页的开销。对于处理许多触及数据存储不同部分的
+    小事务的服务器来说尤其如此。此外，当服务器正在处理许多小的并发
+    事务时，WAL 文件的一次 <function>fsync</function> 可能
+    就足以提交许多事务。
    </para>
 
    <para>
-    <acronym>WAL</acronym> also makes it possible to support on-line
-    backup and point-in-time recovery, as described in <xref
-    linkend="continuous-archiving"/>.  By archiving the WAL data we can support
-    reverting to any time instant covered by the available WAL data:
-    we simply install a prior physical backup of the database, and
-    replay the WAL just as far as the desired time.  What's more,
-    the physical backup doesn't have to be an instantaneous snapshot
-    of the database state &mdash; if it is made over some period of time,
-    then replaying the WAL for that period will fix any internal
-    inconsistencies.
+    <acronym>WAL</acronym> 还使得支持在线备份和按时间点恢复成为可能，如 <xref
+    linkend="continuous-archiving"/> 中所述。通过归档 WAL 数据，我们可以支持回退到可用 WAL 数据所覆盖的任意时间点：我们只需安装数据库之前的物理备份，然后重放 WAL 直到所需的时间点。此外，物理备份不必是数据库状态的瞬时快照 &mdash; 如果它是在一段时间内完成的，那么重放该时间段的 WAL 将修复任何内部不一致性。
    </para>
   </sect1>
 
