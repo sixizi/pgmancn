@@ -311,7 +311,7 @@
   </sect1>
 
   <sect1 id="trigger-interface">
-   <title>Writing Trigger Functions in C</title>
+   <title>用 C 编写触发器函数</title>
 
    <indexterm zone="trigger-interface">
     <primary>trigger</primary>
@@ -324,44 +324,28 @@
    </indexterm>
 
    <para>
-    This section describes the low-level details of the interface to a
-    trigger function.  This information is only needed when writing
-    trigger functions in C.  If you are using a higher-level language then
-    these details are handled for you.  In most cases you should consider
-    using a procedural language before writing your triggers in C.  The
-    documentation of each procedural language explains how to write a
-    trigger in that language.
+    本节介绍触发器函数接口的底层细节。只有在用 C 编写触发器函数时才需要这些信息。如果你使用的是更高级的语言，那么这些细节会为你处理好。在大多数情况下，在用 C 编写触发器之前，你应该考虑使用一种过程语言。每种过程语言的文档都说明了如何用该语言编写触发器。
    </para>
 
    <para>
-    Trigger functions must use the <quote>version 1</quote> function manager
-    interface.
+    触发器函数必须使用 <quote>版本 1</quote> 函数管理器接口。
    </para>
 
    <para>
-    When a function is called by the trigger manager, it is not passed
-    any normal arguments, but it is passed a <quote>context</quote>
-    pointer pointing to a <structname>TriggerData</structname> structure.  C
-    functions can check whether they were called from the trigger
-    manager or not by executing the macro:
+    当触发器管理器调用一个函数时，不会向它传递任何普通参数，而是传递一个指向 <structname>TriggerData</structname> 结构的 <quote>上下文</quote> 指针。C 函数可以通过执行以下宏来检查自己是否是由触发器管理器调用的：
 <programlisting>
 CALLED_AS_TRIGGER(fcinfo)
 </programlisting>
-    which expands to:
+    该宏展开为：
 <programlisting>
 ((fcinfo)-&gt;context != NULL &amp;&amp; IsA((fcinfo)-&gt;context, TriggerData))
 </programlisting>
-    If this returns true, then it is safe to cast
-    <literal>fcinfo-&gt;context</literal> to type <literal>TriggerData
-    *</literal> and make use of the pointed-to
-    <structname>TriggerData</structname> structure.  The function must
-    <emphasis>not</emphasis> alter the <structname>TriggerData</structname>
-    structure or any of the data it points to.
+    如果它返回真，那么就可以安全地把 <literal>fcinfo-&gt;context</literal> 转换为 <literal>TriggerData
+    *</literal> 类型，并使用所指向的 <structname>TriggerData</structname> 结构。该函数<emphasis>不得</emphasis>修改 <structname>TriggerData</structname> 结构或它所指向的任何数据。
    </para>
 
    <para>
-    <structname>struct TriggerData</structname> is defined in
-    <filename>commands/trigger.h</filename>:
+    <structname>struct TriggerData</structname> 定义在 <filename>commands/trigger.h</filename> 中：
 
 <programlisting>
 typedef struct TriggerData
@@ -380,14 +364,14 @@ typedef struct TriggerData
 } TriggerData;
 </programlisting>
 
-    where the members are defined as follows:
+    其中各成员的定义如下：
 
     <variablelist>
      <varlistentry>
       <term><structfield>type</structfield></term>
       <listitem>
        <para>
-        Always <literal>T_TriggerData</literal>.
+        始终为 <literal>T_TriggerData</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -396,15 +380,14 @@ typedef struct TriggerData
       <term><structfield>tg_event</structfield></term>
       <listitem>
        <para>
-        Describes the event for which the function is called. You can use the
-        following macros to examine <literal>tg_event</literal>:
+        描述调用该函数所针对的事件。你可以使用下列宏来检查 <literal>tg_event</literal>：
 
         <variablelist>
          <varlistentry>
           <term><literal>TRIGGER_FIRED_BEFORE(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger fired before the operation.
+            如果触发器在该操作之前触发，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -413,7 +396,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_AFTER(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger fired after the operation.
+            如果触发器在该操作之后触发，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -422,7 +405,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_INSTEAD(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger fired instead of the operation.
+            如果触发器代替该操作触发，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -431,7 +414,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_FOR_ROW(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger fired for a row-level event.
+            如果触发器是为行级事件触发，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -440,7 +423,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_FOR_STATEMENT(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger fired for a statement-level event.
+            如果触发器是为语句级事件触发，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -449,7 +432,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_BY_INSERT(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger was fired by an <command>INSERT</command> command.
+            如果触发器是由 <command>INSERT</command> 命令触发的，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -458,7 +441,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_BY_UPDATE(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger was fired by an <command>UPDATE</command> command.
+            如果触发器是由 <command>UPDATE</command> 命令触发的，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -467,7 +450,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_BY_DELETE(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger was fired by a <command>DELETE</command> command.
+            如果触发器是由 <command>DELETE</command> 命令触发的，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -476,7 +459,7 @@ typedef struct TriggerData
           <term><literal>TRIGGER_FIRED_BY_TRUNCATE(tg_event)</literal></term>
           <listitem>
            <para>
-            Returns true if the trigger was fired by a <command>TRUNCATE</command> command.
+            如果触发器是由 <command>TRUNCATE</command> 命令触发的，则返回 true。
            </para>
           </listitem>
          </varlistentry>
@@ -489,15 +472,12 @@ typedef struct TriggerData
       <term><structfield>tg_relation</structfield></term>
       <listitem>
        <para>
-        A pointer to a structure describing the relation that the trigger fired for.
-        Look at <filename>utils/rel.h</filename> for details about
-        this structure.  The most interesting things are
-        <literal>tg_relation-&gt;rd_att</literal> (descriptor of the relation
-        tuples) and <literal>tg_relation-&gt;rd_rel-&gt;relname</literal>
-        (relation name; the type is not <type>char*</type> but
-        <type>NameData</type>; use
-        <literal>SPI_getrelname(tg_relation)</literal> to get a <type>char*</type> if you
-        need a copy of the name).
+        指向一个结构的指针，该结构描述触发器所针对的关系。
+        有关此结构的详细信息，请参阅 <filename>utils/rel.h</filename>。最值得关注的是
+        <literal>tg_relation-&gt;rd_att</literal>（关系元组的描述符）和 <literal>tg_relation-&gt;rd_rel-&gt;relname</literal>
+        （关系名；其类型不是 <type>char*</type> 而是
+        <type>NameData</type>；如果需要该名称的副本，
+        请使用 <literal>SPI_getrelname(tg_relation)</literal> 获得一个 <type>char*</type>）。
        </para>
       </listitem>
      </varlistentry>
@@ -506,14 +486,13 @@ typedef struct TriggerData
       <term><structfield>tg_trigtuple</structfield></term>
       <listitem>
        <para>
-        A pointer to the row for which the trigger was fired. This is
-        the row being inserted, updated, or deleted.  If this trigger
-        was fired for an <command>INSERT</command> or
-        <command>DELETE</command> then this is what you should return
-        from the function if you don't want to replace the row with
-        a different one (in the case of <command>INSERT</command>) or
-        skip the operation.  For triggers on foreign tables, values of system
-        columns herein are unspecified.
+        指向触发器所针对的行的指针。这就是
+        被插入、更新或删除的行。如果此触发器
+        是针对 <command>INSERT</command> 或
+        <command>DELETE</command> 触发的，那么如果你不想用
+        另一行替换该行（在 <command>INSERT</command> 的情况下）或
+        跳过该操作，就应该从函数中返回它。对于外部表上的触发器，
+        其中系统列的值是未指定的。
        </para>
       </listitem>
      </varlistentry>
@@ -522,14 +501,7 @@ typedef struct TriggerData
       <term><structfield>tg_newtuple</structfield></term>
       <listitem>
        <para>
-        A pointer to the new version of the row, if the trigger was
-        fired for an <command>UPDATE</command>, and <symbol>NULL</symbol> if
-        it is for an <command>INSERT</command> or a
-        <command>DELETE</command>. This is what you have to return
-        from the function if the event is an <command>UPDATE</command>
-        and you don't want to replace this row by a different one or
-        skip the operation.  For triggers on foreign tables, values of system
-        columns herein are unspecified.
+        如果触发器是为 <command>UPDATE</command> 触发的，则是指向该行新版本的指针；如果是为 <command>INSERT</command> 或 <command>DELETE</command> 触发的，则为 <symbol>NULL</symbol>。如果事件是 <command>UPDATE</command>，并且你不想用另一行替换这一行或跳过该操作，那么这就是你必须从函数返回的内容。对于外部表上的触发器，此处系统列的值未作规定。
        </para>
       </listitem>
      </varlistentry>
@@ -538,8 +510,7 @@ typedef struct TriggerData
       <term><structfield>tg_trigger</structfield></term>
       <listitem>
        <para>
-        A pointer to a structure of type <structname>Trigger</structname>,
-        defined in <filename>utils/reltrigger.h</filename>:
+        指向 <filename>utils/reltrigger.h</filename> 中定义的类型为 <structname>Trigger</structname> 的结构的指针：
 
 <programlisting>
 typedef struct Trigger
@@ -566,12 +537,8 @@ typedef struct Trigger
 } Trigger;
 </programlisting>
 
-       where <structfield>tgname</structfield> is the trigger's name,
-       <structfield>tgnargs</structfield> is the number of arguments in
-       <structfield>tgargs</structfield>, and <structfield>tgargs</structfield> is an array of
-       pointers to the arguments specified in the <command>CREATE
-       TRIGGER</command> statement. The other members are for internal use
-       only.
+       其中 <structfield>tgname</structfield> 是触发器的名称，<structfield>tgnargs</structfield> 是 <structfield>tgargs</structfield> 中参数的数量，<structfield>tgargs</structfield> 是指向 <command>CREATE
+       TRIGGER</command> 语句中所指定参数的指针数组。其他成员仅供内部使用。
        </para>
       </listitem>
      </varlistentry>
@@ -580,8 +547,7 @@ typedef struct Trigger
       <term><structfield>tg_trigslot</structfield></term>
       <listitem>
        <para>
-        The slot containing <structfield>tg_trigtuple</structfield>,
-        or a <symbol>NULL</symbol> pointer if there is no such tuple.
+        包含 <structfield>tg_trigtuple</structfield> 的槽位，如果不存在这样的元组，则为 <symbol>NULL</symbol> 指针。
        </para>
       </listitem>
      </varlistentry>
@@ -590,8 +556,7 @@ typedef struct Trigger
       <term><structfield>tg_newslot</structfield></term>
       <listitem>
        <para>
-        The slot containing <structfield>tg_newtuple</structfield>,
-        or a <symbol>NULL</symbol> pointer if there is no such tuple.
+        包含 <structfield>tg_newtuple</structfield> 的槽位，如果不存在这样的元组，则为 <symbol>NULL</symbol> 指针。
        </para>
       </listitem>
      </varlistentry>
@@ -600,10 +565,7 @@ typedef struct Trigger
       <term><structfield>tg_oldtable</structfield></term>
       <listitem>
        <para>
-        A pointer to a structure of type <structname>Tuplestorestate</structname>
-        containing zero or more rows in the format specified by
-        <structfield>tg_relation</structfield>, or a <symbol>NULL</symbol> pointer
-        if there is no <literal>OLD TABLE</literal> transition relation.
+        指向类型为 <structname>Tuplestorestate</structname> 的结构的指针，该结构包含零行或多行格式由 <structfield>tg_relation</structfield> 指定的行；如果不存在 <literal>OLD TABLE</literal> 转换关系，则为 <symbol>NULL</symbol> 指针。
        </para>
       </listitem>
      </varlistentry>
@@ -612,10 +574,7 @@ typedef struct Trigger
       <term><structfield>tg_newtable</structfield></term>
       <listitem>
        <para>
-        A pointer to a structure of type <structname>Tuplestorestate</structname>
-        containing zero or more rows in the format specified by
-        <structfield>tg_relation</structfield>, or a <symbol>NULL</symbol> pointer
-        if there is no <literal>NEW TABLE</literal> transition relation.
+        指向类型为 <structname>Tuplestorestate</structname> 的结构的指针，该结构包含零行或多行格式由 <structfield>tg_relation</structfield> 指定的行；如果不存在 <literal>NEW TABLE</literal> 转换关系，则为 <symbol>NULL</symbol> 指针。
        </para>
       </listitem>
      </varlistentry>
@@ -624,23 +583,17 @@ typedef struct Trigger
       <term><structfield>tg_updatedcols</structfield></term>
       <listitem>
        <para>
-        For <literal>UPDATE</literal> triggers, a bitmap set indicating the
-        columns that were updated by the triggering command.  Generic trigger
-        functions can use this to optimize actions by not having to deal with
-        columns that were not changed.
+        对于 <literal>UPDATE</literal> 触发器，一个位图集合，指示由触发命令更新的列。通用触发器函数可以利用这一点来优化操作，从而不必处理未更改的列。
        </para>
 
        <para>
-        As an example, to determine whether a column with attribute number
-        <varname>attnum</varname> (1-based) is a member of this bitmap set,
-        call <literal>bms_is_member(attnum -
+        例如，要确定属性号为 <varname>attnum</varname>（从 1 开始计数）的列是否是该位图集合的成员，请调用 <literal>bms_is_member(attnum -
         FirstLowInvalidHeapAttributeNumber,
-        trigdata->tg_updatedcols))</literal>.
+        trigdata->tg_updatedcols))</literal>。
        </para>
 
        <para>
-        For triggers other than <literal>UPDATE</literal> triggers, this will
-        be <symbol>NULL</symbol>.
+        对于 <literal>UPDATE</literal> 触发器以外的触发器，这将是 <symbol>NULL</symbol>。
        </para>
       </listitem>
      </varlistentry>
@@ -648,17 +601,11 @@ typedef struct Trigger
    </para>
 
    <para>
-    To allow queries issued through SPI to reference transition tables, see
-    <xref linkend="spi-spi-register-trigger-data"/>.
+    要允许通过 SPI 发出的查询引用转换表，请参见 <xref linkend="spi-spi-register-trigger-data"/>。
    </para>
 
    <para>
-    A trigger function must return either a
-    <structname>HeapTuple</structname> pointer or a <symbol>NULL</symbol> pointer
-    (<emphasis>not</emphasis> an SQL null value, that is, do not set <parameter>isNull</parameter> true).
-    Be careful to return either
-    <structfield>tg_trigtuple</structfield> or <structfield>tg_newtuple</structfield>,
-    as appropriate, if you don't want to modify the row being operated on.
+    触发器函数必须返回 <structname>HeapTuple</structname> 指针或 <symbol>NULL</symbol> 指针（<emphasis>不是</emphasis> SQL 空值，也就是说，不要将 <parameter>isNull</parameter> 设置为 true）。如果你不想修改正在操作的行，请注意根据情况返回 <structfield>tg_trigtuple</structfield> 或 <structfield>tg_newtuple</structfield>。
    </para>
   </sect1>
 
