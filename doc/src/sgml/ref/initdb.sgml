@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>initdb</refname>
-  <refpurpose>create a new <productname>PostgreSQL</productname> database cluster</refpurpose>
+  <refpurpose>创建一个新的 <productname>PostgreSQL</productname> 数据库集簇</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -34,111 +34,67 @@ PostgreSQL documentation
  </refsynopsisdiv>
 
  <refsect1 id="r1-app-initdb-1">
-  <title>Description</title>
+  <title>描述</title>
   <para>
-   <command>initdb</command> creates a new
-   <productname>PostgreSQL</productname> <glossterm linkend="glossary-db-cluster">database cluster</glossterm>.
+   <command>initdb</command> 创建一个新的 <productname>PostgreSQL</productname> <glossterm linkend="glossary-db-cluster">数据库集簇</glossterm>.
   </para>
 
   <para>
-   Creating a database cluster consists of creating the
-   <glossterm linkend="glossary-data-directory">directories</glossterm> in
-   which the cluster data will live, generating the shared catalog
-   tables (tables that belong to the whole cluster rather than to any
-   particular database), and creating the <literal>postgres</literal>,
-   <literal>template1</literal>, and <literal>template0</literal> databases.
-   The <literal>postgres</literal> database is a default database meant
-   for use by users, utilities and third party applications.
-   <literal>template1</literal> and <literal>template0</literal> are
-   meant as source databases to be copied by later <command>CREATE
-   DATABASE</command> commands.  <literal>template0</literal> should never
-   be modified, but you can add objects to <literal>template1</literal>,
-   which by default will be copied into databases created later.  See
-   <xref linkend="manage-ag-templatedbs"/> for more details.
+   创建数据库集簇包括创建
+   <glossterm linkend="glossary-data-directory">目录</glossterm> 其中将存放数据库集簇数据，生成共享系统目录表（属于整个数据库集簇而非任何特定数据库的表），并创建 <literal>postgres</literal>、<literal>template1</literal> 和 <literal>template0</literal> 数据库。
+   <literal>postgres</literal> 数据库是一个默认数据库，供用户、工具和第三方应用程序使用。
+   <literal>template1</literal> 和 <literal>template0</literal> 用作源数据库，供后续的 <command>CREATE
+   DATABASE</command> 命令复制。<literal>template0</literal> 永远不应被修改，但你可以向 <literal>template1</literal> 中添加对象，默认情况下这些对象会被复制到之后创建的数据库中。更多细节请参见 <xref linkend="manage-ag-templatedbs"/>。
   </para>
 
   <para>
-   Although <command>initdb</command> will attempt to create the
-   specified data directory, it might not have permission if the parent
-   directory of the desired data directory is root-owned. To initialize
-   in such a setup, create an empty data directory as root, then use
-   <command>chown</command> to assign ownership of that directory to the
-   database user account, then <command>su</command> to become the
-   database user to run <command>initdb</command>.
+   尽管 <command>initdb</command> 会尝试创建指定的数据目录，但如果所需数据目录的父目录归 root 所有，它可能没有相应权限。要在这种环境下初始化，请以 root 身份创建一个空的数据目录，然后使用 <command>chown</command> 将该目录的所有权分配给数据库用户账户，再使用 <command>su</command> 切换为数据库用户来运行 <command>initdb</command>。
   </para>
 
   <para>
-   <command>initdb</command> must be run as the user that will own the
-   server process, because the server needs to have access to the
-   files and directories that <command>initdb</command> creates.
-   Since the server cannot be run as root, you must not run
-   <command>initdb</command> as root either.  (It will in fact refuse
-   to do so.)
+   <command>initdb</command> 必须以将拥有服务器进程的用户身份运行，因为服务器需要访问 <command>initdb</command> 所创建的文件和目录。
+   由于服务器不能以 root 身份运行，你也不能以 root 身份运行 <command>initdb</command>。（实际上它会拒绝这样做。）
   </para>
 
   <para>
-    For security reasons the new cluster created by <command>initdb</command>
-    will only be accessible by the cluster owner by default.  The
-    <option>--allow-group-access</option> option allows any user in the same
-    group as the cluster owner to read files in the cluster.  This is useful
-    for performing backups as a non-privileged user.
+    出于安全原因，由 <command>initdb</command> 创建的新数据库集簇默认只能由集簇所有者访问。<option>--allow-group-access</option> 选项允许与集簇所有者同组的任何用户读取集簇中的文件。这对于以非特权用户身份执行备份很有用。
   </para>
 
   <para>
-   <command>initdb</command> initializes the database cluster's default locale
-   and character set encoding. These can also be set separately for each
-   database when it is created. <command>initdb</command> determines those
-   settings for the template databases, which will serve as the default for
-   all other databases.
+   <command>initdb</command> 初始化数据库集簇的默认区域设置和字符集编码。在创建每个数据库时，也可以分别为其设置这些选项。<command>initdb</command> 为模板数据库确定这些设置，这些设置将作为所有其他数据库的默认值。
   </para>
 
   <para>
-   By default, <command>initdb</command> uses the locale provider
-   <literal>libc</literal> (see <xref linkend="locale-providers"/>). The
-   <literal>libc</literal> locale provider takes the locale settings from the
-   environment, and determines the encoding from the locale settings.
+   默认情况下，<command>initdb</command> 使用区域提供者 <literal>libc</literal>（参见 <xref linkend="locale-providers"/>）。<literal>libc</literal> 区域提供者从环境中获取区域设置，并根据区域设置确定编码。
   </para>
 
   <para>
-   To choose a different locale for the cluster, use the option
-   <option>--locale</option>.  There are also individual options
-   <option>--lc-*</option> and <option>--icu-locale</option> (see below) to
-   set values for the individual locale categories.  Note that inconsistent
-   settings for different locale categories can give nonsensical results, so
-   this should be used with care.
+   要为数据库集簇选择不同的区域设置，请使用选项
+   <option>--locale</option>。还有单独选项
+   <option>--lc-*</option> 和 <option>--icu-locale</option>（见下文），用于为各个区域类别设置值。请注意，不同区域类别的设置不一致可能会产生无意义的结果，因此应谨慎使用。
   </para>
 
   <para>
-   Alternatively, <command>initdb</command> can use the ICU library to provide
-   locale services by specifying <literal>--locale-provider=icu</literal>. The
-   server must be built with ICU support. To choose the specific ICU locale ID
-   to apply, use the option <option>--icu-locale</option>.  Note that for
-   implementation reasons and to support legacy code,
-   <command>initdb</command> will still select and initialize libc locale
-   settings when the ICU locale provider is used.
+   或者，<command>initdb</command> 可以通过指定 <literal>--locale-provider=icu</literal> 来使用 ICU 库提供区域服务。服务器必须在构建时支持 ICU。要选择要应用的具体 ICU 区域 ID，请使用选项 <option>--icu-locale</option>。请注意，出于实现原因以及为了支持遗留代码，当使用 ICU 区域提供者时，<command>initdb</command> 仍会选择并初始化 libc 区域设置。
   </para>
 
   <para>
-   When <command>initdb</command> runs, it will print out the locale settings
-   it has chosen.  If you have complex requirements or specified multiple
-   options, it is advisable to check that the result matches what was
-   intended.
+   当 <command>initdb</command> 运行时，它会打印出所选择的区域设置。如果您有复杂的需求或指定了多个选项，建议检查结果是否符合预期。
   </para>
 
   <para>
-   More details about locale settings can be found in <xref
-   linkend="locale"/>.
+   有关区域设置的更多细节可以在 <xref
+   linkend="locale"/> 中找到。
   </para>
 
   <para>
-   To alter the default encoding, use the <option>--encoding</option>.
-   More details can be found in <xref linkend="multibyte"/>.
+   要更改默认编码，请使用 <option>--encoding</option>。更多细节可以在 <xref linkend="multibyte"/> 中找到。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Options</title>
+  <title>选项</title>
 
    <para>
     <variablelist>
@@ -147,22 +103,15 @@ PostgreSQL documentation
       <term><option>--auth=<replaceable class="parameter">authmethod</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the default authentication method for local
-        users used in <filename>pg_hba.conf</filename> (<literal>host</literal>
-        and <literal>local</literal> lines).  See <xref linkend="auth-pg-hba-conf"/>
-        for an overview of valid values.
+        此选项指定 <filename>pg_hba.conf</filename> 中（<literal>host</literal> 和 <literal>local</literal> 行）用于本地用户的默认认证方法。有关有效值的概述，请参见 <xref linkend="auth-pg-hba-conf"/>。
        </para>
 
        <para>
-        <command>initdb</command> will
-        prepopulate <filename>pg_hba.conf</filename> entries using the
-        specified authentication method for non-replication as well as
-        replication connections.
+        <command>initdb</command> 将使用指定的认证方法为非复制连接以及复制连接预填充 <filename>pg_hba.conf</filename> 条目。
        </para>
 
        <para>
-        Do not use <literal>trust</literal> unless you trust all local users on your
-        system.  <literal>trust</literal> is the default for ease of installation.
+        除非你信任系统上的所有本地用户，否则不要使用 <literal>trust</literal>。<literal>trust</literal> 是默认值，以便于安装。
        </para>
       </listitem>
      </varlistentry>
@@ -171,9 +120,7 @@ PostgreSQL documentation
       <term><option>--auth-host=<replaceable class="parameter">authmethod</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the authentication method for local users via
-        TCP/IP connections used in <filename>pg_hba.conf</filename>
-        (<literal>host</literal> lines).
+        此选项指定 <filename>pg_hba.conf</filename> 中（<literal>host</literal> 行）用于通过 TCP/IP 连接的本地用户的认证方法。
        </para>
       </listitem>
      </varlistentry>
@@ -182,9 +129,7 @@ PostgreSQL documentation
       <term><option>--auth-local=<replaceable class="parameter">authmethod</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the authentication method for local users via
-        Unix-domain socket connections used in <filename>pg_hba.conf</filename>
-        (<literal>local</literal> lines).
+        此选项指定 <filename>pg_hba.conf</filename> 中（<literal>local</literal> 行）用于通过 Unix 域套接字连接的本地用户的认证方法。
        </para>
       </listitem>
      </varlistentry>
@@ -194,13 +139,7 @@ PostgreSQL documentation
       <term><option>--pgdata=<replaceable class="parameter">directory</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the directory where the database cluster
-        should be stored. This is the only information required by
-        <command>initdb</command>, but you can avoid writing it by
-        setting the <envar>PGDATA</envar> environment variable, which
-        can be convenient since the database server
-        (<command>postgres</command>) can find the data
-        directory later by the same variable.
+        此选项指定数据库集簇应存储的目录。这是 <command>initdb</command> 所需的唯一信息，但你可以通过设置 <envar>PGDATA</envar> 环境变量来避免写入它，这很方便，因为数据库服务器（<command>postgres</command>）稍后可以通过同一变量找到数据目录。
        </para>
       </listitem>
      </varlistentry>
@@ -210,19 +149,11 @@ PostgreSQL documentation
       <term><option>--encoding=<replaceable class="parameter">encoding</replaceable></option></term>
       <listitem>
        <para>
-        Selects the encoding of the template databases. This will also be the
-        default encoding of any database you create later, unless you override
-        it then. The character sets supported by the
-        <productname>PostgreSQL</productname> server are described in <xref
-        linkend="multibyte-charset-supported"/>.
+        选择模板数据库的编码。这也会是你之后创建的任何数据库的默认编码，除非届时你覆盖它。<productname>PostgreSQL</productname> 服务器支持的字符集在 <xref
+        linkend="multibyte-charset-supported"/> 中描述。
        </para>
        <para>
-        By default, the template database encoding is derived from the
-        locale. If <xref linkend="app-initdb-option-no-locale"/> is specified
-        (or equivalently, if the locale is <literal>C</literal> or
-        <literal>POSIX</literal>), then the default is <literal>UTF8</literal>
-        for the ICU provider and <literal>SQL_ASCII</literal> for the
-        <literal>libc</literal> provider.
+        默认情况下，模板数据库编码由区域设置派生而来。如果指定了 <xref linkend="app-initdb-option-no-locale"/>（或等价地，如果区域设置为 <literal>C</literal> 或 <literal>POSIX</literal>），那么对于 ICU 提供者默认是 <literal>UTF8</literal>，对于 <literal>libc</literal> 提供者默认是 <literal>SQL_ASCII</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -232,10 +163,7 @@ PostgreSQL documentation
       <term><option>--allow-group-access</option></term>
       <listitem>
        <para>
-        Allows users in the same group as the cluster owner to read all cluster
-        files created by <command>initdb</command>.  This option is ignored
-        on <productname>Windows</productname> as it does not support
-        <acronym>POSIX</acronym>-style group permissions.
+        允许与数据库集簇所有者同组的用户读取由 <command>initdb</command> 创建的所有集簇文件。此选项在 <productname>Windows</productname> 上被忽略，因为它不支持 <acronym>POSIX</acronym> 风格的组权限。
        </para>
       </listitem>
      </varlistentry>
@@ -244,8 +172,7 @@ PostgreSQL documentation
       <term><option>--icu-locale=<replaceable>locale</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the ICU locale when the ICU provider is used. Locale support
-        is described in <xref linkend="locale"/>.
+        指定使用 ICU 提供者时的 ICU 区域设置。区域设置支持在 <xref linkend="locale"/> 中描述。
        </para>
       </listitem>
      </varlistentry>
@@ -254,8 +181,7 @@ PostgreSQL documentation
       <term><option>--icu-rules=<replaceable>rules</replaceable></option></term>
       <listitem>
        <para>
-        Specifies additional collation rules to customize the behavior of the
-        default collation.  This is supported for ICU only.
+        指定额外的排序规则，以自定义默认排序规则的行为。仅 ICU 支持此功能。
        </para>
       </listitem>
      </varlistentry>
@@ -265,20 +191,14 @@ PostgreSQL documentation
       <term><option>--data-checksums</option></term>
       <listitem>
        <para>
-        Use checksums on data pages to help detect corruption by the I/O
-        system that would otherwise be silent.  This is enabled by default;
-        use <xref linkend="app-initdb-no-data-checksums"/> to disable
-        checksums.
+        在数据页上使用校验和，以帮助检测原本可能悄无声息的 I/O 系统损坏。此选项默认启用；使用 <xref linkend="app-initdb-no-data-checksums"/> 可禁用校验和。
        </para>
 
        <para>
-        Enabling checksums
-        might incur a small performance penalty. If set, checksums
-        are calculated for all objects, in all databases. All checksum
-        failures will be reported in the
+        启用校验和可能会带来少量性能损失。如果设置，将对所有数据库中的所有对象计算校验和。所有校验和失败都会在
         <link linkend="monitoring-pg-stat-database-view">
-        <structname>pg_stat_database</structname></link> view.
-        See <xref linkend="checksums" /> for details.
+        <structname>pg_stat_database</structname></link> 视图中报告。
+        详情请参见 <xref linkend="checksums" />。
        </para>
       </listitem>
      </varlistentry>
@@ -287,16 +207,13 @@ PostgreSQL documentation
       <term><option>--locale=<replaceable>locale</replaceable></option></term>
       <listitem>
        <para>
-        Sets the default locale for the database cluster.  If this
-        option is not specified, the locale is inherited from the
-        environment that <command>initdb</command> runs in. Locale
-        support is described in <xref linkend="locale"/>.
+        设置数据库集簇的默认区域设置。如果未指定此选项，则区域设置继承自
+        <command>initdb</command> 运行所在的环境。区域设置支持在 <xref linkend="locale"/> 中描述。
        </para>
        <para>
-        If <option>--locale-provider</option> is <literal>builtin</literal>,
-        <option>--locale</option> or <option>--builtin-locale</option> must be
-        specified and set to <literal>C</literal>, <literal>C.UTF-8</literal>
-        or <literal>PG_UNICODE_FAST</literal>.
+        如果 <option>--locale-provider</option> 为 <literal>builtin</literal>，
+        则必须指定 <option>--locale</option> 或 <option>--builtin-locale</option>，并将其设置为 <literal>C</literal>、<literal>C.UTF-8</literal>
+        或 <literal>PG_UNICODE_FAST</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -311,8 +228,7 @@ PostgreSQL documentation
 
       <listitem>
        <para>
-        Like <option>--locale</option>, but only sets the locale in
-        the specified category.
+        类似于 <option>--locale</option>，但只设置指定类别中的区域设置。
        </para>
       </listitem>
      </varlistentry>
@@ -321,7 +237,7 @@ PostgreSQL documentation
       <term><option>--no-locale</option></term>
       <listitem>
        <para>
-        Equivalent to <option>--locale=C</option>.
+        等价于 <option>--locale=C</option>。
        </para>
       </listitem>
      </varlistentry>
@@ -330,8 +246,8 @@ PostgreSQL documentation
       <term><option>--builtin-locale=<replaceable>locale</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the locale name when the builtin provider is used. Locale support
-        is described in <xref linkend="locale"/>.
+        指定使用内置提供程序时的区域设置名称。区域设置支持在
+        <xref linkend="locale"/> 中描述。
        </para>
       </listitem>
      </varlistentry>
@@ -353,7 +269,7 @@ PostgreSQL documentation
       <term><option>--no-data-checksums</option></term>
       <listitem>
        <para>
-        Do not enable data checksums.
+        不启用数据校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -362,8 +278,7 @@ PostgreSQL documentation
       <term><option>--pwfile=<replaceable>filename</replaceable></option></term>
       <listitem>
        <para>
-        Makes <command>initdb</command> read the bootstrap superuser's password
-        from a file.  The first line of the file is taken as the password.
+        让 <command>initdb</command> 从文件中读取引导超级用户的密码。文件的第一行被用作密码。
        </para>
       </listitem>
      </varlistentry>
@@ -373,8 +288,7 @@ PostgreSQL documentation
       <term><option>--text-search-config=<replaceable>config</replaceable></option></term>
       <listitem>
        <para>
-        Sets the default text search configuration.
-        See <xref linkend="guc-default-text-search-config"/> for further information.
+        设置默认的全文检索配置。更多信息请参见 <xref linkend="guc-default-text-search-config"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -384,10 +298,8 @@ PostgreSQL documentation
       <term><option>--username=<replaceable class="parameter">username</replaceable></option></term>
       <listitem>
        <para>
-        Sets the user name of the
-        <glossterm linkend="glossary-bootstrap-superuser">bootstrap superuser</glossterm>.
-        This defaults to the name of the operating-system user running
-        <command>initdb</command>.
+        设置……的用户名
+        <glossterm linkend="glossary-bootstrap-superuser">引导超级用户</glossterm>默认值为运行 <command>initdb</command> 的操作系统用户名。
        </para>
       </listitem>
      </varlistentry>
@@ -397,11 +309,7 @@ PostgreSQL documentation
       <term><option>--pwprompt</option></term>
       <listitem>
        <para>
-        Makes <command>initdb</command> prompt for a password
-        to give the bootstrap superuser. If you don't plan on using password
-        authentication, this is not important.  Otherwise you won't be
-        able to use password authentication until you have a password
-        set up.
+        使 <command>initdb</command> 提示输入要为引导超级用户设置的密码。如果您不打算使用密码认证，这并不重要。否则，在您设置密码之前，将无法使用密码认证。
        </para>
       </listitem>
      </varlistentry>
@@ -411,8 +319,7 @@ PostgreSQL documentation
       <term><option>--waldir=<replaceable class="parameter">directory</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the directory where the write-ahead log
-        should be stored.
+        此选项指定应存储预写式日志的目录。
        </para>
       </listitem>
      </varlistentry>
@@ -421,19 +328,11 @@ PostgreSQL documentation
       <term><option>--wal-segsize=<replaceable>size</replaceable></option></term>
       <listitem>
        <para>
-        Set the <firstterm>WAL segment size</firstterm>, in megabytes.  This
-        is the size of each individual file in the WAL log.  The default size
-        is 16 megabytes.  The value must be a power of 2 between 1 and 1024
-        (megabytes).  This option can only be set during initialization, and
-        cannot be changed later.
+        设置 <firstterm>WAL 段大小</firstterm>，单位为兆字节。这是 WAL 日志中每个单独文件的大小。默认大小为 16 兆字节。该值必须是 1 到 1024（兆字节）之间的 2 的幂。此选项只能在初始化期间设置，之后无法更改。
        </para>
 
        <para>
-        It may be useful to adjust this size to control the granularity of
-        WAL log shipping or archiving.  Also, in databases with a high volume
-        of WAL, the sheer number of WAL files per directory can become a
-        performance and management problem.  Increasing the WAL file size
-        will reduce the number of WAL files.
+        调整此大小可能有助于控制 WAL 日志传送或归档的粒度。此外，在 WAL 量很大的数据库中，每个目录中 WAL 文件的数量本身就可能成为性能和管理问题。增大 WAL 文件大小将减少 WAL 文件的数量。
        </para>
       </listitem>
      </varlistentry>
@@ -441,7 +340,7 @@ PostgreSQL documentation
    </para>
 
    <para>
-    Other, less commonly used, options are also available:
+    还提供了其他不太常用的选项：
 
     <variablelist>
      <varlistentry id="app-initdb-option-set">
@@ -449,14 +348,13 @@ PostgreSQL documentation
       <term><option>--set <replaceable>name</replaceable>=<replaceable>value</replaceable></option></term>
       <listitem>
        <para>
-        Forcibly set the server parameter <replaceable>name</replaceable>
-        to <replaceable>value</replaceable> during <command>initdb</command>,
-        and also install that setting in the
-        generated <filename>postgresql.conf</filename> file,
-        so that it will apply during future server runs.
-        This option can be given more than once to set several parameters.
-        It is primarily useful when the environment is such that the server
-        will not start at all using the default parameters.
+        在 <command>initdb</command> 期间强制将服务器参数 <replaceable>name</replaceable>
+设置为 <replaceable>value</replaceable>，
+并将该设置写入生成的 <filename>postgresql.conf</filename> 文件，
+以便在将来的服务器运行期间生效。
+此选项可以多次给出，以设置多个参数。
+当环境导致服务器完全无法使用默认参数启动时，
+此选项特别有用。
        </para>
       </listitem>
      </varlistentry>
@@ -466,11 +364,11 @@ PostgreSQL documentation
       <term><option>--debug</option></term>
       <listitem>
        <para>
-        Print debugging output from the bootstrap backend and a few other
-        messages of lesser interest for the general public.
-        The bootstrap backend is the program <command>initdb</command>
-        uses to create the catalog tables.  This option generates a tremendous
-        amount of extremely boring output.
+        打印来自 bootstrap 后端的调试输出，以及一些
+普通用户不太关心的其他消息。
+bootstrap 后端是 <command>initdb</command>
+用来创建系统目录表的程序。此选项会产生
+大量极其乏味的输出。
        </para>
       </listitem>
      </varlistentry>
@@ -479,9 +377,8 @@ PostgreSQL documentation
       <term><option>--discard-caches</option></term>
       <listitem>
        <para>
-        Run the bootstrap backend with the
-        <literal>debug_discard_caches=1</literal> option.
-        This takes a very long time and is only of use for deep debugging.
+        使用 <literal>debug_discard_caches=1</literal> 选项运行 bootstrap 后端。
+这会花费很长时间，仅对深入调试有用。
        </para>
       </listitem>
      </varlistentry>
@@ -490,10 +387,10 @@ PostgreSQL documentation
       <term><option>-L <replaceable class="parameter">directory</replaceable></option></term>
       <listitem>
        <para>
-        Specifies where <command>initdb</command> should find
-        its input files to initialize the database cluster.  This is
-        normally not necessary.  You will be told if you need to
-        specify their location explicitly.
+        指定 <command>initdb</command> 应在何处找到
+用于初始化数据库集簇的输入文件。通常
+不需要这样做。如果需要显式指定它们的位置，
+会通知您。
        </para>
       </listitem>
      </varlistentry>
@@ -503,11 +400,11 @@ PostgreSQL documentation
       <term><option>--no-clean</option></term>
       <listitem>
        <para>
-        By default, when <command>initdb</command>
-        determines that an error prevented it from completely creating the database
-        cluster, it removes any files it might have created before discovering
-        that it cannot finish the job. This option inhibits tidying-up and is
-        thus useful for debugging.
+        默认情况下，当 <command>initdb</command>
+确定某个错误导致它无法完整创建数据库集簇时，
+它会删除在发现无法完成工作之前可能已创建的任何文件。
+此选项会阻止这种清理，因此
+对调试有用。
        </para>
       </listitem>
      </varlistentry>
@@ -517,12 +414,12 @@ PostgreSQL documentation
       <term><option>--no-sync</option></term>
       <listitem>
        <para>
-        By default, <command>initdb</command> will wait for all files to be
-        written safely to disk.  This option causes <command>initdb</command>
-        to return without waiting, which is faster, but means that a
-        subsequent operating system crash can leave the data directory
-        corrupt.  Generally, this option is useful for testing, but should not
-        be used when creating a production installation.
+        默认情况下，<command>initdb</command> 会等待所有文件
+安全写入磁盘。此选项使 <command>initdb</command>
+不等待就返回，这样速度更快，但意味着
+随后发生操作系统崩溃可能会使数据目录
+损坏。通常，此选项对测试有用，但在创建
+生产安装时不应使用。
        </para>
       </listitem>
      </varlistentry>
@@ -531,25 +428,13 @@ PostgreSQL documentation
       <term><option>--no-sync-data-files</option></term>
       <listitem>
        <para>
-        By default, <command>initdb</command> safely writes all database files
-        to disk.  This option instructs <command>initdb</command> to skip
-        synchronizing all files in the individual database directories, the
-        database directories themselves, and the tablespace directories, i.e.,
-        everything in the <filename>base</filename> subdirectory and any other
-        tablespace directories.  Other files, such as those in
-        <literal>pg_wal</literal> and <literal>pg_xact</literal>, will still be
-        synchronized unless the <option>--no-sync</option> option is also
-        specified.
+        默认情况下，<command>initdb</command> 会安全地将所有数据库文件写入磁盘。此选项指示 <command>initdb</command> 跳过对各个数据库目录中的所有文件、数据库目录本身以及表空间目录的同步，即 <filename>base</filename> 子目录中的所有内容以及其他任何表空间目录。其他文件（例如 <literal>pg_wal</literal> 和 <literal>pg_xact</literal> 中的文件）仍将被同步，除非同时指定了 <option>--no-sync</option> 选项。
        </para>
        <para>
-        Note that if <option>--no-sync-data-files</option> is used in
-        conjunction with <option>--sync-method=syncfs</option>, some or all of
-        the aforementioned files and directories will be synchronized because
-        <literal>syncfs</literal> processes entire file systems.
+        注意，如果 <option>--no-sync-data-files</option> 与 <option>--sync-method=syncfs</option> 一起使用，则上述部分或全部文件和目录将被同步，因为 <literal>syncfs</literal> 会处理整个文件系统。
        </para>
        <para>
-        This option is primarily intended for internal use by tools that
-        separately ensure the skipped files are synchronized to disk.
+        此选项主要供那些另行确保被跳过的文件已同步到磁盘的工具内部使用。
        </para>
       </listitem>
      </varlistentry>
@@ -558,11 +443,7 @@ PostgreSQL documentation
       <term><option>--no-instructions</option></term>
       <listitem>
        <para>
-        By default, <command>initdb</command> will write instructions for how
-        to start the cluster at the end of its output. This option causes
-        those instructions to be left out. This is primarily intended for use
-        by tools that wrap <command>initdb</command> in platform-specific
-        behavior, where those instructions are likely to be incorrect.
+        默认情况下，<command>initdb</command> 会在其输出末尾写入有关如何启动数据库集簇的说明。此选项使这些说明被省略。这主要供那些将 <command>initdb</command> 包装在平台特定行为中的工具使用，在这些情况下那些说明很可能是错误的。
        </para>
       </listitem>
      </varlistentry>
@@ -572,9 +453,7 @@ PostgreSQL documentation
       <term><option>--show</option></term>
       <listitem>
        <para>
-        Show internal settings and exit, without doing anything else.  This
-        can be used to debug the <application>initdb</application>
-        installation.
+        显示内部设置并退出，不做其他任何事情。这可用于调试 <application>initdb</application> 安装。
        </para>
       </listitem>
      </varlistentry>
@@ -583,20 +462,13 @@ PostgreSQL documentation
       <term><option>--sync-method=<replaceable>method</replaceable></option></term>
       <listitem>
        <para>
-        When set to <literal>fsync</literal>, which is the default,
-        <command>initdb</command> will recursively open and synchronize all
-        files in the data directory.  The search for files will follow symbolic
-        links for the WAL directory and each configured tablespace.
+        当设置为 <literal>fsync</literal>（这是默认值）时，<command>initdb</command> 将递归地打开并同步数据目录中的所有文件。文件搜索将遵循 WAL 目录和每个已配置表空间的符号链接。
        </para>
        <para>
-        On Linux, <literal>syncfs</literal> may be used instead to ask the
-        operating system to synchronize the whole file systems that contain the
-        data directory, the WAL files, and each tablespace.  See
-        <xref linkend="guc-recovery-init-sync-method"/> for information about
-        the caveats to be aware of when using <literal>syncfs</literal>.
+        在 Linux 上，可以改用 <literal>syncfs</literal> 来要求操作系统同步包含数据目录、WAL 文件和每个表空间的整个文件系统。有关使用 <literal>syncfs</literal> 时需要注意的事项，请参见 <xref linkend="guc-recovery-init-sync-method"/>。
        </para>
        <para>
-        This option has no effect when <option>--no-sync</option> is used.
+        当使用 <option>--no-sync</option> 时，此选项无效。
        </para>
       </listitem>
      </varlistentry>
@@ -606,11 +478,7 @@ PostgreSQL documentation
       <term><option>--sync-only</option></term>
       <listitem>
        <para>
-        Safely write all database files to disk and exit.  This does not
-        perform any of the normal <application>initdb</application> operations.
-        Generally, this option is useful for ensuring reliable recovery after
-        changing <xref linkend="guc-fsync"/> from <literal>off</literal> to
-        <literal>on</literal>.
+        将所有数据库文件安全地写入磁盘并退出。此操作不执行任何常规的 <application>initdb</application> 操作。通常，在将 <xref linkend="guc-fsync"/> 从 <literal>off</literal> 改为 <literal>on</literal> 之后，此选项有助于确保可靠的恢复。
        </para>
       </listitem>
      </varlistentry>
@@ -618,7 +486,7 @@ PostgreSQL documentation
    </para>
 
    <para>
-    Other options:
+    其他选项：
 
     <variablelist>
      <varlistentry id="app-initdb-option-version">
@@ -626,7 +494,7 @@ PostgreSQL documentation
        <term><option>--version</option></term>
        <listitem>
        <para>
-       Print the <application>initdb</application> version and exit.
+       打印 <application>initdb</application> 版本并退出。
        </para>
        </listitem>
      </varlistentry>
@@ -636,8 +504,7 @@ PostgreSQL documentation
        <term><option>--help</option></term>
        <listitem>
        <para>
-       Show help about <application>initdb</application> command line
-       arguments, and exit.
+       显示关于 <application>initdb</application> 命令行参数的帮助，然后退出。
        </para>
        </listitem>
      </varlistentry>
@@ -648,7 +515,7 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1>
-  <title>Environment</title>
+  <title>环境</title>
 
   <variablelist>
    <varlistentry id="app-initdb-environment-pgdata">
@@ -656,8 +523,7 @@ PostgreSQL documentation
 
     <listitem>
      <para>
-      Specifies the directory where the database cluster is to be
-      stored; can be overridden using the <option>-D</option> option.
+      指定数据库集簇的存储目录；可以使用 <option>-D</option> 选项覆盖。
      </para>
     </listitem>
    </varlistentry>
@@ -666,9 +532,8 @@ PostgreSQL documentation
     <term><envar>PG_COLOR</envar></term>
     <listitem>
      <para>
-      Specifies whether to use color in diagnostic messages. Possible values
-      are <literal>always</literal>, <literal>auto</literal> and
-      <literal>never</literal>.
+      指定诊断消息中是否使用颜色。可能的值为 <literal>always</literal>、<literal>auto</literal> 和
+      <literal>never</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -678,9 +543,8 @@ PostgreSQL documentation
 
     <listitem>
      <para>
-      Specifies the default time zone of the created database cluster.  The
-      value should be a full time zone name
-      (see <xref linkend="datatype-timezones"/>).
+      指定所创建的数据库集簇的默认时区。该值应为完整的时区名称
+      （参见 <xref linkend="datatype-timezones"/>）。
      </para>
     </listitem>
    </varlistentry>
@@ -689,16 +553,15 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   <command>initdb</command> can also be invoked via
-   <command>pg_ctl initdb</command>.
+   <command>initdb</command> 也可以通过 <command>pg_ctl initdb</command> 调用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="app-pg-ctl"/></member>
