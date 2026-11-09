@@ -420,56 +420,39 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 
 <sect1 id="storage-page-layout">
 
-<title>Database Page Layout</title>
+<title>数据库页面布局</title>
 
 <para>
-This section provides an overview of the page format used within
-<productname>PostgreSQL</productname> tables and indexes.<footnote>
+本节概述了 <productname>PostgreSQL</productname> 表和索引中使用的页面格式。<footnote>
   <para>
-    Actually, use of this page format is not required for either table or
-    index access methods. The <literal>heap</literal> table access method
-    always uses this format.  All the existing index methods also use the
-    basic format, but the data kept on index metapages usually doesn't follow
-    the item layout rules.
+    实际上，表访问方法和索引访问方法都不要求使用这种页面格式。<literal>heap</literal> 表访问方法始终使用这种格式。所有现有的索引方法也使用这种基本格式，但索引元页上保存的数据通常不遵循项布局规则。
   </para>
 </footnote>
-Sequences and <acronym>TOAST</acronym> tables are formatted just like a regular table.
+序列和 <acronym>TOAST</acronym> 表的格式与常规表完全相同。
 </para>
 
 <para>
-In the following explanation, a
-<firstterm>byte</firstterm>
-is assumed to contain 8 bits.  In addition, the term
-<firstterm>item</firstterm>
-refers to an individual data value that is stored on a page.  In a table,
-an item is a row; in an index, an item is an index entry.
+在下面的说明中，假设一个<firstterm>字节</firstterm>包含 8 位。此外，术语<firstterm>项</firstterm>指的是存储在页面上的单个数据值。在表中，一项就是一行；在索引中，一项就是一个索引条目。
 </para>
 
 <para>
-Every table and index is stored as an array of <firstterm>pages</firstterm> of a
-fixed size (usually 8 kB, although a different page size can be selected
-when compiling the server).  In a table, all the pages are logically
-equivalent, so a particular item (row) can be stored in any page.  In
-indexes, the first page is generally reserved as a <firstterm>metapage</firstterm>
-holding control information, and there can be different types of pages
-within the index, depending on the index access method.
+每个表和索引都存储为固定大小的<firstterm>页面</firstterm>数组（通常为 8 kB，不过在编译服务器时可以选择不同的页面大小）。在表中，所有页面在逻辑上是等价的，因此特定的项（行）可以存储在任意页面中。在索引中，第一页通常保留为<firstterm>元页</firstterm>，用于保存控制信息，并且根据索引访问方法的不同，索引内可以存在不同类型的页面。
 </para>
 
 <para>
-<xref linkend="page-table"/> shows the overall layout of a page.
-There are five parts to each page.
+<xref linkend="page-table"/> 展示了页面的整体布局。每个页面由五个部分组成。
 </para>
 
 <table tocentry="1" id="page-table">
-<title>Overall Page Layout</title>
+<title>页面整体布局</title>
 <titleabbrev>Page Layout</titleabbrev>
 <tgroup cols="2">
 <thead>
 <row>
 <entry>
-Item
+项
 </entry>
-<entry>Description</entry>
+<entry>描述</entry>
 </row>
 </thead>
 
@@ -477,31 +460,27 @@ Item
 
 <row>
  <entry>PageHeaderData</entry>
- <entry>24 bytes long. Contains general information about the page, including
-free space pointers.</entry>
+ <entry>长度为 24 字节。包含有关该页面的通用信息，其中包括空闲空间指针。</entry>
 </row>
 
 <row>
 <entry>ItemIdData</entry>
-<entry>Array of item identifiers pointing to the actual items. Each
-entry is an (offset,length) pair. 4 bytes per item.</entry>
+<entry>指向实际数据项的项标识符数组。每个条目是一个 (offset,length) 对。每项 4 字节。</entry>
 </row>
 
 <row>
-<entry>Free space</entry>
-<entry>The unallocated space. New item identifiers are allocated from
-the start of this area, new items from the end.</entry>
+<entry>空闲空间</entry>
+<entry>未分配的空间。新的项标识符从该区域的起始处分配，新的数据项从末尾处分配。</entry>
 </row>
 
 <row>
-<entry>Items</entry>
-<entry>The actual items themselves.</entry>
+<entry>项</entry>
+<entry>实际的数据项本身。</entry>
 </row>
 
 <row>
-<entry>Special space</entry>
-<entry>Index access method specific data. Different methods store different
-data. Empty in ordinary tables.</entry>
+<entry>特殊空间</entry>
+<entry>索引访问方法特定的数据。不同的方法存储不同的数据。在普通表中为空。</entry>
 </row>
 
 </tbody>
@@ -510,152 +489,136 @@ data. Empty in ordinary tables.</entry>
 
  <para>
 
-  The first 24 bytes of each page consists of a page header
-  (<structname>PageHeaderData</structname>). Its format is detailed in <xref
-  linkend="pageheaderdata-table"/>. The first field tracks the most
-  recent WAL entry related to this page. The second field contains
-  the page checksum if <link linkend="checksums">data checksums</link> are
-  enabled.  Next is a 2-byte field containing flag bits. This is followed
-  by three 2-byte integer fields (<structfield>pd_lower</structfield>,
-  <structfield>pd_upper</structfield>, and
-  <structfield>pd_special</structfield>).  These contain byte offsets
-  from the page start to the start of unallocated space, to the end of
-  unallocated space, and to the start of the special space.  The next 2
-  bytes of the page header, <structfield>pd_pagesize_version</structfield>,
-  store both the page size and a version indicator.  Beginning with
-  <productname>PostgreSQL</productname> 8.3 the version number is 4;
-  <productname>PostgreSQL</productname> 8.1 and 8.2 used version number 3;
-  <productname>PostgreSQL</productname> 8.0 used version number 2;
-  <productname>PostgreSQL</productname> 7.3 and 7.4 used version number 1;
-  prior releases used version number 0.
-  (The basic page layout and header format has not changed in most of these
-  versions, but the layout of heap row headers has.)  The page size
-  is basically only present as a cross-check; there is no support for having
-  more than one page size in an installation.
-  The last field is a hint that shows whether pruning the page is likely
-  to be profitable: it tracks the oldest un-pruned XMAX on the page.
+  每个页面的前 24 字节由页头（<structname>PageHeaderData</structname>）组成。其格式在 <xref
+  linkend="pageheaderdata-table"/> 中详细说明。第一个字段跟踪与该页面
+  相关的最近的 WAL 条目。如果启用了<link linkend="checksums">数据校验和</link>，
+  则第二个字段包含页面校验和。接下来是一个包含标志位的 2 字节字段。
+  其后是三个 2 字节整数字段（<structfield>pd_lower</structfield>、
+  <structfield>pd_upper</structfield> 和
+  <structfield>pd_special</structfield>）。它们包含从页面起始位置到未分配空间起始位置、
+  到未分配空间结束位置以及到特殊空间起始位置的字节偏移量。页头的
+  接下来 2 个字节 <structfield>pd_pagesize_version</structfield>
+  存储页面大小和版本指示符。从
+  <productname>PostgreSQL</productname> 8.3 开始，版本号为 4；
+  <productname>PostgreSQL</productname> 8.1 和 8.2 使用版本号 3；
+  <productname>PostgreSQL</productname> 8.0 使用版本号 2；
+  <productname>PostgreSQL</productname> 7.3 和 7.4 使用版本号 1；
+  更早的版本使用版本号 0。
+  （在大多数这些版本中，基本的页面布局和页头格式没有改变，
+  但堆行头部的布局改变了。）页面大小
+  基本上只是作为交叉检查而存在；不支持在一个安装中
+  有多个页面大小。
+  最后一个字段是一个提示，表明修剪该页面是否可能带来收益：
+  它跟踪页面上最旧的未修剪的 XMAX。
 
  </para>
 
  <table tocentry="1" id="pageheaderdata-table">
- <title>PageHeaderData Layout</title>
+ <title>PageHeaderData 布局</title>
  <titleabbrev>PageHeaderData Layout</titleabbrev>
  <tgroup cols="4">
  <thead>
   <row>
-   <entry>Field</entry>
-   <entry>Type</entry>
-   <entry>Length</entry>
-   <entry>Description</entry>
+   <entry>字段</entry>
+   <entry>类型</entry>
+   <entry>长度</entry>
+   <entry>描述</entry>
   </row>
  </thead>
  <tbody>
   <row>
    <entry>pd_lsn</entry>
    <entry>PageXLogRecPtr</entry>
-   <entry>8 bytes</entry>
-   <entry>LSN: next byte after last byte of WAL record for last change
-   to this page</entry>
+   <entry>8 字节</entry>
+   <entry>LSN：本页最后一次更改的 WAL 记录最后一个字节之后的字节</entry>
   </row>
   <row>
    <entry>pd_checksum</entry>
    <entry>uint16</entry>
-   <entry>2 bytes</entry>
-   <entry>Page checksum</entry>
+   <entry>2 字节</entry>
+   <entry>页校验和</entry>
   </row>
   <row>
    <entry>pd_flags</entry>
    <entry>uint16</entry>
-   <entry>2 bytes</entry>
-   <entry>Flag bits</entry>
+   <entry>2 字节</entry>
+   <entry>标志位</entry>
   </row>
   <row>
    <entry>pd_lower</entry>
    <entry>LocationIndex</entry>
-   <entry>2 bytes</entry>
-   <entry>Offset to start of free space</entry>
+   <entry>2 字节</entry>
+   <entry>空闲空间起始位置的偏移量</entry>
   </row>
   <row>
    <entry>pd_upper</entry>
    <entry>LocationIndex</entry>
-   <entry>2 bytes</entry>
-   <entry>Offset to end of free space</entry>
+   <entry>2 字节</entry>
+   <entry>空闲空间末尾的偏移量</entry>
   </row>
   <row>
    <entry>pd_special</entry>
    <entry>LocationIndex</entry>
-   <entry>2 bytes</entry>
-   <entry>Offset to start of special space</entry>
+   <entry>2 字节</entry>
+   <entry>到特殊空间起始位置的偏移量</entry>
   </row>
   <row>
    <entry>pd_pagesize_version</entry>
    <entry>uint16</entry>
-   <entry>2 bytes</entry>
-   <entry>Page size and layout version number information</entry>
+   <entry>2 字节</entry>
+   <entry>页面大小和布局版本号信息</entry>
   </row>
   <row>
    <entry>pd_prune_xid</entry>
    <entry>TransactionId</entry>
-   <entry>4 bytes</entry>
-   <entry>Oldest unpruned XMAX on page, or zero if none</entry>
+   <entry>4 字节</entry>
+   <entry>页面上最旧的未清理 XMAX，如果没有则为零</entry>
   </row>
  </tbody>
  </tgroup>
  </table>
 
  <para>
-  All the details can be found in
-  <filename>src/include/storage/bufpage.h</filename>.
+  所有细节都可以在
+  <filename>src/include/storage/bufpage.h</filename> 中找到。
  </para>
 
  <para>
-  Following the page header are item identifiers
-  (<type>ItemIdData</type>), each requiring four bytes.
-  An item identifier contains a byte-offset to
-  the start of an item, its length in bytes, and a few attribute bits
-  which affect its interpretation.
-  New item identifiers are allocated
-  as needed from the beginning of the unallocated space.
-  The number of item identifiers present can be determined by looking at
-  <structfield>pd_lower</structfield>, which is increased to allocate a new identifier.
-  Because an item
-  identifier is never moved until it is freed, its index can be used on a
-  long-term basis to reference an item, even when the item itself is moved
-  around on the page to compact free space.  In fact, every pointer to an
-  item (<type>ItemPointer</type>, also known as
-  <type>CTID</type>) created by
-  <productname>PostgreSQL</productname> consists of a page number and the
-  index of an item identifier.
-
- </para>
-
- <para>
-
-  The items themselves are stored in space allocated backwards from the end
-  of unallocated space.  The exact structure varies depending on what the
-  table is to contain. Tables and sequences both use a structure named
-  <type>HeapTupleHeaderData</type>, described below.
+  页头之后是项标识符
+  （<type>ItemIdData</type>），每个需要四字节。
+  一个项标识符包含指向项起始位置的字节偏移量、
+  项的字节长度，以及几个影响其解释的属性位。
+  新的项标识符按需从未分配空间的起始处分配。
+  现有项标识符的数量可以通过查看
+  <structfield>pd_lower</structfield> 来确定，分配新标识符时该值会增加。
+  由于项标识符在被释放之前从不移动，其索引可以
+  长期用于引用某个项，即使项本身在页面上被移动
+  以压缩空闲空间也是如此。事实上，由
+  <productname>PostgreSQL</productname> 创建的每个指向项的指针
+  （<type>ItemPointer</type>，也称为
+  <type>CTID</type>）都由一个页号和
+  一个项标识符的索引组成。
 
  </para>
 
  <para>
 
-  The final section is the <quote>special section</quote> which can
-  contain anything the access method wishes to store.  For example,
-  b-tree indexes store links to the page's left and right siblings,
-  as well as some other data relevant to the index structure.
-  Ordinary tables do not use a special section at all (indicated by setting
-  <structfield>pd_special</structfield> to equal the page size).
+  这些项本身存储在从未分配空间的末尾向后分配的空间中。确切的结构取决于表要包含的内容。表和序列都使用一个名为 <type>HeapTupleHeaderData</type> 的结构，如下所述。
 
  </para>
 
  <para>
-  <xref linkend="storage-page-layout-figure"/> illustrates how these parts are
-  laid out in a page.
+
+  最后一部分是<quote>特殊段</quote>，它可以包含访问方法希望存储的任何内容。例如，b-tree 索引存储指向该页左右兄弟页的链接，以及与索引结构相关的其他一些数据。普通表根本不使用特殊段（通过将 <structfield>pd_special</structfield> 设置为等于页面大小来表示）。
+
+ </para>
+
+ <para>
+  <xref linkend="storage-page-layout-figure"/> 说明了这些部分在页面中是如何布局的。
  </para>
 
  <figure id="storage-page-layout-figure">
-  <title>Page Layout</title>
+  <title>页面布局</title>
   <mediaobject>
    <imageobject>
     <imagedata fileref="images/pagelayout.svg" format="SVG" width="100%"/>
@@ -665,130 +628,106 @@ data. Empty in ordinary tables.</entry>
 
  <sect2 id="storage-tuple-layout">
 
- <title>Table Row Layout</title>
+ <title>表行布局</title>
 
  <para>
 
-  All table rows are structured in the same way. There is a fixed-size
-  header (occupying 23 bytes on most machines), followed by an optional null
-  bitmap, an optional object ID field, and the user data. The header is
-  detailed
-  in <xref linkend="heaptupleheaderdata-table"/>.  The actual user data
-  (columns of the row) begins at the offset indicated by
-  <structfield>t_hoff</structfield>, which must always be a multiple of the MAXALIGN
-  distance for the platform.
-  The null bitmap is
-  only present if the <firstterm>HEAP_HASNULL</firstterm> bit is set in
-  <structfield>t_infomask</structfield>. If it is present it begins just after
-  the fixed header and occupies enough bytes to have one bit per data column
-  (that is, the number of bits that equals the attribute count in
-  <structfield>t_infomask2</structfield>). In this list of bits, a
-  1 bit indicates not-null, a 0 bit is a null.  When the bitmap is not
-  present, all columns are assumed not-null.
-  The object ID is only present if the <firstterm>HEAP_HASOID_OLD</firstterm> bit
-  is set in <structfield>t_infomask</structfield>.  If present, it appears just
-  before the <structfield>t_hoff</structfield> boundary.  Any padding needed to make
-  <structfield>t_hoff</structfield> a MAXALIGN multiple will appear between the null
-  bitmap and the object ID.  (This in turn ensures that the object ID is
-  suitably aligned.)
+  所有表行都以相同的方式构建。有一个固定大小的头部（在大多数机器上占用 23 字节），其后是一个可选的空位图、一个可选的对象 ID 字段以及用户数据。头部在 <xref linkend="heaptupleheaderdata-table"/> 中有详细说明。实际的用户数据（行的列）从 <structfield>t_hoff</structfield> 指示的偏移量开始，该偏移量必须始终是平台 MAXALIGN 距离的倍数。仅当 <structfield>t_infomask</structfield> 中设置了 <firstterm>HEAP_HASNULL</firstterm> 位时，才存在空位图。如果存在，它紧接在固定头部之后开始，并占用足够的字节，使每个数据列对应一位（即，位数等于 <structfield>t_infomask2</structfield> 中的属性计数）。在这个位列表中，1 位表示非空，0 位表示为空。当位图不存在时，所有列都被假定为非空。仅当 <structfield>t_infomask</structfield> 中设置了 <firstterm>HEAP_HASOID_OLD</firstterm> 位时，才存在对象 ID。如果存在，它正好出现在 <structfield>t_hoff</structfield> 边界之前。为使 <structfield>t_hoff</structfield> 成为 MAXALIGN 的倍数而需要的任何填充都将出现在空位图与对象 ID 之间。（这反过来确保了对象 ID 得到适当的对齐。）
 
  </para>
 
  <table tocentry="1" id="heaptupleheaderdata-table">
- <title>HeapTupleHeaderData Layout</title>
+ <title>HeapTupleHeaderData 布局</title>
  <titleabbrev>HeapTupleHeaderData Layout</titleabbrev>
  <tgroup cols="4">
  <thead>
   <row>
-   <entry>Field</entry>
-   <entry>Type</entry>
-   <entry>Length</entry>
-   <entry>Description</entry>
+   <entry>字段</entry>
+   <entry>类型</entry>
+   <entry>长度</entry>
+   <entry>描述</entry>
   </row>
  </thead>
  <tbody>
   <row>
    <entry>t_xmin</entry>
    <entry>TransactionId</entry>
-   <entry>4 bytes</entry>
-   <entry>insert XID stamp</entry>
+   <entry>4 字节</entry>
+   <entry>插入 XID 标记</entry>
   </row>
   <row>
    <entry>t_xmax</entry>
    <entry>TransactionId</entry>
-   <entry>4 bytes</entry>
-   <entry>delete XID stamp</entry>
+   <entry>4 字节</entry>
+   <entry>删除 XID 标记</entry>
   </row>
   <row>
    <entry>t_cid</entry>
    <entry>CommandId</entry>
-   <entry>4 bytes</entry>
-   <entry>insert and/or delete CID stamp (overlays with t_xvac)</entry>
+   <entry>4 字节</entry>
+   <entry>插入和/或删除 CID 标记（与 t_xvac 重叠）</entry>
   </row>
   <row>
    <entry>t_xvac</entry>
    <entry>TransactionId</entry>
-   <entry>4 bytes</entry>
-   <entry>XID for VACUUM operation moving a row version</entry>
+   <entry>4 字节</entry>
+   <entry>VACUUM 操作移动行版本所用的 XID</entry>
   </row>
   <row>
    <entry>t_ctid</entry>
    <entry>ItemPointerData</entry>
-   <entry>6 bytes</entry>
-   <entry>current TID of this or newer row version</entry>
+   <entry>6 字节</entry>
+   <entry>此行版本或更新行版本的当前 TID</entry>
   </row>
   <row>
    <entry>t_infomask2</entry>
    <entry>uint16</entry>
-   <entry>2 bytes</entry>
-   <entry>number of attributes, plus various flag bits</entry>
+   <entry>2 字节</entry>
+   <entry>属性数量，加上各种标志位</entry>
   </row>
   <row>
    <entry>t_infomask</entry>
    <entry>uint16</entry>
-   <entry>2 bytes</entry>
-   <entry>various flag bits</entry>
+   <entry>2 字节</entry>
+   <entry>各种标志位</entry>
   </row>
   <row>
    <entry>t_hoff</entry>
    <entry>uint8</entry>
-   <entry>1 byte</entry>
-   <entry>offset to user data</entry>
+   <entry>1 字节</entry>
+   <entry>用户数据的偏移量</entry>
   </row>
  </tbody>
  </tgroup>
  </table>
 
  <para>
-   All the details can be found in
-   <filename>src/include/access/htup_details.h</filename>.
+   所有细节都可以在
+   <filename>src/include/access/htup_details.h</filename> 中找到。
  </para>
 
  <para>
 
-  Interpreting the actual data can only be done with information obtained
-  from other tables, mostly <structname>pg_attribute</structname>. The
-  key values needed to identify field locations are
-  <structfield>attlen</structfield> and <structfield>attalign</structfield>.
-  There is no way to directly get a
-  particular attribute, except when there are only fixed width fields and no
-  null values. All this trickery is wrapped up in the functions
-  <firstterm>heap_getattr</firstterm>, <firstterm>fastgetattr</firstterm>
-  and <firstterm>heap_getsysattr</firstterm>.
+  要解释实际数据，只能借助从其他表（主要是 <structname>pg_attribute</structname>）获得的信息。
+  定位字段位置所需的关键值是
+  <structfield>attlen</structfield> 和 <structfield>attalign</structfield>。
+  除非只有固定宽度字段且没有空值，否则无法直接获取
+  某个特定属性。所有这些技巧都封装在
+  <firstterm>heap_getattr</firstterm>、<firstterm>fastgetattr</firstterm>
+  和 <firstterm>heap_getsysattr</firstterm> 函数中。
 
  </para>
  <para>
 
-  To read the data you need to examine each attribute in turn. First check
-  whether the field is NULL according to the null bitmap. If it is, go to
-  the next. Then make sure you have the right alignment.  If the field is a
-  fixed width field, then all the bytes are simply placed. If it's a
-  variable length field (attlen = -1) then it's a bit more complicated.
-  All variable-length data types share the common header structure
-  <type>struct varlena</type>, which includes the total length of the stored
-  value and some flag bits.  Depending on the flags, the data can be either
-  inline or in a <acronym>TOAST</acronym> table;
-  it might be compressed, too (see <xref linkend="storage-toast"/>).
+  要读取数据，你需要依次检查每个属性。首先根据空位图检查
+  该字段是否为 NULL。如果是，就转到
+  下一个。然后确保对齐方式正确。如果字段是
+  固定宽度字段，那么所有字节都直接放置即可。如果是
+  可变长度字段（attlen = -1），情况就稍微复杂一些。
+  所有可变长度数据类型都共享通用的头部结构
+  <type>struct varlena</type>，其中包含所存储值的总长度
+  以及一些标志位。根据标志的不同，数据可以内联存储，也可以存放在 <acronym>TOAST</acronym> 表中；
+  它还可能被压缩（参见 <xref linkend="storage-toast"/>）。
 
  </para>
  </sect2>
