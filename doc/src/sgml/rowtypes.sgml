@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/rowtypes.sgml -->
 
 <sect1 id="rowtypes">
- <title>Composite Types</title>
+ <title>复合类型</title>
 
  <indexterm>
   <primary>composite type</primary>
@@ -12,18 +12,18 @@
  </indexterm>
 
  <para>
-  A <firstterm>composite type</firstterm> represents the structure of a row or record;
-  it is essentially just a list of field names and their data types.
-  <productname>PostgreSQL</productname> allows  composite types to be
-  used in many of the same ways that simple types can be used.  For example, a
-  column of a table can be declared to be of a composite type.
+  一个 <firstterm>复合类型</firstterm> 表示一行或一条记录的结构；
+  它本质上只是字段名及其数据类型的列表。
+  <productname>PostgreSQL</productname> 允许复合类型以
+  许多与简单类型相同的方式使用。例如，表的
+  列可以声明为复合类型。
  </para>
 
  <sect2 id="rowtypes-declaring">
-  <title>Declaration of Composite Types</title>
+  <title>复合类型的声明</title>
 
  <para>
-  Here are two simple examples of defining composite types:
+  下面是定义复合类型的两个简单示例：
 <programlisting>
 CREATE TYPE complex AS (
     r       double precision,
@@ -36,16 +36,16 @@ CREATE TYPE inventory_item AS (
     price           numeric
 );
 </programlisting>
-  The syntax is comparable to <command>CREATE TABLE</command>, except that only
-  field names and types can be specified; no constraints (such as <literal>NOT
-  NULL</literal>) can presently be included.  Note that the <literal>AS</literal> keyword
-  is essential; without it, the system will think a different kind
-  of <command>CREATE TYPE</command> command is meant, and you will get odd syntax
-  errors.
+  语法与 <command>CREATE TABLE</command> 类似，不同之处在于只能
+  指定字段名和类型；目前不能包含任何约束（例如 <literal>NOT
+  NULL</literal>）。请注意，<literal>AS</literal> 关键字
+  是必需的；没有它，系统会认为要执行另一种
+  <command>CREATE TYPE</command> 命令，并且你会得到奇怪的语法
+  错误。
  </para>
 
  <para>
-  Having defined the types, we can use them to create tables:
+  定义类型后，我们可以使用它们创建表：
 
 <programlisting>
 CREATE TABLE on_hand (
@@ -56,7 +56,7 @@ CREATE TABLE on_hand (
 INSERT INTO on_hand VALUES (ROW('fuzzy dice', 42, 1.99), 1000);
 </programlisting>
 
-  or functions:
+  或函数：
 
 <programlisting>
 CREATE FUNCTION price_extension(inventory_item, integer) RETURNS numeric
@@ -85,14 +85,14 @@ CREATE TABLE inventory_item (
   associated with a composite type, the constraints shown in the table
   definition <emphasis>do not apply</emphasis> to values of the composite type
   outside the table.  (To work around this, create a
-  <glossterm linkend="glossary-domain">domain</glossterm> over the composite
+  <glossterm linkend="glossary-domain">域</glossterm> over the composite
   type, and apply the desired constraints as <literal>CHECK</literal>
   constraints of the domain.)
  </para>
  </sect2>
 
  <sect2 id="rowtypes-constructing">
-  <title>Constructing Composite Values</title>
+  <title>构造组合值</title>
 
   <indexterm>
    <primary>composite type</primary>
@@ -100,122 +100,93 @@ CREATE TABLE inventory_item (
   </indexterm>
 
   <para>
-   To write a composite value as a literal constant, enclose the field
-   values within parentheses and separate them by commas.  You can put double
-   quotes around any field value, and must do so if it contains commas or
-   parentheses.  (More details appear <link
-   linkend="rowtypes-io-syntax">below</link>.)  Thus, the general format of
-   a composite constant is the following:
+   要把组合值写成字面常量，请将字段值括在圆括号中并用逗号分隔。你可以用双引号括住任何字段值，如果字段值中包含逗号或圆括号，则必须这样做。（更多细节见<link
+   linkend="rowtypes-io-syntax">下文</link>。）因此，组合常量的一般格式如下：
 <synopsis>
 '( <replaceable>val1</replaceable> , <replaceable>val2</replaceable> , ... )'
 </synopsis>
-   An example is:
+   一个例子是：
 <programlisting>
 '("fuzzy dice",42,1.99)'
 </programlisting>
-   which would be a valid value of the <literal>inventory_item</literal> type
-   defined above.  To make a field be NULL, write no characters at all
-   in its position in the list.  For example, this constant specifies
-   a NULL third field:
+   这将是上面定义的 <literal>inventory_item</literal> 类型的一个合法值。要让某个字段为 NULL，只需在列表中该字段的位置上不写任何字符。例如，这个常量将第三个字段指定为 NULL：
 <programlisting>
 '("fuzzy dice",42,)'
 </programlisting>
-   If you want an empty string rather than NULL, write double quotes:
+   如果你想要的是空字符串而不是 NULL，请写双引号：
 <programlisting>
 '("",42,)'
 </programlisting>
-   Here the first field is a non-NULL empty string, the third is NULL.
+   这里第一个字段是非 NULL 的空字符串，第三个字段是 NULL。
   </para>
 
   <para>
-   (These constants are actually only a special case of
-   the generic type constants discussed in <xref
-   linkend="sql-syntax-constants-generic"/>.  The constant is initially
-   treated as a string and passed to the composite-type input conversion
-   routine.  An explicit type specification might be necessary to tell
-   which type to convert the constant to.)
+   （这些常量实际上只是 <xref
+   linkend="sql-syntax-constants-generic"/> 中讨论的通用类型常量的一种特例。该常量最初被当作字符串处理，并传递给组合类型的输入转换例程。可能需要显式指定类型，以告知要将该常量转换为哪种类型。）
   </para>
 
  <para>
-  The <literal>ROW</literal> expression syntax can also be used to
-  construct composite values.  In most cases this is considerably
-  simpler to use than the string-literal syntax since you don't have
-  to worry about multiple layers of quoting.  We already used this
-  method above:
+  <literal>ROW</literal> 表达式语法也可以用来构造组合值。在大多数情况下，这比字符串字面量语法用起来简单得多，因为你不必担心多层引号的问题。我们在上面已经用过这种方法：
 <programlisting>
 ROW('fuzzy dice', 42, 1.99)
 ROW('', 42, NULL)
 </programlisting>
-  The ROW keyword is actually optional as long as you have more than one
-  field in the expression, so these can be simplified to:
+  实际上，只要表达式中有多于一个字段，ROW 关键字就是可选的，因此这些可以简化为：
 <programlisting>
 ('fuzzy dice', 42, 1.99)
 ('', 42, NULL)
 </programlisting>
-  The <literal>ROW</literal> expression syntax is discussed in more detail in <xref
-  linkend="sql-syntax-row-constructors"/>.
+  <literal>ROW</literal> 表达式语法在 <xref
+  linkend="sql-syntax-row-constructors"/> 中有更详细的讨论。
  </para>
  </sect2>
 
  <sect2 id="rowtypes-accessing">
-  <title>Accessing Composite Types</title>
+  <title>访问组合类型</title>
 
  <para>
-  To access a field of a composite column, one writes a dot and the field
-  name, much like selecting a field from a table name.  In fact, it's so
-  much like selecting from a table name that you often have to use parentheses
-  to keep from confusing the parser.  For example, you might try to select
-  some subfields from our <literal>on_hand</literal> example table with something
-  like:
+  要访问组合列的某个字段，需要写一个点和字段名，这很像从表名中选择字段。事实上，它与从表名中选择是如此相似，以至于你常常必须使用圆括号来避免让解析器产生混淆。例如，你可能会尝试从我们的 <literal>on_hand</literal> 示例表中选取某些子字段，写法类似：
 
 <programlisting>
 SELECT item.name FROM on_hand WHERE item.price &gt; 9.99;
 </programlisting>
 
-  This will not work since the name <literal>item</literal> is taken to be a table
-  name, not a column name of <literal>on_hand</literal>, per SQL syntax rules.
-  You must write it like this:
+  这样不行，因为按照 SQL 语法规则，名称 <literal>item</literal> 会被当作表名，而不是 <literal>on_hand</literal> 的列名。你必须这样写：
 
 <programlisting>
 SELECT (item).name FROM on_hand WHERE (item).price &gt; 9.99;
 </programlisting>
 
-  or if you need to use the table name as well (for instance in a multitable
-  query), like this:
+  或者如果你还需要使用表名（例如在多表查询中），则这样写：
 
 <programlisting>
 SELECT (on_hand.item).name FROM on_hand WHERE (on_hand.item).price &gt; 9.99;
 </programlisting>
 
-  Now the parenthesized object is correctly interpreted as a reference to
-  the <literal>item</literal> column, and then the subfield can be selected from it.
+  现在，括号中的对象被正确地解释为对 <literal>item</literal> 列的引用，然后就可以从中选取子字段了。
  </para>
 
  <para>
-  Similar syntactic issues apply whenever you select a field from a composite
-  value.  For instance, to select just one field from the result of a function
-  that returns a composite value, you'd need to write something like:
+  每当你从复合值中选择一个域时，都会遇到类似的语法问题。例如，要从一个返回复合值的函数结果中只选择一个域，你需要写成类似这样的形式：
 
 <programlisting>
 SELECT (my_func(...)).field FROM ...
 </programlisting>
 
-  Without the extra parentheses, this will generate a syntax error.
+  如果没有额外的括号，这会产生语法错误。
  </para>
 
  <para>
-  The special field name <literal>*</literal> means <quote>all fields</quote>, as
-  further explained in <xref linkend="rowtypes-usage"/>.
+  特殊域名 <literal>*</literal> 表示<quote>所有域</quote>，在 <xref linkend="rowtypes-usage"/> 中有进一步说明。
  </para>
  </sect2>
 
  <sect2 id="rowtypes-modifying">
-  <title>Modifying Composite Types</title>
+  <title>修改复合类型</title>
 
  <para>
-  Here are some examples of the proper syntax for inserting and updating
-  composite columns.
-  First, inserting or updating a whole column:
+  下面是一些插入和更新复合列的恰当语法示例。
+  首先，插入或更新整个列：
 
 <programlisting>
 INSERT INTO mytab (complex_col) VALUES((1.1,2.2));
@@ -223,72 +194,54 @@ INSERT INTO mytab (complex_col) VALUES((1.1,2.2));
 UPDATE mytab SET complex_col = ROW(1.1,2.2) WHERE ...;
 </programlisting>
 
-  The first example omits <literal>ROW</literal>, the second uses it; we
-  could have done it either way.
+  第一个示例省略了 <literal>ROW</literal>，第二个示例使用了它；两种写法都可以。
  </para>
 
  <para>
-  We can update an individual subfield of a composite column:
+  我们可以更新复合列的单个子域：
 
 <programlisting>
 UPDATE mytab SET complex_col.r = (complex_col).r + 1 WHERE ...;
 </programlisting>
 
-  Notice here that we don't need to (and indeed cannot)
-  put parentheses around the column name appearing just after
-  <literal>SET</literal>, but we do need parentheses when referencing the same
-  column in the expression to the right of the equal sign.
+  请注意，这里我们不需要（实际上也不能）在紧跟在 <literal>SET</literal> 之后的列名周围加括号，但是在等号右侧的表达式中引用同一列时，我们确实需要加括号。
  </para>
 
  <para>
-  And we can specify subfields as targets for <command>INSERT</command>, too:
+  我们也可以把子域指定为 <command>INSERT</command> 的目标：
 
 <programlisting>
 INSERT INTO mytab (complex_col.r, complex_col.i) VALUES(1.1, 2.2);
 </programlisting>
 
-  Had we not supplied values for all the subfields of the column, the
-  remaining subfields would have been filled with null values.
+  如果我们没有为该列的所有子域提供值，其余子域将被填充为空值。
  </para>
  </sect2>
 
  <sect2 id="rowtypes-usage">
-  <title>Using Composite Types in Queries</title>
+  <title>在查询中使用复合类型</title>
 
   <para>
-   There are various special syntax rules and behaviors associated with
-   composite types in queries.  These rules provide useful shortcuts,
-   but can be confusing if you don't know the logic behind them.
+   在查询中使用复合类型时，有各种特殊的语法规则和行为。这些规则提供了有用的捷径，但如果你不了解其背后的逻辑，可能会感到困惑。
   </para>
 
   <para>
-   In <productname>PostgreSQL</productname>, a reference to a table name (or alias)
-   in a query is effectively a reference to the composite value of the
-   table's current row.  For example, if we had a table
-   <structname>inventory_item</structname> as shown
-   <link linkend="rowtypes-declaring">above</link>, we could write:
+   在 <productname>PostgreSQL</productname> 中，查询中对表名（或别名）的引用实际上是对该表当前行的复合值的引用。例如，如果我们有一个如 <link linkend="rowtypes-declaring">上文</link> 所示的表 <structname>inventory_item</structname>，我们可以这样写：
 <programlisting>
 SELECT c FROM inventory_item c;
 </programlisting>
-   This query produces a single composite-valued column, so we might get
-   output like:
+   此查询产生一个复合值列，因此我们可能得到如下输出：
 <programlisting>
            c
 ------------------------
  ("fuzzy dice",42,1.99)
 (1 row)
 </programlisting>
-   Note however that simple names are matched to column names before table
-   names, so this example works only because there is no column
-   named <structfield>c</structfield> in the query's tables.
+   但请注意，简单名称会先与列名匹配，然后才与表名匹配，所以这个例子能工作只是因为查询的表中没有名为 <structfield>c</structfield> 的列。
   </para>
 
   <para>
-   The ordinary qualified-column-name
-   syntax <replaceable>table_name</replaceable><literal>.</literal><replaceable>column_name</replaceable>
-   can be understood as applying <link linkend="field-selection">field
-   selection</link> to the composite value of the table's current row.
-   (For efficiency reasons, it's not actually implemented that way.)
+   普通的限定列名语法 <replaceable>table_name</replaceable><literal>.</literal><replaceable>column_name</replaceable> 可以理解为对表的当前行的复合值应用 <link linkend="field-selection">字段选择</link>。（出于效率原因，实际实现并非如此。）
   </para>
 
   <para>
@@ -324,96 +277,50 @@ SELECT (myfunc(x)).a, (myfunc(x)).b, (myfunc(x)).c FROM some_table;
 
   <tip>
    <para>
-    <productname>PostgreSQL</productname> handles column expansion by
-    actually transforming the first form into the second.  So, in this
-    example, <function>myfunc()</function> would get invoked three times per row
-    with either syntax.  If it's an expensive function you may wish to
-    avoid that, which you can do with a query like:
+    <productname>PostgreSQL</productname> 通过实际将第一种形式转换为第二种形式来处理列展开。因此，在这个例子中，无论使用哪种语法，<function>myfunc()</function> 都会每行被调用三次。如果它是一个开销很大的函数，你可能希望避免这种情况，可以用如下查询做到：
 <programlisting>
 SELECT m.* FROM some_table, LATERAL myfunc(x) AS m;
 </programlisting>
-    Placing the function in
-    a <literal>LATERAL</literal> <literal>FROM</literal> item keeps it from
-    being invoked more than once per row.  <literal>m.*</literal> is still
-    expanded into <literal>m.a, m.b, m.c</literal>, but now those variables
-    are just references to the output of the <literal>FROM</literal> item.
-    (The <literal>LATERAL</literal> keyword is optional here, but we show it
-    to clarify that the function is getting <structfield>x</structfield>
-    from <structname>some_table</structname>.)
+    将函数放在 <literal>LATERAL</literal> <literal>FROM</literal> 项中可以防止它每行被调用超过一次。<literal>m.*</literal> 仍会展开为 <literal>m.a, m.b, m.c</literal>，但现在这些变量只是对 <literal>FROM</literal> 项输出的引用。（<literal>LATERAL</literal> 关键字在这里是可选的，但我们展示它是为了说明该函数是从 <structname>some_table</structname> 得到 <structfield>x</structfield> 的。）
    </para>
   </tip>
 
   <para>
-   The <replaceable>composite_value</replaceable><literal>.*</literal> syntax results in
-   column expansion of this kind when it appears at the top level of
-   a <link linkend="queries-select-lists"><command>SELECT</command> output
-   list</link>, a <link linkend="dml-returning"><literal>RETURNING</literal>
-   list</link> in <command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command>/<command>MERGE</command>,
-   a <link linkend="queries-values"><literal>VALUES</literal> clause</link>, or
-   a <link linkend="sql-syntax-row-constructors">row constructor</link>.
-   In all other contexts (including when nested inside one of those
-   constructs), attaching <literal>.*</literal> to a composite value does not
-   change the value, since it means <quote>all columns</quote> and so the
-   same composite value is produced again.  For example,
-   if <function>somefunc()</function> accepts a composite-valued argument,
-   these queries are the same:
+   当 <replaceable>composite_value</replaceable><literal>.*</literal> 语法出现在 <link linkend="queries-select-lists"><command>SELECT</command> 输出列表</link>、<command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command>/<command>MERGE</command> 中的 <link linkend="dml-returning"><literal>RETURNING</literal> 列表</link>、<link linkend="queries-values"><literal>VALUES</literal> 子句</link>或<link linkend="sql-syntax-row-constructors">行构造器</link>的顶层时，会产生这种列展开。
+   在所有其他上下文中（包括嵌套在其中一种构造内部时），将 <literal>.*</literal> 附加到复合值上不会改变该值，因为它表示 <quote>所有列</quote>，因此产生的仍是同一个复合值。例如，如果 <function>somefunc()</function> 接受一个复合值参数，则以下查询是相同的：
 
 <programlisting>
 SELECT somefunc(c.*) FROM inventory_item c;
 SELECT somefunc(c) FROM inventory_item c;
 </programlisting>
 
-   In both cases, the current row of <structname>inventory_item</structname> is
-   passed to the function as a single composite-valued argument.
-   Even though <literal>.*</literal> does nothing in such cases, using it is good
-   style, since it makes clear that a composite value is intended.  In
-   particular, the parser will consider <literal>c</literal> in <literal>c.*</literal> to
-   refer to a table name or alias, not to a column name, so that there is
-   no ambiguity; whereas without <literal>.*</literal>, it is not clear
-   whether <literal>c</literal> means a table name or a column name, and in fact
-   the column-name interpretation will be preferred if there is a column
-   named <literal>c</literal>.
+   在两种情况下，<structname>inventory_item</structname> 的当前行都作为单个复合值参数传递给该函数。尽管在这些情况下 <literal>.*</literal> 不起任何作用，但使用它是一种良好的风格，因为它明确表示意图是使用复合值。特别是，解析器会将 <literal>c.*</literal> 中的 <literal>c</literal> 视为表名或别名，而不是列名，因此不存在歧义；而如果没有 <literal>.*</literal>，就不清楚 <literal>c</literal> 指的是表名还是列名，事实上，如果存在名为 <literal>c</literal> 的列，则会优先采用列名的解释。
   </para>
 
   <para>
-   Another example demonstrating these concepts is that all these queries
-   mean the same thing:
+   另一个演示这些概念的示例是，以下所有查询含义相同：
 <programlisting>
 SELECT * FROM inventory_item c ORDER BY c;
 SELECT * FROM inventory_item c ORDER BY c.*;
 SELECT * FROM inventory_item c ORDER BY ROW(c.*);
 </programlisting>
-   All of these <literal>ORDER BY</literal> clauses specify the row's composite
-   value, resulting in sorting the rows according to the rules described
-   in <xref linkend="composite-type-comparison"/>.  However,
-   if <structname>inventory_item</structname> contained a column
-   named <structfield>c</structfield>, the first case would be different from the
-   others, as it would mean to sort by that column only.  Given the column
-   names previously shown, these queries are also equivalent to those above:
+   所有这些 <literal>ORDER BY</literal> 子句都指定了行的复合值，从而按照 <xref linkend="composite-type-comparison"/> 中描述的规则对行进行排序。但是，如果 <structname>inventory_item</structname> 包含一个名为 <structfield>c</structfield> 的列，则第一种情况将与其他情况不同，因为它意味着仅按该列排序。鉴于前面显示的列名，这些查询也等价于上面的查询：
 <programlisting>
 SELECT * FROM inventory_item c ORDER BY ROW(c.name, c.supplier_id, c.price);
 SELECT * FROM inventory_item c ORDER BY (c.name, c.supplier_id, c.price);
 </programlisting>
-   (The last case uses a row constructor with the key word <literal>ROW</literal>
-   omitted.)
+   （最后一种情况使用了省略关键字 <literal>ROW</literal> 的行构造器。）
   </para>
 
   <para>
-   Another special syntactical behavior associated with composite values is
-   that we can use <firstterm>functional notation</firstterm> for extracting a field
-   of a composite value.  The simple way to explain this is that
-   the notations <literal><replaceable>field</replaceable>(<replaceable>table</replaceable>)</literal>
-   and <literal><replaceable>table</replaceable>.<replaceable>field</replaceable></literal>
-   are interchangeable.  For example, these queries are equivalent:
+   与复合值相关的另一种特殊语法行为是，我们可以使用<firstterm>函数式记法</firstterm>来提取复合值的字段。简单的解释是，记法 <literal><replaceable>field</replaceable>(<replaceable>table</replaceable>)</literal> 和 <literal><replaceable>table</replaceable>.<replaceable>field</replaceable></literal> 可以互换。例如，以下查询是等价的：
 
 <programlisting>
 SELECT c.name FROM inventory_item c WHERE c.price &gt; 1000;
 SELECT name(c) FROM inventory_item c WHERE price(c) &gt; 1000;
 </programlisting>
 
-   Moreover, if we have a function that accepts a single argument of a
-   composite type, we can call it with either notation.  These queries are
-   all equivalent:
+   此外，如果我们有一个接受复合类型单个参数的函数，我们可以用任一记法调用它。以下查询全都等价：
 
 <programlisting>
 SELECT somefunc(c) FROM inventory_item c;
@@ -423,116 +330,66 @@ SELECT c.somefunc FROM inventory_item c;
   </para>
 
   <para>
-   This equivalence between functional notation and field notation
-   makes it possible to use functions on composite types to implement
-   <quote>computed fields</quote>.
+   函数记法与字段记法之间的这种等价性使得可以用复合类型上的函数来实现<quote>计算字段</quote>。
    <indexterm>
-    <primary>computed field</primary>
+    <primary>计算字段</primary>
    </indexterm>
    <indexterm>
-    <primary>field</primary>
-    <secondary>computed</secondary>
+    <primary>字段</primary>
+    <secondary>计算</secondary>
    </indexterm>
-   An application using the last query above wouldn't need to be directly
-   aware that <literal>somefunc</literal> isn't a real column of the table.
+   使用上面最后一个查询的应用程序不需要直接知道 <literal>somefunc</literal> 并不是该表的一个真实列。
   </para>
 
   <tip>
    <para>
-    Because of this behavior, it's unwise to give a function that takes a
-    single composite-type argument the same name as any of the fields of
-    that composite type.  If there is ambiguity, the field-name
-    interpretation will be chosen if field-name syntax is used, while the
-    function will be chosen if function-call syntax is used.  However,
-    <productname>PostgreSQL</productname> versions before 11 always chose the
-    field-name interpretation, unless the syntax of the call required it to
-    be a function call.  One way to force the function interpretation in
-    older versions is to schema-qualify the function name, that is, write
-    <literal><replaceable>schema</replaceable>.<replaceable>func</replaceable>(<replaceable>compositevalue</replaceable>)</literal>.
+    由于这种行为，给一个接受单个复合类型参数的函数赋予与该复合类型任何字段相同的名称是不明智的。如果存在歧义，当使用字段名语法时将选择字段名解释，而当使用函数调用语法时将选择函数。然而，11 之前的 <productname>PostgreSQL</productname> 版本总是选择字段名解释，除非调用的语法要求它必须是函数调用。在较旧版本中强制采用函数解释的一种方法是对函数名进行模式限定，也就是写成 <literal><replaceable>schema</replaceable>.<replaceable>func</replaceable>(<replaceable>compositevalue</replaceable>)</literal>。
    </para>
   </tip>
  </sect2>
 
  <sect2 id="rowtypes-io-syntax">
-  <title>Composite Type Input and Output Syntax</title>
+  <title>复合类型输入和输出语法</title>
 
   <para>
-   The external text representation of a composite value consists of items that
-   are interpreted according to the I/O conversion rules for the individual
-   field types, plus decoration that indicates the composite structure.
-   The decoration consists of parentheses (<literal>(</literal> and <literal>)</literal>)
-   around the whole value, plus commas (<literal>,</literal>) between adjacent
-   items.  Whitespace outside the parentheses is ignored, but within the
-   parentheses it is considered part of the field value, and might or might not be
-   significant depending on the input conversion rules for the field data type.
-   For example, in:
+   复合值的外部文本表示由按照各个字段类型的 I/O 转换规则解释的项，以及指示复合结构的装饰组成。装饰包括包围整个值的圆括号（<literal>(</literal> 和 <literal>)</literal>），以及相邻项之间的逗号（<literal>,</literal>）。圆括号之外的空白会被忽略，但圆括号之内的空白被视为字段值的一部分，并且根据字段数据类型的输入转换规则，它可能重要也可能不重要。例如，在：
 <programlisting>
 '(  42)'
 </programlisting>
-   the whitespace will be ignored if the field type is integer, but not if
-   it is text.
+   中，如果字段类型是 integer，则空白会被忽略，但如果是 text 则不会。
   </para>
 
   <para>
-   As shown previously, when writing a composite value you can write double
-   quotes around any individual field value.
-   You <emphasis>must</emphasis> do so if the field value would otherwise
-   confuse the composite-value parser.  In particular, fields containing
-   parentheses, commas, double quotes, or backslashes must be double-quoted.
-   To put a double quote or backslash in a quoted composite field value,
-   precede it with a backslash.  (Also, a pair of double quotes within a
-   double-quoted field value is taken to represent a double quote character,
-   analogously to the rules for single quotes in SQL literal strings.)
-   Alternatively, you can avoid quoting and use backslash-escaping to
-   protect all data characters
-   that would otherwise be taken as composite syntax.
+   如前所示，在书写复合值时，可以在任何单个字段值两侧加上双引号。
+   如果字段值不加引号会导致复合值解析器混淆，则<emphasis>必须</emphasis>这样做。特别是，包含圆括号、逗号、双引号或反斜杠的字段必须用双引号括起来。
+   要在带引号的复合字段值中放入双引号或反斜杠，请在其前面加上反斜杠。（此外，双引号字段值中的一对双引号会被视为表示一个双引号字符，这与 SQL 字面量字符串中单引号的规则类似。）
+   或者，也可以避免使用引号，而使用反斜杠转义来保护所有原本会被当作复合值语法的数据字符。
   </para>
 
   <para>
-   A completely empty field value (no characters at all between the commas
-   or parentheses) represents a NULL.  To write a value that is an empty
-   string rather than NULL, write <literal>""</literal>.
+   完全为空的字段值（逗号或圆括号之间没有任何字符）表示 NULL。要写入一个空字符串而不是 NULL 的值，请写 <literal>""</literal>。
   </para>
 
   <para>
-   The composite output routine will put double quotes around field values
-   if they are empty strings or contain parentheses, commas,
-   double quotes, backslashes, or white space.  (Doing so for white space
-   is not essential, but aids legibility.)  Double quotes and backslashes
-   embedded in field values will be doubled.
+   如果字段值为空字符串，或包含圆括号、逗号、双引号、反斜杠或空白字符，复合值输出例程会在字段值两侧加上双引号。（对空白字符这样做并非必需，但有助于提高可读性。）嵌入在字段值中的双引号和反斜杠会被双写。
   </para>
 
  <note>
   <para>
-   Remember that what you write in an SQL command will first be interpreted
-   as a string literal, and then as a composite.  This doubles the number of
-   backslashes you need (assuming escape string syntax is used).
-   For example, to insert a <type>text</type> field
-   containing a double quote and a backslash in a composite
-   value, you'd need to write:
+   请记住，在 SQL 命令中书写的内容首先会被解释为字符串字面量，然后再解释为复合值。这会使所需的反斜杠数量翻倍（假设使用转义字符串语法）。
+   例如，要在复合值中插入一个包含双引号和反斜杠的 <type>text</type> 字段，需要这样写：
 <programlisting>
 INSERT ... VALUES ('("\"\\")');
 </programlisting>
-   The string-literal processor removes one level of backslashes, so that
-   what arrives at the composite-value parser looks like
-   <literal>("\"\\")</literal>.  In turn, the string
-   fed to the <type>text</type> data type's input routine
-   becomes <literal>"\</literal>.  (If we were working
-   with a data type whose input routine also treated backslashes specially,
-   <type>bytea</type> for example, we might need as many as eight backslashes
-   in the command to get one backslash into the stored composite field.)
-   Dollar quoting (see <xref linkend="sql-syntax-dollar-quoting"/>) can be
-   used to avoid the need to double backslashes.
+   字符串字面量处理器会去掉一层反斜杠，因此到达复合值解析器的内容看起来像 <literal>("\"\\")</literal>。接着，提供给 <type>text</type> 数据类型输入例程的字符串会变成 <literal>"\</literal>。（如果我们处理的数据类型的输入例程也特殊对待反斜杠，例如 <type>bytea</type>，那么命令中可能需要多达八个反斜杠，才能让一个反斜杠进入存储的复合字段。）
+   可以使用美元引用（参见 <xref linkend="sql-syntax-dollar-quoting"/>）来避免双写反斜杠。
   </para>
  </note>
 
  <tip>
   <para>
-   The <literal>ROW</literal> constructor syntax is usually easier to work with
-   than the composite-literal syntax when writing composite values in SQL
-   commands.
-   In <literal>ROW</literal>, individual field values are written the same way
-   they would be written when not members of a composite.
+   在 SQL 命令中书写复合值时，<literal>ROW</literal> 构造器语法通常比复合值字面量语法更易于使用。
+   在 <literal>ROW</literal> 中，各个字段值的书写方式与它们不是复合值成员时的书写方式相同。
   </para>
  </tip>
  </sect2>
