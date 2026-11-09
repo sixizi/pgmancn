@@ -4875,137 +4875,111 @@ while (1)
  </sect1>
 
  <sect1 id="ecpg-preproc">
-  <title>Preprocessor Directives</title>
+  <title>预处理器指令</title>
 
   <para>
-   Several preprocessor directives are available that modify how
-   the <command>ecpg</command> preprocessor parses and processes a
-   file.
+   有多种预处理器指令可用于修改 <command>ecpg</command> 预处理器解析和处理文件的方式。
   </para>
 
   <sect2 id="ecpg-include">
-   <title>Including Files</title>
+   <title>包含文件</title>
 
    <para>
-    To include an external file into your embedded SQL program, use:
+    要将外部文件包含到嵌入式 SQL 程序中，请使用：
 <programlisting>
 EXEC SQL INCLUDE <replaceable>filename</replaceable>;
 EXEC SQL INCLUDE &lt;<replaceable>filename</replaceable>&gt;;
 EXEC SQL INCLUDE "<replaceable>filename</replaceable>";
 </programlisting>
-    The embedded SQL preprocessor will look for a file named
-    <literal><replaceable>filename</replaceable>.h</literal>,
-    preprocess it, and include it in the resulting C output.  Thus,
-    embedded SQL statements in the included file are handled correctly.
+    嵌入式 SQL 预处理器将查找名为 <literal><replaceable>filename</replaceable>.h</literal> 的文件，对其进行预处理，并将其包含到生成的 C 输出中。因此，所包含文件中的嵌入式 SQL 语句会被正确处理。
    </para>
 
    <para>
-    The <command>ecpg</command> preprocessor will search a file at
-    several directories in following order:
+    <command>ecpg</command> 预处理器将按以下顺序在多个目录中搜索文件：
 
     <itemizedlist>
-     <listitem><simpara>current directory</simpara></listitem>
+     <listitem><simpara>当前目录</simpara></listitem>
      <listitem><simpara><filename>/usr/local/include</filename></simpara></listitem>
-     <listitem><simpara>PostgreSQL include directory, defined at build time (e.g., <filename>/usr/local/pgsql/include</filename>)</simpara></listitem>
+     <listitem><simpara>PostgreSQL 包含目录，在构建时定义（例如 <filename>/usr/local/pgsql/include</filename>）</simpara></listitem>
      <listitem><simpara><filename>/usr/include</filename></simpara></listitem>
     </itemizedlist>
 
-    But when <literal>EXEC SQL INCLUDE
-    "<replaceable>filename</replaceable>"</literal> is used, only the
-    current directory is searched.
+    但是使用 <literal>EXEC SQL INCLUDE
+    "<replaceable>filename</replaceable>"</literal> 时，只搜索当前目录。
    </para>
 
    <para>
-    In each directory, the preprocessor will first look for the file
-    name as given, and if not found will append <literal>.h</literal>
-    to the file name and try again (unless the specified file name
-    already has that suffix).
+    在每个目录中，预处理器会首先查找给定的文件名，如果找不到，就会在文件名后追加 <literal>.h</literal> 并再次尝试（除非指定的文件名已经带有该后缀）。
    </para>
 
    <para>
-    Note that <command>EXEC SQL INCLUDE</command> is <emphasis>not</emphasis> the same as:
+    请注意，<command>EXEC SQL INCLUDE</command> <emphasis>不</emphasis> 等同于：
 <programlisting>
 #include &lt;<replaceable>filename</replaceable>.h&gt;
 </programlisting>
-    because this file would not be subject to SQL command preprocessing.
-    Naturally, you can continue to use the C
-    <literal>#include</literal> directive to include other header
-    files.
+    因为该文件不会经过 SQL 命令预处理。当然，你可以继续使用 C 的 <literal>#include</literal> 指令来包含其他头文件。
    </para>
 
    <note>
     <para>
-     The include file name is case-sensitive, even though the rest of
-     the <literal>EXEC SQL INCLUDE</literal> command follows the normal
-     SQL case-sensitivity rules.
+     包含文件名区分大小写，即使 <literal>EXEC SQL INCLUDE</literal> 命令的其余部分遵循正常的 SQL 大小写敏感性规则。
     </para>
    </note>
   </sect2>
 
   <sect2 id="ecpg-define">
-   <title>The define and undef Directives</title>
+   <title>define 和 undef 指令</title>
    <para>
-    Similar to the directive <literal>#define</literal> that is known from C,
-    embedded SQL has a similar concept:
+    与 C 中已知的 <literal>#define</literal> 指令类似，嵌入式 SQL 也有类似的概念：
 <programlisting>
 EXEC SQL DEFINE <replaceable>name</replaceable>;
 EXEC SQL DEFINE <replaceable>name</replaceable> <replaceable>value</replaceable>;
 </programlisting>
-    So you can define a name:
+    因此你可以定义一个名称：
 <programlisting>
 EXEC SQL DEFINE HAVE_FEATURE;
 </programlisting>
-    And you can also define constants:
+    你还可以定义常量：
 <programlisting>
 EXEC SQL DEFINE MYNUMBER 12;
 EXEC SQL DEFINE MYSTRING 'abc';
 </programlisting>
-    Use <literal>undef</literal> to remove a previous definition:
+    使用 <literal>undef</literal> 删除先前的定义：
 <programlisting>
 EXEC SQL UNDEF MYNUMBER;
 </programlisting>
    </para>
 
    <para>
-    Of course you can continue to use the C versions <literal>#define</literal>
-    and <literal>#undef</literal> in your embedded SQL program. The difference
-    is where your defined values get evaluated. If you use <literal>EXEC SQL
-    DEFINE</literal> then the <command>ecpg</command> preprocessor evaluates the defines and substitutes
-    the values. For example if you write:
+    当然，你可以在嵌入式 SQL 程序中继续使用 C 版本的 <literal>#define</literal>
+    和 <literal>#undef</literal>。区别在于所定义的值在何处求值。如果使用 <literal>EXEC SQL
+    DEFINE</literal>，那么 <command>ecpg</command> 预处理器会对这些定义求值并替换相应的值。例如，如果你编写：
 <programlisting>
 EXEC SQL DEFINE MYNUMBER 12;
 ...
 EXEC SQL UPDATE Tbl SET col = MYNUMBER;
 </programlisting>
-    then <command>ecpg</command> will already do the substitution and your C compiler will never
-    see any name or identifier <literal>MYNUMBER</literal>. Note that you cannot use
-    <literal>#define</literal> for a constant that you are going to use in an
-    embedded SQL query because in this case the embedded SQL precompiler is not
-    able to see this declaration.
+    那么 <command>ecpg</command> 已经完成了替换，你的 C 编译器将永远不会看到任何名称或标识符 <literal>MYNUMBER</literal>。注意，对于将在嵌入式 SQL 查询中使用的常量，你不能使用 <literal>#define</literal>，因为在这种情况下嵌入式 SQL 预编译器无法看到该声明。
    </para>
 
    <para>
-    If multiple input files are named on the <command>ecpg</command>
-    preprocessor's command line, the effects of <literal>EXEC SQL
-    DEFINE</literal> and <literal>EXEC SQL UNDEF</literal> do not carry
-    across files: each file starts with only the symbols defined
-    by <option>-D</option> switches on the command line.
+    如果在 <command>ecpg</command> 预处理器的命令行上指定了多个输入文件，则 <literal>EXEC SQL
+    DEFINE</literal> 和 <literal>EXEC SQL UNDEF</literal> 的效果不会跨文件传递：每个文件开始时只包含由命令行上的 <option>-D</option> 开关定义的符号。
    </para>
   </sect2>
 
   <sect2 id="ecpg-ifdef">
-   <title>ifdef, ifndef, elif, else, and endif Directives</title>
+   <title>ifdef、ifndef、elif、else 和 endif 指令</title>
    <para>
-   You can use the following directives to compile code sections conditionally:
+   你可以使用以下指令有条件地编译代码段：
 
    <variablelist>
     <varlistentry id="ecpg-ifdef-ifdef">
      <term><literal>EXEC SQL ifdef <replaceable>name</replaceable>;</literal></term>
      <listitem>
      <para>
-      Checks a <replaceable>name</replaceable> and processes subsequent lines if
-      <replaceable>name</replaceable> has been defined via <literal>EXEC SQL define
-      <replaceable>name</replaceable></literal>.
+      检查 <replaceable>name</replaceable>，如果 <replaceable>name</replaceable> 已通过 <literal>EXEC SQL define
+      <replaceable>name</replaceable></literal> 定义，则处理后续行。
      </para>
      </listitem>
     </varlistentry>
@@ -5014,9 +4988,7 @@ EXEC SQL UPDATE Tbl SET col = MYNUMBER;
      <term><literal>EXEC SQL ifndef <replaceable>name</replaceable>;</literal></term>
      <listitem>
      <para>
-      Checks a <replaceable>name</replaceable> and processes subsequent lines if
-      <replaceable>name</replaceable> has <emphasis>not</emphasis> been defined via
-      <literal>EXEC SQL define <replaceable>name</replaceable></literal>.
+      检查一个 <replaceable>name</replaceable>，如果 <replaceable>name</replaceable> <emphasis>尚未</emphasis>通过 <literal>EXEC SQL define <replaceable>name</replaceable></literal> 定义，则处理后续行。
      </para>
      </listitem>
     </varlistentry>
@@ -5025,15 +4997,7 @@ EXEC SQL UPDATE Tbl SET col = MYNUMBER;
      <term><literal>EXEC SQL elif <replaceable>name</replaceable>;</literal></term>
      <listitem>
      <para>
-      Begins an optional alternative section after an
-      <literal>EXEC SQL ifdef <replaceable>name</replaceable></literal> or
-      <literal>EXEC SQL ifndef <replaceable>name</replaceable></literal>
-      directive.  Any number of <literal>elif</literal> sections can appear.
-      Lines following an <literal>elif</literal> will be processed
-      if <replaceable>name</replaceable> has been
-      defined <emphasis>and</emphasis> no previous section of the same
-      <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal>
-      construct has been processed.
+      在 <literal>EXEC SQL ifdef <replaceable>name</replaceable></literal> 或 <literal>EXEC SQL ifndef <replaceable>name</replaceable></literal> 指令之后开始一个可选的备选节。可以出现任意数量的 <literal>elif</literal> 节。如果 <replaceable>name</replaceable> 已定义<emphasis>并且</emphasis>同一 <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal> 构造之前的节尚未被处理，则处理 <literal>elif</literal> 之后的行。
      </para>
      </listitem>
     </varlistentry>
@@ -5042,13 +5006,7 @@ EXEC SQL UPDATE Tbl SET col = MYNUMBER;
      <term><literal>EXEC SQL else;</literal></term>
      <listitem>
      <para>
-      Begins an optional, final alternative section after an
-      <literal>EXEC SQL ifdef <replaceable>name</replaceable></literal> or
-      <literal>EXEC SQL ifndef <replaceable>name</replaceable></literal>
-      directive.  Subsequent lines will be processed if no previous section
-      of the same
-      <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal>
-      construct has been processed.
+      在 <literal>EXEC SQL ifdef <replaceable>name</replaceable></literal> 或 <literal>EXEC SQL ifndef <replaceable>name</replaceable></literal> 指令之后开始一个可选的最终备选节。如果同一 <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal> 构造之前的节尚未被处理，则处理后续行。
      </para>
      </listitem>
     </varlistentry>
@@ -5057,9 +5015,7 @@ EXEC SQL UPDATE Tbl SET col = MYNUMBER;
      <term><literal>EXEC SQL endif;</literal></term>
      <listitem>
      <para>
-      Ends an
-      <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal>
-      construct.  Subsequent lines are processed normally.
+      结束一个 <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal> 构造。后续行按正常方式处理。
      </para>
      </listitem>
     </varlistentry>
@@ -5067,13 +5023,12 @@ EXEC SQL UPDATE Tbl SET col = MYNUMBER;
    </para>
 
    <para>
-    <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal>
-    constructs can be nested, up to 127 levels deep.
+    <literal>ifdef</literal>/<literal>ifndef</literal>...<literal>endif</literal> 构造可以嵌套，最多 127 层深。
    </para>
 
    <para>
-    This example will compile exactly one of the three <literal>SET
-    TIMEZONE</literal> commands:
+    此示例将恰好编译三条 <literal>SET
+    TIMEZONE</literal> 命令中的一条：
 <programlisting>
 EXEC SQL ifdef TZVAR;
 EXEC SQL SET TIMEZONE TO TZVAR;
