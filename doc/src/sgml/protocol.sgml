@@ -1222,52 +1222,34 @@ SELCT 1/0;<!-- this typo is intentional -->
  </sect1>
 
  <sect1 id="protocol-replication">
-  <title>Streaming Replication Protocol</title>
+  <title>流复制协议</title>
 
   <para>
-   To initiate streaming replication, the frontend sends the
-   <literal>replication</literal> parameter in the startup message. A Boolean
-   value of <literal>true</literal> (or <literal>on</literal>,
-   <literal>yes</literal>, <literal>1</literal>) tells the backend to go into
-   physical replication walsender mode, wherein a small set of replication
-   commands, shown below, can be issued instead of SQL statements.
+   要发起流复制，前端在启动消息中发送 <literal>replication</literal> 参数。取值为布尔值 <literal>true</literal>（或 <literal>on</literal>、<literal>yes</literal>、<literal>1</literal>）会告诉后端进入物理复制 walsender 模式，在该模式下可以发出下面所示的一小组复制命令，而不是 SQL 语句。
   </para>
 
   <para>
-   Passing <literal>database</literal> as the value for the
-   <literal>replication</literal> parameter instructs the backend to go into
-   logical replication walsender mode, connecting to the database specified in
-   the <literal>dbname</literal> parameter.  In logical replication walsender
-   mode, the replication commands shown below as well as normal SQL commands can
-   be issued.
+   将 <literal>database</literal> 作为 <literal>replication</literal> 参数的值传入，会指示后端进入逻辑复制 walsender 模式，并连接到 <literal>dbname</literal> 参数中指定的数据库。在逻辑复制 walsender 模式下，既可以发出下面所示的复制命令，也可以发出普通的 SQL 命令。
   </para>
 
   <para>
-   In either physical replication or logical replication walsender mode, only the
-   simple query protocol can be used.
+   无论是物理复制还是逻辑复制 walsender 模式，都只能使用简单查询协议。
   </para>
 
   <para>
-   For the purpose of testing replication commands, you can make a replication
-   connection via <application>psql</application> or any other
-   <application>libpq</application>-using tool with a connection string including
-   the <literal>replication</literal> option,
-   e.g.:
+   为了测试复制命令，你可以通过 <application>psql</application> 或任何其他使用 <application>libpq</application> 的工具建立复制连接，连接字符串中包含 <literal>replication</literal> 选项，例如：
 <programlisting>
 psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
 </programlisting>
-   However, it is often more useful to use
-   <xref linkend="app-pgreceivewal"/> (for physical replication) or
-   <xref linkend="app-pgrecvlogical"/> (for logical replication).
+   不过，通常更有用的是使用 <xref linkend="app-pgreceivewal"/>（用于物理复制）或 <xref linkend="app-pgrecvlogical"/>（用于逻辑复制）。
   </para>
 
   <para>
-   Replication commands are logged in the server log when
-   <xref linkend="guc-log-replication-commands"/> is enabled.
+   当启用 <xref linkend="guc-log-replication-commands"/> 时，复制命令会被记录到服务器日志中。
   </para>
 
   <para>
-   The commands accepted in replication mode are:
+   复制模式下接受的命令有：
 
    <variablelist>
     <varlistentry id="protocol-replication-identify-system">
@@ -1276,8 +1258,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Requests the server to identify itself. Server replies with a result
-       set of a single row, containing four fields:
+       请求服务器标识自身。服务器以单行结果集回复，其中包含四个字段：
       </para>
 
       <variablelist>
@@ -1285,9 +1266,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>systemid</literal> (<type>text</type>)</term>
         <listitem>
          <para>
-          The unique system identifier identifying the cluster. This
-          can be used to check that the base backup used to initialize the
-          standby came from the same cluster.
+          标识该数据库集簇的唯一系统标识符。可用于检查用于初始化备库的基础备份是否来自同一个数据库集簇。
          </para>
         </listitem>
        </varlistentry>
@@ -1296,8 +1275,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>timeline</literal> (<type>int8</type>)</term>
         <listitem>
          <para>
-          Current timeline ID. Also useful to check that the standby is
-          consistent with the primary.
+          当前时间线 ID。也可用于检查备库是否与主库一致。
          </para>
         </listitem>
        </varlistentry>
@@ -1306,8 +1284,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>xlogpos</literal> (<type>text</type>)</term>
         <listitem>
          <para>
-          Current WAL flush location. Useful to get a known location in the
-          write-ahead log where streaming can start.
+          当前 WAL 刷写位置。可用于获取预写式日志中一个已知的、可以开始流复制的位置。
          </para>
         </listitem>
        </varlistentry>
@@ -1316,7 +1293,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>dbname</literal> (<type>text</type>)</term>
         <listitem>
          <para>
-          Database connected to or null.
+          已连接的数据库，或 null。
          </para>
         </listitem>
        </varlistentry>
@@ -1330,8 +1307,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Requests the server to send the current setting of a run-time parameter.
-       This is similar to the SQL command <xref linkend="sql-show"/>.
+       请求服务器发送某个运行时参数的当前设置。
+       这类似于 SQL 命令 <xref linkend="sql-show"/>。
       </para>
 
       <variablelist>
@@ -1339,8 +1316,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">name</replaceable></term>
         <listitem>
          <para>
-          The name of a run-time parameter. Available parameters are documented
-          in <xref linkend="runtime-config"/>.
+          运行时参数的名称。可用参数在 <xref linkend="runtime-config"/> 中有文档说明。
          </para>
         </listitem>
        </varlistentry>
@@ -1354,11 +1330,10 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Requests the server to send over the timeline history file for timeline
-       <replaceable class="parameter">tli</replaceable>.  Server replies with a
-       result set of a single row, containing two fields.  While the fields
-       are labeled as <type>text</type>, they effectively return raw bytes,
-       with no encoding conversion:
+       请求服务器发送时间线 <replaceable class="parameter">tli</replaceable> 的时间线历史文件。服务器以一个
+       只包含一行的结果集回复，其中含有两个字段。虽然这些字段
+       被标记为 <type>text</type>，但它们实际上返回原始字节，
+       不进行任何编码转换：
       </para>
 
       <variablelist>
@@ -1366,7 +1341,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>filename</literal> (<type>text</type>)</term>
         <listitem>
          <para>
-          File name of the timeline history file, e.g., <filename>00000002.history</filename>.
+          时间线历史文件的文件名，例如 <filename>00000002.history</filename>。
          </para>
         </listitem>
        </varlistentry>
@@ -1375,7 +1350,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>content</literal> (<type>text</type>)</term>
         <listitem>
          <para>
-          Contents of the timeline history file.
+          时间线历史文件的内容。
          </para>
         </listitem>
        </varlistentry>
@@ -1389,9 +1364,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Create a physical or logical replication
-       slot. See <xref linkend="streaming-replication-slots"/> for more about
-       replication slots.
+       创建一个物理或逻辑复制槽。有关复制槽的更多信息，请参见 <xref linkend="streaming-replication-slots"/>。
       </para>
 
       <variablelist>
@@ -1399,8 +1372,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">slot_name</replaceable></term>
         <listitem>
          <para>
-          The name of the slot to create. Must be a valid replication slot
-          name (see <xref linkend="streaming-replication-slots-manipulation"/>).
+          要创建的槽的名称。必须是有效的复制槽名称（参见 <xref linkend="streaming-replication-slots-manipulation"/>）。
          </para>
         </listitem>
        </varlistentry>
@@ -1409,8 +1381,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">output_plugin</replaceable></term>
         <listitem>
          <para>
-          The name of the output plugin used for logical decoding
-          (see <xref linkend="logicaldecoding-output-plugin"/>).
+          用于逻辑解码的输出插件的名称（参见 <xref linkend="logicaldecoding-output-plugin"/>）。
          </para>
         </listitem>
        </varlistentry>
@@ -1419,28 +1390,20 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>TEMPORARY</literal></term>
         <listitem>
          <para>
-          Specify that this replication slot is a temporary one. Temporary
-          slots are not saved to disk and are automatically dropped on error
-          or when the session has finished.
+          指定该复制槽为临时复制槽。临时槽不会保存到磁盘，在出错或会话结束时会被自动删除。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
 
-      <para>The following options are supported:</para>
+      <para>支持以下选项：</para>
 
       <variablelist>
        <varlistentry>
         <term><literal>TWO_PHASE [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
         <listitem>
          <para>
-          If true, this logical replication slot supports decoding of two-phase
-          commit. With this option, commands related to two-phase commit such as
-          <literal>PREPARE TRANSACTION</literal>, <literal>COMMIT PREPARED</literal>
-          and <literal>ROLLBACK PREPARED</literal> are decoded and transmitted.
-          The transaction will be decoded and transmitted at
-          <literal>PREPARE TRANSACTION</literal> time.
-          The default is false.
+          如果为 true，则此逻辑复制槽支持两阶段提交的解码。使用此选项时，与两阶段提交相关的命令（例如 <literal>PREPARE TRANSACTION</literal>、<literal>COMMIT PREPARED</literal> 和 <literal>ROLLBACK PREPARED</literal>）会被解码并传输。事务将在 <literal>PREPARE TRANSACTION</literal> 时被解码并传输。默认值为 false。
          </para>
         </listitem>
        </varlistentry>
@@ -1449,10 +1412,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>RESERVE_WAL [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
         <listitem>
          <para>
-          If true, this physical replication slot reserves <acronym>WAL</acronym>
-          immediately.  Otherwise, <acronym>WAL</acronym> is only reserved upon
-          connection from a streaming replication client.
-          The default is false.
+          如果为 true，则此物理复制槽会立即预留 <acronym>WAL</acronym>。否则，只有在流式复制客户端建立连接时才会预留 <acronym>WAL</acronym>。默认值为 false。
          </para>
         </listitem>
        </varlistentry>
@@ -1461,16 +1421,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>SNAPSHOT { 'export' | 'use' | 'nothing' }</literal></term>
         <listitem>
          <para>
-          Decides what to do with the snapshot created during logical slot
-          initialization. <literal>'export'</literal>, which is the default,
-          will export the snapshot for use in other sessions. This option can't
-          be used inside a transaction.  <literal>'use'</literal> will use the
-          snapshot for the current transaction executing the command. This
-          option must be used in a transaction, and
-          <literal>CREATE_REPLICATION_SLOT</literal> must be the first command
-          run in that transaction.  Finally, <literal>'nothing'</literal> will
-          just use the snapshot for logical decoding as normal but won't do
-          anything else with it.
+          决定如何处理在逻辑槽初始化期间创建的快照。<literal>'export'</literal>（默认值）会导出该快照以供其他会话使用。此选项不能在事务内使用。<literal>'use'</literal> 会将快照用于执行该命令的当前事务。此选项必须在事务中使用，并且 <literal>CREATE_REPLICATION_SLOT</literal> 必须是该事务中运行的第一个命令。最后，<literal>'nothing'</literal> 只会像平常一样将快照用于逻辑解码，而不会对它做任何其他操作。
          </para>
         </listitem>
        </varlistentry>
@@ -1479,24 +1430,21 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>FAILOVER [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
         <listitem>
          <para>
-          If true, the slot is enabled to be synced to the standbys
-          so that logical replication can be resumed after failover.
-          The default is false.
+          如果为 true，则该槽可以同步到备库，以便在故障转移后恢复逻辑复制。默认值为 false。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
 
       <para>
-       In response to this command, the server will send a one-row result set
-       containing the following fields:
+       作为对该命令的响应，服务器将发送一个单行结果集，其中包含以下字段：
 
        <variablelist>
         <varlistentry>
          <term><literal>slot_name</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The name of the newly-created replication slot.
+           新建复制槽的名称。
           </para>
          </listitem>
         </varlistentry>
@@ -1505,9 +1453,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>consistent_point</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The WAL location at which the slot became consistent.  This is the
-           earliest location from which streaming can start on this replication
-           slot.
+           该槽变为一致的 WAL 位置。这是可以在此复制槽上开始流复制的最早位置。
           </para>
          </listitem>
         </varlistentry>
@@ -1516,10 +1462,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>snapshot_name</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The identifier of the snapshot exported by the command.  The
-           snapshot is valid until a new command is executed on this connection
-           or the replication connection is closed.  Null if the created slot
-           is physical.
+           该命令导出的快照的标识符。该快照一直有效，直到在此连接上执行新命令或复制连接被关闭。如果创建的槽是物理槽，则为 Null。
           </para>
          </listitem>
         </varlistentry>
@@ -1528,8 +1471,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>output_plugin</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The name of the output plugin used by the newly-created replication
-           slot.  Null if the created slot is physical.
+           新建复制槽所使用的输出插件的名称。如果创建的槽是物理槽，则为 Null。
           </para>
          </listitem>
         </varlistentry>
@@ -1543,8 +1485,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       For compatibility with older releases, this alternative syntax for
-       the <literal>CREATE_REPLICATION_SLOT</literal> command is still supported.
+       为了与旧版本兼容，仍然支持 <literal>CREATE_REPLICATION_SLOT</literal> 命令的这种替代语法。
       </para>
      </listitem>
     </varlistentry>
@@ -1555,10 +1496,9 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Change the definition of a replication slot.
-       See <xref linkend="streaming-replication-slots"/> for more about
-       replication slots. This command is currently only supported for logical
-       replication slots.
+       更改复制槽的定义。
+       有关复制槽的更多信息，请参见 <xref linkend="streaming-replication-slots"/>。
+       此命令目前仅支持逻辑复制槽。
       </para>
 
       <variablelist>
@@ -1566,26 +1506,26 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">slot_name</replaceable></term>
         <listitem>
          <para>
-          The name of the slot to alter. Must be a valid replication slot
-          name (see <xref linkend="streaming-replication-slots-manipulation"/>).
+          要更改的槽的名称。必须是有效的复制槽名称
+          （参见 <xref linkend="streaming-replication-slots-manipulation"/>）。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
 
-      <para>The following options are supported:</para>
+      <para>支持以下选项：</para>
 
       <variablelist>
        <varlistentry>
         <term><literal>TWO_PHASE [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
         <listitem>
          <para>
-          If true, this logical replication slot supports decoding of two-phase
-          commit. With this option, commands related to two-phase commit such as
-          <literal>PREPARE TRANSACTION</literal>, <literal>COMMIT PREPARED</literal>
-          and <literal>ROLLBACK PREPARED</literal> are decoded and transmitted.
-          The transaction will be decoded and transmitted at
-          <literal>PREPARE TRANSACTION</literal> time.
+          如果为 true，则此逻辑复制槽支持两阶段提交的解码。使用此选项时，
+          与两阶段提交相关的命令（例如
+          <literal>PREPARE TRANSACTION</literal>、<literal>COMMIT PREPARED</literal>
+          和 <literal>ROLLBACK PREPARED</literal>）会被解码并传输。
+          事务将在
+          <literal>PREPARE TRANSACTION</literal> 时被解码并传输。
          </para>
         </listitem>
        </varlistentry>
@@ -1596,8 +1536,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>FAILOVER [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
         <listitem>
          <para>
-          If true, the slot is enabled to be synced to the standbys
-          so that logical replication can be resumed after failover.
+          如果为 true，则该槽可以被同步到备机上，
+          以便在故障转移后能够恢复逻辑复制。
          </para>
         </listitem>
        </varlistentry>
@@ -1612,22 +1552,17 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Read some information associated with a replication slot. Returns a tuple
-       with <literal>NULL</literal> values if the replication slot does not
-       exist. This command is currently only supported for physical replication
-       slots.
+       读取与复制槽相关的一些信息。如果复制槽不存在，则返回一个包含 <literal>NULL</literal> 个值的元组。此命令目前仅支持物理复制槽。
       </para>
 
       <para>
-       In response to this command, the server will return a one-row result set,
-       containing the following fields:
+       响应此命令时，服务器将返回一个单行结果集，其中包含以下字段：
        <variablelist>
         <varlistentry>
          <term><literal>slot_type</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The replication slot's type, either <literal>physical</literal> or
-           <literal>NULL</literal>.
+           复制槽的类型，为 <literal>physical</literal> 或 <literal>NULL</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -1636,7 +1571,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>restart_lsn</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The replication slot's <literal>restart_lsn</literal>.
+           复制槽的 <literal>restart_lsn</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -1645,8 +1580,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>restart_tli</literal> (<type>int8</type>)</term>
          <listitem>
           <para>
-           The timeline ID associated with <literal>restart_lsn</literal>,
-           following the current timeline history.
+           与 <literal>restart_lsn</literal> 关联的时间线 ID，遵循当前的时间线历史。
           </para>
          </listitem>
         </varlistentry>
@@ -1661,56 +1595,51 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Instructs server to start streaming WAL, starting at
-       WAL location <replaceable class="parameter">XXX/XXX</replaceable>.
-       If <literal>TIMELINE</literal> option is specified,
-       streaming starts on timeline <replaceable class="parameter">tli</replaceable>;
-       otherwise, the server's current timeline is selected. The server can
-       reply with an error, for example if the requested section of WAL has already
-       been recycled. On success, the server responds with a CopyBothResponse
-       message, and then starts to stream WAL to the frontend.
+       指示服务器从 WAL 位置 <replaceable class="parameter">XXX/XXX</replaceable> 开始流式传输 WAL。
+       如果指定了 <literal>TIMELINE</literal> 选项，
+       则从时间线 <replaceable class="parameter">tli</replaceable> 开始流式传输；
+       否则，选择服务器当前的时间线。服务器可以
+       返回错误，例如所请求的 WAL 区段已经被回收。成功时，
+       服务器以 CopyBothResponse 消息响应，然后开始向前端流式传输 WAL。
       </para>
 
       <para>
-       If a slot's name is provided
-       via <replaceable class="parameter">slot_name</replaceable>, it will be updated
-       as replication progresses so that the server knows which WAL segments,
-       and if <varname>hot_standby_feedback</varname> is on which transactions,
-       are still needed by the standby.
+       如果通过 <replaceable class="parameter">slot_name</replaceable> 提供了槽的名称，
+       该名称将随着复制的推进而更新，以便服务器知道备机
+       仍然需要哪些 WAL 段，以及（如果开启 <varname>hot_standby_feedback</varname>）哪些事务。
       </para>
 
       <para>
-       If the client requests a timeline that's not the latest but is part of
-       the history of the server, the server will stream all the WAL on that
-       timeline starting from the requested start point up to the point where
-       the server switched to another timeline. If the client requests
-       streaming at exactly the end of an old timeline, the server skips COPY
-       mode entirely.
+       如果客户端请求的时间线不是最新的，但属于
+       该服务器历史的一部分，服务器将从请求的起始点开始
+       流式传输该时间线上的所有 WAL，直到服务器切换到
+       另一条时间线的位置。如果客户端请求的流式传输位置
+       恰好位于一条旧时间线的末尾，服务器将完全跳过 COPY
+       模式。
       </para>
 
       <para>
-       After streaming all the WAL on a timeline that is not the latest one,
-       the server will end streaming by exiting the COPY mode. When the client
-       acknowledges this by also exiting COPY mode, the server sends a result
-       set with one row and two columns, indicating the next timeline in this
-       server's history. The first column is the next timeline's ID (type <type>int8</type>), and the
-       second column is the WAL location where the switch happened (type <type>text</type>). Usually,
-       the switch position is the end of the WAL that was streamed, but there
-       are corner cases where the server can send some WAL from the old
-       timeline that it has not itself replayed before promoting. Finally, the
-       server sends two CommandComplete messages (one that ends the CopyData
-       and the other ends the <literal>START_REPLICATION</literal> itself), and
-       is ready to accept a new command.
+       在流式传输完一条非最新时间线上的所有 WAL 之后，
+       服务器将通过退出 COPY 模式来结束流式传输。当客户端
+       也退出 COPY 模式以确认这一点时，服务器会发送一个
+       包含一行两列的结果集，指明该服务器历史中的下一条时间线。
+       第一列是下一条时间线的 ID（类型为 <type>int8</type>），
+       第二列是发生切换的 WAL 位置（类型为 <type>text</type>）。通常，
+       切换位置就是所流式传输的 WAL 的末尾，但在某些
+       边界情况下，服务器可能会发送一些来自旧时间线的 WAL，
+       而这些 WAL 在提升之前它自身尚未重放。最后，
+       服务器发送两条 CommandComplete 消息（一条结束 CopyData，
+       另一条结束 <literal>START_REPLICATION</literal> 本身），并
+       准备好接受新命令。
       </para>
 
       <para>
-       WAL data is sent as a series of CopyData messages;
-       see <xref linkend="protocol-message-types"/> and <xref
-       linkend="protocol-message-formats"/> for details.
-       (This allows other information to be intermixed; in particular the server can send
-       an ErrorResponse message if it encounters a failure after beginning
-       to stream.)  The payload of each CopyData message from server to the
-       client contains a message of one of the following formats:
+       WAL 数据以一系列 CopyData 消息的形式发送；
+       详情参见 <xref linkend="protocol-message-types"/> 和 <xref
+       linkend="protocol-message-formats"/>。
+       （这允许混入其他信息；特别是，如果服务器在开始流式传输之后遇到失败，
+       它可以发送一条 ErrorResponse 消息。）从服务器到客户端的每条 CopyData
+       消息的负载都包含以下格式之一的消息：
       </para>
 
       <variablelist>
@@ -1722,7 +1651,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Byte1('w')</term>
            <listitem>
             <para>
-             Identifies the message as WAL data.
+             标识该消息为 WAL 数据。
             </para>
            </listitem>
           </varlistentry>
@@ -1731,7 +1660,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The starting point of the WAL data in this message.
+             本条消息中 WAL 数据的起始点。
             </para>
            </listitem>
           </varlistentry>
@@ -1740,7 +1669,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The current end of WAL on the server.
+             服务器上 WAL 的当前末尾位置。
             </para>
            </listitem>
           </varlistentry>
@@ -1749,8 +1678,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The server's system clock at the time of transmission, as
-             microseconds since midnight on 2000-01-01.
+             传输时服务器的系统时钟，以自 2000-01-01 午夜起的微秒数表示。
             </para>
            </listitem>
           </varlistentry>
@@ -1759,15 +1687,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Byte<replaceable>n</replaceable></term>
            <listitem>
             <para>
-             A section of the WAL data stream.
+             WAL 数据流的一部分。
             </para>
 
             <para>
-             A single WAL record is never split across two XLogData messages.
-             When a WAL record crosses a WAL page boundary, and is therefore
-             already split using continuation records, it can be split at the page
-             boundary. In other words, the first main WAL record and its
-             continuation records can be sent in different XLogData messages.
+             单条 WAL 记录绝不会被拆分到两个 XLogData 消息中。
+             当一条 WAL 记录跨越 WAL 页边界，因而已经使用延续记录进行拆分时，
+             它可以在页边界处拆分。换言之，第一条主 WAL 记录及其
+             延续记录可以在不同的 XLogData 消息中发送。
             </para>
            </listitem>
           </varlistentry>
@@ -1776,14 +1703,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        </varlistentry>
 
        <varlistentry id="protocol-replication-primary-keepalive-message">
-        <term>Primary keepalive message (B)</term>
+        <term>主库保活消息 (B)</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('k')</term>
            <listitem>
             <para>
-             Identifies the message as a sender keepalive.
+             标识该消息为发送方保活消息。
             </para>
            </listitem>
           </varlistentry>
@@ -1792,7 +1719,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The current end of WAL on the server.
+             服务器上 WAL 的当前末尾位置。
             </para>
            </listitem>
           </varlistentry>
@@ -1801,8 +1728,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The server's system clock at the time of transmission, as
-             microseconds since midnight on 2000-01-01.
+             发送时服务器的系统时钟，以自 2000-01-01 午夜起的微秒数表示。
             </para>
            </listitem>
           </varlistentry>
@@ -1811,8 +1737,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Byte1</term>
            <listitem>
             <para>
-             1 means that the client should reply to this message as soon as
-             possible, to avoid a timeout disconnect. 0 otherwise.
+             1 表示客户端应尽快回复此消息，以避免超时断开连接。0 表示不要求回复。
             </para>
            </listitem>
           </varlistentry>
@@ -1822,21 +1747,19 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
       </variablelist>
 
       <para>
-       The receiving process can send replies back to the sender at any time,
-       using one of the following message formats (also in the payload of a
-       CopyData message):
+       接收进程可以随时使用下列消息格式之一向发送方回送应答（同样位于 CopyData 消息的负载中）：
       </para>
 
       <variablelist>
        <varlistentry id="protocol-replication-standby-status-update">
-        <term>Standby status update (F)</term>
+        <term>后备状态更新（F）</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('r')</term>
            <listitem>
             <para>
-             Identifies the message as a receiver status update.
+             标识该消息为接收者状态更新。
             </para>
            </listitem>
           </varlistentry>
@@ -1845,8 +1768,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The location of the last WAL byte + 1 received and written to disk
-             in the standby.
+             在备库中已接收并写入磁盘的最后一个 WAL 字节的位置 + 1。
             </para>
            </listitem>
           </varlistentry>
@@ -1855,8 +1777,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The location of the last WAL byte + 1 flushed to disk in
-             the standby.
+             在备库中已刷写到磁盘的最后一个 WAL 字节的位置 + 1。
             </para>
            </listitem>
           </varlistentry>
@@ -1865,7 +1786,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The location of the last WAL byte + 1 applied in the standby.
+             备机中已应用的最后一个 WAL 字节的位置 + 1。
             </para>
            </listitem>
           </varlistentry>
@@ -1874,8 +1795,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The client's system clock at the time of transmission, as
-             microseconds since midnight on 2000-01-01.
+             发送时客户端系统时钟，以自 2000-01-01 午夜起的微秒数表示。
             </para>
            </listitem>
           </varlistentry>
@@ -1884,9 +1804,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Byte1</term>
            <listitem>
             <para>
-             If 1, the client requests the server to reply to this message
-             immediately. This can be used to ping the server, to test if
-             the connection is still healthy.
+             如果为 1，客户端请求服务器立即回复此消息。这可用于 ping 服务器，以测试连接是否仍然正常。
             </para>
            </listitem>
           </varlistentry>
@@ -1895,14 +1813,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        </varlistentry>
 
        <varlistentry id="protocol-replication-hot-standby-feedback-message">
-        <term>Hot standby feedback message (F)</term>
+        <term>热备反馈消息 (F)</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('h')</term>
            <listitem>
             <para>
-             Identifies the message as a hot standby feedback message.
+             标识该消息为热备反馈消息。
             </para>
            </listitem>
           </varlistentry>
@@ -1911,8 +1829,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int64</term>
            <listitem>
             <para>
-             The client's system clock at the time of transmission, as
-             microseconds since midnight on 2000-01-01.
+             发送时客户端的系统时钟，以自 2000-01-01 午夜起的微秒数表示。
             </para>
            </listitem>
           </varlistentry>
@@ -1921,12 +1838,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int32</term>
            <listitem>
             <para>
-             The standby's current global <literal>xmin</literal>, excluding the
-             <literal>catalog_xmin</literal> from any replication slots. If both
-             this value and the following <literal>catalog_xmin</literal>
-             are 0, this is treated as a notification that hot standby feedback
-             will no longer be sent on this connection. Later non-zero messages
-             may reinitiate the feedback mechanism.
+             备用服务器的当前全局 <literal>xmin</literal>，不包括任何复制槽中的 <literal>catalog_xmin</literal>。如果此值和后面的 <literal>catalog_xmin</literal> 均为 0，则将其视为一条通知，表示不再在此连接上发送热备反馈。之后的非零消息可能会重新启动反馈机制。
             </para>
            </listitem>
           </varlistentry>
@@ -1935,7 +1847,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int32</term>
            <listitem>
             <para>
-             The epoch of the global <literal>xmin</literal> xid on the standby.
+             备用服务器上全局 <literal>xmin</literal> xid 的纪元。
             </para>
            </listitem>
           </varlistentry>
@@ -1944,10 +1856,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int32</term>
            <listitem>
             <para>
-             The lowest <literal>catalog_xmin</literal> of any replication
-             slots on the standby. Set to 0 if no <literal>catalog_xmin</literal>
-             exists on the standby or if hot standby feedback is being
-             disabled.
+             备用服务器上任何复制槽的最低 <literal>catalog_xmin</literal>。如果备用服务器上不存在 <literal>catalog_xmin</literal>，或者热备反馈正在被禁用，则设置为 0。
             </para>
            </listitem>
           </varlistentry>
@@ -1956,7 +1865,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
            <term>Int32</term>
            <listitem>
             <para>
-             The epoch of the <literal>catalog_xmin</literal> xid on the standby.
+             备机上 <literal>catalog_xmin</literal> xid 的纪元。
             </para>
            </listitem>
           </varlistentry>
@@ -1985,20 +1894,15 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
       </para>
 
       <para>
-       The server can reply with an error, for example if the
-       slot does not exist. On success, the server responds with a CopyBothResponse
-       message, and then starts to stream WAL to the frontend.
+       服务器可以回复一个错误，例如当槽不存在时。成功时，服务器响应一条 CopyBothResponse 消息，然后开始向前端流式传输 WAL。
       </para>
 
       <para>
-       The messages inside the CopyBothResponse messages are of the same format
-       documented for <literal>START_REPLICATION ... PHYSICAL</literal>, including
-       two CommandComplete messages.
+       CopyBothResponse 消息内部的消息格式与 <literal>START_REPLICATION ... PHYSICAL</literal> 所记录的一致，包括两条 CommandComplete 消息。
       </para>
 
       <para>
-       The output plugin associated with the selected slot is used
-       to process the output for streaming.
+       与所选槽关联的输出插件用于处理流式传输的输出。
       </para>
 
       <variablelist>
@@ -2006,10 +1910,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>SLOT</literal> <replaceable class="parameter">slot_name</replaceable></term>
         <listitem>
          <para>
-          The name of the slot to stream changes from. This parameter is required,
-          and must correspond to an existing logical replication slot created
-          with <literal>CREATE_REPLICATION_SLOT</literal> in
-          <literal>LOGICAL</literal> mode.
+          要从中流式传输更改的槽的名称。此参数是必需的，并且必须对应于在 <literal>LOGICAL</literal> 模式下用 <literal>CREATE_REPLICATION_SLOT</literal> 创建的现有逻辑复制槽。
          </para>
         </listitem>
        </varlistentry>
@@ -2018,7 +1919,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">XXX/XXX</replaceable></term>
         <listitem>
          <para>
-          The WAL location to begin streaming at.
+          开始流式传输的 WAL 位置。
          </para>
         </listitem>
        </varlistentry>
@@ -2027,10 +1928,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">option_name</replaceable></term>
         <listitem>
          <para>
-          The name of an option passed to the slot's logical decoding output
-          plugin.  See <xref linkend="protocol-logical-replication"/> for
-          options that are accepted by the standard (<literal>pgoutput</literal>)
-          plugin.
+          传递给该槽的逻辑解码输出插件的选项名称。有关标准（<literal>pgoutput</literal>）插件所接受的选项，请参见 <xref linkend="protocol-logical-replication"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -2039,8 +1937,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">option_value</replaceable></term>
         <listitem>
          <para>
-          Optional value, in the form of a string constant, associated with the
-          specified option.
+          可选值，以字符串常量的形式，与指定的选项相关联。
          </para>
         </listitem>
        </varlistentry>
@@ -2055,7 +1952,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      </term>
      <listitem>
       <para>
-       Drops a replication slot, freeing any reserved server-side resources.
+       删除一个复制槽，释放任何保留的服务器端资源。
       </para>
 
       <variablelist>
@@ -2063,7 +1960,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><replaceable class="parameter">slot_name</replaceable></term>
         <listitem>
          <para>
-          The name of the slot to drop.
+          要删除的槽的名称。
          </para>
         </listitem>
        </varlistentry>
@@ -2072,9 +1969,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term><literal>WAIT</literal></term>
         <listitem>
          <para>
-          This option causes the command to wait if the slot is active until
-          it becomes inactive, instead of the default behavior of raising an
-          error.
+          此选项使得命令在槽处于活动状态时等待，直到它变为非活动状态，而不是默认的抛出错误的行为。
          </para>
         </listitem>
        </varlistentry>
@@ -2085,36 +1980,29 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
     <varlistentry id="protocol-replication-upload-manifest">
      <term>
       <literal>UPLOAD_MANIFEST</literal>
-      <indexterm><primary>UPLOAD_MANIFEST</primary></indexterm>
+<indexterm><primary>UPLOAD_MANIFEST</primary></indexterm>
      </term>
      <listitem>
       <para>
-       Uploads a backup manifest in preparation for taking an incremental
-       backup.
+       上传一个备份清单，为执行增量备份做准备。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry id="protocol-replication-base-backup" xreflabel="BASE_BACKUP">
      <term><literal>BASE_BACKUP</literal> [ ( <replaceable class="parameter">option</replaceable> [, ...] ) ]
-      <indexterm><primary>BASE_BACKUP</primary></indexterm>
+<indexterm><primary>BASE_BACKUP</primary></indexterm>
      </term>
      <listitem>
       <para>
-       Instructs the server to start streaming a base backup.
-       The system will automatically be put in backup mode before the backup
-       is started, and taken out of it when the backup is complete. The
-       following options are accepted:
+       指示服务器开始流式传输基础备份。系统将在备份开始前自动进入备份模式，并在备份完成后退出备份模式。接受以下选项：
 
        <variablelist>
         <varlistentry>
          <term><literal>LABEL</literal> <replaceable>'label'</replaceable></term>
          <listitem>
           <para>
-           Sets the label of the backup. If none is specified, a backup label
-           of <literal>base backup</literal> will be used. The quoting rules
-           for the label are the same as a standard SQL string with
-           <xref linkend="guc-standard-conforming-strings"/> turned on.
+           设置备份的标签。如果未指定，将使用 <literal>base backup</literal> 的备份标签。标签的引用规则与开启 <xref linkend="guc-standard-conforming-strings"/> 时的标准 SQL 字符串相同。
           </para>
          </listitem>
         </varlistentry>
@@ -2123,18 +2011,11 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>TARGET</literal> <replaceable>'target'</replaceable></term>
          <listitem>
           <para>
-           Tells the server where to send the backup.  If the target is
-           <literal>client</literal>, which is the default, the backup data is
-           sent to the client. If it is <literal>server</literal>, the backup
-           data is written to the server at the pathname specified by the
-           <literal>TARGET_DETAIL</literal> option. If it is
-           <literal>blackhole</literal>, the backup data is not sent
-           anywhere; it is simply discarded.
+           告诉服务器将备份发送到哪里。如果目标是 <literal>client</literal>（这是默认值），备份数据会发送到客户端。如果目标是 <literal>server</literal>，备份数据会写入服务器上由 <literal>TARGET_DETAIL</literal> 选项指定的路径名。如果目标是 <literal>blackhole</literal>，备份数据不会发送到任何地方，而是直接被丢弃。
           </para>
 
           <para>
-           The <literal>server</literal> target requires superuser privilege or
-           being granted the <literal>pg_write_server_files</literal> role.
+           <literal>server</literal> 目标需要超级用户权限或被授予 <literal>pg_write_server_files</literal> 角色。
           </para>
          </listitem>
         </varlistentry>
@@ -2143,13 +2024,11 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>TARGET_DETAIL</literal> <replaceable>'detail'</replaceable></term>
          <listitem>
           <para>
-           Provides additional information about the backup target.
+           提供有关备份目标的附加信息。
           </para>
 
           <para>
-           Currently, this option can only be used when the backup target is
-           <literal>server</literal>. It specifies the server directory
-           to which the backup should be written.
+           目前，此选项只能在备份目标为 <literal>server</literal> 时使用。它指定应将备份写入的服务器目录。
           </para>
          </listitem>
         </varlistentry>
@@ -2158,17 +2037,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>PROGRESS [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
          <listitem>
           <para>
-           If set to true, request information required to generate a progress
-           report. This will send back an approximate size in the header of each
-           tablespace, which can be used to calculate how far along the stream
-           is done. This is calculated by enumerating all the file sizes once
-           before the transfer is even started, and might as such have a
-           negative impact on the performance.  In particular, it might take
-           longer before the first data
-           is streamed. Since the database files can change during the backup,
-           the size is only approximate and might both grow and shrink between
-           the time of approximation and the sending of the actual files.
-           The default is false.
+           如果设置为 true，则请求生成进度报告所需的信息。这将在每个表空间的头部返回一个近似大小，可用于计算流式传输的进度。该大小是在传输甚至开始之前通过枚举所有文件大小一次性计算出来的，因此可能会对性能产生负面影响。特别是，第一个数据开始流式传输之前可能需要更长时间。由于数据库文件在备份期间可能发生变化，该大小只是近似值，并且在估算时间与实际文件发送时间之间可能既会增大也会缩小。默认值为 false。
           </para>
          </listitem>
         </varlistentry>
@@ -2177,8 +2046,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>CHECKPOINT { 'fast' | 'spread' }</literal></term>
          <listitem>
           <para>
-           Sets the type of checkpoint to be performed at the beginning of the
-           base backup. The default is <literal>spread</literal>.
+           设置基础备份开始时执行的检查点类型。默认值为 <literal>spread</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -2187,10 +2055,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>WAL [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
          <listitem>
           <para>
-           If set to true, include the necessary WAL segments in the backup.
-           This will include all the files between start and stop backup in the
-           <filename>pg_wal</filename> directory of the base directory tar
-           file. The default is false.
+           如果设置为 true，则在备份中包含必要的 WAL 段。这将在基础目录 tar 文件的 <filename>pg_wal</filename> 目录中包含开始备份与停止备份之间的所有文件。默认为 false。
           </para>
          </listitem>
         </varlistentry>
@@ -2199,11 +2064,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>WAIT [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
          <listitem>
           <para>
-           If set to true, the backup will wait until the last required WAL
-           segment has been archived, or emit a warning if WAL archiving is
-           not enabled. If false, the backup will neither wait nor warn,
-           leaving the client responsible for ensuring the required log is
-           available. The default is true.
+           如果设置为 true，备份将等待最后一个所需的 WAL 段被归档，如果未启用 WAL 归档则发出警告。如果为 false，备份既不等待也不发出警告，由客户端负责确保所需的日志可用。默认为 true。
           </para>
          </listitem>
         </varlistentry>
@@ -2212,9 +2073,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>COMPRESSION</literal> <replaceable>'method'</replaceable></term>
          <listitem>
           <para>
-           Instructs the server to compress the backup using the specified
-           method. Currently, the supported methods are <literal>gzip</literal>,
-           <literal>lz4</literal>, and <literal>zstd</literal>.
+           指示服务器使用指定的方法压缩备份。目前支持的方法有 <literal>gzip</literal>、<literal>lz4</literal> 和 <literal>zstd</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -2223,41 +2082,19 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>COMPRESSION_DETAIL</literal> <replaceable>detail</replaceable></term>
          <listitem>
           <para>
-           Specifies details for the chosen compression method. This should only
-           be used in conjunction with the <literal>COMPRESSION</literal>
-           option.  If the value is an integer, it specifies the compression
-           level.  Otherwise, it should be a comma-separated list of items,
-           each of the form <replaceable>keyword</replaceable> or
-           <replaceable>keyword=value</replaceable>. Currently, the supported
-           keywords are <literal>level</literal>, <literal>long</literal> and
-           <literal>workers</literal>.
+           指定所选压缩方法的详细信息。此选项只能与 <literal>COMPRESSION</literal> 选项一起使用。如果该值是一个整数，则指定压缩级别。否则，它应该是一个以逗号分隔的项列表，每一项的形式为 <replaceable>keyword</replaceable> 或 <replaceable>keyword=value</replaceable>。目前支持的关键字有 <literal>level</literal>、<literal>long</literal> 和 <literal>workers</literal>。
           </para>
 
           <para>
-           The <literal>level</literal> keyword sets the compression level.
-           For <literal>gzip</literal> the compression level should be an
-           integer between <literal>1</literal> and <literal>9</literal>
-           (default <literal>Z_DEFAULT_COMPRESSION</literal> or
-           <literal>-1</literal>), for <literal>lz4</literal> an integer
-           between 1 and 12 (default <literal>0</literal> for fast compression
-           mode), and for <literal>zstd</literal> an integer between
-           <literal>ZSTD_minCLevel()</literal> (usually <literal>-131072</literal>)
-           and <literal>ZSTD_maxCLevel()</literal> (usually <literal>22</literal>),
-           (default <literal>ZSTD_CLEVEL_DEFAULT</literal> or
-           <literal>3</literal>).
+           <literal>level</literal> 关键字设置压缩级别。对于 <literal>gzip</literal>，压缩级别应为 <literal>1</literal> 到 <literal>9</literal> 之间的整数（默认为 <literal>Z_DEFAULT_COMPRESSION</literal> 或 <literal>-1</literal>）；对于 <literal>lz4</literal>，为 1 到 12 之间的整数（快速压缩模式下默认为 <literal>0</literal>）；对于 <literal>zstd</literal>，为 <literal>ZSTD_minCLevel()</literal>（通常为 <literal>-131072</literal>）到 <literal>ZSTD_maxCLevel()</literal>（通常为 <literal>22</literal>）之间的整数（默认为 <literal>ZSTD_CLEVEL_DEFAULT</literal> 或 <literal>3</literal>）。
           </para>
 
           <para>
-           The <literal>long</literal> keyword enables long-distance matching
-           mode, for improved compression ratio, at the expense of higher memory
-           use.  Long-distance mode is supported only for
-           <literal>zstd</literal>.
+           <literal>long</literal> 关键字启用长距离匹配模式，以提高压缩比，代价是更高的内存使用。长距离模式仅支持 <literal>zstd</literal>。
           </para>
 
           <para>
-           The <literal>workers</literal> keyword sets the number of threads
-           that should be used for parallel compression. Parallel compression
-           is supported only for <literal>zstd</literal>.
+           <literal>workers</literal> 关键字设置用于并行压缩的线程数。并行压缩仅支持 <literal>zstd</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -2266,12 +2103,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>MAX_RATE</literal> <replaceable>rate</replaceable></term>
          <listitem>
           <para>
-           Limit (throttle) the maximum amount of data transferred from server
-           to client per unit of time.  The expected unit is kilobytes per second.
-           If this option is specified, the value must either be equal to zero
-           or it must fall within the range from 32 kB through 1 GB (inclusive).
-           If zero is passed or the option is not specified, no restriction is
-           imposed on the transfer.
+           限制（节流）每单位时间从服务器传输到客户端的数据量上限。预期单位是千字节每秒。如果指定了此选项，该值必须等于零，或者必须落在 32 kB 到 1 GB（含）的范围内。如果传入零或未指定该选项，则对传输不施加任何限制。
           </para>
          </listitem>
         </varlistentry>
@@ -2280,12 +2112,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>TABLESPACE_MAP [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
          <listitem>
           <para>
-           If true, include information about symbolic links present in the
-           directory <filename>pg_tblspc</filename> in a file named
-           <filename>tablespace_map</filename>. The tablespace map file includes
-           each symbolic link name as it exists in the directory
-           <filename>pg_tblspc/</filename> and the full path of that symbolic link.
-           The default is false.
+           如果为 true，则在名为 <filename>tablespace_map</filename> 的文件中包含目录 <filename>pg_tblspc</filename> 中存在的符号链接的信息。表空间映射文件包含目录 <filename>pg_tblspc/</filename> 中存在的每个符号链接名称以及该符号链接的完整路径。默认值为 false。
           </para>
          </listitem>
         </varlistentry>
@@ -2294,8 +2121,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>VERIFY_CHECKSUMS [ <replaceable class="parameter">boolean</replaceable> ]</literal></term>
          <listitem>
           <para>
-           If true, checksums are verified during a base backup if they are
-           enabled. If false, this is skipped. The default is true.
+           如果为 true，则在基础备份期间，若校验和已启用，则验证校验和。如果为 false，则跳过此操作。默认值为 true。
           </para>
          </listitem>
         </varlistentry>
@@ -2304,19 +2130,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>MANIFEST</literal> <replaceable>manifest_option</replaceable></term>
          <listitem>
           <para>
-           When this option is specified with a value of <literal>yes</literal>
-           or <literal>force-encode</literal>, a backup manifest is created
-           and sent along with the backup.  The manifest is a list of every
-           file present in the backup with the exception of any WAL files that
-           may be included. It also stores the size, last modification time, and
-           optionally a checksum for each file.
-           A value of <literal>force-encode</literal> forces all filenames
-           to be hex-encoded; otherwise, this type of encoding is performed only
-           for files whose names are non-UTF8 octet sequences.
-           <literal>force-encode</literal> is intended primarily for testing
-           purposes, to be sure that clients which read the backup manifest
-           can handle this case. For compatibility with previous releases,
-           the default is <literal>MANIFEST 'no'</literal>.
+           当此选项被指定为 <literal>yes</literal> 或 <literal>force-encode</literal> 时，会创建备份清单并随备份一起发送。该清单列出了备份中存在的每个文件，但可能包含的任何 WAL 文件除外。它还存储每个文件的大小、最后修改时间以及可选的校验和。值为 <literal>force-encode</literal> 会强制所有文件名采用十六进制编码；否则，仅对名称为非 UTF8 八位字节序列的文件执行此类编码。<literal>force-encode</literal> 主要用于测试目的，以确保读取备份清单的客户端能够处理这种情况。为了与以前的版本兼容，默认值为 <literal>MANIFEST 'no'</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -2325,12 +2139,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>MANIFEST_CHECKSUMS</literal> <replaceable>checksum_algorithm</replaceable></term>
          <listitem>
           <para>
-           Specifies the checksum algorithm that should be applied to each file included
-           in the backup manifest. Currently, the available
-           algorithms are <literal>NONE</literal>, <literal>CRC32C</literal>,
-           <literal>SHA224</literal>, <literal>SHA256</literal>,
-           <literal>SHA384</literal>, and <literal>SHA512</literal>.
-           The default is <literal>CRC32C</literal>.
+           指定应应用于备份清单中每个文件的校验和算法。目前可用的算法有 <literal>NONE</literal>、<literal>CRC32C</literal>、<literal>SHA224</literal>、<literal>SHA256</literal>、<literal>SHA384</literal> 和 <literal>SHA512</literal>。默认值为 <literal>CRC32C</literal>。
           </para>
          </listitem>
         </varlistentry>
@@ -2339,9 +2148,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>INCREMENTAL</literal></term>
          <listitem>
           <para>
-           Requests an incremental backup. The
-           <literal>UPLOAD_MANIFEST</literal> command must be executed
-           before running a base backup with this option.
+           请求一次增量备份。在使用此选项运行基础备份之前，必须先执行 <literal>UPLOAD_MANIFEST</literal> 命令。
           </para>
          </listitem>
         </varlistentry>
@@ -2349,29 +2156,22 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
       </para>
 
       <para>
-       When the backup is started, the server will first send two
-       ordinary result sets, followed by one or more CopyOutResponse
-       results.
+       备份启动时，服务器会先发送两个普通结果集，随后发送一个或多个 CopyOutResponse 结果。
       </para>
 
       <para>
-       The first ordinary result set contains the starting position of the
-       backup, in a single row with two columns. The first column contains
-       the start position given in XLogRecPtr format, and the second column
-       contains the corresponding timeline ID.
+       第一个普通结果集包含备份的起始位置，以单行两列的形式给出。第一列包含以 XLogRecPtr 格式给出的起始位置，第二列包含相应的时间线 ID。
       </para>
 
       <para>
-       The second ordinary result set has one row for each tablespace.
-       The fields in this row are:
+       第二个普通结果集为每个表空间各有一行。该行中的字段为：
 
        <variablelist>
         <varlistentry>
          <term><literal>spcoid</literal> (<type>oid</type>)</term>
          <listitem>
           <para>
-           The OID of the tablespace, or null if it's the base
-           directory.
+           表空间的 OID，如果它是基础目录则为 null。
           </para>
          </listitem>
         </varlistentry>
@@ -2380,8 +2180,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>spclocation</literal> (<type>text</type>)</term>
          <listitem>
           <para>
-           The full path of the tablespace directory, or null
-           if it's the base directory.
+           表空间目录的完整路径，如果它是基础目录则为 null。
           </para>
          </listitem>
         </varlistentry>
@@ -2390,8 +2189,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
          <term><literal>size</literal> (<type>int8</type>)</term>
          <listitem>
           <para>
-           The approximate size of the tablespace, in kilobytes (1024 bytes),
-           if progress report has been requested; otherwise it's null.
+           如果请求了进度报告，则为表空间的近似大小，单位为千字节（1024 字节）；否则为 null。
           </para>
          </listitem>
         </varlistentry>
@@ -2399,40 +2197,35 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
       </para>
 
       <para>
-       After the second regular result set, a CopyOutResponse will be sent.
-       The payload of each CopyData message will contain a message in one of
-       the following formats:
+       在第二个常规结果集之后，将发送一个 CopyOutResponse。
+       每个 CopyData 消息的负载将包含以下格式之一的消息：
       </para>
 
       <variablelist>
        <varlistentry>
-        <term>new archive (B)</term>
+        <term>新归档 (B)</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('n')</term>
            <listitem><para>
-            Identifies the message as indicating the start of a new archive.
-            There will be one archive for the main data directory and one
-            for each additional tablespace; each will use tar format
-            (following the <quote>ustar interchange format</quote> specified
-            in the POSIX 1003.1-2008 standard).
+            标识该消息为指示一个新归档的开始。
+           主数据目录将有一个归档，每个附加表空间也各有一个归档；每个归档都将使用 tar 格式
+           （遵循 POSIX 1003.1-2008 标准中规定的 <quote>ustar 交换格式</quote>）。
+           </para></listitem>
+          </varlistentry>
+
+          <varlistentry>
+           <term>字符串</term>
+           <listitem><para>
+            此归档的文件名。
            </para></listitem>
           </varlistentry>
 
           <varlistentry>
            <term>String</term>
            <listitem><para>
-            The file name for this archive.
-           </para></listitem>
-          </varlistentry>
-
-          <varlistentry>
-           <term>String</term>
-           <listitem><para>
-            For the main data directory, an empty string. For other
-            tablespaces, the full path to the directory from which this
-            archive was created.
+            对于主数据目录，为空字符串。对于其他表空间，为创建此归档所在目录的完整路径。
            </para></listitem>
           </varlistentry>
          </variablelist>
@@ -2446,8 +2239,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
           <varlistentry>
            <term>Byte1('m')</term>
            <listitem><para>
-            Identifies the message as indicating the start of the backup
-            manifest.
+            标识该消息表示备份清单的开始。
            </para></listitem>
           </varlistentry>
          </variablelist>
@@ -2455,20 +2247,20 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        </varlistentry>
 
        <varlistentry>
-        <term>archive or manifest data (B)</term>
+        <term>归档或清单数据 (B)</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('d')</term>
            <listitem><para>
-            Identifies the message as containing archive or manifest data.
+            标识该消息包含归档或清单数据。
            </para></listitem>
           </varlistentry>
 
           <varlistentry>
            <term>Byte<replaceable>n</replaceable></term>
            <listitem><para>
-            Data bytes.
+            数据字节。
            </para></listitem>
           </varlistentry>
          </variablelist>
@@ -2476,21 +2268,20 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        </varlistentry>
 
        <varlistentry>
-        <term>progress report (B)</term>
+        <term>进度报告 (B)</term>
         <listitem>
          <variablelist>
           <varlistentry>
            <term>Byte1('p')</term>
            <listitem><para>
-            Identifies the message as a progress report.
+            标识该消息为进度报告。
            </para></listitem>
           </varlistentry>
 
           <varlistentry>
            <term>Int64</term>
            <listitem><para>
-            The number of bytes from the current tablespace for which
-            processing has been completed.
+            当前表空间中已处理完成的字节数。
            </para></listitem>
           </varlistentry>
          </variablelist>
@@ -2499,16 +2290,11 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
       </variablelist>
 
       <para>
-       After the CopyOutResponse, or all such responses, have been sent, a
-       final ordinary result set will be sent, containing the WAL end position
-       of the backup, in the same format as the start position.
+       在 CopyOutResponse（或所有此类响应）发送之后，将发送一个最终的普通结果集，其中包含备份的 WAL 结束位置，格式与起始位置相同。
       </para>
 
       <para>
-       The tar archive for the data directory and each tablespace will contain
-       all files in the directories, regardless of whether they are
-       <productname>PostgreSQL</productname> files or other files added to the same
-       directory. The only excluded files are:
+       数据目录和每个表空间的 tar 归档将包含这些目录中的所有文件，无论它们是 <productname>PostgreSQL</productname> 文件还是添加到同一目录中的其他文件。唯一被排除的文件是：
 
        <itemizedlist spacing="compact" mark="bullet">
         <listitem>
@@ -2523,50 +2309,39 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         </listitem>
         <listitem>
          <para>
-          <filename>pg_internal.init</filename> (found in multiple directories)
+          <filename>pg_internal.init</filename>（存在于多个目录中）
          </para>
         </listitem>
         <listitem>
          <para>
-          Various temporary files and directories created during the operation
-          of the PostgreSQL server, such as any file or directory beginning
-          with <filename>pgsql_tmp</filename> and temporary relations.
+          PostgreSQL 服务器运行期间创建的各种临时文件和目录，例如任何以 <filename>pgsql_tmp</filename> 开头的文件或目录以及临时关系。
          </para>
         </listitem>
         <listitem>
          <para>
-          Unlogged relations, except for the init fork which is required to
-          recreate the (empty) unlogged relation on recovery.
+          未记录关系，但重建（空）未记录关系以用于恢复所需的 init fork 除外。
          </para>
         </listitem>
         <listitem>
          <para>
-          <filename>pg_wal</filename>, including subdirectories. If the backup is run
-          with WAL files included, a synthesized version of <filename>pg_wal</filename> will be
-          included, but it will only contain the files necessary for the
-          backup to work, not the rest of the contents.
+          <filename>pg_wal</filename>，包括子目录。如果备份在包含 WAL 文件的情况下运行，则会包含一个合成的 <filename>pg_wal</filename> 版本，但它只包含备份正常工作所需的文件，而不包含其余内容。
          </para>
         </listitem>
         <listitem>
          <para>
-          <filename>pg_dynshmem</filename>, <filename>pg_notify</filename>,
-          <filename>pg_replslot</filename>, <filename>pg_serial</filename>,
-          <filename>pg_snapshots</filename>, <filename>pg_stat_tmp</filename>, and
-          <filename>pg_subtrans</filename> are copied as empty directories (even if
-          they are symbolic links).
+          <filename>pg_dynshmem</filename>、<filename>pg_notify</filename>、
+          <filename>pg_replslot</filename>、<filename>pg_serial</filename>、
+          <filename>pg_snapshots</filename>、<filename>pg_stat_tmp</filename> 和
+          <filename>pg_subtrans</filename> 会作为空目录复制（即使它们是符号链接）。
          </para>
         </listitem>
         <listitem>
          <para>
-          Files other than regular files and directories, such as symbolic
-          links (other than for the directories listed above) and special
-          device and operating system files, are skipped.  (Symbolic links
-          in <filename>pg_tblspc</filename> are maintained.)
+          除常规文件和目录之外的文件，例如符号链接（上面列出的目录除外）以及特殊设备和操作系统文件，都会被跳过。（<filename>pg_tblspc</filename> 中的符号链接会被保留。）
          </para>
         </listitem>
        </itemizedlist>
-       Owner, group, and file mode are set if the underlying file system on
-       the server supports it.
+       如果服务器上的底层文件系统支持，则会设置所有者、组和文件模式。
       </para>
      </listitem>
     </varlistentry>
@@ -2574,10 +2349,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
   </para>
 
   <para>
-   In all the above commands,
-   when specifying a parameter of type <type>boolean</type> the
-   <replaceable class="parameter">value</replaceable> part can be omitted,
-   which is equivalent to specifying <literal>TRUE</literal>.
+   在上述所有命令中，当指定类型为 <type>boolean</type> 的参数时，可以省略 <replaceable class="parameter">value</replaceable> 部分，这等同于指定 <literal>TRUE</literal>。
   </para>
  </sect1>
 
