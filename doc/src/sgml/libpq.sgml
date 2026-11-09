@@ -5435,7 +5435,7 @@ typedef struct pgNotify
  </sect1>
 
  <sect1 id="libpq-copy">
-  <title>Functions Associated with the <command>COPY</command> Command</title>
+  <title>与 <command>COPY</command> 命令相关的函数</title>
 
   <indexterm zone="libpq-copy">
    <primary>COPY</primary>
@@ -5443,54 +5443,23 @@ typedef struct pgNotify
   </indexterm>
 
   <para>
-   The <command>COPY</command> command in
-   <productname>PostgreSQL</productname> has options to read from or write
-   to the network connection used by <application>libpq</application>.
-   The functions described in this section allow applications to take
-   advantage of this capability by supplying or consuming copied data.
+   <productname>PostgreSQL</productname> 中的 <command>COPY</command> 命令提供了从 <application>libpq</application> 所使用的网络连接读取数据或向其写入数据的选项。本节描述的函数允许应用程序通过提供或消费复制的数据来利用这一能力。
   </para>
 
   <para>
-   The overall process is that the application first issues the SQL
-   <command>COPY</command> command via <xref linkend="libpq-PQexec"/> or one
-   of the equivalent functions.  The response to this (if there is no
-   error in the command) will be a <structname>PGresult</structname> object bearing
-   a status code of <literal>PGRES_COPY_OUT</literal> or
-   <literal>PGRES_COPY_IN</literal> (depending on the specified copy
-   direction).  The application should then use the functions of this
-   section to receive or transmit data rows.  When the data transfer is
-   complete, another <structname>PGresult</structname> object is returned to indicate
-   success or failure of the transfer.  Its status will be
-   <literal>PGRES_COMMAND_OK</literal> for success or
-   <literal>PGRES_FATAL_ERROR</literal> if some problem was encountered.
-   At this point further SQL commands can be issued via
-   <xref linkend="libpq-PQexec"/>.  (It is not possible to execute other SQL
-   commands using the same connection while the <command>COPY</command>
-   operation is in progress.)
+   整个过程是这样的：应用程序首先通过 <xref linkend="libpq-PQexec"/> 或某个等效函数发出 SQL <command>COPY</command> 命令。对此的响应（如果命令中没有错误）将是一个 <structname>PGresult</structname> 对象，其状态码为 <literal>PGRES_COPY_OUT</literal> 或 <literal>PGRES_COPY_IN</literal>（取决于指定的复制方向）。然后应用程序应使用本节中的函数来接收或发送数据行。当数据传输完成时，会返回另一个 <structname>PGresult</structname> 对象，以指示传输成功还是失败。其状态为 <literal>PGRES_COMMAND_OK</literal> 表示成功，如果遇到某些问题则为 <literal>PGRES_FATAL_ERROR</literal>。此时可以通过 <xref linkend="libpq-PQexec"/> 发出更多 SQL 命令。（在 <command>COPY</command> 操作进行期间，无法使用同一连接执行其他 SQL 命令。）
   </para>
 
   <para>
-   If a <command>COPY</command> command is issued via
-   <xref linkend="libpq-PQexec"/> in a string that could contain additional
-   commands, the application must continue fetching results via
-   <xref linkend="libpq-PQgetResult"/> after completing the <command>COPY</command>
-   sequence.  Only when <xref linkend="libpq-PQgetResult"/> returns
-   <symbol>NULL</symbol> is it certain that the <xref linkend="libpq-PQexec"/>
-   command string is done and it is safe to issue more commands.
+   如果通过 <xref linkend="libpq-PQexec"/> 在一个可能包含其他命令的字符串中发出 <command>COPY</command> 命令，则应用程序在完成 <command>COPY</command> 序列后必须继续通过 <xref linkend="libpq-PQgetResult"/> 获取结果。只有当 <xref linkend="libpq-PQgetResult"/> 返回 <symbol>NULL</symbol> 时，才能确定 <xref linkend="libpq-PQexec"/> 命令字符串已执行完毕，并且可以安全地发出更多命令。
   </para>
 
   <para>
-   The functions of this section should be executed only after obtaining
-   a result status of <literal>PGRES_COPY_OUT</literal> or
-   <literal>PGRES_COPY_IN</literal> from <xref linkend="libpq-PQexec"/> or
-   <xref linkend="libpq-PQgetResult"/>.
+   只有在从 <xref linkend="libpq-PQexec"/> 或 <xref linkend="libpq-PQgetResult"/> 获得 <literal>PGRES_COPY_OUT</literal> 或 <literal>PGRES_COPY_IN</literal> 的结果状态之后，才应执行本节中的函数。
   </para>
 
   <para>
-   A <structname>PGresult</structname> object bearing one of these status values
-   carries some additional data about the <command>COPY</command> operation
-   that is starting.  This additional data is available using functions
-   that are also used in connection with query results:
+   带有这些状态值之一的 <structname>PGresult</structname> 对象携带一些关于即将开始的 <command>COPY</command> 操作的附加数据。可以使用同样用于查询结果的函数来获取这些附加数据：
 
    <variablelist>
     <varlistentry id="libpq-PQnfields-1">
@@ -5499,7 +5468,7 @@ typedef struct pgNotify
 
      <listitem>
       <para>
-       Returns the number of columns (fields) to be copied.
+       返回要复制的列（字段）数。
       </para>
      </listitem>
     </varlistentry>
@@ -5510,10 +5479,8 @@ typedef struct pgNotify
 
      <listitem>
       <para>
-       0 indicates the overall copy format is textual (rows separated by
-       newlines, columns separated by separator characters, etc.).  1
-       indicates the overall copy format is binary.  See <xref
-       linkend="sql-copy"/> for more information.
+       0 表示整体复制格式为文本（行由换行符分隔，列由分隔符分隔等）。1 表示整体复制格式为二进制。更多信息请参见 <xref
+       linkend="sql-copy"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -5524,13 +5491,7 @@ typedef struct pgNotify
 
      <listitem>
       <para>
-       Returns the format code (0 for text, 1 for binary) associated with
-       each column of the copy operation.  The per-column format codes
-       will always be zero when the overall copy format is textual, but
-       the binary format can support both text and binary columns.
-       (However, as of the current implementation of <command>COPY</command>,
-       only binary columns appear in a binary copy; so the per-column
-       formats always match the overall format at present.)
+       返回与复制操作的每一列相关联的格式代码（0 表示文本，1 表示二进制）。当整体复制格式为文本时，各列的格式代码始终为零，但二进制格式可以同时支持文本列和二进制列。（不过，就当前 <command>COPY</command> 的实现而言，二进制复制中只会出现二进制列；因此目前各列的格式总是与整体格式一致。）
       </para>
      </listitem>
     </varlistentry>
@@ -5538,12 +5499,11 @@ typedef struct pgNotify
   </para>
 
   <sect2 id="libpq-copy-send">
-   <title>Functions for Sending <command>COPY</command> Data</title>
+   <title>用于发送 <command>COPY</command> 数据的函数</title>
 
    <para>
-    These functions are used to send data during <literal>COPY FROM
-    STDIN</literal>.  They will fail if called when the connection is not in
-    <literal>COPY_IN</literal> state.
+    这些函数用于在 <literal>COPY FROM
+    STDIN</literal> 期间发送数据。如果在连接不处于 <literal>COPY_IN</literal> 状态时调用它们，将会失败。
    </para>
 
    <variablelist>
@@ -5552,7 +5512,7 @@ typedef struct pgNotify
 
      <listitem>
       <para>
-       Sends data to the server during <literal>COPY_IN</literal> state.
+       在 <literal>COPY_IN</literal> 状态期间向服务器发送数据。
 <synopsis>
 int PQputCopyData(PGconn *conn,
                   const char *buffer,
@@ -5561,22 +5521,19 @@ int PQputCopyData(PGconn *conn,
       </para>
 
       <para>
-       Transmits the <command>COPY</command> data in the specified
-       <parameter>buffer</parameter>, of length <parameter>nbytes</parameter>, to the server.
-       The result is 1 if the data was queued, zero if it was not queued
-       because of full buffers (this will only happen in nonblocking mode),
-       or -1 if an error occurred.
-       (Use <xref linkend="libpq-PQerrorMessage"/> to retrieve details if
-       the return value is -1.  If the value is zero, wait for write-ready
-       and try again.)
+       把指定 <parameter>buffer</parameter> 中长度为 <parameter>nbytes</parameter> 的 <command>COPY</command> 数据传输到服务器。
+       如果数据已排队，结果为 1；如果因为缓冲区已满而未能排队
+       （这只会在非阻塞模式下发生），结果为零；
+       如果发生错误，结果为 -1。
+       （如果返回值为 -1，可使用 <xref linkend="libpq-PQerrorMessage"/> 获取详细信息。
+       如果值为零，请等待可写状态后重试。）
       </para>
 
       <para>
-       The application can divide the <command>COPY</command> data stream
-       into buffer loads of any convenient size.  Buffer-load boundaries
-       have no semantic significance when sending.  The contents of the
-       data stream must match the data format expected by the
-       <command>COPY</command> command; see <xref linkend="sql-copy"/> for details.
+       应用程序可以把 <command>COPY</command> 数据流划分成任意方便大小的缓冲区载荷。
+       在发送时，缓冲区载荷的边界没有语义上的意义。
+       数据流的内容必须与 <command>COPY</command> 命令所期望的数据格式相匹配；
+       详情请参见 <xref linkend="sql-copy"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -5586,7 +5543,7 @@ int PQputCopyData(PGconn *conn,
 
      <listitem>
       <para>
-       Sends end-of-data indication to the server during <literal>COPY_IN</literal> state.
+       在 <literal>COPY_IN</literal> 状态期间向服务器发送数据结束指示。
 <synopsis>
 int PQputCopyEnd(PGconn *conn,
                  const char *errormsg);
@@ -5594,35 +5551,30 @@ int PQputCopyEnd(PGconn *conn,
       </para>
 
       <para>
-       Ends the <literal>COPY_IN</literal> operation successfully if
-       <parameter>errormsg</parameter> is <symbol>NULL</symbol>.  If
-       <parameter>errormsg</parameter> is not <symbol>NULL</symbol> then the
-       <command>COPY</command> is forced to fail, with the string pointed to by
-       <parameter>errormsg</parameter> used as the error message.  (One should not
-       assume that this exact error message will come back from the server,
-       however, as the server might have already failed the
-       <command>COPY</command> for its own reasons.)
+       如果 <parameter>errormsg</parameter> 为 <symbol>NULL</symbol>，则成功结束 <literal>COPY_IN</literal> 操作。如果
+       <parameter>errormsg</parameter> 不为 <symbol>NULL</symbol>，则强制 <command>COPY</command> 失败，并使用
+       <parameter>errormsg</parameter> 指向的字符串作为错误消息。（但是，不应
+       假定服务器会返回完全相同的错误消息，
+       因为服务器可能已经由于自身的原因使
+       <command>COPY</command> 失败。）
       </para>
 
       <para>
-       The result is 1 if the termination message was sent; or in
-       nonblocking mode, this may only indicate that the termination
-       message was successfully queued.  (In nonblocking mode, to be
-       certain that the data has been sent, you should next wait for
-       write-ready and call <xref linkend="libpq-PQflush"/>, repeating until it
-       returns zero.)  Zero indicates that the function could not queue
-       the termination message because of full buffers; this will only
-       happen in nonblocking mode.  (In this case, wait for
-       write-ready and try the <xref linkend="libpq-PQputCopyEnd"/> call
-       again.)  If a hard error occurs, -1 is returned; you can use
-       <xref linkend="libpq-PQerrorMessage"/> to retrieve details.
+       如果终止消息已发送，结果为 1；或者在非阻塞模式下，这可能仅表示
+       终止消息已成功排队。（在非阻塞模式下，要确定数据
+       已经发送，接下来应等待可写并调用 <xref linkend="libpq-PQflush"/>，
+       重复直到它返回零。）零表示该函数由于缓冲区已满
+       而无法将终止消息排队；这只会在非阻塞模式下
+       发生。（在这种情况下，等待可写并再次尝试
+       <xref linkend="libpq-PQputCopyEnd"/> 调用。）如果发生硬错误，
+       返回 -1；你可以使用
+       <xref linkend="libpq-PQerrorMessage"/> 获取详细信息。
       </para>
 
       <para>
-       After successfully calling <xref linkend="libpq-PQputCopyEnd"/>, call
-       <xref linkend="libpq-PQgetResult"/> to obtain the final result status of the
-       <command>COPY</command> command.  One can wait for this result to be
-       available in the usual way.  Then return to normal operation.
+       成功调用 <xref linkend="libpq-PQputCopyEnd"/> 之后，调用
+       <xref linkend="libpq-PQgetResult"/> 以获得 <command>COPY</command> 命令的最终结果状态。
+       可以按通常方式等待该结果可用。然后恢复正常操作。
       </para>
      </listitem>
     </varlistentry>
@@ -5631,12 +5583,11 @@ int PQputCopyEnd(PGconn *conn,
   </sect2>
 
   <sect2 id="libpq-copy-receive">
-   <title>Functions for Receiving <command>COPY</command> Data</title>
+   <title>用于接收 <command>COPY</command> 数据的函数</title>
 
    <para>
-    These functions are used to receive data during <literal>COPY TO
-    STDOUT</literal>.  They will fail if called when the connection is not in
-    <literal>COPY_OUT</literal> state.
+    这些函数用于在 <literal>COPY TO
+    STDOUT</literal> 期间接收数据。如果在连接不处于 <literal>COPY_OUT</literal> 状态时调用，它们将失败。
    </para>
 
    <variablelist>
@@ -5645,7 +5596,7 @@ int PQputCopyEnd(PGconn *conn,
 
      <listitem>
       <para>
-       Receives data from the server during <literal>COPY_OUT</literal> state.
+       在 <literal>COPY_OUT</literal> 状态期间从服务器接收数据。
 <synopsis>
 int PQgetCopyData(PGconn *conn,
                   char **buffer,
@@ -5654,46 +5605,36 @@ int PQgetCopyData(PGconn *conn,
       </para>
 
       <para>
-       Attempts to obtain another row of data from the server during a
-       <command>COPY</command>.  Data is always returned one data row at
-       a time; if only a partial row is available, it is not returned.
-       Successful return of a data row involves allocating a chunk of
-       memory to hold the data.  The <parameter>buffer</parameter> parameter must
-       be non-<symbol>NULL</symbol>.  <parameter>*buffer</parameter> is set to
-       point to the allocated memory, or to <symbol>NULL</symbol> in cases
-       where no buffer is returned.  A non-<symbol>NULL</symbol> result
-       buffer should be freed using <xref linkend="libpq-PQfreemem"/> when no longer
-       needed.
+       尝试在 <command>COPY</command> 期间从服务器获取另一行数据。数据总是每次返回一行；
+       如果只有部分行可用，则不会返回。
+       成功返回一行数据需要分配一块内存来保存数据。<parameter>buffer</parameter> 参数必须
+       非 <symbol>NULL</symbol>。<parameter>*buffer</parameter> 被设置为指向已分配的内存，或者在未返回
+       缓冲区的情况下设置为 <symbol>NULL</symbol>。非 <symbol>NULL</symbol> 的结果缓冲区在不再需要时
+       应使用 <xref linkend="libpq-PQfreemem"/> 释放。
       </para>
 
       <para>
-       When a row is successfully returned, the return value is the number
-       of data bytes in the row (this will always be greater than zero).
-       The returned string is always null-terminated, though this is
-       probably only useful for textual <command>COPY</command>.  A result
-       of zero indicates that the <command>COPY</command> is still in
-       progress, but no row is yet available (this is only possible when
-       <parameter>async</parameter> is true).  A result of -1 indicates that the
-       <command>COPY</command> is done.  A result of -2 indicates that an
-       error occurred (consult <xref linkend="libpq-PQerrorMessage"/> for the reason).
+       当成功返回一行时，返回值是该行中的数据字节数（这始终大于零）。
+       返回的字符串始终以 null 结尾，尽管这可能只对文本 <command>COPY</command> 有用。
+       结果为零表示 <command>COPY</command> 仍在进行中，但尚无行可用（这仅在
+       <parameter>async</parameter> 为 true 时可能）。结果为 -1 表示 <command>COPY</command> 已完成。
+       结果为 -2 表示发生了错误（原因请查阅 <xref linkend="libpq-PQerrorMessage"/>）。
       </para>
 
       <para>
-       When <parameter>async</parameter> is true (not zero),
-       <xref linkend="libpq-PQgetCopyData"/> will not block waiting for input; it
-       will return zero if the <command>COPY</command> is still in progress
-       but no complete row is available.  (In this case wait for read-ready
-       and then call <xref linkend="libpq-PQconsumeInput"/> before calling
-       <xref linkend="libpq-PQgetCopyData"/> again.)  When <parameter>async</parameter> is
-       false (zero), <xref linkend="libpq-PQgetCopyData"/> will block until data is
-       available or the operation completes.
+       当 <parameter>async</parameter> 为 true（非零）时，<xref linkend="libpq-PQgetCopyData"/>
+       不会阻塞等待输入；如果 <command>COPY</command> 仍在进行中但没有完整的行可用，
+       它将返回零。（在这种情况下，等待可读就绪，然后在再次调用
+       <xref linkend="libpq-PQgetCopyData"/> 之前调用 <xref linkend="libpq-PQconsumeInput"/>。）
+       当 <parameter>async</parameter> 为 false（零）时，<xref linkend="libpq-PQgetCopyData"/>
+       将阻塞，直到数据可用或操作完成。
       </para>
 
       <para>
-       After <xref linkend="libpq-PQgetCopyData"/> returns -1, call
-       <xref linkend="libpq-PQgetResult"/> to obtain the final result status of the
-       <command>COPY</command> command.  One can wait for this result to be
-       available in the usual way.  Then return to normal operation.
+       在 <xref linkend="libpq-PQgetCopyData"/> 返回 -1 之后，调用
+       <xref linkend="libpq-PQgetResult"/> 以获得
+       <command>COPY</command> 命令的最终结果状态。可以按通常方式等待该结果
+       变为可用。然后恢复正常操作。
       </para>
      </listitem>
     </varlistentry>
@@ -5702,13 +5643,13 @@ int PQgetCopyData(PGconn *conn,
   </sect2>
 
   <sect2 id="libpq-copy-deprecated">
-   <title>Obsolete Functions for <command>COPY</command></title>
+   <title><command>COPY</command> 的过时函数</title>
 
    <para>
-    These functions represent older methods of handling <command>COPY</command>.
-    Although they still work, they are deprecated due to poor error handling,
-    inconvenient methods of detecting end-of-data, and lack of support for binary
-    or nonblocking transfers.
+    这些函数代表了处理 <command>COPY</command> 的较旧方法。
+    尽管它们仍然可用，但由于错误处理不佳、
+    检测数据结束的方法不便，以及不支持二进制
+    或非阻塞传输，它们已被废弃。
    </para>
 
    <variablelist>
@@ -5717,8 +5658,8 @@ int PQgetCopyData(PGconn *conn,
 
      <listitem>
       <para>
-       Reads  a  newline-terminated  line  of  characters (transmitted
-       by the server) into a buffer string of size <parameter>length</parameter>.
+       将以换行符结尾的一行字符（由服务器传输）
+       读入大小为 <parameter>length</parameter> 的缓冲区字符串中。
 <synopsis>
 int PQgetline(PGconn *conn,
               char *buffer,
@@ -5727,21 +5668,14 @@ int PQgetline(PGconn *conn,
       </para>
 
       <para>
-       This function copies up to <parameter>length</parameter>-1 characters into
-       the buffer and converts the terminating newline into a zero byte.
-       <xref linkend="libpq-PQgetline"/> returns <symbol>EOF</symbol> at the
-       end of input, 0 if the entire line has been read, and 1 if the
-       buffer is full but the terminating newline has not yet been read.
+       该函数最多将 <parameter>length</parameter>-1 个字符复制到缓冲区中，
+       并将结尾的换行符转换为零字节。
+       <xref linkend="libpq-PQgetline"/> 在输入结束时返回 <symbol>EOF</symbol>，
+       如果整行已读取完毕则返回 0，如果缓冲区已满
+       但尚未读取到结尾的换行符则返回 1。
        </para>
        <para>
-       Note that the application must check to see if a new line consists
-       of  the  two characters  <literal>\.</literal>, which  indicates
-       that the server has finished sending the results  of  the
-       <command>COPY</command> command.  If  the  application might receive
-       lines that are more than <parameter>length</parameter>-1  characters  long,
-       care is needed to be sure it recognizes the <literal>\.</literal>
-       line correctly (and does not, for example, mistake the end of a
-       long data line for a terminator line).
+       注意，应用程序必须检查新的一行是否由两个字符 <literal>\.</literal> 组成，这表示服务器已经发送完 <command>COPY</command> 命令的结果。如果应用程序可能接收到长度超过 <parameter>length</parameter>-1 个字符的行，则需要小心确保它能正确地识别 <literal>\.</literal> 行（例如，不要将长数据行的结尾误认为终止行）。
       </para>
      </listitem>
     </varlistentry>
@@ -5751,8 +5685,7 @@ int PQgetline(PGconn *conn,
 
      <listitem>
       <para>
-       Reads a row of <command>COPY</command> data (transmitted  by the
-       server) into a buffer without blocking.
+       以非阻塞方式将一行 <command>COPY</command> 数据（由服务器发送）读入缓冲区。
 <synopsis>
 int PQgetlineAsync(PGconn *conn,
                    char *buffer,
@@ -5761,41 +5694,18 @@ int PQgetlineAsync(PGconn *conn,
       </para>
 
       <para>
-       This function is similar to <xref linkend="libpq-PQgetline"/>, but it can be used
-       by applications
-       that must read <command>COPY</command> data asynchronously, that is, without blocking.
-       Having issued the <command>COPY</command> command and gotten a <literal>PGRES_COPY_OUT</literal>
-       response, the
-       application should call <xref linkend="libpq-PQconsumeInput"/> and
-       <xref linkend="libpq-PQgetlineAsync"/> until the
-       end-of-data signal is detected.
+       此函数类似于 <xref linkend="libpq-PQgetline"/>，但它可供必须以异步方式（即不阻塞）读取 <command>COPY</command> 数据的应用程序使用。在发出 <command>COPY</command> 命令并得到 <literal>PGRES_COPY_OUT</literal> 响应之后，应用程序应调用 <xref linkend="libpq-PQconsumeInput"/> 和 <xref linkend="libpq-PQgetlineAsync"/>，直到检测到数据结束信号。
        </para>
        <para>
-       Unlike <xref linkend="libpq-PQgetline"/>, this function takes
-       responsibility for detecting end-of-data.
+       与 <xref linkend="libpq-PQgetline"/> 不同，此函数负责检测数据结束。
       </para>
 
       <para>
-       On each call, <xref linkend="libpq-PQgetlineAsync"/> will return data if a
-       complete data row is available in <application>libpq</application>'s input buffer.
-       Otherwise, no data is returned until the rest of the row arrives.
-       The function returns -1 if the end-of-copy-data marker has been recognized,
-       or 0 if no data is available, or a positive number giving the number of
-       bytes of data returned.  If -1 is returned, the caller must next call
-       <xref linkend="libpq-PQendcopy"/>, and then return to normal processing.
+       每次调用时，如果 <application>libpq</application> 的输入缓冲区中有一整行数据可用，<xref linkend="libpq-PQgetlineAsync"/> 就会返回数据。否则，在剩余的行到达之前不会返回任何数据。如果识别到复制数据结束标记，该函数返回 -1；如果没有可用数据，返回 0；否则返回一个正数，给出所返回数据的字节数。如果返回 -1，调用方接下来必须调用 <xref linkend="libpq-PQendcopy"/>，然后恢复正常处理。
       </para>
 
       <para>
-       The data returned will not extend beyond a data-row boundary.  If possible
-       a whole row will be returned at one time.  But if the buffer offered by
-       the caller is too small to hold a row sent by the server, then a partial
-       data row will be returned.  With textual data this can be detected by testing
-       whether the last returned byte is <literal>\n</literal> or not.  (In a binary
-       <command>COPY</command>, actual parsing of the <command>COPY</command> data format will be needed to make the
-       equivalent determination.)
-       The returned string is not null-terminated.  (If you want to add a
-       terminating null, be sure to pass a <parameter>bufsize</parameter> one smaller
-       than the room actually available.)
+       返回的数据不会超出一个数据行边界。如果可能，将一次返回一整行。但是如果调用者提供的缓冲区太小，无法容纳服务器发送的一行，则将返回部分数据行。对于文本数据，可以通过检测最后返回的字节是否为 <literal>\n</literal> 来判断。（在二进制 <command>COPY</command> 中，需要对 <command>COPY</command> 数据格式进行实际解析才能做出等效的判断。）返回的字符串不是以空字符结尾的。（如果希望添加一个结尾的空字符，请确保传入的 <parameter>bufsize</parameter> 比实际可用的空间小一。）
       </para>
      </listitem>
     </varlistentry>
@@ -5805,8 +5715,7 @@ int PQgetlineAsync(PGconn *conn,
 
      <listitem>
       <para>
-       Sends  a  null-terminated  string  to  the server.  Returns 0 if
-       OK and <symbol>EOF</symbol> if unable to send the string.
+       向服务器发送一个以空字符结尾的字符串。如果成功则返回 0，如果无法发送该字符串则返回 <symbol>EOF</symbol>。
 <synopsis>
 int PQputline(PGconn *conn,
               const char *string);
@@ -5814,24 +5723,12 @@ int PQputline(PGconn *conn,
       </para>
 
       <para>
-       The <command>COPY</command> data stream sent by a series of calls
-       to <xref linkend="libpq-PQputline"/> has the same format as that
-       returned by <xref linkend="libpq-PQgetlineAsync"/>, except that
-       applications are not obliged to send exactly one data row per
-       <xref linkend="libpq-PQputline"/> call; it is okay to send a partial
-       line or multiple lines per call.
+       通过一系列对 <xref linkend="libpq-PQputline"/> 的调用所发送的 <command>COPY</command> 数据流，其格式与 <xref linkend="libpq-PQgetlineAsync"/> 返回的格式相同，不同之处在于应用程序不必每次调用 <xref linkend="libpq-PQputline"/> 都恰好发送一个数据行；每次调用发送部分行或多行都是可以的。
       </para>
 
       <note>
        <para>
-        Before <productname>PostgreSQL</productname> protocol 3.0, it was necessary
-        for the application to explicitly send the two characters
-        <literal>\.</literal> as a final line to indicate to the server that it had
-        finished sending <command>COPY</command> data.  While this still works, it is deprecated and the
-        special meaning of <literal>\.</literal> can be expected to be removed in a
-        future release.  (It already will misbehave in <literal>CSV</literal>
-        mode.)  It is sufficient to call <xref linkend="libpq-PQendcopy"/>
-        after having sent the actual data.
+        在 <productname>PostgreSQL</productname> 协议 3.0 之前，应用程序必须显式发送两个字符 <literal>\.</literal> 作为最后一行，以向服务器表明它已经完成 <command>COPY</command> 数据的发送。虽然这种做法仍然有效，但已被废弃，并且可以预期 <literal>\.</literal> 的特殊含义将在未来的版本中被移除。（它在 <literal>CSV</literal> 模式下已经会出现异常行为。）在发送完实际数据之后，调用 <xref linkend="libpq-PQendcopy"/> 就足够了。
        </para>
       </note>
      </listitem>
@@ -5842,8 +5739,7 @@ int PQputline(PGconn *conn,
 
      <listitem>
       <para>
-       Sends  a  non-null-terminated  string  to  the server.  Returns
-       0 if OK and <symbol>EOF</symbol> if unable to send the string.
+       向服务器发送一个不以空字符结尾的字符串。成功时返回 0，无法发送该字符串时返回 <symbol>EOF</symbol>。
 <synopsis>
 int PQputnbytes(PGconn *conn,
                 const char *buffer,
@@ -5852,9 +5748,7 @@ int PQputnbytes(PGconn *conn,
       </para>
 
       <para>
-       This is exactly like <xref linkend="libpq-PQputline"/>, except that the data
-       buffer need not be null-terminated since the number of bytes to send is
-       specified directly.  Use this procedure when sending binary data.
+       这与 <xref linkend="libpq-PQputline"/> 完全相同，只是数据缓冲区不必以空字符结尾，因为要发送的字节数是直接指定的。在发送二进制数据时使用此过程。
       </para>
      </listitem>
     </varlistentry>
@@ -5864,43 +5758,19 @@ int PQputnbytes(PGconn *conn,
 
      <listitem>
       <para>
-       Synchronizes with the server.
+       与服务器同步。
 <synopsis>
 int PQendcopy(PGconn *conn);
 </synopsis>
-       This function waits until the  server  has  finished  the copying.
-       It should either be issued when the  last  string  has  been sent
-       to  the  server using <xref linkend="libpq-PQputline"/> or when the
-       last string has been  received  from  the  server using
-       <function>PQgetline</function>.  It must be issued or the server
-       will get <quote>out of sync</quote> with  the client.   Upon return
-       from this function, the server is ready to receive the next SQL
-       command.  The return value is 0  on  successful  completion,
-       nonzero otherwise.  (Use <xref linkend="libpq-PQerrorMessage"/> to
-       retrieve details if the return value is nonzero.)
+此函数等待服务器完成复制。它应当在最后一行字符串已使用 <xref linkend="libpq-PQputline"/> 发送到服务器之后，或者最后一行字符串已使用 <function>PQgetline</function> 从服务器接收之后发出。必须发出它，否则服务器将与客户端<quote>失去同步</quote>。从此函数返回后，服务器已准备好接收下一条 SQL 命令。成功完成时返回值为 0，否则为非零。（如果返回值非零，可使用 <xref linkend="libpq-PQerrorMessage"/> 获取详细信息。）
       </para>
 
       <para>
-       When using <xref linkend="libpq-PQgetResult"/>, the application should
-       respond to a <literal>PGRES_COPY_OUT</literal> result by executing
-       <xref linkend="libpq-PQgetline"/> repeatedly, followed by
-       <xref linkend="libpq-PQendcopy"/> after the terminator line is seen.
-       It should then return to the <xref linkend="libpq-PQgetResult"/> loop
-       until <xref linkend="libpq-PQgetResult"/> returns a null pointer.
-       Similarly a <literal>PGRES_COPY_IN</literal> result is processed
-       by a series of <xref linkend="libpq-PQputline"/> calls followed by
-       <xref linkend="libpq-PQendcopy"/>, then return to the
-       <xref linkend="libpq-PQgetResult"/> loop.  This arrangement will
-       ensure that a <command>COPY</command> command embedded in a series
-       of <acronym>SQL</acronym> commands will be executed correctly.
+       使用 <xref linkend="libpq-PQgetResult"/> 时，应用程序应对 <literal>PGRES_COPY_OUT</literal> 结果作出响应：反复执行 <xref linkend="libpq-PQgetline"/>，在看到终止行之后再执行 <xref linkend="libpq-PQendcopy"/>。然后应返回 <xref linkend="libpq-PQgetResult"/> 循环，直到 <xref linkend="libpq-PQgetResult"/> 返回空指针。类似地，<literal>PGRES_COPY_IN</literal> 结果通过一系列 <xref linkend="libpq-PQputline"/> 调用处理，随后调用 <xref linkend="libpq-PQendcopy"/>，然后返回 <xref linkend="libpq-PQgetResult"/> 循环。这种安排可确保嵌入在一系列 <acronym>SQL</acronym> 命令中的 <command>COPY</command> 命令被正确执行。
       </para>
 
       <para>
-       Older applications are likely to submit a <command>COPY</command>
-       via <xref linkend="libpq-PQexec"/> and assume that the transaction
-       is done after <xref linkend="libpq-PQendcopy"/>.  This will work
-       correctly only if the <command>COPY</command> is the only
-       <acronym>SQL</acronym> command in the command string.
+       较旧的应用程序可能会通过 <xref linkend="libpq-PQexec"/> 提交一个 <command>COPY</command>，并假定事务在 <xref linkend="libpq-PQendcopy"/> 之后即已完成。只有当 <command>COPY</command> 是命令字符串中唯一的 <acronym>SQL</acronym> 命令时，这种做法才能正确工作。
       </para>
      </listitem>
     </varlistentry>
