@@ -1237,7 +1237,7 @@ CREATE FUNCTION test(int, int) RETURNS int
   </sect1>
 
   <sect1 id="xfunc-volatility">
-   <title>Function Volatility Categories</title>
+   <title>函数易变性类别</title>
 
    <indexterm zone="xfunc-volatility">
     <primary>volatility</primary>
@@ -1254,68 +1254,43 @@ CREATE FUNCTION test(int, int) RETURNS int
    </indexterm>
 
    <para>
-    Every function has a <firstterm>volatility</firstterm> classification, with
-    the possibilities being <literal>VOLATILE</literal>, <literal>STABLE</literal>, or
-    <literal>IMMUTABLE</literal>.  <literal>VOLATILE</literal> is the default if the
-    <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link>
-    command does not specify a category.  The volatility category is a
-    promise to the optimizer about the behavior of the function:
+    每个函数都有一个<firstterm>易变性</firstterm>分类，可能的取值为 <literal>VOLATILE</literal>、<literal>STABLE</literal> 或 <literal>IMMUTABLE</literal>。如果 <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link> 命令没有指定类别，则默认为 <literal>VOLATILE</literal>。易变性类别是向优化器做出的关于函数行为的承诺：
 
    <itemizedlist>
     <listitem>
      <para>
-      A <literal>VOLATILE</literal> function can do anything, including modifying
-      the database.  It can return different results on successive calls with
-      the same arguments.  The optimizer makes no assumptions about the
-      behavior of such functions.  A query using a volatile function will
-      re-evaluate the function at every row where its value is needed.
+      <literal>VOLATILE</literal> 函数可以做任何事情，包括修改数据库。在相继的调用中即使参数相同，它也可能返回不同的结果。优化器不会对此类函数的行为做任何假设。使用易变函数的查询会在需要其值的每一行上重新计算该函数。
      </para>
     </listitem>
     <listitem>
      <para>
-      A <literal>STABLE</literal> function cannot modify the database and is
-      guaranteed to return the same results given the same arguments
-      for all rows within a single statement. This category allows the
-      optimizer to optimize multiple calls of the function to a single
-      call. In particular, it is safe to use an expression containing
-      such a function in an index scan condition. (Since an index scan
-      will evaluate the comparison value only once, not once at each
-      row, it is not valid to use a <literal>VOLATILE</literal> function in an
-      index scan condition.)
+      <literal>STABLE</literal> 函数不能修改数据库，并且保证在单条语句内的所有行上，给定相同参数时返回相同的结果。该类别允许优化器把对该函数的多次调用优化为一次调用。特别是，在索引扫描条件中使用包含此类函数的表达式是安全的。（由于索引扫描只会计算一次比较值，而不是在每一行上计算一次，因此在索引扫描条件中使用 <literal>VOLATILE</literal> 函数是无效的。）
      </para>
     </listitem>
     <listitem>
      <para>
-      An <literal>IMMUTABLE</literal> function cannot modify the database and is
-      guaranteed to return the same results given the same arguments forever.
-      This category allows the optimizer to pre-evaluate the function when
-      a query calls it with constant arguments.  For example, a query like
-      <literal>SELECT ... WHERE x = 2 + 2</literal> can be simplified on sight to
-      <literal>SELECT ... WHERE x = 4</literal>, because the function underlying
-      the integer addition operator is marked <literal>IMMUTABLE</literal>.
+      <literal>IMMUTABLE</literal> 函数不能修改数据库，并且保证永远在给定相同参数时返回相同的结果。该类别允许优化器在查询以常量参数调用该函数时预先计算该函数。例如，像 <literal>SELECT ... WHERE x = 2 + 2</literal> 这样的查询可以一看到就简化为 <literal>SELECT ... WHERE x = 4</literal>，因为整数加法运算符底层的函数被标记为 <literal>IMMUTABLE</literal>。
      </para>
     </listitem>
    </itemizedlist>
    </para>
 
    <para>
-    For best optimization results, you should label your functions with the
-    strictest volatility category that is valid for them.
+    为了获得最佳的优化结果，你应该为函数标注对其有效的、最严格的易变性类别。
    </para>
 
    <para>
-    Any function with side-effects <emphasis>must</emphasis> be labeled
-    <literal>VOLATILE</literal>, so that calls to it cannot be optimized away.
-    Even a function with no side-effects needs to be labeled
-    <literal>VOLATILE</literal> if its value can change within a single query;
-    some examples are <literal>random()</literal>, <literal>currval()</literal>,
-    <literal>timeofday()</literal>.
+    任何有副作用的函数<emphasis>必须</emphasis>被标记为
+    <literal>VOLATILE</literal>，这样对它的调用才不会被优化掉。
+    即使是没有副作用的函数，如果它的值在单条查询内可能发生变化，
+    也需要被标记为 <literal>VOLATILE</literal>；
+    一些例子是 <literal>random()</literal>、<literal>currval()</literal>、
+    <literal>timeofday()</literal>。
    </para>
 
    <para>
-    Another important example is that the <function>current_timestamp</function>
-    family of functions qualify as <literal>STABLE</literal>, since their values do
-    not change within a transaction.
+    另一个重要的例子是 <function>current_timestamp</function>
+    系列函数属于 <literal>STABLE</literal>，因为它们的值在事务内不会改变。
    </para>
 
    <para>
@@ -1333,64 +1308,42 @@ CREATE FUNCTION test(int, int) RETURNS int
    </para>
 
    <para>
-    For functions written in SQL or in any of the standard procedural
-    languages, there is a second important property determined by the
-    volatility category, namely the visibility of any data changes that have
-    been made by the SQL command that is calling the function.  A
-    <literal>VOLATILE</literal> function will see such changes, a <literal>STABLE</literal>
-    or <literal>IMMUTABLE</literal> function will not.  This behavior is implemented
-    using the snapshotting behavior of MVCC (see <xref linkend="mvcc"/>):
-    <literal>STABLE</literal> and <literal>IMMUTABLE</literal> functions use a snapshot
-    established as of the start of the calling query, whereas
-    <literal>VOLATILE</literal> functions obtain a fresh snapshot at the start of
-    each query they execute.
+    对于用 SQL 或任何标准过程语言编写的函数，还有第二个由易变性
+    类别决定的重要属性，即调用该函数的 SQL 命令所做的任何数据更改的
+    可见性。<literal>VOLATILE</literal> 函数能看到这类更改，而 <literal>STABLE</literal>
+    或 <literal>IMMUTABLE</literal> 函数则看不到。此行为是通过 MVCC 的快照行为实现的
+    （参见 <xref linkend="mvcc"/>）：
+    <literal>STABLE</literal> 和 <literal>IMMUTABLE</literal> 函数使用在调用查询开始时建立的快照，
+    而 <literal>VOLATILE</literal> 函数在它们执行的每条查询开始时获取一个新快照。
    </para>
 
    <note>
     <para>
-     Functions written in C can manage snapshots however they want, but it's
-     usually a good idea to make C functions work this way too.
+     用 C 编写的函数可以按自己的意愿管理快照，但通常让 C 函数也
+     以这种方式工作是个好主意。
     </para>
    </note>
 
    <para>
-    Because of this snapshotting behavior,
-    a function containing only <command>SELECT</command> commands can safely be
-    marked <literal>STABLE</literal>, even if it selects from tables that might be
-    undergoing modifications by concurrent queries.
-    <productname>PostgreSQL</productname> will execute all commands of a
-    <literal>STABLE</literal> function using the snapshot established for the
-    calling query, and so it will see a fixed view of the database throughout
-    that query.
+    由于这种快照行为，
+    一个只包含 <command>SELECT</command> 命令的函数可以安全地标记为
+    <literal>STABLE</literal>，即使它从可能正被并发查询修改的表中选择数据也是如此。
+    <productname>PostgreSQL</productname> 将使用为调用查询建立的快照来执行
+    <literal>STABLE</literal> 函数的所有命令，因此它在该查询的整个过程中将看到数据库的
+    固定视图。
    </para>
 
    <para>
-    The same snapshotting behavior is used for <command>SELECT</command> commands
-    within <literal>IMMUTABLE</literal> functions.  It is generally unwise to select
-    from database tables within an <literal>IMMUTABLE</literal> function at all,
-    since the immutability will be broken if the table contents ever change.
-    However, <productname>PostgreSQL</productname> does not enforce that you
-    do not do that.
+    相同的快照行为也用于 <literal>IMMUTABLE</literal> 函数中的 <command>SELECT</command> 命令。在 <literal>IMMUTABLE</literal> 函数中从数据库表进行查询通常是不明智的，因为一旦表内容发生变化，不可变性就会被破坏。不过，<productname>PostgreSQL</productname> 并不会强制禁止你这样做。
    </para>
 
    <para>
-    A common error is to label a function <literal>IMMUTABLE</literal> when its
-    results depend on a configuration parameter.  For example, a function
-    that manipulates timestamps might well have results that depend on the
-    <xref linkend="guc-timezone"/> setting.  For safety, such functions should
-    be labeled <literal>STABLE</literal> instead.
+    一个常见的错误是，当函数的结果依赖于某个配置参数时，却把该函数标记为 <literal>IMMUTABLE</literal>。例如，一个操作时间戳的函数，其结果很可能依赖于 <xref linkend="guc-timezone"/> 设置。为了安全起见，这类函数应改为标记为 <literal>STABLE</literal>。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> requires that <literal>STABLE</literal>
-     and <literal>IMMUTABLE</literal> functions contain no SQL commands other
-     than <command>SELECT</command> to prevent data modification.
-     (This is not a completely bulletproof test, since such functions could
-     still call <literal>VOLATILE</literal> functions that modify the database.
-     If you do that, you will find that the <literal>STABLE</literal> or
-     <literal>IMMUTABLE</literal> function does not notice the database changes
-     applied by the called function, since they are hidden from its snapshot.)
+     <productname>PostgreSQL</productname> 要求 <literal>STABLE</literal> 和 <literal>IMMUTABLE</literal> 函数中除 <command>SELECT</command> 之外不包含任何 SQL 命令，以防止数据修改。（这并不是一个完全可靠的检查，因为这类函数仍然可以调用会修改数据库的 <literal>VOLATILE</literal> 函数。如果你这样做，你会发现 <literal>STABLE</literal> 或 <literal>IMMUTABLE</literal> 函数不会察觉到被调用函数所施加的数据库更改，因为这些更改对其快照是不可见的。）
     </para>
    </note>
   </sect1>
