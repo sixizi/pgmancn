@@ -65,155 +65,131 @@
   </sect1>
 
   <sect1 id="geqo-pg-intro">
-   <title>Genetic Query Optimization (<acronym>GEQO</acronym>) in PostgreSQL</title>
+   <title>PostgreSQL 中的遗传查询优化（<acronym>GEQO</acronym>）</title>
 
    <para>
-    The <acronym>GEQO</acronym> module approaches the query
-    optimization problem as though it were the well-known traveling salesman
-    problem (<acronym>TSP</acronym>).
-    Possible query plans are encoded as integer strings. Each string
-    represents the join order from one relation of the query to the next.
-    For example, the join tree
+    <acronym>GEQO</acronym> 模块将查询优化问题视为著名的旅行商问题（<acronym>TSP</acronym>）。
+    可能的查询计划被编码为整数字符串。每个字符串
+    表示从查询的一个关系到下一个关系的连接顺序。
+    例如，连接树
 <literallayout class="monospaced">
    /\
   /\ 2
  /\ 3
 4  1
 </literallayout>
-    is encoded by the integer string '4-1-3-2',
-    which means, first join relation '4' and '1', then '3', and
-    then '2', where 1, 2, 3, 4 are relation IDs within the
-    <productname>PostgreSQL</productname> optimizer.
+    被编码为整数字符串 '4-1-3-2'，
+    这意味着首先连接关系 '4' 和 '1'，然后连接 '3'，再
+    连接 '2'，其中 1、2、3、4 是 <productname>PostgreSQL</productname> 优化器中的关系 ID。
    </para>
 
    <para>
-    Specific characteristics of the <acronym>GEQO</acronym>
-    implementation in <productname>PostgreSQL</productname>
-    are:
+    <productname>PostgreSQL</productname> 中 <acronym>GEQO</acronym> 实现的具体特点
+    如下：
 
     <itemizedlist spacing="compact" mark="bullet">
      <listitem>
       <para>
-       Usage of a <firstterm>steady state</firstterm> <acronym>GA</acronym> (replacement of the least fit
-       individuals in a population, not whole-generational replacement)
-       allows fast convergence towards improved query plans. This is
-       essential for query handling with reasonable time;
+       使用<firstterm>稳态</firstterm><acronym>GA</acronym>（替换种群中最不适应的
+       个体，而非整代替换）
+       可以快速收敛到改进的查询计划。这对于
+       在合理时间内处理查询至关重要；
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Usage of <firstterm>edge recombination crossover</firstterm>
-       which is especially suited to keep edge losses low for the
-       solution of the <acronym>TSP</acronym> by means of a
-       <acronym>GA</acronym>;
+       使用<firstterm>边缘重组交叉</firstterm>，
+       它特别适合在借助 <acronym>GA</acronym> 求解 <acronym>TSP</acronym> 时
+       保持较低的边缘损失；
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Mutation as genetic operator is deprecated so that no repair
-       mechanisms are needed to generate legal <acronym>TSP</acronym> tours.
+       变异作为遗传算子已被弃用，因此无需修复
+       机制即可生成合法的 <acronym>TSP</acronym> 巡回路径。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    Parts of the <acronym>GEQO</acronym> module are adapted from D. Whitley's
-    Genitor algorithm.
+    <acronym>GEQO</acronym> 模块的部分内容改编自 D. Whitley 的
+    Genitor 算法。
    </para>
 
    <para>
-    The <acronym>GEQO</acronym> module allows
-    the <productname>PostgreSQL</productname> query optimizer to
-    support large join queries effectively through
-    non-exhaustive search.
+    <acronym>GEQO</acronym> 模块允许
+    <productname>PostgreSQL</productname> 查询优化器通过
+    非穷举搜索有效地支持大型连接查询。
    </para>
 
   <sect2 id="geqo-pg-intro-gen-possible-plans">
-   <title>Generating Possible Plans with <acronym>GEQO</acronym></title>
+   <title>使用 <acronym>GEQO</acronym> 生成可能的计划</title>
 
    <para>
-    The <acronym>GEQO</acronym> planning process uses the standard planner
-    code to generate plans for scans of individual relations.  Then join
-    plans are developed using the genetic approach.  As shown above, each
-    candidate join plan is represented by a sequence in which to join
-    the base relations.  In the initial stage, the <acronym>GEQO</acronym>
-    code simply generates some possible join sequences at random.  For each
-    join sequence considered, the standard planner code is invoked to
-    estimate the cost of performing the query using that join sequence.
-    (For each step of the join sequence, all three possible join strategies
-    are considered; and all the initially-determined relation scan plans
-    are available.  The estimated cost is the cheapest of these
-    possibilities.)  Join sequences with lower estimated cost are considered
-    <quote>more fit</quote> than those with higher cost.  The genetic algorithm
-    discards the least fit candidates.  Then new candidates are generated
-    by combining genes of more-fit candidates &mdash; that is, by using
-    randomly-chosen portions of known low-cost join sequences to create
-    new sequences for consideration.  This process is repeated until a
-    preset number of join sequences have been considered; then the best
-    one found at any time during the search is used to generate the finished
-    plan.
+    <acronym>GEQO</acronym> 规划过程使用标准规划器
+    代码为单个关系的扫描生成计划。然后使用遗传方法
+    开发连接计划。如上所示，每个候选连接计划
+    由连接基本关系的序列表示。在初始阶段，<acronym>GEQO</acronym>
+    代码只是随机生成一些可能的连接序列。对于所考虑的每个
+    连接序列，都会调用标准规划器代码来
+    估算使用该连接序列执行查询的代价。
+    （对于连接序列的每一步，都会考虑所有三种可能的连接策略；
+    并且所有最初确定的关系扫描计划都可用。
+    估算代价是这些可能性中最低的。）估算代价较低的连接序列
+    被认为比代价较高的连接序列<quote>更适应</quote>。遗传算法
+    会丢弃最不适应的候选者。然后通过组合更适应候选者的基因
+    来生成新的候选者 &mdash; 也就是说，使用
+    已知低成本连接序列中随机选取的部分来创建
+    供考虑的新序列。此过程会重复进行，直到考虑了
+    预设数量的连接序列；然后使用搜索过程中任意时刻找到的最佳序列
+    来生成最终计划。
    </para>
 
    <para>
-    This process is inherently nondeterministic, because of the randomized
-    choices made during both the initial population selection and subsequent
-    <quote>mutation</quote> of the best candidates.  To avoid surprising changes
-    of the selected plan, each run of the GEQO algorithm restarts its
-    random number generator with the current <xref linkend="guc-geqo-seed"/>
-    parameter setting.  As long as <varname>geqo_seed</varname> and the other
-    GEQO parameters are kept fixed, the same plan will be generated for a
-    given query (and other planner inputs such as statistics).  To experiment
-    with different search paths, try changing <varname>geqo_seed</varname>.
+    此过程本质上是不确定的，因为在初始种群选择
+    以及随后对最佳候选者的<quote>变异</quote>过程中
+    都做出了随机选择。为避免所选计划发生令人意外的
+    变化，GEQO 算法的每次运行都会使用当前的 <xref linkend="guc-geqo-seed"/>
+    参数设置重新启动其随机数生成器。只要 <varname>geqo_seed</varname> 和其他
+    GEQO 参数保持不变，对于给定的查询（以及其他规划器输入，例如统计信息），
+    就会生成相同的计划。要试验不同的搜索路径，请尝试更改 <varname>geqo_seed</varname>。
    </para>
 
   </sect2>
 
   <sect2 id="geqo-future">
-   <title>Future Implementation Tasks for
-    <productname>PostgreSQL</productname> <acronym>GEQO</acronym></title>
+   <title><productname>PostgreSQL</productname> <acronym>GEQO</acronym> 的未来实现任务</title>
 
      <para>
-      Work is still needed to improve the genetic algorithm parameter
-      settings.
-      In file <filename>src/backend/optimizer/geqo/geqo_main.c</filename>,
-      routines
-      <function>gimme_pool_size</function> and <function>gimme_number_generations</function>,
-      we have to find a compromise for the parameter settings
-      to satisfy two competing demands:
+      仍需要改进遗传算法的参数设置。
+      在文件 <filename>src/backend/optimizer/geqo/geqo_main.c</filename> 中，
+      例程
+      <function>gimme_pool_size</function> 和 <function>gimme_number_generations</function>，
+      我们必须为参数设置找到一个折中方案，
+      以满足两个相互竞争的需求：
       <itemizedlist spacing="compact">
        <listitem>
         <para>
-         Optimality of the query plan
+         查询计划的最优性
         </para>
        </listitem>
        <listitem>
         <para>
-         Computing time
+         计算时间
         </para>
        </listitem>
       </itemizedlist>
      </para>
 
      <para>
-      In the current implementation, the fitness of each candidate join
-      sequence is estimated by running the standard planner's join selection
-      and cost estimation code from scratch.  To the extent that different
-      candidates use similar sub-sequences of joins, a great deal of work
-      will be repeated.  This could be made significantly faster by retaining
-      cost estimates for sub-joins.  The problem is to avoid expending
-      unreasonable amounts of memory on retaining that state.
+      在当前实现中，每个候选连接序列的适应度是通过从头运行标准规划器的连接选择和代价估算代码来估计的。由于不同候选会使用相似的连接子序列，因此大量工作会被重复执行。通过保留子连接的代价估算值，可以显著加快这一过程。问题在于要避免为保留这些状态而消耗不合理的内存量。
      </para>
 
      <para>
-      At a more basic level, it is not clear that solving query optimization
-      with a GA algorithm designed for TSP is appropriate.  In the TSP case,
-      the cost associated with any substring (partial tour) is independent
-      of the rest of the tour, but this is certainly not true for query
-      optimization.  Thus it is questionable whether edge recombination
-      crossover is the most effective mutation procedure.
+      在更基础的层面上，用为 TSP 设计的 GA 算法来解决查询优化是否合适并不明确。在 TSP 的情况下，任何子串（部分路径）相关的代价都独立于路径的其余部分，但对于查询优化而言这显然不成立。因此，边重组交叉是否是最有效的变异过程值得怀疑。
      </para>
 
    </sect2>
