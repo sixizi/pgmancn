@@ -4755,7 +4755,7 @@ UPDATE mytable SET x = x + 1 WHERE id = 42;
 
  <!-- keep this not-too-apropos sect1 ID for stability of doc URLs -->
  <sect1 id="libpq-single-row-mode">
-  <title>Retrieving Query Results in Chunks</title>
+  <title>分块获取查询结果</title>
 
   <indexterm zone="libpq-single-row-mode">
    <primary>libpq</primary>
@@ -4768,49 +4768,38 @@ UPDATE mytable SET x = x + 1 WHERE id = 42;
   </indexterm>
 
   <para>
-   Ordinarily, <application>libpq</application> collects an SQL command's
-   entire result and returns it to the application as a single
-   <structname>PGresult</structname>.  This can be unworkable for commands
-   that return a large number of rows.  For such cases, applications can use
-   <xref linkend="libpq-PQsendQuery"/> and <xref linkend="libpq-PQgetResult"/> in
-   <firstterm>single-row mode</firstterm> or <firstterm>chunked
-   mode</firstterm>.  In these modes, result row(s) are returned to the
-   application as they are received from the server, one at a time for
-   single-row mode or in groups for chunked mode.
+   通常，<application>libpq</application> 会收集 SQL 命令的整个结果，并将其作为单个
+   <structname>PGresult</structname> 返回给应用。对于返回大量行的命令，这可能行不通。
+   对于这种情况，应用可以在<firstterm>单行模式</firstterm>或<firstterm>分块
+   模式</firstterm>下使用 <xref linkend="libpq-PQsendQuery"/> 和 <xref linkend="libpq-PQgetResult"/>。
+   在这些模式下，结果行在从服务器接收到时即返回给应用，
+   单行模式下一次一行，分块模式下则成组返回。
   </para>
 
   <para>
-   To enter one of these modes, call <xref linkend="libpq-PQsetSingleRowMode"/>
-    or <xref linkend="libpq-PQsetChunkedRowsMode"/>
-   immediately after a successful call of <xref linkend="libpq-PQsendQuery"/>
-   (or a sibling function).  This mode selection is effective only for the
-   currently executing query.  Then call <xref linkend="libpq-PQgetResult"/>
-   repeatedly, until it returns null, as documented in <xref
-   linkend="libpq-async"/>.  If the query returns any rows, they are returned
-   as one or more <structname>PGresult</structname> objects, which look like
-   normal query results except for having status code
-   <literal>PGRES_SINGLE_TUPLE</literal> for single-row mode or
-   <literal>PGRES_TUPLES_CHUNK</literal> for chunked mode, instead of
-   <literal>PGRES_TUPLES_OK</literal>.  There is exactly one result row in
-   each <literal>PGRES_SINGLE_TUPLE</literal> object, while
-   a <literal>PGRES_TUPLES_CHUNK</literal> object contains at least one
-   row but not more than the specified number of rows per chunk.
-   After the last row, or immediately if
-   the query returns zero rows, a zero-row object with status
-   <literal>PGRES_TUPLES_OK</literal> is returned; this is the signal that no
-   more rows will arrive.  (But note that it is still necessary to continue
-   calling <xref linkend="libpq-PQgetResult"/> until it returns null.)  All of
-   these <structname>PGresult</structname> objects will contain the same row
-   description data (column names, types, etc.) that an ordinary
-   <structname>PGresult</structname> object for the query would have.
-   Each object should be freed with <xref linkend="libpq-PQclear"/> as usual.
+   要进入其中一种模式，请在成功调用 <xref linkend="libpq-PQsendQuery"/>
+   （或同类函数）之后立即调用 <xref linkend="libpq-PQsetSingleRowMode"/>
+   或 <xref linkend="libpq-PQsetChunkedRowsMode"/>。该模式选择仅对
+   当前正在执行的查询有效。然后反复调用 <xref linkend="libpq-PQgetResult"/>，
+   直到它返回 null，如 <xref
+   linkend="libpq-async"/> 中所述。如果查询返回任何行，它们会作为一个或多个
+   <structname>PGresult</structname> 对象返回，这些对象看起来与普通查询结果一样，只是状态码为
+   <literal>PGRES_SINGLE_TUPLE</literal>（单行模式）或
+   <literal>PGRES_TUPLES_CHUNK</literal>（分块模式），而不是
+   <literal>PGRES_TUPLES_OK</literal>。每个 <literal>PGRES_SINGLE_TUPLE</literal> 对象中恰好有一行结果，
+   而一个 <literal>PGRES_TUPLES_CHUNK</literal> 对象至少包含一行，但不超过每个分块指定的行数。
+   在最后一行之后，或者如果查询返回零行则立即，会返回一个状态为
+   <literal>PGRES_TUPLES_OK</literal> 的零行对象；这是不会再有行到达的信号。
+   （但请注意，仍然需要继续调用 <xref linkend="libpq-PQgetResult"/>，直到它返回 null。）
+   所有这些 <structname>PGresult</structname> 对象都将包含该查询的普通
+   <structname>PGresult</structname> 对象所具有的相同行描述数据（列名、类型等）。
+   每个对象都应像往常一样用 <xref linkend="libpq-PQclear"/> 释放。
   </para>
 
   <para>
-   When using pipeline mode, single-row or chunked mode needs to be
-   activated for each query in the pipeline before retrieving results for
-   that query with <function>PQgetResult</function>.
-   See <xref linkend="libpq-pipeline-mode"/> for more information.
+   使用管道模式时，需要在用 <function>PQgetResult</function> 获取该查询的结果之前，
+   为管道中的每个查询激活单行模式或分块模式。
+   更多信息请参见 <xref linkend="libpq-pipeline-mode"/>。
   </para>
 
   <para>
@@ -4820,7 +4809,7 @@ UPDATE mytable SET x = x + 1 WHERE id = 42;
 
      <listitem>
       <para>
-       Select single-row mode for the currently-executing query.
+       为当前正在执行的查询选择单行模式。
 
 <synopsis>
 int PQsetSingleRowMode(PGconn *conn);
@@ -4828,15 +4817,13 @@ int PQsetSingleRowMode(PGconn *conn);
       </para>
 
       <para>
-       This function can only be called immediately after
-       <xref linkend="libpq-PQsendQuery"/> or one of its sibling functions,
-       before any other operation on the connection such as
-       <xref linkend="libpq-PQconsumeInput"/> or
-       <xref linkend="libpq-PQgetResult"/>.  If called at the correct time,
-       the function activates single-row mode for the current query and
-       returns 1.  Otherwise the mode stays unchanged and the function
-       returns 0.  In any case, the mode reverts to normal after
-       completion of the current query.
+       该函数只能在紧接
+       <xref linkend="libpq-PQsendQuery"/> 或其同级函数之一之后调用，
+       且必须在对该连接执行任何其他操作（例如
+       <xref linkend="libpq-PQconsumeInput"/> 或
+       <xref linkend="libpq-PQgetResult"/>）之前调用。如果在正确的时机调用，
+       该函数会为当前查询激活单行模式并返回 1。否则模式保持不变，函数
+       返回 0。无论哪种情况，当前查询完成后模式都会恢复为正常模式。
       </para>
      </listitem>
     </varlistentry>
@@ -4846,7 +4833,7 @@ int PQsetSingleRowMode(PGconn *conn);
 
      <listitem>
       <para>
-       Select chunked mode for the currently-executing query.
+       为当前正在执行的查询选择分块模式。
 
 <synopsis>
 int PQsetChunkedRowsMode(PGconn *conn, int chunkSize);
@@ -4854,19 +4841,17 @@ int PQsetChunkedRowsMode(PGconn *conn, int chunkSize);
       </para>
 
       <para>
-       This function is similar to
-       <xref linkend="libpq-PQsetSingleRowMode"/>, except that it
-       specifies retrieval of up to <replaceable>chunkSize</replaceable> rows
-       per <structname>PGresult</structname>, not necessarily just one row.
-       This function can only be called immediately after
-       <xref linkend="libpq-PQsendQuery"/> or one of its sibling functions,
-       before any other operation on the connection such as
-       <xref linkend="libpq-PQconsumeInput"/> or
-       <xref linkend="libpq-PQgetResult"/>.  If called at the correct time,
-       the function activates chunked mode for the current query and
-       returns 1.  Otherwise the mode stays unchanged and the function
-       returns 0.  In any case, the mode reverts to normal after
-       completion of the current query.
+       该函数与
+       <xref linkend="libpq-PQsetSingleRowMode"/> 类似，区别在于它
+       指定每次 <structname>PGresult</structname> 最多取回 <replaceable>chunkSize</replaceable> 行，
+       而不一定只取一行。
+       该函数只能在紧接
+       <xref linkend="libpq-PQsendQuery"/> 或其同级函数之一之后调用，
+       且必须在对该连接执行任何其他操作（例如
+       <xref linkend="libpq-PQconsumeInput"/> 或
+       <xref linkend="libpq-PQgetResult"/>）之前调用。如果在正确的时机调用，
+       该函数会为当前查询激活分块模式并返回 1。否则模式保持不变，函数
+       返回 0。无论哪种情况，当前查询完成后模式都会恢复为正常模式。
       </para>
      </listitem>
     </varlistentry>
@@ -4875,17 +4860,16 @@ int PQsetChunkedRowsMode(PGconn *conn, int chunkSize);
 
   <caution>
    <para>
-    While processing a query, the server may return some rows and then
-    encounter an error, causing the query to be aborted.  Ordinarily,
-    <application>libpq</application> discards any such rows and reports only the
-    error.  But in single-row or chunked mode, some rows may have already
-    been returned to the application. Hence, the application will see some
-    <literal>PGRES_SINGLE_TUPLE</literal> or <literal>PGRES_TUPLES_CHUNK</literal>
+    在处理查询时，服务器可能返回一些行，然后
+    遇到错误，导致查询被中止。通常情况下，
+    <application>libpq</application> 会丢弃任何此类行，只报告
+    错误。但在单行模式或分块模式下，某些行可能已经
+    返回给应用。因此，应用将看到一些
+    <literal>PGRES_SINGLE_TUPLE</literal> 或 <literal>PGRES_TUPLES_CHUNK</literal>
     <structname>PGresult</structname>
-    objects followed by a <literal>PGRES_FATAL_ERROR</literal> object.  For
-    proper transactional behavior, the application must be designed to
-    discard or undo whatever has been done with the previously-processed
-    rows, if the query ultimately fails.
+    对象，随后是一个 <literal>PGRES_FATAL_ERROR</literal> 对象。为了
+    获得正确的事务行为，如果查询最终失败，应用必须设计为
+    丢弃或撤销此前已处理的行所造成的一切影响。
    </para>
   </caution>
 
