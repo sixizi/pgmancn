@@ -1,98 +1,70 @@
 <!-- doc/src/sgml/logical-replication.sgml -->
 
 <chapter id="logical-replication">
- <title>Logical Replication</title>
+ <title>逻辑复制</title>
 
  <para>
-  Logical replication is a method of replicating data objects and their
-  changes, based upon their replication identity (usually a primary key).  We
-  use the term logical in contrast to physical replication, which uses exact
-  block addresses and byte-by-byte replication.  PostgreSQL supports both
-  mechanisms concurrently, see <xref linkend="high-availability"/>.  Logical
-  replication allows fine-grained control over both data replication and
-  security.
+  逻辑复制是一种基于复制标识（通常是主键）来复制数据对象及其变化的方法。我们使用“逻辑”一词，以区别于使用精确块地址和逐字节复制的物理复制。PostgreSQL 同时支持这两种机制，参见 <xref linkend="high-availability"/>。逻辑复制允许对数据复制和安全性进行细粒度控制。
  </para>
 
  <para>
-  Logical replication uses a <firstterm>publish</firstterm>
-  and <firstterm>subscribe</firstterm> model with one or
-  more <firstterm>subscribers</firstterm> subscribing to one or more
-  <firstterm>publications</firstterm> on a <firstterm>publisher</firstterm>
-  node.  Subscribers pull data from the publications they subscribe to and may
-  subsequently re-publish data to allow cascading replication or more complex
-  configurations.
+  逻辑复制采用<firstterm>发布</firstterm>和<firstterm>订阅</firstterm>模型，由一个或多个<firstterm>订阅者</firstterm>订阅<firstterm>发布者</firstterm>节点上的一个或多个<firstterm>发布</firstterm>。订阅者从它们所订阅的发布拉取数据，随后可以重新发布数据，以实现级联复制或更复杂的配置。
  </para>
 
  <para>
-  When logical replication of a table typically starts, PostgreSQL takes
-  a snapshot of the table's data on the publisher database and copies it
-  to the subscriber.  Once complete, changes on the publisher since the
-  initial copy are sent continually to the subscriber.  The subscriber
-  applies the data in the same
-  order as the publisher so that transactional consistency is guaranteed for
-  publications within a single subscription.  This method of data replication
-  is sometimes referred to as transactional replication.
+  当表的逻辑复制通常开始时，PostgreSQL 会在发布者数据库上获取该表数据的快照，并将其复制到订阅者。一旦完成，自初始复制以来发布者上的更改会持续发送给订阅者。订阅者按照与发布者相同的顺序应用数据，从而保证单个订阅内各发布的事务一致性。这种数据复制方法有时被称为事务复制。
  </para>
 
  <para>
-  The typical use-cases for logical replication are:
+  逻辑复制的典型用例包括：
 
   <itemizedlist>
    <listitem>
     <para>
-     Sending incremental changes in a single database or a subset of a
-     database to subscribers as they occur.
+     在单个数据库或数据库的一个子集中，将增量更改在发生时发送给订阅者。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Firing triggers for individual changes as they arrive on the
-     subscriber.
+     在订阅端接收到各个更改时触发触发器。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Consolidating multiple databases into a single one (for example for
-     analytical purposes).
+     将多个数据库合并为单个数据库（例如用于分析目的）。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Replicating between different major versions of PostgreSQL.
+     在不同主版本的 PostgreSQL 之间进行复制。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Replicating between PostgreSQL instances on different platforms (for
-     example Linux to Windows).
+     在不同平台上的 PostgreSQL 实例之间进行复制（例如从 Linux 到 Windows）。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Giving access to replicated data to different groups of users.
+     向不同用户组授予对复制数据的访问权限。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Sharing a subset of the database between multiple databases.
+     在多个数据库之间共享数据库的一个子集。
     </para>
    </listitem>
   </itemizedlist>
  </para>
 
  <para>
-  The subscriber database behaves in the same way as any other PostgreSQL
-  instance and can be used as a publisher for other databases by defining its
-  own publications.  When the subscriber is treated as read-only by an
-  application, there will be no conflicts from a single subscription.  On the
-  other hand, if there are other writes done either by an application or by other
-  subscribers to the same set of tables, conflicts can arise.
+  订阅方数据库的行为与任何其他 PostgreSQL 实例相同，并且可以通过定义自己的发布来用作其他数据库的发布方。当应用程序将订阅方视为只读时，单个订阅不会产生冲突。另一方面，如果应用程序或其他订阅方对同一组表进行了其他写入，则可能产生冲突。
  </para>
 
  <sect1 id="logical-replication-publication">
