@@ -259,72 +259,48 @@
   </sect1>
 
   <sect1 id="trigger-datachanges">
-   <title>Visibility of Data Changes</title>
+   <title>数据更改的可见性</title>
 
    <para>
-    If you execute SQL commands in your trigger function, and these
-    commands access the table that the trigger is for, then
-    you need to be aware of the data visibility rules, because they determine
-    whether these SQL commands will see the data change that the trigger
-    is fired for.  Briefly:
+    如果你在触发器函数中执行 SQL 命令，并且这些命令访问该触发器所针对的表，那么你需要了解数据可见性规则，因为这些规则决定了这些 SQL 命令是否能看到触发该触发器的数据更改。简要来说：
 
     <itemizedlist>
 
      <listitem>
       <para>
-       Statement-level triggers follow simple visibility rules: none of
-       the changes made by a statement are visible to statement-level
-       <literal>BEFORE</literal> triggers, whereas all
-       modifications are visible to statement-level <literal>AFTER</literal>
-       triggers.
+       语句级触发器遵循简单的可见性规则：语句所做的任何更改对语句级 <literal>BEFORE</literal> 触发器都不可见，而所有修改对语句级 <literal>AFTER</literal> 触发器都可见。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The data change (insertion, update, or deletion) causing the
-       trigger to fire is naturally <emphasis>not</emphasis> visible
-       to SQL commands executed in a row-level <literal>BEFORE</literal> trigger,
-       because it hasn't happened yet.
+       导致触发器被触发的数据更改（插入、更新或删除）自然<emphasis>不会</emphasis>对在行级 <literal>BEFORE</literal> 触发器中执行的 SQL 命令可见，因为该更改尚未发生。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       However, SQL commands executed in a row-level <literal>BEFORE</literal>
-       trigger <emphasis>will</emphasis> see the effects of data
-       changes for rows previously processed in the same outer
-       command.  This requires caution, since the ordering of these
-       change events is not in general predictable; an SQL command that
-       affects multiple rows can visit the rows in any order.
+       然而，在行级 <literal>BEFORE</literal> 触发器中执行的 SQL 命令<emphasis>会</emphasis>看到同一外层命令中先前已处理行的数据更改效果。这需要谨慎对待，因为这些更改事件的顺序通常是不可预测的；一条影响多行的 SQL 命令可以以任意顺序访问这些行。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Similarly, a row-level <literal>INSTEAD OF</literal> trigger will see the
-       effects of data changes made by previous firings of <literal>INSTEAD
-       OF</literal> triggers in the same outer command.
+       类似地，行级 <literal>INSTEAD OF</literal> 触发器会看到同一外层命令中先前触发的 <literal>INSTEAD
+       OF</literal> 触发器所做数据更改的效果。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When a row-level <literal>AFTER</literal> trigger is fired, all data
-       changes made
-       by the outer command are already complete, and are visible to
-       the invoked trigger function.
+       当行级 <literal>AFTER</literal> 触发器被触发时，外层命令所做的所有数据更改都已经完成，并且对调用的触发器函数可见。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    If your trigger function is written in any of the standard procedural
-    languages, then the above statements apply only if the function is
-    declared <literal>VOLATILE</literal>.  Functions that are declared
-    <literal>STABLE</literal> or <literal>IMMUTABLE</literal> will not see changes made by
-    the calling command in any case.
+    如果触发器函数是用任何标准过程语言编写的，那么上述说法仅在函数被声明为 <literal>VOLATILE</literal> 时才适用。声明为 <literal>STABLE</literal> 或 <literal>IMMUTABLE</literal> 的函数在任何情况下都不会看到调用命令所做的更改。
    </para>
 
    <para>
