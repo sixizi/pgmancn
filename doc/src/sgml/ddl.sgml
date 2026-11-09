@@ -1400,7 +1400,7 @@ ALTER TABLE products RENAME TO items;
  </sect1>
 
  <sect1 id="ddl-priv">
-  <title>Privileges</title>
+  <title>权限</title>
 
   <indexterm zone="ddl-priv">
    <primary>privilege</primary>
@@ -1433,92 +1433,50 @@ ALTER TABLE products RENAME TO items;
   </indexterm>
 
   <para>
-   When an object is created, it is assigned an owner. The
-   owner is normally the role that executed the creation statement.
-   For most kinds of objects, the initial state is that only the owner
-   (or a superuser) can do anything with the object. To allow
-   other roles to use it, <firstterm>privileges</firstterm> must be
-   granted.
+   当创建一个对象时，它会被分配一个所有者。所有者通常是执行创建语句的角色。对于大多数类型的对象，初始状态是只有所有者（或超级用户）才能对该对象执行任何操作。要允许其他角色使用它，必须授予<firstterm>权限</firstterm>。
   </para>
 
   <para>
-   There are different kinds of privileges: <literal>SELECT</literal>,
-   <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>,
-   <literal>TRUNCATE</literal>, <literal>REFERENCES</literal>, <literal>TRIGGER</literal>,
-   <literal>CREATE</literal>, <literal>CONNECT</literal>, <literal>TEMPORARY</literal>,
-   <literal>EXECUTE</literal>, <literal>USAGE</literal>, <literal>SET</literal>,
-   <literal>ALTER SYSTEM</literal>, and <literal>MAINTAIN</literal>.
-   The privileges applicable to a particular
-   object vary depending on the object's type (table, function, etc.).
-   More detail about the meanings of these privileges appears below.
-   The following sections and chapters will also show you how
-   these privileges are used.
+   权限有多种类型：<literal>SELECT</literal>、<literal>INSERT</literal>、<literal>UPDATE</literal>、<literal>DELETE</literal>、<literal>TRUNCATE</literal>、<literal>REFERENCES</literal>、<literal>TRIGGER</literal>、<literal>CREATE</literal>、<literal>CONNECT</literal>、<literal>TEMPORARY</literal>、<literal>EXECUTE</literal>、<literal>USAGE</literal>、<literal>SET</literal>、<literal>ALTER SYSTEM</literal> 和 <literal>MAINTAIN</literal>。适用于特定对象的权限因对象类型（表、函数等）而异。关于这些权限含义的更多细节见下文。后续的章节也会向你展示这些权限是如何使用的。
   </para>
 
   <para>
-   The right to modify or destroy an object is inherent in being the
-   object's owner, and cannot be granted or revoked in itself.
-   (However, like all privileges, that right can be inherited by
-   members of the owning role; see <xref linkend="role-membership"/>.)
+   修改或销毁对象的权利是作为对象所有者所固有的，并且本身不能被授予或撤销。（但是，像所有权限一样，该权利可以被拥有该角色的成员继承；参见 <xref linkend="role-membership"/>。）
   </para>
 
   <para>
-   An object can be assigned to a new owner with an <command>ALTER</command>
-   command of the appropriate kind for the object, for example
+   可以使用适用于该对象的相应类型的 <command>ALTER</command> 命令将对象分配给新的所有者，例如
 <programlisting>
 ALTER TABLE <replaceable>table_name</replaceable> OWNER TO <replaceable>new_owner</replaceable>;
 </programlisting>
-   Superusers can always do this; ordinary roles can only do it if they are
-   both the current owner of the object (or inherit the privileges of the
-   owning role) and able to <literal>SET ROLE</literal> to the new owning role.
-   All object privileges of the old owner are transferred to the new owner
-   along with the ownership.
+   超级用户始终可以这样做；普通角色只有在同时是对象的当前所有者（或继承拥有该对象的角色的权限）并且能够 <literal>SET ROLE</literal> 到新的拥有角色时才能这样做。旧所有者的所有对象权限会连同所有权一起转移给新所有者。
   </para>
 
   <para>
-   To assign privileges, the <xref linkend="sql-grant"/> command is
-   used. For example, if <literal>joe</literal> is an existing role, and
-   <literal>accounts</literal> is an existing table, the privilege to
-   update the table can be granted with:
+   要分配权限，需使用 <xref linkend="sql-grant"/> 命令。例如，如果 <literal>joe</literal> 是一个已存在的角色，而 <literal>accounts</literal> 是一个已存在的表，则可以使用以下命令授予更新该表的权限：
 <programlisting>
 GRANT UPDATE ON accounts TO joe;
 </programlisting>
-   Writing <literal>ALL</literal> in place of a specific privilege grants all
-   privileges that are relevant for the object type.
+   在特定权限的位置写上 <literal>ALL</literal> 会授予与该对象类型相关的所有权限。
   </para>
 
   <para>
-   The special <quote>role</quote> name <literal>PUBLIC</literal> can
-   be used to grant a privilege to every role on the system.  Also,
-   <quote>group</quote> roles can be set up to help manage privileges when
-   there are many users of a database &mdash; for details see
-   <xref linkend="user-manag"/>.
+   特殊的<quote>角色</quote>名称 <literal>PUBLIC</literal> 可用于把权限授予系统中的每一个角色。此外，当数据库有许多用户时，可以建立<quote>组</quote>角色来帮助管理权限 &mdash; 详情请见 <xref linkend="user-manag"/>。
   </para>
 
   <para>
-   To revoke a previously-granted privilege, use the fittingly named
-   <xref linkend="sql-revoke"/> command:
+   要撤销先前授予的权限，请使用名称恰如其分的 <xref linkend="sql-revoke"/> 命令：
 <programlisting>
 REVOKE ALL ON accounts FROM PUBLIC;
 </programlisting>
   </para>
 
   <para>
-   Ordinarily, only the object's owner (or a superuser) can grant or
-   revoke privileges on an object.  However, it is possible to grant a
-   privilege <quote>with grant option</quote>, which gives the recipient
-   the right to grant it in turn to others.  If the grant option is
-   subsequently revoked then all who received the privilege from that
-   recipient (directly or through a chain of grants) will lose the
-   privilege.  For details see the <xref linkend="sql-grant"/> and
-   <xref linkend="sql-revoke"/> reference pages.
+   通常，只有对象的所有者（或超级用户）才能授予或撤销对象上的权限。不过，可以授予权限时带上<quote>授予选项</quote>，这会让接受者有权将该权限再授予他人。如果随后撤销了该授予选项，那么从该接受者处（直接或通过一连串授予）获得该权限的所有人都会失去该权限。详情请参阅 <xref linkend="sql-grant"/> 和 <xref linkend="sql-revoke"/> 参考页。
   </para>
 
   <para>
-   An object's owner can choose to revoke their own ordinary privileges,
-   for example to make a table read-only for themselves as well as others.
-   But owners are always treated as holding all grant options, so they
-   can always re-grant their own privileges.
+   对象的所有者可以选择撤销自己的普通权限，例如让自己和其他人一样只能对表进行只读访问。但所有者始终被视为持有所有授予选项，因此他们总能重新授予自己的权限。
   </para>
 
   <para>
@@ -1529,16 +1487,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>SELECT</literal></term>
      <listitem>
       <para>
-       Allows <command>SELECT</command> from
-       any column, or specific column(s), of a table, view, materialized
-       view, or other table-like object.
-       Also allows use of <command>COPY TO</command>.
-       This privilege is also needed to reference existing column values in
-       <command>UPDATE</command>, <command>DELETE</command>,
-       or <command>MERGE</command>.
-       For sequences, this privilege also allows use of the
-       <function>currval</function> function.
-       For large objects, this privilege allows the object to be read.
+       允许从表、视图、物化视图或其他类表对象的任意列或特定列进行 <command>SELECT</command>。还允许使用 <command>COPY TO</command>。在 <command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command> 中引用现有列值时也需要此权限。对于序列，此权限还允许使用 <function>currval</function> 函数。对于大对象，此权限允许读取该对象。
       </para>
      </listitem>
     </varlistentry>
@@ -1547,11 +1496,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>INSERT</literal></term>
      <listitem>
       <para>
-       Allows <command>INSERT</command> of a new row into a table, view,
-       etc.  Can be granted on specific column(s), in which case
-       only those columns may be assigned to in the <command>INSERT</command>
-       command (other columns will therefore receive default values).
-       Also allows use of <command>COPY FROM</command>.
+       允许向表、视图等中 <command>INSERT</command> 新行。可以授予特定列，此时在 <command>INSERT</command> 命令中只能向这些列赋值（其他列因此将获得默认值）。还允许使用 <command>COPY FROM</command>。
       </para>
      </listitem>
     </varlistentry>
@@ -1560,20 +1505,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>UPDATE</literal></term>
      <listitem>
       <para>
-       Allows <command>UPDATE</command> of any
-       column, or specific column(s), of a table, view, etc.
-       (In practice, any nontrivial <command>UPDATE</command> command will
-       require <literal>SELECT</literal> privilege as well, since it must
-       reference table columns to determine which rows to update, and/or to
-       compute new values for columns.)
-       <literal>SELECT ... FOR UPDATE</literal>
-       and <literal>SELECT ... FOR SHARE</literal>
-       also require this privilege on at least one column, in addition to the
-       <literal>SELECT</literal> privilege.  For sequences, this
-       privilege allows use of the <function>nextval</function> and
-       <function>setval</function> functions.
-       For large objects, this privilege allows writing or truncating the
-       object.
+       允许对表、视图等的任意列或特定列执行 <command>UPDATE</command>。（实际上，任何非平凡的 <command>UPDATE</command> 命令还需要 <literal>SELECT</literal> 权限，因为它必须引用表的列来确定要更新哪些行，和/或计算列的新值。）<literal>SELECT ... FOR UPDATE</literal> 和 <literal>SELECT ... FOR SHARE</literal> 除了需要 <literal>SELECT</literal> 权限外，还至少需要在一列上具有此权限。对于序列，此权限允许使用 <function>nextval</function> 和 <function>setval</function> 函数。对于大对象，此权限允许写入或截断该对象。
       </para>
      </listitem>
     </varlistentry>
@@ -1582,10 +1514,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>DELETE</literal></term>
      <listitem>
       <para>
-       Allows <command>DELETE</command> of a row from a table, view, etc.
-       (In practice, any nontrivial <command>DELETE</command> command will
-       require <literal>SELECT</literal> privilege as well, since it must
-       reference table columns to determine which rows to delete.)
+       允许从表、视图等中 <command>DELETE</command> 一行。（实际上，任何非平凡的 <command>DELETE</command> 命令还需要 <literal>SELECT</literal> 权限，因为它必须引用表的列来确定要删除哪些行。）
       </para>
      </listitem>
     </varlistentry>
@@ -1594,7 +1523,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>TRUNCATE</literal></term>
      <listitem>
       <para>
-       Allows <command>TRUNCATE</command> on a table.
+       允许在表上执行 <command>TRUNCATE</command>。
       </para>
      </listitem>
     </varlistentry>
@@ -1603,12 +1532,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>REFERENCES</literal></term>
      <listitem>
       <para>
-       Allows creation of a foreign key constraint referencing a
-       table, or specific column(s) of a table. Great care should be taken when
-       granting this privilege, since a user who creates a foreign key can arrange
-       for enforcement of that foreign key to call an arbitrary function, such as
-       a cast function, and such functions will be called with the privileges of
-       the table owner.
+       允许创建引用某个表或表的特定列的外键约束。授予此权限时应格外小心，因为创建外键的用户可以安排该外键的强制执行调用任意函数（例如转换函数），而此类函数将以表所有者的权限被调用。
       </para>
      </listitem>
     </varlistentry>
@@ -1617,9 +1541,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>TRIGGER</literal></term>
      <listitem>
       <para>
-       Allows creation of a trigger on a table, view, etc. Great care should be
-       taken when granting this privilege, since any triggers added to a table
-       or view will be executed with the privileges of users who modify it.
+       允许在表、视图等上创建触发器。授予此权限时应格外小心，因为添加到表或视图的任何触发器都将以修改它的用户的权限执行。
       </para>
      </listitem>
     </varlistentry>
@@ -1628,24 +1550,16 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>CREATE</literal></term>
      <listitem>
       <para>
-       For databases, allows new schemas and publications to be created within
-       the database, and allows trusted extensions to be installed within
-       the database.
+       对于数据库，允许在该数据库内创建新模式和发布，并允许在该数据库内安装可信扩展。
       </para>
       <para>
-       For schemas, allows new objects to be created within the schema.
-       To rename an existing object, you must own the
-       object <emphasis>and</emphasis> have this privilege for the containing
-       schema.
+       对于模式，允许在模式内创建新对象。要重命名一个已有对象，你必须拥有该对象<emphasis>并且</emphasis>拥有包含它的模式的此权限。
       </para>
       <para>
-       For tablespaces, allows tables, indexes, and temporary files to be
-       created within the tablespace, and allows databases to be created that
-       have the tablespace as their default tablespace.
+       对于表空间，允许在表空间内创建表、索引和临时文件，并允许创建以该表空间作为默认表空间的数据库。
       </para>
       <para>
-       Note that revoking this privilege will not alter the existence or
-       location of existing objects.
+       注意，撤销此权限不会改变已有对象的存在性或位置。
       </para>
      </listitem>
     </varlistentry>
@@ -1654,9 +1568,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>CONNECT</literal></term>
      <listitem>
       <para>
-       Allows the grantee to connect to the database.  This
-       privilege is checked at connection startup (in addition to checking
-       any restrictions imposed by <filename>pg_hba.conf</filename>).
+       允许被授予者连接到数据库。此权限在连接启动时检查（除了检查 <filename>pg_hba.conf</filename> 施加的任何限制之外）。
       </para>
      </listitem>
     </varlistentry>
@@ -1665,7 +1577,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>TEMPORARY</literal></term>
      <listitem>
       <para>
-       Allows temporary tables to be created while using the database.
+       允许在使用数据库时创建临时表。
       </para>
      </listitem>
     </varlistentry>
@@ -1674,9 +1586,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>EXECUTE</literal></term>
      <listitem>
       <para>
-       Allows calling a function or procedure, including use of
-       any operators that are implemented on top of the function.  This is the
-       only type of privilege that is applicable to functions and procedures.
+       允许调用函数或过程，包括使用建立在该函数之上的任何运算符。这是唯一适用于函数和过程的权限类型。
       </para>
      </listitem>
     </varlistentry>
@@ -1685,42 +1595,22 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>USAGE</literal></term>
      <listitem>
       <para>
-       For procedural languages, allows use of the language for
-       the creation of functions in that language.  This is the only type
-       of privilege that is applicable to procedural languages.
+       对于过程语言，允许使用该语言创建以该语言编写的函数。这是适用于过程语言的唯一一种权限类型。
       </para>
       <para>
-       For schemas, allows access to objects contained in the
-       schema (assuming that the objects' own privilege requirements are
-       also met).  Essentially this allows the grantee to <quote>look up</quote>
-       objects within the schema.  Without this permission, it is still
-       possible to see the object names, e.g., by querying system catalogs.
-       Also, after revoking this permission, existing sessions might have
-       statements that have previously performed this lookup, so this is not
-       a completely secure way to prevent object access.
+       对于模式，允许访问该模式中包含的对象（前提是这些对象自身的权限要求也得到满足）。本质上，这允许被授予者在该模式中<quote>查找</quote>对象。没有此权限，仍然可以看到对象名称，例如通过查询系统目录。此外，在撤销此权限后，现有会话可能仍有先前执行过此查找的语句，因此这并不是防止对象访问的完全安全的方式。
       </para>
       <para>
-       For sequences, allows use of the
-       <function>currval</function> and <function>nextval</function> functions.
+       对于序列，允许使用 <function>currval</function> 和 <function>nextval</function> 函数。
       </para>
       <para>
-       For types and domains, allows use of the type or domain in the
-       creation of tables, functions, and other schema objects.  (Note that
-       this privilege does not control all <quote>usage</quote> of the
-       type, such as values of the type appearing in queries.  It only
-       prevents objects from being created that depend on the type.  The
-       main purpose of this privilege is controlling which users can create
-       dependencies on a type, which could prevent the owner from changing
-       the type later.)
+       对于类型和域，允许在创建表、函数和其他模式对象时使用该类型或域。（注意，此权限并不控制该类型的所有<quote>使用</quote>，例如查询中出现的该类型的值。它只阻止创建依赖于该类型的对象。此权限的主要目的是控制哪些用户可以创建对类型的依赖，这种依赖可能会阻止所有者以后更改该类型。）
       </para>
       <para>
-       For foreign-data wrappers, allows creation of new servers using the
-       foreign-data wrapper.
+       对于外部数据包装器，允许使用该外部数据包装器创建新的服务器。
       </para>
       <para>
-       For foreign servers, allows creation of foreign tables using the
-       server.  Grantees may also create, alter, or drop their own user
-       mappings associated with that server.
+       对于外部服务器，允许使用该服务器创建外部表。被授予者还可以创建、更改或删除其与该服务器关联的自己的用户映射。
       </para>
      </listitem>
     </varlistentry>
@@ -1729,10 +1619,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>SET</literal></term>
      <listitem>
       <para>
-       Allows a server configuration parameter to be set to a new value
-       within the current session.  (While this privilege can be granted
-       on any parameter, it is meaningless except for parameters that would
-       normally require superuser privilege to set.)
+       允许在当前会话内将服务器配置参数设置为新值。（尽管可以对任意参数授予此权限，但除了那些通常需要超级用户权限才能设置的参数之外，此权限没有意义。）
       </para>
      </listitem>
     </varlistentry>
@@ -1741,8 +1628,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <term><literal>ALTER SYSTEM</literal></term>
      <listitem>
       <para>
-       Allows a server configuration parameter to be configured to a new
-       value using the <xref linkend="sql-altersystem"/> command.
+       允许使用 <xref linkend="sql-altersystem"/> 命令将服务器配置参数配置为新值。
       </para>
      </listitem>
     </varlistentry>
@@ -1751,11 +1637,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
     <term><literal>MAINTAIN</literal></term>
     <listitem>
      <para>
-      Allows <command>VACUUM</command>, <command>ANALYZE</command>,
-      <command>CLUSTER</command>, <command>REFRESH MATERIALIZED VIEW</command>,
-      <command>REINDEX</command>, <command>LOCK TABLE</command>,
-      and database object statistics manipulation functions
-      (see <xref linkend="functions-admin-statsmod"/>) on a relation.
+      允许对关系执行 <command>VACUUM</command>、<command>ANALYZE</command>、<command>CLUSTER</command>、<command>REFRESH MATERIALIZED VIEW</command>、<command>REINDEX</command>、<command>LOCK TABLE</command> 以及数据库对象统计信息操纵函数（参见 <xref linkend="functions-admin-statsmod"/>）。
      </para>
     </listitem>
    </varlistentry>
@@ -1766,80 +1648,50 @@ REVOKE ALL ON accounts FROM PUBLIC;
   </para>
 
   <para id="ddl-priv-default">
-   PostgreSQL grants privileges on some types of objects to
-   <literal>PUBLIC</literal> by default when the objects are created.
-   No privileges are granted to <literal>PUBLIC</literal> by default on
-   tables,
-   table columns,
-   sequences,
-   foreign data wrappers,
-   foreign servers,
-   large objects,
-   schemas,
-   tablespaces,
-   or configuration parameters.
-   For other types of objects, the default privileges
-   granted to <literal>PUBLIC</literal> are as follows:
-   <literal>CONNECT</literal> and <literal>TEMPORARY</literal> (create
-   temporary tables) privileges for databases;
-   <literal>EXECUTE</literal> privilege for functions and procedures; and
-   <literal>USAGE</literal> privilege for languages and data types
-   (including domains).
-   The object owner can, of course, <command>REVOKE</command>
-   both default and expressly granted privileges. (For maximum
-   security, issue the <command>REVOKE</command> in the same transaction that
-   creates the object; then there is no window in which another user
-   can use the object.)
-   Also, these default privilege settings can be overridden using the
-   <xref linkend="sql-alterdefaultprivileges"/> command.
+   创建对象时，PostgreSQL 默认将某些类型对象的权限授予 <literal>PUBLIC</literal>。默认情况下，不会向 <literal>PUBLIC</literal> 授予表、表列、序列、外部数据包装器、外部服务器、大对象、模式、表空间或配置参数上的任何权限。对于其他类型的对象，授予 <literal>PUBLIC</literal> 的默认权限如下：数据库的 <literal>CONNECT</literal> 和 <literal>TEMPORARY</literal>（创建临时表）权限；函数和过程的 <literal>EXECUTE</literal> 权限；以及语言和数据类型（包括域）的 <literal>USAGE</literal> 权限。当然，对象所有者可以 <command>REVOKE</command> 默认权限和显式授予的权限。（为了获得最大安全性，请在创建对象的同一事务中发出 <command>REVOKE</command>；这样就不存在其他用户可以使用该对象的窗口期。）此外，这些默认权限设置可以使用 <xref linkend="sql-alterdefaultprivileges"/> 命令覆盖。
   </para>
 
   <para>
-   <xref linkend="privilege-abbrevs-table"/> shows the one-letter
-   abbreviations that are used for these privilege types in
-   <firstterm><acronym>ACL</acronym></firstterm> values.
-   You will see these letters in the output of the <xref linkend="app-psql"/>
-   commands listed below, or when looking at <acronym>ACL</acronym> columns
-   of system catalogs.
+   <xref linkend="privilege-abbrevs-table"/> 显示了在 <firstterm><acronym>ACL</acronym></firstterm> 值中用于这些权限类型的单字母缩写。您将在下面列出的 <xref linkend="app-psql"/> 命令的输出中，或在查看系统目录的 <acronym>ACL</acronym> 列时看到这些字母。
   </para>
 
   <table id="privilege-abbrevs-table">
-   <title><acronym>ACL</acronym> Privilege Abbreviations</title>
+   <title><acronym>ACL</acronym> 权限缩写</title>
    <tgroup cols="3">
     <colspec colname="col1" colwidth="1*"/>
     <colspec colname="col2" colwidth="1*"/>
     <colspec colname="col3" colwidth="2*"/>
     <thead>
      <row>
-      <entry>Privilege</entry>
-      <entry>Abbreviation</entry>
-      <entry>Applicable Object Types</entry>
+      <entry>权限</entry>
+      <entry>缩写</entry>
+      <entry>适用的对象类型</entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry><literal>SELECT</literal></entry>
-      <entry><literal>r</literal> (<quote>read</quote>)</entry>
+      <entry><literal>r</literal>（<quote>读</quote>）</entry>
       <entry>
-       <literal>LARGE OBJECT</literal>,
-       <literal>SEQUENCE</literal>,
-       <literal>TABLE</literal> (and table-like objects),
-       table column
+       <literal>LARGE OBJECT</literal>、
+       <literal>SEQUENCE</literal>、
+       <literal>TABLE</literal>（以及类表对象）、
+       表列
       </entry>
      </row>
      <row>
       <entry><literal>INSERT</literal></entry>
-      <entry><literal>a</literal> (<quote>append</quote>)</entry>
-      <entry><literal>TABLE</literal>, table column</entry>
+      <entry><literal>a</literal>（<quote>追加</quote>）</entry>
+      <entry><literal>TABLE</literal>，表列</entry>
      </row>
      <row>
       <entry><literal>UPDATE</literal></entry>
-      <entry><literal>w</literal> (<quote>write</quote>)</entry>
+      <entry><literal>w</literal>（<quote>写</quote>）</entry>
       <entry>
-       <literal>LARGE OBJECT</literal>,
-       <literal>SEQUENCE</literal>,
-       <literal>TABLE</literal>,
-       table column
+       <literal>LARGE OBJECT</literal>，
+       <literal>SEQUENCE</literal>，
+       <literal>TABLE</literal>，
+       表列
       </entry>
      </row>
      <row>
@@ -1855,7 +1707,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <row>
       <entry><literal>REFERENCES</literal></entry>
       <entry><literal>x</literal></entry>
-      <entry><literal>TABLE</literal>, table column</entry>
+      <entry><literal>TABLE</literal>，表列</entry>
      </row>
      <row>
       <entry><literal>TRIGGER</literal></entry>
@@ -1919,15 +1771,12 @@ REVOKE ALL ON accounts FROM PUBLIC;
   </table>
 
   <para>
-   <xref linkend="privileges-summary-table"/> summarizes the privileges
-   available for each type of SQL object, using the abbreviations shown
-   above.
-   It also shows the <application>psql</application> command
-   that can be used to examine privilege settings for each object type.
+   <xref linkend="privileges-summary-table"/> 使用上文所示的缩写，汇总了每种 SQL 对象类型可用的权限。
+   它还显示了可用于检查每种对象类型权限设置的 <application>psql</application> 命令。
   </para>
 
   <table id="privileges-summary-table">
-   <title>Summary of Access Privileges</title>
+   <title>访问权限摘要</title>
    <tgroup cols="4">
     <colspec colname="col1" colwidth="2*"/>
     <colspec colname="col2" colwidth="1*"/>
@@ -1935,10 +1784,10 @@ REVOKE ALL ON accounts FROM PUBLIC;
     <colspec colname="col4" colwidth="1*"/>
     <thead>
      <row>
-      <entry>Object Type</entry>
-      <entry>All Privileges</entry>
-      <entry>Default <literal>PUBLIC</literal> Privileges</entry>
-      <entry><application>psql</application> Command</entry>
+      <entry>对象类型</entry>
+      <entry>所有权限</entry>
+      <entry>默认 <literal>PUBLIC</literal> 权限</entry>
+      <entry><application>psql</application> 命令</entry>
      </row>
     </thead>
     <tbody>
@@ -1955,7 +1804,7 @@ REVOKE ALL ON accounts FROM PUBLIC;
       <entry><literal>\dD+</literal></entry>
      </row>
      <row>
-      <entry><literal>FUNCTION</literal> or <literal>PROCEDURE</literal></entry>
+      <entry><literal>FUNCTION</literal> 或 <literal>PROCEDURE</literal></entry>
       <entry><literal>X</literal></entry>
       <entry><literal>X</literal></entry>
       <entry><literal>\df+</literal></entry>
@@ -1963,13 +1812,13 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <row>
       <entry><literal>FOREIGN DATA WRAPPER</literal></entry>
       <entry><literal>U</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dew+</literal></entry>
      </row>
      <row>
       <entry><literal>FOREIGN SERVER</literal></entry>
       <entry><literal>U</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\des+</literal></entry>
      </row>
      <row>
@@ -1981,43 +1830,43 @@ REVOKE ALL ON accounts FROM PUBLIC;
      <row>
       <entry><literal>LARGE OBJECT</literal></entry>
       <entry><literal>rw</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dl+</literal></entry>
      </row>
      <row>
       <entry><literal>PARAMETER</literal></entry>
       <entry><literal>sA</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dconfig+</literal></entry>
      </row>
      <row>
       <entry><literal>SCHEMA</literal></entry>
       <entry><literal>UC</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dn+</literal></entry>
      </row>
      <row>
       <entry><literal>SEQUENCE</literal></entry>
       <entry><literal>rwU</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dp</literal></entry>
      </row>
      <row>
-      <entry><literal>TABLE</literal> (and table-like objects)</entry>
+      <entry><literal>TABLE</literal>（以及类似表的对象）</entry>
       <entry><literal>arwdDxtm</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dp</literal></entry>
      </row>
      <row>
-      <entry>Table column</entry>
+      <entry>表列</entry>
       <entry><literal>arwx</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\dp</literal></entry>
      </row>
      <row>
       <entry><literal>TABLESPACE</literal></entry>
       <entry><literal>C</literal></entry>
-      <entry>none</entry>
+      <entry>无</entry>
       <entry><literal>\db+</literal></entry>
      </row>
      <row>
@@ -2034,39 +1883,22 @@ REVOKE ALL ON accounts FROM PUBLIC;
    <indexterm>
     <primary><type>aclitem</type></primary>
    </indexterm>
-   The privileges that have been granted for a particular object are
-   displayed as a list of <type>aclitem</type> entries, each having the
-   format:
+   为特定对象授予的权限显示为一个 <type>aclitem</type> 条目列表，每个条目的格式如下：
 <synopsis>
 <replaceable>grantee</replaceable><literal>=</literal><replaceable>privilege-abbreviation</replaceable><optional><literal>*</literal></optional>...<literal>/</literal><replaceable>grantor</replaceable>
 </synopsis>
-   Each <type>aclitem</type> lists all the permissions of one grantee that
-   have been granted by a particular grantor.  Specific privileges are
-   represented by one-letter abbreviations from
-   <xref linkend="privilege-abbrevs-table"/>, with <literal>*</literal>
-   appended if the privilege was granted with grant option.  For example,
-   <literal>calvin=r*w/hobbes</literal> specifies that the role
-   <literal>calvin</literal> has the privilege
-   <literal>SELECT</literal> (<literal>r</literal>) with grant option
-   (<literal>*</literal>) as well as the non-grantable
-   privilege <literal>UPDATE</literal> (<literal>w</literal>), both granted
-   by the role <literal>hobbes</literal>.  If <literal>calvin</literal>
-   also has some privileges on the same object granted by a different
-   grantor, those would appear as a separate <type>aclitem</type> entry.
-   An empty grantee field in an <type>aclitem</type> stands
-   for <literal>PUBLIC</literal>.
+   每个 <type>aclitem</type> 列出某个被授予者由某个特定授予者授予的所有权限。具体权限由
+   <xref linkend="privilege-abbrevs-table"/> 中的单字母缩写表示，如果该权限是带授予选项授予的，则附加 <literal>*</literal>。例如，<literal>calvin=r*w/hobbes</literal> 指定角色 <literal>calvin</literal> 具有带授予选项（<literal>*</literal>）的权限 <literal>SELECT</literal>（<literal>r</literal>），以及不可授予的权限 <literal>UPDATE</literal>（<literal>w</literal>），两者均由角色 <literal>hobbes</literal> 授予。如果 <literal>calvin</literal> 在同一对象上还拥有由不同授予者授予的某些权限，则这些权限将显示为单独的 <type>aclitem</type> 条目。<type>aclitem</type> 中空的被授予者字段代表 <literal>PUBLIC</literal>。
   </para>
 
   <para>
-   As an example, suppose that user <literal>miriam</literal> creates
-   table <literal>mytable</literal> and does:
+   例如，假设用户 <literal>miriam</literal> 创建表 <literal>mytable</literal> 并执行：
 <programlisting>
 GRANT SELECT ON mytable TO PUBLIC;
 GRANT SELECT, UPDATE, INSERT ON mytable TO admin;
 GRANT SELECT (col1), UPDATE (col1) ON mytable TO miriam_rw;
 </programlisting>
-   Then <application>psql</application>'s <literal>\dp</literal> command
-   would show:
+   那么 <application>psql</application> 的 <literal>\dp</literal> 命令将显示：
 <programlisting>
 =&gt; \dp mytable
                                   Access privileges
@@ -2080,38 +1912,17 @@ GRANT SELECT (col1), UPDATE (col1) ON mytable TO miriam_rw;
   </para>
 
   <para>
-   If the <quote>Access privileges</quote> column is empty for a given
-   object, it means the object has default privileges (that is, its
-   privileges entry in the relevant system catalog is null).  Default
-   privileges always include all privileges for the owner, and can include
-   some privileges for <literal>PUBLIC</literal> depending on the object
-   type, as explained above.  The first <command>GRANT</command>
-   or <command>REVOKE</command> on an object will instantiate the default
-   privileges (producing, for
-   example, <literal>miriam=arwdDxt/miriam</literal>) and then modify them
-   per the specified request.  Similarly, entries are shown in <quote>Column
-   privileges</quote> only for columns with nondefault privileges.
-   (Note: for this purpose, <quote>default privileges</quote> always means
-   the built-in default privileges for the object's type.  An object whose
-   privileges have been affected by an <command>ALTER DEFAULT
-   PRIVILEGES</command> command will always be shown with an explicit
-   privilege entry that includes the effects of
-   the <command>ALTER</command>.)
+   如果给定对象的 <quote>Access privileges</quote> 列为空，则表示该对象具有默认权限（即其在相关系统目录中的权限项为空值）。默认权限始终包含拥有者的所有权限，并且根据对象类型，还可能包含 <literal>PUBLIC</literal> 的某些权限，如上所述。对某个对象执行的第一个 <command>GRANT</command> 或 <command>REVOKE</command> 会实例化默认权限（例如产生 <literal>miriam=arwdDxt/miriam</literal>），然后按照指定的请求修改它们。同样，<quote>Column privileges</quote> 中只显示具有非默认权限的列的条目。
+   （注意：为此目的，<quote>default privileges</quote> 始终指该对象类型的内置默认权限。权限受到 <command>ALTER DEFAULT
+   PRIVILEGES</command> 命令影响的对象，将始终显示一个显式的权限条目，其中包含 <command>ALTER</command> 的效果。）
   </para>
 
   <para>
-   Notice that the owner's implicit grant options are not marked in the
-   access privileges display.  A <literal>*</literal> will appear only when
-   grant options have been explicitly granted to someone.
+   注意，拥有者的隐式授权选项不会在访问权限显示中标记。只有当授权选项被显式授予某人时，才会出现 <literal>*</literal>。
   </para>
 
   <para>
-   The <quote>Access privileges</quote> column
-   shows <literal>(none)</literal> when the object's privileges entry is
-   non-null but empty.  This means that no privileges are granted at all,
-   even to the object's owner &mdash; a rare situation.  (The owner still
-   has implicit grant options in this case, and so could re-grant her own
-   privileges; but she has none at the moment.)
+   当对象的权限项非空但为空时，<quote>Access privileges</quote> 列会显示 <literal>(none)</literal>。这意味着根本没有授予任何权限，甚至对对象的拥有者 &mdash; 也是如此，这是一种罕见的情况。（在这种情况下，拥有者仍然拥有隐式授权选项，因此可以重新授予她自己的权限；但此刻她没有任何权限。）
   </para>
  </sect1>
 
