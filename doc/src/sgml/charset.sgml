@@ -479,110 +479,57 @@ SELECT 'N-45' &lt; 'N-123' COLLATE mycollation5 as result;
 
 
  <sect1 id="collation">
-  <title>Collation Support</title>
+  <title>排序规则支持</title>
 
   <indexterm zone="collation"><primary>collation</primary></indexterm>
 
   <para>
-   The collation feature allows specifying the sort order and character
-   classification behavior of data per-column, or even per-operation.
-   This alleviates the restriction that the
-   <symbol>LC_COLLATE</symbol> and <symbol>LC_CTYPE</symbol> settings
-   of a database cannot be changed after its creation.
+   排序规则特性允许按列、甚至按操作指定数据的排序顺序和字符分类行为。这缓解了数据库的 <symbol>LC_COLLATE</symbol> 和 <symbol>LC_CTYPE</symbol> 设置在创建后无法更改的限制。
   </para>
 
   <sect2 id="collation-concepts">
-   <title>Concepts</title>
+   <title>概念</title>
 
    <para>
-    Conceptually, every expression of a collatable data type has a
-    collation.  (The built-in collatable data types are
-    <type>text</type>, <type>varchar</type>, and <type>char</type>.
-    User-defined base types can also be marked collatable, and of course
-    a <glossterm linkend="glossary-domain">domain</glossterm> over a
-    collatable data type is collatable.)  If the
-    expression is a column reference, the collation of the expression is the
-    defined collation of the column.  If the expression is a constant, the
-    collation is the default collation of the data type of the
-    constant.  The collation of a more complex expression is derived
-    from the collations of its inputs, as described below.
+    从概念上讲，每个可排序数据类型的表达式都有一个排序规则。（内置的可排序数据类型是 <type>text</type>、<type>varchar</type> 和 <type>char</type>。用户定义的基础类型也可以标记为可排序，当然，一个 <glossterm linkend="glossary-domain">域</glossterm> 基于可排序数据类型的域也是可排序的。）如果表达式是列引用，则该表达式的排序规则就是该列所定义的排序规则。如果表达式是常量，则排序规则是该常量数据类型的默认排序规则。更复杂表达式的排序规则由其输入的排序规则推导而来，如下所述。
    </para>
 
    <para>
-    The collation of an expression can be the <quote>default</quote>
-    collation, which means the locale settings defined for the
-    database.  It is also possible for an expression's collation to be
-    indeterminate.  In such cases, ordering operations and other
-    operations that need to know the collation will fail.
+    一个表达式的排序规则可以是<quote>默认</quote>排序规则，这意味着使用为数据库定义的区域设置。一个表达式的排序规则也可能是不确定的。在这种情况下，需要知道排序规则的排序操作和其他操作将会失败。
    </para>
 
    <para>
-    When the database system has to perform an ordering or a character
-    classification, it uses the collation of the input expression.  This
-    happens, for example, with <literal>ORDER BY</literal> clauses
-    and function or operator calls such as <literal>&lt;</literal>.
-    The collation to apply for an <literal>ORDER BY</literal> clause
-    is simply the collation of the sort key.  The collation to apply for a
-    function or operator call is derived from the arguments, as described
-    below.  In addition to comparison operators, collations are taken into
-    account by functions that convert between lower and upper case
-    letters, such as <function>lower</function>, <function>upper</function>, and
-    <function>initcap</function>; by pattern matching operators; and by
-    <function>to_char</function> and related functions.
+    当数据库系统必须执行排序或字符分类时，它会使用输入表达式的排序规则。例如，在使用 <literal>ORDER BY</literal> 子句以及调用函数或运算符（如 <literal>&lt;</literal>）时就会发生这种情况。<literal>ORDER BY</literal> 子句所应用的排序规则就是排序键的排序规则。函数或运算符调用所应用的排序规则由参数推导而来，具体如下所述。除了比较运算符之外，在大小写字母之间进行转换的函数（如 <function>lower</function>、<function>upper</function> 和 <function>initcap</function>）、模式匹配运算符以及 <function>to_char</function> 和相关函数也会考虑排序规则。
    </para>
 
    <para>
-    For a function or operator call, the collation that is derived by
-    examining the argument collations is used at run time for performing
-    the specified operation.  If the result of the function or operator
-    call is of a collatable data type, the collation is also used at parse
-    time as the defined collation of the function or operator expression,
-    in case there is a surrounding expression that requires knowledge of
-    its collation.
+    对于函数或运算符调用，通过检查参数排序规则推导出的排序规则会在运行时用于执行指定的操作。如果函数或运算符调用的结果属于可排序的数据类型，那么该排序规则也会在解析时用作该函数或运算符表达式的已定义排序规则，以备外层表达式需要了解其排序规则。
    </para>
 
    <para>
-    The <firstterm>collation derivation</firstterm> of an expression can be
-    implicit or explicit.  This distinction affects how collations are
-    combined when multiple different collations appear in an
-    expression.  An explicit collation derivation occurs when a
-    <literal>COLLATE</literal> clause is used; all other collation
-    derivations are implicit.  When multiple collations need to be
-    combined, for example in a function call, the following rules are
-    used:
+    表达式的<firstterm>排序规则推导</firstterm>可以是隐式的或显式的。这一区别会影响当表达式中出现多个不同排序规则时如何组合它们。当使用 <literal>COLLATE</literal> 子句时，会发生显式排序规则推导；所有其他排序规则推导都是隐式的。当需要组合多个排序规则时，例如在函数调用中，将使用以下规则：
 
     <orderedlist>
      <listitem>
       <para>
-       If any input expression has an explicit collation derivation, then
-       all explicitly derived collations among the input expressions must be
-       the same, otherwise an error is raised.  If any explicitly
-       derived collation is present, that is the result of the
-       collation combination.
+       如果任何输入表达式具有显式排序规则推导，那么输入表达式中所有显式推导出的排序规则必须相同，否则会引发错误。如果存在任何显式推导出的排序规则，那么它就是排序规则组合的结果。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Otherwise, all input expressions must have the same implicit
-       collation derivation or the default collation.  If any non-default
-       collation is present, that is the result of the collation combination.
-       Otherwise, the result is the default collation.
+       否则，所有输入表达式必须具有相同的隐式排序规则推导或默认排序规则。如果存在任何非默认排序规则，那么它就是排序规则组合的结果。否则，结果就是默认排序规则。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If there are conflicting non-default implicit collations among the
-       input expressions, then the combination is deemed to have indeterminate
-       collation.  This is not an error condition unless the particular
-       function being invoked requires knowledge of the collation it should
-       apply.  If it does, an error will be raised at run-time.
+       如果输入表达式之间存在冲突的非默认隐式排序规则，则组合被认为具有不确定的排序规则。这不是错误状况，除非所调用的特定函数需要知道它应应用的排序规则。如果确实需要，将在运行时报错。
       </para>
      </listitem>
     </orderedlist>
 
-    For example, consider this table definition:
+    例如，考虑这个表定义：
 <programlisting>
 CREATE TABLE test1 (
     a text COLLATE "de_DE",
@@ -591,61 +538,58 @@ CREATE TABLE test1 (
 );
 </programlisting>
 
-    Then in
+    那么在
 <programlisting>
 SELECT a &lt; 'foo' FROM test1;
 </programlisting>
-    the <literal>&lt;</literal> comparison is performed according to
-    <literal>de_DE</literal> rules, because the expression combines an
-    implicitly derived collation with the default collation.  But in
+    中，<literal>&lt;</literal> 比较是按照
+<literal>de_DE</literal> 规则执行的，因为该表达式将一个隐式推导的排序规则与默认排序规则组合在一起。但在
 <programlisting>
 SELECT a &lt; ('foo' COLLATE "fr_FR") FROM test1;
 </programlisting>
-    the comparison is performed using <literal>fr_FR</literal> rules,
-    because the explicit collation derivation overrides the implicit one.
-    Furthermore, given
+    中，比较是使用 <literal>fr_FR</literal> 规则执行的，
+    因为显式排序规则推导会覆盖隐式推导。此外，对于
 <programlisting>
 SELECT a &lt; b FROM test1;
 </programlisting>
-    the parser cannot determine which collation to apply, since the
-    <structfield>a</structfield> and <structfield>b</structfield> columns have conflicting
-    implicit collations.  Since the <literal>&lt;</literal> operator
-    does need to know which collation to use, this will result in an
-    error.  The error can be resolved by attaching an explicit collation
-    specifier to either input expression, thus:
+    解析器无法确定应应用哪个排序规则，因为
+    <structfield>a</structfield> 和 <structfield>b</structfield> 列具有冲突的
+    隐式排序规则。由于 <literal>&lt;</literal> 运算符
+    确实需要知道使用哪个排序规则，这将导致
+    错误。可以通过给任一输入表达式附加显式排序规则
+    说明符来解决该错误，如下所示：
 <programlisting>
 SELECT a &lt; b COLLATE "de_DE" FROM test1;
 </programlisting>
-    or equivalently
+    或等价地
 <programlisting>
 SELECT a COLLATE "de_DE" &lt; b FROM test1;
 </programlisting>
-    On the other hand, the structurally similar case
+    另一方面，结构上类似的情况
 <programlisting>
 SELECT a || b FROM test1;
 </programlisting>
-    does not result in an error, because the <literal>||</literal> operator
-    does not care about collations: its result is the same regardless
-    of the collation.
+    不会导致错误，因为 <literal>||</literal> 运算符
+    不关心排序规则：无论排序规则如何，
+    其结果都相同。
    </para>
 
    <para>
-    The collation assigned to a function or operator's combined input
-    expressions is also considered to apply to the function or operator's
-    result, if the function or operator delivers a result of a collatable
-    data type.  So, in
+    赋予函数或运算符的组合输入表达式的排序规则，如果该函数或运算符
+    返回可排序数据类型的结果，也被认为适用于该函数或运算符的
+    结果。因此，在
 <programlisting>
 SELECT * FROM test1 ORDER BY a || 'foo';
 </programlisting>
-    the ordering will be done according to <literal>de_DE</literal> rules.
-    But this query:
+    中，排序将按照 <literal>de_DE</literal> 规则进行。
+    但这个查询：
 <programlisting>
 SELECT * FROM test1 ORDER BY a || b;
 </programlisting>
-    results in an error, because even though the <literal>||</literal> operator
-    doesn't need to know a collation, the <literal>ORDER BY</literal> clause does.
-    As before, the conflict can be resolved with an explicit collation
-    specifier:
+    会导致错误，因为尽管 <literal>||</literal> 运算符
+    不需要知道排序规则，但 <literal>ORDER BY</literal> 子句需要。
+    和前面一样，可以通过显式排序规则说明符
+    来解决冲突：
 <programlisting>
 SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
 </programlisting>
@@ -653,51 +597,25 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
   </sect2>
 
   <sect2 id="collation-managing">
-   <title>Managing Collations</title>
+   <title>管理排序规则</title>
 
    <para>
-    A collation is an SQL schema object that maps an SQL name to locales
-    provided by libraries installed in the operating system.  A collation
-    definition has a <firstterm>provider</firstterm> that specifies which
-    library supplies the locale data.  One standard provider name
-    is <literal>libc</literal>, which uses the locales provided by the
-    operating system C library.  These are the locales used by most tools
-    provided by the operating system.  Another provider
-    is <literal>icu</literal>, which uses the external
-    ICU<indexterm><primary>ICU</primary></indexterm> library.  ICU locales can only be
-    used if support for ICU was configured when PostgreSQL was built.
+    排序规则是一个 SQL 模式对象，它将 SQL 名称映射到由操作系统中安装的库提供的区域设置。排序规则定义有一个<firstterm>提供者</firstterm>，用于指定由哪个库提供区域设置数据。一个标准的提供者名称是 <literal>libc</literal>，它使用操作系统 C 库提供的区域设置。这些是操作系统提供的大多数工具所使用的区域设置。另一个提供者是 <literal>icu</literal>，它使用外部 ICU<indexterm><primary>ICU</primary></indexterm> 库。只有在构建 PostgreSQL 时配置了对 ICU 的支持，才能使用 ICU 区域设置。
    </para>
 
    <para>
-    A collation object provided by <literal>libc</literal> maps to a
-    combination of <symbol>LC_COLLATE</symbol> and <symbol>LC_CTYPE</symbol>
-    settings, as accepted by the <literal>setlocale()</literal> system library call.  (As
-    the name would suggest, the main purpose of a collation is to set
-    <symbol>LC_COLLATE</symbol>, which controls the sort order.  But
-    it is rarely necessary in practice to have an
-    <symbol>LC_CTYPE</symbol> setting that is different from
-    <symbol>LC_COLLATE</symbol>, so it is more convenient to collect
-    these under one concept than to create another infrastructure for
-    setting <symbol>LC_CTYPE</symbol> per expression.)  Also,
-    a <literal>libc</literal> collation
-    is tied to a character set encoding (see <xref linkend="multibyte"/>).
-    The same collation name may exist for different encodings.
+    由 <literal>libc</literal> 提供的排序规则对象映射到 <symbol>LC_COLLATE</symbol> 和 <symbol>LC_CTYPE</symbol> 设置的组合，正如 <literal>setlocale()</literal> 系统库调用所接受的那样。（顾名思义，排序规则的主要目的是设置 <symbol>LC_COLLATE</symbol>，它控制排序顺序。但在实践中很少需要让 <symbol>LC_CTYPE</symbol> 设置与 <symbol>LC_COLLATE</symbol> 不同，因此将这些设置归集到一个概念下，比另外创建一套按表达式设置 <symbol>LC_CTYPE</symbol> 的基础设施更方便。）此外，<literal>libc</literal> 排序规则与字符集编码绑定（参见 <xref linkend="multibyte"/>）。相同的排序规则名称可能存在于不同的编码中。
    </para>
 
    <para>
-    A collation object provided by <literal>icu</literal> maps to a named
-    collator provided by the ICU library.  ICU does not support
-    separate <quote>collate</quote> and <quote>ctype</quote> settings, so
-    they are always the same.  Also, ICU collations are independent of the
-    encoding, so there is always only one ICU collation of a given name in
-    a database.
+    由 <literal>icu</literal> 提供的排序规则对象映射到 ICU 库提供的具名排序器。ICU 不支持单独的 <quote>collate</quote> 和 <quote>ctype</quote> 设置，因此它们始终相同。此外，ICU 排序规则与编码无关，因此在一个数据库中，给定名称的 ICU 排序规则始终只有一个。
    </para>
 
    <sect3 id="collation-managing-standard">
-    <title>Standard Collations</title>
+    <title>标准排序规则</title>
 
    <para>
-    On all platforms, the following collations are supported:
+    在所有平台上，都支持以下排序规则：
 
     <variablelist>
      <varlistentry>
@@ -719,14 +637,9 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
       <term><literal>ucs_basic</literal></term>
       <listitem>
        <para>
-        This SQL standard collation sorts using the Unicode code point values
-        rather than natural language order, and only the ASCII letters
-        <quote><literal>A</literal></quote> through
-        <quote><literal>Z</literal></quote> are treated as letters.  The
-        behavior is efficient and stable across all versions.  Only available
-        for encoding <literal>UTF8</literal>.  (This collation has the same
-        behavior as the libc locale specification <literal>C</literal> in
-        <literal>UTF8</literal> encoding.)
+        这种 SQL 标准排序规则使用 Unicode 码点值排序，而不是按自然语言顺序，并且只有 ASCII 字母
+        <quote><literal>A</literal></quote> 到
+        <quote><literal>Z</literal></quote> 被视为字母。该行为高效且在所有版本中保持稳定。仅对编码 <literal>UTF8</literal> 可用。（此排序规则的行为与 <literal>UTF8</literal> 编码中的 libc 区域设置规范 <literal>C</literal> 相同。）
        </para>
       </listitem>
      </varlistentry>
@@ -735,15 +648,13 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
       <term><literal>pg_unicode_fast</literal></term>
       <listitem>
        <para>
-        This collation sorts by Unicode code point values rather than natural
-        language order.  For the functions <function>lower</function>,
-        <function>initcap</function>, and <function>upper</function> it uses
-        Unicode full case mapping. For pattern matching (including regular
-        expressions), it uses the Standard variant of Unicode <ulink
+        这种排序规则按 Unicode 码点值排序，而不是按自然语言顺序。对于函数 <function>lower</function>、
+        <function>initcap</function> 和 <function>upper</function>，它使用 Unicode 完整大小写映射。对于模式匹配（包括正则
+        表达式），它使用 Unicode <ulink
         url="https://www.unicode.org/reports/tr18/#Compatibility_Properties">Compatibility
-        Properties</ulink>.  Behavior is efficient and stable within a
-        <productname>Postgres</productname> major version.  It is only
-        available for encoding <literal>UTF8</literal>.
+        Properties</ulink> 的 Standard 变体。行为在
+        <productname>Postgres</productname> 主版本内高效且稳定。它仅
+        对编码 <literal>UTF8</literal> 可用。
        </para>
       </listitem>
      </varlistentry>
@@ -752,31 +663,27 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
       <term><literal>pg_c_utf8</literal></term>
       <listitem>
        <para>
-        This collation sorts by Unicode code point values rather than natural
-        language order.  For the functions <function>lower</function>,
-        <function>initcap</function>, and <function>upper</function>, it uses
-        Unicode simple case mapping.  For pattern matching (including regular
-        expressions), it uses the POSIX Compatible variant of Unicode <ulink
+        这种排序规则按 Unicode 码点值排序，而不是按自然语言顺序。对于函数 <function>lower</function>、
+        <function>initcap</function> 和 <function>upper</function>，它使用 Unicode 简单大小写映射。对于模式匹配（包括正则
+        表达式），它使用 Unicode <ulink
         url="https://www.unicode.org/reports/tr18/#Compatibility_Properties">Compatibility
-        Properties</ulink>.  Behavior is efficient and stable within a
-        <productname>PostgreSQL</productname> major version.  This collation is
-        only available for encoding <literal>UTF8</literal>.
+        Properties</ulink> 的 POSIX Compatible 变体。行为在
+        <productname>PostgreSQL</productname> 主版本内高效且稳定。此排序规则
+        仅对编码 <literal>UTF8</literal> 可用。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term><literal>C</literal> (equivalent to <literal>POSIX</literal>)</term>
+      <term><literal>C</literal>（等价于 <literal>POSIX</literal>）</term>
       <listitem>
        <para>
-        The <literal>C</literal> and <literal>POSIX</literal> collations are
-        based on <quote>traditional C</quote> behavior.  They sort by byte
-        values rather than natural language order, and only the ASCII letters
-        <quote><literal>A</literal></quote> through
-        <quote><literal>Z</literal></quote> are treated as letters.  The
-        behavior is efficient and stable across all versions for a given
-        database encoding, but behavior may vary between different database
-        encodings.
+        <literal>C</literal> 和 <literal>POSIX</literal> 排序规则基于 <quote>传统 C</quote> 行为。它们按字节
+        值排序，而不是按自然语言顺序，并且只有 ASCII 字母
+        <quote><literal>A</literal></quote> 到
+        <quote><literal>Z</literal></quote> 被视为字母。对于给定的
+        数据库编码，该行为高效且在所有版本中保持稳定，但不同数据库
+        编码之间的行为可能有所不同。
        </para>
       </listitem>
      </varlistentry>
@@ -785,8 +692,7 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
       <term><literal>default</literal></term>
       <listitem>
        <para>
-        The <literal>default</literal> collation selects the locale specified
-        at database creation time.
+        <literal>default</literal> 排序规则选择在创建数据库时指定的区域设置。
        </para>
       </listitem>
      </varlistentry>
@@ -794,132 +700,82 @@ SELECT * FROM test1 ORDER BY a || b COLLATE "fr_FR";
    </para>
 
    <para>
-    Additional collations may be available depending on operating system
-    support.  The efficiency and stability of these additional collations
-    depend on the collation provider, the provider version, and the locale.
+    取决于操作系统的支持情况，可能还会有其他排序规则可用。这些额外排序规则的效率和稳定性取决于排序规则提供者、提供者版本以及区域设置。
    </para>
   </sect3>
 
   <sect3 id="collation-managing-predefined">
-   <title>Predefined Collations</title>
+   <title>预定义排序规则</title>
 
    <para>
-    If the operating system provides support for using multiple locales
-    within a single program (<function>newlocale</function> and related functions),
-    or if support for ICU is configured,
-    then when a database cluster is initialized, <command>initdb</command>
-    populates the system catalog <literal>pg_collation</literal> with
-    collations based on all the locales it finds in the operating
-    system at the time.
+    如果操作系统支持在单个程序中使用多个区域设置（<function>newlocale</function> 及相关函数），或者配置了对 ICU 的支持，那么在初始化数据库集簇时，<command>initdb</command> 会根据它在当时在操作系统中找到的所有区域设置，用排序规则填充系统目录 <literal>pg_collation</literal>。
    </para>
 
    <para>
-    To inspect the currently available locales, use the query <literal>SELECT
-    * FROM pg_collation</literal>, or the command <command>\dOS+</command>
-    in <application>psql</application>.
+    要查看当前可用的区域设置，请使用查询 <literal>SELECT
+    * FROM pg_collation</literal>，或 <application>psql</application> 中的命令 <command>\dOS+</command>。
    </para>
 
   <sect4 id="collation-managing-predefined-libc">
-   <title>libc Collations</title>
+   <title>libc 排序规则</title>
 
    <para>
-    For example, the operating system might
-    provide a locale named <literal>de_DE.utf8</literal>.
-    <command>initdb</command> would then create a collation named
-    <literal>de_DE.utf8</literal> for encoding <literal>UTF8</literal>
-    that has both <symbol>LC_COLLATE</symbol> and
-    <symbol>LC_CTYPE</symbol> set to <literal>de_DE.utf8</literal>.
-    It will also create a collation with the <literal>.utf8</literal>
-    tag stripped off the name.  So you could also use the collation
-    under the name <literal>de_DE</literal>, which is less cumbersome
-    to write and makes the name less encoding-dependent.  Note that,
-    nevertheless, the initial set of collation names is
-    platform-dependent.
+    例如，操作系统可能提供一个名为 <literal>de_DE.utf8</literal> 的区域设置。<command>initdb</command> 随后会为编码 <literal>UTF8</literal> 创建一个名为 <literal>de_DE.utf8</literal> 的排序规则，其 <symbol>LC_COLLATE</symbol> 和 <symbol>LC_CTYPE</symbol> 都设置为 <literal>de_DE.utf8</literal>。它还会创建一个去掉名称中 <literal>.utf8</literal> 标记的排序规则。因此你也可以用名称 <literal>de_DE</literal> 来使用该排序规则，这样写起来不那么繁琐，也使名称较少依赖于编码。但请注意，初始的排序规则名称集合仍取决于平台。
    </para>
 
    <para>
-    The default set of collations provided by <literal>libc</literal> map
-    directly to the locales installed in the operating system, which can be
-    listed using the command <literal>locale -a</literal>.  In case
-    a <literal>libc</literal> collation is needed that has different values
-    for <symbol>LC_COLLATE</symbol> and <symbol>LC_CTYPE</symbol>, or if new
-    locales are installed in the operating system after the database system
-    was initialized, then a new collation may be created using
-    the <xref linkend="sql-createcollation"/> command.
-    New operating system locales can also be imported en masse using
-    the <link linkend="functions-admin-collation"><function>pg_import_system_collations()</function></link> function.
+    <literal>libc</literal> 提供的默认排序规则集直接映射到操作系统中安装的区域设置，可以使用命令 <literal>locale -a</literal> 列出这些区域设置。如果需要一种 <literal>libc</literal> 排序规则，且其对 <symbol>LC_COLLATE</symbol> 和 <symbol>LC_CTYPE</symbol> 具有不同的值，或者在数据库系统初始化之后操作系统中安装了新的区域设置，则可以使用 <xref linkend="sql-createcollation"/> 命令创建新的排序规则。新的操作系统区域设置也可以通过 <link linkend="functions-admin-collation"><function>pg_import_system_collations()</function></link> 函数批量导入。
    </para>
 
    <para>
-    Within any particular database, only collations that use that
-    database's encoding are of interest.  Other entries in
-    <literal>pg_collation</literal> are ignored.  Thus, a stripped collation
-    name such as <literal>de_DE</literal> can be considered unique
-    within a given database even though it would not be unique globally.
-    Use of the stripped collation names is recommended, since it will
-    make one fewer thing you need to change if you decide to change to
-    another database encoding.  Note however that the <literal>default</literal>,
-    <literal>C</literal>, and <literal>POSIX</literal> collations can be used regardless of
-    the database encoding.
+    在任何特定的数据库中，只有使用该数据库编码的排序规则才有意义。<literal>pg_collation</literal> 中的其他条目会被忽略。因此，像 <literal>de_DE</literal> 这样的剥离排序规则名称在给定数据库内可以被视为唯一的，即使它在全局范围内并不唯一。建议使用剥离后的排序规则名称，因为如果你决定改用另一种数据库编码，这样你需要更改的内容就会少一项。但请注意，无论数据库编码如何，<literal>default</literal>、<literal>C</literal> 和 <literal>POSIX</literal> 排序规则都可以使用。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> considers distinct collation
-    objects to be incompatible even when they have identical properties.
-    Thus for example,
+    <productname>PostgreSQL</productname> 认为不同的排序规则对象是不兼容的，即使它们具有相同的属性。因此，例如，
 <programlisting>
 SELECT a COLLATE "C" &lt; b COLLATE "POSIX" FROM test1;
 </programlisting>
-    will draw an error even though the <literal>C</literal> and <literal>POSIX</literal>
-    collations have identical behaviors.  Mixing stripped and non-stripped
-    collation names is therefore not recommended.
+    会报错，即使 <literal>C</literal> 和 <literal>POSIX</literal> 排序规则具有完全相同的行为。因此，不建议混用剥离和非剥离的排序规则名称。
    </para>
   </sect4>
 
   <sect4 id="collation-managing-predefined-icu">
-   <title>ICU Collations</title>
+   <title>ICU 排序规则</title>
 
    <para>
-    With ICU, it is not sensible to enumerate all possible locale names.  ICU
-    uses a particular naming system for locales, but there are many more ways
-    to name a locale than there are actually distinct locales.
-    <command>initdb</command> uses the ICU APIs to extract a set of distinct
-    locales to populate the initial set of collations.  Collations provided by
-    ICU are created in the SQL environment with names in BCP 47 language tag
-    format, with a <quote>private use</quote>
-    extension <literal>-x-icu</literal> appended, to distinguish them from
-    libc locales.
+    对于 ICU 而言，枚举所有可能的区域设置名称是不明智的。ICU 对区域设置使用一种特定的命名体系，但命名区域设置的方式远多于实际存在的不同区域设置。<command>initdb</command> 使用 ICU API 提取一组不同的区域设置，以填充初始的排序规则集。ICU 提供的排序规则在 SQL 环境中创建，其名称采用 BCP 47 语言标记格式，并附加一个<quote>专用</quote>扩展 <literal>-x-icu</literal>，以区别于 libc 区域设置。
    </para>
 
    <para>
-    Here are some example collations that might be created:
+    以下是一些可能创建的排序规则示例：
 
     <variablelist>
      <varlistentry id="collation-managing-predefined-icu-de-x-icu">
       <term><literal>de-x-icu</literal></term>
       <listitem>
-       <para>German collation, default variant</para>
+       <para>德语排序规则，默认变体</para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="collation-managing-predefined-icu-de-at-x-icu">
       <term><literal>de-AT-x-icu</literal></term>
       <listitem>
-       <para>German collation for Austria, default variant</para>
+       <para>奥地利德语排序规则，默认变体</para>
        <para>
-        (There are also, say, <literal>de-DE-x-icu</literal>
-        or <literal>de-CH-x-icu</literal>, but as of this writing, they are
-        equivalent to <literal>de-x-icu</literal>.)
+        （另外还有，比如说，<literal>de-DE-x-icu</literal>
+        或 <literal>de-CH-x-icu</literal>，但在撰写本文时，它们
+        等同于 <literal>de-x-icu</literal>。）
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="collation-managing-predefined-icu-und-x-icu">
-      <term><literal>und-x-icu</literal> (for <quote>undefined</quote>)</term>
+      <term><literal>und-x-icu</literal>（表示 <quote>未定义</quote>）</term>
       <listitem>
        <para>
-        ICU <quote>root</quote> collation.  Use this to get a reasonable
-        language-agnostic sort order.
+        ICU <quote>根</quote>排序规则。使用它可以获得合理的
+        与语言无关的排序顺序。
        </para>
       </listitem>
      </varlistentry>
@@ -927,85 +783,66 @@ SELECT a COLLATE "C" &lt; b COLLATE "POSIX" FROM test1;
    </para>
 
    <para>
-    Some (less frequently used) encodings are not supported by ICU.  When the
-    database encoding is one of these, ICU collation entries
-    in <literal>pg_collation</literal> are ignored.  Attempting to use one
-    will draw an error along the lines of <quote>collation "de-x-icu" for
-    encoding "WIN874" does not exist</quote>.
+    某些（较少使用的）编码不受 ICU 支持。当
+    数据库编码是其中之一时，<literal>pg_collation</literal> 中的 ICU 排序规则条目
+    会被忽略。尝试使用其中一个
+    会引发类似 <quote>collation "de-x-icu" for
+    encoding "WIN874" does not exist</quote> 的错误。
    </para>
   </sect4>
   </sect3>
 
   <sect3 id="collation-create">
-   <title>Creating New Collation Objects</title>
+   <title>创建新的排序规则对象</title>
 
    <para>
-    If the standard and predefined collations are not sufficient, users can
-    create their own collation objects using the SQL
-    command <xref linkend="sql-createcollation"/>.
+    如果标准排序规则和预定义排序规则不够用，用户可以使用 SQL 命令 <xref linkend="sql-createcollation"/> 创建自己的排序规则对象。
    </para>
 
    <para>
-    The standard and predefined collations are in the
-    schema <literal>pg_catalog</literal>, like all predefined objects.
-    User-defined collations should be created in user schemas.  This also
-    ensures that they are saved by <command>pg_dump</command>.
+    标准排序规则和预定义排序规则与所有预定义对象一样，位于 <literal>pg_catalog</literal> 模式中。用户定义的排序规则应创建在用户模式中。这也能确保它们被 <command>pg_dump</command> 保存。
    </para>
 
    <sect4 id="collation-managing-create-libc">
-    <title>libc Collations</title>
+    <title>libc 排序规则</title>
 
     <para>
-     New libc collations can be created like this:
+     新的 libc 排序规则可以这样创建：
 <programlisting>
 CREATE COLLATION german (provider = libc, locale = 'de_DE');
 </programlisting>
-     The exact values that are acceptable for the <literal>locale</literal>
-     clause in this command depend on the operating system.  On Unix-like
-     systems, the command <literal>locale -a</literal> will show a list.
+此命令中 <literal>locale</literal> 子句可接受的确切值取决于操作系统。在类 Unix 系统上，命令 <literal>locale -a</literal> 会显示一个列表。
     </para>
 
     <para>
-     Since the predefined libc collations already include all collations
-     defined in the operating system when the database instance is
-     initialized, it is not often necessary to manually create new ones.
-     Reasons might be if a different naming system is desired (in which case
-     see also <xref linkend="collation-copy"/>) or if the operating system has
-     been upgraded to provide new locale definitions (in which case see
-     also <link linkend="functions-admin-collation"><function>pg_import_system_collations()</function></link>).
+     由于在数据库实例初始化时，预定义的 libc 排序规则已经包含了操作系统中定义的所有排序规则，因此通常不必手动创建新的排序规则。可能需要创建的原因包括：希望使用不同的命名体系（这种情况下另请参阅 <xref linkend="collation-copy"/>），或者操作系统已升级以提供新的区域设置定义（这种情况下另请参阅 <link linkend="functions-admin-collation"><function>pg_import_system_collations()</function></link>）。
     </para>
    </sect4>
 
    <sect4 id="collation-managing-create-icu">
-    <title>ICU Collations</title>
+    <title>ICU 排序规则</title>
 
     <para>
-     ICU collations can be created like:
+     ICU 排序规则可以这样创建：
 
 <programlisting>
 CREATE COLLATION german (provider = icu, locale = 'de-DE');
 </programlisting>
 
-     ICU locales are specified as a BCP 47 <link
-     linkend="icu-language-tag">Language Tag</link>, but can also accept most
-     libc-style locale names. If possible, libc-style locale names are
-     transformed into language tags.
+     ICU 区域设置以 BCP 47 <link
+     linkend="icu-language-tag">语言标签</link>的形式指定，但也可以接受大多数
+     libc 风格的区域设置名称。如果可能，libc 风格的区域设置名称会被转换为语言标签。
     </para>
     <para>
-     New ICU collations can customize collation behavior extensively by
-     including collation attributes in the language tag. See <xref
-     linkend="icu-custom-collations"/> for details and examples.
+     新的 ICU 排序规则可以通过在语言标签中包含排序规则属性来广泛地自定义排序规则行为。详情和示例请参见 <xref
+     linkend="icu-custom-collations"/>。
     </para>
    </sect4>
    <sect4 id="collation-copy">
-   <title>Copying Collations</title>
+   <title>复制排序规则</title>
 
    <para>
-    The command <xref linkend="sql-createcollation"/> can also be used to
-    create a new collation from an existing collation, which can be useful to
-    be able to use operating-system-independent collation names in
-    applications, create compatibility names, or use an ICU-provided collation
-    under a more readable name.  For example:
+    命令 <xref linkend="sql-createcollation"/> 也可以用于从现有排序规则创建新的排序规则，这在需要于应用程序中使用与操作系统无关的排序规则名称、创建兼容性名称，或以更易读的名称使用 ICU 提供的排序规则时很有用。例如：
 <programlisting>
 CREATE COLLATION german FROM "de_DE";
 CREATE COLLATION french FROM "fr-x-icu";
@@ -1015,35 +852,19 @@ CREATE COLLATION french FROM "fr-x-icu";
    </sect3>
 
    <sect3 id="collation-nondeterministic">
-    <title>Nondeterministic Collations</title>
+    <title>非确定性排序规则</title>
 
     <para>
-     A collation is either <firstterm>deterministic</firstterm> or
-     <firstterm>nondeterministic</firstterm>.  A deterministic collation uses
-     deterministic comparisons, which means that it considers strings to be
-     equal only if they consist of the same byte sequence.  Nondeterministic
-     comparison may determine strings to be equal even if they consist of
-     different bytes.  Typical situations include case-insensitive comparison,
-     accent-insensitive comparison, as well as comparison of strings in
-     different Unicode normal forms.  It is up to the collation provider to
-     actually implement such insensitive comparisons; the deterministic flag
-     only determines whether ties are to be broken using bytewise comparison.
-     See also <ulink url="https://www.unicode.org/reports/tr10">Unicode Technical
-     Standard 10</ulink> for more information on the terminology.
+     排序规则要么是<firstterm>确定性的</firstterm>，要么是<firstterm>非确定性的</firstterm>。确定性排序规则使用确定性比较，这意味着只有当字符串由相同的字节序列组成时，它才认为这些字符串相等。非确定性比较则可能将即使由不同字节组成的字符串也判定为相等。典型情况包括不区分大小写的比较、不区分重音的比较，以及不同 Unicode 规范化形式的字符串之间的比较。实际实现这类不敏感比较取决于排序规则提供者；确定性标志只决定是否使用逐字节比较来打破平局。有关术语的更多信息，另请参阅 <ulink url="https://www.unicode.org/reports/tr10">Unicode Technical Standard 10</ulink>。
     </para>
 
     <para>
-     To create a nondeterministic collation, specify the property
-     <literal>deterministic = false</literal> to <command>CREATE
-     COLLATION</command>, for example:
+     要创建非确定性排序规则，请将属性 <literal>deterministic = false</literal> 指定为 <command>CREATE
+     COLLATION</command>，例如：
 <programlisting>
 CREATE COLLATION ndcoll (provider = icu, locale = 'und', deterministic = false);
 </programlisting>
-     This example would use the standard Unicode collation in a
-     nondeterministic way.  In particular, this would allow strings in
-     different normal forms to be compared correctly.  More interesting
-     examples make use of the ICU customization facilities explained above.
-     For example:
+     这个示例将以非确定性的方式使用标准 Unicode 排序规则。特别是，这将允许正确地比较不同规范化形式的字符串。更有趣的示例会利用上文介绍的 ICU 定制功能。例如：
 <programlisting>
 CREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
 CREATE COLLATION ignore_accents (provider = icu, locale = 'und-u-ks-level1-kc-true', deterministic = false);
@@ -1051,38 +872,22 @@ CREATE COLLATION ignore_accents (provider = icu, locale = 'und-u-ks-level1-kc-tr
     </para>
 
     <para>
-     All standard and predefined collations are deterministic, all
-     user-defined collations are deterministic by default.  While
-     nondeterministic collations give a more <quote>correct</quote> behavior,
-     especially when considering the full power of Unicode and its many
-     special cases, they also have some drawbacks.  Foremost, their use leads
-     to a performance penalty.  Note, in particular, that B-tree cannot use
-     deduplication with indexes that use a nondeterministic collation.  Also,
-     certain operations are not possible with nondeterministic collations,
-     such as some pattern matching operations.  Therefore, they should be used
-     only in cases where they are specifically wanted.
+     所有标准排序规则和预定义排序规则都是确定性的，所有用户定义的排序规则默认也是确定性的。虽然非确定性排序规则提供了更<quote>正确</quote>的行为，尤其是在考虑 Unicode 的全部能力及其众多特殊情况时，但它们也有一些缺点。首先，使用它们会导致性能损失。特别要注意，B-tree 无法对使用非确定性排序规则的索引使用去重。此外，某些操作无法使用非确定性排序规则完成，例如某些模式匹配操作。因此，只应在确实需要它们的情况下使用。
     </para>
 
     <tip>
      <para>
-      To deal with text in different Unicode normalization forms, it is also
-      an option to use the functions/expressions
-      <function>normalize</function> and <literal>is normalized</literal> to
-      preprocess or check the strings, instead of using nondeterministic
-      collations.  There are different trade-offs for each approach.
+      要处理不同 Unicode 规范化形式的文本，也可以选择使用函数/表达式 <function>normalize</function> 和 <literal>is normalized</literal> 来预处理或检查字符串，而不是使用非确定性排序规则。每种方法都有不同的取舍。
      </para>
     </tip>
    </sect3>
   </sect2>
 
   <sect2 id="icu-custom-collations">
-   <title>ICU Custom Collations</title>
+   <title>ICU 定制排序规则</title>
 
    <para>
-    ICU allows extensive control over collation behavior by defining new
-    collations with collation settings as a part of the language tag. These
-    settings can modify the collation order to suit a variety of needs. For
-    instance:
+    ICU 允许通过在语言标签中把排序规则设置作为其一部分来定义新的排序规则，从而对排序规则行为进行广泛的控制。这些设置可以修改排序顺序以满足各种需求。例如：
 
 <programlisting>
 -- ignore differences in accents and case
@@ -1100,32 +905,25 @@ SELECT 'id-45' &lt; 'id-123' COLLATE num_ignore_punct; -- true
 SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
 </programlisting>
 
-    Many of the available options are described in <xref
-    linkend="icu-collation-settings"/>, or see <xref
-    linkend="icu-external-references"/> for more details.
+    许多可用选项在 <xref
+    linkend="icu-collation-settings"/> 中描述，或者参阅 <xref
+    linkend="icu-external-references"/> 了解更多细节。
    </para>
 
    <sect3 id="icu-collation-comparison-levels">
-    <title>ICU Comparison Levels</title>
+    <title>ICU 比较级别</title>
 
     <para>
-     Comparison of two strings (collation) in ICU is determined by a
-     multi-level process, where textual features are grouped into
-     "levels". Treatment of each level is controlled by the <link
-     linkend="icu-collation-settings-table">collation settings</link>. Higher
-     levels correspond to finer textual features.
+     在 ICU 中，两个字符串的比较（排序规则）由一个多级过程决定，其中文本特征被分组为“级别”。每个级别的处理由 <link
+     linkend="icu-collation-settings-table">排序规则设置</link> 控制。较高的级别对应于更精细的文本特征。
     </para>
 
     <para>
-     <xref linkend="icu-collation-levels"/> shows which textual feature
-     differences are considered significant when determining equality at the
-     given level. The Unicode character <literal>U+2063</literal> is an
-     invisible separator, and as seen in the table, is ignored for at all
-     levels of comparison less than <literal>identic</literal>.
+     <xref linkend="icu-collation-levels"/> 显示了在给定级别上确定相等性时，哪些文本特征差异被视为重要。Unicode 字符 <literal>U+2063</literal> 是一个不可见分隔符，如表中所见，在所有小于 <literal>identic</literal> 的比较级别中它都被忽略。
     </para>
 
      <table id="icu-collation-levels">
-      <title>ICU Collation Levels</title>
+      <title>ICU 排序规则级别</title>
       <tgroup cols="8">
        <colspec colname="col1" colwidth="1*"/>
        <colspec colname="col2" colwidth="1.25*"/>
@@ -1138,8 +936,8 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
 
        <thead>
         <row>
-         <entry>Level</entry>
-         <entry>Description</entry>
+         <entry>级别</entry>
+         <entry>描述</entry>
          <entry><literal>'f' = 'f'</literal></entry>
          <entry><literal>'ab' = U&amp;'a\2063b'</literal></entry>
          <entry><literal>'x-y' = 'x_y'</literal></entry>
@@ -1152,7 +950,7 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
        <tbody>
         <row>
          <entry>level1</entry>
-         <entry>Base Character</entry>
+         <entry>基本字符</entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
@@ -1162,7 +960,7 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
         </row>
         <row>
          <entry>level2</entry>
-         <entry>Accents</entry>
+         <entry>重音符号</entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
@@ -1172,7 +970,7 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
         </row>
         <row>
          <entry>level3</entry>
-         <entry>Case/Variants</entry>
+         <entry>大小写/变体</entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
          <entry><literal>true</literal></entry>
@@ -1182,7 +980,7 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
         </row>
         <row>
          <entry>level4</entry>
-         <entry>Punctuation<footnote><para>only with
+         <entry>标点符号<footnote><para>only with
          <literal>ka-shifted</literal>; see <xref
          linkend="icu-collation-settings-table"/></para></footnote></entry>
          <entry><literal>true</literal></entry>
@@ -1194,7 +992,7 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
         </row>
         <row>
          <entry>identic</entry>
-         <entry>All</entry>
+         <entry>全部</entry>
          <entry><literal>true</literal></entry>
          <entry><literal>false</literal></entry>
          <entry><literal>false</literal></entry>
@@ -1207,18 +1005,11 @@ SELECT 'w;x*y-z' = 'wxyz' COLLATE num_ignore_punct; -- true
      </table>
 
     <para>
-     At every level, even with full normalization off, basic normalization is
-     performed. For example, <literal>'á'</literal> may be composed of the
-     code points <literal>U&amp;'\0061\0301'</literal> or the single code
-     point <literal>U&amp;'\00E1'</literal>, and those sequences will be
-     considered equal even at the <literal>identic</literal> level. To treat
-     any difference in code point representation as distinct, use a collation
-     created with <symbol>deterministic</symbol> set to
-     <literal>true</literal>.
+     在每个级别，即使关闭完全规范化，也会执行基本规范化。例如，<literal>'á'</literal> 可能由码点 <literal>U&amp;'\0061\0301'</literal> 组成，也可能由单个码点 <literal>U&amp;'\00E1'</literal> 组成，即使在 <literal>identic</literal> 级别，这些序列也会被视为相等。要将码点表示中的任何差异视为不同，请使用将 <symbol>deterministic</symbol> 设置为 <literal>true</literal> 所创建的排序规则。
     </para>
 
     <sect4 id="icu-collation-level-examples">
-     <title>Collation Level Examples</title>
+     <title>排序规则级别示例</title>
 
 <programlisting>
 CREATE COLLATION level3 (provider = icu, deterministic = false, locale = 'und-u-ka-shifted-ks-level3');
@@ -1238,16 +1029,16 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
    </sect3>
 
    <sect3 id="icu-collation-settings">
-    <title>Collation Settings for an ICU Locale</title>
+    <title>ICU 区域设置的排序规则设置</title>
 
     <para>
-     <xref linkend="icu-collation-settings-table"/> shows the available
-     collation settings, which can be used as part of a language tag to
-     customize a collation.
+     <xref linkend="icu-collation-settings-table"/> 显示了可用的
+     排序规则设置，这些设置可作为语言标签的一部分，用于
+     自定义排序规则。
     </para>
 
      <table id="icu-collation-settings-table">
-      <title>ICU Collation Settings</title>
+      <title>ICU 排序规则设置</title>
       <tgroup cols="4">
        <colspec colname="col1" colwidth="1*"/>
        <colspec colname="col2" colwidth="2*"/>
@@ -1256,10 +1047,10 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
 
        <thead>
         <row>
-         <entry>Key</entry>
-         <entry>Values</entry>
-         <entry>Default</entry>
-         <entry>Description</entry>
+         <entry>键</entry>
+         <entry>值</entry>
+         <entry>默认值</entry>
+         <entry>描述</entry>
         </row>
        </thead>
 
@@ -1269,7 +1060,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>emoji</literal>, <literal>phonebk</literal>, <literal>standard</literal>, <replaceable>...</replaceable></entry>
          <entry><literal>standard</literal></entry>
          <entry>
-          Collation type. See <xref linkend="icu-external-references"/> for additional options and details.
+          排序规则类型。有关其他选项和详细信息，请参阅 <xref linkend="icu-external-references"/>。
          </entry>
         </row>
 
@@ -1278,11 +1069,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>noignore</literal>, <literal>shifted</literal></entry>
          <entry><literal>noignore</literal></entry>
          <entry>
-          If set to <literal>shifted</literal>, causes some characters
-          (e.g. punctuation or space) to be ignored in comparison. Key
-          <literal>ks</literal> must be set to <literal>level3</literal> or
-          lower to take effect. Set key <literal>kv</literal> to control which
-          character classes are ignored.
+          如果设置为 <literal>shifted</literal>，则某些字符（例如标点或空格）在比较时会被忽略。键 <literal>ks</literal> 必须设置为 <literal>level3</literal> 或更低才能生效。设置键 <literal>kv</literal> 可控制忽略哪些字符类。
          </entry>
         </row>
 
@@ -1291,9 +1078,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>true</literal>, <literal>false</literal></entry>
          <entry><literal>false</literal></entry>
          <entry>
-          Backwards comparison for the level 2 differences. For example,
-          locale <literal>und-u-kb</literal> sorts <literal>'àe'</literal>
-          before <literal>'aé'</literal>.
+          对第 2 级差异进行反向比较。例如，区域设置 <literal>und-u-kb</literal> 会将 <literal>'àe'</literal> 排在 <literal>'aé'</literal> 之前。
          </entry>
         </row>
 
@@ -1303,13 +1088,10 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>false</literal></entry>
          <entry>
           <para>
-           Separates case into a "level 2.5" that falls between accents and
-           other level 3 features.
+           将大小写分离为一个“2.5 级”，它介于重音符号和其他 3 级特性之间。
           </para>
           <para>
-           If set to <literal>true</literal> and <literal>ks</literal> is set
-           to <literal>level1</literal>, will ignore accents but take case
-           into account.
+           如果设置为 <literal>true</literal> 且 <literal>ks</literal> 设置为 <literal>level1</literal>，将忽略重音符号，但会考虑大小写。
           </para>
          </entry>
         </row>
@@ -1322,10 +1104,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          </entry>
          <entry><literal>false</literal></entry>
          <entry>
-          If set to <literal>upper</literal>, upper case sorts before lower
-          case. If set to <literal>lower</literal>, lower case sorts before
-          upper case. If set to <literal>false</literal>, the sort depends on
-          the rules of the locale.
+          如果设置为 <literal>upper</literal>，大写排在小写之前。如果设置为 <literal>lower</literal>，小写排在大写之前。如果设置为 <literal>false</literal>，排序取决于区域的规则。
          </entry>
         </row>
 
@@ -1334,10 +1113,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>true</literal>, <literal>false</literal></entry>
          <entry><literal>false</literal></entry>
          <entry>
-          If set to <literal>true</literal>, numbers within a string are
-          treated as a single numeric value rather than a sequence of
-          digits. For example, <literal>'id-45'</literal> sorts before
-          <literal>'id-123'</literal>.
+          如果设置为 <literal>true</literal>，字符串中的数字会被当作单个数值处理，而不是一串数字。例如，<literal>'id-45'</literal> 排在 <literal>'id-123'</literal> 之前。
          </entry>
         </row>
 
@@ -1347,20 +1123,10 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>false</literal></entry>
          <entry>
           <para>
-           Enable full normalization; may affect performance. Basic
-           normalization is performed even when set to
-           <literal>false</literal>. Locales for languages that require full
-           normalization typically enable it by default.
+           启用完全规范化；可能影响性能。即使设置为 <literal>false</literal>，也会执行基本规范化。需要完全规范化的语言的区域设置通常默认启用它。
           </para>
           <para>
-           Full normalization is important in some cases, such as when
-           multiple accents are applied to a single character. For example,
-           the code point sequences <literal>U&amp;'\0065\0323\0302'</literal>
-           and <literal>U&amp;'\0065\0302\0323'</literal> represent
-           an <literal>e</literal> with circumflex and dot-below accents
-           applied in different orders. With full normalization
-           on, these code point sequences are treated as equal; otherwise they
-           are unequal.
+           在某些情况下，完全规范化很重要，例如当单个字符上应用多个重音符号时。例如，码点序列 <literal>U&amp;'\0065\0323\0302'</literal> 和 <literal>U&amp;'\0065\0302\0323'</literal> 表示一个 <literal>e</literal>，其抑扬符和下加点重音符号以不同顺序应用。开启完全规范化后，这些码点序列被视为相等；否则它们不相等。
           </para>
          </entry>
         </row>
@@ -1375,18 +1141,16 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry></entry>
          <entry>
           <para>
-           Set to one or more of the valid values, or any BCP 47
-           <replaceable>script-id</replaceable>, e.g. <literal>latn</literal>
-           ("Latin") or <literal>grek</literal> ("Greek"). Multiple values are
-           separated by "<literal>-</literal>".
+           设置为一个或多个有效值，或任意 BCP 47
+<replaceable>script-id</replaceable>，例如 <literal>latn</literal>
+（"Latin"）或 <literal>grek</literal>（"Greek"）。多个值之间
+用 "<literal>-</literal>" 分隔。
           </para>
           <para>
-           Redefines the ordering of classes of characters; those characters
-           belonging to a class earlier in the list sort before characters
-           belonging to a class later in the list. For instance, the value
-           <literal>digit-currency-space</literal> (as part of a language tag
-           like <literal>und-u-kr-digit-currency-space</literal>) sorts
-           punctuation before digits and spaces.
+           重新定义字符类的排序；属于列表中靠前的类的字符
+排在属于列表中靠后的类的字符之前。例如，值
+<literal>digit-currency-space</literal>（作为诸如 <literal>und-u-kr-digit-currency-space</literal> 之类的语言标签
+的一部分）会将标点排在数字和空格之前。
           </para>
          </entry>
         </row>
@@ -1396,10 +1160,10 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          <entry><literal>level1</literal>, <literal>level2</literal>, <literal>level3</literal>, <literal>level4</literal>, <literal>identic</literal></entry>
          <entry><literal>level3</literal></entry>
          <entry>
-          Sensitivity (or "strength") when determining equality, with
-          <literal>level1</literal> the least sensitive to differences and
-          <literal>identic</literal> the most sensitive to differences. See
-          <xref linkend="icu-collation-levels"/> for details.
+          判断相等时的敏感度（或“强度”），其中
+<literal>level1</literal> 对差异最不敏感，
+<literal>identic</literal> 对差异最敏感。详情请参见
+<xref linkend="icu-collation-levels"/>。
          </entry>
         </row>
 
@@ -1411,13 +1175,13 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
          </entry>
          <entry><literal>punct</literal></entry>
          <entry>
-          Classes of characters ignored during comparison at level 3. Setting
-          to a later value includes earlier values;
-          e.g. <literal>symbol</literal> also includes
-          <literal>punct</literal> and <literal>space</literal> in the
-          characters to be ignored. Key <literal>ka</literal> must be set to
-          <literal>shifted</literal> and key <literal>ks</literal> must be set
-          to <literal>level3</literal> or lower to take effect.
+          在第 3 级比较时忽略的字符类。设置为靠后的值
+会包含靠前的值；
+例如 <literal>symbol</literal> 还会将
+<literal>punct</literal> 和 <literal>space</literal> 包含在
+要忽略的字符中。要生效，键 <literal>ka</literal> 必须设置为
+<literal>shifted</literal>，且键 <literal>ks</literal> 必须
+设置为 <literal>level3</literal> 或更低。
          </entry>
         </row>
        </tbody>
@@ -1425,9 +1189,8 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
      </table>
 
     <para>
-     Defaults may depend on locale. The above table is not meant to be
-     complete. See <xref linkend="icu-external-references"/> for additional
-     options and details.
+     默认值可能取决于区域设置。上表并非完整无遗。
+有关其他选项和详细信息，请参见 <xref linkend="icu-external-references"/>。
     </para>
 
     <note>
@@ -1444,13 +1207,13 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
    </sect3>
 
    <sect3 id="icu-locale-examples">
-    <title>Collation Settings Examples</title>
+    <title>排序规则设置示例</title>
 
      <variablelist>
       <varlistentry id="collation-managing-create-icu-de-u-co-phonebk-x-icu">
        <term><literal>CREATE COLLATION "de-u-co-phonebk-x-icu" (provider = icu, locale = 'de-u-co-phonebk');</literal></term>
        <listitem>
-        <para>German collation with phone book collation type</para>
+        <para>使用电话簿排序规则类型的德语排序规则</para>
        </listitem>
       </varlistentry>
 
@@ -1458,7 +1221,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
        <term><literal>CREATE COLLATION "und-u-co-emoji-x-icu" (provider = icu, locale = 'und-u-co-emoji');</literal></term>
        <listitem>
         <para>
-         Root collation with Emoji collation type, per Unicode Technical Standard #51
+         根排序规则，使用 Emoji 排序规则类型，依据 Unicode 技术标准 #51
         </para>
        </listitem>
       </varlistentry>
@@ -1467,7 +1230,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
        <term><literal>CREATE COLLATION latinlast (provider = icu, locale = 'en-u-kr-grek-latn');</literal></term>
        <listitem>
         <para>
-         Sort Greek letters before Latin ones.  (The default is Latin before Greek.)
+         将希腊字母排在拉丁字母之前。（默认是拉丁字母在希腊字母之前。）
         </para>
        </listitem>
       </varlistentry>
@@ -1476,8 +1239,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
        <term><literal>CREATE COLLATION upperfirst (provider = icu, locale = 'en-u-kf-upper');</literal></term>
        <listitem>
         <para>
-         Sort upper-case letters before lower-case letters.  (The default is
-         lower-case letters first.)
+         将大写字母排在小写字母之前。（默认是小写字母在前。）
         </para>
        </listitem>
       </varlistentry>
@@ -1486,7 +1248,7 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
        <term><literal>CREATE COLLATION special (provider = icu, locale = 'en-u-kf-upper-kr-grek-latn');</literal></term>
        <listitem>
         <para>
-         Combines both of the above options.
+         组合上述两个选项。
         </para>
        </listitem>
       </varlistentry>
@@ -1494,32 +1256,24 @@ SELECT 'x-y' = 'x_y' COLLATE level4; -- false
    </sect3>
 
    <sect3 id="icu-tailoring-rules">
-    <title>ICU Tailoring Rules</title>
+    <title>ICU 定制规则</title>
 
     <para>
-     If the options provided by the collation settings shown above are not
-     sufficient, the order of collation elements can be changed with tailoring
-     rules, whose syntax is detailed at <ulink
-     url="https://unicode-org.github.io/icu/userguide/collation/customization/"></ulink>.
+     如果上面展示的排序规则设置所提供的选项不够用，可以使用定制规则来改变排序规则元素的顺序，其语法在 <ulink
+     url="https://unicode-org.github.io/icu/userguide/collation/customization/"></ulink> 中有详细说明。
     </para>
 
     <para>
-     This small example creates a collation based on the root locale with a
-     tailoring rule:
+     这个小例子基于根区域设置创建了一个带有定制规则的排序规则：
 <programlisting>
 <![CDATA[CREATE COLLATION custom (provider = icu, locale = 'und', rules = '&V << w <<< W');]]>
 </programlisting>
-     With this rule, the letter <quote>W</quote> is sorted after
-     <quote>V</quote>, but is treated as a secondary difference similar to an
-     accent.  Rules like this are contained in the locale definitions of some
-     languages.  (Of course, if a locale definition already contains the
-     desired rules, then they don't need to be specified again explicitly.)
+     使用这条规则，字母 <quote>W</quote> 排在
+     <quote>V</quote> 之后，但被当作类似于重音的次要差异来处理。此类规则包含在某些语言的语言环境定义中。（当然，如果某个语言环境定义已经包含所需的规则，那么就不需要再显式指定它们了。）
     </para>
 
     <para>
-     Here is a more complex example.  The following statement sets up a
-     collation named <literal>ebcdic</literal> with rules to sort US-ASCII
-     characters in the order of the EBCDIC encoding.
+     下面是一个更复杂的例子。以下语句建立了一个名为 <literal>ebcdic</literal> 的排序规则，其中的规则按 EBCDIC 编码的顺序对 US-ASCII 字符进行排序。
 
 <programlisting>
 <![CDATA[CREATE COLLATION ebcdic (provider = icu, locale = 'und',
@@ -1550,18 +1304,16 @@ ORDER BY c COLLATE ebcdic;
    </sect3>
 
    <sect3 id="icu-external-references">
-    <title>External References for ICU</title>
+    <title>ICU 的外部参考</title>
 
     <para>
-     This section (<xref linkend="icu-custom-collations"/>) is only a brief
-     overview of ICU behavior and language tags. Refer to the following
-     documents for technical details, additional options, and new behavior:
+     本节（<xref linkend="icu-custom-collations"/>）只是对 ICU 行为和语言标签的简要概述。有关技术细节、附加选项和新行为，请参阅以下文档：
     </para>
 
     <itemizedlist>
      <listitem>
       <para>
-       <ulink url="https://www.unicode.org/reports/tr35/tr35-collation.html">Unicode Technical Standard #35</ulink>
+       <ulink url="https://www.unicode.org/reports/tr35/tr35-collation.html">Unicode 技术标准 #35</ulink>
       </para>
      </listitem>
      <listitem>
@@ -1571,7 +1323,7 @@ ORDER BY c COLLATE ebcdic;
      </listitem>
      <listitem>
       <para>
-       <ulink url="https://github.com/unicode-org/cldr/blob/master/common/bcp47/collation.xml">CLDR repository</ulink>
+       <ulink url="https://github.com/unicode-org/cldr/blob/master/common/bcp47/collation.xml">CLDR 仓库</ulink>
       </para>
      </listitem>
      <listitem>
