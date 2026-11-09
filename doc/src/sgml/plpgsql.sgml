@@ -2919,10 +2919,10 @@ CALL transaction_test2();
   </sect1>
 
   <sect1 id="plpgsql-errors-and-messages">
-   <title>Errors and Messages</title>
+   <title>错误和消息</title>
 
   <sect2 id="plpgsql-statements-raise">
-   <title>Reporting Errors and Messages</title>
+   <title>报告错误和消息</title>
 
    <indexterm>
     <primary>RAISE</primary>
@@ -2935,8 +2935,7 @@ CALL transaction_test2();
    </indexterm>
 
    <para>
-    Use the <command>RAISE</command> statement to report messages and
-    raise errors.
+    使用 <command>RAISE</command> 语句来报告消息和抛出错误。
 
 <synopsis>
 RAISE <optional> <replaceable class="parameter">level</replaceable> </optional> '<replaceable class="parameter">format</replaceable>' <optional>, <replaceable class="parameter">expression</replaceable> <optional>, ... </optional></optional> <optional> USING <replaceable class="parameter">option</replaceable> { = | := } <replaceable class="parameter">expression</replaceable> <optional>, ... </optional> </optional>;
@@ -2946,60 +2945,47 @@ RAISE <optional> <replaceable class="parameter">level</replaceable> </optional> 
 RAISE ;
 </synopsis>
 
-    The <replaceable class="parameter">level</replaceable> option specifies
-    the error severity.  Allowed levels are <literal>DEBUG</literal>,
-    <literal>LOG</literal>, <literal>INFO</literal>,
-    <literal>NOTICE</literal>, <literal>WARNING</literal>,
-    and <literal>EXCEPTION</literal>, with <literal>EXCEPTION</literal>
-    being the default.
-    <literal>EXCEPTION</literal> raises an error (which normally aborts the
-    current transaction); the other levels only generate messages of different
-    priority levels.
-    Whether messages of a particular priority are reported to the client,
-    written to the server log, or both is controlled by the
-    <xref linkend="guc-log-min-messages"/> and
-    <xref linkend="guc-client-min-messages"/> configuration
-    variables. See <xref linkend="runtime-config"/> for more
-    information.
+    <replaceable class="parameter">level</replaceable> 选项指定错误的严重程度。允许的级别为 <literal>DEBUG</literal>、
+    <literal>LOG</literal>、<literal>INFO</literal>、
+    <literal>NOTICE</literal>、<literal>WARNING</literal>、
+    和 <literal>EXCEPTION</literal>，其中 <literal>EXCEPTION</literal>
+    为默认值。
+    <literal>EXCEPTION</literal> 抛出一个错误（通常会中止当前事务）；其他级别只生成不同优先级的消息。
+    特定优先级的消息是报告给客户端、写入服务器日志，还是两者都做，由
+    <xref linkend="guc-log-min-messages"/> 和
+    <xref linkend="guc-client-min-messages"/> 配置变量控制。
+    更多信息请参见 <xref linkend="runtime-config"/>。
    </para>
 
    <para>
-    In the first syntax variant,
-    after the <replaceable class="parameter">level</replaceable> if any,
-    write a <replaceable class="parameter">format</replaceable> string
-    (which must be a simple string literal, not an expression).  The
-    format string specifies the error message text to be reported.
-    The format string can be followed
-    by optional argument expressions to be inserted into the message.
-    Inside the format string, <literal>%</literal> is replaced by the
-    string representation of the next optional argument's value. Write
-    <literal>%%</literal> to emit a literal <literal>%</literal>.
-    The number of arguments must match the number of <literal>%</literal>
-    placeholders in the format string, or an error is raised during
-    the compilation of the function.
+    在第一种语法变体中，
+    在 <replaceable class="parameter">level</replaceable>（如果有）之后，
+    写一个 <replaceable class="parameter">format</replaceable> 字符串
+    （它必须是简单字符串字面量，而不是表达式）。格式字符串指定要报告的错误消息文本。
+    格式字符串后面可以跟可选的参数表达式，这些表达式将被插入到消息中。
+    在格式字符串内部，<literal>%</literal> 会被替换为下一个可选参数值的字符串表示形式。写
+    <literal>%%</literal> 可输出一个字面量 <literal>%</literal>。
+    参数的数量必须与格式字符串中 <literal>%</literal> 占位符的数量匹配，否则在编译该函数期间会抛出一个错误。
    </para>
 
    <para>
-    In this example, the value of <literal>v_job_id</literal> will replace the
-    <literal>%</literal> in the string:
+    在本例中，<literal>v_job_id</literal> 的值将替换字符串中的
+    <literal>%</literal>：
 <programlisting>
 RAISE NOTICE 'Calling cs_create_job(%)', v_job_id;
 </programlisting>
    </para>
 
    <para>
-    In the second and third syntax variants,
-    <replaceable class="parameter">condition_name</replaceable> and
-    <replaceable class="parameter">sqlstate</replaceable> specify an
-    error condition name or a five-character SQLSTATE code, respectively.
-    See <xref linkend="errcodes-appendix"/> for the valid error condition
-    names and the predefined SQLSTATE codes.
+    在第二种和第三种语法变体中，
+    <replaceable class="parameter">condition_name</replaceable> 和
+    <replaceable class="parameter">sqlstate</replaceable> 分别指定一个错误条件名称或一个五字符的 SQLSTATE 代码。
+    有效的错误条件名称和预定义的 SQLSTATE 代码请参见 <xref linkend="errcodes-appendix"/>。
    </para>
 
    <para>
-    Here are examples
-    of <replaceable class="parameter">condition_name</replaceable>
-    and <replaceable class="parameter">sqlstate</replaceable> usage:
+    下面是 <replaceable class="parameter">condition_name</replaceable>
+    和 <replaceable class="parameter">sqlstate</replaceable> 用法的示例：
 <programlisting>
 RAISE division_by_zero;
 RAISE WARNING SQLSTATE '22012';
@@ -3007,46 +2993,41 @@ RAISE WARNING SQLSTATE '22012';
    </para>
 
    <para>
-    In any of these syntax variants,
-    you can attach additional information to the error report by writing
-    <literal>USING</literal> followed by <replaceable
+    在上述任何一种语法变体中，
+    你都可以通过在错误报告中写入
+    <literal>USING</literal> 后跟 <replaceable
     class="parameter">option</replaceable> = <replaceable
-    class="parameter">expression</replaceable> items.  Each
-    <replaceable class="parameter">expression</replaceable> can be any
-    string-valued expression.  The allowed <replaceable
-    class="parameter">option</replaceable> key words are:
+    class="parameter">expression</replaceable> 项来附加额外信息。每个
+    <replaceable class="parameter">expression</replaceable> 可以是任何
+    字符串值表达式。允许的 <replaceable
+    class="parameter">option</replaceable> 关键字有：
 
     <variablelist id="raise-using-options">
      <varlistentry id="raise-using-option-message">
       <term><literal>MESSAGE</literal></term>
       <listitem>
-       <para>Sets the error message text.  This option can't be used in the
-        first syntax variant, since the message is already supplied.</para>
+       <para>设置错误消息文本。此选项不能用于第一种语法变体，因为消息已经提供。</para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="raise-using-option-detail">
       <term><literal>DETAIL</literal></term>
       <listitem>
-       <para>Supplies an error detail message.</para>
+       <para>提供错误的详细信息消息。</para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="raise-using-option-hint">
       <term><literal>HINT</literal></term>
       <listitem>
-       <para>Supplies a hint message.</para>
+       <para>提供提示消息。</para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="raise-using-option-errcode">
       <term><literal>ERRCODE</literal></term>
       <listitem>
-       <para>Specifies the error code (SQLSTATE) to report, either by condition
-        name, as shown in <xref linkend="errcodes-appendix"/>, or directly as a
-        five-character SQLSTATE code.  This option can't be used in the
-        second or third syntax variant, since the error code is already
-        supplied.</para>
+       <para>指定要报告的错误代码（SQLSTATE），既可以按条件名指定（如 <xref linkend="errcodes-appendix"/> 所示），也可以直接指定为五个字符的 SQLSTATE 代码。此选项不能用于第二种或第三种语法变体，因为错误代码已经提供。</para>
       </listitem>
      </varlistentry>
 
@@ -3057,15 +3038,14 @@ RAISE WARNING SQLSTATE '22012';
       <term><literal>TABLE</literal></term>
       <term><literal>SCHEMA</literal></term>
       <listitem>
-       <para>Supplies the name of a related object.</para>
+       <para>提供相关对象的名称。</para>
       </listitem>
      </varlistentry>
     </variablelist>
    </para>
 
    <para>
-    This example will abort the transaction with the given error message
-    and hint:
+    这个示例将用给定的错误消息和提示中止事务：
 <programlisting>
 RAISE EXCEPTION 'Nonexistent ID --> %', user_id
       USING HINT = 'Please check your user ID';
@@ -3073,67 +3053,48 @@ RAISE EXCEPTION 'Nonexistent ID --> %', user_id
    </para>
 
    <para>
-    These two examples show equivalent ways of setting the SQLSTATE:
+    下面两个示例展示了设置 SQLSTATE 的等价方式：
 <programlisting>
 RAISE 'Duplicate user ID: %', user_id USING ERRCODE = 'unique_violation';
 RAISE 'Duplicate user ID: %', user_id USING ERRCODE = '23505';
 </programlisting>
-    Another way to produce the same result is:
+    产生相同结果的另一种方式是：
 <programlisting>
 RAISE unique_violation USING MESSAGE = 'Duplicate user ID: ' || user_id;
 </programlisting>
    </para>
 
    <para>
-    As shown in the fourth syntax variant, it is also possible to
-    write <literal>RAISE USING</literal> or <literal>RAISE
-    <replaceable class="parameter">level</replaceable> USING</literal> and put
-    everything else into the <literal>USING</literal> list.
+    如第四种语法变体所示，也可以写 <literal>RAISE USING</literal> 或 <literal>RAISE
+    <replaceable class="parameter">level</replaceable> USING</literal>，并把其他所有内容放入 <literal>USING</literal> 列表。
    </para>
 
    <para>
-    The last variant of <command>RAISE</command> has no parameters at all.
-    This form can only be used inside a <literal>BEGIN</literal> block's
-    <literal>EXCEPTION</literal> clause;
-    it causes the error currently being handled to be re-thrown.
+    <command>RAISE</command> 的最后一种变体完全没有参数。这种形式只能在 <literal>BEGIN</literal> 块的
+    <literal>EXCEPTION</literal> 子句内使用；它会导致当前正在处理的错误被重新抛出。
    </para>
 
    <note>
     <para>
-     Before <productname>PostgreSQL</productname> 9.1, <command>RAISE</command> without
-     parameters was interpreted as re-throwing the error from the block
-     containing the active exception handler.  Thus an <literal>EXCEPTION</literal>
-     clause nested within that handler could not catch it, even if the
-     <command>RAISE</command> was within the nested <literal>EXCEPTION</literal> clause's
-     block. This was deemed surprising as well as being incompatible with
-     Oracle's PL/SQL.
+     在 <productname>PostgreSQL</productname> 9.1 之前，不带参数的 <command>RAISE</command> 被解释为重新抛出包含活动异常处理器的块中的错误。因此，嵌套在该处理器内的 <literal>EXCEPTION</literal>
+    子句无法捕获它，即使 <command>RAISE</command> 位于嵌套的 <literal>EXCEPTION</literal> 子句的块内也是如此。这被认为既令人意外，又与 Oracle 的 PL/SQL 不兼容。
     </para>
    </note>
 
    <para>
-    If no condition name nor SQLSTATE is specified in a
-    <command>RAISE EXCEPTION</command> command, the default is to use
-    <literal>raise_exception</literal> (<literal>P0001</literal>).
-    If no message text is specified, the default is to use the condition
-    name or SQLSTATE as message text.
+    如果 <command>RAISE EXCEPTION</command> 命令中既没有指定条件名称也没有指定 SQLSTATE，则默认使用 <literal>raise_exception</literal>（<literal>P0001</literal>）。如果没有指定消息文本，则默认使用条件名称或 SQLSTATE 作为消息文本。
    </para>
 
    <note>
     <para>
-     When specifying an error code by SQLSTATE code, you are not
-     limited to the predefined error codes, but can select any
-     error code consisting of five digits and/or upper-case ASCII
-     letters, other than <literal>00000</literal>.  It is recommended that
-     you avoid throwing error codes that end in three zeroes, because
-     these are category codes and can only be trapped by trapping
-     the whole category.
+     通过 SQLSTATE 代码指定错误码时，并不局限于预定义的错误码，而是可以选择任何由五位数字和/或大写 ASCII 字母组成的错误码，但 <literal>00000</literal> 除外。建议避免抛出以三个零结尾的错误码，因为这些是类别代码，只能通过捕获整个类别来捕获。
     </para>
    </note>
 
   </sect2>
 
   <sect2 id="plpgsql-statements-assert">
-   <title>Checking Assertions</title>
+   <title>检查断言</title>
 
    <indexterm>
     <primary>ASSERT</primary>
@@ -3150,43 +3111,27 @@ RAISE unique_violation USING MESSAGE = 'Duplicate user ID: ' || user_id;
    </indexterm>
 
    <para>
-    The <command>ASSERT</command> statement is a convenient shorthand for
-    inserting debugging checks into <application>PL/pgSQL</application>
-    functions.
+    <command>ASSERT</command> 语句是一种便捷的简写形式，用于将调试检查插入到 <application>PL/pgSQL</application> 函数中。
 
 <synopsis>
 ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <replaceable class="parameter">message</replaceable> </optional>;
 </synopsis>
 
-    The <replaceable class="parameter">condition</replaceable> is a Boolean
-    expression that is expected to always evaluate to true; if it does,
-    the <command>ASSERT</command> statement does nothing further.  If the
-    result is false or null, then an <literal>ASSERT_FAILURE</literal> exception
-    is raised.  (If an error occurs while evaluating
-    the <replaceable class="parameter">condition</replaceable>, it is
-    reported as a normal error.)
+    <replaceable class="parameter">condition</replaceable> 是一个布尔表达式，预期其求值结果始终为真；如果确实如此，则 <command>ASSERT</command> 语句不再做其他事情。如果结果为假或空，则会引发一个 <literal>ASSERT_FAILURE</literal> 异常。（如果在求值 <replaceable class="parameter">condition</replaceable> 时发生错误，则将其报告为普通错误。）
    </para>
 
    <para>
-    If the optional <replaceable class="parameter">message</replaceable> is
-    provided, it is an expression whose result (if not null) replaces the
-    default error message text <quote>assertion failed</quote>, should
-    the <replaceable class="parameter">condition</replaceable> fail.
-    The <replaceable class="parameter">message</replaceable> expression is
-    not evaluated in the normal case where the assertion succeeds.
+    如果提供了可选的 <replaceable class="parameter">message</replaceable>，它是一个表达式，当 <replaceable class="parameter">condition</replaceable> 失败时，其结果（如果不为空）将替换默认的错误消息文本 <quote>assertion failed</quote>。在断言成功的正常情况下，不会对 <replaceable class="parameter">message</replaceable> 表达式求值。
    </para>
 
    <para>
-    Testing of assertions can be enabled or disabled via the configuration
-    parameter <literal>plpgsql.check_asserts</literal>, which takes a Boolean
-    value; the default is <literal>on</literal>.  If this parameter
-    is <literal>off</literal> then <command>ASSERT</command> statements do nothing.
+    可以通过配置参数 <literal>plpgsql.check_asserts</literal> 启用或禁用断言的测试，该参数接受一个布尔值；默认值为 <literal>on</literal>。如果此参数为 <literal>off</literal>，则 <command>ASSERT</command> 语句不做任何事情。
    </para>
 
    <para>
-    Note that <command>ASSERT</command> is meant for detecting program
-    bugs, not for reporting ordinary error conditions.  Use
-    the <command>RAISE</command> statement, described above, for that.
+    请注意，<command>ASSERT</command> 用于检测程序
+    缺陷，而不是用于报告普通错误情况。为此，请使用
+    上文所述的 <command>RAISE</command> 语句。
    </para>
 
   </sect2>
