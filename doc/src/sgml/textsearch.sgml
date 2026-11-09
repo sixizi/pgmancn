@@ -2664,21 +2664,17 @@ SHOW default_text_search_config;
  </sect1>
 
  <sect1 id="textsearch-debugging">
-  <title>Testing and Debugging Text Search</title>
+  <title>测试和调试全文检索</title>
 
   <para>
-   The behavior of a custom text search configuration can easily become
-   confusing.  The functions described
-   in this section are useful for testing text search objects.  You can
-   test a complete configuration, or test parsers and dictionaries separately.
+   自定义全文检索配置的行为很容易变得令人困惑。本节中描述的函数可用于测试全文检索对象。你可以测试一个完整的配置，也可以分别测试解析器和字典。
   </para>
 
   <sect2 id="textsearch-configuration-testing">
-   <title>Configuration Testing</title>
+   <title>配置测试</title>
 
   <para>
-   The function <function>ts_debug</function> allows easy testing of a
-   text search configuration.
+   函数 <function>ts_debug</function> 可以方便地测试全文检索配置。
   </para>
 
   <indexterm>
@@ -2697,13 +2693,8 @@ ts_debug(<optional> <replaceable class="parameter">config</replaceable> <type>re
 </synopsis>
 
   <para>
-   <function>ts_debug</function> displays information about every token of
-   <replaceable class="parameter">document</replaceable> as produced by the
-   parser and processed by the configured dictionaries.  It uses the
-   configuration specified by <replaceable
-   class="parameter">config</replaceable>,
-   or <varname>default_text_search_config</varname> if that argument is
-   omitted.
+   <function>ts_debug</function> 显示 <replaceable class="parameter">document</replaceable> 的每个记号的信息，这些记号由解析器产生并由配置的字典处理。它使用由 <replaceable
+   class="parameter">config</replaceable> 指定的配置，如果省略该参数则使用 <varname>default_text_search_config</varname>。
   </para>
 
   <para>
@@ -2713,45 +2704,39 @@ ts_debug(<optional> <replaceable class="parameter">config</replaceable> <type>re
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
-       <replaceable>alias</replaceable> <type>text</type> &mdash; short name of the token type
+       <replaceable>alias</replaceable> <type>text</type> &mdash; 记号类型的短名称
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>description</replaceable> <type>text</type> &mdash; description of the
-       token type
+       <replaceable>description</replaceable> <type>text</type> &mdash; 词元类型的描述
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>token</replaceable> <type>text</type> &mdash; text of the token
+       <replaceable>token</replaceable> <type>text</type> &mdash; 词元的文本
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>dictionaries</replaceable> <type>regdictionary[]</type> &mdash; the
-       dictionaries selected by the configuration for this token type
+       <replaceable>dictionaries</replaceable> <type>regdictionary[]</type> &mdash; 该词元类型由配置选定的字典
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>dictionary</replaceable> <type>regdictionary</type> &mdash; the dictionary
-       that recognized the token, or <literal>NULL</literal> if none did
+       <replaceable>dictionary</replaceable> <type>regdictionary</type> &mdash; 识别出该词元的字典，如果没有字典识别出它则为 <literal>NULL</literal>
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>lexemes</replaceable> <type>text[]</type> &mdash; the lexeme(s) produced
-       by the dictionary that recognized the token, or <literal>NULL</literal> if
-       none did; an empty array (<literal>{}</literal>) means it was recognized as a
-       stop word
+       <replaceable>lexemes</replaceable> <type>text[]</type> &mdash; 识别出该词元的字典所产生的词位，如果没有字典识别出它则为 <literal>NULL</literal>；空数组（<literal>{}</literal>）表示它被识别为停用词
       </para>
      </listitem>
     </itemizedlist>
   </para>
 
   <para>
-   Here is a simple example:
+   下面是一个简单的例子：
 
 <screen>
 SELECT * FROM ts_debug('english', 'a fat  cat sat on a mat - it ate a fat rats');
@@ -2816,31 +2801,24 @@ SELECT * FROM ts_debug('public.english', 'The Brightest supernovaes');
 </screen>
 
   <para>
-   In this example, the word <literal>Brightest</literal> was recognized by the
-   parser as an <literal>ASCII word</literal> (alias <literal>asciiword</literal>).
-   For this token type the dictionary list is
-   <literal>english_ispell</literal> and
-   <literal>english_stem</literal>. The word was recognized by
-   <literal>english_ispell</literal>, which reduced it to the noun
-   <literal>bright</literal>. The word <literal>supernovaes</literal> is
-   unknown to the <literal>english_ispell</literal> dictionary so it
-   was passed to the next dictionary, and, fortunately, was recognized (in
-   fact, <literal>english_stem</literal> is a Snowball dictionary which
-   recognizes everything; that is why it was placed at the end of the
-   dictionary list).
+   在这个例子中，单词 <literal>Brightest</literal> 被解析器识别为一个 <literal>ASCII word</literal>（别名 <literal>asciiword</literal>）。
+   对于这种记号类型，词典列表是
+   <literal>english_ispell</literal> 和
+   <literal>english_stem</literal>。该单词被
+   <literal>english_ispell</literal> 识别，并将其归约为名词
+   <literal>bright</literal>。单词 <literal>supernovaes</literal> 对于 <literal>english_ispell</literal> 词典来说是未知的，因此
+   它被传递给下一个词典，并且幸运的是被识别了（事实上，<literal>english_stem</literal> 是一个 Snowball 词典，
+   它能识别任何内容；这就是为什么它被放在词典列表的末尾）。
   </para>
 
   <para>
-   The word <literal>The</literal> was recognized by the
-   <literal>english_ispell</literal> dictionary as a stop word (<xref
-   linkend="textsearch-stopwords"/>) and will not be indexed.
-   The spaces are discarded too, since the configuration provides no
-   dictionaries at all for them.
+   单词 <literal>The</literal> 被 <literal>english_ispell</literal> 词典识别为停用词（<xref
+   linkend="textsearch-stopwords"/>），因此不会被索引。
+   空格也被丢弃，因为配置根本没有为它们提供任何词典。
   </para>
 
   <para>
-   You can reduce the width of the output by explicitly specifying which columns
-   you want to see:
+   你可以通过显式指定想要查看的列来缩小输出的宽度：
 
 <screen>
 SELECT alias, token, dictionary, lexemes
@@ -2858,10 +2836,10 @@ FROM ts_debug('public.english', 'The Brightest supernovaes');
   </sect2>
 
   <sect2 id="textsearch-parser-testing">
-   <title>Parser Testing</title>
+   <title>解析器测试</title>
 
   <para>
-   The following functions allow direct testing of a text search parser.
+   以下函数允许直接测试文本检索解析器。
   </para>
 
   <indexterm>
@@ -2876,11 +2854,8 @@ ts_parse(<replaceable class="parameter">parser_oid</replaceable> <type>oid</type
 </synopsis>
 
   <para>
-   <function>ts_parse</function> parses the given <replaceable>document</replaceable>
-   and returns a series of records, one for each token produced by
-   parsing. Each record includes a <varname>tokid</varname> showing the
-   assigned token type and a <varname>token</varname> which is the text of the
-   token.  For example:
+   <function>ts_parse</function> 解析给定的 <replaceable>document</replaceable>
+   并返回一系列记录，每个由解析产生的记号对应一条记录。每条记录包含一个 <varname>tokid</varname>，其中显示所分配的记号类型，以及一个 <varname>token</varname>，即该记号的文本。例如：
 
 <screen>
 SELECT * FROM ts_parse('default', '123 - a number');
@@ -2907,12 +2882,7 @@ ts_token_type(<replaceable class="parameter">parser_oid</replaceable> <type>oid<
 </synopsis>
 
   <para>
-   <function>ts_token_type</function> returns a table which describes each type of
-   token the specified parser can recognize.  For each token type, the table
-   gives the integer <varname>tokid</varname> that the parser uses to label a
-   token of that type, the <varname>alias</varname> that names the token type
-   in configuration commands, and a short <varname>description</varname>.  For
-   example:
+   <function>ts_token_type</function> 返回一个表，描述指定的解析器能够识别的每一种记号类型。对于每种记号类型，该表给出解析器用来标记该类型记号的整数 <varname>tokid</varname>、在配置命令中命名该记号类型的 <varname>alias</varname>，以及一个简短的 <varname>description</varname>。例如：
 
 <screen>
 SELECT * FROM ts_token_type('default');
@@ -2947,10 +2917,10 @@ SELECT * FROM ts_token_type('default');
   </sect2>
 
   <sect2 id="textsearch-dictionary-testing">
-   <title>Dictionary Testing</title>
+   <title>词典测试</title>
 
    <para>
-    The <function>ts_lexize</function> function facilitates dictionary testing.
+    <function>ts_lexize</function> 函数便于进行词典测试。
    </para>
 
    <indexterm>
@@ -2962,15 +2932,13 @@ ts_lexize(<replaceable class="parameter">dict</replaceable> <type>regdictionary<
 </synopsis>
 
    <para>
-    <function>ts_lexize</function> returns an array of lexemes if the input
-    <replaceable>token</replaceable> is known to the dictionary,
-    or an empty array if the token
-    is known to the dictionary but it is a stop word, or
-    <literal>NULL</literal> if it is an unknown word.
+    如果输入 <replaceable>token</replaceable> 是词典已知的，<function>ts_lexize</function> 返回一个词位数组；
+    如果该记号是词典已知的但属于停用词，则返回空数组；
+    如果是未知词，则返回 <literal>NULL</literal>。
    </para>
 
    <para>
-    Examples:
+    示例：
 
 <screen>
 SELECT ts_lexize('english_stem', 'stars');
@@ -2987,9 +2955,9 @@ SELECT ts_lexize('english_stem', 'a');
 
    <note>
     <para>
-     The <function>ts_lexize</function> function expects a single
-     <emphasis>token</emphasis>, not text. Here is a case
-     where this can be confusing:
+     <function>ts_lexize</function> 函数期望的是单个
+     <emphasis>词元</emphasis>，而不是文本。下面是一个
+     可能令人困惑的情况：
 
 <screen>
 SELECT ts_lexize('thesaurus_astro', 'supernovae stars') is null;
@@ -2998,11 +2966,11 @@ SELECT ts_lexize('thesaurus_astro', 'supernovae stars') is null;
  t
 </screen>
 
-     The thesaurus dictionary <literal>thesaurus_astro</literal> does know the
-     phrase <literal>supernovae stars</literal>, but <function>ts_lexize</function>
-     fails since it does not parse the input text but treats it as a single
-     token. Use <function>plainto_tsquery</function> or <function>to_tsvector</function> to
-     test thesaurus dictionaries, for example:
+     同义词词典 <literal>thesaurus_astro</literal> 确实知道
+     短语 <literal>supernovae stars</literal>，但 <function>ts_lexize</function>
+     会失败，因为它不解析输入文本，而是将其视为单个
+     词元。例如，使用 <function>plainto_tsquery</function> 或 <function>to_tsvector</function> 来
+     测试同义词词典：
 
 <screen>
 SELECT plainto_tsquery('supernovae stars');
