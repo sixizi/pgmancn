@@ -131,7 +131,7 @@ All type conversion rules are designed with several principles in mind:
 </sect1>
 
 <sect1 id="typeconv-oper">
-<title>Operators</title>
+<title>运算符</title>
 
 <indexterm zone="typeconv-oper">
  <primary>operator</primary>
@@ -139,35 +139,29 @@ All type conversion rules are designed with several principles in mind:
 </indexterm>
 
   <para>
-   The specific operator that is referenced by an operator expression
-   is determined using the following procedure.
-   Note that this procedure is indirectly affected
-   by the precedence of the operators involved, since that will determine
-   which sub-expressions are taken to be the inputs of which operators.
-   See <xref linkend="sql-precedence"/> for more information.
+   一个运算符表达式所引用的具体运算符，由下列过程决定。
+   注意，该过程会间接地受到所涉及运算符的优先级的影响，因为优先级将决定
+   哪些子表达式被当作哪些运算符的输入。
+   更多信息请参见 <xref linkend="sql-precedence"/>。
   </para>
 
 <procedure>
-<title>Operator Type Resolution</title>
+<title>运算符类型解析</title>
 
 <step id="op-resol-select" performance="required">
 <para>
-Select the operators to be considered from the
-<classname>pg_operator</classname> system catalog.  If a non-schema-qualified
-operator name was used (the usual case), the operators
-considered are those with the matching name and argument count that are
-visible in the current search path (see <xref linkend="ddl-schemas-path"/>).
-If a qualified operator name was given, only operators in the specified
-schema are considered.
+从 <classname>pg_operator</classname> 系统目录中选择要考虑的运算符。如果使用的是未用模式限定的
+运算符名称（常见情况），则考虑的是当前搜索路径中可见的、名称和参数个数
+都匹配的那些运算符（参见 <xref linkend="ddl-schemas-path"/>）。
+如果给出了限定运算符名称，则只考虑指定模式中的运算符。
 </para>
 
 <substeps>
 <step performance="optional">
 <para>
-If the search path finds multiple operators with identical argument types,
-only the one appearing earliest in the path is considered.  Operators with
-different argument types are considered on an equal footing regardless of
-search path position.
+如果搜索路径找到多个参数类型完全相同的运算符，则只考虑在路径中最先
+出现的那个。参数类型不同的运算符则被同等对待，与它们在搜索路径中的
+位置无关。
 </para>
 </step>
 </substeps>
@@ -182,10 +176,8 @@ hazard when calling, via qualified name
   <footnote id="op-qualified-security">
    <!-- If you edit this, consider editing func-qualified-security. -->
    <para>
-    The hazard does not arise with a non-schema-qualified name, because a
-    search path containing schemas that permit untrusted users to create
-    objects is not a <link linkend="ddl-schemas-patterns">secure schema usage
-    pattern</link>.
+    对于非模式限定的名称不会产生这种风险，因为包含允许不受信任用户创建
+   对象的模式的搜索路径并不是一种 <link linkend="ddl-schemas-patterns">安全的模式使用方式</link>。
    </para>
   </footnote>
 (not typical), any operator found in a schema that permits untrusted users to
@@ -195,17 +187,12 @@ create objects.  In such situations, cast arguments to force an exact match.
 <substeps>
 <step id="op-resol-exact-unknown" performance="optional">
 <para>
-If one argument of a binary operator invocation is of the <type>unknown</type> type,
-then assume it is the same type as the other argument for this check.
-Invocations involving two <type>unknown</type> inputs, or a prefix operator
-with an <type>unknown</type> input, will never find a match at this step.
+如果一个二元运算符调用的一个参数是 <type>unknown</type> 类型，那么在此检查中假定它与另一个参数类型相同。涉及两个 <type>unknown</type> 输入的调用，或者带有一个 <type>unknown</type> 输入的前缀运算符，在这一步永远不会找到匹配。
 </para>
 </step>
 <step id="op-resol-exact-domain" performance="optional">
 <para>
-If one argument of a binary operator invocation is of the <type>unknown</type>
-type and the other is of a domain type, next check to see if there is an
-operator accepting exactly the domain's base type on both sides; if so, use it.
+如果一个二元运算符调用的一个参数是 <type>unknown</type> 类型，而另一个是域类型，则接下来检查是否存在一个运算符，其两侧都接受该域的基本类型；如果存在，则使用它。
 </para>
 </step>
 </substeps>
@@ -213,67 +200,40 @@ operator accepting exactly the domain's base type on both sides; if so, use it.
 
 <step id="op-resol-best-match" performance="required">
 <para>
-Look for the best match.
+寻找最佳匹配。
 </para>
 <substeps>
 <step performance="required">
 <para>
-Discard candidate operators for which the input types do not match
-and cannot be converted (using an implicit conversion) to match.
-<type>unknown</type> literals are
-assumed to be convertible to anything for this purpose.  If only one
-candidate remains, use it; else continue to the next step.
+丢弃那些输入类型不匹配且无法（使用隐式转换）转换为匹配的候选运算符。为此，<type>unknown</type> 字面量被假定可以转换为任何类型。如果只剩下一个候选，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-If any input argument is of a domain type, treat it as being of the
-domain's base type for all subsequent steps.  This ensures that domains
-act like their base types for purposes of ambiguous-operator resolution.
+如果任何输入参数是域类型，则在所有后续步骤中将其视为该域的基本类型。这确保在歧义运算符解析时，域的行为与其基本类型相同。
 </para>
 </step>
 <step performance="required">
 <para>
-Run through all candidates and keep those with the most exact matches
-on input types.  Keep all candidates if none have exact matches.
-If only one candidate remains, use it; else continue to the next step.
+遍历所有候选，保留那些在输入类型上具有最多精确匹配的候选。如果没有任何候选具有精确匹配，则保留所有候选。如果只剩下一个候选，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-Run through all candidates and keep those that accept preferred types (of the
-input data type's type category) at the most positions where type conversion
-will be required.
-Keep all candidates if none accept preferred types.
-If only one candidate remains, use it; else continue to the next step.
+遍历所有候选者，保留那些在需要进行类型转换的位置上接受首选类型（属于输入数据类型的类型分类）最多的候选者。
+如果没有任何候选者接受首选类型，则保留所有候选者。
+如果只剩下一个候选者，就使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-If any input arguments are <type>unknown</type>, check the type
-categories accepted at those argument positions by the remaining
-candidates.  At each position, select the <type>string</type> category
-if any
-candidate accepts that category.  (This bias towards string is appropriate
-since an unknown-type literal looks like a string.) Otherwise, if
-all the remaining candidates accept the same type category, select that
-category; otherwise fail because the correct choice cannot be deduced
-without more clues.  Now discard
-candidates that do not accept the selected type category.  Furthermore,
-if any candidate accepts a preferred type in that category,
-discard candidates that accept non-preferred types for that argument.
-Keep all candidates if none survive these tests.
-If only one candidate remains, use it; else continue to the next step.
+如果任何输入参数是 <type>unknown</type>，检查剩余候选者在这些参数位置上接受的类型分类。在每个位置上，如果任何候选者接受 <type>string</type> 分类，则选择该分类。（这种对字符串的偏向是合适的，因为未知类型的字面量看起来就像字符串。）否则，如果所有剩余候选者都接受相同的类型分类，则选择该分类；否则失败，因为如果没有更多线索就无法推断出正确的选择。现在丢弃不接受所选类型分类的候选者。此外，如果任何候选者接受该分类中的首选类型，则丢弃在该参数上接受非首选类型的候选者。如果经过这些测试后没有任何候选者留存，则保留所有候选者。
+如果只剩下一个候选者，就使用它；否则继续下一步。
 </para>
 </step>
 <step id="op-resol-last-unknown" performance="required">
 <para>
-If there are both <type>unknown</type> and known-type arguments, and all
-the known-type arguments have the same type, assume that the
-<type>unknown</type> arguments are also of that type, and check which
-candidates can accept that type at the <type>unknown</type>-argument
-positions.  If exactly one candidate passes this test, use it.
-Otherwise, fail.
+如果同时存在 <type>unknown</type> 和已知类型的参数，并且所有已知类型的参数都具有相同的类型，则假定 <type>unknown</type> 参数也是该类型，并检查哪些候选者可以在 <type>unknown</type> 参数位置上接受该类型。如果恰好有一个候选者通过此测试，就使用它。否则失败。
 </para>
 </step>
 </substeps>
@@ -281,18 +241,14 @@ Otherwise, fail.
 </procedure>
 
 <para>
-Some examples follow.
+下面给出一些示例。
 </para>
 
 <example>
-<title>Square Root Operator Type Resolution</title>
+<title>平方根运算符的类型解析</title>
 
 <para>
-There is only one square root operator (prefix <literal>|/</literal>)
-defined in the standard catalog, and it takes an argument of type
-<type>double precision</type>.
-The scanner assigns an initial type of <type>integer</type> to the argument
-in this query expression:
+在标准系统目录中只定义了一个平方根运算符（前缀 <literal>|/</literal>），它接受一个类型为 <type>double precision</type> 的参数。扫描器为此查询表达式中的参数赋予初始类型 <type>integer</type>：
 <screen>
 SELECT |/ 40 AS "square root of 40";
  square root of 40
@@ -301,8 +257,7 @@ SELECT |/ 40 AS "square root of 40";
 (1 row)
 </screen>
 
-So the parser does a type conversion on the operand and the query
-is equivalent to:
+因此解析器对操作数进行类型转换，该查询等价于：
 
 <screen>
 SELECT |/ CAST(40 AS double precision) AS "square root of 40";
@@ -311,16 +266,14 @@ SELECT |/ CAST(40 AS double precision) AS "square root of 40";
 </example>
 
 <example>
-<title>String Concatenation Operator Type Resolution</title>
+<title>字符串连接运算符类型解析</title>
 
 <para>
-A string-like syntax is used for working with string types and for
-working with complex extension types.
-Strings with unspecified type are matched with likely operator candidates.
+字符串类语法用于处理字符串类型以及处理复杂的扩展类型。未指定类型的字符串会与可能的运算符候选进行匹配。
 </para>
 
 <para>
-An example with one unspecified argument:
+一个带有一个未指定参数的例子：
 <screen>
 SELECT text 'abc' || 'def' AS "text and unknown";
 
@@ -332,13 +285,11 @@ SELECT text 'abc' || 'def' AS "text and unknown";
 </para>
 
 <para>
-In this case the parser looks to see if there is an operator taking <type>text</type>
-for both arguments. Since there is, it assumes that the second argument should
-be interpreted as type <type>text</type>.
+在这种情况下，解析器会查看是否存在接受 <type>text</type> 作为两个参数的运算符。由于存在这样的运算符，它假定第二个参数应被解释为 <type>text</type> 类型。
 </para>
 
 <para>
-Here is a concatenation of two values of unspecified types:
+下面是两个未指定类型的值的连接：
 <screen>
 SELECT 'abc' || 'def' AS "unspecified";
 
@@ -350,26 +301,15 @@ SELECT 'abc' || 'def' AS "unspecified";
 </para>
 
 <para>
-In this case there is no initial hint for which type to use, since no types
-are specified in the query. So, the parser looks for all candidate operators
-and finds that there are candidates accepting both string-category and
-bit-string-category inputs.  Since string category is preferred when available,
-that category is selected, and then the
-preferred type for strings, <type>text</type>, is used as the specific
-type to resolve the unknown-type literals as.
+在这种情况下，由于查询中没有指定任何类型，因此没有关于使用哪种类型的初始提示。所以，解析器会查找所有候选运算符，并发现存在同时接受字符串类别和位串类别输入的候选。由于字符串类别在可用时优先，因此选择该类别，然后使用字符串的首选类型 <type>text</type> 作为具体类型来解析未知类型的字面量。
 </para>
 </example>
 
 <example>
-<title>Absolute-Value and Negation Operator Type Resolution</title>
+<title>绝对值与否定运算符的类型解析</title>
 
 <para>
-The <productname>PostgreSQL</productname> operator catalog has several
-entries for the prefix operator <literal>@</literal>, all of which implement
-absolute-value operations for various numeric data types.  One of these
-entries is for type <type>float8</type>, which is the preferred type in
-the numeric category.  Therefore, <productname>PostgreSQL</productname>
-will use that entry when faced with an <type>unknown</type> input:
+<productname>PostgreSQL</productname> 运算符目录中有多个前缀运算符 <literal>@</literal> 的条目，它们都为各种数值数据类型实现绝对值运算。其中一个条目对应类型 <type>float8</type>，它是数值类别中的首选类型。因此，当面对 <type>unknown</type> 输入时，<productname>PostgreSQL</productname> 将使用该条目：
 <screen>
 SELECT @ '-4.5' AS "abs";
  abs
@@ -377,9 +317,7 @@ SELECT @ '-4.5' AS "abs";
  4.5
 (1 row)
 </screen>
-Here the system has implicitly resolved the unknown-type literal as type
-<type>float8</type> before applying the chosen operator.  We can verify that
-<type>float8</type> and not some other type was used:
+在这里，系统在应用所选运算符之前，已经将该未知类型的字面量隐式解析为类型 <type>float8</type>。我们可以验证使用的是 <type>float8</type> 而不是其他类型：
 <screen>
 SELECT @ '-4.5e500' AS "abs";
 
@@ -388,9 +326,7 @@ ERROR:  "-4.5e500" is out of range for type double precision
 </para>
 
 <para>
-On the other hand, the prefix operator <literal>~</literal> (bitwise negation)
-is defined only for integer data types, not for <type>float8</type>.  So, if we
-try a similar case with <literal>~</literal>, we get:
+另一方面，前缀运算符 <literal>~</literal>（按位取反）只为整数数据类型定义，而不是为 <type>float8</type> 定义。因此，如果我们对 <literal>~</literal> 尝试类似的情况，会得到：
 <screen>
 SELECT ~ '20' AS "negation";
 
@@ -398,9 +334,7 @@ ERROR:  operator is not unique: ~ "unknown"
 HINT:  Could not choose a best candidate operator. You might need to add
 explicit type casts.
 </screen>
-This happens because the system cannot decide which of the several
-possible <literal>~</literal> operators should be preferred.  We can help
-it out with an explicit cast:
+发生这种情况是因为系统无法决定在多个可能的 <literal>~</literal> 运算符中应该优先选择哪一个。我们可以通过显式转换来帮助它：
 <screen>
 SELECT ~ CAST('20' AS int8) AS "negation";
 
@@ -413,11 +347,10 @@ SELECT ~ CAST('20' AS int8) AS "negation";
 </example>
 
 <example>
-<title>Array Inclusion Operator Type Resolution</title>
+<title>数组包含运算符的类型解析</title>
 
 <para>
-Here is another example of resolving an operator with one known and one
-unknown input:
+下面是另一个解析具有一个已知输入和一个未知输入的运算符的例子：
 <screen>
 SELECT array[1,2] &lt;@ '{1,2,3}' as "is subset";
 
@@ -426,31 +359,17 @@ SELECT array[1,2] &lt;@ '{1,2,3}' as "is subset";
  t
 (1 row)
 </screen>
-The <productname>PostgreSQL</productname> operator catalog has several
-entries for the infix operator <literal>&lt;@</literal>, but the only two that
-could possibly accept an integer array on the left-hand side are
-array inclusion (<type>anyarray</type> <literal>&lt;@</literal> <type>anyarray</type>)
-and range inclusion (<type>anyelement</type> <literal>&lt;@</literal> <type>anyrange</type>).
-Since none of these polymorphic pseudo-types (see <xref
-linkend="datatype-pseudo"/>) are considered preferred, the parser cannot
-resolve the ambiguity on that basis.
-However, <xref linkend="op-resol-last-unknown"/> tells
-it to assume that the unknown-type literal is of the same type as the other
-input, that is, integer array.  Now only one of the two operators can match,
-so array inclusion is selected.  (Had range inclusion been selected, we would
-have gotten an error, because the string does not have the right format to be
-a range literal.)
+<productname>PostgreSQL</productname> 运算符目录中有多个中缀运算符 <literal>&lt;@</literal> 的条目，但左侧可能接受整数数组的只有两个：数组包含（<type>anyarray</type> <literal>&lt;@</literal> <type>anyarray</type>）和范围包含（<type>anyelement</type> <literal>&lt;@</literal> <type>anyrange</type>）。由于这些多态伪类型（参见 <xref
+linkend="datatype-pseudo"/>）都不被视为首选类型，解析器无法在此基础上解决歧义。
+但是，<xref linkend="op-resol-last-unknown"/> 告诉它假定未知类型的字面量与其他输入具有相同的类型，即整数数组。现在两个运算符中只有一个能够匹配，因此选择了数组包含。（如果选择了范围包含，我们就会得到一个错误，因为该字符串的格式不正确，不能作为范围字面量。）
 </para>
 </example>
 
 <example>
-<title>Custom Operator on a Domain Type</title>
+<title>域类型上的自定义运算符</title>
 
 <para>
-Users sometimes try to declare operators applying just to a domain type.
-This is possible but is not nearly as useful as it might seem, because the
-operator resolution rules are designed to select operators applying to the
-domain's base type.  As an example consider
+用户有时会尝试声明仅应用于某个域类型的运算符。这是可行的，但远不如看起来那么有用，因为运算符解析规则的设计目的是选择应用于该域的基本类型的运算符。举例来说，考虑
 <screen>
 CREATE DOMAIN mytext AS text CHECK(...);
 CREATE FUNCTION mytext_eq_text (mytext, text) RETURNS boolean AS ...;
@@ -459,26 +378,11 @@ CREATE TABLE mytable (val mytext);
 
 SELECT * FROM mytable WHERE val = 'foo';
 </screen>
-This query will not use the custom operator.  The parser will first see if
-there is a <type>mytext</type> <literal>=</literal> <type>mytext</type> operator
-(<xref linkend="op-resol-exact-unknown"/>), which there is not;
-then it will consider the domain's base type <type>text</type>, and see if
-there is a <type>text</type> <literal>=</literal> <type>text</type> operator
-(<xref linkend="op-resol-exact-domain"/>), which there is;
-so it resolves the <type>unknown</type>-type literal as <type>text</type> and
-uses the <type>text</type> <literal>=</literal> <type>text</type> operator.
-The only way to get the custom operator to be used is to explicitly cast
-the literal:
+这个查询不会使用自定义运算符。解析器首先会检查是否存在 <type>mytext</type> <literal>=</literal> <type>mytext</type> 运算符（<xref linkend="op-resol-exact-unknown"/>），结果不存在；然后它会考虑该域的基本类型 <type>text</type>，并检查是否存在 <type>text</type> <literal>=</literal> <type>text</type> 运算符（<xref linkend="op-resol-exact-domain"/>），结果存在；因此它把 <type>unknown</type> 类型的字面量解析为 <type>text</type>，并使用 <type>text</type> <literal>=</literal> <type>text</type> 运算符。要让自定义运算符被使用，唯一的办法是显式转换该字面量：
 <screen>
 SELECT * FROM mytable WHERE val = text 'foo';
 </screen>
-so that the <type>mytext</type> <literal>=</literal> <type>text</type> operator is found
-immediately according to the exact-match rule.  If the best-match rules
-are reached, they actively discriminate against operators on domain types.
-If they did not, such an operator would create too many ambiguous-operator
-failures, because the casting rules always consider a domain as castable
-to or from its base type, and so the domain operator would be considered
-usable in all the same cases as a similarly-named operator on the base type.
+这样就会根据精确匹配规则立即找到 <type>mytext</type> <literal>=</literal> <type>text</type> 运算符。如果走到了最佳匹配规则，这些规则会主动歧视域类型上的运算符。如果它们不这样做，那么这样的运算符会造成过多歧义运算符错误，因为转换规则总是认为域可以转换为其基本类型或从基本类型转换而来，因此该域运算符会被认为在与基本类型上同名运算符相同的所有情况下都可用。
 </para>
 </example>
 
