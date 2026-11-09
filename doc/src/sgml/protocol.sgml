@@ -5156,15 +5156,13 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
  </sect1>
 
  <sect1 id="protocol-logicalrep-message-formats">
-  <title>Logical Replication Message Formats</title>
+  <title>逻辑复制消息格式</title>
 
   <para>
-   This section describes the detailed format of each logical replication
-   message.  These messages are either returned by the replication slot SQL
-   interface or are sent by a walsender.  In the case of a walsender, they are
-   encapsulated inside replication protocol WAL messages as described in
-   <xref linkend="protocol-replication"/>, and generally obey the same message
-   flow as physical replication.
+   本节描述每条逻辑复制消息的详细格式。这些消息要么由复制槽 SQL
+   接口返回，要么由 walsender 发送。对于 walsender 而言，它们按照
+   <xref linkend="protocol-replication"/> 中所述封装在复制协议 WAL 消息内部，
+   并且通常遵循与物理复制相同的消息流。
   </para>
 
   <variablelist>
@@ -5176,7 +5174,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('B')</term>
        <listitem>
         <para>
-         Identifies the message as a begin message.
+         标识该消息为 begin 消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5185,7 +5183,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The final LSN of the transaction.
+         事务的最终 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5194,8 +5192,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Commit timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的提交时间戳。该值表示自 PostgreSQL 纪元（2000-01-01）起的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -5204,7 +5201,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -5213,14 +5210,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Message">
-    <term>Message</term>
+    <term>消息</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('M')</term>
        <listitem>
         <para>
-         Identifies the message as a logical decoding message.
+         标识该消息为逻辑解码消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5229,8 +5226,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务存在）。该字段自协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5239,8 +5235,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8</term>
        <listitem>
         <para>
-         Flags; Either 0 for no flags or 1 if the logical decoding
-         message is transactional.
+         标志位；0 表示无标志，若逻辑解码消息是事务性的则为 1。
         </para>
        </listitem>
       </varlistentry>
@@ -5249,7 +5244,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the logical decoding message.
+         逻辑解码消息的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5258,7 +5253,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         The prefix of the logical decoding message.
+         逻辑解码消息的前缀。
         </para>
        </listitem>
       </varlistentry>
@@ -5267,16 +5262,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32</term>
        <listitem>
         <para>
-         Length of the content.
+         内容的长度。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>Byte<replaceable>n</replaceable></term>
+       <term>字节<replaceable>n</replaceable></term>
        <listitem>
         <para>
-         The content of the logical decoding message.
+         逻辑解码消息的内容。
         </para>
        </listitem>
       </varlistentry>
@@ -5285,14 +5280,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Commit">
-    <term>Commit</term>
+    <term>提交</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('C')</term>
        <listitem>
         <para>
-         Identifies the message as a commit message.
+         标识该消息为提交消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5301,7 +5296,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -5310,7 +5305,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the commit.
+         提交的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5319,7 +5314,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the transaction.
+         事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5328,8 +5323,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Commit timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的提交时间戳。该值是从 PostgreSQL 纪元（2000-01-01）起算的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -5345,7 +5339,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('O')</term>
        <listitem>
         <para>
-         Identifies the message as an origin message.
+         标识该消息为源消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5354,36 +5348,36 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the commit on the origin server.
+         源服务器上该提交的 LSN。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         Name of the origin.
+         源名称。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      Note that there can be multiple Origin messages inside a single transaction.
+      注意，单个事务内可以有多条 Origin 消息。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Relation">
-    <term>Relation</term>
+    <term>关系</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('R')</term>
        <listitem>
         <para>
-         Identifies the message as a relation message.
+         标识该消息为关系消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5392,8 +5386,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务出现）。
+         此字段从协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5402,7 +5396,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the relation.
+         关系的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5411,16 +5405,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         Namespace (empty string for <literal>pg_catalog</literal>).
+         命名空间（对 <literal>pg_catalog</literal> 为空字符串）。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         Relation name.
+         关系名称。
         </para>
        </listitem>
       </varlistentry>
@@ -5429,8 +5423,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8</term>
        <listitem>
         <para>
-         Replica identity setting for the relation (same as
-         <structfield>relreplident</structfield> in <structname>pg_class</structname>).
+         关系的副本标识设置（与 <structname>pg_class</structname> 中的 <structfield>relreplident</structfield> 相同）。
         </para>
        </listitem>
       </varlistentry>
@@ -5439,15 +5432,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int16</term>
        <listitem>
         <para>
-         Number of columns.
+         列数。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      Next, the following message part appears for each column included in
-      the publication:
+      接下来，对于发布中包含的每一列，都会出现以下消息部分：
      </para>
 
      <variablelist>
@@ -5455,8 +5447,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8</term>
        <listitem>
         <para>
-         Flags for the column. Currently can be either 0 for no flags
-         or 1 which marks the column as part of the key.
+         列的标志位。目前可以是 0（表示无标志位）或 1（将该列标记为键的一部分）。
         </para>
        </listitem>
       </varlistentry>
@@ -5465,7 +5456,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         Name of the column.
+         列的名称。
         </para>
        </listitem>
       </varlistentry>
@@ -5474,7 +5465,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the column's data type.
+         列的数据类型的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5483,7 +5474,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32</term>
        <listitem>
         <para>
-         Type modifier of the column (<structfield>atttypmod</structfield>).
+         列的类型修饰符（<structfield>atttypmod</structfield>）。
         </para>
        </listitem>
       </varlistentry>
@@ -5492,14 +5483,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Type">
-    <term>Type</term>
+    <term>类型</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('Y')</term>
        <listitem>
         <para>
-         Identifies the message as a type message.
+         标识该消息为类型消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5508,8 +5499,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务出现）。
+         该字段自协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5518,7 +5509,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the data type.
+         数据类型的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5527,16 +5518,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         Namespace (empty string for <literal>pg_catalog</literal>).
+         命名空间（对于 <literal>pg_catalog</literal> 为空字符串）。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         Name of the data type.
+         数据类型的名称。
         </para>
        </listitem>
       </varlistentry>
@@ -5552,7 +5543,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('I')</term>
        <listitem>
         <para>
-         Identifies the message as an insert message.
+         标识该消息为 Insert 消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5561,8 +5552,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务出现）。
+        该字段自协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5571,8 +5562,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the relation corresponding to the ID in the relation
-         message.
+         与 relation 消息中的 ID 相对应的关系的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5581,7 +5571,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('N')</term>
        <listitem>
         <para>
-         Identifies the following TupleData message as a new tuple.
+         将后面的 TupleData 消息标识为一个新元组。
         </para>
        </listitem>
       </varlistentry>
@@ -5590,7 +5580,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>TupleData</term>
        <listitem>
         <para>
-         TupleData message part representing the contents of new tuple.
+         TupleData 消息部分，表示新元组的内容。
         </para>
        </listitem>
       </varlistentry>
@@ -5599,14 +5589,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Update">
-    <term>Update</term>
+    <term>更新</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('U')</term>
        <listitem>
         <para>
-         Identifies the message as an update message.
+         标识该消息为更新消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5615,8 +5605,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务存在）。该字段从协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5625,8 +5614,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the relation corresponding to the ID in the relation
-         message.
+         与 relation 消息中的 ID 相对应的关系的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5635,10 +5623,9 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('K')</term>
        <listitem>
         <para>
-         Identifies the following TupleData submessage as a key.
-         This field is optional and is only present if
-         the update changed data in any of the column(s) that are
-         part of the REPLICA IDENTITY index.
+         将后面的 TupleData 子消息标识为键。
+         该字段是可选的，仅当更新更改了作为
+         REPLICA IDENTITY 索引一部分的任一列中的数据时才会出现。
         </para>
        </listitem>
       </varlistentry>
@@ -5647,9 +5634,9 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('O')</term>
        <listitem>
         <para>
-         Identifies the following TupleData submessage as an old tuple.
-         This field is optional and is only present if table in which
-         the update happened has REPLICA IDENTITY set to FULL.
+         将后面的 TupleData 子消息标识为旧元组。
+         该字段是可选的，仅当发生更新的表已将
+         REPLICA IDENTITY 设置为 FULL 时才会出现。
         </para>
        </listitem>
       </varlistentry>
@@ -5658,9 +5645,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>TupleData</term>
        <listitem>
         <para>
-         TupleData message part representing the contents of the old tuple
-         or primary key. Only present if the previous 'O' or 'K' part
-         is present.
+         TupleData 消息部分，表示旧元组或主键的内容。仅当前面的 'O' 或 'K' 部分存在时才存在。
         </para>
        </listitem>
       </varlistentry>
@@ -5669,7 +5654,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('N')</term>
        <listitem>
         <para>
-         Identifies the following TupleData message as a new tuple.
+         将后面的 TupleData 消息标识为新元组。
         </para>
        </listitem>
       </varlistentry>
@@ -5678,15 +5663,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>TupleData</term>
        <listitem>
         <para>
-         TupleData message part representing the contents of a new tuple.
+         TupleData 消息部分，表示新元组的内容。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      The Update message may contain either a 'K' message part or an 'O' message part
-      or neither of them, but never both of them.
+      Update 消息可以包含一个 'K' 消息部分或一个 'O' 消息部分，也可以两者都不包含，但绝不会同时包含两者。
      </para>
     </listitem>
    </varlistentry>
@@ -5699,7 +5683,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('D')</term>
        <listitem>
         <para>
-         Identifies the message as a delete message.
+         将该消息标识为删除消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5708,8 +5692,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务存在）。
+         该字段从协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5718,8 +5702,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the relation corresponding to the ID in the relation
-         message.
+         与 relation 消息中的 ID 相对应的关系的 OID。
         </para>
        </listitem>
       </varlistentry>
@@ -5728,9 +5711,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('K')</term>
        <listitem>
         <para>
-         Identifies the following TupleData submessage as a key.
-         This field is present if the table in which the delete has
-         happened uses an index as REPLICA IDENTITY.
+         将后面的 TupleData 子消息标识为键。
+         如果发生删除的表使用索引作为 REPLICA IDENTITY，则会出现此字段。
         </para>
        </listitem>
       </varlistentry>
@@ -5739,9 +5721,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('O')</term>
        <listitem>
         <para>
-         Identifies the following TupleData message as an old tuple.
-         This field is present if the table in which the delete
-         happened has REPLICA IDENTITY set to FULL.
+         将后面的 TupleData 消息标识为旧元组。
+         如果发生删除的表将 REPLICA IDENTITY 设置为 FULL，则会出现此字段。
         </para>
        </listitem>
       </varlistentry>
@@ -5750,16 +5731,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>TupleData</term>
        <listitem>
         <para>
-         TupleData message part representing the contents of the old tuple
-         or primary key, depending on the previous field.
+         TupleData 消息部分，表示旧元组或主键的内容，具体取决于前一个字段。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      The Delete message may contain either a 'K' message part or an 'O' message part,
-      but never both of them.
+      Delete 消息可以包含一个 'K' 消息部分或一个 'O' 消息部分，但绝不会同时包含两者。
      </para>
     </listitem>
    </varlistentry>
@@ -5772,7 +5751,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('T')</term>
        <listitem>
         <para>
-         Identifies the message as a truncate message.
+         标识该消息为 truncate 消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5781,8 +5760,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction (only present for streamed transactions).
-         This field is available since protocol version 2.
+         事务的 Xid（仅对流式事务存在）。
+         该字段自协议版本 2 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5791,7 +5770,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32</term>
        <listitem>
         <para>
-         Number of relations
+         关系数量
         </para>
        </listitem>
       </varlistentry>
@@ -5800,8 +5779,8 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8</term>
        <listitem>
         <para>
-         Option bits for <command>TRUNCATE</command>:
-         1 for <literal>CASCADE</literal>, 2 for <literal>RESTART IDENTITY</literal>
+         <command>TRUNCATE</command> 的选项位：
+         1 表示 <literal>CASCADE</literal>，2 表示 <literal>RESTART IDENTITY</literal>
         </para>
        </listitem>
       </varlistentry>
@@ -5810,8 +5789,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (Oid)</term>
        <listitem>
         <para>
-         OID of the relation corresponding to the ID in the relation
-         message.  This field is repeated for each relation.
+         与 relation 消息中的 ID 相对应的关系的 OID。该字段对每个关系重复一次。
         </para>
        </listitem>
       </varlistentry>
@@ -5821,8 +5799,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
   </variablelist>
 
   <para>
-   The following messages (Stream Start, Stream Stop, Stream Commit, and
-   Stream Abort) are available since protocol version 2.
+   以下消息（Stream Start、Stream Stop、Stream Commit 和 Stream Abort）自协议版本 2 起可用。
   </para>
 
   <variablelist>
@@ -5834,7 +5811,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('S')</term>
        <listitem>
         <para>
-         Identifies the message as a stream start message.
+         标识该消息为流开始消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5843,7 +5820,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -5852,8 +5829,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8</term>
        <listitem>
         <para>
-         A value of 1 indicates this is the first stream segment for
-         this XID, 0 for any other stream segment.
+         值为 1 表示这是该 XID 的第一个流片段，值为 0 表示任何其他流片段。
         </para>
        </listitem>
       </varlistentry>
@@ -5862,14 +5838,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Stream-Stop">
-    <term>Stream Stop</term>
+    <term>流停止</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('E')</term>
        <listitem>
         <para>
-         Identifies the message as a stream stop message.
+         标识该消息为流停止消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5878,14 +5854,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Stream-Commit">
-    <term>Stream Commit</term>
+    <term>流提交</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('c')</term>
        <listitem>
         <para>
-         Identifies the message as a stream commit message.
+         标识该消息为流提交消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5894,7 +5870,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -5903,7 +5879,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -5912,7 +5888,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the commit.
+         提交的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5921,7 +5897,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the transaction.
+         事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -5930,8 +5906,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Commit timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的提交时间戳。该值以自 PostgreSQL 纪元（2000-01-01）起的微秒数表示。
         </para>
        </listitem>
       </varlistentry>
@@ -5940,14 +5915,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Stream-Abort">
-    <term>Stream Abort</term>
+    <term>流中止</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('A')</term>
        <listitem>
         <para>
-         Identifies the message as a stream abort message.
+         标识该消息为流中止消息。
         </para>
        </listitem>
       </varlistentry>
@@ -5956,7 +5931,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -5965,8 +5940,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the subtransaction (will be same as xid of the transaction for top-level
-         transactions).
+         子事务的 Xid（对于顶层事务，将与事务的 xid 相同）。
         </para>
        </listitem>
       </varlistentry>
@@ -5975,8 +5949,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the abort operation, present only when streaming is set to parallel.
-         This field is available since protocol version 4.
+         中止操作的 LSN，仅当 streaming 设置为 parallel 时存在。该字段自协议版本 4 起可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5985,9 +5958,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Abort timestamp of the transaction, present only when streaming is set to
-         parallel. The value is in number of microseconds since PostgreSQL epoch (2000-01-01).
-         This field is available since protocol version 4.
+         事务的中止时间戳，仅当 streaming 设置为 parallel 时存在。该值是从 PostgreSQL 纪元（2000-01-01）起算的微秒数。该字段从协议版本 4 开始可用。
         </para>
        </listitem>
       </varlistentry>
@@ -5998,8 +5969,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
   </variablelist>
 
   <para>
-   The following messages (Begin Prepare, Prepare, Commit Prepared, Rollback Prepared, Stream Prepare)
-   are available since protocol version 3.
+   以下消息（Begin Prepare、Prepare、Commit Prepared、Rollback Prepared、Stream Prepare）从协议版本 3 开始可用。
   </para>
 
   <variablelist>
@@ -6011,7 +5981,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('b')</term>
        <listitem>
         <para>
-         Identifies the message as the beginning of a prepared transaction message.
+         标识该消息为预备事务消息的开始。
         </para>
        </listitem>
       </varlistentry>
@@ -6020,7 +5990,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the prepare.
+         预备的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6029,7 +5999,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the prepared transaction.
+         预备事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6038,8 +6008,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Prepare timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的预备时间戳。该值是从 PostgreSQL 纪元（2000-01-01）起算的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -6048,16 +6017,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         The user defined GID of the prepared transaction.
+         预备事务的用户定义 GID。
         </para>
        </listitem>
       </varlistentry>
@@ -6073,7 +6042,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('P')</term>
        <listitem>
         <para>
-         Identifies the message as a prepared transaction message.
+         标识该消息为预备事务消息。
         </para>
        </listitem>
       </varlistentry>
@@ -6082,7 +6051,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -6091,7 +6060,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the prepare.
+         预备操作的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6100,7 +6069,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the prepared transaction.
+         预备事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6109,8 +6078,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Prepare timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的准备时间戳。该值以自 PostgreSQL 纪元（2000-01-01）起的微秒数表示。
         </para>
        </listitem>
       </varlistentry>
@@ -6119,7 +6087,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -6128,7 +6096,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         The user defined GID of the prepared transaction.
+         预备事务的用户定义 GID。
         </para>
        </listitem>
       </varlistentry>
@@ -6144,7 +6112,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('K')</term>
        <listitem>
         <para>
-         Identifies the message as the commit of a prepared transaction message.
+         标识该消息为提交预备事务的消息。
         </para>
        </listitem>
       </varlistentry>
@@ -6153,7 +6121,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -6162,7 +6130,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the commit of the prepared transaction.
+         预备事务提交的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6171,7 +6139,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the commit of the prepared transaction.
+         预备事务提交的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6180,8 +6148,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Commit timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的提交时间戳。该值是从 PostgreSQL 纪元（2000-01-01）起算的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -6190,16 +6157,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         The user defined GID of the prepared transaction.
+         预备事务的用户定义 GID。
         </para>
        </listitem>
       </varlistentry>
@@ -6208,14 +6175,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
    </varlistentry>
 
    <varlistentry id="protocol-logicalrep-message-formats-Rollback-Prepared">
-    <term>Rollback Prepared</term>
+    <term>回滚预备事务</term>
     <listitem>
      <variablelist>
       <varlistentry>
        <term>Byte1('r')</term>
        <listitem>
         <para>
-         Identifies the message as the rollback of a prepared transaction message.
+         标识该消息为回滚预备事务消息。
         </para>
        </listitem>
       </varlistentry>
@@ -6224,7 +6191,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -6233,7 +6200,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the prepared transaction.
+         预备事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6242,7 +6209,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the rollback of the prepared transaction.
+         预备事务回滚的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6251,8 +6218,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Prepare timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的准备时间戳。该值是以 PostgreSQL 纪元（2000-01-01）为起点的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -6261,8 +6227,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Rollback timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的回滚时间戳。该值是以 PostgreSQL 纪元（2000-01-01）为起点的微秒数。
         </para>
        </listitem>
       </varlistentry>
@@ -6271,16 +6236,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry>
-       <term>String</term>
+       <term>字符串</term>
        <listitem>
         <para>
-         The user defined GID of the prepared transaction.
+         预备事务的用户定义 GID。
         </para>
        </listitem>
       </varlistentry>
@@ -6296,7 +6261,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte1('p')</term>
        <listitem>
         <para>
-         Identifies the message as a stream prepared transaction message.
+         标识该消息为流式预备事务消息。
         </para>
        </listitem>
       </varlistentry>
@@ -6305,7 +6270,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int8(0)</term>
        <listitem>
         <para>
-         Flags; currently unused.
+         标志位；当前未使用。
         </para>
        </listitem>
       </varlistentry>
@@ -6314,7 +6279,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The LSN of the prepare.
+         预备阶段的 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6323,7 +6288,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (XLogRecPtr)</term>
        <listitem>
         <para>
-         The end LSN of the prepared transaction.
+         预备事务的结束 LSN。
         </para>
        </listitem>
       </varlistentry>
@@ -6332,8 +6297,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int64 (TimestampTz)</term>
        <listitem>
         <para>
-         Prepare timestamp of the transaction. The value is in number
-         of microseconds since PostgreSQL epoch (2000-01-01).
+         事务的准备时间戳。该值以自 PostgreSQL 纪元（2000-01-01）起的微秒数表示。
         </para>
        </listitem>
       </varlistentry>
@@ -6342,7 +6306,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int32 (TransactionId)</term>
        <listitem>
         <para>
-         Xid of the transaction.
+         事务的 Xid。
         </para>
        </listitem>
       </varlistentry>
@@ -6351,7 +6315,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>String</term>
        <listitem>
         <para>
-         The user defined GID of the prepared transaction.
+         预备事务的用户定义 GID。
         </para>
        </listitem>
       </varlistentry>
@@ -6361,7 +6325,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
   </variablelist>
 
   <para>
-   The following message parts are shared by the above messages.
+   以下消息部分由上述消息共享。
   </para>
 
   <variablelist>
@@ -6373,55 +6337,54 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Int16</term>
        <listitem>
         <para>
-         Number of columns.
+         列数。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
 
      <para>
-      Next, one of the following submessages appears for each published column:
+      接下来，对于每个已发布的列，会出现以下子消息之一：
 
       <variablelist>
        <varlistentry>
         <term>Byte1('n')</term>
         <listitem>
          <para>
-          Identifies the data as NULL value.
+          标识该数据为 NULL 值。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
-      Or
+      或
       <variablelist>
        <varlistentry>
         <term>Byte1('u')</term>
         <listitem>
          <para>
-          Identifies unchanged TOASTed value (the actual value is not
-          sent).
+          标识未更改的 TOASTed 值（实际值不会发送）。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
-      Or
+      或
       <variablelist>
        <varlistentry>
         <term>Byte1('t')</term>
         <listitem>
          <para>
-          Identifies the data as text formatted value.
+          将数据标识为文本格式的值。
          </para>
         </listitem>
        </varlistentry>
       </variablelist>
-      Or
+      或
       <variablelist>
        <varlistentry>
         <term>Byte1('b')</term>
         <listitem>
          <para>
-          Identifies the data as binary formatted value.
+          标识数据为二进制格式值。
          </para>
         </listitem>
        </varlistentry>
@@ -6430,7 +6393,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term>Int32</term>
         <listitem>
          <para>
-          Length of the column value.
+          列值的长度。
          </para>
         </listitem>
        </varlistentry>
@@ -6439,9 +6402,7 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
         <term>Byte<replaceable>n</replaceable></term>
         <listitem>
          <para>
-          The value of the column, either in binary or in text format.
-          (As specified in the preceding format byte).
-          <replaceable>n</replaceable> is the above length.
+          列的值，可以是二进制格式或文本格式。（由前面的格式字节指定。）<replaceable>n</replaceable> 是上述长度。
          </para>
         </listitem>
        </varlistentry>
