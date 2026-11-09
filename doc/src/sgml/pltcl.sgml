@@ -193,7 +193,7 @@ $$ LANGUAGE pltcl;
    </sect1>
 
    <sect1 id="pltcl-global">
-    <title>Global Data in PL/Tcl</title>
+    <title>PL/Tcl 中的全局数据</title>
 
     <indexterm zone="pltcl-global">
      <primary>global data</primary>
@@ -201,56 +201,25 @@ $$ LANGUAGE pltcl;
     </indexterm>
 
     <para>
-     Sometimes it
-     is useful to have some global data that is held between two
-     calls to a function or is shared between different functions.
-     This is easily done in PL/Tcl, but there are some restrictions that
-     must be understood.
+     有时，在两次函数调用之间保留一些全局数据，或者在不同函数之间共享数据，是很有用的。
+     这在 PL/Tcl 中很容易做到，但有一些限制必须理解。
     </para>
 
     <para>
-     For security reasons, PL/Tcl executes functions called by any one SQL
-     role in a separate Tcl interpreter for that role.  This prevents
-     accidental or malicious interference by one user with the behavior of
-     another user's PL/Tcl functions.  Each such interpreter will have its own
-     values for any <quote>global</quote> Tcl variables.  Thus, two PL/Tcl
-     functions will share the same global variables if and only if they are
-     executed by the same SQL role.  In an application wherein a single
-     session executes code under multiple SQL roles (via <literal>SECURITY
-     DEFINER</literal> functions, use of <command>SET ROLE</command>, etc.) you may need to
-     take explicit steps to ensure that PL/Tcl functions can share data.  To
-     do that, make sure that functions that should communicate are owned by
-     the same user, and mark them <literal>SECURITY DEFINER</literal>.  You must of
-     course take care that such functions can't be used to do anything
-     unintended.
+     出于安全原因，PL/Tcl 会为每个 SQL 角色使用一个单独的 Tcl 解释器来执行该角色调用的函数。这可以防止一个用户意外或恶意地干扰另一个用户的 PL/Tcl 函数的行为。每个这样的解释器都会为任何<quote>全局</quote> Tcl 变量维护自己的值。因此，两个 PL/Tcl 函数当且仅当由同一个 SQL 角色执行时，才会共享相同的全局变量。在一个会话通过多个 SQL 角色执行代码的应用中（通过 <literal>SECURITY
+     DEFINER</literal> 函数、使用 <command>SET ROLE</command> 等），你可能需要采取明确步骤来确保 PL/Tcl 函数能够共享数据。为此，请确保应当相互通信的函数由同一个用户拥有，并将它们标记为 <literal>SECURITY DEFINER</literal>。当然，你必须注意，此类函数不能被用于执行任何非预期的操作。
     </para>
 
     <para>
-     All PL/TclU functions used in a session execute in the same Tcl
-     interpreter, which of course is distinct from the interpreter(s)
-     used for PL/Tcl functions.  So global data is automatically shared
-     between PL/TclU functions.  This is not considered a security risk
-     because all PL/TclU functions execute at the same trust level,
-     namely that of a database superuser.
+     一个会话中使用的所有 PL/TclU 函数都在同一个 Tcl 解释器中执行，这个解释器当然不同于 PL/Tcl 函数所使用的解释器。因此，全局数据会在 PL/TclU 函数之间自动共享。这不被视为安全风险，因为所有 PL/TclU 函数都以相同的信任级别执行，即数据库超级用户的信任级别。
     </para>
 
     <para>
-     To help protect PL/Tcl functions from unintentionally interfering
-     with each other, a global
-     array is made available to each function via the <function>upvar</function>
-     command. The global name of this variable is the function's internal
-     name, and the local name is <literal>GD</literal>.  It is recommended that
-     <literal>GD</literal> be used
-     for persistent private data of a function.  Use regular Tcl global
-     variables only for values that you specifically intend to be shared among
-     multiple functions.  (Note that the <literal>GD</literal> arrays are only
-     global within a particular interpreter, so they do not bypass the
-     security restrictions mentioned above.)
+     为了帮助保护 PL/Tcl 函数免于意外地相互干扰，通过 <function>upvar</function> 命令为每个函数提供一个全局数组。该变量的全局名称是函数的内部名称，局部名称是 <literal>GD</literal>。建议将 <literal>GD</literal> 用于函数的持久私有数据。仅当你明确打算在多个函数之间共享值时，才使用常规 Tcl 全局变量。（请注意，<literal>GD</literal> 数组仅在特定解释器内是全局的，因此它们不会绕过上述安全限制。）
     </para>
 
     <para>
-     An example of using <literal>GD</literal> appears in the
-     <function>spi_execp</function> example below.
+     使用 <literal>GD</literal> 的示例出现在下面的 <function>spi_execp</function> 示例中。
     </para>
    </sect1>
 
