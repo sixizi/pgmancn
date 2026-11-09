@@ -16,256 +16,191 @@
   </para>
 
   <sect1 id="regress-run">
-   <title>Running the Tests</title>
+   <title>运行测试</title>
 
   <para>
-   The regression tests can be run against an already installed and
-   running server, or using a temporary installation within the build
-   tree.  Furthermore, there is a <quote>parallel</quote> and a
-   <quote>sequential</quote> mode for running the tests.  The
-   sequential method runs each test script alone, while the
-   parallel method starts up multiple server processes to run groups
-   of tests in parallel.  Parallel testing adds confidence that
-   interprocess communication and locking are working correctly.
-   Some tests may run sequentially even in the <quote>parallel</quote>
-   mode in case this is required by the test.
+   回归测试可以针对已经安装并正在运行的服务器运行，也可以在构建树内使用临时安装来运行。此外，运行测试还有<quote>并行</quote>和<quote>顺序</quote>两种模式。顺序方法单独运行每个测试脚本，而并行方法会启动多个服务器进程来并行运行成组的测试。并行测试可以增强对进程间通信和锁机制正常工作的信心。某些测试即使在<quote>并行</quote>模式下也可能顺序运行，如果测试需要这样的话。
   </para>
 
   <sect2 id="regress-run-temp-inst">
-   <title>Running the Tests Against a Temporary Installation</title>
+   <title>针对临时安装运行测试</title>
 
   <para>
-   To run the parallel regression tests after building but before installation,
-   type:
+   要在构建之后、安装之前运行并行回归测试，请键入：
 <screen>
 make check
 </screen>
-   in the top-level directory.  (Or you can change to
-   <filename>src/test/regress</filename> and run the command there.)
-   Tests which are run in parallel are prefixed with <quote>+</quote>, and
-   tests which run sequentially are prefixed with <quote>-</quote>.
-   At the end you should see something like:
+   在顶层目录中。（或者您可以切换到
+   <filename>src/test/regress</filename> 并在那里运行该命令。）
+   并行运行的测试以<quote>+</quote>为前缀，顺序运行的测试以<quote>-</quote>为前缀。
+   最后您应该会看到类似这样的内容：
 <screen>
 <computeroutput>
 # All 213 tests passed.
 </computeroutput>
 </screen>
-   or otherwise a note about which tests failed.  See <xref
-   linkend="regress-evaluation"/> below before assuming that a
-   <quote>failure</quote> represents a serious problem.
+   否则会有一条关于哪些测试失败的说明。在假定某个<quote>失败</quote>代表严重问题之前，请参阅下面的<xref
+   linkend="regress-evaluation"/>。
   </para>
 
    <para>
-    Because this test method runs a temporary server, it will not work
-    if you did the build as the root user, since the server will not start as
-    root.  Recommended procedure is not to do the build as root, or else to
-    perform testing after completing the installation.
+    由于此测试方法会运行一个临时服务器，如果您以 root 用户执行构建，它将无法工作，因为服务器不会以 root 身份启动。推荐的做法是不要以 root 身份执行构建，或者在完成安装之后再执行测试。
    </para>
 
    <para>
-    If you have configured <productname>PostgreSQL</productname> to install
-    into a location where an older <productname>PostgreSQL</productname>
-    installation already exists, and you perform <literal>make check</literal>
-    before installing the new version, you might find that the tests fail
-    because the new programs try to use the already-installed shared
-    libraries.  (Typical symptoms are complaints about undefined symbols.)
-    If you wish to run the tests before overwriting the old installation,
-    you'll need to build with <literal>configure --disable-rpath</literal>.
-    It is not recommended that you use this option for the final installation,
-    however.
+    如果您已将 <productname>PostgreSQL</productname> 配置为安装到一个已存在较旧 <productname>PostgreSQL</productname>
+    安装的位置，并且在安装新版本之前执行了 <literal>make check</literal>，
+    您可能会发现测试失败，因为新程序试图使用已安装的共享库。
+    （典型症状是关于未定义符号的报错。）
+    如果您希望在覆盖旧安装之前运行测试，则需要使用 <literal>configure --disable-rpath</literal> 进行构建。
+    但是，不建议将此选项用于最终安装。
    </para>
 
    <para>
-    The parallel regression test starts quite a few processes under your
-    user ID.  Presently, the maximum concurrency is twenty parallel test
-    scripts, which means forty processes: there's a server process and a
-    <application>psql</application> process for each test script.
-    So if your system enforces a per-user limit on the number of processes,
-    make sure this limit is at least fifty or so, else you might get
-    random-seeming failures in the parallel test.  If you are not in
-    a position to raise the limit, you can cut down the degree of parallelism
-    by setting the <literal>MAX_CONNECTIONS</literal> parameter.  For example:
+    并行回归测试会在你的用户 ID 下启动相当多的进程。目前，最大并发数是二十个并行测试脚本，这意味着四十个进程：每个测试脚本对应一个服务器进程和一个 <application>psql</application> 进程。因此，如果你的系统对每个用户的进程数有限制，请确保该限制至少为五十左右，否则并行测试中可能会出现看似随机的失败。如果你无法提高该限制，可以通过设置 <literal>MAX_CONNECTIONS</literal> 参数来降低并行度。例如：
 <screen>
 make MAX_CONNECTIONS=10 check
 </screen>
-    runs no more than ten tests concurrently.
+    最多并发运行十个测试。
    </para>
   </sect2>
 
   <sect2 id="regress-run-existing-inst">
-   <title>Running the Tests Against an Existing Installation</title>
+   <title>针对现有安装运行测试</title>
 
   <para>
-   To run the tests after installation (see <xref linkend="installation"/>),
-   initialize a data directory and start the
-   server as explained in <xref linkend="runtime"/>, then type:
+   要在安装完成后运行测试（参见 <xref linkend="installation"/>），请按照 <xref linkend="runtime"/> 中的说明初始化数据目录并启动服务器，然后输入：
 <screen>
 make installcheck
 </screen>
-or for a parallel test:
+或者进行并行测试：
 <screen>
 make installcheck-parallel
 </screen>
-   The tests will expect to contact the server at the local host and the
-   default port number, unless directed otherwise by <envar>PGHOST</envar> and
-   <envar>PGPORT</envar> environment variables.  The tests will be run in a
-   database named <literal>regression</literal>; any existing database by this name
-   will be dropped.
+   除非通过 <envar>PGHOST</envar> 和 <envar>PGPORT</envar> 环境变量另行指定，否则测试将期望在本地主机和默认端口号上联系服务器。测试将在名为 <literal>regression</literal> 的数据库中运行；任何已存在的同名数据库都将被删除。
   </para>
 
   <para>
-   The tests will also transiently create some cluster-wide objects, such as
-   roles, tablespaces, and subscriptions.  These objects will have names
-   beginning with <literal>regress_</literal>.  Beware of
-   using <literal>installcheck</literal> mode with an installation that has
-   any actual global objects named that way.
+   测试还会临时创建一些集簇范围内的对象，例如角色、表空间和订阅。这些对象的名称将以 <literal>regress_</literal> 开头。请注意，不要在存在任何以此方式命名的实际全局对象的安装上使用 <literal>installcheck</literal> 模式。
   </para>
   </sect2>
 
   <sect2 id="regress-additional">
-   <title>Additional Test Suites</title>
+   <title>附加测试套件</title>
 
   <para>
-   The <literal>make check</literal> and <literal>make installcheck</literal> commands
-   run only the <quote>core</quote> regression tests, which test built-in
-   functionality of the <productname>PostgreSQL</productname> server.  The source
-   distribution contains many additional test suites, most of them having
-   to do with add-on functionality such as optional procedural languages.
+   <literal>make check</literal> 和 <literal>make installcheck</literal> 命令只运行<quote>核心</quote>回归测试，这些测试检验 <productname>PostgreSQL</productname> 服务器的内置功能。源代码发行版包含许多附加测试套件，其中大多数与附加功能有关，例如可选的过程语言。
   </para>
 
   <para>
-   To run all test suites applicable to the modules that have been selected
-   to be built, including the core tests, type one of these commands at the
-   top of the build tree:
+   要运行适用于已选择构建的模块的所有测试套件（包括核心测试），请在构建树的顶层输入以下命令之一：
 <screen>
 make check-world
 make installcheck-world
 </screen>
-   These commands run the tests using temporary servers or an
-   already-installed server, respectively, just as previously explained
-   for <literal>make check</literal> and <literal>make installcheck</literal>.  Other
-   considerations are the same as previously explained for each method.
-   Note that <literal>make check-world</literal> builds a separate instance
-   (temporary data directory) for each tested module, so it requires more
-   time and disk space than <literal>make installcheck-world</literal>.
+这些命令分别使用临时服务器或已安装的服务器来运行测试，正如前面针对 <literal>make check</literal> 和 <literal>make installcheck</literal> 所解释的那样。其他注意事项与前面针对每种方法所解释的相同。请注意，<literal>make check-world</literal> 会为每个被测试的模块构建一个单独的实例（临时数据目录），因此它比 <literal>make installcheck-world</literal> 需要更多的时间和磁盘空间。
   </para>
 
   <para>
-   On a modern machine with multiple CPU cores and no tight operating-system
-   limits, you can make things go substantially faster with parallelism.
-   The recipe that most PostgreSQL developers actually use for running all
-   tests is something like
+   在具有多个 CPU 核心且没有严格操作系统限制的现代机器上，你可以通过并行显著加快速度。大多数 PostgreSQL 开发者实际用于运行所有测试的方法大致如下
 <screen>
 make check-world -j8 >/dev/null
 </screen>
-   with a <option>-j</option> limit near to or a bit more than the number
-   of available cores.  Discarding <systemitem>stdout</systemitem>
-   eliminates chatter that's not interesting when you just want to verify
-   success.  (In case of failure, the <systemitem>stderr</systemitem>
-   messages are usually enough to determine where to look closer.)
+其中 <option>-j</option> 限制接近或略多于可用核心数。丢弃 <systemitem>stdout</systemitem> 可以消除那些当你只想验证成功时并不感兴趣的杂音。（如果失败，<systemitem>stderr</systemitem> 消息通常足以确定需要进一步查看的位置。）
   </para>
 
   <para>
-   Alternatively, you can run individual test suites by typing
-   <literal>make check</literal> or <literal>make installcheck</literal> in the appropriate
-   subdirectory of the build tree.  Keep in mind that <literal>make
-   installcheck</literal> assumes you've installed the relevant module(s), not
-   only the core server.
+   或者，你可以在构建树的相应子目录中输入 <literal>make check</literal> 或 <literal>make installcheck</literal> 来运行单个测试套件。请记住，<literal>make
+   installcheck</literal> 假定你已经安装了相关模块，而不仅仅是核心服务器。
   </para>
 
   <para>
-   The additional tests that can be invoked this way include:
+   可以通过这种方式调用的额外测试包括：
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     Regression tests for optional procedural languages.
-     These are located under <filename>src/pl</filename>.
+     可选过程语言的回归测试。这些测试位于 <filename>src/pl</filename> 下。
     </para>
    </listitem>
    <listitem>
     <para>
-     Regression tests for <filename>contrib</filename> modules,
-     located under <filename>contrib</filename>.
-     Not all <filename>contrib</filename> modules have tests.
+     <filename>contrib</filename> 模块的回归测试，位于 <filename>contrib</filename> 下。并非所有 <filename>contrib</filename> 模块都有测试。
     </para>
    </listitem>
    <listitem>
     <para>
-     Regression tests for the interface libraries,
-     located in <filename>src/interfaces/libpq/test</filename> and
-     <filename>src/interfaces/ecpg/test</filename>.
+     接口库的回归测试，
+     位于 <filename>src/interfaces/libpq/test</filename> 和
+     <filename>src/interfaces/ecpg/test</filename>。
     </para>
    </listitem>
    <listitem>
     <para>
-     Tests for core-supported authentication methods,
-     located in <filename>src/test/authentication</filename>.
-     (See below for additional authentication-related tests.)
+     核心支持的认证方法的测试，
+     位于 <filename>src/test/authentication</filename>。
+     （有关其他与认证相关的测试，请参见下文。）
     </para>
    </listitem>
    <listitem>
     <para>
-     Tests stressing behavior of concurrent sessions,
-     located in <filename>src/test/isolation</filename>.
+     着重测试并发会话行为的测试，
+     位于 <filename>src/test/isolation</filename>。
     </para>
    </listitem>
    <listitem>
     <para>
-     Tests for crash recovery and physical replication,
-     located in <filename>src/test/recovery</filename>.
+     崩溃恢复和物理复制的测试，
+     位于 <filename>src/test/recovery</filename>。
     </para>
    </listitem>
    <listitem>
     <para>
-     Tests for logical replication,
-     located in <filename>src/test/subscription</filename>.
+     逻辑复制的测试，
+     位于 <filename>src/test/subscription</filename>。
     </para>
    </listitem>
    <listitem>
     <para>
-     Tests of client programs, located under <filename>src/bin</filename>.
+     客户端程序的测试，位于 <filename>src/bin</filename> 下。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   When using <literal>installcheck</literal> mode, these tests will create
-   and destroy test databases whose names
-   include <literal>regression</literal>, for
-   example <literal>pl_regression</literal>
-   or <literal>contrib_regression</literal>.  Beware of
-   using <literal>installcheck</literal> mode with an installation that has
-   any non-test databases named that way.
+   使用 <literal>installcheck</literal> 模式时，这些测试将创建
+   和销毁名称中包含 <literal>regression</literal> 的测试数据库，
+   例如 <literal>pl_regression</literal>
+   或 <literal>contrib_regression</literal>。请注意，
+   不要在存在任何以该方式命名的非测试数据库的安装中
+   使用 <literal>installcheck</literal> 模式。
   </para>
 
   <para>
-   Some of these auxiliary test suites use the TAP infrastructure explained
-   in <xref linkend="regress-tap"/>.
-   The TAP-based tests are run only when PostgreSQL was configured with the
-   option <option>--enable-tap-tests</option>.  This is recommended for
-   development, but can be omitted if there is no suitable Perl installation.
+   其中一些辅助测试套件使用
+   <xref linkend="regress-tap"/> 中说明的 TAP 基础设施。
+   基于 TAP 的测试仅在 PostgreSQL 使用
+   <option>--enable-tap-tests</option> 选项配置时才会运行。建议在
+   开发时使用该选项，但如果没有合适的 Perl 安装，可以省略。
   </para>
 
   <para>
-   Some test suites are not run by default, either because they are not secure
-   to run on a multiuser system, because they require special software or
-   because they are resource intensive.  You can decide which test suites to
-   run additionally by setting the <command>make</command> or environment
-   variable <varname>PG_TEST_EXTRA</varname> to a whitespace-separated list,
-   for example:
+   有些测试套件默认不会运行，原因可能是它们在多用户系统上运行不安全、
+   需要特殊软件，或者资源消耗较大。你可以通过将 <command>make</command> 或环境
+   变量 <varname>PG_TEST_EXTRA</varname> 设置为以空白分隔的列表，来决定额外
+   运行哪些测试套件，例如：
 <programlisting>
 make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
 </programlisting>
-   The following values are currently supported:
+   目前支持以下值：
    <variablelist>
     <varlistentry>
      <term><literal>kerberos</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>src/test/kerberos</filename>.  This
-       requires an MIT Kerberos installation and opens TCP/IP listen sockets.
+       在 <filename>src/test/kerberos</filename> 下运行测试套件。这
+       需要安装 MIT Kerberos，并会打开 TCP/IP 监听套接字。
       </para>
      </listitem>
     </varlistentry>
@@ -274,9 +209,9 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>ldap</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>src/test/ldap</filename>.  This
-       requires an <productname>OpenLDAP</productname> installation and opens
-       TCP/IP listen sockets.
+       在 <filename>src/test/ldap</filename> 下运行测试套件。这
+       需要安装 <productname>OpenLDAP</productname>，并会打开
+       TCP/IP 监听套接字。
       </para>
      </listitem>
     </varlistentry>
@@ -285,10 +220,10 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>libpq_encryption</literal></term>
      <listitem>
       <para>
-       Runs the test <filename>src/interfaces/libpq/t/005_negotiate_encryption.pl</filename>.
-       This opens TCP/IP listen sockets. If <varname>PG_TEST_EXTRA</varname>
-       also includes <literal>kerberos</literal>, additional tests that require
-       an MIT Kerberos installation are enabled.
+       运行测试 <filename>src/interfaces/libpq/t/005_negotiate_encryption.pl</filename>。
+       这会打开 TCP/IP 监听套接字。如果 <varname>PG_TEST_EXTRA</varname>
+       还包含 <literal>kerberos</literal>，则会启用需要
+       安装 MIT Kerberos 的额外测试。
       </para>
      </listitem>
     </varlistentry>
@@ -297,9 +232,8 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>load_balance</literal></term>
      <listitem>
       <para>
-       Runs the test <filename>src/interfaces/libpq/t/004_load_balance_dns.pl</filename>.
-       This requires editing the system <filename>hosts</filename> file and
-       opens TCP/IP listen sockets.
+       运行 <filename>src/interfaces/libpq/t/004_load_balance_dns.pl</filename> 测试。
+       这需要编辑系统 <filename>hosts</filename> 文件，并打开 TCP/IP 监听套接字。
       </para>
      </listitem>
     </varlistentry>
@@ -308,8 +242,8 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>oauth</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>src/test/modules/oauth_validator</filename>.
-       This opens TCP/IP listen sockets for a test server running HTTPS.
+       在 <filename>src/test/modules/oauth_validator</filename> 下运行测试套件。
+       这会为运行 HTTPS 的测试服务器打开 TCP/IP 监听套接字。
       </para>
      </listitem>
     </varlistentry>
@@ -318,11 +252,10 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>regress_dump_restore</literal></term>
      <listitem>
       <para>
-       Runs an additional test suite in
-       <filename>src/bin/pg_upgrade/t/002_pg_upgrade.pl</filename> which
-       cycles the regression database through <command>pg_dump</command>/
-       <command>pg_restore</command>.  Not enabled by default because it
-       is resource intensive.
+       在 <filename>src/bin/pg_upgrade/t/002_pg_upgrade.pl</filename> 中运行额外的测试套件，
+       它会将回归数据库在 <command>pg_dump</command>/
+       <command>pg_restore</command> 之间循环切换。由于
+       资源消耗较大，默认不启用。
       </para>
      </listitem>
     </varlistentry>
@@ -331,9 +264,9 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>sepgsql</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>contrib/sepgsql</filename>.  This
-       requires an SELinux environment that is set up in a specific way; see
-       <xref linkend="sepgsql-regression"/>.
+       在 <filename>contrib/sepgsql</filename> 下运行测试套件。这
+       需要以特定方式配置的 SELinux 环境；参见
+       <xref linkend="sepgsql-regression"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -342,7 +275,7 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>ssl</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>src/test/ssl</filename>.  This opens TCP/IP listen sockets.
+       在 <filename>src/test/ssl</filename> 下运行测试套件。这会打开 TCP/IP 监听套接字。
       </para>
      </listitem>
     </varlistentry>
@@ -351,9 +284,9 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>wal_consistency_checking</literal></term>
      <listitem>
       <para>
-       Uses <literal>wal_consistency_checking=all</literal> while running
-       certain tests under <filename>src/test/recovery</filename>.  Not
-       enabled by default because it is resource intensive.
+       在 <filename>src/test/recovery</filename> 下运行某些测试时
+       使用 <literal>wal_consistency_checking=all</literal>。由于
+       资源消耗较大，默认不启用。
       </para>
      </listitem>
     </varlistentry>
@@ -362,110 +295,89 @@ make check-world PG_TEST_EXTRA='kerberos ldap ssl load_balance libpq_encryption'
      <term><literal>xid_wraparound</literal></term>
      <listitem>
       <para>
-       Runs the test suite under <filename>src/test/modules/xid_wraparound</filename>.
-       Not enabled by default because it is resource intensive.
+       在 <filename>src/test/modules/xid_wraparound</filename> 下运行测试套件。
+       默认不启用，因为它资源消耗大。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
 
-   Tests for features that are not supported by the current build
-   configuration are not run even if they are mentioned in
-   <varname>PG_TEST_EXTRA</varname>.
+   对于当前构建配置不支持的特性，即使它们在
+   <varname>PG_TEST_EXTRA</varname> 中被提及，其测试也不会运行。
   </para>
 
   <para>
-   In addition, there are tests in <filename>src/test/modules</filename>
-   which will be run by <literal>make check-world</literal> but not
-   by <literal>make installcheck-world</literal>.  This is because they
-   install non-production extensions or have other side-effects that are
-   considered undesirable for a production installation.  You can
-   use <literal>make install</literal> and <literal>make
-   installcheck</literal> in one of those subdirectories if you wish,
-   but it's not recommended to do so with a non-test server.
+   此外，<filename>src/test/modules</filename> 中有一些测试会由 <literal>make check-world</literal> 运行，
+   但不会由 <literal>make installcheck-world</literal> 运行。这是因为它们会安装非生产用途的扩展，
+   或者具有其他被认为不适合生产安装的副作用。如果愿意，
+   你可以在其中某个子目录中使用 <literal>make install</literal> 和 <literal>make
+   installcheck</literal>，
+   但不建议在非测试服务器上这样做。
   </para>
   </sect2>
 
   <sect2 id="regress-run-locale">
-   <title>Locale and Encoding</title>
+   <title>区域设置与编码</title>
 
    <para>
-    By default, tests using a temporary installation use the
-    locale defined in the current environment and the corresponding
-    database encoding as determined by <command>initdb</command>.  It
-    can be useful to test different locales by setting the appropriate
-    environment variables, for example:
+    默认情况下，使用临时安装的测试会使用当前环境中定义的
+    区域设置，以及由 <command>initdb</command> 确定的相应数据库编码。
+    通过设置适当的环境变量来测试不同的区域设置可能会很有用，例如：
 <screen>
 make check LANG=C
 make check LC_COLLATE=en_US.utf8 LC_CTYPE=fr_CA.utf8
 </screen>
-    For implementation reasons, setting <envar>LC_ALL</envar> does not
-    work for this purpose; all the other locale-related environment
-    variables do work.
+    出于实现原因，为此目的设置 <envar>LC_ALL</envar> 不起作用；
+    所有其他与区域设置相关的环境变量都有效。
    </para>
 
    <para>
-    When testing against an existing installation, the locale is
-    determined by the existing database cluster and cannot be set
-    separately for the test run.
+    针对现有安装进行测试时，区域设置由现有数据库集簇决定，
+    无法为测试运行单独设置。
    </para>
 
    <para>
-    You can also choose the database encoding explicitly by setting
-    the variable <envar>ENCODING</envar>, for example:
+    你也可以通过设置变量 <envar>ENCODING</envar> 来显式选择数据库编码，例如：
 <screen>
 make check LANG=C ENCODING=EUC_JP
 </screen>
-    Setting the database encoding this way typically only makes sense
-    if the locale is C; otherwise the encoding is chosen automatically
-    from the locale, and specifying an encoding that does not match
-    the locale will result in an error.
+    以这种方式设置数据库编码通常只在区域设置为 C 时才有意义；否则编码会根据区域设置自动选择，而指定与区域设置不匹配的编码将导致错误。
    </para>
 
    <para>
-    The database encoding can be set for tests against either a temporary or
-    an existing installation, though in the latter case it must be
-    compatible with the installation's locale.
+    数据库编码可以针对临时安装或现有安装的测试进行设置，不过在后者的情况下，它必须与安装的区域设置兼容。
    </para>
   </sect2>
 
   <sect2 id="regress-run-custom-settings">
-   <title>Custom Server Settings</title>
+   <title>自定义服务器设置</title>
 
    <para>
-    There are several ways to use custom server settings when running a test
-    suite.  This can be useful to enable additional logging, adjust resource
-    limits, or enable extra run-time checks such as <xref
-    linkend="guc-debug-discard-caches"/>.  But note that not all tests can be
-    expected to pass cleanly with arbitrary settings.
+    在运行测试套件时，有几种方法可以使用自定义服务器设置。这对于启用额外的日志记录、调整资源限制，或启用额外的运行时检查（例如 <xref
+    linkend="guc-debug-discard-caches"/>）很有用。但请注意，并非所有测试都能在任意设置下顺利通过。
    </para>
 
    <para>
-    Extra options can be passed to the various <command>initdb</command>
-    commands that are run internally during test setup using the environment
-    variable <envar>PG_TEST_INITDB_EXTRA_OPTS</envar>.  For example, to run a
-    test with checksums enabled and a custom WAL segment size and
-    <varname>work_mem</varname> setting, use:
+    可以使用环境变量 <envar>PG_TEST_INITDB_EXTRA_OPTS</envar> 将额外选项传递给测试设置期间内部运行的各种 <command>initdb</command>
+    命令。例如，要在启用校验和并自定义 WAL 段大小和
+    <varname>work_mem</varname> 设置的情况下运行测试，请使用：
 <screen>
 make check PG_TEST_INITDB_EXTRA_OPTS='-k --wal-segsize=4 -c work_mem=50MB'
 </screen>
    </para>
 
    <para>
-    For the core regression test suite and other tests driven by
-    <command>pg_regress</command>, custom run-time server settings can also be
-    set in the <varname>PGOPTIONS</varname> environment variable (for settings
-    that allow this), for example:
+    对于核心回归测试套件以及由 <command>pg_regress</command> 驱动的其他测试，还可以
+    在 <varname>PGOPTIONS</varname> 环境变量中设置自定义运行时服务器设置（对于允许这样做的设置），例如：
 <screen>
 make check PGOPTIONS="-c debug_parallel_query=regress -c work_mem=50MB"
 </screen>
-    (This makes use of functionality provided by libpq; see <xref
-    linkend="libpq-connect-options"/> for details.)
+    （这利用了 libpq 提供的功能；详情请参见 <xref
+    linkend="libpq-connect-options"/>。）
    </para>
 
    <para>
-    When running against a temporary installation, custom settings can also be
-    set by supplying a pre-written <filename>postgresql.conf</filename>:
+    在针对临时安装运行时，也可以通过提供预先写好的 <filename>postgresql.conf</filename> 来设置自定义设置：
 <screen>
 echo 'log_checkpoints = on' > test_postgresql.conf
 echo 'work_mem = 50MB' >> test_postgresql.conf
@@ -476,14 +388,10 @@ make check EXTRA_REGRESS_OPTS="--temp-config=test_postgresql.conf"
   </sect2>
 
   <sect2 id="regress-run-extra-tests">
-   <title>Extra Tests</title>
+   <title>额外测试</title>
 
    <para>
-    The core regression test suite contains a few test files that are not
-    run by default, because they might be platform-dependent or take a
-    very long time to run.  You can run these or other extra test
-    files by setting the variable <envar>EXTRA_TESTS</envar>.  For
-    example, to run the <literal>numeric_big</literal> test:
+    核心回归测试套件包含少量默认不运行的测试文件，因为它们可能依赖于平台，或者运行时间非常长。你可以通过设置变量 <envar>EXTRA_TESTS</envar> 来运行这些测试文件或其他额外测试文件。例如，要运行 <literal>numeric_big</literal> 测试：
 <screen>
 make check EXTRA_TESTS=numeric_big
 </screen>
