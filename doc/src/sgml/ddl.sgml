@@ -2287,44 +2287,24 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
  </sect1>
 
  <sect1 id="ddl-schemas">
-  <title>Schemas</title>
+  <title>模式</title>
 
   <indexterm zone="ddl-schemas">
    <primary>schema</primary>
   </indexterm>
 
   <para>
-   A <productname>PostgreSQL</productname> database cluster contains
-   one or more named databases.  Roles and a few other object types are
-   shared across the entire cluster.  A client connection to the server
-   can only access data in a single database, the one specified in the
-   connection request.
+   一个 <productname>PostgreSQL</productname> 数据库集簇包含一个或多个命名数据库。角色和少数其他类型的对象在整个集簇范围内共享。客户端到服务器的连接只能访问单个数据库中的数据，即连接请求中指定的那个数据库。
   </para>
 
   <note>
    <para>
-    Users of a cluster do not necessarily have the privilege to access every
-    database in the cluster.  Sharing of role names means that there
-    cannot be different roles named, say, <literal>joe</literal> in two databases
-    in the same cluster; but the system can be configured to allow
-    <literal>joe</literal> access to only some of the databases.
+    集簇的用户不一定拥有访问集簇中每个数据库的权限。角色名称的共享意味着，在同一个集簇的两个数据库中不可能存在不同的同名角色，比如说 <literal>joe</literal>；但系统可以配置为只允许 <literal>joe</literal> 访问其中一部分数据库。
    </para>
   </note>
 
   <para>
-   A database contains one or more named <firstterm>schemas</firstterm>, which
-   in turn contain tables.  Schemas also contain other kinds of named
-   objects, including data types, functions, and operators.  Within one
-   schema, two objects of the same type cannot have the same name.
-   Furthermore, tables, sequences, indexes, views, materialized views, and
-   foreign tables share the same namespace, so that, for example, an index and
-   a table must have different names if they are in the same schema.  The same
-   object name can be used in different schemas without conflict; for
-   example, both <literal>schema1</literal> and <literal>myschema</literal> can
-   contain tables named <literal>mytable</literal>.  Unlike databases,
-   schemas are not rigidly separated: a user can access objects in any
-   of the schemas in the database they are connected to, if they have
-   privileges to do so.
+   一个数据库包含一个或多个命名<firstterm>模式</firstterm>，而模式中又包含表。模式还包含其他类型的命名对象，包括数据类型、函数和运算符。在一个模式中，两个同类型的对象不能同名。此外，表、序列、索引、视图、物化视图和外部表共享同一个命名空间，因此，例如，如果索引和表位于同一个模式中，它们必须使用不同的名称。相同的对象名称可以用在不同的模式中而不会冲突；例如，<literal>schema1</literal> 和 <literal>myschema</literal> 都可以包含名为 <literal>mytable</literal> 的表。与数据库不同，模式并不是严格隔离的：只要用户拥有相应权限，就可以访问其所连接数据库中任意模式中的对象。
   </para>
 
   <para>
@@ -2333,22 +2313,19 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
    <itemizedlist>
     <listitem>
      <para>
-      To allow many users to use one database without interfering with
-      each other.
+      允许多个用户使用同一个数据库而互不干扰。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      To organize database objects into logical groups to make them
-      more manageable.
+      将数据库对象组织成逻辑分组，使它们更易于管理。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Third-party applications can be put into separate schemas so
-      they do not collide with the names of other objects.
+      第三方应用程序可以被放入单独的模式中，这样它们就不会与其他对象的名称发生冲突。
      </para>
     </listitem>
    </itemizedlist>
@@ -2358,7 +2335,7 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
   </para>
 
   <sect2 id="ddl-schemas-create">
-   <title>Creating a Schema</title>
+   <title>创建模式</title>
 
    <indexterm zone="ddl-schemas-create">
     <primary>schema</primary>
@@ -2366,9 +2343,8 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
    </indexterm>
 
    <para>
-    To create a schema, use the <xref linkend="sql-createschema"/>
-    command.  Give the schema a name
-    of your choice.  For example:
+    要创建模式，请使用 <xref linkend="sql-createschema"/>
+    命令。为模式取一个你选择的名字。例如：
 <programlisting>
 CREATE SCHEMA myschema;
 </programlisting>
@@ -2384,31 +2360,24 @@ CREATE SCHEMA myschema;
    </indexterm>
 
    <para>
-    To create or access objects in a schema, write a
-    <firstterm>qualified name</firstterm> consisting of the schema name and
-    table name separated by a dot:
+    要在模式中创建或访问对象，请书写一个<firstterm>限定名称</firstterm>，它由模式名和表名组成，两者之间用点分隔：
 <synopsis>
 <replaceable>schema</replaceable><literal>.</literal><replaceable>table</replaceable>
 </synopsis>
-    This works anywhere a table name is expected, including the table
-    modification commands and the data access commands discussed in
-    the following chapters.
-    (For brevity we will speak of tables only, but the same ideas apply
-    to other kinds of named objects, such as types and functions.)
+    这在任何需要表名的地方都适用，包括表修改命令以及后续章节中讨论的数据访问命令。
+    （为简洁起见，我们只谈论表，但同样的概念也适用于其他种类的命名对象，例如类型和函数。）
    </para>
 
    <para>
-    Actually, the even more general syntax
+    实际上，还可以使用更通用的语法
 <synopsis>
 <replaceable>database</replaceable><literal>.</literal><replaceable>schema</replaceable><literal>.</literal><replaceable>table</replaceable>
 </synopsis>
-    can be used too, but at present this is just for pro forma
-    compliance with the SQL standard.  If you write a database name,
-    it must be the same as the database you are connected to.
+    但目前这只是为了在形式上符合 SQL 标准。如果你写出一个数据库名，它必须与你所连接的数据库相同。
    </para>
 
    <para>
-    So to create a table in the new schema, use:
+    因此，要在新模式中创建表，请使用：
 <programlisting>
 CREATE TABLE myschema.mytable (
  ...
@@ -2422,39 +2391,33 @@ CREATE TABLE myschema.mytable (
    </indexterm>
 
    <para>
-    To drop a schema if it's empty (all objects in it have been
-    dropped), use:
+    要删除一个模式（如果它是空的，即其中的所有对象都已被删除），请使用：
 <programlisting>
 DROP SCHEMA myschema;
 </programlisting>
-    To drop a schema including all contained objects, use:
+    要删除一个模式及其包含的所有对象，请使用：
 <programlisting>
 DROP SCHEMA myschema CASCADE;
 </programlisting>
-    See <xref linkend="ddl-depend"/> for a description of the general
-    mechanism behind this.
+    关于这背后的一般机制的说明，请参见 <xref linkend="ddl-depend"/>。
    </para>
 
    <para>
-    Often you will want to create a schema owned by someone else
-    (since this is one of the ways to restrict the activities of your
-    users to well-defined namespaces).  The syntax for that is:
+    通常你会希望创建一个由其他人拥有的模式（因为这是将用户的活动限制在定义良好的命名空间中的方法之一）。其语法为：
 <programlisting>
 CREATE SCHEMA <replaceable>schema_name</replaceable> AUTHORIZATION <replaceable>user_name</replaceable>;
 </programlisting>
-    You can even omit the schema name, in which case the schema name
-    will be the same as the user name.  See <xref
-    linkend="ddl-schemas-patterns"/> for how this can be useful.
+    你甚至可以省略模式名，此时模式名将与用户名相同。关于这样做有何用处，请参见 <xref
+    linkend="ddl-schemas-patterns"/>。
    </para>
 
    <para>
-    Schema names beginning with <literal>pg_</literal> are reserved for
-    system purposes and cannot be created by users.
+    以 <literal>pg_</literal> 开头的模式名保留给系统使用，用户不能创建。
    </para>
   </sect2>
 
   <sect2 id="ddl-schemas-public">
-   <title>The Public Schema</title>
+   <title>public 模式</title>
 
    <indexterm zone="ddl-schemas-public">
     <primary>schema</primary>
@@ -2462,14 +2425,11 @@ CREATE SCHEMA <replaceable>schema_name</replaceable> AUTHORIZATION <replaceable>
    </indexterm>
 
    <para>
-    In the previous sections we created tables without specifying any
-    schema names.  By default such tables (and other objects) are
-    automatically put into a schema named <quote>public</quote>.  Every new
-    database contains such a schema.  Thus, the following are equivalent:
+    在前面的小节中，我们创建表时没有指定任何模式名。默认情况下，这类表（以及其他对象）会被自动放入名为 <quote>public</quote> 的模式中。每个新数据库都包含这样一个模式。因此，以下两条语句是等价的：
 <programlisting>
 CREATE TABLE products ( ... );
 </programlisting>
-    and:
+    以及：
 <programlisting>
 CREATE TABLE public.products ( ... );
 </programlisting>
@@ -2477,7 +2437,7 @@ CREATE TABLE public.products ( ... );
   </sect2>
 
   <sect2 id="ddl-schemas-path">
-   <title>The Schema Search Path</title>
+   <title>模式搜索路径</title>
 
    <indexterm>
     <primary>search path</primary>
@@ -2493,29 +2453,11 @@ CREATE TABLE public.products ( ... );
    </indexterm>
 
    <para>
-    Qualified names are tedious to write, and it's often best not to
-    wire a particular schema name into applications anyway.  Therefore
-    tables are often referred to by <firstterm>unqualified names</firstterm>,
-    which consist of just the table name.  The system determines which table
-    is meant by following a <firstterm>search path</firstterm>, which is a list
-    of schemas to look in.  The first matching table in the search path
-    is taken to be the one wanted.  If there is no match in the search
-    path, an error is reported, even if matching table names exist
-    in other schemas in the database.
+    限定名称写起来很繁琐，而且通常最好不要把特定的模式名硬编码到应用程序中。因此，表常常用<firstterm>非限定名称</firstterm>来引用，它仅由表名组成。系统通过遵循<firstterm>搜索路径</firstterm>来确定指的是哪张表，搜索路径是一个要查找的模式列表。搜索路径中第一个匹配的表就被认为是所需的表。如果搜索路径中没有匹配项，则报告错误，即使数据库中的其他模式中存在匹配的表名也是如此。
    </para>
 
   <para>
-    The ability to create like-named objects in different schemas complicates
-    writing a query that references precisely the same objects every time.  It
-    also opens up the potential for users to change the behavior of other
-    users' queries, maliciously or accidentally.  Due to the prevalence of
-    unqualified names in queries and their use
-    in <productname>PostgreSQL</productname> internals, adding a schema
-    to <varname>search_path</varname> effectively trusts all users having
-    <literal>CREATE</literal> privilege on that schema.  When you run an
-    ordinary query, a malicious user able to create objects in a schema of
-    your search path can take control and execute arbitrary SQL functions as
-    though you executed them.
+    在不同的模式中创建同名对象的能力，使得编写每次都精确引用同一批对象的查询变得复杂。它还带来了用户恶意或无意地改变其他用户查询行为的可能性。由于查询中非限定名称的普遍使用以及它们在 <productname>PostgreSQL</productname> 内部的使用，向 <varname>search_path</varname> 添加一个模式实际上就是信任所有对该模式具有 <literal>CREATE</literal> 权限的用户。当你运行一条普通查询时，能够在你的搜索路径中的某个模式里创建对象的恶意用户可以取得控制权，并像你执行它们一样执行任意 SQL 函数。
    </para>
 
    <indexterm>
@@ -2524,10 +2466,7 @@ CREATE TABLE public.products ( ... );
    </indexterm>
 
    <para>
-    The first schema named in the search path is called the current schema.
-    Aside from being the first schema searched, it is also the schema in
-    which new tables will be created if the <command>CREATE TABLE</command>
-    command does not specify a schema name.
+    搜索路径中第一个命名的模式称为当前模式。除了是第一个被搜索的模式之外，它也是当 <command>CREATE TABLE</command> 命令未指定模式名时将在其中创建新表的模式。
    </para>
 
    <indexterm>
@@ -2535,83 +2474,62 @@ CREATE TABLE public.products ( ... );
    </indexterm>
 
    <para>
-    To show the current search path, use the following command:
+    要显示当前的搜索路径，请使用以下命令：
 <programlisting>
 SHOW search_path;
 </programlisting>
-    In the default setup this returns:
+    在默认设置下，这会返回：
 <screen>
  search_path
 --------------
  "$user", public
 </screen>
-    The first element specifies that a schema with the same name as
-    the current user is to be searched.  If no such schema exists,
-    the entry is ignored.  The second element refers to the
-    public schema that we have seen already.
+    第一个元素指定要搜索一个与当前用户同名的模式。如果不存在这样的模式，则忽略该项。第二个元素指的是我们已经见过的 public 模式。
    </para>
 
    <para>
-    The first schema in the search path that exists is the default
-    location for creating new objects.  That is the reason that by
-    default objects are created in the public schema.  When objects
-    are referenced in any other context without schema qualification
-    (table modification, data modification, or query commands) the
-    search path is traversed until a matching object is found.
-    Therefore, in the default configuration, any unqualified access
-    again can only refer to the public schema.
+    搜索路径中存在的第一个模式是创建新对象的默认位置。这就是默认情况下对象被创建在 public 模式中的原因。当在任何其他上下文中引用对象而没有模式限定时（表修改、数据修改或查询命令），会遍历搜索路径，直到找到匹配的对象。因此，在默认配置下，任何非限定访问同样只能引用 public 模式。
    </para>
 
    <para>
-    To put our new schema in the path, we use:
+    要把我们的新模式放入路径中，我们使用：
 <programlisting>
 SET search_path TO myschema,public;
 </programlisting>
-    (We omit the <literal>$user</literal> here because we have no
-    immediate need for it.)  And then we can access the table without
-    schema qualification:
+    （我们在这里省略了 <literal>$user</literal>，因为我们暂时不需要它。）然后我们就可以在不指定模式限定的情况下访问该表：
 <programlisting>
 DROP TABLE mytable;
 </programlisting>
-    Also, since <literal>myschema</literal> is the first element in
-    the path, new objects would by default be created in it.
+    另外，由于 <literal>myschema</literal> 是路径中的第一个元素，新对象默认会创建在其中。
    </para>
 
    <para>
-    We could also have written:
+    我们也可以写成：
 <programlisting>
 SET search_path TO myschema;
 </programlisting>
-    Then we no longer have access to the public schema without
-    explicit qualification.  There is nothing special about the public
-    schema except that it exists by default.  It can be dropped, too.
+    这样我们就无法在不显式限定的情况下访问 public 模式了。public 模式并没有什么特别之处，只是它默认存在而已。它也可以被删除。
    </para>
 
    <para>
-    See also <xref linkend="functions-info"/> for other ways to manipulate
-    the schema search path.
+    关于操作模式搜索路径的其他方法，另请参阅 <xref linkend="functions-info"/>。
    </para>
 
    <para>
-    The search path works in the same way for data type names, function names,
-    and operator names as it does for table names.  Data type and function
-    names can be qualified in exactly the same way as table names.  If you
-    need to write a qualified operator name in an expression, there is a
-    special provision: you must write
+    搜索路径对数据类型名、函数名和运算符名的作用方式与对表名相同。数据类型名和函数名可以完全按照与表名相同的方式进行限定。如果你需要在表达式中书写带限定的运算符名，有一个特殊规定：你必须写成
 <synopsis>
 <literal>OPERATOR(</literal><replaceable>schema</replaceable><literal>.</literal><replaceable>operator</replaceable><literal>)</literal>
 </synopsis>
-    This is needed to avoid syntactic ambiguity.  An example is:
+    这是为了避免语法歧义。例如：
 <programlisting>
 SELECT 3 OPERATOR(pg_catalog.+) 4;
 </programlisting>
-    In practice one usually relies on the search path for operators,
-    so as not to have to write anything so ugly as that.
+    在实践中，人们通常依赖搜索路径来查找运算符，以免写出那样难看的代码。
    </para>
   </sect2>
 
   <sect2 id="ddl-schemas-priv">
-   <title>Schemas and Privileges</title>
+   <title>模式与权限</title>
 
    <indexterm zone="ddl-schemas-priv">
     <primary>privilege</primary>
@@ -2619,35 +2537,20 @@ SELECT 3 OPERATOR(pg_catalog.+) 4;
    </indexterm>
 
    <para>
-    By default, users cannot access any objects in schemas they do not
-    own.  To allow that, the owner of the schema must grant the
-    <literal>USAGE</literal> privilege on the schema.  By default, everyone
-    has that privilege on the schema <literal>public</literal>.  To allow
-    users to make use of the objects in a schema, additional privileges might
-    need to be granted, as appropriate for the object.
+    默认情况下，用户不能访问他们不拥有的模式中的任何对象。要允许这样做，模式的拥有者必须在该模式上授予 <literal>USAGE</literal> 权限。默认情况下，每个人在模式 <literal>public</literal> 上都拥有该权限。要允许用户使用模式中的对象，可能还需要根据对象的情况授予额外的权限。
    </para>
 
    <para>
-    A user can also be allowed to create objects in someone else's schema.  To
-    allow that, the <literal>CREATE</literal> privilege on the schema needs to
-    be granted.  In databases upgraded from
-    <productname>PostgreSQL</productname> 14 or earlier, everyone has that
-    privilege on the schema <literal>public</literal>.
-    Some <link linkend="ddl-schemas-patterns">usage patterns</link> call for
-    revoking that privilege:
+    也可以允许用户在别人的模式中创建对象。为了允许这样做，需要授予该模式上的 <literal>CREATE</literal> 特权。在从 <productname>PostgreSQL</productname> 14 或更早版本升级的数据库中，每个人都对模式 <literal>public</literal> 拥有该特权。某些<link linkend="ddl-schemas-patterns">使用模式</link>要求撤销该特权：
 <programlisting>
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 </programlisting>
-    (The first <quote>public</quote> is the schema, the second
-    <quote>public</quote> means <quote>every user</quote>.  In the
-    first sense it is an identifier, in the second sense it is a
-    key word, hence the different capitalization; recall the
-    guidelines from <xref linkend="sql-syntax-identifiers"/>.)
+    （第一个<quote>public</quote>是模式，第二个<quote>public</quote>表示<quote>每个用户</quote>。在第一种含义中它是一个标识符，在第二种含义中它是一个关键字，因此大小写不同；回想一下<xref linkend="sql-syntax-identifiers"/>中的指导原则。）
    </para>
   </sect2>
 
   <sect2 id="ddl-schemas-catalog">
-   <title>The System Catalog Schema</title>
+   <title>系统目录模式</title>
 
    <indexterm zone="ddl-schemas-catalog">
     <primary>system catalog</primary>
@@ -2655,33 +2558,16 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
    </indexterm>
 
    <para>
-    In addition to <literal>public</literal> and user-created schemas, each
-    database contains a <literal>pg_catalog</literal> schema, which contains
-    the system tables and all the built-in data types, functions, and
-    operators.  <literal>pg_catalog</literal> is always effectively part of
-    the search path.  If it is not named explicitly in the path then
-    it is implicitly searched <emphasis>before</emphasis> searching the path's
-    schemas.  This ensures that built-in names will always be
-    findable.  However, you can explicitly place
-    <literal>pg_catalog</literal> at the end of your search path if you
-    prefer to have user-defined names override built-in names.
+    除了 <literal>public</literal> 和用户创建的模式之外，每个数据库都包含一个 <literal>pg_catalog</literal> 模式，其中包含系统表以及所有内置数据类型、函数和运算符。<literal>pg_catalog</literal> 实际上总是搜索路径的一部分。如果它没有在路径中显式命名，那么它会在搜索路径中的模式<emphasis>之前</emphasis>被隐式搜索。这确保了内置名称总是可以被找到。不过，如果你希望用户定义的名称覆盖内置名称，也可以显式地把 <literal>pg_catalog</literal> 放在搜索路径的末尾。
    </para>
 
    <para>
-    Since system table names begin with <literal>pg_</literal>, it is best to
-    avoid such names to ensure that you won't suffer a conflict if some
-    future version defines a system table named the same as your
-    table.  (With the default search path, an unqualified reference to
-    your table name would then be resolved as the system table instead.)
-    System tables will continue to follow the convention of having
-    names beginning with <literal>pg_</literal>, so that they will not
-    conflict with unqualified user-table names so long as users avoid
-    the <literal>pg_</literal> prefix.
+    由于系统表名称以 <literal>pg_</literal> 开头，最好避免使用这类名称，以确保在将来的某个版本定义了与你表同名的系统表时不会发生冲突。（在使用默认搜索路径时，对表名的非限定引用届时会被解析为系统表。）系统表将继续遵循名称以 <literal>pg_</literal> 开头的约定，因此只要用户避免使用 <literal>pg_</literal> 前缀，它们就不会与非限定的用户表名称冲突。
    </para>
   </sect2>
 
   <sect2 id="ddl-schemas-patterns">
-   <title>Usage Patterns</title>
+   <title>使用模式</title>
 
    <para>
     Schemas can be used to organize your data in many ways.
@@ -2697,32 +2583,13 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
     <itemizedlist>
      <listitem>
       <para>
-       Constrain ordinary users to user-private schemas.
-       To implement this pattern, first ensure that no schemas have
-       public <literal>CREATE</literal> privileges.  Then, for every user
-       needing to create non-temporary objects, create a schema with the
-       same name as that user, for example
-       <literal>CREATE SCHEMA alice AUTHORIZATION alice</literal>.
-       (Recall that the default search path starts
-       with <literal>$user</literal>, which resolves to the user
-       name. Therefore, if each user has a separate schema, they access
-       their own schemas by default.)  This pattern is a secure schema
-       usage pattern unless an untrusted user is the database owner or
-       has been granted <literal>ADMIN OPTION</literal> on a relevant role,
-       in which case no secure schema usage pattern exists.
+       将普通用户限制到用户私有的模式。要实现此方案，首先确保没有任何模式具有 public <literal>CREATE</literal> 权限。然后，对每个需要创建非临时对象的用户，创建一个与该用户同名的模式，例如 <literal>CREATE SCHEMA alice AUTHORIZATION alice</literal>。（回想一下，默认搜索路径以 <literal>$user</literal> 开头，它会解析为用户名。因此，如果每个用户都有单独的模式，他们默认访问自己的模式。）此方案是一种安全的模式使用方案，除非某个不受信任的用户是数据库所有者，或者被授予了相关角色上的 <literal>ADMIN OPTION</literal>，在这种情况下不存在安全的模式使用方案。
       </para>
       <!-- A database owner can attack the database's users via "CREATE SCHEMA
            trojan; ALTER DATABASE $mydb SET search_path = trojan, public;". -->
 
       <para>
-       In <productname>PostgreSQL</productname> 15 and later, the default
-       configuration supports this usage pattern.  In prior versions, or
-       when using a database that has been upgraded from a prior version,
-       you will need to remove the public <literal>CREATE</literal>
-       privilege from the <literal>public</literal> schema (issue
-       <literal>REVOKE CREATE ON SCHEMA public FROM PUBLIC</literal>).
-       Then consider auditing the <literal>public</literal> schema for
-       objects named like objects in schema <literal>pg_catalog</literal>.
+       在 <productname>PostgreSQL</productname> 15 及更高版本中，默认配置支持这种使用方案。在更早的版本中，或者使用从早期版本升级而来的数据库时，你需要从 <literal>public</literal> 模式中移除 public 的 <literal>CREATE</literal> 权限（执行 <literal>REVOKE CREATE ON SCHEMA public FROM PUBLIC</literal>）。然后考虑审计 <literal>public</literal> 模式，检查其中是否有名称与 <literal>pg_catalog</literal> 模式中的对象类似的对象。
       </para>
       <!-- "DROP SCHEMA public" is inferior to this REVOKE, because pg_dump
            doesn't preserve that DROP. -->
@@ -2730,74 +2597,37 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
      <listitem>
       <para>
-       Remove the public schema from the default search path, by modifying
-       <link linkend="config-setting-configuration-file"><filename>postgresql.conf</filename></link>
-       or by issuing <literal>ALTER ROLE ALL SET search_path =
-       "$user"</literal>.  Then, grant privileges to create in the public
-       schema.  Only qualified names will choose public schema objects.  While
-       qualified table references are fine, calls to functions in the public
-       schema <link linkend="typeconv-func">will be unsafe or
-       unreliable</link>.  If you create functions or extensions in the public
-       schema, use the first pattern instead.  Otherwise, like the first
-       pattern, this is secure unless an untrusted user is the database owner
-       or has been granted <literal>ADMIN OPTION</literal> on a relevant role.
+       通过修改 <link linkend="config-setting-configuration-file"><filename>postgresql.conf</filename></link> 或执行 <literal>ALTER ROLE ALL SET search_path =
+       "$user"</literal>，从默认搜索路径中移除 public 模式。然后，授予在 public 模式中创建的权限。只有限定名称才会选择 public 模式中的对象。虽然限定表引用没有问题，但对 public 模式中函数的调用 <link linkend="typeconv-func">将不安全或不可靠</link>。如果你在 public 模式中创建函数或扩展，请改用第一种方案。否则，与第一种方案一样，除非某个不受信任的用户是数据库所有者或被授予了相关角色上的 <literal>ADMIN OPTION</literal>，否则这是安全的。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Keep the default search path, and grant privileges to create in the
-       public schema.  All users access the public schema implicitly.  This
-       simulates the situation where schemas are not available at all, giving
-       a smooth transition from the non-schema-aware world.  However, this is
-       never a secure pattern.  It is acceptable only when the database has a
-       single user or a few mutually-trusting users.  In databases upgraded
-       from <productname>PostgreSQL</productname> 14 or earlier, this is the
-       default.
+       保留默认搜索路径，并授予在 public 模式中创建的权限。所有用户都隐式访问 public 模式。这模拟了模式完全不可用的情况，从而提供了从不感知模式的世界平滑过渡。然而，这从来都不是一种安全的方案。仅当数据库只有一个用户或少数相互信任的用户时，才可以接受。在从 <productname>PostgreSQL</productname> 14 或更早版本升级的数据库中，这是默认设置。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    For any pattern, to install shared applications (tables to be used by
-    everyone, additional functions provided by third parties, etc.), put them
-    into separate schemas.  Remember to grant appropriate privileges to allow
-    the other users to access them.  Users can then refer to these additional
-    objects by qualifying the names with a schema name, or they can put the
-    additional schemas into their search path, as they choose.
+    对于任何模式，要安装共享应用程序（供所有人使用的表、第三方提供的附加函数等），请将它们放入单独的模式中。记得授予适当的权限以允许其他用户访问它们。然后，用户可以通过用模式名限定名称来引用这些附加对象，或者他们也可以按自己的选择将附加模式放入其搜索路径中。
    </para>
   </sect2>
 
   <sect2 id="ddl-schemas-portability">
-   <title>Portability</title>
+   <title>可移植性</title>
 
    <para>
-    In the SQL standard, the notion of objects in the same schema
-    being owned by different users does not exist.  Moreover, some
-    implementations do not allow you to create schemas that have a
-    different name than their owner.  In fact, the concepts of schema
-    and user are nearly equivalent in a database system that
-    implements only the basic schema support specified in the
-    standard.  Therefore, many users consider qualified names to
-    really consist of
-    <literal><replaceable>user_name</replaceable>.<replaceable>table_name</replaceable></literal>.
-    This is how <productname>PostgreSQL</productname> will effectively
-    behave if you create a per-user schema for every user.
+    在 SQL 标准中，不存在同一模式中的对象由不同用户拥有的概念。此外，某些实现不允许你创建名称与其所有者不同的模式。事实上，在仅实现标准中指定的基本模式支持的数据库系统中，模式和用户的概念几乎等同。因此，许多用户认为限定名实际上由 <literal><replaceable>user_name</replaceable>.<replaceable>table_name</replaceable></literal> 组成。如果你为每个用户创建一个每用户模式，<productname>PostgreSQL</productname> 实际上就会这样表现。
    </para>
 
    <para>
-    Also, there is no concept of a <literal>public</literal> schema in the
-    SQL standard.  For maximum conformance to the standard, you should
-    not use the <literal>public</literal> schema.
+    此外，SQL 标准中没有 <literal>public</literal> 模式的概念。为了最大程度地符合标准，你不应使用 <literal>public</literal> 模式。
    </para>
 
    <para>
-    Of course, some SQL database systems might not implement schemas
-    at all, or provide namespace support by allowing (possibly
-    limited) cross-database access.  If you need to work with those
-    systems, then maximum portability would be achieved by not using
-    schemas at all.
+    当然，某些 SQL 数据库系统可能根本不实现模式，或者通过允许（可能受限的）跨数据库访问来提供命名空间支持。如果你需要与这些系统协作，那么完全不使用模式可以实现最大的可移植性。
    </para>
   </sect2>
  </sect1>
