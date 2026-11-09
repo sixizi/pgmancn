@@ -52,40 +52,25 @@
   </sect1>
 
   <sect1 id="lo-implementation">
-   <title>Implementation Features</title>
+   <title>实现特性</title>
 
    <para>
-    The large object implementation breaks large
-    objects up into <quote>chunks</quote> and stores the chunks in
-    rows in the database.  A B-tree index guarantees fast
-    searches for the correct chunk number when doing random
-    access reads and writes.
+    大对象实现会把大对象拆分成<quote>块</quote>（chunk），并将这些块存储在数据库的行中。B-tree 索引保证在进行随机访问读写时能够快速搜索到正确的块号。
    </para>
 
    <para>
-    The chunks stored for a large object do not have to be contiguous.
-    For example, if an application opens a new large object, seeks to offset
-    1000000, and writes a few bytes there, this does not result in allocation
-    of 1000000 bytes worth of storage; only of chunks covering the range of
-    data bytes actually written.  A read operation will, however, read out
-    zeroes for any unallocated locations preceding the last existing chunk.
-    This corresponds to the common behavior of <quote>sparsely allocated</quote>
-    files in <acronym>Unix</acronym> file systems.
+    为一个大对象存储的块不必是连续的。例如，如果一个应用程序打开一个新的大对象，定位到偏移量 1000000 处并在那里写入几个字节，这并不会导致分配价值 1000000 字节的存储空间；只会分配覆盖实际写入数据字节范围的块。不过，读操作会把最后一个现有块之前任何未分配位置读出为零。这与 <acronym>Unix</acronym> 文件系统中<quote>稀疏分配</quote>文件的常见行为相对应。
    </para>
 
    <para>
-    As of <productname>PostgreSQL</productname> 9.0, large objects have an owner
-    and a set of access permissions, which can be managed using
-    <xref linkend="sql-grant"/> and
-    <xref linkend="sql-revoke"/>.
-    <literal>SELECT</literal> privileges are required to read a large
-    object, and
-    <literal>UPDATE</literal> privileges are required to write or
-    truncate it.
-    Only the large object's owner (or a database superuser) can delete,
-    comment on, or change the owner of a large object.
-    To adjust this behavior for compatibility with prior releases, see the
-    <xref linkend="guc-lo-compat-privileges"/> run-time parameter.
+    从 <productname>PostgreSQL</productname> 9.0 开始，大对象拥有一个所有者以及一组访问权限，可以使用
+    <xref linkend="sql-grant"/> 和
+    <xref linkend="sql-revoke"/> 来管理。
+    读取大对象需要 <literal>SELECT</literal> 权限，
+    写入或截断大对象需要 <literal>UPDATE</literal> 权限。
+    只有大对象的所有者（或数据库超级用户）才能删除大对象、为其添加注释或更改其所有者。
+    要调整此行为以兼容以前的版本，请参见
+    <xref linkend="guc-lo-compat-privileges"/> 运行时参数。
    </para>
   </sect1>
 
