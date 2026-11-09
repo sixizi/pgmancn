@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/spgist.sgml -->
 
 <sect1 id="spgist">
-<title>SP-GiST Indexes</title>
+<title>SP-GiST 索引</title>
 
    <indexterm>
     <primary>index</primary>
@@ -9,67 +9,47 @@
    </indexterm>
 
 <sect2 id="spgist-intro">
- <title>Introduction</title>
+ <title>简介</title>
 
  <para>
-  <acronym>SP-GiST</acronym> is an abbreviation for space-partitioned
-  <acronym>GiST</acronym>.  <acronym>SP-GiST</acronym> supports partitioned
-  search trees, which facilitate development of a wide range of different
-  non-balanced data structures, such as quad-trees, k-d trees, and radix
-  trees (tries).  The common feature of these structures is that they
-  repeatedly divide the search space into partitions that need not be
-  of equal size.  Searches that are well matched to the partitioning rule
-  can be very fast.
+  <acronym>SP-GiST</acronym> 是 space-partitioned <acronym>GiST</acronym> 的缩写。<acronym>SP-GiST</acronym> 支持分区搜索树，这有助于开发各种不同的非平衡数据结构，例如四叉树、k-d 树和基数树（trie）。这些结构的共同特征是，它们反复地将搜索空间划分为不必大小相等的分区。与分区规则良好匹配的搜索可以非常快。
  </para>
 
  <para>
-  These popular data structures were originally developed for in-memory
-  usage.  In main memory, they are usually designed as a set of dynamically
-  allocated nodes linked by pointers.  This is not suitable for direct
-  storing on disk, since these chains of pointers can be rather long which
-  would require too many disk accesses.  In contrast, disk-based data
-  structures should have a high fanout to minimize I/O.  The challenge
-  addressed by <acronym>SP-GiST</acronym> is to map search tree nodes to
-  disk pages in such a way that a search need access only a few disk pages,
-  even if it traverses many nodes.
+  这些流行的数据结构最初是为内存使用而开发的。在主存中，它们通常被设计成一组由指针链接的动态分配节点。这不适合直接存储在磁盘上，因为这些指针链可能相当长，会需要过多的磁盘访问。相比之下，基于磁盘的数据结构应该具有高扇出，以尽量减少 I/O。<acronym>SP-GiST</acronym> 所应对的挑战是，将搜索树节点映射到磁盘页面，使得搜索只需访问少量磁盘页面，即使它遍历了许多节点。
  </para>
 
  <para>
-  Like <acronym>GiST</acronym>, <acronym>SP-GiST</acronym> is meant to allow
-  the development of custom data types with the appropriate access methods,
-  by an expert in the domain of the data type, rather than a database expert.
+  与 <acronym>GiST</acronym> 一样，<acronym>SP-GiST</acronym> 旨在允许由数据类型领域的专家（而非数据库专家）开发带有适当访问方法的自定义数据类型。
  </para>
 
  <para>
-  Some of the information here is derived from Purdue University's
-  SP-GiST Indexing Project
-  <ulink url="https://www.cs.purdue.edu/spgist/">web site</ulink>.
-  The <acronym>SP-GiST</acronym> implementation in
-  <productname>PostgreSQL</productname> is primarily maintained by Teodor
-  Sigaev and Oleg Bartunov, and there is more information on their
+  此处的一些信息源自普渡大学的 SP-GiST Indexing Project
+  <ulink url="https://www.cs.purdue.edu/spgist/">网站</ulink>。
+  <productname>PostgreSQL</productname> 中的 <acronym>SP-GiST</acronym> 实现主要由 Teodor
+  Sigaev 和 Oleg Bartunov 维护，他们的
   <!-- URL will be changed -->
-  <ulink url="http://www.sai.msu.su/~megera/wiki/spgist_dev">web site</ulink>.
+  <ulink url="http://www.sai.msu.su/~megera/wiki/spgist_dev">网站</ulink> 上有更多信息。
  </para>
 
 </sect2>
 
 <sect2 id="spgist-builtin-opclasses">
- <title>Built-in Operator Classes</title>
+ <title>内置运算符类</title>
 
  <para>
-  The core <productname>PostgreSQL</productname> distribution
-  includes the <acronym>SP-GiST</acronym> operator classes shown in
-  <xref linkend="spgist-builtin-opclasses-table"/>.
+  核心 <productname>PostgreSQL</productname> 发行版包含
+  <xref linkend="spgist-builtin-opclasses-table"/> 中所示的 <acronym>SP-GiST</acronym> 运算符类。
  </para>
 
   <table id="spgist-builtin-opclasses-table">
-   <title>Built-in <acronym>SP-GiST</acronym> Operator Classes</title>
+   <title>内置 <acronym>SP-GiST</acronym> 运算符类</title>
    <tgroup cols="3">
     <thead>
      <row>
-      <entry>Name</entry>
-      <entry>Indexable Operators</entry>
-      <entry>Ordering Operators</entry>
+      <entry>名称</entry>
+      <entry>可索引运算符</entry>
+      <entry>排序运算符</entry>
      </row>
     </thead>
     <tbody>
@@ -179,113 +159,49 @@
   </table>
 
  <para>
-  Of the two operator classes for type <type>point</type>,
-  <literal>quad_point_ops</literal> is the default.  <literal>kd_point_ops</literal>
-  supports the same operators but uses a different index data structure that
-  may offer better performance in some applications.
+  对于类型 <type>point</type> 的两个运算符类，<literal>quad_point_ops</literal> 是默认的。<literal>kd_point_ops</literal> 支持相同的运算符，但使用不同的索引数据结构，在某些应用中可能提供更好的性能。
  </para>
  <para>
-  The <literal>quad_point_ops</literal>, <literal>kd_point_ops</literal> and
-  <literal>poly_ops</literal> operator classes support the <literal>&lt;-&gt;</literal>
-  ordering operator, which enables the k-nearest neighbor (<literal>k-NN</literal>)
-  search over indexed point or polygon data sets.
+  <literal>quad_point_ops</literal>、<literal>kd_point_ops</literal> 和 <literal>poly_ops</literal> 运算符类支持 <literal>&lt;-&gt;</literal> 排序运算符，它使得可以在已建立索引的点或多边形数据集上进行 k 最近邻（<literal>k-NN</literal>）搜索。
  </para>
 
 </sect2>
 
 <sect2 id="spgist-extensibility">
- <title>Extensibility</title>
+ <title>可扩展性</title>
 
  <para>
-  <acronym>SP-GiST</acronym> offers an interface with a high level of
-  abstraction, requiring the access method developer to implement only
-  methods specific to a given data type. The <acronym>SP-GiST</acronym> core
-  is responsible for efficient disk mapping and searching the tree structure.
-  It also takes care of concurrency and logging considerations.
+  <acronym>SP-GiST</acronym> 提供了一个高度抽象的接口，只要求访问方法开发者实现特定于给定数据类型的方法。<acronym>SP-GiST</acronym> 核心负责高效的磁盘映射和树结构搜索。它还负责处理并发和日志方面的考虑。
  </para>
 
  <para>
-  Leaf tuples of an <acronym>SP-GiST</acronym> tree usually contain values
-  of the same data type as the indexed column, although it is also possible
-  for them to contain lossy representations of the indexed column.
-  Leaf tuples stored at the root level will directly represent
-  the original indexed data value, but leaf tuples at lower
-  levels might contain only a partial value, such as a suffix.
-  In that case the operator class support functions must be able to
-  reconstruct the original value using information accumulated from the
-  inner tuples that are passed through to reach the leaf level.
+  <acronym>SP-GiST</acronym> 树的叶子元组通常包含与被索引列相同数据类型的值，尽管它们也可能包含被索引列的有损表示。存储在根级别的叶子元组将直接表示原始的被索引数据值，但较低级别的叶子元组可能只包含部分值，例如后缀。在这种情况下，运算符类支持函数必须能够使用从到达叶子级别所经过的内部元组中累积的信息来重建原始值。
  </para>
 
  <para>
-  When an <acronym>SP-GiST</acronym> index is created with
-  <literal>INCLUDE</literal> columns, the values of those columns are also
-  stored in leaf tuples.  The <literal>INCLUDE</literal> columns are of no
-  concern to the <acronym>SP-GiST</acronym> operator class, so they are
-  not discussed further here.
+  当使用 <literal>INCLUDE</literal> 列创建 <acronym>SP-GiST</acronym> 索引时，这些列的值也会存储在叶子元组中。<literal>INCLUDE</literal> 列与 <acronym>SP-GiST</acronym> 运算符类无关，因此这里不再进一步讨论。
  </para>
 
  <para>
-  Inner tuples are more complex, since they are branching points in the
-  search tree.  Each inner tuple contains a set of one or more
-  <firstterm>nodes</firstterm>, which represent groups of similar leaf values.
-  A node contains a downlink that leads either to another, lower-level inner
-  tuple, or to a short list of leaf tuples that all lie on the same index page.
-  Each node normally has a <firstterm>label</firstterm> that describes it; for example,
-  in a radix tree the node label could be the next character of the string
-  value.  (Alternatively, an operator class can omit the node labels, if it
-  works with a fixed set of nodes for all inner tuples;
-  see <xref linkend="spgist-null-labels"/>.)
-  Optionally, an inner tuple can have a <firstterm>prefix</firstterm> value
-  that describes all its members.  In a radix tree this could be the common
-  prefix of the represented strings.  The prefix value is not necessarily
-  really a prefix, but can be any data needed by the operator class;
-  for example, in a quad-tree it can store the central point that the four
-  quadrants are measured with respect to.  A quad-tree inner tuple would
-  then also contain four nodes corresponding to the quadrants around this
-  central point.
+  内部元组更复杂，因为它们是搜索树中的分支点。每个内部元组包含一组一个或多个<firstterm>节点</firstterm>，它们表示相似叶子值的分组。一个节点包含一个向下链接，指向另一个更低层的内部元组，或者指向位于同一索引页上的一小串叶子元组。每个节点通常有一个描述它的<firstterm>标签</firstterm>；例如，在基数树中，节点标签可以是字符串值的下一个字符。（另外，如果某个操作符类对所有内部元组都使用固定的一组节点，它也可以省略节点标签；参见 <xref linkend="spgist-null-labels"/>。）内部元组还可以可选地拥有一个<firstterm>前缀</firstterm>值，用于描述其所有成员。在基数树中，这可以是被表示字符串的公共前缀。前缀值不一定真的是前缀，而可以是操作符类所需的任意数据；例如，在四叉树中，它可以存储四个象限所参照的中心点。于是四叉树的内部元组还会包含四个节点，分别对应该中心点周围的四个象限。
  </para>
 
  <para>
-  Some tree algorithms require knowledge of level (or depth) of the current
-  tuple, so the <acronym>SP-GiST</acronym> core provides the possibility for
-  operator classes to manage level counting while descending the tree.
-  There is also support for incrementally reconstructing the represented
-  value when that is needed, and for passing down additional data (called
-  <firstterm>traverse values</firstterm>) during a tree descent.
+  有些树算法需要知道当前元组的层（或深度），因此 <acronym>SP-GiST</acronym> 核心提供了让操作符类在下树过程中管理层计数的能力。它还支持在需要时增量地重建所表示的值，以及在向下遍历树的过程中向下传递附加数据（称为<firstterm>遍历值</firstterm>）。
  </para>
 
  <note>
   <para>
-   The <acronym>SP-GiST</acronym> core code takes care of null entries.
-   Although <acronym>SP-GiST</acronym> indexes do store entries for nulls
-   in indexed columns, this is hidden from the index operator class code:
-   no null index entries or search conditions will ever be passed to the
-   operator class methods.  (It is assumed that <acronym>SP-GiST</acronym>
-   operators are strict and so cannot succeed for null values.)  Null values
-   are therefore not discussed further here.
+   <acronym>SP-GiST</acronym> 核心代码负责处理空条目。尽管 <acronym>SP-GiST</acronym> 索引确实会为索引列中的空值存储条目，但这对索引操作符类代码是隐藏的：空索引条目或搜索条件永远不会被传递给操作符类方法。（这里假定 <acronym>SP-GiST</acronym> 运算符是严格的，因此对空值不可能成功。）因此，这里不再进一步讨论空值。
   </para>
  </note>
 
  <para>
-  There are five user-defined methods that an index operator class for
-  <acronym>SP-GiST</acronym> must provide, and two are optional.  All five
-  mandatory methods follow the convention of accepting two <type>internal</type>
-  arguments, the first of which is a pointer to a C struct containing input
-  values for the support method, while the second argument is a pointer to a
-  C struct where output values must be placed.  Four of the mandatory methods just
-  return <type>void</type>, since all their results appear in the output struct; but
-  <function>leaf_consistent</function> returns a <type>boolean</type> result.
-  The methods must not modify any fields of their input structs.  In all
-  cases, the output struct is initialized to zeroes before calling the
-  user-defined method.  The optional sixth method <function>compress</function>
-  accepts a <type>datum</type> to be indexed as the only argument and returns a value suitable
-  for physical storage in a leaf tuple.  The optional seventh method
-  <function>options</function> accepts an <type>internal</type> pointer to a C struct, where
-  opclass-specific parameters should be placed, and returns <type>void</type>.
+  <acronym>SP-GiST</acronym> 的索引运算符类必须提供五个用户定义的方法，其中两个是可选的。所有五个必需的方法都遵循接受两个 <type>internal</type> 参数的约定，第一个参数是指向 C 结构体的指针，其中包含该支持方法的输入值，而第二个参数是指向必须放置输出值的 C 结构体的指针。四个必需方法只返回 <type>void</type>，因为它们的所有结果都出现在输出结构体中；但 <function>leaf_consistent</function> 返回一个 <type>boolean</type> 结果。这些方法不得修改其输入结构体的任何字段。在所有情况下，输出结构体在调用用户定义的方法之前都会被初始化为零。可选的第六个方法 <function>compress</function> 接受一个要索引的 <type>datum</type> 作为唯一参数，并返回一个适合在叶子元组中进行物理存储的值。可选的第七个方法 <function>options</function> 接受一个指向 C 结构体的 <type>internal</type> 指针，其中应放置运算符类特定的参数，并返回 <type>void</type>。
  </para>
 
  <para>
-  The five mandatory user-defined methods are:
+  五个必需的用户定义方法是：
  </para>
 
  <variablelist>
@@ -293,18 +209,14 @@
      <term><function>config</function></term>
      <listitem>
       <para>
-       Returns static information about the index implementation, including
-       the data type OIDs of the prefix and node label data types.
+       返回关于索引实现的静态信息，包括前缀和节点标签数据类型的数据类型 OID。
       </para>
      <para>
-      The <acronym>SQL</acronym> declaration of the function must look like this:
+      函数的 <acronym>SQL</acronym> 声明必须如下所示：
 <programlisting>
 CREATE FUNCTION my_config(internal, internal) RETURNS void ...
 </programlisting>
-      The first argument is a pointer to a <structname>spgConfigIn</structname>
-      C struct, containing input data for the function.
-      The second argument is a pointer to a <structname>spgConfigOut</structname>
-      C struct, which the function must fill with result data.
+      第一个参数是指向 <structname>spgConfigIn</structname> C 结构体的指针，其中包含该函数的输入数据。第二个参数是指向 <structname>spgConfigOut</structname> C 结构体的指针，函数必须用结果数据填充它。
 <programlisting>
 typedef struct spgConfigIn
 {
@@ -321,48 +233,32 @@ typedef struct spgConfigOut
 } spgConfigOut;
 </programlisting>
 
-      <structfield>attType</structfield> is passed in order to support polymorphic
-      index operator classes; for ordinary fixed-data-type operator classes, it
-      will always have the same value and so can be ignored.
+      传入 <structfield>attType</structfield> 是为了支持多态索引运算符类；对于普通的固定数据类型运算符类，它的值始终相同，因此可以忽略。
      </para>
 
      <para>
-      For operator classes that do not use prefixes,
-      <structfield>prefixType</structfield> can be set to <literal>VOIDOID</literal>.
-      Likewise, for operator classes that do not use node labels,
-      <structfield>labelType</structfield> can be set to <literal>VOIDOID</literal>.
-      <structfield>canReturnData</structfield> should be set true if the operator class
-      is capable of reconstructing the originally-supplied index value.
-      <structfield>longValuesOK</structfield> should be set true only when the
-      <structfield>attType</structfield> is of variable length and the operator
-      class is capable of segmenting long values by repeated suffixing
-      (see <xref linkend="spgist-limits"/>).
+      对于不使用前缀的运算符类，可以将 <structfield>prefixType</structfield> 设置为 <literal>VOIDOID</literal>。同样，对于不使用节点标签的运算符类，可以将 <structfield>labelType</structfield> 设置为 <literal>VOIDOID</literal>。如果运算符类能够重建最初提供的索引值，则应将 <structfield>canReturnData</structfield> 设置为 true。仅当 <structfield>attType</structfield> 为可变长度且运算符类能够通过重复后缀来分割长值时，才应将 <structfield>longValuesOK</structfield> 设置为 true（参见 <xref linkend="spgist-limits"/>）。
      </para>
 
      <para>
-      <structfield>leafType</structfield> should match the index storage type
-      defined by the operator class's <structfield>opckeytype</structfield>
-      catalog entry.
-      (Note that <structfield>opckeytype</structfield> can be zero,
-      implying the storage type is the same as the operator class's input
-      type, which is the most common situation.)
-      For reasons of backward compatibility, the <function>config</function>
-      method can set <structfield>leafType</structfield> to some other value,
-      and that value will be used; but this is deprecated since the index
-      contents are then incorrectly identified in the catalogs.
-      Also, it's permissible to
-      leave <structfield>leafType</structfield> uninitialized (zero);
-      that is interpreted as meaning the index storage type derived from
-      <structfield>opckeytype</structfield>.
+      <structfield>leafType</structfield> 应该匹配由操作符类的 <structfield>opckeytype</structfield>
+      系统目录项所定义的索引存储类型。
+      （注意 <structfield>opckeytype</structfield> 可以为零，
+      这意味着存储类型与操作符类的输入类型相同，这是最常见的情况。）
+      出于向后兼容的原因，<function>config</function>
+      方法可以将 <structfield>leafType</structfield> 设置为其他值，
+      并且将使用该值；但这已被废弃，因为索引内容随后会在系统目录中被错误地标识。
+      此外，允许将 <structfield>leafType</structfield> 保持未初始化（零）；
+      这被解释为索引存储类型派生自
+      <structfield>opckeytype</structfield>。
      </para>
 
      <para>
-      When <structfield>attType</structfield>
-      and <structfield>leafType</structfield> are different, the optional
-      method <function>compress</function> must be provided.
-      Method <function>compress</function> is responsible
-      for transformation of datums to be indexed from <structfield>attType</structfield>
-      to <structfield>leafType</structfield>.
+      当 <structfield>attType</structfield>
+      与 <structfield>leafType</structfield> 不同时，必须提供可选的
+      方法 <function>compress</function>。
+      方法 <function>compress</function> 负责将要索引的数据值
+      从 <structfield>attType</structfield> 转换为 <structfield>leafType</structfield>。
      </para>
      </listitem>
     </varlistentry>
@@ -371,18 +267,18 @@ typedef struct spgConfigOut
      <term><function>choose</function></term>
      <listitem>
       <para>
-        Chooses a method for inserting a new value into an inner tuple.
+        选择一种将新值插入到内部元组中的方法。
       </para>
 
      <para>
-      The <acronym>SQL</acronym> declaration of the function must look like this:
+      函数的 <acronym>SQL</acronym> 声明必须如下所示：
 <programlisting>
 CREATE FUNCTION my_choose(internal, internal) RETURNS void ...
 </programlisting>
-      The first argument is a pointer to a <structname>spgChooseIn</structname>
-      C struct, containing input data for the function.
-      The second argument is a pointer to a <structname>spgChooseOut</structname>
-      C struct, which the function must fill with result data.
+      第一个参数是指向 <structname>spgChooseIn</structname>
+      C 结构体的指针，其中包含该函数的输入数据。
+      第二个参数是指向 <structname>spgChooseOut</structname>
+      C 结构体的指针，函数必须用结果数据填充它。
 <programlisting>
 typedef struct spgChooseIn
 {
@@ -439,99 +335,67 @@ typedef struct spgChooseOut
 } spgChooseOut;
 </programlisting>
 
-       <structfield>datum</structfield> is the original datum of
+       <structfield>datum</structfield> 是要插入到索引中的
        <structname>spgConfigIn</structname>.<structfield>attType</structfield>
-       type that was to be inserted into the index.
-       <structfield>leafDatum</structfield> is a value of
+       类型的原始数据值。
+       <structfield>leafDatum</structfield> 是一个
        <structname>spgConfigOut</structname>.<structfield>leafType</structfield>
-       type, which is initially a result of method
-       <function>compress</function> applied to <structfield>datum</structfield>
-       when method <function>compress</function> is provided, or the same value as
-       <structfield>datum</structfield> otherwise.
-       <structfield>leafDatum</structfield> can change at lower levels of the tree
-       if the <function>choose</function> or <function>picksplit</function>
-       methods change it.  When the insertion search reaches a leaf page,
-       the current value of <structfield>leafDatum</structfield> is what will be stored
-       in the newly created leaf tuple.
-       <structfield>level</structfield> is the current inner tuple's level, starting at
-       zero for the root level.
-       <structfield>allTheSame</structfield> is true if the current inner tuple is
-       marked as containing multiple equivalent nodes
-       (see <xref linkend="spgist-all-the-same"/>).
-       <structfield>hasPrefix</structfield> is true if the current inner tuple contains
-       a prefix; if so,
-       <structfield>prefixDatum</structfield> is its value.
-       <structfield>nNodes</structfield> is the number of child nodes contained in the
-       inner tuple, and
-       <structfield>nodeLabels</structfield> is an array of their label values, or
-       NULL if there are no labels.
+       类型的值，当提供了方法 <function>compress</function> 时，它最初是对 <structfield>datum</structfield>
+       应用方法 <function>compress</function> 的结果，否则与
+       <structfield>datum</structfield> 的值相同。
+       如果 <function>choose</function> 或 <function>picksplit</function>
+       方法改变了它，<structfield>leafDatum</structfield> 可以在树的更低层发生变化。当插入搜索到达叶子页时，
+       <structfield>leafDatum</structfield> 的当前值就是将要存储
+       在新建叶子元组中的值。
+       <structfield>level</structfield> 是当前内部元组的层级，根层级从
+       零开始。
+       如果当前内部元组被
+       标记为包含多个等价节点，则 <structfield>allTheSame</structfield> 为真
+       （参见 <xref linkend="spgist-all-the-same"/>）。
+       如果当前内部元组包含
+       前缀，则 <structfield>hasPrefix</structfield> 为真；如果是这样，
+       <structfield>prefixDatum</structfield> 就是该前缀的值。
+       <structfield>nNodes</structfield> 是内部元组中包含的子节点数，
+       <structfield>nodeLabels</structfield> 是它们的标签值数组，如果没有标签则为
+       NULL。
       </para>
 
       <para>
-       The <function>choose</function> function can determine either that
-       the new value matches one of the existing child nodes, or that a new
-       child node must be added, or that the new value is inconsistent with
-       the tuple prefix and so the inner tuple must be split to create a
-       less restrictive prefix.
+       <function>choose</function> 函数可以判定新值与某个现有子节点匹配，或者必须添加一个新的子节点，或者新值与元组前缀不一致，因此必须拆分内元组以创建一个限制更少的前缀。
       </para>
 
       <para>
-       If the new value matches one of the existing child nodes,
-       set <structfield>resultType</structfield> to <literal>spgMatchNode</literal>.
-       Set <structfield>nodeN</structfield> to the index (from zero) of that node in
-       the node array.
-       Set <structfield>levelAdd</structfield> to the increment in
-       <structfield>level</structfield> caused by descending through that node,
-       or leave it as zero if the operator class does not use levels.
-       Set <structfield>restDatum</structfield> to equal <structfield>leafDatum</structfield>
-       if the operator class does not modify datums from one level to the
-       next, or otherwise set it to the modified value to be used as
-       <structfield>leafDatum</structfield> at the next level.
+       如果新值与某个现有子节点匹配，
+       则将 <structfield>resultType</structfield> 设置为 <literal>spgMatchNode</literal>。
+       将 <structfield>nodeN</structfield> 设置为该节点在节点数组中的索引（从零开始）。
+       将 <structfield>levelAdd</structfield> 设置为因下降到该节点而引起的
+       <structfield>level</structfield> 增量，
+       如果运算符类不使用层级，则将其保留为零。
+       如果运算符类不会在层级之间修改数据值，则将 <structfield>restDatum</structfield> 设置为等于 <structfield>leafDatum</structfield>，
+       否则将其设置为修改后的值，以便在下一层级用作
+       <structfield>leafDatum</structfield>。
       </para>
 
       <para>
-       If a new child node must be added,
-       set <structfield>resultType</structfield> to <literal>spgAddNode</literal>.
-       Set <structfield>nodeLabel</structfield> to the label to be used for the new
-       node, and set <structfield>nodeN</structfield> to the index (from zero) at which
-       to insert the node in the node array.
-       After the node has been added, the <function>choose</function>
-       function will be called again with the modified inner tuple;
-       that call should result in an <literal>spgMatchNode</literal> result.
+       如果必须添加一个新的子节点，
+       则将 <structfield>resultType</structfield> 设置为 <literal>spgAddNode</literal>。
+       将 <structfield>nodeLabel</structfield> 设置为用于新节点的标签，并将 <structfield>nodeN</structfield> 设置为
+       在节点数组中插入该节点的索引（从零开始）。
+       添加该节点后，将使用修改后的内元组再次调用 <function>choose</function>
+       函数；
+       该调用应产生 <literal>spgMatchNode</literal> 结果。
       </para>
 
       <para>
-       If the new value is inconsistent with the tuple prefix,
-       set <structfield>resultType</structfield> to <literal>spgSplitTuple</literal>.
-       This action moves all the existing nodes into a new lower-level
-       inner tuple, and replaces the existing inner tuple with a tuple
-       having a single downlink pointing to the new lower-level inner tuple.
-       Set <structfield>prefixHasPrefix</structfield> to indicate whether the new
-       upper tuple should have a prefix, and if so set
-       <structfield>prefixPrefixDatum</structfield> to the prefix value.  This new
-       prefix value must be sufficiently less restrictive than the original
-       to accept the new value to be indexed.
-       Set <structfield>prefixNNodes</structfield> to the number of nodes needed in the
-       new tuple, and set <structfield>prefixNodeLabels</structfield> to a palloc'd array
-       holding their labels, or to NULL if node labels are not required.
-       Note that the total size of the new upper tuple must be no more
-       than the total size of the tuple it is replacing; this constrains
-       the lengths of the new prefix and new labels.
-       Set <structfield>childNodeN</structfield> to the index (from zero) of the node
-       that will downlink to the new lower-level inner tuple.
-       Set <structfield>postfixHasPrefix</structfield> to indicate whether the new
-       lower-level inner tuple should have a prefix, and if so set
-       <structfield>postfixPrefixDatum</structfield> to the prefix value.  The
-       combination of these two prefixes and the downlink node's label
-       (if any) must have the same meaning as the original prefix, because
-       there is no opportunity to alter the node labels that are moved to
-       the new lower-level tuple, nor to change any child index entries.
-       After the node has been split, the <function>choose</function>
-       function will be called again with the replacement inner tuple.
-       That call may return an <literal>spgAddNode</literal> result, if no suitable
-       node was created by the <literal>spgSplitTuple</literal> action.  Eventually
-       <function>choose</function> must return <literal>spgMatchNode</literal> to
-       allow the insertion to descend to the next level.
+       如果新值与元组前缀不一致，则将 <structfield>resultType</structfield> 设置为 <literal>spgSplitTuple</literal>。
+       该动作将所有现有节点移入一个新的更低层级的内部元组，并用一个具有单个下行链接的元组替换现有的内部元组，该下行链接指向新的更低层级内部元组。
+       设置 <structfield>prefixHasPrefix</structfield> 以指示新的上层元组是否应具有前缀，如果是，则将 <structfield>prefixPrefixDatum</structfield> 设置为该前缀值。这个新前缀值必须比原前缀值限制足够宽松，以便接受要索引的新值。
+       将 <structfield>prefixNNodes</structfield> 设置为新元组中所需的节点数，并将 <structfield>prefixNodeLabels</structfield> 设置为一个由 palloc 分配的、保存这些节点标签的数组；如果不需要节点标签，则设置为 NULL。
+       注意，新上层元组的总大小不得超过它所替换的元组的总大小；这约束了新前缀和新标签的长度。
+       将 <structfield>childNodeN</structfield> 设置为将下行链接到新更低层级内部元组的节点的索引（从零开始）。
+       设置 <structfield>postfixHasPrefix</structfield> 以指示新的更低层级内部元组是否应具有前缀，如果是，则将 <structfield>postfixPrefixDatum</structfield> 设置为该前缀值。这两个前缀与下行链接节点的标签（如果有）的组合必须与原前缀具有相同的含义，因为无法更改被移入新更低层级元组的节点标签，也无法更改任何子索引项。
+       节点拆分后，将使用替换的内部元组再次调用 <function>choose</function> 函数。
+       如果 <literal>spgSplitTuple</literal> 动作没有创建合适的节点，该调用可能返回 <literal>spgAddNode</literal> 结果。最终 <function>choose</function> 必须返回 <literal>spgMatchNode</literal>，以允许插入下降到下一层级。
       </para>
      </listitem>
     </varlistentry>
@@ -540,18 +404,16 @@ typedef struct spgChooseOut
      <term><function>picksplit</function></term>
      <listitem>
       <para>
-       Decides how to create a new inner tuple over a set of leaf tuples.
+       决定如何在一组叶子元组之上创建新的内部元组。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 <programlisting>
 CREATE FUNCTION my_picksplit(internal, internal) RETURNS void ...
 </programlisting>
-      The first argument is a pointer to a <structname>spgPickSplitIn</structname>
-      C struct, containing input data for the function.
-      The second argument is a pointer to a <structname>spgPickSplitOut</structname>
-      C struct, which the function must fill with result data.
+      第一个参数是指向 <structname>spgPickSplitIn</structname> C 结构体的指针，包含该函数的输入数据。
+      第二个参数是指向 <structname>spgPickSplitOut</structname> C 结构体的指针，函数必须用结果数据填充它。
 <programlisting>
 typedef struct spgPickSplitIn
 {
@@ -573,59 +435,46 @@ typedef struct spgPickSplitOut
 } spgPickSplitOut;
 </programlisting>
 
-       <structfield>nTuples</structfield> is the number of leaf tuples provided.
-       <structfield>datums</structfield> is an array of their datum values of
-       <structname>spgConfigOut</structname>.<structfield>leafType</structfield>
-       type.
-       <structfield>level</structfield> is the current level that all the leaf tuples
-       share, which will become the level of the new inner tuple.
+       <structfield>nTuples</structfield> 是所提供的叶子元组数。
+       <structfield>datums</structfield> 是一个数组，包含它们的 <structname>spgConfigOut</structname>.<structfield>leafType</structfield> 类型的 datum 值。
+       <structfield>level</structfield> 是所有叶子元组共享的当前层级，它将成为新内部元组的层级。
       </para>
 
       <para>
-       Set <structfield>hasPrefix</structfield> to indicate whether the new inner
-       tuple should have a prefix, and if so set
-       <structfield>prefixDatum</structfield> to the prefix value.
-       Set <structfield>nNodes</structfield> to indicate the number of nodes that
-       the new inner tuple will contain, and
-       set <structfield>nodeLabels</structfield> to an array of their label values,
-       or to NULL if node labels are not required.
-       Set <structfield>mapTuplesToNodes</structfield> to an array that gives the index
-       (from zero) of the node that each leaf tuple should be assigned to.
-       Set <structfield>leafTupleDatums</structfield> to an array of the values to
-       be stored in the new leaf tuples (these will be the same as the
-       input <structfield>datums</structfield> if the operator class does not modify
-       datums from one level to the next).
-       Note that the <function>picksplit</function> function is
-       responsible for palloc'ing the
-       <structfield>nodeLabels</structfield>, <structfield>mapTuplesToNodes</structfield> and
-       <structfield>leafTupleDatums</structfield> arrays.
+       设置 <structfield>hasPrefix</structfield> 以指示新的内元组是否应带有前缀，如果是，则将 <structfield>prefixDatum</structfield> 设置为该前缀值。
+      设置 <structfield>nNodes</structfield> 以指示新内元组将包含的节点数，并
+      将 <structfield>nodeLabels</structfield> 设置为它们的标签值数组，
+      如果不需要节点标签则设置为 NULL。
+      设置 <structfield>mapTuplesToNodes</structfield> 为一个数组，给出每个叶子元组应被分配到的
+      节点的索引（从零开始）。
+      设置 <structfield>leafTupleDatums</structfield> 为要存储在新叶子元组中的值数组
+      （如果运算符类不会在层级之间修改数据值，
+      则这些值与输入的 <structfield>datums</structfield> 相同）。
+      注意，<function>picksplit</function> 函数负责 palloc 分配
+      <structfield>nodeLabels</structfield>、<structfield>mapTuplesToNodes</structfield> 和
+      <structfield>leafTupleDatums</structfield> 数组。
       </para>
 
       <para>
-       If more than one leaf tuple is supplied, it is expected that the
-       <function>picksplit</function> function will classify them into more than
-       one node; otherwise it is not possible to split the leaf tuples
-       across multiple pages, which is the ultimate purpose of this
-       operation.  Therefore, if the <function>picksplit</function> function
-       ends up placing all the leaf tuples in the same node, the core
-       SP-GiST code will override that decision and generate an inner
-       tuple in which the leaf tuples are assigned at random to several
-       identically-labeled nodes.  Such a tuple is marked
-       <literal>allTheSame</literal> to signify that this has happened.  The
-       <function>choose</function> and <function>inner_consistent</function> functions
-       must take suitable care with such inner tuples.
-       See <xref linkend="spgist-all-the-same"/> for more information.
+       如果提供了多个叶子元组，则期望 <function>picksplit</function> 函数
+      将它们分类到多个节点中；否则就无法将叶子元组
+      拆分到多个页面，而这正是此操作的最终目的。
+      因此，如果 <function>picksplit</function> 函数
+      最终将所有叶子元组放在同一个节点中，SP-GiST 核心
+      代码将覆盖该决定，并生成一个内元组，其中叶子元组
+      被随机分配到若干个标签相同的节点。这样的元组会被标记为
+      <literal>allTheSame</literal>，以表示发生了这种情况。
+      <function>choose</function> 和 <function>inner_consistent</function> 函数
+      必须对此类内元组给予适当的注意。
+      参见 <xref linkend="spgist-all-the-same"/> 了解更多信息。
       </para>
 
       <para>
-       <function>picksplit</function> can be applied to a single leaf tuple only
-       in the case that the <function>config</function> function set
-       <structfield>longValuesOK</structfield> to true and a larger-than-a-page input
-       value has been supplied.  In this case the point of the operation is
-       to strip off a prefix and produce a new, shorter leaf datum value.
-       The call will be repeated until a leaf datum short enough to fit on
-       a page has been produced.  See <xref linkend="spgist-limits"/> for
-       more information.
+       只有在 <function>config</function> 函数将 <structfield>longValuesOK</structfield> 设置为 true
+      且提供了大于一个页面的输入值时，才能将 <function>picksplit</function> 应用于单个叶子元组。
+      在这种情况下，此操作的目的是去掉前缀并产生一个新的、更短的叶子数据值。
+      该调用将被重复，直到产生足够短、能放在一个页面上的叶子数据值。
+      参见 <xref linkend="spgist-limits"/> 了解更多信息。
       </para>
      </listitem>
     </varlistentry>
@@ -634,18 +483,16 @@ typedef struct spgPickSplitOut
      <term><function>inner_consistent</function></term>
      <listitem>
       <para>
-       Returns set of nodes (branches) to follow during tree search.
+       返回在树搜索期间要跟随的节点（分支）集合。
       </para>
 
       <para>
-       The <acronym>SQL</acronym> declaration of the function must look like this:
+       函数的 <acronym>SQL</acronym> 声明必须如下所示：
 <programlisting>
 CREATE FUNCTION my_inner_consistent(internal, internal) RETURNS void ...
 </programlisting>
-      The first argument is a pointer to a <structname>spgInnerConsistentIn</structname>
-      C struct, containing input data for the function.
-      The second argument is a pointer to a <structname>spgInnerConsistentOut</structname>
-      C struct, which the function must fill with result data.
+      第一个参数是指向 <structname>spgInnerConsistentIn</structname> C 结构体的指针，其中包含该函数的输入数据。
+      第二个参数是指向 <structname>spgInnerConsistentOut</structname> C 结构体的指针，函数必须用结果数据填充它。
 
 <programlisting>
 typedef struct spgInnerConsistentIn
@@ -681,84 +528,51 @@ typedef struct spgInnerConsistentOut
 } spgInnerConsistentOut;
 </programlisting>
 
-       The array <structfield>scankeys</structfield>, of length <structfield>nkeys</structfield>,
-       describes the index search condition(s).  These conditions are
-       combined with AND &mdash; only index entries that satisfy all of
-       them are interesting.  (Note that <structfield>nkeys</structfield> = 0 implies
-       that all index entries satisfy the query.)  Usually the consistent
-       function only cares about the <structfield>sk_strategy</structfield> and
-       <structfield>sk_argument</structfield> fields of each array entry, which
-       respectively give the indexable operator and comparison value.
-       In particular it is not necessary to check <structfield>sk_flags</structfield> to
-       see if the comparison value is NULL, because the SP-GiST core code
-       will filter out such conditions.
-       The array <structfield>orderbys</structfield>, of length <structfield>norderbys</structfield>,
-       describes ordering operators (if any) in the same manner.
-       <structfield>reconstructedValue</structfield> is the value reconstructed for the
-       parent tuple; it is <literal>(Datum) 0</literal> at the root level or if the
-       <function>inner_consistent</function> function did not provide a value at the
-       parent level.
-       <structfield>traversalValue</structfield> is a pointer to any traverse data
-       passed down from the previous call of <function>inner_consistent</function>
-       on the parent index tuple, or NULL at the root level.
-       <structfield>traversalMemoryContext</structfield> is the memory context in which
-       to store output traverse values (see below).
-       <structfield>level</structfield> is the current inner tuple's level, starting at
-       zero for the root level.
-       <structfield>returnData</structfield> is <literal>true</literal> if reconstructed data is
-       required for this query; this will only be so if the
-       <function>config</function> function asserted <structfield>canReturnData</structfield>.
-       <structfield>allTheSame</structfield> is true if the current inner tuple is
-       marked <quote>all-the-same</quote>; in this case all the nodes have the
-       same label (if any) and so either all or none of them match the query
-       (see <xref linkend="spgist-all-the-same"/>).
-       <structfield>hasPrefix</structfield> is true if the current inner tuple contains
-       a prefix; if so,
-       <structfield>prefixDatum</structfield> is its value.
-       <structfield>nNodes</structfield> is the number of child nodes contained in the
-       inner tuple, and
-       <structfield>nodeLabels</structfield> is an array of their label values, or
-       NULL if the nodes do not have labels.
+       长度为 <structfield>nkeys</structfield> 的数组 <structfield>scankeys</structfield> 描述了索引搜索条件。这些条件用 AND 组合，&mdash; 只有满足所有条件的索引项才是感兴趣的。（注意 <structfield>nkeys</structfield> = 0 意味着所有索引项都满足该查询。）通常，consistent 函数只关心每个数组项的 <structfield>sk_strategy</structfield> 和 <structfield>sk_argument</structfield> 字段，它们分别给出可索引的运算符和比较值。特别地，不需要检查 <structfield>sk_flags</structfield> 来判断比较值是否为 NULL，因为 SP-GiST 核心代码会过滤掉这类条件。
+       长度为 <structfield>norderbys</structfield> 的数组 <structfield>orderbys</structfield> 以相同方式描述排序运算符（如果有）。
+       <structfield>reconstructedValue</structfield> 是为父元组重建的值；在根层级，或者如果 <function>inner_consistent</function> 函数在父层级没有提供值，则它为 <literal>(Datum) 0</literal>。
+       <structfield>traversalValue</structfield> 是指向任何遍历数据的指针，这些数据由之前对父索引元组调用 <function>inner_consistent</function> 时向下传递，或者在根层级为 NULL。
+       <structfield>traversalMemoryContext</structfield> 是用于存储输出遍历值的内存上下文（见下文）。
+       <structfield>level</structfield> 是当前内元组的层级，根层级从零开始。
+       如果此查询需要重建数据，则 <structfield>returnData</structfield> 为 <literal>true</literal>；只有当 <function>config</function> 函数断言了 <structfield>canReturnData</structfield> 时才会如此。
+       如果当前内元组被标记为 <quote>all-the-same</quote>，则 <structfield>allTheSame</structfield> 为真；在这种情况下，所有节点都具有相同的标签（如果有），因此它们要么全部匹配查询，要么全部不匹配（见 <xref linkend="spgist-all-the-same"/>）。
+       如果当前内元组包含前缀，则 <structfield>hasPrefix</structfield> 为真；如果是这样，<structfield>prefixDatum</structfield> 就是其值。
+       <structfield>nNodes</structfield> 是内元组中包含的子节点数，而 <structfield>nodeLabels</structfield> 是它们的标签值数组，如果节点没有标签则为 NULL。
       </para>
 
       <para>
-       <structfield>nNodes</structfield> must be set to the number of child nodes that
-       need to be visited by the search, and
-       <structfield>nodeNumbers</structfield> must be set to an array of their indexes.
-       If the operator class keeps track of levels, set
-       <structfield>levelAdds</structfield> to an array of the level increments
-       required when descending to each node to be visited.  (Often these
-       increments will be the same for all the nodes, but that's not
-       necessarily so, so an array is used.)
-       If value reconstruction is needed, set
-       <structfield>reconstructedValues</structfield> to an array of the values
-       reconstructed for each child node to be visited; otherwise, leave
-       <structfield>reconstructedValues</structfield> as NULL.
-       The reconstructed values are assumed to be of type
-       <structname>spgConfigOut</structname>.<structfield>leafType</structfield>.
-       (However, since the core system will do nothing with them except
-       possibly copy them, it is sufficient for them to have the
-       same <literal>typlen</literal> and <literal>typbyval</literal>
-       properties as <structfield>leafType</structfield>.)
-       If ordered search is performed, set <structfield>distances</structfield>
-       to an array of distance values according to <structfield>orderbys</structfield>
-       array (nodes with lowest distances will be processed first).  Leave it
-       NULL otherwise.
-       If it is desired to pass down additional out-of-band information
-       (<quote>traverse values</quote>) to lower levels of the tree search,
-       set <structfield>traversalValues</structfield> to an array of the appropriate
-       traverse values, one for each child node to be visited; otherwise,
-       leave <structfield>traversalValues</structfield> as NULL.
-       Note that the <function>inner_consistent</function> function is
-       responsible for palloc'ing the
-       <structfield>nodeNumbers</structfield>, <structfield>levelAdds</structfield>,
-       <structfield>distances</structfield>,
-       <structfield>reconstructedValues</structfield>, and
-       <structfield>traversalValues</structfield> arrays in the current memory context.
-       However, any output traverse values pointed to by
-       the <structfield>traversalValues</structfield> array should be allocated
-       in <structfield>traversalMemoryContext</structfield>.
-       Each traverse value must be a single palloc'd chunk.
+       <structfield>nNodes</structfield> 必须设置为搜索需要访问的子节点数，
+       并且 <structfield>nodeNumbers</structfield> 必须设置为这些子节点索引的数组。
+       如果操作符类跟踪层级，则将
+       <structfield>levelAdds</structfield> 设置为下降到每个待访问节点时所需层级增量的数组。
+       （通常这些增量对所有节点都相同，但并非一定如此，
+       因此使用数组。）
+       如果需要重建值，则将
+       <structfield>reconstructedValues</structfield> 设置为为每个待访问子节点重建的值的数组；
+       否则，将 <structfield>reconstructedValues</structfield> 保留为 NULL。
+       假定重建值的类型为
+       <structname>spgConfigOut</structname>.<structfield>leafType</structfield>。
+       （不过，由于核心系统除了可能复制它们之外不会对它们做任何处理，
+       因此只要它们具有与 <structfield>leafType</structfield> 相同的 <literal>typlen</literal> 和 <literal>typbyval</literal>
+       属性就足够了。）
+       如果执行有序搜索，则根据 <structfield>orderbys</structfield>
+       数组将 <structfield>distances</structfield> 设置为距离值的数组
+       （距离最小的节点将首先被处理）。否则将其保留为
+       NULL。
+       如果希望向下层树搜索传递额外的带外信息
+       （<quote>遍历值</quote>），
+       则将 <structfield>traversalValues</structfield> 设置为相应遍历值的数组，
+       每个待访问子节点一个；否则，
+       将 <structfield>traversalValues</structfield> 保留为 NULL。
+       注意，<function>inner_consistent</function> 函数负责在当前内存上下文中
+       palloc 分配
+       <structfield>nodeNumbers</structfield>、<structfield>levelAdds</structfield>、
+       <structfield>distances</structfield>、
+       <structfield>reconstructedValues</structfield> 和
+       <structfield>traversalValues</structfield> 数组。
+       但是，由 <structfield>traversalValues</structfield> 数组指向的任何输出遍历值
+       都应在 <structfield>traversalMemoryContext</structfield> 中分配。
+       每个遍历值必须是单个 palloc 分配的块。
       </para>
      </listitem>
     </varlistentry>
@@ -767,18 +581,16 @@ typedef struct spgInnerConsistentOut
      <term><function>leaf_consistent</function></term>
      <listitem>
       <para>
-       Returns true if a leaf tuple satisfies a query.
+       如果叶子元组满足查询，则返回 true。
       </para>
 
       <para>
-       The <acronym>SQL</acronym> declaration of the function must look like this:
+       函数的 <acronym>SQL</acronym> 声明必须如下所示：
 <programlisting>
 CREATE FUNCTION my_leaf_consistent(internal, internal) RETURNS bool ...
 </programlisting>
-      The first argument is a pointer to a <structname>spgLeafConsistentIn</structname>
-      C struct, containing input data for the function.
-      The second argument is a pointer to a <structname>spgLeafConsistentOut</structname>
-      C struct, which the function must fill with result data.
+      第一个参数是指向 <structname>spgLeafConsistentIn</structname> C 结构体的指针，其中包含该函数的输入数据。
+      第二个参数是指向 <structname>spgLeafConsistentOut</structname> C 结构体的指针，函数必须用结果数据填充它。
 <programlisting>
 typedef struct spgLeafConsistentIn
 {
@@ -805,59 +617,24 @@ typedef struct spgLeafConsistentOut
 } spgLeafConsistentOut;
 </programlisting>
 
-       The array <structfield>scankeys</structfield>, of length <structfield>nkeys</structfield>,
-       describes the index search condition(s).  These conditions are
-       combined with AND &mdash; only index entries that satisfy all of
-       them satisfy the query.  (Note that <structfield>nkeys</structfield> = 0 implies
-       that all index entries satisfy the query.)  Usually the consistent
-       function only cares about the <structfield>sk_strategy</structfield> and
-       <structfield>sk_argument</structfield> fields of each array entry, which
-       respectively give the indexable operator and comparison value.
-       In particular it is not necessary to check <structfield>sk_flags</structfield> to
-       see if the comparison value is NULL, because the SP-GiST core code
-       will filter out such conditions.
-       The array <structfield>orderbys</structfield>, of length <structfield>norderbys</structfield>,
-       describes the ordering operators in the same manner.
-       <structfield>reconstructedValue</structfield> is the value reconstructed for the
-       parent tuple; it is <literal>(Datum) 0</literal> at the root level or if the
-       <function>inner_consistent</function> function did not provide a value at the
-       parent level.
-       <structfield>traversalValue</structfield> is a pointer to any traverse data
-       passed down from the previous call of <function>inner_consistent</function>
-       on the parent index tuple, or NULL at the root level.
-       <structfield>level</structfield> is the current leaf tuple's level, starting at
-       zero for the root level.
-       <structfield>returnData</structfield> is <literal>true</literal> if reconstructed data is
-       required for this query; this will only be so if the
-       <function>config</function> function asserted <structfield>canReturnData</structfield>.
-       <structfield>leafDatum</structfield> is the key value of
-       <structname>spgConfigOut</structname>.<structfield>leafType</structfield>
-       stored in the current leaf tuple.
+      长度为 <structfield>nkeys</structfield> 的数组 <structfield>scankeys</structfield> 描述索引搜索条件。这些条件用 AND 组合 &mdash; 只有满足全部条件的索引项才满足该查询。（注意 <structfield>nkeys</structfield> = 0 意味着所有索引项都满足该查询。）通常 consistent 函数只关心每个数组项的 <structfield>sk_strategy</structfield> 和 <structfield>sk_argument</structfield> 字段，它们分别给出可索引的运算符和比较值。特别地，不必检查 <structfield>sk_flags</structfield> 来判断比较值是否为 NULL，因为 SP-GiST 核心代码会过滤掉这类条件。
+      长度为 <structfield>norderbys</structfield> 的数组 <structfield>orderbys</structfield> 以相同方式描述排序运算符。
+      <structfield>reconstructedValue</structfield> 是为父元组重建的值；在根层，或者如果 <function>inner_consistent</function> 函数未在父层提供值，则它为 <literal>(Datum) 0</literal>。
+      <structfield>traversalValue</structfield> 是指向从先前对父索引元组调用 <function>inner_consistent</function> 时传下来的任意遍历数据的指针，在根层为 NULL。
+      <structfield>level</structfield> 是当前叶子元组的层级，根层从零开始。
+      如果此查询需要重建数据，则 <structfield>returnData</structfield> 为 <literal>true</literal>；仅当 <function>config</function> 函数断言了 <structfield>canReturnData</structfield> 时才会如此。
+      <structfield>leafDatum</structfield> 是存储在当前叶子元组中的 <structname>spgConfigOut</structname>.<structfield>leafType</structfield> 的键值。
       </para>
 
       <para>
-       The function must return <literal>true</literal> if the leaf tuple matches the
-       query, or <literal>false</literal> if not.  In the <literal>true</literal> case,
-       if <structfield>returnData</structfield> is <literal>true</literal> then
-       <structfield>leafValue</structfield> must be set to the value (of type
-       <structname>spgConfigIn</structname>.<structfield>attType</structfield>)
-       originally supplied to be indexed for this leaf tuple.  Also,
-       <structfield>recheck</structfield> may be set to <literal>true</literal> if the match
-       is uncertain and so the operator(s) must be re-applied to the actual
-       heap tuple to verify the match.
-       If ordered search is performed, set <structfield>distances</structfield>
-       to an array of distance values according to <structfield>orderbys</structfield>
-       array.  Leave it NULL otherwise.  If at least one of returned distances
-       is not exact, set <structfield>recheckDistances</structfield> to true.
-       In this case, the executor will calculate the exact distances after
-       fetching the tuple from the heap, and will reorder the tuples if needed.
+       如果叶子元组匹配查询，函数必须返回 <literal>true</literal>，否则返回 <literal>false</literal>。在 <literal>true</literal> 情况下，如果 <structfield>returnData</structfield> 为 <literal>true</literal>，则必须将 <structfield>leafValue</structfield> 设置为最初为该叶子元组提供以便索引的值（类型为 <structname>spgConfigIn</structname>.<structfield>attType</structfield>）。此外，如果匹配不确定，可以将 <structfield>recheck</structfield> 设置为 <literal>true</literal>，此时必须对实际的堆元组重新应用运算符以验证匹配。如果执行有序搜索，则根据 <structfield>orderbys</structfield> 数组将 <structfield>distances</structfield> 设置为距离值数组。否则将其保留为 NULL。如果返回的距离中至少有一个不精确，则将 <structfield>recheckDistances</structfield> 设置为 true。在这种情况下，执行器将在从堆中取出元组后计算精确距离，并在需要时对元组重新排序。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
 
  <para>
-  The optional user-defined methods are:
+  可选的用户定义方法包括：
  </para>
 
  <variablelist>
@@ -865,19 +642,11 @@ typedef struct spgLeafConsistentOut
      <term><function>Datum compress(Datum in)</function></term>
      <listitem>
       <para>
-       Converts a data item into a format suitable for physical storage in
-       a leaf tuple of the index.  It accepts a value of type
-       <structname>spgConfigIn</structname>.<structfield>attType</structfield>
-       and returns a value of type
-       <structname>spgConfigOut</structname>.<structfield>leafType</structfield>.
-       The output value must not contain an out-of-line TOAST pointer.
+       将数据项转换为适合物理存储在索引叶子元组中的格式。它接受类型为 <structname>spgConfigIn</structname>.<structfield>attType</structfield> 的值，并返回类型为 <structname>spgConfigOut</structname>.<structfield>leafType</structfield> 的值。输出值不得包含行外 TOAST 指针。
       </para>
 
       <para>
-       Note: the <function>compress</function> method is only applied to
-       values to be stored.  The consistent methods receive query
-       <structfield>scankeys</structfield> unchanged, without transformation
-       using <function>compress</function>.
+       注意：<function>compress</function> 方法仅应用于要存储的值。consistent 方法接收的查询 <structfield>scankeys</structfield> 保持不变，不经过 <function>compress</function> 转换。
       </para>
      </listitem>
     </varlistentry>
@@ -886,12 +655,11 @@ typedef struct spgLeafConsistentOut
      <term><function>options</function></term>
      <listitem>
       <para>
-       Defines a set of user-visible parameters that control operator class
-       behavior.
+       定义一组用户可见的参数，用于控制运算符类的行为。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_options(internal)
@@ -902,173 +670,91 @@ LANGUAGE C STRICT;
       </para>
 
       <para>
-       The function is passed a pointer to a <structname>local_relopts</structname>
-       struct, which needs to be filled with a set of operator class
-       specific options.  The options can be accessed from other support
-       functions using the <literal>PG_HAS_OPCLASS_OPTIONS()</literal> and
-       <literal>PG_GET_OPCLASS_OPTIONS()</literal> macros.
+       该函数会接收到一个指向 <structname>local_relopts</structname> 结构的指针，需要用一组运算符类特定的选项填充它。其他支持函数可以使用 <literal>PG_HAS_OPCLASS_OPTIONS()</literal> 和 <literal>PG_GET_OPCLASS_OPTIONS()</literal> 宏来访问这些选项。
       </para>
 
       <para>
-       Since the representation of the key in <acronym>SP-GiST</acronym> is
-       flexible, it may depend on user-specified parameters.
+       由于 <acronym>SP-GiST</acronym> 中键的表示形式是灵活的，它可能依赖于用户指定的参数。
       </para>
      </listitem>
     </varlistentry>
   </variablelist>
 
   <para>
-   All the SP-GiST support methods are normally called in a short-lived
-   memory context; that is, <varname>CurrentMemoryContext</varname> will be reset
-   after processing of each tuple.  It is therefore not very important to
-   worry about pfree'ing everything you palloc.  (The <function>config</function>
-   method is an exception: it should try to avoid leaking memory.  But
-   usually the <function>config</function> method need do nothing but assign
-   constants into the passed parameter struct.)
+   所有 SP-GiST 支持方法通常都在短生命周期的内存上下文中调用；也就是说，<varname>CurrentMemoryContext</varname> 会在处理完每个元组后被重置。因此，不必太在意对每个 palloc 分配的内存都执行 pfree。（<function>config</function> 方法是个例外：它应尽量避免内存泄漏。但通常 <function>config</function> 方法只需把常量赋值到传入的参数结构中即可。）
   </para>
 
   <para>
-   If the indexed column is of a collatable data type, the index collation
-   will be passed to all the support methods, using the standard
-   <function>PG_GET_COLLATION()</function> mechanism.
+   如果被索引的列属于可排序的数据类型，则索引的排序规则将使用标准的 <function>PG_GET_COLLATION()</function> 机制传递给所有支持方法。
   </para>
 
 </sect2>
 
 <sect2 id="spgist-implementation">
- <title>Implementation</title>
+ <title>实现</title>
 
   <para>
-   This section covers implementation details and other tricks that are
-   useful for implementers of <acronym>SP-GiST</acronym> operator classes to
-   know.
+   本节介绍实现细节以及其他一些技巧，了解这些内容对 <acronym>SP-GiST</acronym> 运算符类的实现者很有用。
   </para>
 
  <sect3 id="spgist-limits">
-  <title>SP-GiST Limits</title>
+  <title>SP-GiST 限制</title>
 
   <para>
-   Individual leaf tuples and inner tuples must fit on a single index page
-   (8kB by default).  Therefore, when indexing values of variable-length
-   data types, long values can only be supported by methods such as radix
-   trees, in which each level of the tree includes a prefix that is short
-   enough to fit on a page, and the final leaf level includes a suffix also
-   short enough to fit on a page.  The operator class should set
-   <structfield>longValuesOK</structfield> to true only if it is prepared to arrange for
-   this to happen.  Otherwise, the <acronym>SP-GiST</acronym> core will
-   reject any request to index a value that is too large to fit
-   on an index page.
+   单个叶子元组和内部元组必须能放在单个索引页（默认 8kB）上。因此，在为变长数据类型的值建立索引时，长值只能通过基数树之类的方法来支持，在这类方法中，树的每一层都包含一个足够短、能放在一页上的前缀，而最终的叶子层包含的后缀也足够短，能放在一页上。只有当操作符类准备好为此做出安排时，才应把 <structfield>longValuesOK</structfield> 设置为 true。否则，<acronym>SP-GiST</acronym> 核心将拒绝任何为过大而无法放在索引页上的值建立索引的请求。
   </para>
 
   <para>
-   Likewise, it is the operator class's responsibility that inner tuples
-   do not grow too large to fit on an index page; this limits the number
-   of child nodes that can be used in one inner tuple, as well as the
-   maximum size of a prefix value.
+   同样，确保内部元组不会增长到过大而无法放在索引页上，是操作符类的责任；这既限制了一个内部元组中可以使用的子节点数量，也限制了前缀值的最大尺寸。
   </para>
 
   <para>
-   Another limitation is that when an inner tuple's node points to a set
-   of leaf tuples, those tuples must all be in the same index page.
-   (This is a design decision to reduce seeking and save space in the
-   links that chain such tuples together.)  If the set of leaf tuples
-   grows too large for a page, a split is performed and an intermediate
-   inner tuple is inserted.  For this to fix the problem, the new inner
-   tuple <emphasis>must</emphasis> divide the set of leaf values into more than one
-   node group.  If the operator class's <function>picksplit</function> function
-   fails to do that, the <acronym>SP-GiST</acronym> core resorts to
-   extraordinary measures described in <xref linkend="spgist-all-the-same"/>.
+   另一个限制是，当内部元组的节点指向一组叶子元组时，这些元组必须全部位于同一个索引页中。（这是一项设计决策，目的是减少寻道并节省将这些元组链接在一起的链接所占用的空间。）如果叶子元组集合增长到一页放不下，就会执行分裂并插入一个中间内部元组。要使这种做法解决问题，新的内部元组<emphasis>必须</emphasis>把叶子值集合划分成多于一个节点组。如果操作符类的 <function>picksplit</function> 函数未能做到这一点，<acronym>SP-GiST</acronym> 核心将采取 <xref linkend="spgist-all-the-same"/> 中描述的非常措施。
   </para>
 
   <para>
-   When <structfield>longValuesOK</structfield> is true, it is expected
-   that successive levels of the <acronym>SP-GiST</acronym> tree will
-   absorb more and more information into the prefixes and node labels of
-   the inner tuples, making the required leaf datum smaller and smaller,
-   so that eventually it will fit on a page.
-   To prevent bugs in operator classes from causing infinite insertion
-   loops, the <acronym>SP-GiST</acronym> core will raise an error if the
-   leaf datum does not become any smaller within ten cycles
-   of <function>choose</function> method calls.
+   当 <structfield>longValuesOK</structfield> 为 true 时，预期 <acronym>SP-GiST</acronym> 树的后续各层会把越来越多的信息吸收到内部元组的前缀和节点标签中，使所需的叶子数据项越来越小，从而最终能放在一页上。为了防止操作符类中的缺陷导致无限插入循环，如果在 <function>choose</function> 方法调用的十个循环内叶子数据项没有变小，<acronym>SP-GiST</acronym> 核心将报错。
   </para>
  </sect3>
 
  <sect3 id="spgist-null-labels">
-  <title>SP-GiST Without Node Labels</title>
+  <title>不带节点标签的 SP-GiST</title>
 
   <para>
-   Some tree algorithms use a fixed set of nodes for each inner tuple;
-   for example, in a quad-tree there are always exactly four nodes
-   corresponding to the four quadrants around the inner tuple's centroid
-   point.  In such a case the code typically works with the nodes by
-   number, and there is no need for explicit node labels.  To suppress
-   node labels (and thereby save some space), the <function>picksplit</function>
-   function can return NULL for the <structfield>nodeLabels</structfield> array,
-   and likewise the <function>choose</function> function can return NULL for
-   the <structfield>prefixNodeLabels</structfield> array during
-   a <literal>spgSplitTuple</literal> action.
-   This will in turn result in <structfield>nodeLabels</structfield> being NULL during
-   subsequent calls to <function>choose</function> and <function>inner_consistent</function>.
-   In principle, node labels could be used for some inner tuples and omitted
-   for others in the same index.
+   有些树算法为每个内元组使用固定的一组节点；例如，在四叉树中，总是恰好有四个节点对应于内元组质心点周围的四个象限。在这种情况下，代码通常按编号处理节点，不需要显式的节点标签。为了抑制节点标签（从而节省一些空间），<function>picksplit</function> 函数可以为 <structfield>nodeLabels</structfield> 数组返回 NULL，同样地，<function>choose</function> 函数可以在 <literal>spgSplitTuple</literal> 动作期间为 <structfield>prefixNodeLabels</structfield> 数组返回 NULL。这反过来会导致在随后调用 <function>choose</function> 和 <function>inner_consistent</function> 期间 <structfield>nodeLabels</structfield> 为 NULL。原则上，在同一个索引中，可以对某些内元组使用节点标签，而对另一些省略节点标签。
   </para>
 
   <para>
-   When working with an inner tuple having unlabeled nodes, it is an error
-   for <function>choose</function> to return <literal>spgAddNode</literal>, since the set
-   of nodes is supposed to be fixed in such cases.
+   处理具有无标签节点的内元组时，<function>choose</function> 返回 <literal>spgAddNode</literal> 是错误的，因为在这种情况下节点集合应当是固定的。
   </para>
  </sect3>
 
  <sect3 id="spgist-all-the-same">
-  <title><quote>All-the-Same</quote> Inner Tuples</title>
+  <title><quote>全同</quote>内元组</title>
 
   <para>
-   The <acronym>SP-GiST</acronym> core can override the results of the
-   operator class's <function>picksplit</function> function when
-   <function>picksplit</function> fails to divide the supplied leaf values into
-   at least two node categories.  When this happens, the new inner tuple
-   is created with multiple nodes that each have the same label (if any)
-   that <function>picksplit</function> gave to the one node it did use, and the
-   leaf values are divided at random among these equivalent nodes.
-   The <literal>allTheSame</literal> flag is set on the inner tuple to warn the
-   <function>choose</function> and <function>inner_consistent</function> functions that the
-   tuple does not have the node set that they might otherwise expect.
+   当 <function>picksplit</function> 未能将提供的叶子值划分成至少两个节点类别时，<acronym>SP-GiST</acronym> 核心可以覆盖运算符类的 <function>picksplit</function> 函数的结果。发生这种情况时，创建的新内元组带有多个节点，每个节点都具有 <function>picksplit</function> 赋予它实际使用的那个节点的相同标签（如果有），并且叶子值在这些等价节点之间随机划分。在内元组上设置 <literal>allTheSame</literal> 标志，以警告 <function>choose</function> 和 <function>inner_consistent</function> 函数：该元组不具有它们原本可能预期的节点集合。
   </para>
 
   <para>
-   When dealing with an <literal>allTheSame</literal> tuple, a <function>choose</function>
-   result of <literal>spgMatchNode</literal> is interpreted to mean that the new
-   value can be assigned to any of the equivalent nodes; the core code will
-   ignore the supplied  <structfield>nodeN</structfield> value and descend into one
-   of the nodes at random (so as to keep the tree balanced).  It is an
-   error for <function>choose</function> to return <literal>spgAddNode</literal>, since
-   that would make the nodes not all equivalent; the
-   <literal>spgSplitTuple</literal> action must be used if the value to be inserted
-   doesn't match the existing nodes.
+   处理 <literal>allTheSame</literal> 元组时，<function>choose</function> 结果为 <literal>spgMatchNode</literal> 被解释为新值可以赋给任意一个等价节点；核心代码将忽略提供的 <structfield>nodeN</structfield> 值，并随机下降到其中一个节点（以保持树平衡）。<function>choose</function> 返回 <literal>spgAddNode</literal> 是错误的，因为那会使节点不再全部等价；如果要插入的值与现有节点不匹配，必须使用 <literal>spgSplitTuple</literal> 动作。
   </para>
 
   <para>
-   When dealing with an <literal>allTheSame</literal> tuple, the
-   <function>inner_consistent</function> function should return either all or none
-   of the nodes as targets for continuing the index search, since they are
-   all equivalent.  This may or may not require any special-case code,
-   depending on how much the <function>inner_consistent</function> function normally
-   assumes about the meaning of the nodes.
+   处理 <literal>allTheSame</literal> 元组时，<function>inner_consistent</function> 函数应当返回全部节点或一个节点都不返回，作为继续索引搜索的目标，因为它们全都等价。这可能需要也可能不需要任何特殊处理代码，取决于 <function>inner_consistent</function> 函数通常对节点含义做了多少假定。
   </para>
  </sect3>
 
 </sect2>
 
 <sect2 id="spgist-examples">
- <title>Examples</title>
+ <title>示例</title>
 
  <para>
-  The <productname>PostgreSQL</productname> source distribution includes
-  several examples of index operator classes for <acronym>SP-GiST</acronym>,
-  as described in <xref linkend="spgist-builtin-opclasses-table"/>.  Look
-  into <filename>src/backend/access/spgist/</filename>
-  and <filename>src/backend/utils/adt/</filename> to see the code.
+  <productname>PostgreSQL</productname> 源代码发行版包含若干 <acronym>SP-GiST</acronym> 的索引运算符类示例，
+  如 <xref linkend="spgist-builtin-opclasses-table"/> 中所述。请查看
+  <filename>src/backend/access/spgist/</filename>
+  和 <filename>src/backend/utils/adt/</filename> 以了解代码。
  </para>
 
 </sect2>
