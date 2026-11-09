@@ -229,26 +229,21 @@ $$ LANGUAGE plpgsql;
   </sect1>
 
   <sect1 id="plpgsql-declarations">
-    <title>Declarations</title>
+    <title>声明</title>
 
     <para>
-     All variables used in a block must be declared in the
-     declarations section of the block.
-     (The only exceptions are that the loop variable of a <literal>FOR</literal> loop
-     iterating over a range of integer values is automatically declared as an
-     integer variable, and likewise the loop variable of a <literal>FOR</literal> loop
-     iterating over a cursor's result is automatically declared as a
-     record variable.)
+     块中使用的所有变量都必须在块的声明部分中声明。
+     （唯一的例外是：遍历整数范围值的 <literal>FOR</literal> 循环的循环变量会自动声明为整数变量，同样，遍历游标结果的 <literal>FOR</literal> 循环的循环变量会自动声明为记录变量。）
     </para>
 
     <para>
-     <application>PL/pgSQL</application> variables can have any SQL data type, such as
-     <type>integer</type>, <type>varchar</type>, and
-     <type>char</type>.
+     <application>PL/pgSQL</application> 变量可以具有任何 SQL 数据类型，例如
+     <type>integer</type>、<type>varchar</type> 和
+     <type>char</type>。
     </para>
 
     <para>
-     Here are some examples of variable declarations:
+     以下是一些变量声明的示例：
 <programlisting>
 user_id integer;
 quantity numeric(5);
@@ -260,38 +255,24 @@ arow RECORD;
     </para>
 
     <para>
-     The general syntax of a variable declaration is:
+     变量声明的一般语法为：
 <synopsis>
 <replaceable>name</replaceable> <optional> CONSTANT </optional> <replaceable>type</replaceable> <optional> COLLATE <replaceable>collation_name</replaceable> </optional> <optional> NOT NULL </optional> <optional> { DEFAULT | := | = } <replaceable>expression</replaceable> </optional>;
 </synopsis>
-      The <literal>DEFAULT</literal> clause, if given, specifies the initial value assigned
-      to the variable when the block is entered.  If the <literal>DEFAULT</literal> clause
-      is not given then the variable is initialized to the
-      <acronym>SQL</acronym> null value.
-      The <literal>CONSTANT</literal> option prevents the variable from being
-      assigned to after initialization, so that its value will remain constant
-      for the duration of the block.
-      The <literal>COLLATE</literal> option specifies a collation to use for the
-      variable (see <xref linkend="plpgsql-declaration-collation"/>).
-      If <literal>NOT NULL</literal>
-      is specified, an assignment of a null value results in a run-time
-      error. All variables declared as <literal>NOT NULL</literal>
-      must have a nonnull default value specified.
-      Equal (<literal>=</literal>) can be used instead of PL/SQL-compliant
-      <literal>:=</literal>.
+      如果给出了 <literal>DEFAULT</literal> 子句，则它指定进入块时赋给该变量的初始值。如果没有给出 <literal>DEFAULT</literal> 子句，则该变量被初始化为 <acronym>SQL</acronym> 空值。
+      <literal>CONSTANT</literal> 选项阻止变量在初始化之后被赋值，因此其值在块的持续期间将保持不变。
+      <literal>COLLATE</literal> 选项指定用于该变量的排序规则（参见 <xref linkend="plpgsql-declaration-collation"/>）。
+      如果指定了 <literal>NOT NULL</literal>，则赋予空值会导致运行时错误。所有声明为 <literal>NOT NULL</literal> 的变量都必须指定非空的默认值。
+      可以使用等号（<literal>=</literal>）来代替符合 PL/SQL 的 <literal>:=</literal>。
      </para>
 
      <para>
-      A variable's default value is evaluated and assigned to the variable
-      each time the block is entered (not just once per function call).
-      So, for example, assigning <literal>now()</literal> to a variable of type
-      <type>timestamp</type> causes the variable to have the
-      time of the current function call, not the time when the function was
-      precompiled.
+      变量的默认值在每次进入块时都会被计算并赋给该变量（而不是每次函数调用只计算一次）。
+      因此，例如将 <literal>now()</literal> 赋给 <type>timestamp</type> 类型的变量，会使该变量具有当前函数调用的时间，而不是函数被预编译时的时间。
      </para>
 
      <para>
-      Examples:
+      示例：
 <programlisting>
 quantity integer DEFAULT 32;
 url varchar := 'http://mysite.com';
@@ -300,8 +281,7 @@ transaction_time CONSTANT timestamp with time zone := now();
      </para>
 
      <para>
-      Once declared, a variable's value can be used in later initialization
-      expressions in the same block, for example:
+      一旦声明，变量的值就可以在同一块中后续的初始化表达式中使用，例如：
 <programlisting>
 DECLARE
   x integer := 1;
@@ -310,21 +290,14 @@ DECLARE
      </para>
 
     <sect2 id="plpgsql-declaration-parameters">
-     <title>Declaring Function Parameters</title>
+     <title>声明函数参数</title>
 
      <para>
-      Parameters passed to functions are named with the identifiers
-      <literal>$1</literal>, <literal>$2</literal>,
-      etc.  Optionally, aliases can be declared for
-      <literal>$<replaceable>n</replaceable></literal>
-      parameter names for increased readability.  Either the alias or the
-      numeric identifier can then be used to refer to the parameter value.
+      传递给函数的参数用标识符 <literal>$1</literal>、<literal>$2</literal> 等命名。为了提高可读性，可以选择为 <literal>$<replaceable>n</replaceable></literal> 参数名声明别名。之后既可以使用别名，也可以使用数字标识符来引用参数值。
      </para>
 
      <para>
-      There are two ways to create an alias.  The preferred way is to give a
-      name to the parameter in the <command>CREATE FUNCTION</command> command,
-      for example:
+      有两种创建别名的方式。首选方式是在 <command>CREATE FUNCTION</command> 命令中为参数指定名称，例如：
 <programlisting>
 CREATE FUNCTION sales_tax(subtotal real) RETURNS real AS $$
 BEGIN
@@ -332,14 +305,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 </programlisting>
-      The other way is to explicitly declare an alias, using the
-      declaration syntax
+      另一种方式是使用声明语法显式声明别名：
 
 <synopsis>
 <replaceable>name</replaceable> ALIAS FOR $<replaceable>n</replaceable>;
 </synopsis>
 
-      The same example in this style looks like:
+      采用这种风格的同一示例如下：
 <programlisting>
 CREATE FUNCTION sales_tax(real) RETURNS real AS $$
 DECLARE
@@ -353,16 +325,12 @@ $$ LANGUAGE plpgsql;
 
     <note>
      <para>
-      These two examples are not perfectly equivalent.  In the first case,
-      <literal>subtotal</literal> could be referenced as
-      <literal>sales_tax.subtotal</literal>, but in the second case it could not.
-      (Had we attached a label to the inner block, <literal>subtotal</literal> could
-      be qualified with that label, instead.)
+      这两个示例并不完全等价。在第一种情况下，<literal>subtotal</literal> 可以引用为 <literal>sales_tax.subtotal</literal>，但在第二种情况下则不能。（如果我们在内层块上附加了标签，那么 <literal>subtotal</literal> 就可以改用该标签限定。）
      </para>
     </note>
 
      <para>
-      Some more examples:
+      再举几个例子：
 <programlisting>
 CREATE FUNCTION instr(varchar, integer) RETURNS integer AS $$
 DECLARE
@@ -383,14 +351,7 @@ $$ LANGUAGE plpgsql;
      </para>
 
      <para>
-      When a <application>PL/pgSQL</application> function is declared
-      with output parameters, the output parameters are given
-      <literal>$<replaceable>n</replaceable></literal> names and optional
-      aliases in just the same way as the normal input parameters.  An
-      output parameter is effectively a variable that starts out NULL;
-      it should be assigned to during the execution of the function.
-      The final value of the parameter is what is returned.  For instance,
-      the sales-tax example could also be done this way:
+      当声明一个带有输出参数的 <application>PL/pgSQL</application> 函数时，输出参数会以与普通输入参数完全相同的方式被赋予 <literal>$<replaceable>n</replaceable></literal> 名称和可选的别名。输出参数实际上是一个初始值为 NULL 的变量；应该在函数执行期间对它赋值。参数的最终值就是返回的内容。例如，销售税示例也可以用这种方式完成：
 
 <programlisting>
 CREATE FUNCTION sales_tax(subtotal real, OUT tax real) AS $$
@@ -400,21 +361,18 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-      Notice that we omitted <literal>RETURNS real</literal> &mdash; we could have
-      included it, but it would be redundant.
+      注意我们省略了 <literal>RETURNS real</literal> &mdash; 我们本可以把它包含进来，但那样会是多余的。
      </para>
 
      <para>
-      To call a function with <literal>OUT</literal> parameters, omit the
-      output parameter(s) in the function call:
+      要调用带有 <literal>OUT</literal> 参数的函数，在函数调用中省略输出参数：
 <programlisting>
 SELECT sales_tax(100.00);
 </programlisting>
      </para>
 
      <para>
-      Output parameters are most useful when returning multiple values.
-      A trivial example is:
+      输出参数在返回多个值时最为有用。一个简单的例子是：
 
 <programlisting>
 CREATE FUNCTION sum_n_product(x int, y int, OUT sum int, OUT prod int) AS $$
@@ -430,14 +388,11 @@ SELECT * FROM sum_n_product(2, 4);
    6 |    8
 </programlisting>
 
-      As discussed in <xref linkend="xfunc-output-parameters"/>, this
-      effectively creates an anonymous record type for the function's
-      results.  If a <literal>RETURNS</literal> clause is given, it must say
-      <literal>RETURNS record</literal>.
+      正如 <xref linkend="xfunc-output-parameters"/> 中所讨论的，这实际上会为函数的结果创建一个匿名记录类型。如果给出了 <literal>RETURNS</literal> 子句，它必须写成 <literal>RETURNS record</literal>。
      </para>
 
      <para>
-      This also works with procedures, for example:
+      这也适用于过程，例如：
 
 <programlisting>
 CREATE PROCEDURE sum_n_product(x int, y int, OUT sum int, OUT prod int) AS $$
@@ -448,9 +403,7 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-      In a call to a procedure, all the parameters must be specified.  For
-      output parameters, <literal>NULL</literal> may be specified when
-      calling the procedure from plain SQL:
+      在调用过程时，必须指定所有参数。对于输出参数，在从普通 SQL 中调用过程时可以指定 <literal>NULL</literal>：
 <programlisting>
 CALL sum_n_product(2, 4, NULL, NULL);
  sum | prod
@@ -458,16 +411,11 @@ CALL sum_n_product(2, 4, NULL, NULL);
    6 |    8
 </programlisting>
 
-      However, when calling a procedure
-      from <application>PL/pgSQL</application>, you should instead write a
-      variable for any output parameter; the variable will receive the result
-      of the call.  See <xref linkend="plpgsql-statements-calling-procedure"/>
-      for details.
+      不过，当从 <application>PL/pgSQL</application> 中调用过程时，你应该改为针对任何输出参数写一个变量；该变量将接收调用的结果。详情请参见 <xref linkend="plpgsql-statements-calling-procedure"/>。
      </para>
 
      <para>
-      Another way to declare a <application>PL/pgSQL</application> function
-      is with <literal>RETURNS TABLE</literal>, for example:
+      声明 <application>PL/pgSQL</application> 函数的另一种方式是使用 <literal>RETURNS TABLE</literal>，例如：
 
 <programlisting>
 CREATE FUNCTION extended_sales(p_itemno int)
@@ -479,24 +427,22 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-      This is exactly equivalent to declaring one or more <literal>OUT</literal>
-      parameters and specifying <literal>RETURNS SETOF
-      <replaceable>sometype</replaceable></literal>.
+      这完全等价于声明一个或多个 <literal>OUT</literal> 参数并指定 <literal>RETURNS SETOF
+      <replaceable>sometype</replaceable></literal>。
      </para>
 
      <para>
-      When the return type of a <application>PL/pgSQL</application> function
-      is declared as a polymorphic type (see
-      <xref linkend="extend-types-polymorphic"/>), a special
-      parameter <literal>$0</literal> is created.  Its data type is the actual
-      return type of the function, as deduced from the actual input types.
-      This allows the function to access its actual return type
-      as shown in <xref linkend="plpgsql-declaration-type"/>.
-      <literal>$0</literal> is initialized to null and can be modified by
-      the function, so it can be used to hold the return value if desired,
-      though that is not required.  <literal>$0</literal> can also be
-      given an alias.  For example, this function works on any data type
-      that has a <literal>+</literal> operator:
+      当 <application>PL/pgSQL</application> 函数的返回类型被声明为多态类型（参见
+      <xref linkend="extend-types-polymorphic"/>）时，会创建一个特殊
+      参数 <literal>$0</literal>。它的数据类型就是该函数的实际返回类型，
+      由实际输入类型推导得出。
+      这使得函数能够访问其实际返回类型，
+      如 <xref linkend="plpgsql-declaration-type"/> 所示。
+      <literal>$0</literal> 被初始化为 null，并且可以由函数修改，
+      因此如果需要，可以用它来保存返回值，
+      尽管这并不是必需的。<literal>$0</literal> 也可以
+      被赋予一个别名。例如，下面这个函数可作用于任何
+      具有 <literal>+</literal> 运算符的数据类型：
 
 <programlisting>
 CREATE FUNCTION add_three_values(v1 anyelement, v2 anyelement, v3 anyelement)
@@ -512,10 +458,10 @@ $$ LANGUAGE plpgsql;
      </para>
 
      <para>
-      The same effect can be obtained by declaring one or more output parameters as
-      polymorphic types.  In this case the
-      special <literal>$0</literal> parameter is not used; the output
-      parameters themselves serve the same purpose.  For example:
+      通过将一个或多个输出参数声明为多态类型，
+      也可以获得同样的效果。在这种情况下，
+      不会使用特殊的 <literal>$0</literal> 参数；输出参数本身
+      就起到了相同的作用。例如：
 
 <programlisting>
 CREATE FUNCTION add_three_values(v1 anyelement, v2 anyelement, v3 anyelement,
@@ -529,10 +475,9 @@ $$ LANGUAGE plpgsql;
      </para>
 
      <para>
-      In practice it might be more useful to declare a polymorphic function
-      using the <type>anycompatible</type> family of types, so that automatic
-      promotion of the input arguments to a common type will occur.
-      For example:
+      在实践中，使用 <type>anycompatible</type> 系列类型来声明多态函数
+      可能更有用，这样输入参数就会自动
+      提升为公共类型。例如：
 
 <programlisting>
 CREATE FUNCTION add_three_values(v1 anycompatible, v2 anycompatible, v3 anycompatible)
@@ -543,15 +488,15 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-      With this example, a call such as
+      在这个例子中，像下面这样的调用
 
 <programlisting>
 SELECT add_three_values(1, 2, 4.7);
 </programlisting>
 
-      will work, automatically promoting the integer inputs to numeric.
-      The function using <type>anyelement</type> would require you to
-      cast the three inputs to the same type manually.
+      可以正常工作，它会自动把整数输入提升为 numeric。
+      而使用 <type>anyelement</type> 的函数则要求你
+      手动把三个输入转换为同一类型。
      </para>
     </sect2>
 
@@ -563,16 +508,14 @@ SELECT add_three_values(1, 2, 4.7);
 </synopsis>
 
    <para>
-    The <literal>ALIAS</literal> syntax is more general than is suggested in the
-    previous section: you can declare an alias for any variable, not just
-    function parameters.  The main practical use for this is to assign
-    a different name for variables with predetermined names, such as
-    <varname>NEW</varname> or <varname>OLD</varname> within
-    a trigger function.
+    <literal>ALIAS</literal> 语法比上一节所暗示的更为通用：你可以为任何变量
+    声明别名，而不仅仅是函数参数。它的主要实际用途是为
+    具有预定名称的变量指定不同的名称，例如
+    触发器函数中的 <varname>NEW</varname> 或 <varname>OLD</varname>。
    </para>
 
    <para>
-    Examples:
+    示例：
 <programlisting>
 DECLARE
   prior ALIAS FOR old;
@@ -581,14 +524,14 @@ DECLARE
    </para>
 
    <para>
-    Since <literal>ALIAS</literal> creates two different ways to name the same
-    object, unrestricted use can be confusing.  It's best to use it only
-    for the purpose of overriding predetermined names.
+    由于 <literal>ALIAS</literal> 为同一对象创建了两种不同的命名方式，
+    不加限制地使用可能会造成混淆。最好只在
+    覆盖预定名称的目的下使用它。
    </para>
    </sect2>
 
   <sect2 id="plpgsql-declaration-type">
-   <title>Copying Types</title>
+   <title>复制类型</title>
 
 <synopsis>
 <replaceable>name</replaceable> <replaceable>table</replaceable>.<replaceable>column</replaceable>%TYPE
@@ -596,54 +539,46 @@ DECLARE
 </synopsis>
 
    <para>
-    <literal>%TYPE</literal> provides the data type of a table column
-    or a previously-declared <application>PL/pgSQL</application>
-    variable. You can use this to declare variables that will hold
-    database values. For example, let's say you have a column named
-    <literal>user_id</literal> in your <literal>users</literal>
-    table. To declare a variable with the same data type as
-    <literal>users.user_id</literal> you write:
+    <literal>%TYPE</literal> 提供表列或先前声明的 <application>PL/pgSQL</application>
+    变量的数据类型。你可以使用它来声明将持有数据库值的变量。例如，假设你的 <literal>users</literal>
+    表中有一个名为 <literal>user_id</literal> 的列。要声明一个与
+    <literal>users.user_id</literal> 具有相同数据类型的变量，你可以这样写：
 <programlisting>
 user_id users.user_id%TYPE;
 </programlisting>
    </para>
 
    <para>
-    It is also possible to write array decoration
-    after <literal>%TYPE</literal>, thereby creating a variable that holds
-    an array of the referenced type:
+    也可以在 <literal>%TYPE</literal> 之后编写数组修饰，
+    从而创建一个持有被引用类型数组的变量：
 <programlisting>
 user_ids users.user_id%TYPE[];
 user_ids users.user_id%TYPE ARRAY[4];  -- equivalent to the above
 </programlisting>
-    Just as when declaring table columns that are arrays, it doesn't
-    matter whether you write multiple bracket pairs or specific array
-    dimensions: <productname>PostgreSQL</productname> treats all arrays of
-    a given element type as the same type, regardless of dimensionality.
-    (See <xref linkend="arrays-declaration"/>.)
+    正如声明数组类型的表列时一样，你写多对方括号还是写具体的数组维度并不重要：<productname>PostgreSQL</productname>
+    将给定元素类型的所有数组视为同一类型，无论维度如何。
+    （参见 <xref linkend="arrays-declaration"/>。）
    </para>
 
    <para>
-    By using <literal>%TYPE</literal> you don't need to know the data
-    type of the structure you are referencing, and most importantly,
-    if the data type of the referenced item changes in the future (for
-    instance: you change the type of <literal>user_id</literal>
-    from <type>integer</type> to <type>real</type>), you might not need
-    to change your function definition.
+    通过使用 <literal>%TYPE</literal>，你不需要知道所引用结构的数据
+    类型，而且最重要的是，
+    如果被引用项的数据类型将来发生变化（例如：你将 <literal>user_id</literal>
+    的类型从 <type>integer</type> 改为 <type>real</type>），你可能不需要
+    更改你的函数定义。
    </para>
 
    <para>
-    <literal>%TYPE</literal> is particularly valuable in polymorphic
-    functions, since the data types needed for internal variables can
-    change from one call to the next.  Appropriate variables can be
-    created by applying <literal>%TYPE</literal> to the function's
-    arguments or result placeholders.
+    <literal>%TYPE</literal> 在多态函数中特别有价值，
+    因为内部变量所需的数据类型可能
+    在每次调用之间发生变化。可以通过对函数的
+    参数或结果占位符应用 <literal>%TYPE</literal> 来创建适当的变量。
    </para>
 
   </sect2>
 
     <sect2 id="plpgsql-declaration-rowtypes">
-     <title>Row Types</title>
+     <title>行类型</title>
 
 <synopsis>
 <replaceable>name</replaceable> <replaceable>table_name</replaceable><literal>%ROWTYPE</literal>;
@@ -651,44 +586,23 @@ user_ids users.user_id%TYPE ARRAY[4];  -- equivalent to the above
 </synopsis>
 
    <para>
-    A variable of a composite type is called a <firstterm>row</firstterm>
-    variable (or <firstterm>row-type</firstterm> variable).  Such a variable
-    can hold a whole row of a <command>SELECT</command> or <command>FOR</command>
-    query result, so long as that query's column set matches the
-    declared type of the variable.
-    The individual fields of the row value
-    are accessed using the usual dot notation, for example
-    <literal>rowvar.field</literal>.
+    复合类型的变量称为<firstterm>行</firstterm>变量（或<firstterm>行类型</firstterm>变量）。这样的变量可以容纳 <command>SELECT</command> 或 <command>FOR</command> 查询结果的整行，只要该查询的列集合与变量声明的类型相匹配。行值的各个字段使用通常的点号表示法访问，例如 <literal>rowvar.field</literal>。
    </para>
 
    <para>
-    A row variable can be declared to have the same type as the rows of
-    an existing table or view, by using the
-    <replaceable>table_name</replaceable><literal>%ROWTYPE</literal>
-    notation; or it can be declared by giving a composite type's name.
-    (Since every table has an associated composite type of the same name,
-    it actually does not matter in <productname>PostgreSQL</productname> whether you
-    write <literal>%ROWTYPE</literal> or not.  But the form with
-    <literal>%ROWTYPE</literal> is more portable.)
+    通过使用 <replaceable>table_name</replaceable><literal>%ROWTYPE</literal> 表示法，可以声明一个行变量，使其类型与现有表或视图的行类型相同；也可以通过给出复合类型的名称来声明。（由于每个表都有一个同名的关联复合类型，因此在 <productname>PostgreSQL</productname> 中是否写出 <literal>%ROWTYPE</literal> 实际上无关紧要。但带 <literal>%ROWTYPE</literal> 的形式更具可移植性。）
    </para>
 
    <para>
-    As with <literal>%TYPE</literal>, <literal>%ROWTYPE</literal> can be
-    followed by array decoration to declare a variable that holds an array
-    of the referenced composite type.
+    与 <literal>%TYPE</literal> 一样，<literal>%ROWTYPE</literal> 后面可以跟数组修饰，以声明一个持有被引用复合类型数组的变量。
    </para>
 
    <para>
-    Parameters to a function can be
-    composite types (complete table rows). In that case, the
-    corresponding identifier <literal>$<replaceable>n</replaceable></literal> will be a row variable, and fields can
-    be selected from it, for example <literal>$1.user_id</literal>.
+    函数的参数可以是复合类型（完整的表行）。在这种情况下，相应的标识符 <literal>$<replaceable>n</replaceable></literal> 将是一个行变量，可以从中选取字段，例如 <literal>$1.user_id</literal>。
    </para>
 
    <para>
-    Here is an example of using composite types.  <structname>table1</structname>
-    and <structname>table2</structname> are existing tables having at least the
-    mentioned fields:
+    下面是使用复合类型的一个示例。<structname>table1</structname> 和 <structname>table2</structname> 是至少具有所提及字段的现有表：
 
 <programlisting>
 CREATE FUNCTION merge_fields(t_row table1) RETURNS text AS $$
@@ -706,37 +620,23 @@ SELECT merge_fields(t.*) FROM table1 t WHERE ... ;
   </sect2>
 
   <sect2 id="plpgsql-declaration-records">
-   <title>Record Types</title>
+   <title>记录类型</title>
 
 <synopsis>
 <replaceable>name</replaceable> RECORD;
 </synopsis>
 
    <para>
-    Record variables are similar to row-type variables, but they have no
-    predefined structure.  They take on the actual row structure of the
-    row they are assigned during a <command>SELECT</command> or <command>FOR</command> command.  The substructure
-    of a record variable can change each time it is assigned to.
-    A consequence of this is that until a record variable is first assigned
-    to, it has no substructure, and any attempt to access a
-    field in it will draw a run-time error.
+    记录变量与行类型变量相似，但它们没有预定义的结构。它们会采用在 <command>SELECT</command> 或 <command>FOR</command> 命令中赋值给它的那一行的实际行结构。记录变量的子结构在每次赋值时都可能改变。这样做的结果是，在记录变量首次被赋值之前，它没有子结构，任何访问其中字段的尝试都会引发运行时错误。
    </para>
 
    <para>
-    Note that <literal>RECORD</literal> is not a true data type, only a placeholder.
-    One should also realize that when a <application>PL/pgSQL</application>
-    function is declared to return type <type>record</type>, this is not quite the
-    same concept as a record variable, even though such a function might
-    use a record variable to hold its result.  In both cases the actual row
-    structure is unknown when the function is written, but for a function
-    returning <type>record</type> the actual structure is determined when the
-    calling query is parsed, whereas a record variable can change its row
-    structure on-the-fly.
+    请注意，<literal>RECORD</literal> 不是真正的数据类型，只是一个占位符。还应该认识到，当一个 <application>PL/pgSQL</application> 函数被声明为返回类型 <type>record</type> 时，这与记录变量并不完全是同一个概念，即使这样的函数可能会使用记录变量来保存其结果。在这两种情况下，编写函数时实际的行结构都是未知的，但对于返回 <type>record</type> 的函数，实际结构在解析调用查询时确定，而记录变量可以随时改变其行结构。
    </para>
   </sect2>
 
   <sect2 id="plpgsql-declaration-collation">
-   <title>Collation of <application>PL/pgSQL</application> Variables</title>
+   <title><application>PL/pgSQL</application> 变量的排序规则</title>
 
    <indexterm>
     <primary>collation</primary>
@@ -744,15 +644,7 @@ SELECT merge_fields(t.*) FROM table1 t WHERE ... ;
    </indexterm>
 
    <para>
-    When a <application>PL/pgSQL</application> function has one or more
-    parameters of collatable data types, a collation is identified for each
-    function call depending on the collations assigned to the actual
-    arguments, as described in <xref linkend="collation"/>.  If a collation is
-    successfully identified (i.e., there are no conflicts of implicit
-    collations among the arguments) then all the collatable parameters are
-    treated as having that collation implicitly.  This will affect the
-    behavior of collation-sensitive operations within the function.
-    For example, consider
+    当一个 <application>PL/pgSQL</application> 函数具有一个或多个可排序数据类型的参数时，每次函数调用都会根据赋予实际参数的排序规则来确定一个排序规则，如 <xref linkend="collation"/> 中所述。如果成功确定了一个排序规则（即参数之间不存在隐式排序规则的冲突），那么所有可排序参数都被隐式地视为具有该排序规则。这会影响函数中排序规则敏感操作的行为。例如，考虑
 
 <programlisting>
 CREATE FUNCTION less_than(a text, b text) RETURNS boolean AS $$
@@ -765,15 +657,11 @@ SELECT less_than(text_field_1, text_field_2) FROM table1;
 SELECT less_than(text_field_1, text_field_2 COLLATE "C") FROM table1;
 </programlisting>
 
-    The first use of <function>less_than</function> will use the common collation
-    of <structfield>text_field_1</structfield> and <structfield>text_field_2</structfield> for
-    the comparison, while the second use will use <literal>C</literal> collation.
+    <function>less_than</function> 的第一次使用将使用 <structfield>text_field_1</structfield> 和 <structfield>text_field_2</structfield> 的公共排序规则进行比较，而第二次使用将使用 <literal>C</literal> 排序规则。
    </para>
 
    <para>
-    Furthermore, the identified collation is also assumed as the collation of
-    any local variables that are of collatable types.  Thus this function
-    would not work any differently if it were written as
+    此外，所确定的排序规则也被假定为任何可排序类型的局部变量的排序规则。因此，如果这个函数写成如下形式，其行为也不会有任何不同
 
 <programlisting>
 CREATE FUNCTION less_than(a text, b text) RETURNS boolean AS $$
@@ -788,31 +676,22 @@ $$ LANGUAGE plpgsql;
    </para>
 
    <para>
-    If there are no parameters of collatable data types, or no common
-    collation can be identified for them, then parameters and local variables
-    use the default collation of their data type (which is usually the
-    database's default collation, but could be different for variables of
-    domain types).
+    如果没有可排序数据类型的参数，或者无法为它们确定公共排序规则，那么参数和局部变量使用其数据类型的默认排序规则（通常是数据库的默认排序规则，但对于域类型的变量可能不同）。
    </para>
 
    <para>
-    A local variable of a collatable data type can have a different collation
-    associated with it by including the <literal>COLLATE</literal> option in its
-    declaration, for example
+    可排序数据类型的局部变量可以通过在其声明中包含 <literal>COLLATE</literal> 选项来关联不同的排序规则，例如
 
 <programlisting>
 DECLARE
     local_a text COLLATE "en_US";
 </programlisting>
 
-    This option overrides the collation that would otherwise be
-    given to the variable according to the rules above.
+此选项会覆盖按照上述规则原本应赋予该变量的排序规则。
    </para>
 
    <para>
-    Also, of course explicit <literal>COLLATE</literal> clauses can be written inside
-    a function if it is desired to force a particular collation to be used in
-    a particular operation.  For example,
+    当然，如果希望在特定操作中强制使用特定的排序规则，也可以在函数内部编写显式的 <literal>COLLATE</literal> 子句。例如，
 
 <programlisting>
 CREATE FUNCTION less_than_c(a text, b text) RETURNS boolean AS $$
@@ -822,9 +701,7 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-    This overrides the collations associated with the table columns,
-    parameters, or local variables used in the expression, just as would
-    happen in a plain SQL command.
+这会覆盖表达式中使用的表列、参数或局部变量所关联的排序规则，正如在普通 SQL 命令中会发生的那样。
    </para>
   </sect2>
   </sect1>
