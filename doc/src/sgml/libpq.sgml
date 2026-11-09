@@ -4006,79 +4006,46 @@ unsigned char *PQunescapeBytea(const unsigned char *from, size_t *to_length);
  </sect1>
 
  <sect1 id="libpq-async">
-  <title>Asynchronous Command Processing</title>
+  <title>异步命令处理</title>
 
   <indexterm zone="libpq-async">
    <primary>nonblocking connection</primary>
   </indexterm>
 
   <para>
-   The <xref linkend="libpq-PQexec"/> function is adequate for submitting
-   commands in normal, synchronous applications.  It has a few
-   deficiencies, however, that can be of importance to some users:
+   <xref linkend="libpq-PQexec"/> 函数足以在普通的同步应用中提交命令。然而，它有一些缺陷，对某些用户来说可能很重要：
 
    <itemizedlist>
     <listitem>
      <para>
-      <xref linkend="libpq-PQexec"/> waits for the command to be completed.
-      The application might have other work to do (such as maintaining a
-      user interface), in which case it won't want to block waiting for
-      the response.
+      <xref linkend="libpq-PQexec"/> 会等待命令完成。应用程序可能还有别的工作要做（例如维护用户界面），在这种情况下它不会愿意阻塞等待响应。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Since the execution of the client application is suspended while it
-      waits for the result, it is hard for the application to decide that
-      it would like to try to cancel the ongoing command.  (It can be done
-      from a signal handler, but not otherwise.)
+      由于客户端应用程序的执行在等待结果期间被挂起，应用程序很难决定它想要尝试取消正在进行的命令。（这可以在信号处理函数中完成，但除此之外不行。）
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <xref linkend="libpq-PQexec"/> can return only one
-      <structname>PGresult</structname> structure.  If the submitted command
-      string contains multiple <acronym>SQL</acronym> commands, all but
-      the last <structname>PGresult</structname> are discarded by
-      <xref linkend="libpq-PQexec"/>.
+      <xref linkend="libpq-PQexec"/> 只能返回一个
+      <structname>PGresult</structname> 结构。如果提交的命令字符串包含多个 <acronym>SQL</acronym> 命令，除最后一个 <structname>PGresult</structname> 之外的所有命令都会被
+      <xref linkend="libpq-PQexec"/> 丢弃。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <xref linkend="libpq-PQexec"/> always collects the command's entire result,
-      buffering it in a single <structname>PGresult</structname>.  While
-      this simplifies error-handling logic for the application, it can be
-      impractical for results containing many rows.
+      <xref linkend="libpq-PQexec"/> 总是收集命令的整个结果，并将其缓冲在单个 <structname>PGresult</structname> 中。虽然这简化了应用程序的错误处理逻辑，但对于包含许多行的结果来说可能不切实际。
      </para>
     </listitem>
    </itemizedlist>
   </para>
 
   <para>
-   Applications that do not like these limitations can instead use the
-   underlying functions that <xref linkend="libpq-PQexec"/> is built from:
-   <xref linkend="libpq-PQsendQuery"/> and <xref linkend="libpq-PQgetResult"/>.
-   There are also
-   <xref linkend="libpq-PQsendQueryParams"/>,
-   <xref linkend="libpq-PQsendPrepare"/>,
-   <xref linkend="libpq-PQsendQueryPrepared"/>,
-   <xref linkend="libpq-PQsendDescribePrepared"/>,
-   <xref linkend="libpq-PQsendDescribePortal"/>,
-   <xref linkend="libpq-PQsendClosePrepared"/>, and
-   <xref linkend="libpq-PQsendClosePortal"/>,
-   which can be used with <xref linkend="libpq-PQgetResult"/> to duplicate
-   the functionality of
-   <xref linkend="libpq-PQexecParams"/>,
-   <xref linkend="libpq-PQprepare"/>,
-   <xref linkend="libpq-PQexecPrepared"/>,
-   <xref linkend="libpq-PQdescribePrepared"/>,
-   <xref linkend="libpq-PQdescribePortal"/>,
-   <xref linkend="libpq-PQclosePrepared"/>, and
-   <xref linkend="libpq-PQclosePortal"/>
-   respectively.
+   不喜欢这些限制的应用可以改用 <xref linkend="libpq-PQexec"/> 所基于的底层函数：<xref linkend="libpq-PQsendQuery"/> 和 <xref linkend="libpq-PQgetResult"/>。此外还有 <xref linkend="libpq-PQsendQueryParams"/>、<xref linkend="libpq-PQsendPrepare"/>、<xref linkend="libpq-PQsendQueryPrepared"/>、<xref linkend="libpq-PQsendDescribePrepared"/>、<xref linkend="libpq-PQsendDescribePortal"/>、<xref linkend="libpq-PQsendClosePrepared"/> 和 <xref linkend="libpq-PQsendClosePortal"/>，它们可以与 <xref linkend="libpq-PQgetResult"/> 配合使用，分别复制 <xref linkend="libpq-PQexecParams"/>、<xref linkend="libpq-PQprepare"/>、<xref linkend="libpq-PQexecPrepared"/>、<xref linkend="libpq-PQdescribePrepared"/>、<xref linkend="libpq-PQdescribePortal"/>、<xref linkend="libpq-PQclosePrepared"/> 和 <xref linkend="libpq-PQclosePortal"/> 的功能。
 
    <variablelist>
     <varlistentry id="libpq-PQsendQuery">
@@ -4086,23 +4053,15 @@ unsigned char *PQunescapeBytea(const unsigned char *from, size_t *to_length);
 
      <listitem>
       <para>
-       Submits a command to the server without waiting for the result(s).
-       1 is returned if the command was successfully dispatched and 0 if
-       not (in which case, use <xref linkend="libpq-PQerrorMessage"/> to get more
-       information about the failure).
+       向服务器提交一条命令而不等待结果。如果命令成功派发则返回 1，否则返回 0（此时可使用 <xref linkend="libpq-PQerrorMessage"/> 获取有关失败的更多信息）。
 <synopsis>
 int PQsendQuery(PGconn *conn, const char *command);
 </synopsis>
-
-       After successfully calling <xref linkend="libpq-PQsendQuery"/>, call
-       <xref linkend="libpq-PQgetResult"/> one or more times to obtain the
-       results.  <xref linkend="libpq-PQsendQuery"/> cannot be called again
-       (on the same connection) until <xref linkend="libpq-PQgetResult"/>
-       has returned a null pointer, indicating that the command is done.
+       成功调用 <xref linkend="libpq-PQsendQuery"/> 之后，应调用 <xref linkend="libpq-PQgetResult"/> 一次或多次以获取结果。在 <xref linkend="libpq-PQgetResult"/> 返回空指针（表示命令已完成）之前，不能（在同一连接上）再次调用 <xref linkend="libpq-PQsendQuery"/>。
       </para>
 
       <para>
-       In pipeline mode, this function is disallowed.
+       在管道模式下，不允许使用此函数。
       </para>
      </listitem>
     </varlistentry>
@@ -4112,8 +4071,7 @@ int PQsendQuery(PGconn *conn, const char *command);
 
      <listitem>
       <para>
-       Submits a command and separate parameters to the server without
-       waiting for the result(s).
+       向服务器提交一条命令和单独的参数而不等待结果。
 <synopsis>
 int PQsendQueryParams(PGconn *conn,
                       const char *command,
@@ -4124,13 +4082,7 @@ int PQsendQueryParams(PGconn *conn,
                       const int *paramFormats,
                       int resultFormat);
 </synopsis>
-
-       This is equivalent to <xref linkend="libpq-PQsendQuery"/> except that
-       query parameters can be specified separately from the query string.
-       The function's parameters are handled identically to
-       <xref linkend="libpq-PQexecParams"/>.  Like
-       <xref linkend="libpq-PQexecParams"/>, it allows only one command in the
-       query string.
+       这与 <xref linkend="libpq-PQsendQuery"/> 等价，区别在于查询参数可以与查询字符串分开指定。该函数的参数处理方式与 <xref linkend="libpq-PQexecParams"/> 完全相同。与 <xref linkend="libpq-PQexecParams"/> 一样，它只允许在查询字符串中包含一条命令。
       </para>
      </listitem>
     </varlistentry>
@@ -4140,8 +4092,7 @@ int PQsendQueryParams(PGconn *conn,
 
      <listitem>
       <para>
-       Sends a request to create a prepared statement with the given
-       parameters, without waiting for completion.
+       发送一个请求，用给定参数创建预备语句，而不等待其完成。
 <synopsis>
 int PQsendPrepare(PGconn *conn,
                   const char *stmtName,
@@ -4150,12 +4101,7 @@ int PQsendPrepare(PGconn *conn,
                   const Oid *paramTypes);
 </synopsis>
 
-       This is an asynchronous version of <xref linkend="libpq-PQprepare"/>: it
-       returns 1 if it was able to dispatch the request, and 0 if not.
-       After a successful call, call <xref linkend="libpq-PQgetResult"/> to
-       determine whether the server successfully created the prepared
-       statement.  The function's parameters are handled identically to
-       <xref linkend="libpq-PQprepare"/>.
+       这是 <xref linkend="libpq-PQprepare"/> 的异步版本：如果能够派发该请求则返回 1，否则返回 0。成功调用之后，调用 <xref linkend="libpq-PQgetResult"/> 来确定服务器是否成功创建了该预备语句。该函数的参数处理方式与 <xref linkend="libpq-PQprepare"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4165,8 +4111,7 @@ int PQsendPrepare(PGconn *conn,
 
      <listitem>
       <para>
-       Sends a request to execute a prepared statement with given
-       parameters, without waiting for the result(s).
+       发送一个请求，用给定参数执行预备语句，而不等待结果。
 <synopsis>
 int PQsendQueryPrepared(PGconn *conn,
                         const char *stmtName,
@@ -4177,11 +4122,7 @@ int PQsendQueryPrepared(PGconn *conn,
                         int resultFormat);
 </synopsis>
 
-       This is similar to <xref linkend="libpq-PQsendQueryParams"/>, but
-       the command to be executed is specified by naming a
-       previously-prepared statement, instead of giving a query string.
-       The function's parameters are handled identically to
-       <xref linkend="libpq-PQexecPrepared"/>.
+       这与 <xref linkend="libpq-PQsendQueryParams"/> 类似，但要执行的命令是通过指定一个先前准备好的预备语句来给出的，而不是提供查询字符串。该函数的参数处理方式与 <xref linkend="libpq-PQexecPrepared"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4191,17 +4132,12 @@ int PQsendQueryPrepared(PGconn *conn,
 
      <listitem>
       <para>
-       Submits a request to obtain information about the specified
-       prepared statement, without waiting for completion.
+       提交一个请求以获取指定预备语句的信息，而不等待其完成。
 <synopsis>
 int PQsendDescribePrepared(PGconn *conn, const char *stmtName);
 </synopsis>
 
-       This is an asynchronous version of <xref linkend="libpq-PQdescribePrepared"/>:
-       it returns 1 if it was able to dispatch the request, and 0 if not.
-       After a successful call, call <xref linkend="libpq-PQgetResult"/> to
-       obtain the results.  The function's parameters are handled
-       identically to <xref linkend="libpq-PQdescribePrepared"/>.
+       这是 <xref linkend="libpq-PQdescribePrepared"/> 的异步版本：如果能够派发该请求则返回 1，否则返回 0。成功调用之后，调用 <xref linkend="libpq-PQgetResult"/> 来获取结果。该函数的参数处理方式与 <xref linkend="libpq-PQdescribePrepared"/> 完全相同。
       </para>
      </listitem>
     </varlistentry>
@@ -4271,59 +4207,51 @@ int PQsendClosePortal(PGconn *conn, const char *portalName);
 
      <listitem>
       <para>
-       Waits for the next result from a prior
-       <xref linkend="libpq-PQsendQuery"/>,
-       <xref linkend="libpq-PQsendQueryParams"/>,
-       <xref linkend="libpq-PQsendPrepare"/>,
-       <xref linkend="libpq-PQsendQueryPrepared"/>,
-       <xref linkend="libpq-PQsendDescribePrepared"/>,
-       <xref linkend="libpq-PQsendDescribePortal"/>,
-       <xref linkend="libpq-PQsendClosePrepared"/>,
-       <xref linkend="libpq-PQsendClosePortal"/>,
-       <xref linkend="libpq-PQsendPipelineSync"/>, or
+       等待来自先前的
+       <xref linkend="libpq-PQsendQuery"/>、
+       <xref linkend="libpq-PQsendQueryParams"/>、
+       <xref linkend="libpq-PQsendPrepare"/>、
+       <xref linkend="libpq-PQsendQueryPrepared"/>、
+       <xref linkend="libpq-PQsendDescribePrepared"/>、
+       <xref linkend="libpq-PQsendDescribePortal"/>、
+       <xref linkend="libpq-PQsendClosePrepared"/>、
+       <xref linkend="libpq-PQsendClosePortal"/>、
+       <xref linkend="libpq-PQsendPipelineSync"/> 或
        <xref linkend="libpq-PQpipelineSync"/>
-       call, and returns it.
-       A null pointer is returned when the command is complete and there
-       will be no more results.
+       调用的下一个结果，并将其返回。
+       当命令完成且不再有结果时，返回空指针。
 <synopsis>
 PGresult *PQgetResult(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       <xref linkend="libpq-PQgetResult"/> must be called repeatedly until
-       it returns a null pointer, indicating that the command is done.
-       (If called when no command is active,
-       <xref linkend="libpq-PQgetResult"/> will just return a null pointer
-       at once.) Each non-null result from
-       <xref linkend="libpq-PQgetResult"/> should be processed using the
-       same <structname>PGresult</structname> accessor functions previously
-       described.  Don't forget to free each result object with
-       <xref linkend="libpq-PQclear"/> when done with it.  Note that
-       <xref linkend="libpq-PQgetResult"/> will block only if a command is
-       active and the necessary response data has not yet been read by
-       <xref linkend="libpq-PQconsumeInput"/>.
+       必须重复调用 <xref linkend="libpq-PQgetResult"/>，直到它返回空指针，表示命令已完成。
+       （如果在没有活动命令时调用，
+       <xref linkend="libpq-PQgetResult"/> 只会立即返回空指针。）来自
+       <xref linkend="libpq-PQgetResult"/> 的每个非空结果都应使用前面描述的相同
+       <structname>PGresult</structname> 访问器函数进行处理。完成后不要忘记用
+       <xref linkend="libpq-PQclear"/> 释放每个结果对象。注意，
+       只有当命令处于活动状态且必要的响应数据尚未被
+       <xref linkend="libpq-PQconsumeInput"/> 读取时，<xref linkend="libpq-PQgetResult"/> 才会阻塞。
       </para>
 
       <para>
-       In pipeline mode, <function>PQgetResult</function> will return normally
-       unless an error occurs; for any subsequent query sent after the one
-       that caused the error until (and excluding) the next synchronization point,
-       a special result of type <literal>PGRES_PIPELINE_ABORTED</literal> will
-       be returned, and a null pointer will be returned after it.
-       When the pipeline synchronization point is reached, a result of type
-       <literal>PGRES_PIPELINE_SYNC</literal> will be returned.
-       The result of the next query after the synchronization point follows
-       immediately (that is, no null pointer is returned after
-       the synchronization point).
+       在管道模式下，除非发生错误，<function>PQgetResult</function> 将正常返回；
+       对于在导致错误的查询之后发送的任何后续查询，直到（但不包括）下一个同步点为止，
+       将返回一个类型为 <literal>PGRES_PIPELINE_ABORTED</literal> 的特殊结果，之后将返回空指针。
+       当到达管道同步点时，将返回一个类型为
+       <literal>PGRES_PIPELINE_SYNC</literal> 的结果。
+       同步点之后的下一个查询的结果紧随其后
+       （也就是说，同步点之后不会返回空指针）。
       </para>
 
       <note>
        <para>
-        Even when <xref linkend="libpq-PQresultStatus"/> indicates a fatal
-        error, <xref linkend="libpq-PQgetResult"/> should be called until it
-        returns a null pointer, to allow <application>libpq</application> to
-        process the error information completely.
+        即使 <xref linkend="libpq-PQresultStatus"/> 指示致命
+        错误，也应调用 <xref linkend="libpq-PQgetResult"/> 直到它
+        返回空指针，以便 <application>libpq</application> 能够
+        完整地处理错误信息。
        </para>
       </note>
      </listitem>
@@ -4332,29 +4260,21 @@ PGresult *PQgetResult(PGconn *conn);
   </para>
 
   <para>
-   Using <xref linkend="libpq-PQsendQuery"/> and
-   <xref linkend="libpq-PQgetResult"/> solves one of
-   <xref linkend="libpq-PQexec"/>'s problems:  If a command string contains
-   multiple <acronym>SQL</acronym> commands, the results of those commands
-   can be obtained individually.  (This allows a simple form of overlapped
-   processing, by the way: the client can be handling the results of one
-   command while the server is still working on later queries in the same
-   command string.)
+   使用 <xref linkend="libpq-PQsendQuery"/> 和
+   <xref linkend="libpq-PQgetResult"/> 可以解决
+   <xref linkend="libpq-PQexec"/> 的一个问题：如果命令字符串包含
+   多条 <acronym>SQL</acronym> 命令，那么这些命令的结果可以分别获取。（顺便说一下，这允许一种简单的重叠处理形式：客户端可以处理一条命令的结果，而服务器仍在处理同一命令字符串中后面的查询。）
   </para>
 
   <para>
-   Another frequently-desired feature that can be obtained with
-   <xref linkend="libpq-PQsendQuery"/> and <xref linkend="libpq-PQgetResult"/>
-   is retrieving large query results a limited number of rows at a time.
-   This is discussed
-   in <xref linkend="libpq-single-row-mode"/>.
+   使用 <xref linkend="libpq-PQsendQuery"/> 和 <xref linkend="libpq-PQgetResult"/>
+   还能实现另一个经常需要的功能：每次以有限的行数获取大型查询结果。
+   这在 <xref linkend="libpq-single-row-mode"/> 中讨论。
   </para>
 
   <para>
-   By itself, calling <xref linkend="libpq-PQgetResult"/>
-   will still cause the client to block until the server completes the
-   next <acronym>SQL</acronym> command.  This can be avoided by proper
-   use of two more functions:
+   单独调用 <xref linkend="libpq-PQgetResult"/>
+   仍然会导致客户端阻塞，直到服务器完成下一条 <acronym>SQL</acronym> 命令。可以通过正确使用另外两个函数来避免这种情况：
 
    <variablelist>
     <varlistentry id="libpq-PQconsumeInput">
@@ -4363,32 +4283,23 @@ PGresult *PQgetResult(PGconn *conn);
 
      <listitem>
       <para>
-       If input is available from the server, consume it.
+       如果服务器有输入可用，则消费它。
 <synopsis>
 int PQconsumeInput(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       <xref linkend="libpq-PQconsumeInput"/> normally returns 1 indicating
-       <quote>no error</quote>, but returns 0 if there was some kind of
-       trouble (in which case <xref linkend="libpq-PQerrorMessage"/> can be
-       consulted).  Note that the result does not say whether any input
-       data was actually collected. After calling
-       <xref linkend="libpq-PQconsumeInput"/>, the application can check
-       <xref linkend="libpq-PQisBusy"/> and/or
-       <function>PQnotifies</function> to see if their state has changed.
+       <xref linkend="libpq-PQconsumeInput"/> 通常返回 1，表示
+       <quote>没有错误</quote>，但如果出现某种问题则返回 0（此时可以查阅
+       <xref linkend="libpq-PQerrorMessage"/>）。注意，该结果并不说明是否实际收集到了任何输入数据。调用
+       <xref linkend="libpq-PQconsumeInput"/> 之后，应用程序可以检查
+       <xref linkend="libpq-PQisBusy"/> 和/或
+       <function>PQnotifies</function>，以查看它们的状态是否已改变。
       </para>
 
       <para>
-       <xref linkend="libpq-PQconsumeInput"/> can be called even if the
-       application is not prepared to deal with a result or notification
-       just yet.  The function will read available data and save it in
-       a buffer, thereby causing a <function>select()</function>
-       read-ready indication to go away.  The application can thus use
-       <xref linkend="libpq-PQconsumeInput"/> to clear the
-       <function>select()</function> condition immediately, and then
-       examine the results at leisure.
+       即使应用程序尚未准备好处理结果或通知，也可以调用 <xref linkend="libpq-PQconsumeInput"/>。该函数将读取可用数据并将其保存在缓冲区中，从而使 <function>select()</function> 读就绪指示消失。因此，应用程序可以使用 <xref linkend="libpq-PQconsumeInput"/> 立即清除 <function>select()</function> 条件，然后从容地检查结果。
       </para>
      </listitem>
     </varlistentry>
@@ -4398,19 +4309,14 @@ int PQconsumeInput(PGconn *conn);
 
      <listitem>
       <para>
-       Returns 1 if a command is busy, that is,
-       <xref linkend="libpq-PQgetResult"/> would block waiting for input.
-       A 0 return indicates that <xref linkend="libpq-PQgetResult"/> can be
-       called with assurance of not blocking.
+       如果命令正忙，即 <xref linkend="libpq-PQgetResult"/> 会阻塞等待输入，则返回 1。返回 0 表示可以确保不阻塞地调用 <xref linkend="libpq-PQgetResult"/>。
 <synopsis>
 int PQisBusy(PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       <xref linkend="libpq-PQisBusy"/> will not itself attempt to read data
-       from the server; therefore <xref linkend="libpq-PQconsumeInput"/>
-       must be invoked first, or the busy state will never end.
+       <xref linkend="libpq-PQisBusy"/> 本身不会尝试从服务器读取数据；因此必须先调用 <xref linkend="libpq-PQconsumeInput"/>，否则忙状态将永远不会结束。
       </para>
      </listitem>
     </varlistentry>
@@ -4434,27 +4340,11 @@ int PQisBusy(PGconn *conn);
   </para>
 
   <para>
-   A client that uses
-   <xref linkend="libpq-PQsendQuery"/>/<xref linkend="libpq-PQgetResult"/>
-   can also attempt to cancel a command that is still being processed
-   by the server; see <xref linkend="libpq-cancel"/>.  But regardless of
-   the return value of <xref linkend="libpq-PQcancelBlocking"/>, the application
-   must continue with the normal result-reading sequence using
-   <xref linkend="libpq-PQgetResult"/>.  A successful cancellation will
-   simply cause the command to terminate sooner than it would have
-   otherwise.
+   使用 <xref linkend="libpq-PQsendQuery"/>/<xref linkend="libpq-PQgetResult"/> 的客户端还可以尝试取消服务器仍在处理的命令；参见 <xref linkend="libpq-cancel"/>。但无论 <xref linkend="libpq-PQcancelBlocking"/> 的返回值如何，应用程序都必须继续使用 <xref linkend="libpq-PQgetResult"/> 进行正常的结果读取序列。成功取消只会使命令比原本更早终止。
   </para>
 
   <para>
-   By using the functions described above, it is possible to avoid
-   blocking while waiting for input from the database server.  However,
-   it is still possible that the application will block waiting to send
-   output to the server.  This is relatively uncommon but can happen if
-   very long SQL commands or data values are sent.  (It is much more
-   probable if the application sends data via <command>COPY IN</command>,
-   however.)  To prevent this possibility and achieve completely
-   nonblocking database operation, the following additional functions
-   can be used.
+   通过使用上面描述的函数，可以避免在等待来自数据库服务器的输入时发生阻塞。不过，应用程序仍有可能在等待向服务器发送输出时发生阻塞。这种情况相对少见，但如果发送非常长的 SQL 命令或数据值，就可能发生。（不过，如果应用程序通过 <command>COPY IN</command> 发送数据，这种可能性会大得多。）为了防止这种可能性并实现完全非阻塞的数据库操作，可以使用下列附加函数。
 
    <variablelist>
     <varlistentry id="libpq-PQsetnonblocking">
@@ -4462,30 +4352,26 @@ int PQisBusy(PGconn *conn);
 
      <listitem>
       <para>
-       Sets the nonblocking status of the connection.
+       设置连接的非阻塞状态。
 <synopsis>
 int PQsetnonblocking(PGconn *conn, int arg);
 </synopsis>
       </para>
 
       <para>
-       Sets the state of the connection to nonblocking if
-       <parameter>arg</parameter> is 1, or blocking if
-       <parameter>arg</parameter> is 0.  Returns 0 if OK, -1 if error.
+       如果 <parameter>arg</parameter> 为 1，则把连接的状态设置为非阻塞；如果 <parameter>arg</parameter> 为 0，则设置为阻塞。成功时返回 0，出错时返回 -1。
       </para>
 
       <para>
-       In the nonblocking state, successful calls to
-       <xref linkend="libpq-PQsendQuery"/>, <xref linkend="libpq-PQputline"/>,
-       <xref linkend="libpq-PQputnbytes"/>, <xref linkend="libpq-PQputCopyData"/>,
-       and <xref linkend="libpq-PQendcopy"/> will not block;  their changes
-       are stored in the local output buffer until they are flushed.
-       Unsuccessful calls will return an error and must be retried.
+       在非阻塞状态下，对
+       <xref linkend="libpq-PQsendQuery"/>、<xref linkend="libpq-PQputline"/>、
+       <xref linkend="libpq-PQputnbytes"/>、<xref linkend="libpq-PQputCopyData"/>
+       和 <xref linkend="libpq-PQendcopy"/> 的成功调用不会阻塞；它们的更改会存储在本地输出缓冲区中，直到被冲刷为止。
+       不成功的调用将返回错误，并且必须重试。
       </para>
 
       <para>
-       Note that <xref linkend="libpq-PQexec"/> does not honor nonblocking
-       mode; if it is called, it will act in blocking fashion anyway.
+       注意 <xref linkend="libpq-PQexec"/> 不遵循非阻塞模式；如果调用它，它无论如何都会以阻塞方式行事。
       </para>
      </listitem>
     </varlistentry>
@@ -4495,15 +4381,14 @@ int PQsetnonblocking(PGconn *conn, int arg);
 
      <listitem>
       <para>
-       Returns the blocking status of the database connection.
+       返回数据库连接的阻塞状态。
 <synopsis>
 int PQisnonblocking(const PGconn *conn);
 </synopsis>
       </para>
 
       <para>
-       Returns 1 if the connection is set to nonblocking mode and 0 if
-       blocking.
+       如果连接被设置为非阻塞模式则返回 1，如果是阻塞模式则返回 0。
       </para>
      </listitem>
     </varlistentry>
@@ -4513,11 +4398,9 @@ int PQisnonblocking(const PGconn *conn);
 
       <listitem>
        <para>
-       Attempts to flush any queued output data to the server.  Returns
-       0 if successful (or if the send queue is empty), -1 if it failed
-       for some reason, or 1 if it was unable to send all the data in
-       the send queue yet (this case can only occur if the connection
-       is nonblocking).
+       尝试将任何排队的输出数据发送到服务器。如果成功（或发送队列为空）则返回
+       0，如果由于某种原因失败则返回 -1，如果还无法发送完发送队列中的所有数据则返回
+       1（这种情况只可能在连接为非阻塞时发生）。
 <synopsis>
 int PQflush(PGconn *conn);
 </synopsis>
@@ -4528,18 +4411,16 @@ int PQflush(PGconn *conn);
   </para>
 
   <para>
-   After sending any command or data on a nonblocking connection, call
-   <xref linkend="libpq-PQflush"/>.  If it returns 1, wait for the socket
-   to become read- or write-ready.  If it becomes write-ready, call
-   <xref linkend="libpq-PQflush"/> again.  If it becomes read-ready, call
-   <xref linkend="libpq-PQconsumeInput"/>, then call
-   <xref linkend="libpq-PQflush"/> again.  Repeat until
-   <xref linkend="libpq-PQflush"/> returns 0.  (It is necessary to check for
-   read-ready and drain the input with <xref linkend="libpq-PQconsumeInput"/>,
-   because the server can block trying to send us data, e.g., NOTICE
-   messages, and won't read our data until we read its.)  Once
-   <xref linkend="libpq-PQflush"/> returns 0, wait for the socket to be
-   read-ready and then read the response as described above.
+   在非阻塞连接上发送任何命令或数据之后，调用
+   <xref linkend="libpq-PQflush"/>。如果它返回 1，则等待套接字变为可读或可写。如果它变为可写，再次调用
+   <xref linkend="libpq-PQflush"/>。如果它变为可读，调用
+   <xref linkend="libpq-PQconsumeInput"/>，然后再次调用
+   <xref linkend="libpq-PQflush"/>。重复此过程直到
+   <xref linkend="libpq-PQflush"/> 返回 0。（有必要检查可读状态并用 <xref linkend="libpq-PQconsumeInput"/> 排空输入，
+   因为服务器在尝试向我们发送数据（例如 NOTICE
+   消息）时可能会阻塞，并且在我们读取它的数据之前不会读取我们的数据。）一旦
+   <xref linkend="libpq-PQflush"/> 返回 0，等待套接字变为
+   可读，然后如上所述读取响应。
   </para>
 
  </sect1>
