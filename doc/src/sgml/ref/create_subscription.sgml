@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE SUBSCRIPTION</refname>
-  <refpurpose>define a new subscription</refpurpose>
+  <refpurpose>定义一个新的订阅</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -29,50 +29,39 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE SUBSCRIPTION</command> adds a new logical-replication
-   subscription.  The user that creates a subscription becomes the owner
-   of the subscription. The subscription name must be distinct from the name of
-   any existing subscription in the current database.
+   <command>CREATE SUBSCRIPTION</command> 添加一个新的逻辑复制订阅。创建订阅的用户成为该订阅的所有者。订阅名称必须与当前数据库中任何现有订阅的名称不同。
   </para>
 
   <para>
-   A subscription represents a replication connection to the publisher.
-   Hence, in addition to adding definitions in the local catalogs, this
-   command normally creates a replication slot on the publisher.
+   订阅表示到发布端的复制连接。因此，除了在本地系统目录中添加定义之外，该命令通常还会在发布端创建一个复制槽。
   </para>
 
   <para>
-   A logical replication worker will be started to replicate data for the new
-   subscription at the commit of the transaction where this command is run,
-   unless the subscription is initially disabled.
+   除非订阅最初被禁用，否则在运行该命令的事务提交时，将启动一个逻辑复制工作者来为新订阅复制数据。
   </para>
 
   <para>
-   To be able to create a subscription, you must have the privileges of
-   the <literal>pg_create_subscription</literal> role, as well as
-   <literal>CREATE</literal> privileges on the current database.
+   要能够创建订阅，您必须具有 <literal>pg_create_subscription</literal> 角色的权限，以及当前数据库上的 <literal>CREATE</literal> 权限。
   </para>
 
   <para>
-   Additional information about subscriptions and logical replication as a
-   whole is available at <xref linkend="logical-replication-subscription"/> and
-   <xref linkend="logical-replication"/>.
+   关于订阅以及整个逻辑复制的附加信息可在 <xref linkend="logical-replication-subscription"/> 和 <xref linkend="logical-replication"/> 中找到。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry id="sql-createsubscription-params-name">
     <term><replaceable class="parameter">subscription_name</replaceable></term>
     <listitem>
      <para>
-      The name of the new subscription.
+      新订阅的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -81,9 +70,8 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
     <term><literal>CONNECTION '<replaceable class="parameter">conninfo</replaceable>'</literal></term>
     <listitem>
      <para>
-      The <application>libpq</application> connection string defining how
-      to connect to the publisher database.  For details see
-      <xref linkend="libpq-connstring"/>.
+      <application>libpq</application> 连接串，用于定义如何连接到发布者数据库。详情请参见
+      <xref linkend="libpq-connstring"/>。
      </para>
     </listitem>
    </varlistentry>
@@ -92,7 +80,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
     <term><literal>PUBLICATION <replaceable class="parameter">publication_name</replaceable> [, ...]</literal></term>
     <listitem>
      <para>
-      Names of the publications on the publisher to subscribe to.
+      要订阅的发布者上发布的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -101,11 +89,11 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
     <term><literal>WITH ( <replaceable class="parameter">subscription_parameter</replaceable> [= <replaceable class="parameter">value</replaceable>] [, ... ] )</literal></term>
     <listitem>
      <para>
-      This clause specifies optional parameters for a subscription.
+      此子句指定订阅的可选参数。
      </para>
 
      <para>
-      The following parameters control what happens during subscription creation:
+      下列参数控制创建订阅期间的行为：
 
       <variablelist>
 
@@ -113,26 +101,21 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>connect</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the <command>CREATE SUBSCRIPTION</command>
-          command should connect to the publisher at all.  The default
-          is <literal>true</literal>.  Setting this to
-          <literal>false</literal> will force the values of
-          <literal>create_slot</literal>, <literal>enabled</literal> and
-          <literal>copy_data</literal> to <literal>false</literal>.
-          (You cannot combine setting <literal>connect</literal>
-          to <literal>false</literal> with
-          setting <literal>create_slot</literal>, <literal>enabled</literal>,
-          or <literal>copy_data</literal> to <literal>true</literal>.)
+          指定 <command>CREATE SUBSCRIPTION</command>
+          命令是否应该连接到发布端。默认值为 <literal>true</literal>。将此参数设置为
+          <literal>false</literal> 会强制将
+          <literal>create_slot</literal>、<literal>enabled</literal> 和
+          <literal>copy_data</literal> 的值设为 <literal>false</literal>。
+          （不能将 <literal>connect</literal>
+          设置为 <literal>false</literal> 与将 <literal>create_slot</literal>、<literal>enabled</literal>
+          或 <literal>copy_data</literal> 设置为 <literal>true</literal> 组合使用。）
          </para>
 
          <para>
-          Since no connection is made when this option is
-          <literal>false</literal>, no tables are subscribed. To initiate
-          replication, you must manually create the replication slot, enable
-          the failover if required, enable the subscription, and refresh the
-          subscription. See
-          <xref linkend="logical-replication-subscription-examples-deferred-slot"/>
-          for examples.
+          由于此选项为 <literal>false</literal> 时不会建立连接，因此不会订阅任何表。要启动
+          复制，你必须手动创建复制槽，在需要时启用故障转移，启用订阅，并刷新
+          订阅。有关示例，请参见
+          <xref linkend="logical-replication-subscription-examples-deferred-slot"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -141,14 +124,11 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>create_slot</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the command should create the replication slot on
-          the publisher.  The default is <literal>true</literal>.
+          指定该命令是否应在发布端创建复制槽。默认值为 <literal>true</literal>。
          </para>
          <para>
-          If set to <literal>false</literal>, you are responsible for
-          creating the publisher's slot in some other way. See
-          <xref linkend="logical-replication-subscription-examples-deferred-slot"/>
-          for examples.
+          如果设置为 <literal>false</literal>，则由你负责以其他方式创建发布端的槽。有关示例，请参见
+          <xref linkend="logical-replication-subscription-examples-deferred-slot"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -157,9 +137,8 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>enabled</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the subscription should be actively replicating
-          or whether it should just be set up but not started yet.  The default
-          is <literal>true</literal>.
+          指定订阅是应该主动进行复制，还是只进行设置但尚未启动。默认值为
+          <literal>true</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -168,34 +147,15 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>slot_name</literal> (<type>string</type>)</term>
         <listitem>
          <para>
-          Name of the publisher's replication slot to use.  The default is
-          to use the name of the subscription for the slot name.
+          要使用的发布端复制槽的名称。默认使用订阅的名称作为槽名称。
          </para>
 
          <para>
-          Setting <literal>slot_name</literal> to <literal>NONE</literal>
-          means there will be no replication slot associated with the
-          subscription. Such subscriptions must also have both
-          <literal>enabled</literal> and <literal>create_slot</literal> set to
-          <literal>false</literal>.  Use this when you will be creating the
-          replication slot later manually. See
-          <xref linkend="logical-replication-subscription-examples-deferred-slot"/>
-          for examples.
+          将 <literal>slot_name</literal> 设置为 <literal>NONE</literal> 意味着该订阅不会关联任何复制槽。此类订阅还必须将 <literal>enabled</literal> 和 <literal>create_slot</literal> 都设置为 <literal>false</literal>。当你稍后要手动创建复制槽时，请使用此设置。有关示例，请参见 <xref linkend="logical-replication-subscription-examples-deferred-slot"/>。
          </para>
 
          <para>
-          When setting <literal>slot_name</literal> to a valid name and
-          <literal>create_slot</literal> to <literal>false</literal>, the
-          <literal>failover</literal> property value of the named slot may
-          differ from the counterpart <literal>failover</literal> parameter
-          specified in the subscription. Always ensure the slot property
-          <literal>failover</literal> matches the counterpart parameter of the
-          subscription and vice versa. Otherwise, the slot on the publisher may
-          behave differently from what these subscription options say: for
-          example, the slot on the publisher could either be synced to the
-          standbys even when the subscription's <literal>failover</literal>
-          option is disabled or could be disabled for sync even when the
-          subscription's <literal>failover</literal> option is enabled.
+          当把 <literal>slot_name</literal> 设置为一个有效名称、并把 <literal>create_slot</literal> 设置为 <literal>false</literal> 时，所指定槽的 <literal>failover</literal> 属性值可能与订阅中对应的 <literal>failover</literal> 参数不同。请始终确保槽属性 <literal>failover</literal> 与订阅的对应参数相匹配，反之亦然。否则，发布端上的槽的行为可能与这些订阅选项所声明的不同：例如，即使订阅的 <literal>failover</literal> 选项被禁用，发布端上的槽仍可能被同步到备机；或者即使订阅的 <literal>failover</literal> 选项被启用，该槽仍可能被禁止同步。
          </para>
         </listitem>
        </varlistentry>
@@ -203,8 +163,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
      </para>
 
      <para>
-      The following parameters control the subscription's replication
-      behavior after it has been created:
+      以下参数控制订阅创建之后的复制行为：
 
       <variablelist>
 
@@ -212,35 +171,15 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>binary</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the subscription will request the publisher to send
-          the data in binary format (as opposed to text). The default is
-          <literal>false</literal>. Any initial table synchronization copy
-          (see <literal>copy_data</literal>) also uses the same format. Binary
-          format can be faster than the text format, but it is less portable
-          across machine architectures and <productname>PostgreSQL</productname>
-          versions. Binary format is very data type specific; for example, it
-          will not allow copying from a <type>smallint</type> column to an
-          <type>integer</type> column, even though that would work fine in text
-          format. Even when this option is enabled, only data types having binary
-          send and receive functions will be transferred in binary. Note that
-          the initial synchronization requires all data types to have binary
-          send and receive functions, otherwise the synchronization will fail
-          (see <xref linkend="sql-createtype"/> for more about send/receive
-          functions).
+          指定订阅是否请求发布端以二进制格式（而非文本格式）发送数据。默认值为 <literal>false</literal>。任何初始表同步复制（参见 <literal>copy_data</literal>）也使用相同的格式。二进制格式可能比文本格式更快，但它在不同机器架构和 <productname>PostgreSQL</productname> 版本之间的可移植性较差。二进制格式与数据类型高度相关；例如，它不允许从 <type>smallint</type> 列复制到 <type>integer</type> 列，尽管在文本格式下这样做是可以的。即使启用了此选项，也只有具有二进制发送和接收函数的数据类型才会以二进制形式传输。请注意，初始同步要求所有数据类型都具有二进制发送和接收函数，否则同步将失败（有关发送/接收函数的更多信息，请参见 <xref linkend="sql-createtype"/>）。
          </para>
 
          <para>
-          When doing cross-version replication, it could be that the
-          publisher has a binary send function for some data type, but the
-          subscriber lacks a binary receive function for that type.  In
-          such a case, data transfer will fail, and
-          the <literal>binary</literal> option cannot be used.
+          在进行跨版本复制时，可能出现发布端对某种数据类型具有二进制发送函数，但订阅端缺少该类型的二进制接收函数的情况。在这种情况下，数据传输将失败，并且不能使用 <literal>binary</literal> 选项。
          </para>
 
          <para>
-          If the publisher is a <productname>PostgreSQL</productname> version
-          before 16, then any initial table synchronization will use text format
-          even if <literal>binary = true</literal>.
+          如果发布端是 16 之前的 <productname>PostgreSQL</productname> 版本，那么任何初始表同步都将使用文本格式，即使 <literal>binary = true</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -249,19 +188,13 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>copy_data</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether to copy pre-existing data in the publications
-          that are being subscribed to when the replication starts.
-          The default is <literal>true</literal>.
+          指定在复制启动时是否复制所订阅的发布中已存在的数据。默认值为 <literal>true</literal>。
          </para>
          <para>
-          If the publications contain <literal>WHERE</literal> clauses, it
-          will affect what data is copied. Refer to the
-          <xref linkend="sql-createsubscription-notes" /> for details.
+          如果发布包含 <literal>WHERE</literal> 子句，将影响复制哪些数据。详情请参阅 <xref linkend="sql-createsubscription-notes" />。
          </para>
          <para>
-          See <xref linkend="sql-createsubscription-notes"/> for details of how
-          <literal>copy_data = true</literal> can interact with the
-          <literal>origin</literal> parameter.
+          有关 <literal>copy_data = true</literal> 如何与 <literal>origin</literal> 参数相互作用的详细信息，请参阅 <xref linkend="sql-createsubscription-notes"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -270,33 +203,21 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>streaming</literal> (<type>enum</type>)</term>
         <listitem>
          <para>
-          Specifies whether to enable streaming of in-progress transactions
-          for this subscription.  The default value is <literal>parallel</literal>,
-          meaning incoming changes are directly applied via one of the parallel
-          apply workers, if available. If no parallel apply worker is free to
-          handle streaming transactions then the changes are written to
-          temporary files and applied after the transaction is committed. Note
-          that if an error happens in a parallel apply worker, the finish LSN
-          of the remote transaction might not be reported in the server log.
+          指定是否为此订阅启用进行中事务的流式传输。默认值为 <literal>parallel</literal>，表示传入的更改会通过某个并行应用工作者（如果可用）直接应用。如果没有空闲的并行应用工作者来处理流式事务，则更改会写入临时文件，并在事务提交后应用。请注意，如果并行应用工作者中发生错误，远程事务的结束 LSN 可能不会报告到服务器日志中。
          </para>
 
          <caution>
           <para>
-           There is a risk of deadlock when the schemas of the publisher and
-           subscriber differ, although such cases are rare. The apply worker
-           is equipped to retry these transactions automatically.
+           当发布端和订阅端的模式不同时，存在死锁的风险，尽管这类情况很少见。应用工作进程具备自动重试这些事务的能力。
           </para>
          </caution>
 
          <para>
-          If set to <literal>on</literal>, the incoming changes are written to
-          temporary files and then applied only after the transaction is
-          committed on the publisher and received by the subscriber.
+          如果设置为 <literal>on</literal>，传入的更改会被写入临时文件，只有在发布端事务提交并且订阅端接收到之后才会被应用。
          </para>
 
          <para>
-          If set to <literal>off</literal>, all transactions are fully decoded
-          on the publisher and only then sent to the subscriber as a whole.
+          如果设置为 <literal>off</literal>，所有事务都在发布端完整解码，然后才作为一个整体发送给订阅端。
          </para>
         </listitem>
        </varlistentry>
@@ -305,30 +226,15 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>synchronous_commit</literal> (<type>enum</type>)</term>
         <listitem>
          <para>
-          The value of this parameter overrides the
-          <xref linkend="guc-synchronous-commit"/> setting within this
-          subscription's apply worker processes.  The default value
-          is <literal>off</literal>.
+          此参数的值会覆盖此订阅的应用工作进程内的 <xref linkend="guc-synchronous-commit"/> 设置。默认值为 <literal>off</literal>。
          </para>
 
          <para>
-          It is safe to use <literal>off</literal> for logical replication:
-          If the subscriber loses transactions because of missing
-          synchronization, the data will be sent again from the publisher.
+          对逻辑复制使用 <literal>off</literal> 是安全的：如果订阅端因为缺少同步而丢失了事务，数据将再次从发布端发送。
          </para>
 
          <para>
-          A different setting might be appropriate when doing synchronous
-          logical replication.  The logical replication workers report the
-          positions of writes and flushes to the publisher, and when using
-          synchronous replication, the publisher will wait for the actual
-          flush.  This means that setting
-          <literal>synchronous_commit</literal> for the subscriber to
-          <literal>off</literal> when the subscription is used for
-          synchronous replication might increase the latency for
-          <command>COMMIT</command> on the publisher.  In this scenario, it
-          can be advantageous to set <literal>synchronous_commit</literal>
-          to <literal>local</literal> or higher.
+          在执行同步逻辑复制时，可能需要不同的设置。逻辑复制工作进程会向发布端报告写入和刷写的位置，而在使用同步复制时，发布端将等待实际的刷写。这意味着，当订阅用于同步复制时，为订阅端将 <literal>synchronous_commit</literal> 设置为 <literal>off</literal> 可能会增加发布端上 <command>COMMIT</command> 的延迟。在这种情况下，将 <literal>synchronous_commit</literal> 设置为 <literal>local</literal> 或更高可能是有利的。
          </para>
         </listitem>
        </varlistentry>
@@ -337,28 +243,16 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>two_phase</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether two-phase commit is enabled for this subscription.
-          The default is <literal>false</literal>.
+          指定是否为该订阅启用两阶段提交。默认值为 <literal>false</literal>。
          </para>
 
          <para>
-          When two-phase commit is enabled, prepared transactions are sent
-          to the subscriber at the time of <command>PREPARE
-          TRANSACTION</command>, and are processed as two-phase
-          transactions on the subscriber too.  Otherwise, prepared
-          transactions are sent to the subscriber only when committed, and
-          are then processed immediately by the subscriber.
+          启用两阶段提交时，预备事务会在 <command>PREPARE
+          TRANSACTION</command> 时发送给订阅者，并在订阅者上同样作为两阶段事务处理。否则，预备事务仅在提交时发送给订阅者，随后由订阅者立即处理。
          </para>
 
          <para>
-          The implementation of two-phase commit requires that replication
-          has successfully finished the initial table synchronization
-          phase. So even when <literal>two_phase</literal> is enabled for a
-          subscription, the internal two-phase state remains
-          temporarily <quote>pending</quote> until the initialization phase
-          completes. See column <structfield>subtwophasestate</structfield>
-          of <link linkend="catalog-pg-subscription"><structname>pg_subscription</structname></link>
-          to know the actual two-phase state.
+          两阶段提交的实现要求复制已成功完成初始表同步阶段。因此，即使为某个订阅启用了 <literal>two_phase</literal>，内部的二阶段状态也会暂时保持为 <quote>pending</quote>，直到初始化阶段完成。请参阅 <link linkend="catalog-pg-subscription"><structname>pg_subscription</structname></link> 的 <structfield>subtwophasestate</structfield> 列，以了解实际的二阶段状态。
          </para>
 
         </listitem>
@@ -368,10 +262,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>disable_on_error</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the subscription should be automatically disabled
-          if any errors are detected by subscription workers during data
-          replication from the publisher. The default is
-          <literal>false</literal>.
+          指定当订阅工作者在从发布者进行数据复制期间检测到任何错误时，是否应自动禁用该订阅。默认值为 <literal>false</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -380,12 +271,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>password_required</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          If set to <literal>true</literal>, connections to the publisher made
-          as a result of this subscription must use password authentication
-          and the password must be specified as a part of the connection
-          string. This setting is ignored when the subscription is owned by a
-          superuser.  The default is <literal>true</literal>. Only superusers
-          can set this value to <literal>false</literal>.
+          如果设置为 <literal>true</literal>，则作为该订阅的结果而建立的到发布者的连接必须使用密码认证，并且密码必须作为连接字符串的一部分指定。当订阅由超级用户拥有时，此设置会被忽略。默认值为 <literal>true</literal>。只有超级用户才能将此值设置为 <literal>false</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -394,12 +280,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>run_as_owner</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          If true, all replication actions are performed as the subscription
-          owner. If false, replication workers will perform actions on each
-          table as the owner of that table. The latter configuration is
-          generally much more secure; for details, see
-          <xref linkend="logical-replication-security" />.
-          The default is <literal>false</literal>.
+          如果为 true，所有复制操作都以订阅所有者的身份执行。如果为 false，复制工作者将以各表所有者的身份对每张表执行操作。后一种配置通常安全得多；详情请参见 <xref linkend="logical-replication-security" />。默认值为 <literal>false</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -408,18 +289,10 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>origin</literal> (<type>string</type>)</term>
         <listitem>
          <para>
-          Specifies whether the subscription will request the publisher to only
-          send changes that don't have an origin or send changes regardless of
-          origin. Setting <literal>origin</literal> to <literal>none</literal>
-          means that the subscription will request the publisher to only send
-          changes that don't have an origin. Setting <literal>origin</literal>
-          to <literal>any</literal> means that the publisher sends changes
-          regardless of their origin. The default is <literal>any</literal>.
+          指定订阅是否请求发布者只发送没有 origin 的更改，还是无论 origin 如何都发送更改。将 <literal>origin</literal> 设置为 <literal>none</literal> 表示订阅将请求发布者只发送没有 origin 的更改。将 <literal>origin</literal> 设置为 <literal>any</literal> 表示发布者无论更改的 origin 是什么都会发送。默认值为 <literal>any</literal>。
          </para>
          <para>
-          See <xref linkend="sql-createsubscription-notes"/> for details of how
-          <literal>copy_data = true</literal> can interact with the
-          <literal>origin</literal> parameter.
+          有关 <literal>copy_data = true</literal> 如何与 <literal>origin</literal> 参数交互的详细信息，请参见 <xref linkend="sql-createsubscription-notes"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -428,10 +301,7 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
         <term><literal>failover</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          Specifies whether the replication slots associated with the subscription
-          are enabled to be synced to the standbys so that logical
-          replication can be resumed from the new primary after failover.
-          The default is <literal>false</literal>.
+          指定与订阅关联的复制槽是否启用同步到备库，以便在故障转移后可以从新的主库恢复逻辑复制。默认值为 <literal>false</literal>。
          </para>
         </listitem>
        </varlistentry>
@@ -442,95 +312,45 @@ CREATE SUBSCRIPTION <replaceable class="parameter">subscription_name</replaceabl
   </variablelist>
 
   <para>
-   When specifying a parameter of type <type>boolean</type>, the
-   <literal>=</literal> <replaceable class="parameter">value</replaceable>
-   part can be omitted, which is equivalent to
-   specifying <literal>TRUE</literal>.
+   当指定类型为 <type>boolean</type> 的参数时，可以省略 <literal>=</literal> <replaceable class="parameter">value</replaceable> 部分，这等价于指定 <literal>TRUE</literal>。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createsubscription-notes" xreflabel="Notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   See <xref linkend="logical-replication-security"/> for details on
-   how to configure access control between the subscription and the
-   publication instance.
+   有关如何配置订阅与发布实例之间的访问控制的详细信息，请参见 <xref linkend="logical-replication-security"/>。
   </para>
 
   <para>
-   When creating a replication slot (the default behavior), <command>CREATE
-   SUBSCRIPTION</command> cannot be executed inside a transaction block.
+   在创建复制槽时（默认行为），<command>CREATE
+   SUBSCRIPTION</command> 不能在事务块内执行。
   </para>
 
   <para>
-   Creating a subscription that connects to the same database cluster (for
-   example, to replicate between databases in the same cluster or to replicate
-   within the same database) will only succeed if the replication slot is not
-   created as part of the same command.  Otherwise, the <command>CREATE
-   SUBSCRIPTION</command> call will hang.  To make this work, create the
-   replication slot separately (using the
-   function <function>pg_create_logical_replication_slot</function> with the
-   plugin name <literal>pgoutput</literal>) and create the subscription using
-   the parameter <literal>create_slot = false</literal>.  See
-   <xref linkend="logical-replication-subscription-examples-deferred-slot"/>
-   for examples. This is an implementation restriction that might be lifted in a
-   future release.
+   创建连接到同一数据库集簇的订阅（例如，在同一集簇中的数据库之间复制，或在同一数据库内复制）只有在复制槽不是作为同一条命令的一部分创建时才会成功。否则，<command>CREATE
+   SUBSCRIPTION</command> 调用将会挂起。要使其正常工作，请单独创建复制槽（使用函数 <function>pg_create_logical_replication_slot</function> 并指定插件名 <literal>pgoutput</literal>），并使用参数 <literal>create_slot = false</literal> 创建订阅。示例请参见 <xref linkend="logical-replication-subscription-examples-deferred-slot"/>。这是一项实现上的限制，可能会在未来的版本中取消。
   </para>
 
   <para>
-   If any table in the publication has a <literal>WHERE</literal> clause, rows
-   for which the <replaceable class="parameter">expression</replaceable>
-   evaluates to <literal>false</literal> or <literal>NULL</literal> will not be
-   published. If the subscription has
-   several publications in which the same table has been published with
-   different <literal>WHERE</literal> clauses, a row will be published if any
-   of the expressions (referring to that publish operation) are satisfied. In
-   the case of different <literal>WHERE</literal> clauses, if one of the
-   publications has no <literal>WHERE</literal> clause (referring to that
-   publish operation) or the publication is declared as
-   <link linkend="sql-createpublication-params-for-all-tables"><literal>FOR ALL TABLES</literal></link>
-   or <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link>,
-   rows are always published regardless of the definition of the other
-   expressions. If the subscriber is a <productname>PostgreSQL</productname>
-   version before 15, then any row filtering is ignored during the initial data
-   synchronization phase. For this case, the user might want to consider
-   deleting any initially copied data that would be incompatible with
-   subsequent filtering. Because initial data synchronization does not take
-   into account the publication
-   <link linkend="sql-createpublication-params-with-publish"><literal>publish</literal></link>
-   parameter when copying existing table data, some rows may be copied that
-   would not be replicated using DML. See
-   <xref linkend="logical-replication-subscription-examples"/> for examples.
+   如果发布中的任何表带有 <literal>WHERE</literal> 子句，则 <replaceable class="parameter">expression</replaceable> 求值为 <literal>false</literal> 或 <literal>NULL</literal> 的行将不会被发布。如果订阅包含多个发布，且同一张表在这些发布中以不同的 <literal>WHERE</literal> 子句发布，那么只要其中任一表达式（针对该发布操作）得到满足，该行就会被发布。对于不同的 <literal>WHERE</literal> 子句，如果其中一个发布没有 <literal>WHERE</literal> 子句（针对该发布操作），或者该发布被声明为 <link linkend="sql-createpublication-params-for-all-tables"><literal>FOR ALL TABLES</literal></link> 或 <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link>，则无论其他表达式如何定义，行始终会被发布。如果订阅方是 15 之前的 <productname>PostgreSQL</productname> 版本，那么在初始数据同步阶段会忽略任何行过滤。在这种情况下，用户可能需要考虑删除任何与后续过滤不兼容的初始复制数据。由于初始数据同步在复制现有表数据时不会考虑发布的 <link linkend="sql-createpublication-params-with-publish"><literal>publish</literal></link> 参数，因此可能会复制一些使用 DML 时不会被复制的行。示例请参见 <xref linkend="logical-replication-subscription-examples"/>。
   </para>
 
   <para>
-   Subscriptions having several publications in which the same table has been
-   published with different column lists are not supported.
+   不支持订阅包含多个发布、且同一张表在这些发布中以不同的列列表发布的情况。
   </para>
 
   <para>
-   We allow non-existent publications to be specified so that users can add
-   those later. This means
-   <link linkend="catalog-pg-subscription"><structname>pg_subscription</structname></link>
-   can have non-existent publications.
+   我们允许指定不存在的发布，以便用户稍后添加它们。这意味着 <link linkend="catalog-pg-subscription"><structname>pg_subscription</structname></link> 可以包含不存在的发布。
   </para>
 
   <para>
-   When using a subscription parameter combination of
-   <literal>copy_data = true</literal> and <literal>origin = NONE</literal>,
-   the initial sync table data is copied directly from the publisher, meaning
-   that knowledge of the true origin of that data is not possible. If the
-   publisher also has subscriptions then the copied table data might have
-   originated from further upstream. This scenario is detected and a WARNING is
-   logged to the user, but the warning is only an indication of a potential
-   problem; it is the user's responsibility to make the necessary checks to
-   ensure the copied data origins are really as wanted or not.
+   当使用 <literal>copy_data = true</literal> 和 <literal>origin = NONE</literal> 的订阅参数组合时，初始同步的表数据直接从发布端复制，这意味着无法得知该数据的真实来源。如果发布端本身也有订阅，那么复制的表数据可能源自更上游的节点。这种情况会被检测到，并向用户记录一条 WARNING，但该警告只是表明可能存在问题的提示；用户有责任进行必要的检查，以确保复制的数据来源确实符合预期。
   </para>
 
   <para>
-   To find which tables might potentially include non-local origins (due to
-   other subscriptions created on the publisher) try this SQL query:
+   要找出哪些表可能包含非本地来源（由于在发布端创建了其他订阅），请尝试以下 SQL 查询：
 <programlisting>
 # substitute &lt;pub-names&gt; below with your publication name(s) to be queried
 SELECT DISTINCT PT.schemaname, PT.tablename
@@ -548,13 +368,10 @@ WHERE C.relnamespace = N.oid AND
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Create a subscription to a remote server that replicates tables in
-   the publications <literal>mypublication</literal> and
-   <literal>insert_only</literal> and starts replicating immediately on
-   commit:
+   创建一个到远程服务器的订阅，复制 <literal>mypublication</literal> 和 <literal>insert_only</literal> 发布中的表，并在提交时立即开始复制：
 <programlisting>
 CREATE SUBSCRIPTION mysub
          CONNECTION 'host=192.168.1.50 port=5432 user=foo dbname=foodb'
@@ -563,9 +380,7 @@ CREATE SUBSCRIPTION mysub
   </para>
 
   <para>
-   Create a subscription to a remote server that replicates tables in
-   the <literal>insert_only</literal> publication and does not start replicating
-   until enabled at a later time.
+   创建一个到远程服务器的订阅，复制 <literal>insert_only</literal> 发布中的表，并且在稍后启用之前不开始复制。
 <programlisting>
 CREATE SUBSCRIPTION mysub
          CONNECTION 'host=192.168.1.50 port=5432 user=foo dbname=foodb'
@@ -575,16 +390,16 @@ CREATE SUBSCRIPTION mysub
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE SUBSCRIPTION</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>CREATE SUBSCRIPTION</command> 是一个 <productname>PostgreSQL</productname>
+   扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-altersubscription"/></member>
