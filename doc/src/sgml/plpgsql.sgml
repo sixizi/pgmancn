@@ -1014,11 +1014,7 @@ EXECUTE 'SELECT count(*) FROM mytable WHERE inserted_by = $1 AND inserted &lt;= 
     </para>
 
     <para>
-     Note that parameter symbols can only be used for data values
-     &mdash; if you want to use dynamically determined table or column
-     names, you must insert them into the command string textually.
-     For example, if the preceding query needed to be done against a
-     dynamically selected table, you could do this:
+     请注意，参数符号只能用于数据值 &mdash; 如果你想使用动态确定的表名或列名，就必须以文本方式将它们插入到命令字符串中。例如，如果前面的查询需要针对一个动态选择的表执行，你可以这样做：
 <programlisting>
 EXECUTE 'SELECT count(*) FROM '
     || quote_ident(tabname)
@@ -1026,16 +1022,14 @@ EXECUTE 'SELECT count(*) FROM '
    INTO c
    USING checked_user, checked_date;
 </programlisting>
-     A cleaner approach is to use <function>format()</function>'s <literal>%I</literal>
-     specification to insert table or column names with automatic quoting:
+    更简洁的方法是使用 <function>format()</function> 的 <literal>%I</literal> 规范来插入表名或列名并自动加引号：
 <programlisting>
 EXECUTE format('SELECT count(*) FROM %I '
    'WHERE inserted_by = $1 AND inserted &lt;= $2', tabname)
    INTO c
    USING checked_user, checked_date;
 </programlisting>
-     (This example relies on the SQL rule that string literals separated by a
-     newline are implicitly concatenated.)
+    （此示例依赖于这样一条 SQL 规则：由换行分隔的字符串字面量会被隐式拼接。）
     </para>
 
     <para>
@@ -1124,17 +1118,8 @@ EXECUTE 'UPDATE tbl SET '
     </para>
 
     <para>
-     This example demonstrates the use of the
-     <function>quote_ident</function> and
-     <function>quote_literal</function> functions (see <xref
-     linkend="functions-string"/>).  For safety, expressions containing column
-     or table identifiers should be passed through
-     <function>quote_ident</function> before insertion in a dynamic query.
-     Expressions containing values that should be literal strings in the
-     constructed command should be passed through <function>quote_literal</function>.
-     These functions take the appropriate steps to return the input text
-     enclosed in double or single quotes respectively, with any embedded
-     special characters properly escaped.
+     此示例演示了 <function>quote_ident</function> 和 <function>quote_literal</function> 函数的用法（参见 <xref
+     linkend="functions-string"/>）。为安全起见，包含列标识符或表标识符的表达式在插入动态查询之前应通过 <function>quote_ident</function> 处理。包含在构造的命令中应为字面字符串的值的表达式应通过 <function>quote_literal</function> 处理。这些函数会采取适当的步骤，分别返回用双引号或单引号括起来的输入文本，并正确转义其中嵌入的特殊字符。
     </para>
 
     <para>
@@ -2093,9 +2078,7 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
     </para>
 
     <para>
-     Another way to specify the query whose results should be iterated
-     through is to declare it as a cursor.  This is described in
-     <xref linkend="plpgsql-cursor-for-loop"/>.
+     指定应迭代其结果集的查询的另一种方式是将其声明为游标。这在 <xref linkend="plpgsql-cursor-for-loop"/> 中描述。
     </para>
    </sect2>
 
@@ -2814,8 +2797,7 @@ COMMIT;
     <title>遍历游标的结果</title>
 
     <para>
-     There is a variant of the <command>FOR</command> statement that allows
-     iterating through the rows returned by a cursor.  The syntax is:
+     <command>FOR</command> 语句有一个变体，允许遍历游标返回的行。语法为：
 
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
@@ -2824,14 +2806,8 @@ FOR <replaceable>recordvar</replaceable> IN <replaceable>bound_cursorvar</replac
 END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
 
-     The cursor variable must have been bound to some query when it was
-     declared, and it <emphasis>cannot</emphasis> be open already.  The
-     <command>FOR</command> statement automatically opens the cursor, and it closes
-     the cursor again when the loop exits.  A list of actual argument value
-     expressions must appear if and only if the cursor was declared to take
-     arguments.  These values will be substituted in the query, in just
-     the same way as during an <command>OPEN</command> (see <xref
-     linkend="plpgsql-open-bound-cursor"/>).
+    该游标变量在声明时必须已绑定到某个查询，并且它<emphasis>不能</emphasis>已经打开。<command>FOR</command> 语句会自动打开该游标，并在循环退出时再次关闭该游标。当且仅当游标被声明为接受参数时，必须出现实际参数值表达式列表。这些值将被替换到查询中，其方式与 <command>OPEN</command> 期间完全相同（参见 <xref
+     linkend="plpgsql-open-bound-cursor"/>）。
    </para>
 
    <para>
@@ -3869,20 +3845,8 @@ $$ LANGUAGE plpgsql;
    </para>
 
    <para>
-    <application>PL/pgSQL</application> (or more precisely, the SPI manager) can
-    furthermore attempt to cache the execution plan associated with any
-    particular prepared statement.  If a cached plan is not used, then
-    a fresh execution plan is generated on each visit to the statement,
-    and the current parameter values (that is, <application>PL/pgSQL</application>
-    variable values) can be used to optimize the selected plan.  If the
-    statement has no parameters, or is executed many times, the SPI manager
-    will consider creating a <firstterm>generic</firstterm> plan that is not dependent
-    on specific parameter values, and caching that for re-use.  Typically
-    this will happen only if the execution plan is not very sensitive to
-    the values of the <application>PL/pgSQL</application> variables referenced in it.
-    If it is, generating a plan each time is a net win.  See <xref
-    linkend="sql-prepare"/> for more information about the behavior of
-    prepared statements.
+    <application>PL/pgSQL</application>（更准确地说，是 SPI 管理器）还可以尝试缓存与任何特定预备语句相关联的执行计划。如果不使用缓存的计划，那么在每次访问该语句时都会生成一个新的执行计划，并且可以使用当前参数值（即 <application>PL/pgSQL</application> 变量值）来优化所选计划。如果该语句没有参数，或者被执行多次，SPI 管理器将考虑创建一个不依赖于特定参数值的<firstterm>通用</firstterm>计划，并将其缓存以供重复使用。通常，只有当执行计划对其中引用的 <application>PL/pgSQL</application> 变量的值不太敏感时，才会发生这种情况。如果执行计划对其敏感，那么每次生成计划总体上更有利。关于预备语句行为的更多信息，请参见 <xref
+    linkend="sql-prepare"/>。
    </para>
 
    <para>
