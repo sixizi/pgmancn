@@ -652,7 +652,7 @@ analyze threshold = analyze base threshold + analyze scale factor * number of tu
 
 
  <sect1 id="logfile-maintenance">
-  <title>Log File Maintenance</title>
+  <title>日志文件维护</title>
 
   <indexterm zone="logfile-maintenance">
    <primary>server log</primary>
@@ -660,68 +660,48 @@ analyze threshold = analyze base threshold + analyze scale factor * number of tu
   </indexterm>
 
   <para>
-   It is a good idea to save the database server's log output
-   somewhere, rather than just discarding it via <filename>/dev/null</filename>.
-   The log output is invaluable when diagnosing
-   problems.
+   最好把数据库服务器的日志输出保存到某个地方，而不是通过 <filename>/dev/null</filename> 直接丢弃。
+   在诊断问题时，日志输出是非常宝贵的。
   </para>
 
   <note>
    <para>
-    The server log can contain sensitive information and needs to be protected,
-    no matter how or where it is stored, or the destination to which it is routed.
-    For example, some DDL statements might contain plaintext passwords or other
-    authentication details. Logged statements at the <literal>ERROR</literal>
-    level might show the SQL source code for applications
-    and might also contain some parts of data rows. Recording data, events and
-    related information is the intended function of this facility, so this is
-    not a leakage or a bug. Please ensure the server logs are visible only to
-    appropriately authorized people.
+    服务器日志可能包含敏感信息，需要加以保护，无论它以何种方式、存储在何处，或者被路由到哪个目的地。
+    例如，某些 DDL 语句可能包含明文密码或其他认证细节。在 <literal>ERROR</literal>
+    级别记录的语句可能会显示应用程序的 SQL 源代码，
+    也可能包含数据行的某些部分。记录数据、事件及相关信息正是此功能的预期用途，因此这
+    不是泄漏，也不是缺陷。请确保服务器日志仅对获得适当授权的人员可见。
    </para>
   </note>
 
   <para>
-   Log output tends to be voluminous
-   (especially at higher debug levels) so you won't want to save it
-   indefinitely.  You need to <emphasis>rotate</emphasis> the log files so that
-   new log files are started and old ones removed after a reasonable
-   period of time.
+   日志输出往往数量庞大
+   （尤其是在较高的调试级别下），因此你不会希望无限期地保存它。你需要<emphasis>轮转</emphasis>日志文件，
+   以便启动新的日志文件，并在经过一段合理的时间后删除旧的日志文件。
   </para>
 
   <para>
-   If you simply direct the <systemitem>stderr</systemitem> of
-   <command>postgres</command> into a
-   file, you will have log output, but
-   the only way to truncate the log file is to stop and restart
-   the server. This might be acceptable if you are using
-   <productname>PostgreSQL</productname> in a development environment,
-   but few production servers would find this behavior acceptable.
+   如果你只是把
+   <command>postgres</command> 的 <systemitem>stderr</systemitem> 重定向到一个
+   文件，你确实会得到日志输出，但截断该日志文件的唯一办法是停止并重启
+   服务器。如果你在开发环境中使用
+   <productname>PostgreSQL</productname>，这也许可以接受，
+   但很少有生产服务器会觉得这种行为可以接受。
   </para>
 
   <para>
-   A better approach is to send the server's
-   <systemitem>stderr</systemitem> output to some type of log rotation program.
-   There is a built-in log rotation facility, which you can use by
-   setting the configuration parameter <varname>logging_collector</varname> to
-   <literal>true</literal> in <filename>postgresql.conf</filename>.  The control
-   parameters for this program are described in <xref
-   linkend="runtime-config-logging-where"/>. You can also use this approach
-   to capture the log data in machine readable <acronym>CSV</acronym>
-   (comma-separated values) format.
+   更好的做法是把服务器的
+   <systemitem>stderr</systemitem> 输出发送给某种日志轮转程序。
+   有一个内置的日志轮转功能，你可以在 <filename>postgresql.conf</filename> 中把配置参数 <varname>logging_collector</varname> 设置为
+   <literal>true</literal> 来使用它。该程序的控制
+   参数在 <xref
+   linkend="runtime-config-logging-where"/> 中描述。你也可以用这种方法
+   以机器可读的 <acronym>CSV</acronym>
+   （逗号分隔值）格式捕获日志数据。
   </para>
 
   <para>
-   Alternatively, you might prefer to use an external log rotation
-   program if you have one that you are already using with other
-   server software. For example, the <application>rotatelogs</application>
-   tool included in the <productname>Apache</productname> distribution
-   can be used with <productname>PostgreSQL</productname>.  One way to
-   do this is to pipe the server's
-   <systemitem>stderr</systemitem> output to the desired program.
-   If you start the server with
-   <command>pg_ctl</command>, then <systemitem>stderr</systemitem>
-   is already redirected to <systemitem>stdout</systemitem>, so you just need a
-   pipe command, for example:
+   另外，如果你已经有正在用于其他服务器软件的外部日志轮转程序，你可能更愿意使用它。例如，<productname>Apache</productname> 发行版中包含的 <application>rotatelogs</application> 工具就可以与 <productname>PostgreSQL</productname> 一起使用。一种做法是把服务器的 <systemitem>stderr</systemitem> 输出通过管道传给所需的程序。如果你用 <command>pg_ctl</command> 启动服务器，那么 <systemitem>stderr</systemitem> 已经被重定向到 <systemitem>stdout</systemitem>，所以你只需要一条管道命令，例如：
 
 <programlisting>
 pg_ctl start | rotatelogs /var/log/pgsql_log 86400
@@ -729,74 +709,33 @@ pg_ctl start | rotatelogs /var/log/pgsql_log 86400
   </para>
 
   <para>
-   You can combine these approaches by setting up <application>logrotate</application>
-   to collect log files produced by <productname>PostgreSQL</productname> built-in
-   logging collector.  In this case, the logging collector defines the names and
-   location of the log files, while <application>logrotate</application>
-   periodically archives these files.  When initiating log rotation,
-   <application>logrotate</application> must ensure that the application
-   sends further output to the new file.  This is commonly done with a
-   <literal>postrotate</literal> script that sends a <literal>SIGHUP</literal>
-   signal to the application, which then reopens the log file.
-   In <productname>PostgreSQL</productname>, you can run <command>pg_ctl</command>
-   with the <literal>logrotate</literal> option instead.  When the server receives
-   this command, the server either switches to a new log file or reopens the
-   existing file, depending on the logging configuration
-   (see <xref linkend="runtime-config-logging-where"/>).
+   你可以把这两种方法结合起来：设置 <application>logrotate</application> 来收集由 <productname>PostgreSQL</productname> 内置日志收集器产生的日志文件。在这种情况下，日志收集器定义日志文件的名称和位置，而 <application>logrotate</application> 定期归档这些文件。在启动日志轮转时，<application>logrotate</application> 必须确保应用程序把后续输出发送到新文件。通常的做法是使用一个 <literal>postrotate</literal> 脚本向应用程序发送 <literal>SIGHUP</literal> 信号，然后由应用程序重新打开日志文件。在 <productname>PostgreSQL</productname> 中，你可以改为带 <literal>logrotate</literal> 选项运行 <command>pg_ctl</command>。当服务器收到该命令时，服务器会根据日志配置切换到新的日志文件或重新打开现有文件（参见 <xref linkend="runtime-config-logging-where"/>）。
   </para>
 
   <note>
    <para>
-    When using static log file names, the server might fail to reopen the log
-    file if the max open file limit is reached or a file table overflow occurs.
-    In this case, log messages are sent to the old log file until a
-    successful log rotation. If <application>logrotate</application> is
-    configured to compress the log file and delete it, the server may lose
-    the messages logged in this time frame. To avoid this issue, you can
-    configure the logging collector to dynamically assign log file names
-    and use a <literal>prerotate</literal> script to ignore open log files.
+    使用静态日志文件名时，如果达到最大打开文件数限制或发生文件表溢出，服务器可能无法重新打开日志文件。在这种情况下，日志消息会被发送到旧的日志文件，直到日志轮转成功为止。如果 <application>logrotate</application> 被配置为压缩日志文件并将其删除，服务器可能会丢失在这段时间内记录的日志消息。为避免此问题，你可以配置日志收集器动态分配日志文件名，并使用 <literal>prerotate</literal> 脚本忽略已打开的日志文件。
     </para>
   </note>
 
   <para>
-   Another production-grade approach to managing log output is to
-   send it to <application>syslog</application> and let
-   <application>syslog</application> deal with file rotation. To do this, set the
-   configuration parameter <varname>log_destination</varname> to <literal>syslog</literal>
-   (to log to <application>syslog</application> only) in
-   <filename>postgresql.conf</filename>. Then you can send a <literal>SIGHUP</literal>
-   signal to the <application>syslog</application> daemon whenever you want to force it
-   to start writing a new log file.  If you want to automate log
-   rotation, the <application>logrotate</application> program can be
-   configured to work with log files from
-   <application>syslog</application>.
+   另一种生产级的日志输出管理方法是把日志发送到 <application>syslog</application>，让 <application>syslog</application> 处理文件轮转。为此，在 <filename>postgresql.conf</filename> 中把配置参数 <varname>log_destination</varname> 设置为 <literal>syslog</literal>（即只记录到 <application>syslog</application>）。然后，每当你想强制 <application>syslog</application> 守护进程开始写入新的日志文件时，就可以向它发送 <literal>SIGHUP</literal> 信号。如果你想自动化日志轮转，可以把 <application>logrotate</application> 程序配置为处理来自 <application>syslog</application> 的日志文件。
   </para>
 
   <para>
-   On many systems, however, <application>syslog</application> is not very reliable,
-   particularly with large log messages; it might truncate or drop messages
-   just when you need them the most.  Also, on <productname>Linux</productname>,
-   <application>syslog</application> will flush each message to disk, yielding poor
-   performance.  (You can use a <quote><literal>-</literal></quote> at the start of the file name
-   in the <application>syslog</application> configuration file to disable syncing.)
+   然而，在许多系统上，<application>syslog</application> 并不十分可靠，尤其是对于大型日志消息；它可能恰好在您最需要消息的时候截断或丢弃消息。此外，在 <productname>Linux</productname> 上，<application>syslog</application> 会将每条消息刷新到磁盘，从而导致性能不佳。（您可以在 <application>syslog</application> 配置文件中文件名的开头使用 <quote><literal>-</literal></quote> 来禁用同步。）
   </para>
 
   <para>
-   Note that all the solutions described above take care of starting new
-   log files at configurable intervals, but they do not handle deletion
-   of old, no-longer-useful log files.  You will probably want to set
-   up a batch job to periodically delete old log files.  Another possibility
-   is to configure the rotation program so that old log files are overwritten
-   cyclically.
+   请注意，上述所有解决方案都会按可配置的时间间隔启动新的日志文件，但它们不处理删除旧的、不再有用的日志文件。您可能需要设置一个批处理作业来定期删除旧的日志文件。另一种可能是配置轮转程序，以便循环覆盖旧的日志文件。
   </para>
 
   <para>
    <ulink url="https://pgbadger.darold.net/"><productname>pgBadger</productname></ulink>
-   is an external project that does sophisticated log file analysis.
+   是一个外部项目，可进行复杂的日志文件分析。
    <ulink
    url="https://bucardo.org/check_postgres/"><productname>check_postgres</productname></ulink>
-   provides Nagios alerts when important messages appear in the log
-   files, as well as detection of many other extraordinary conditions.
+   在日志文件中出现重要消息时提供 Nagios 警报，并且还能检测许多其他异常情况。
   </para>
  </sect1>
 </chapter>
