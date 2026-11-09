@@ -880,89 +880,42 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
   </sect1>
 
   <sect1 id="warm-standby-failover">
-   <title>Failover</title>
+   <title>故障转移</title>
 
    <para>
-    If the primary server fails then the standby server should begin
-    failover procedures.
+    如果主服务器发生故障，那么后备服务器应开始执行故障转移过程。
    </para>
 
    <para>
-    If the standby server fails then no failover need take place. If the
-    standby server can be restarted, even some time later, then the recovery
-    process can also be restarted immediately, taking advantage of
-    restartable recovery. If the standby server cannot be restarted, then a
-    full new standby server instance should be created.
+    如果后备服务器发生故障，则无需进行故障转移。如果后备服务器能够重启，即使是在一段时间之后，那么恢复过程也可以立即重新开始，从而利用可重启的恢复机制。如果后备服务器无法重启，则应创建一个全新的后备服务器实例。
    </para>
 
    <para>
-    If the primary server fails and the standby server becomes the
-    new primary, and then the old primary restarts, you must have
-    a mechanism for informing the old primary that it is no longer the primary. This is
-    sometimes known as <acronym>STONITH</acronym> (Shoot The Other Node In The Head), which is
-    necessary to avoid situations where both systems think they are the
-    primary, which will lead to confusion and ultimately data loss.
+    如果主服务器发生故障，后备服务器成为新的主服务器，然后旧的主服务器重新启动，那么您必须有一种机制来通知旧的主服务器它不再是主服务器。这有时被称为 <acronym>STONITH</acronym>（Shoot The Other Node In The Head，即“击中另一节点的头部”），它是必要的，以避免两个系统都认为自己是主服务器的情况，这种情况会导致混乱并最终造成数据丢失。
    </para>
 
    <para>
-    Many failover systems use just two systems, the primary and the standby,
-    connected by some kind of heartbeat mechanism to continually verify the
-    connectivity between the two and the viability of the primary. It is
-    also possible to use a third system (called a witness server) to prevent
-    some cases of inappropriate failover, but the additional complexity
-    might not be worthwhile unless it is set up with sufficient care and
-    rigorous testing.
+    许多故障转移系统只使用两个系统，即主服务器和后备服务器，通过某种心跳机制连接，以持续验证两者之间的连通性以及主服务器的可用性。也可以使用第三个系统（称为见证服务器）来防止某些不恰当的故障转移情况，但除非经过充分的精心设置和严格的测试，否则增加的复杂性可能并不值得。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> does not provide the system
-    software required to identify a failure on the primary and notify
-    the standby database server.  Many such tools exist and are well
-    integrated with the operating system facilities required for
-    successful failover, such as IP address migration.
+    <productname>PostgreSQL</productname> 不提供用于识别主服务器上的故障并通知后备数据库服务器所需的系统软件。存在许多此类工具，它们与成功进行故障转移所需的操作系统设施（例如 IP 地址迁移）良好集成。
    </para>
 
    <para>
-    Once failover to the standby occurs, there is only a
-    single server in operation. This is known as a degenerate state.
-    The former standby is now the primary, but the former primary is down
-    and might stay down.  To return to normal operation, a standby server
-    must be recreated,
-    either on the former primary system when it comes up, or on a third,
-    possibly new, system. The <xref linkend="app-pgrewind"/> utility can be
-    used to speed up this process on large clusters.
-    Once complete, the primary and standby can be
-    considered to have switched roles. Some people choose to use a third
-    server to provide backup for the new primary until the new standby
-    server is recreated,
-    though clearly this complicates the system configuration and
-    operational processes.
+    一旦切换到备用服务器发生，就只有一个服务器在运行。这被称为退化状态。原来的备用服务器现在是主服务器，但原来的主服务器已停机，并且可能一直保持停机状态。要恢复正常运行，必须重新创建一台备用服务器，可以在原来的主服务器系统启动时在其上重建，也可以在一个第三方的、可能是新的系统上重建。在大规模数据库集簇上，可以使用 <xref linkend="app-pgrewind"/> 工具来加速此过程。一旦完成，就可以认为主服务器和备用服务器已经交换了角色。有些人选择使用第三台服务器为新主服务器提供备份，直到新的备用服务器被重新创建，不过显然这会使系统配置和操作流程变得复杂。
    </para>
 
    <para>
-    So, switching from primary to standby server can be fast but requires
-    some time to re-prepare the failover cluster. Regular switching from
-    primary to standby is useful, since it allows regular downtime on
-    each system for maintenance. This also serves as a test of the
-    failover mechanism to ensure that it will really work when you need it.
-    Written administration procedures are advised.
+    因此，从主服务器切换到备用服务器可能很快，但需要一些时间来重新准备故障转移集簇。定期从主服务器切换到备用服务器是有用的，因为它允许每个系统定期停机进行维护。这也可以作为对故障转移机制的测试，以确保在你需要时它真的能工作。建议编写书面的管理流程。
    </para>
 
    <para>
-    If you have opted for logical replication slot synchronization (see
-    <xref linkend="logicaldecoding-replication-slots-synchronization"/>),
-    then before switching to the standby server, it is recommended to check
-    if the logical slots synchronized on the standby server are ready
-    for failover. This can be done by following the steps described in
-    <xref linkend="logical-replication-failover"/>.
+    如果你选择了逻辑复制槽同步（参见 <xref linkend="logicaldecoding-replication-slots-synchronization"/>），那么在切换到备用服务器之前，建议检查在备用服务器上同步的逻辑槽是否已准备好进行故障转移。这可以通过遵循 <xref linkend="logical-replication-failover"/> 中描述的步骤来完成。
    </para>
 
    <para>
-    To trigger failover of a log-shipping standby server, run
-    <command>pg_ctl promote</command> or call <function>pg_promote()</function>.
-    If you're setting up reporting servers that are only used to offload
-    read-only queries from the primary, not for high availability purposes,
-    you don't need to promote.
+    要触发日志传送备用服务器的故障转移，请运行 <command>pg_ctl promote</command> 或调用 <function>pg_promote()</function>。如果你正在设置仅用于从主服务器卸载只读查询、而非用于高可用性目的的报告服务器，则不需要提升。
    </para>
   </sect1>
 
