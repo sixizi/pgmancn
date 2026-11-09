@@ -1157,7 +1157,7 @@ CREATE TABLE circles (
  </sect1>
 
  <sect1 id="ddl-alter">
-  <title>Modifying Tables</title>
+  <title>修改表</title>
 
   <indexterm zone="ddl-alter">
    <primary>table</primary>
@@ -1165,44 +1165,36 @@ CREATE TABLE circles (
   </indexterm>
 
   <para>
-   When you create a table and you realize that you made a mistake, or
-   the requirements of the application change, you can drop the
-   table and create it again.  But this is not a convenient option if
-   the table is already filled with data, or if the table is
-   referenced by other database objects (for instance a foreign key
-   constraint).  Therefore <productname>PostgreSQL</productname>
-   provides a family of commands to make modifications to existing
-   tables.  Note that this is conceptually distinct from altering
-   the data contained in the table: here we are interested in altering
-   the definition, or structure, of the table.
+   当你创建了一个表之后，如果发现犯了错误，或者应用的需求发生了变化，你可以删除该表并重新创建它。但如果表中已经填满了数据，或者该表被其他数据库对象（例如外键约束）引用，这就不是一个方便的选择。因此，<productname>PostgreSQL</productname>
+ 提供了一系列命令来对已有的表进行修改。请注意，这与修改表中包含的数据在概念上是不同的：这里我们关心的是修改表的定义或结构。
   </para>
 
   <para>
    You can:
    <itemizedlist spacing="compact">
     <listitem>
-     <para>Add columns</para>
+     <para>增加列</para>
     </listitem>
     <listitem>
-     <para>Remove columns</para>
+     <para>删除列</para>
     </listitem>
     <listitem>
-     <para>Add constraints</para>
+     <para>增加约束</para>
     </listitem>
     <listitem>
-     <para>Remove constraints</para>
+     <para>删除约束</para>
     </listitem>
     <listitem>
-     <para>Change default values</para>
+     <para>更改默认值</para>
     </listitem>
     <listitem>
-     <para>Change column data types</para>
+     <para>更改列数据类型</para>
     </listitem>
     <listitem>
-     <para>Rename columns</para>
+     <para>重命名列</para>
     </listitem>
     <listitem>
-     <para>Rename tables</para>
+     <para>重命名表</para>
     </listitem>
    </itemizedlist>
 
@@ -1213,7 +1205,7 @@ CREATE TABLE circles (
   </para>
 
   <sect2 id="ddl-alter-adding-a-column">
-   <title>Adding a Column</title>
+   <title>添加列</title>
 
    <indexterm>
     <primary>column</primary>
@@ -1221,53 +1213,35 @@ CREATE TABLE circles (
    </indexterm>
 
    <para>
-    To add a column, use a command like:
+    要添加列，请使用类似这样的命令：
 <programlisting>
 ALTER TABLE products ADD COLUMN description text;
 </programlisting>
-    The new column is initially filled with whatever default
-    value is given (null if you don't specify a <literal>DEFAULT</literal> clause).
+    新列最初会填充所给定的任何默认值（如果没有指定 <literal>DEFAULT</literal> 子句，则为 null）。
    </para>
 
    <tip>
     <para>
-     Adding a column with a constant default value does not require each row of
-     the table to be updated when the <command>ALTER TABLE</command> statement
-     is executed. Instead, the default value will be returned the next time
-     the row is accessed, and applied when the table is rewritten, making
-     the <command>ALTER TABLE</command> very fast even on large tables.
+     添加带有常量默认值的列时，在执行 <command>ALTER TABLE</command> 语句时不需要更新表中的每一行。相反，默认值将在下次访问该行时返回，并在表被重写时应用，这使得 <command>ALTER TABLE</command> 即使在大表上也非常快。
     </para>
 
     <para>
-     If the default value is volatile (e.g., <function>clock_timestamp()</function>)
-     each row will need to be updated with the value calculated at the time
-     <command>ALTER TABLE</command> is executed. To avoid a potentially
-     lengthy update operation, particularly if you intend to fill the column
-     with mostly nondefault values anyway, it may be preferable to add the
-     column with no default, insert the correct values using
-     <command>UPDATE</command>, and then add any desired default as described
-     below.
+     如果默认值是易变的（例如 <function>clock_timestamp()</function>），则每一行都需要用执行 <command>ALTER TABLE</command> 时计算出的值来更新。为了避免可能耗时的更新操作，特别是如果您打算无论如何都要用大部分非默认值来填充该列，那么最好先添加没有默认值的列，使用 <command>UPDATE</command> 插入正确的值，然后如下文所述添加所需的默认值。
     </para>
    </tip>
 
    <para>
-    You can also define constraints on the column at the same time,
-    using the usual syntax:
+    您也可以同时在该列上定义约束，使用通常的语法：
 <programlisting>
 ALTER TABLE products ADD COLUMN description text CHECK (description &lt;&gt; '');
 </programlisting>
-    In fact all the options that can be applied to a column description
-    in <command>CREATE TABLE</command> can be used here.  Keep in mind however
-    that the default value must satisfy the given constraints, or the
-    <literal>ADD</literal> will fail.  Alternatively, you can add
-    constraints later (see below) after you've filled in the new column
-    correctly.
+    事实上，在 <command>CREATE TABLE</command> 中可用于列描述的所有选项都可以在这里使用。但请记住，默认值必须满足给定的约束，否则 <literal>ADD</literal> 将失败。或者，您也可以在正确地填充新列之后再添加约束（见下文）。
    </para>
 
   </sect2>
 
   <sect2 id="ddl-alter-removing-a-column">
-   <title>Removing a Column</title>
+   <title>删除列</title>
 
    <indexterm>
     <primary>column</primary>
@@ -1275,26 +1249,20 @@ ALTER TABLE products ADD COLUMN description text CHECK (description &lt;&gt; '')
    </indexterm>
 
    <para>
-    To remove a column, use a command like:
+    要删除一列，请使用如下命令：
 <programlisting>
 ALTER TABLE products DROP COLUMN description;
 </programlisting>
-    Whatever data was in the column disappears.  Table constraints involving
-    the column are dropped, too.  However, if the column is referenced by a
-    foreign key constraint of another table,
-    <productname>PostgreSQL</productname> will not silently drop that
-    constraint.  You can authorize dropping everything that depends on
-    the column by adding <literal>CASCADE</literal>:
+    该列中原有的任何数据都会消失。涉及该列的表约束也会被删除。但是，如果该列被另一个表的外键约束所引用，<productname>PostgreSQL</productname> 不会悄悄地删除该约束。您可以通过添加 <literal>CASCADE</literal> 来授权删除所有依赖于该列的对象：
 <programlisting>
 ALTER TABLE products DROP COLUMN description CASCADE;
 </programlisting>
-    See <xref linkend="ddl-depend"/> for a description of the general
-    mechanism behind this.
+    有关这背后的一般机制的描述，请参见 <xref linkend="ddl-depend"/>。
    </para>
   </sect2>
 
   <sect2 id="ddl-alter-adding-a-constraint">
-   <title>Adding a Constraint</title>
+   <title>添加约束</title>
 
    <indexterm>
     <primary>constraint</primary>
@@ -1302,7 +1270,7 @@ ALTER TABLE products DROP COLUMN description CASCADE;
    </indexterm>
 
    <para>
-    To add a constraint, the table constraint syntax is used.  For example:
+    要添加约束，使用表约束语法。例如：
 <programlisting>
 ALTER TABLE products ADD CHECK (name &lt;&gt; '');
 ALTER TABLE products ADD CONSTRAINT some_name UNIQUE (product_no);
@@ -1311,23 +1279,20 @@ ALTER TABLE products ADD FOREIGN KEY (product_group_id) REFERENCES product_group
    </para>
 
    <para>
-    To add a not-null constraint, which is normally not written as a table
-    constraint, this special syntax is available:
+    要添加非空约束（通常不写成表约束），可以使用这种特殊语法：
 <programlisting>
 ALTER TABLE products ALTER COLUMN product_no SET NOT NULL;
 </programlisting>
-    This command silently does nothing if the column already has a
-    not-null constraint.
+如果该列已经具有非空约束，此命令会静默地不做任何事。
    </para>
 
    <para>
-    The constraint will be checked immediately, so the table data must
-    satisfy the constraint before it can be added.
+    该约束将被立即检查，因此表数据必须在添加约束之前就满足该约束。
    </para>
   </sect2>
 
   <sect2 id="ddl-alter-removing-a-constraint">
-   <title>Removing a Constraint</title>
+   <title>移除约束</title>
 
    <indexterm>
     <primary>constraint</primary>
@@ -1335,40 +1300,28 @@ ALTER TABLE products ALTER COLUMN product_no SET NOT NULL;
    </indexterm>
 
    <para>
-    To remove a constraint you need to know its name.  If you gave it
-    a name then that's easy.  Otherwise the system assigned a
-    generated name, which you need to find out.  The
-    <application>psql</application> command <literal>\d
-    <replaceable>tablename</replaceable></literal> can be helpful
-    here; other interfaces might also provide a way to inspect table
-    details.  Then the command is:
+    要移除约束，你需要知道它的名称。如果你曾为它指定名称，那就很容易。否则系统会分配一个生成的名称，你需要找出它。<application>psql</application> 命令 <literal>\d
+    <replaceable>tablename</replaceable></literal> 在这里会很有帮助；其他接口也可能提供检查表详细信息的方法。然后命令是：
 <programlisting>
 ALTER TABLE products DROP CONSTRAINT some_name;
 </programlisting>
    </para>
 
    <para>
-    As with dropping a column, you need to add <literal>CASCADE</literal> if you
-    want to drop a constraint that something else depends on.  An example
-    is that a foreign key constraint depends on a unique or primary key
-    constraint on the referenced column(s).
+    与删除列一样，如果你想删除某个被其他对象依赖的约束，则需要加上 <literal>CASCADE</literal>。一个例子是，外键约束依赖于被引用列上的唯一约束或主键约束。
    </para>
 
    <para>
-    Simplified syntax is available to drop a not-null constraint:
+    可以使用简化语法删除非空约束：
 <programlisting>
 ALTER TABLE products ALTER COLUMN product_no DROP NOT NULL;
 </programlisting>
-    This mirrors the <literal>SET NOT NULL</literal> syntax for adding a
-    not-null constraint.  This command will silently do nothing if the column
-    does not have a not-null constraint.  (Recall that a column can have at
-    most one not-null constraint, so it is never ambiguous which constraint
-    this command acts on.)
+    这与用于添加非空约束的 <literal>SET NOT NULL</literal> 语法相对应。如果该列没有非空约束，此命令将静默地不做任何事。（回想一下，一个列最多只能有一个非空约束，因此此命令作用于哪个约束从来不会有歧义。）
    </para>
   </sect2>
 
   <sect2 id="ddl-alter-column-default">
-   <title>Changing a Column's Default Value</title>
+   <title>更改列的默认值</title>
 
    <indexterm>
     <primary>default value</primary>
@@ -1376,28 +1329,24 @@ ALTER TABLE products ALTER COLUMN product_no DROP NOT NULL;
    </indexterm>
 
    <para>
-    To set a new default for a column, use a command like:
+    要为列设置新的默认值，请使用类似这样的命令：
 <programlisting>
 ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;
 </programlisting>
-    Note that this doesn't affect any existing rows in the table, it
-    just changes the default for future <command>INSERT</command> commands.
+    请注意，这不会影响表中的任何现有行，它只是更改未来 <command>INSERT</command> 命令的默认值。
    </para>
 
    <para>
-    To remove any default value, use:
+    要移除任何默认值，请使用：
 <programlisting>
 ALTER TABLE products ALTER COLUMN price DROP DEFAULT;
 </programlisting>
-    This is effectively the same as setting the default to null.
-    As a consequence, it is not an error
-    to drop a default where one hadn't been defined, because the
-    default is implicitly the null value.
+    这实际上等同于将默认值设置为 null。因此，删除一个并未定义过的默认值并不是错误，因为默认值隐含为 null 值。
    </para>
   </sect2>
 
   <sect2 id="ddl-alter-column-type">
-   <title>Changing a Column's Data Type</title>
+   <title>更改列的数据类型</title>
 
    <indexterm>
     <primary>column data type</primary>
@@ -1405,28 +1354,20 @@ ALTER TABLE products ALTER COLUMN price DROP DEFAULT;
    </indexterm>
 
    <para>
-    To convert a column to a different data type, use a command like:
+    要将列转换为不同的数据类型，请使用类似这样的命令：
 <programlisting>
 ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
 </programlisting>
-    This will succeed only if each existing entry in the column can be
-    converted to the new type by an implicit cast.  If a more complex
-    conversion is needed, you can add a <literal>USING</literal> clause that
-    specifies how to compute the new values from the old.
+    只有当该列中的每个现有条目都能通过隐式转换转换为新类型时，此操作才会成功。如果需要更复杂的转换，可以添加一个 <literal>USING</literal> 子句，指定如何从旧值计算新值。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> will attempt to convert the column's
-    default value (if any) to the new type, as well as any constraints
-    that involve the column.  But these conversions might fail, or might
-    produce surprising results.  It's often best to drop any constraints
-    on the column before altering its type, and then add back suitably
-    modified constraints afterwards.
+    <productname>PostgreSQL</productname> 会尝试将该列的默认值（如果有）以及涉及该列的任何约束转换为新类型。但这些转换可能会失败，或者可能产生令人意外的结果。通常最好在更改列类型之前删除该列上的所有约束，然后再添加回经过适当修改的约束。
    </para>
   </sect2>
 
   <sect2 id="ddl-alter-renaming-column">
-   <title>Renaming a Column</title>
+   <title>重命名列</title>
 
    <indexterm>
     <primary>column</primary>
@@ -1434,7 +1375,7 @@ ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
    </indexterm>
 
    <para>
-    To rename a column:
+    要重命名一个列：
 <programlisting>
 ALTER TABLE products RENAME COLUMN product_no TO product_number;
 </programlisting>
@@ -1442,7 +1383,7 @@ ALTER TABLE products RENAME COLUMN product_no TO product_number;
   </sect2>
 
   <sect2 id="ddl-alter-renaming-table">
-   <title>Renaming a Table</title>
+   <title>重命名表</title>
 
    <indexterm>
     <primary>table</primary>
@@ -1450,7 +1391,7 @@ ALTER TABLE products RENAME COLUMN product_no TO product_number;
    </indexterm>
 
    <para>
-    To rename a table:
+    要重命名一个表：
 <programlisting>
 ALTER TABLE products RENAME TO items;
 </programlisting>
