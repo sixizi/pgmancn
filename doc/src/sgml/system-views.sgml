@@ -236,29 +236,25 @@
   </indexterm>
 
   <para>
-   The <structname>pg_aios</structname> view lists all <xref
-   linkend="glossary-aio"/> handles that are currently in-use.  An I/O handle
-   is used to reference an I/O operation that is being prepared, executed or
-   is in the process of completing.  <structname>pg_aios</structname> contains
-   one row for each I/O handle.
+   <structname>pg_aios</structname> 视图列出当前正在使用的所有 <xref
+   linkend="glossary-aio"/> 句柄。I/O 句柄用于引用正在准备、执行或正在完成过程中的 I/O 操作。<structname>pg_aios</structname> 为每个 I/O 句柄包含一行。
   </para>
 
   <para>
-   This view is mainly useful for developers of
-   <productname>PostgreSQL</productname>, but may also be useful when tuning
-   <productname>PostgreSQL</productname>.
+   此视图主要对 <productname>PostgreSQL</productname> 的开发者有用，但在调优
+   <productname>PostgreSQL</productname> 时也可能有用。
   </para>
 
   <table>
-   <title><structname>pg_aios</structname> Columns</title>
+   <title><structname>pg_aios</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -269,7 +265,7 @@
        <structfield>pid</structfield> <type>int4</type>
       </para>
       <para>
-       Process ID of the server process that is issuing this I/O.
+       发出此 I/O 的服务器进程的进程 ID。
       </para></entry>
      </row>
 
@@ -278,12 +274,11 @@
        <structfield>io_id</structfield> <type>int4</type>
       </para>
       <para>
-       Identifier of the I/O handle. Handles are reused once the I/O
-       completed (or if the handle is released before I/O is started). On reuse
+       I/O 句柄的标识符。一旦 I/O 完成（或者如果在 I/O 开始之前句柄被释放），句柄就会被重用。重用时，
        <link linkend="view-pg-aios-io-generation">
         <structname>pg_aios</structname>.<structfield>io_generation</structfield>
        </link>
-       is incremented.
+       会递增。
       </para></entry>
      </row>
 
@@ -292,7 +287,7 @@
        <structfield>io_generation</structfield> <type>int8</type>
       </para>
       <para>
-       Generation of the I/O handle.
+       I/O 句柄的代次。
       </para></entry>
      </row>
 
@@ -301,41 +296,41 @@
        <structfield>state</structfield> <type>text</type>
       </para>
       <para>
-       State of the I/O handle:
+       I/O 句柄的状态：
        <itemizedlist>
         <listitem>
          <para>
-          <literal>HANDED_OUT</literal>, referenced by code but not yet used
+          <literal>HANDED_OUT</literal>，被代码引用但尚未使用
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>DEFINED</literal>, information necessary for execution is known
+          <literal>DEFINED</literal>，执行所需的信息已知
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>STAGED</literal>, ready for execution
+          <literal>STAGED</literal>，已准备好执行
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>SUBMITTED</literal>, submitted for execution
+          <literal>SUBMITTED</literal>，已提交执行
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>COMPLETED_IO</literal>, finished, but result has not yet been processed
+          <literal>COMPLETED_IO</literal>，已完成，但结果尚未处理
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>COMPLETED_SHARED</literal>, shared completion processing completed
+          <literal>COMPLETED_SHARED</literal>，共享完成处理已完成
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>COMPLETED_LOCAL</literal>, backend local completion processing completed
+          <literal>COMPLETED_LOCAL</literal>，后端本地完成处理已完成
          </para>
         </listitem>
        </itemizedlist>
@@ -347,21 +342,21 @@
        <structfield>operation</structfield> <type>text</type>
       </para>
       <para>
-       Operation performed using the I/O handle:
+       使用 I/O 句柄执行的操作：
        <itemizedlist>
         <listitem>
          <para>
-          <literal>invalid</literal>, not yet known
+          <literal>invalid</literal>，尚不清楚
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>readv</literal>, a vectored read
+          <literal>readv</literal>，向量化读
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>writev</literal>, a vectored write
+          <literal>writev</literal>，向量化写
          </para>
         </listitem>
        </itemizedlist>
@@ -373,7 +368,7 @@
        <structfield>off</structfield> <type>int8</type>
       </para>
       <para>
-       Offset of the I/O operation.
+       I/O 操作的偏移量。
       </para></entry>
      </row>
 
@@ -382,7 +377,7 @@
        <structfield>length</structfield> <type>int8</type>
       </para>
       <para>
-       Length of the I/O operation.
+       I/O 操作的长度。
       </para></entry>
      </row>
 
@@ -391,11 +386,11 @@
        <structfield>target</structfield> <type>text</type>
       </para>
       <para>
-       What kind of object is the I/O targeting:
+       I/O 所针对的对象类型：
        <itemizedlist spacing="compact">
         <listitem>
          <para>
-          <literal>smgr</literal>, I/O on relations
+          <literal>smgr</literal>，对关系的 I/O
          </para>
         </listitem>
        </itemizedlist>
@@ -407,10 +402,8 @@
        <structfield>handle_data_len</structfield> <type>int2</type>
       </para>
       <para>
-       Length of the data associated with the I/O operation. For I/O to/from
-       <xref linkend="guc-shared-buffers"/> and <xref
-       linkend="guc-temp-buffers"/>, this indicates the number of buffers the
-       I/O is operating on.
+       与 I/O 操作相关联的数据长度。对于发往 <xref linkend="guc-shared-buffers"/> 和 <xref
+       linkend="guc-temp-buffers"/> 或从它们发出的 I/O，这表示该 I/O 所操作的缓冲区数量。
       </para></entry>
      </row>
 
@@ -419,8 +412,7 @@
        <structfield>raw_result</structfield> <type>int4</type>
       </para>
       <para>
-       Low-level result of the I/O operation, or NULL if the operation has not
-       yet completed.
+       I/O 操作的底层结果，如果操作尚未完成则为 NULL。
       </para></entry>
      </row>
 
@@ -429,37 +421,32 @@
        <structfield>result</structfield> <type>text</type>
       </para>
       <para>
-       High-level result of the I/O operation:
+       I/O 操作的高层结果：
        <itemizedlist>
         <listitem>
          <para>
-          <literal>UNKNOWN</literal> means that the result of the
-          operation is not yet known.
+          <literal>UNKNOWN</literal> 表示操作结果尚不可知。
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>OK</literal> means the I/O completed successfully.
+          <literal>OK</literal> 表示 I/O 已成功完成。
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>PARTIAL</literal> means that the I/O completed without
-          error, but did not process all data. Commonly callers will need to
-          retry and perform the remainder of the work in a separate I/O.
+          <literal>PARTIAL</literal> 表示 I/O 已完成且未出错，但并未处理所有数据。通常调用方需要重试，并在另一次 I/O 中完成剩余的工作。
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>WARNING</literal> means that the I/O completed without
-          error, but that execution of the IO triggered a warning. E.g. when
-          encountering a corrupted buffer with <xref
-          linkend="guc-zero-damaged-pages"/> enabled.
+          <literal>WARNING</literal> 表示 I/O 已完成且没有错误，但执行该 IO 触发了警告。例如，在启用 <xref
+          linkend="guc-zero-damaged-pages"/> 时遇到损坏的缓冲区。
          </para>
         </listitem>
         <listitem>
          <para>
-          <literal>ERROR</literal> means the I/O failed with an error.
+          <literal>ERROR</literal> 表示 I/O 因错误而失败。
          </para>
         </listitem>
        </itemizedlist>
@@ -471,7 +458,7 @@
        <structfield>target_desc</structfield> <type>text</type>
       </para>
       <para>
-       Description of what the I/O operation is targeting.
+       描述 I/O 操作所针对的目标。
       </para></entry>
      </row>
 
@@ -480,7 +467,7 @@
        <structfield>f_sync</structfield> <type>bool</type>
       </para>
       <para>
-       Flag indicating whether the I/O is executed synchronously.
+       指示 I/O 是否同步执行的标志。
       </para></entry>
      </row>
 
@@ -489,7 +476,7 @@
        <structfield>f_localmem</structfield> <type>bool</type>
       </para>
       <para>
-       Flag indicating whether the I/O references process local memory.
+       指示 I/O 是否引用进程本地内存的标志。
       </para></entry>
      </row>
 
@@ -498,7 +485,7 @@
        <structfield>f_buffered</structfield> <type>bool</type>
       </para>
       <para>
-       Flag indicating whether the I/O is buffered I/O.
+       指示 I/O 是否为缓冲 I/O 的标志。
       </para></entry>
      </row>
 
@@ -507,13 +494,11 @@
   </table>
 
   <para>
-   The <structname>pg_aios</structname> view is read-only.
+   <structname>pg_aios</structname> 视图是只读的。
   </para>
 
   <para>
-   By default, the <structname>pg_aios</structname> view can be read only by
-   superusers or roles with privileges of the
-   <literal>pg_read_all_stats</literal> role.
+   默认情况下，只有超级用户或具有 <literal>pg_read_all_stats</literal> 角色权限的角色才能读取 <structname>pg_aios</structname> 视图。
   </para>
  </sect1>
 
