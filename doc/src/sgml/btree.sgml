@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/btree.sgml -->
 
 <sect1 id="btree">
-<title>B-Tree Indexes</title>
+<title>B-Tree 索引</title>
 
    <indexterm>
     <primary>index</primary>
@@ -9,100 +9,64 @@
    </indexterm>
 
 <sect2 id="btree-intro">
- <title>Introduction</title>
+ <title>简介</title>
 
  <para>
-  <productname>PostgreSQL</productname> includes an implementation of the
-  standard <acronym>btree</acronym> (multi-way balanced tree) index data
-  structure.  Any data type that can be sorted into a well-defined linear
-  order can be indexed by a btree index.  The only limitation is that an
-  index entry cannot exceed approximately one-third of a page (after TOAST
-  compression, if applicable).
+  <productname>PostgreSQL</productname> 包含标准 <acronym>btree</acronym>（多路平衡树）索引数据结构的实现。任何能够排序成明确定义的线性顺序的数据类型都可以用 btree 索引来索引。唯一的限制是索引项不能超过大约三分之一页（在 TOAST 压缩之后，如果适用）。
  </para>
 
  <para>
-  Because each btree operator class imposes a sort order on its data type,
-  btree operator classes (or, really, operator families) have come to be
-  used as <productname>PostgreSQL</productname>'s general representation
-  and understanding of sorting semantics.  Therefore, they've acquired
-  some features that go beyond what would be needed just to support btree
-  indexes, and parts of the system that are quite distant from the
-  btree <acronym>AM</acronym> make use of them.
+  由于每个 btree 运算符类都为其数据类型规定了一种排序顺序，btree 运算符类（或者更确切地说，运算符族）已经成为 <productname>PostgreSQL</productname> 对排序语义的一般表示和理解方式。因此，它们获得了一些超出仅仅支持 btree 索引所需的功能，系统中与 btree <acronym>AM</acronym> 相距甚远的部分也会用到它们。
  </para>
 
 </sect2>
 
 <sect2 id="btree-behavior">
- <title>Behavior of B-Tree Operator Classes</title>
+ <title>B-Tree 运算符类的行为</title>
 
  <para>
-  As shown in <xref linkend="xindex-btree-strat-table"/>, a btree operator
-  class must provide five comparison operators,
-  <literal>&lt;</literal>,
-  <literal>&lt;=</literal>,
-  <literal>=</literal>,
-  <literal>&gt;=</literal> and
-  <literal>&gt;</literal>.
-  One might expect that <literal>&lt;&gt;</literal> should also be part of
-  the operator class, but it is not, because it would almost never be
-  useful to use a <literal>&lt;&gt;</literal> WHERE clause in an index
-  search.  (For some purposes, the planner treats <literal>&lt;&gt;</literal>
-  as associated with a btree operator class; but it finds that operator via
-  the <literal>=</literal> operator's negator link, rather than
-  from <structname>pg_amop</structname>.)
+  如 <xref linkend="xindex-btree-strat-table"/> 所示，一个 btree 运算符类必须提供五个比较运算符：<literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>=</literal>、<literal>&gt;=</literal> 和 <literal>&gt;</literal>。人们可能以为 <literal>&lt;&gt;</literal> 也应该是该运算符类的一部分，但事实并非如此，因为在索引搜索中使用 <literal>&lt;&gt;</literal> 的 WHERE 子句几乎从来都没有用。（出于某些目的，查询规划器会把 <literal>&lt;&gt;</literal> 视为与某个 btree 运算符类相关联；但它是通过 <literal>=</literal> 运算符的否定符链接找到该运算符的，而不是从 <structname>pg_amop</structname> 中找到的。）
  </para>
 
  <para>
-  When several data types share near-identical sorting semantics, their
-  operator classes can be grouped into an operator family.  Doing so is
-  advantageous because it allows the planner to make deductions about
-  cross-type comparisons.  Each operator class within the family should
-  contain the single-type operators (and associated support functions)
-  for its input data type, while cross-type comparison operators and
-  support functions are <quote>loose</quote> in the family.  It is
-  recommendable that a complete set of cross-type operators be included
-  in the family, thus ensuring that the planner can represent any
-  comparison conditions that it deduces from transitivity.
+  当多个数据类型共享几乎相同的排序语义时，它们的运算符类可以归入一个运算符族。这样做是有利的，因为它允许规划器对跨类型比较进行推断。族中的每个运算符类应包含其输入数据类型的单类型运算符（以及相关的支持函数），而跨类型比较运算符和支持函数在族中是<quote>松散</quote>的。建议在族中包含一整套跨类型运算符，从而确保规划器能够表示它从传递性中推断出的任何比较条件。
  </para>
 
  <para>
-  There are some basic assumptions that a btree operator family must
-  satisfy:
+  btree 运算符族必须满足一些基本假设：
  </para>
 
  <itemizedlist>
   <listitem>
    <para>
-    An <literal>=</literal> operator must be an equivalence relation; that
-    is, for all non-null values <replaceable>A</replaceable>,
-    <replaceable>B</replaceable>, <replaceable>C</replaceable> of the
-    data type:
+    一个 <literal>=</literal> 运算符必须是等价关系；也就是说，对于该数据类型的
+    所有非空值 <replaceable>A</replaceable>、<replaceable>B</replaceable>、<replaceable>C</replaceable>：
 
     <itemizedlist>
      <listitem>
       <para>
        <replaceable>A</replaceable> <literal>=</literal>
-       <replaceable>A</replaceable> is true
-       (<firstterm>reflexive law</firstterm>)
+       <replaceable>A</replaceable> 为真
+       （<firstterm>自反律</firstterm>）
       </para>
      </listitem>
      <listitem>
       <para>
-       if <replaceable>A</replaceable> <literal>=</literal>
-       <replaceable>B</replaceable>,
-       then <replaceable>B</replaceable> <literal>=</literal>
+       如果 <replaceable>A</replaceable> <literal>=</literal>
+       <replaceable>B</replaceable>，
+       那么 <replaceable>B</replaceable> <literal>=</literal>
        <replaceable>A</replaceable>
-       (<firstterm>symmetric law</firstterm>)
+       （<firstterm>对称律</firstterm>）
       </para>
      </listitem>
      <listitem>
       <para>
-       if <replaceable>A</replaceable> <literal>=</literal>
-       <replaceable>B</replaceable> and <replaceable>B</replaceable>
-       <literal>=</literal> <replaceable>C</replaceable>,
-       then <replaceable>A</replaceable> <literal>=</literal>
+       如果 <replaceable>A</replaceable> <literal>=</literal>
+       <replaceable>B</replaceable> 且 <replaceable>B</replaceable>
+       <literal>=</literal> <replaceable>C</replaceable>，
+       那么 <replaceable>A</replaceable> <literal>=</literal>
        <replaceable>C</replaceable>
-       (<firstterm>transitive law</firstterm>)
+       （<firstterm>传递律</firstterm>）
       </para>
      </listitem>
     </itemizedlist>
@@ -111,27 +75,25 @@
 
   <listitem>
    <para>
-    A <literal>&lt;</literal> operator must be a strong ordering relation;
-    that is, for all non-null values <replaceable>A</replaceable>,
-    <replaceable>B</replaceable>, <replaceable>C</replaceable>:
+    一个 <literal>&lt;</literal> 运算符必须是一个强排序关系；也就是说，对于所有非空值 <replaceable>A</replaceable>、<replaceable>B</replaceable>、<replaceable>C</replaceable>：
 
     <itemizedlist>
      <listitem>
       <para>
        <replaceable>A</replaceable> <literal>&lt;</literal>
-       <replaceable>A</replaceable> is false
-       (<firstterm>irreflexive law</firstterm>)
+       <replaceable>A</replaceable> 为假
+       （<firstterm>非自反律</firstterm>）
       </para>
      </listitem>
      <listitem>
       <para>
-       if <replaceable>A</replaceable> <literal>&lt;</literal>
+       如果 <replaceable>A</replaceable> <literal>&lt;</literal>
        <replaceable>B</replaceable>
-       and <replaceable>B</replaceable> <literal>&lt;</literal>
-       <replaceable>C</replaceable>,
-       then <replaceable>A</replaceable> <literal>&lt;</literal>
+       且 <replaceable>B</replaceable> <literal>&lt;</literal>
+       <replaceable>C</replaceable>，
+       那么 <replaceable>A</replaceable> <literal>&lt;</literal>
        <replaceable>C</replaceable>
-       (<firstterm>transitive law</firstterm>)
+       （<firstterm>传递律</firstterm>）
       </para>
      </listitem>
     </itemizedlist>
@@ -140,111 +102,60 @@
 
   <listitem>
    <para>
-    Furthermore, the ordering is total; that is, for all non-null
-    values <replaceable>A</replaceable>, <replaceable>B</replaceable>:
+    此外，该排序是全序；也就是说，对于所有非空值 <replaceable>A</replaceable>、<replaceable>B</replaceable>：
 
     <itemizedlist>
      <listitem>
       <para>
-       exactly one of <replaceable>A</replaceable> <literal>&lt;</literal>
-       <replaceable>B</replaceable>, <replaceable>A</replaceable>
-       <literal>=</literal> <replaceable>B</replaceable>, and
+       <replaceable>A</replaceable> <literal>&lt;</literal>
+       <replaceable>B</replaceable>、<replaceable>A</replaceable>
+       <literal>=</literal> <replaceable>B</replaceable> 和
        <replaceable>B</replaceable> <literal>&lt;</literal>
-       <replaceable>A</replaceable> is true
-       (<firstterm>trichotomy law</firstterm>)
+       <replaceable>A</replaceable> 中恰好有一个为真
+       （<firstterm>三分律</firstterm>）
       </para>
      </listitem>
     </itemizedlist>
 
-    (The trichotomy law justifies the definition of the comparison support
-    function, of course.)
+    （当然，三分律为比较支持函数的定义提供了依据。）
    </para>
   </listitem>
  </itemizedlist>
 
  <para>
-  The other three operators are defined in terms of <literal>=</literal>
-  and <literal>&lt;</literal> in the obvious way, and must act consistently
-  with them.
+  另外三个运算符以显而易见的方式基于 <literal>=</literal> 和 <literal>&lt;</literal> 定义，并且必须与它们保持一致的行为。
  </para>
 
  <para>
-  For an operator family supporting multiple data types, the above laws must
-  hold when <replaceable>A</replaceable>, <replaceable>B</replaceable>,
-  <replaceable>C</replaceable> are taken from any data types in the family.
-  The transitive laws are the trickiest to ensure, as in cross-type
-  situations they represent statements that the behaviors of two or three
-  different operators are consistent.
-  As an example, it would not work to put <type>float8</type>
-  and <type>numeric</type> into the same operator family, at least not with
-  the current semantics that <type>numeric</type> values are converted
-  to <type>float8</type> for comparison to a <type>float8</type>.  Because
-  of the limited accuracy of <type>float8</type>, this means there are
-  distinct <type>numeric</type> values that will compare equal to the
-  same <type>float8</type> value, and thus the transitive law would fail.
+  对于支持多种数据类型的运算符族，当 <replaceable>A</replaceable>、<replaceable>B</replaceable>、<replaceable>C</replaceable> 取自该族中的任意数据类型时，上述定律必须成立。传递律是最难保证的，因为在跨类型的情形下，它们所表述的是两三个不同运算符的行为之间的一致性。举例来说，把 <type>float8</type> 和 <type>numeric</type> 放入同一个运算符族是行不通的，至少按当前语义（<type>numeric</type> 值会被转换为 <type>float8</type> 以便与 <type>float8</type> 比较）是不行的。由于 <type>float8</type> 的精度有限，这意味着存在不同的 <type>numeric</type> 值会与同一个 <type>float8</type> 值比较相等，因此传递律将不成立。
  </para>
 
  <para>
-  Another requirement for a multiple-data-type family is that any implicit
-  or binary-coercion casts that are defined between data types included in
-  the operator family must not change the associated sort ordering.
+  对多数据类型运算符族的另一项要求是：在运算符族所包含的数据类型之间定义的任何隐式转换或二进制强制转换，都不得改变相关的排序顺序。
  </para>
 
  <para>
-  It should be fairly clear why a btree index requires these laws to hold
-  within a single data type: without them there is no ordering to arrange
-  the keys with.  Also, index searches using a comparison key of a
-  different data type require comparisons to behave sanely across two
-  data types.  The extensions to three or more data types within a family
-  are not strictly required by the btree index mechanism itself, but the
-  planner relies on them for optimization purposes.
+  btree 索引为什么要求在单一数据类型内满足这些定律，应该是相当清楚的：没有它们，就没有可用于排列键的排序。此外，使用不同数据类型的比较键进行索引搜索时，要求比较在两个数据类型之间表现合理。运算符族内扩展到三种或更多数据类型并非 btree 索引机制本身严格要求的，但查询规划器依赖它们来进行优化。
  </para>
 
 </sect2>
 
 <sect2 id="btree-support-funcs">
- <title>B-Tree Support Functions</title>
+ <title>B-Tree 支持函数</title>
 
  <para>
-  As shown in <xref linkend="xindex-btree-support-table"/>, btree defines
-  one required and five optional support functions.  The six
-  user-defined methods are:
+  如 <xref linkend="xindex-btree-support-table"/> 所示，btree 定义了一个必需的支持函数和五个可选的支持函数。这六个用户定义方法是：
  </para>
  <variablelist>
   <varlistentry>
    <term><function>order</function></term>
    <listitem>
     <para>
-     For each combination of data types that a btree operator family
-     provides comparison operators for, it must provide a comparison
-     support function, registered in
-     <structname>pg_amproc</structname> with support function number 1
-     and
-     <structfield>amproclefttype</structfield>/<structfield>amprocrighttype</structfield>
-     equal to the left and right data types for the comparison (i.e.,
-     the same data types that the matching operators are registered
-     with in <structname>pg_amop</structname>).  The comparison
-     function must take two non-null values
-     <replaceable>A</replaceable> and <replaceable>B</replaceable> and
-     return an <type>int32</type> value that is
-     <literal>&lt;</literal> <literal>0</literal>,
-     <literal>0</literal>, or <literal>&gt;</literal>
-     <literal>0</literal> when <replaceable>A</replaceable>
-     <literal>&lt;</literal> <replaceable>B</replaceable>,
-     <replaceable>A</replaceable> <literal>=</literal>
-     <replaceable>B</replaceable>, or <replaceable>A</replaceable>
-     <literal>&gt;</literal> <replaceable>B</replaceable>,
-     respectively.  A null result is disallowed: all values of the
-     data type must be comparable.  See
-     <filename>src/backend/access/nbtree/nbtcompare.c</filename> for
-     examples.
+     对于 btree 操作符族为其提供比较运算符的每一种数据类型组合，它必须提供一个比较支持函数，注册在 <structname>pg_amproc</structname> 中，支持函数编号为 1，且 <structfield>amproclefttype</structfield>/<structfield>amprocrighttype</structfield> 等于用于比较的左右数据类型（即，匹配的运算符在 <structname>pg_amop</structname> 中注册时所用的相同数据类型）。比较函数必须接受两个非空值 <replaceable>A</replaceable> 和 <replaceable>B</replaceable>，并返回一个 <type>int32</type> 值，当 <replaceable>A</replaceable> <literal>&lt;</literal> <replaceable>B</replaceable>、<replaceable>A</replaceable> <literal>=</literal> <replaceable>B</replaceable> 或 <replaceable>A</replaceable> <literal>&gt;</literal> <replaceable>B</replaceable> 时，该值分别为 <literal>&lt;</literal> <literal>0</literal>、<literal>0</literal> 或 <literal>&gt;</literal> <literal>0</literal>。不允许空结果：该数据类型的所有值都必须可比较。有关示例，请参见 <filename>src/backend/access/nbtree/nbtcompare.c</filename>。
     </para>
 
     <para>
-     If the compared values are of a collatable data type, the
-     appropriate collation OID will be passed to the comparison
-     support function, using the standard
-     <function>PG_GET_COLLATION()</function> mechanism.
+     如果被比较的值属于可排序规则的数据类型，则将使用标准的 <function>PG_GET_COLLATION()</function> 机制，把适当的排序规则 OID 传递给比较支持函数。
     </para>
    </listitem>
   </varlistentry>
@@ -252,13 +163,7 @@
    <term><function>sortsupport</function></term>
    <listitem>
     <para>
-     Optionally, a btree operator family may provide <firstterm>sort
-      support</firstterm> function(s), registered under support
-     function number 2.  These functions allow implementing
-     comparisons for sorting purposes in a more efficient way than
-     naively calling the comparison support function.  The APIs
-     involved in this are defined in
-     <filename>src/include/utils/sortsupport.h</filename>.
+     可选地，btree 操作符族可以提供<firstterm>排序支持</firstterm>函数，注册在支持函数编号 2 下。这些函数允许以比直接调用比较支持函数更高效的方式实现用于排序目的的比较。其中涉及的 API 定义在 <filename>src/include/utils/sortsupport.h</filename> 中。
     </para>
    </listitem>
   </varlistentry>
@@ -266,13 +171,13 @@
    <term><function>in_range</function></term>
    <listitem>
     <indexterm>
-     <primary>in_range support functions</primary>
-    </indexterm>
+ <primary>in_range 支持函数</primary>
+</indexterm>
 
-    <indexterm>
-     <primary>support functions</primary>
-     <secondary>in_range</secondary>
-    </indexterm>
+<indexterm>
+ <primary>支持函数</primary>
+ <secondary>in_range</secondary>
+</indexterm>
     <para>
      Optionally, a btree operator family may provide
      <firstterm>in_range</firstterm> support function(s), registered
@@ -290,36 +195,33 @@
     </para>
 
     <para>
-     An <function>in_range</function> function must have the signature
+     <function>in_range</function> 函数必须具有如下签名
 <synopsis>
 in_range(<replaceable>val</replaceable> type1, <replaceable>base</replaceable> type1, <replaceable>offset</replaceable> type2, <replaceable>sub</replaceable> bool, <replaceable>less</replaceable> bool)
 returns bool
 </synopsis>
-     <replaceable>val</replaceable> and
-     <replaceable>base</replaceable> must be of the same type, which
-     is one of the types supported by the operator family (i.e., a
-     type for which it provides an ordering).  However,
-     <replaceable>offset</replaceable> could be of a different type,
-     which might be one otherwise unsupported by the family.  An
-     example is that the built-in <literal>time_ops</literal> family
-     provides an <function>in_range</function> function that has
-     <replaceable>offset</replaceable> of type <type>interval</type>.
-     A family can provide <function>in_range</function> functions for
-     any of its supported types and one or more
-     <replaceable>offset</replaceable> types.  Each
-     <function>in_range</function> function should be entered in
-     <structname>pg_amproc</structname> with
-     <structfield>amproclefttype</structfield> equal to
-     <type>type1</type> and <structfield>amprocrighttype</structfield>
-     equal to <type>type2</type>.
+     <replaceable>val</replaceable> 和
+     <replaceable>base</replaceable> 必须是同一类型，该类型
+     是运算符族所支持的类型之一（即该族为其提供排序的类型）。
+     不过，<replaceable>offset</replaceable> 可以是不同的类型，
+     该类型可能是该族原本不支持的类型。一个
+     例子是，内置的 <literal>time_ops</literal> 族
+     提供了一个 <function>in_range</function> 函数，其
+     <replaceable>offset</replaceable> 的类型为 <type>interval</type>。
+     一个族可以为其任一受支持的类型以及一个或多个
+     <replaceable>offset</replaceable> 类型提供 <function>in_range</function> 函数。每个
+     <function>in_range</function> 函数都应录入
+     <structname>pg_amproc</structname>，其中
+     <structfield>amproclefttype</structfield> 等于
+     <type>type1</type>，<structfield>amprocrighttype</structfield>
+     等于 <type>type2</type>。
     </para>
 
     <para>
-     The essential semantics of an <function>in_range</function>
-     function depend on the two Boolean flag parameters.  It should
-     add or subtract <replaceable>base</replaceable> and
-     <replaceable>offset</replaceable>, then compare
-     <replaceable>val</replaceable> to the result, as follows:
+     <function>in_range</function> 函数的基本语义取决于两个布尔标志参数。它应当
+     加上或减去 <replaceable>base</replaceable> 和
+     <replaceable>offset</replaceable>，然后将
+     <replaceable>val</replaceable> 与结果进行比较，如下所示：
      <itemizedlist>
       <listitem>
        <para>
@@ -358,101 +260,100 @@ returns bool
        </para>
       </listitem>
      </itemizedlist>
-     Before doing so, the function should check the sign of
-     <replaceable>offset</replaceable>: if it is less than zero, raise
-     error
+     在这样做之前，函数应检查
+     <replaceable>offset</replaceable> 的符号：如果它小于零，则抛出
+     错误
      <literal>ERRCODE_INVALID_PRECEDING_OR_FOLLOWING_SIZE</literal>
-     (22013) with error text like <quote>invalid preceding or
-      following size in window function</quote>.  (This is required by
-     the SQL standard, although nonstandard operator families might
-     perhaps choose to ignore this restriction, since there seems to
-     be little semantic necessity for it.) This requirement is
-     delegated to the <function>in_range</function> function so that
-     the core code needn't understand what <quote>less than
-      zero</quote> means for a particular data type.
+     （22013），错误文本类似于 <quote>invalid preceding or
+      following size in window function</quote>。（这是 SQL 标准所要求的，
+     尽管非标准的运算符族或许
+     可以选择忽略这一限制，因为似乎
+     没有太多语义上的必要性。）这一要求
+     被委托给 <function>in_range</function> 函数，以便
+     核心代码不必理解 <quote>小于
+     零</quote> 对于特定数据类型意味着什么。
     </para>
 
     <para>
-     An additional expectation is that <function>in_range</function>
-     functions should, if practical, avoid throwing an error if
+     另一个期望是，<function>in_range</function>
+     函数在可行的情况下应避免在
      <replaceable>base</replaceable> <literal>+</literal>
-     <replaceable>offset</replaceable> or
+     <replaceable>offset</replaceable> 或
      <replaceable>base</replaceable> <literal>-</literal>
-     <replaceable>offset</replaceable> would overflow.  The correct
-     comparison result can be determined even if that value would be
-     out of the data type's range.  Note that if the data type
-     includes concepts such as <quote>infinity</quote> or
-     <quote>NaN</quote>, extra care may be needed to ensure that
-     <function>in_range</function>'s results agree with the normal
-     sort order of the operator family.
+     <replaceable>offset</replaceable> 会溢出时抛出错误。即使该值会
+     超出数据类型的范围，也能确定正确的
+     比较结果。请注意，如果数据类型
+     包含 <quote>infinity</quote> 或
+     <quote>NaN</quote> 之类的概念，则可能需要格外小心，以确保
+     <function>in_range</function> 的结果与运算符族的正常
+     排序顺序一致。
     </para>
 
     <para>
-     The results of the <function>in_range</function> function must be
-     consistent with the sort ordering imposed by the operator family.
-     To be precise, given any fixed values of
-     <replaceable>offset</replaceable> and
-     <replaceable>sub</replaceable>, then:
+     <function>in_range</function> 函数的结果必须与
+     运算符族所施加的排序顺序一致。
+     确切地说，给定
+     <replaceable>offset</replaceable> 和
+     <replaceable>sub</replaceable> 的任意固定值，则：
      <itemizedlist>
       <listitem>
        <para>
-        If <function>in_range</function> with
-        <replaceable>less</replaceable> = true is true for some
-        <replaceable>val1</replaceable> and
-        <replaceable>base</replaceable>, it must be true for every
+        如果带有
+        <replaceable>less</replaceable> = true 的 <function>in_range</function> 对于某些
+        <replaceable>val1</replaceable> 和
+        <replaceable>base</replaceable> 为真，那么对于具有相同
         <replaceable>val2</replaceable> <literal>&lt;=</literal>
-        <replaceable>val1</replaceable> with the same
-        <replaceable>base</replaceable>.
+        <replaceable>val1</replaceable> 的每个
+        <replaceable>base</replaceable>，它也必须为真。
        </para>
       </listitem>
       <listitem>
        <para>
-        If <function>in_range</function> with
-        <replaceable>less</replaceable> = true is false for some
-        <replaceable>val1</replaceable> and
-        <replaceable>base</replaceable>, it must be false for every
+        如果带有
+        <replaceable>less</replaceable> = true 的 <function>in_range</function> 对于某些
+        <replaceable>val1</replaceable> 和
+        <replaceable>base</replaceable> 为假，那么对于具有相同
         <replaceable>val2</replaceable> <literal>&gt;=</literal>
-        <replaceable>val1</replaceable> with the same
-        <replaceable>base</replaceable>.
+        <replaceable>val1</replaceable> 的每个
+        <replaceable>base</replaceable>，它也必须为假。
        </para>
       </listitem>
       <listitem>
        <para>
-        If <function>in_range</function> with
-        <replaceable>less</replaceable> = true is true for some
-        <replaceable>val</replaceable> and
-        <replaceable>base1</replaceable>, it must be true for every
+        如果带有
+        <replaceable>less</replaceable> = true 的 <function>in_range</function> 对于某些
+        <replaceable>val</replaceable> 和
+        <replaceable>base1</replaceable> 为真，那么对于具有相同
         <replaceable>base2</replaceable> <literal>&gt;=</literal>
-        <replaceable>base1</replaceable> with the same
-        <replaceable>val</replaceable>.
+        <replaceable>base1</replaceable> 的每个
+        <replaceable>val</replaceable>，它也必须为真。
        </para>
       </listitem>
       <listitem>
        <para>
-        If <function>in_range</function> with
-        <replaceable>less</replaceable> = true is false for some
-        <replaceable>val</replaceable> and
-        <replaceable>base1</replaceable>, it must be false for every
+        如果对于某些
+        <replaceable>val</replaceable> 和
+        <replaceable>base1</replaceable>，带有
+        <replaceable>less</replaceable> = true 的 <function>in_range</function> 为假，那么对于具有相同
+        <replaceable>val</replaceable> 的每个
         <replaceable>base2</replaceable> <literal>&lt;=</literal>
-        <replaceable>base1</replaceable> with the same
-        <replaceable>val</replaceable>.
+        <replaceable>base1</replaceable>，它也必须为假。
        </para>
       </listitem>
      </itemizedlist>
-     Analogous statements with inverted conditions hold when
-     <replaceable>less</replaceable> = false.
+     当
+     <replaceable>less</replaceable> = false 时，条件取反的类似陈述也成立。
     </para>
 
     <para>
-     If the type being ordered (<type>type1</type>) is collatable, the
-     appropriate collation OID will be passed to the
-     <function>in_range</function> function, using the standard
-     PG_GET_COLLATION() mechanism.
+     如果被排序的类型（<type>type1</type>）支持排序规则，则将使用标准的
+     PG_GET_COLLATION() 机制把相应的排序规则 OID 传递给
+     <function>in_range</function> 函数。
     </para>
 
     <para>
-     <function>in_range</function> functions need not handle NULL
-     inputs, and typically will be marked strict.
+     <function>in_range</function> 函数无需处理 NULL
+     输入，并且通常会被标记为 strict。
     </para>
    </listitem>
   </varlistentry>
@@ -460,93 +361,44 @@ returns bool
    <term><function>equalimage</function></term>
    <listitem>
     <para>
-     Optionally, a btree operator family may provide
-     <function>equalimage</function> (<quote>equality implies image
-      equality</quote>) support functions, registered under support
-     function number 4.  These functions allow the core code to
-     determine when it is safe to apply the btree deduplication
-     optimization.  Currently, <function>equalimage</function>
-     functions are only called when building or rebuilding an index.
+     可选地，btree 运算符族可以提供
+     <function>equalimage</function>（<quote>相等意味着映像
+      相等</quote>）支持函数，注册在支持
+     函数编号 4 下。这些函数让核心代码能够
+     确定何时可以安全地应用 btree 去重
+     优化。目前，<function>equalimage</function>
+     函数仅在创建或重建索引时被调用。
     </para>
     <para>
-     An <function>equalimage</function> function must have the
-     signature
+     <function>equalimage</function> 函数必须具有如下
+     签名
 <synopsis>
 equalimage(<replaceable>opcintype</replaceable> <type>oid</type>) returns bool
 </synopsis>
-     The return value is static information about an operator class
-     and collation.  Returning <literal>true</literal> indicates that
-     the <function>order</function> function for the operator class is
-     guaranteed to only return <literal>0</literal> (<quote>arguments
-      are equal</quote>) when its <replaceable>A</replaceable> and
-     <replaceable>B</replaceable> arguments are also interchangeable
-     without any loss of semantic information.  Not registering an
-     <function>equalimage</function> function or returning
-     <literal>false</literal> indicates that this condition cannot be
-     assumed to hold.
+     返回值是关于运算符类和排序规则的静态信息。返回 <literal>true</literal> 表示
+     该运算符类的 <function>order</function> 函数
+     保证：当其 <replaceable>A</replaceable> 和
+     <replaceable>B</replaceable> 参数也可以在不丢失任何语义信息的情况下
+     互换时，它只返回 <literal>0</literal>（<quote>参数
+      相等</quote>）。不注册
+     <function>equalimage</function> 函数或返回
+     <literal>false</literal> 表示不能假定该条件
+     成立。
     </para>
     <para>
-     The <replaceable>opcintype</replaceable> argument is the
-     <literal><structname>pg_type</structname>.oid</literal> of the
-     data type that the operator class indexes.  This is a convenience
-     that allows reuse of the same underlying
-     <function>equalimage</function> function across operator classes.
-     If <replaceable>opcintype</replaceable> is a collatable data
-     type, the appropriate collation OID will be passed to the
-     <function>equalimage</function> function, using the standard
-     <function>PG_GET_COLLATION()</function> mechanism.
+     <replaceable>opcintype</replaceable> 参数是操作符类所索引的数据类型的 <literal><structname>pg_type</structname>.oid</literal>。这是一种便利机制，允许在多个操作符类之间重用同一个底层 <function>equalimage</function> 函数。如果 <replaceable>opcintype</replaceable> 是可排序的数据类型，则会使用标准的 <function>PG_GET_COLLATION()</function> 机制将适当的排序规则 OID 传递给 <function>equalimage</function> 函数。
     </para>
     <para>
-     As far as the operator class is concerned, returning
-     <literal>true</literal> indicates that deduplication is safe (or
-     safe for the collation whose OID was passed to its
-     <function>equalimage</function> function).  However, the core
-     code will only deem deduplication safe for an index when
-     <emphasis>every</emphasis> indexed column uses an operator class
-     that registers an <function>equalimage</function> function, and
-     each function actually returns <literal>true</literal> when
-     called.
+     就操作符类而言，返回 <literal>true</literal> 表示去重是安全的（或者对于其 OID 被传递给其 <function>equalimage</function> 函数的排序规则而言是安全的）。但是，只有当<emphasis>每个</emphasis>被索引的列都使用注册了 <function>equalimage</function> 函数的操作符类，并且每个函数在被调用时实际返回 <literal>true</literal> 时，核心代码才会认为索引的去重是安全的。
     </para>
     <para>
-     Image equality is <emphasis>almost</emphasis> the same condition
-     as simple bitwise equality.  There is one subtle difference: When
-     indexing a varlena data type, the on-disk representation of two
-     image equal datums may not be bitwise equal due to inconsistent
-     application of <acronym>TOAST</acronym> compression on input.
-     Formally, when an operator class's
-     <function>equalimage</function> function returns
-     <literal>true</literal>, it is safe to assume that the
-     <literal>datum_image_eq()</literal> C function will always agree
-     with the operator class's <function>order</function> function
-     (provided that the same collation OID is passed to both the
-     <function>equalimage</function> and <function>order</function>
-     functions).
+     图像相等与简单的按位相等<emphasis>几乎</emphasis>是相同的条件。有一个细微的差别：在索引 varlena 数据类型时，由于输入时 <acronym>TOAST</acronym> 压缩的应用不一致，两个图像相等的基准值的磁盘表示可能不是按位相等的。形式上，当操作符类的 <function>equalimage</function> 函数返回 <literal>true</literal> 时，可以安全地假设 <literal>datum_image_eq()</literal> C 函数将始终与操作符类的 <function>order</function> 函数一致（前提是将相同的排序规则 OID 传递给 <function>equalimage</function> 和 <function>order</function> 两个函数）。
     </para>
     <para>
-     The core code is fundamentally unable to deduce anything about
-     the <quote>equality implies image equality</quote> status of an
-     operator class within a multiple-data-type family based on
-     details from other operator classes in the same family.  Also, it
-     is not sensible for an operator family to register a cross-type
-     <function>equalimage</function> function, and attempting to do so
-     will result in an error.  This is because <quote>equality implies
-      image equality</quote> status does not just depend on
-     sorting/equality semantics, which are more or less defined at the
-     operator family level.  In general, the semantics that one
-     particular data type implements must be considered separately.
+     核心代码从根本上无法根据同一操作符族中其他操作符类的细节，推断出多数据类型族中某个操作符类的<quote>相等意味着图像相等</quote>状态。此外，操作符族注册跨类型 <function>equalimage</function> 函数是不合理的，尝试这样做将导致错误。这是因为<quote>相等意味着图像相等</quote>状态不仅仅取决于排序/相等语义，这些语义或多或少是在操作符族级别定义的。一般来说，必须单独考虑某个特定数据类型所实现的语义。
     </para>
     <para>
-     The convention followed by the operator classes included with the
-     core <productname>PostgreSQL</productname> distribution is to
-     register a stock, generic <function>equalimage</function>
-     function.  Most operator classes register
-     <function>btequalimage()</function>, which indicates that
-     deduplication is safe unconditionally.  Operator classes for
-     collatable data types such as <type>text</type> register
-     <function>btvarstrequalimage()</function>, which indicates that
-     deduplication is safe with deterministic collations.  Best
-     practice for third-party extensions is to register their own
-     custom function to retain control.
+     核心 <productname>PostgreSQL</productname> 发行版中包含的运算符类所遵循的约定是注册一个标准的、通用的 <function>equalimage</function> 函数。大多数运算符类注册 <function>btequalimage()</function>，这表示去重是无条件安全的。可排序数据类型（如 <type>text</type>）的运算符类注册 <function>btvarstrequalimage()</function>，这表示在使用确定性排序规则时去重是安全的。第三方扩展的最佳实践是注册自己的自定义函数，以保留控制权。
     </para>
    </listitem>
   </varlistentry>
@@ -554,32 +406,17 @@ equalimage(<replaceable>opcintype</replaceable> <type>oid</type>) returns bool
    <term><function>options</function></term>
    <listitem>
     <para>
-     Optionally, a B-tree operator family may provide
-     <function>options</function> (<quote>operator class specific
-     options</quote>) support functions, registered under support
-     function number 5.  These functions define a set of user-visible
-     parameters that control operator class behavior.
+     可选地，B-tree 运算符族可以提供 <function>options</function>（<quote>运算符类特定选项</quote>）支持函数，注册在支持函数编号 5 下。这些函数定义了一组用户可见的参数，用于控制运算符类的行为。
     </para>
     <para>
-     An <function>options</function> support function must have the
-     signature
+     <function>options</function> 支持函数必须具有如下签名
 <synopsis>
 options(<replaceable>relopts</replaceable> <type>local_relopts *</type>) returns void
 </synopsis>
-     The function is passed a pointer to a <structname>local_relopts</structname>
-     struct, which needs to be filled with a set of operator class
-     specific options.  The options can be accessed from other support
-     functions using the <literal>PG_HAS_OPCLASS_OPTIONS()</literal> and
-     <literal>PG_GET_OPCLASS_OPTIONS()</literal> macros.
+     该函数会接收一个指向 <structname>local_relopts</structname> 结构体的指针，该结构体需要填充一组运算符类特定的选项。其他支持函数可以使用 <literal>PG_HAS_OPCLASS_OPTIONS()</literal> 和 <literal>PG_GET_OPCLASS_OPTIONS()</literal> 宏来访问这些选项。
     </para>
     <para>
-     Currently, no B-Tree operator class has an <function>options</function>
-     support function.  B-tree doesn't allow flexible representation of keys
-     like GiST, SP-GiST, GIN and BRIN do.  So, <function>options</function>
-     probably doesn't have much application in the current B-tree index
-     access method.  Nevertheless, this support function was added to B-tree
-     for uniformity, and will probably find uses during further
-     evolution of B-tree in <productname>PostgreSQL</productname>.
+     目前，没有任何 B-Tree 运算符类具有 <function>options</function> 支持函数。B-tree 不像 GiST、SP-GiST、GIN 和 BRIN 那样允许灵活地表示键。因此，<function>options</function> 在当前 B-tree 索引访问方法中可能没有太多应用。尽管如此，为了保持一致性，此支持函数已被添加到 B-tree 中，并且在 <productname>PostgreSQL</productname> 中 B-tree 的进一步演进过程中可能会找到用武之地。
     </para>
    </listitem>
   </varlistentry>
@@ -587,28 +424,13 @@ options(<replaceable>relopts</replaceable> <type>local_relopts *</type>) returns
    <term><function>skipsupport</function></term>
    <listitem>
     <para>
-     Optionally, a btree operator family may provide a <firstterm>skip
-      support</firstterm> function, registered under support function number 6.
-     These functions give the B-tree code a way to iterate through every
-     possible value that can be represented by an operator class's underlying
-     input type, in key space order.  This is used by the core code when it
-     applies the skip scan optimization.  The APIs involved in this are
-     defined in <filename>src/include/utils/skipsupport.h</filename>.
+     可选地，btree 运算符族可以提供 <firstterm>跳跃支持</firstterm> 函数，注册在支持函数编号 6 下。这些函数为 B-tree 代码提供了一种按键空间顺序遍历运算符类底层输入类型所能表示的每个可能值的方法。核心代码在应用跳跃扫描优化时会使用它。相关的 API 定义在 <filename>src/include/utils/skipsupport.h</filename> 中。
     </para>
     <para>
-     Operator classes that do not provide a skip support function are still
-     eligible to use skip scan.  The core code can still use its fallback
-     strategy, though that might be suboptimal for some discrete types.  It
-     usually doesn't make sense (and may not even be feasible) for operator
-     classes on continuous types to provide a skip support function.
+     未提供跳跃支持函数的运算符类仍然可以使用跳跃扫描。核心代码仍然可以使用其回退策略，尽管对于某些离散类型而言这可能不是最优的。对于连续类型上的运算符类而言，提供跳跃支持函数通常没有意义（甚至可能不可行）。
     </para>
     <para>
-     It is not sensible for an operator family to register a cross-type
-     <function>skipsupport</function> function, and attempting to do so will
-     result in an error.  This is because determining the next indexable value
-     must happen by incrementing a value copied from an index tuple.  The
-     values generated must all be of the same underlying data type (the
-     <quote>skipped</quote> index column's opclass input type).
+     运算符族注册跨类型 <function>skipsupport</function> 函数是不合理的，尝试这样做会导致错误。这是因为确定下一个可索引值必须通过递增从索引元组复制的值来实现。生成的值必须全部属于相同的底层数据类型（<quote>被跳过</quote>索引列的 opclass 输入类型）。
     </para>
    </listitem>
   </varlistentry>
@@ -617,117 +439,45 @@ options(<replaceable>relopts</replaceable> <type>local_relopts *</type>) returns
 </sect2>
 
 <sect2 id="btree-implementation">
- <title>Implementation</title>
+ <title>实现</title>
 
  <para>
-  This section covers B-Tree index implementation details that may be
-  of use to advanced users.  See
-  <filename>src/backend/access/nbtree/README</filename> in the source
-  distribution for a much more detailed, internals-focused description
-  of the B-Tree implementation.
+  本节涵盖 B-Tree 索引的实现细节，可能对高级用户有用。有关 B-Tree 实现的更详细、聚焦于内部的描述，请参阅源代码分发中的 <filename>src/backend/access/nbtree/README</filename>。
  </para>
  <sect3 id="btree-structure">
-  <title>B-Tree Structure</title>
+  <title>B-Tree 结构</title>
   <para>
-   <productname>PostgreSQL</productname> B-Tree indexes are
-   multi-level tree structures, where each level of the tree can be
-   used as a doubly-linked list of pages.  A single metapage is stored
-   in a fixed position at the start of the first segment file of the
-   index.  All other pages are either leaf pages or internal pages.
-   Leaf pages are the pages on the lowest level of the tree.  All
-   other levels consist of internal pages.  Each leaf page contains
-   tuples that point to table rows.  Each internal page contains
-   tuples that point to the next level down in the tree.  Typically,
-   over 99% of all pages are leaf pages.  Both internal pages and leaf
-   pages use the standard page format described in <xref
-    linkend="storage-page-layout"/>.
+   <productname>PostgreSQL</productname> B-Tree 索引是多层树结构，树的每一层都可以用作页的双向链表。单个元页存储在索引第一个段文件起始处的固定位置。所有其他页要么是叶子页，要么是内部页。叶子页是树最底层的页。所有其他层由内部页组成。每个叶子页包含指向表行的元组。每个内部页包含指向树中下一层的元组。通常，超过 99% 的页是叶子页。内部页和叶子页都使用 <xref
+    linkend="storage-page-layout"/> 中描述的标准页格式。
   </para>
   <para>
-   New leaf pages are added to a B-Tree index when an existing leaf
-   page cannot fit an incoming tuple.  A <firstterm>page
-    split</firstterm> operation makes room for items that originally
-   belonged on the overflowing page by moving a portion of the items
-   to a new page.  Page splits must also insert a new
-   <firstterm>downlink</firstterm> to the new page in the parent page,
-   which may cause the parent to split in turn.  Page splits
-   <quote>cascade upwards</quote> in a recursive fashion.  When the
-   root page finally cannot fit a new downlink, a <firstterm>root page
-    split</firstterm> operation takes place.  This adds a new level to
-   the tree structure by creating a new root page that is one level
-   above the original root page.
+   当现有叶子页无法容纳传入的元组时，会向 B-Tree 索引添加新的叶子页。<firstterm>页分裂</firstterm>操作通过将一部分项移动到新页，为原本属于溢出页的项腾出空间。页分裂还必须在其父页中插入指向新页的新<firstterm>下行链接</firstterm>，这可能导致父页也发生分裂。页分裂以递归方式<quote>向上级联</quote>。当根页最终无法容纳新的下行链接时，就会发生<firstterm>根页分裂</firstterm>操作。这会通过创建一个比原根页高一层的新根页，为树结构增加一个新层级。
   </para>
  </sect3>
 
  <sect3 id="btree-deletion">
-  <title>Bottom-up Index Deletion</title>
+  <title>自底向上索引删除</title>
   <para>
-   B-Tree indexes are not directly aware that under MVCC, there might
-   be multiple extant versions of the same logical table row; to an
-   index, each tuple is an independent object that needs its own index
-   entry.  <quote>Version churn</quote> tuples may sometimes
-   accumulate and adversely affect query latency and throughput.  This
-   typically occurs with <command>UPDATE</command>-heavy workloads
-   where most individual updates cannot apply the
-   <link linkend="storage-hot"><acronym>HOT</acronym> optimization.</link>
-   Changing the value of only
-   one column covered by one index during an <command>UPDATE</command>
-   <emphasis>always</emphasis> necessitates a new set of index tuples
-   &mdash; one for <emphasis>each and every</emphasis> index on the
-   table.  Note in particular that this includes indexes that were not
-   <quote>logically modified</quote> by the <command>UPDATE</command>.
-   All indexes will need a successor physical index tuple that points
-   to the latest version in the table.  Each new tuple within each
-   index will generally need to coexist with the original
-   <quote>updated</quote> tuple for a short period of time (typically
-   until shortly after the <command>UPDATE</command> transaction
-   commits).
+   B-Tree 索引并不直接知晓在 MVCC 下，同一个逻辑表行可能存在多个现存版本；对索引而言，每个元组都是独立对象，需要有自己的索引项。<quote>版本更替</quote>元组有时会累积，并对查询延迟和吞吐量产生不利影响。这通常发生在以 <command>UPDATE</command> 为主的工作负载中，其中大多数单条更新无法应用 <link linkend="storage-hot"><acronym>HOT</acronym> 优化。</link> 在一次 <command>UPDATE</command> 中只修改一个索引所覆盖的某一列的值，<emphasis>总是</emphasis>需要一组新的索引元组 &mdash; 为表上的<emphasis>每一个</emphasis>索引各提供一个。特别要注意，这包括那些并未被该 <command>UPDATE</command> <quote>逻辑修改</quote>的索引。所有索引都需要一个指向表中最新版本的后继物理索引元组。每个索引中的每个新元组通常都需要在短时间内与原来的<quote>被更新</quote>元组共存（通常直到 <command>UPDATE</command> 事务提交后不久）。
   </para>
   <para>
-   B-Tree indexes incrementally delete version churn index tuples by
-   performing <firstterm>bottom-up index deletion</firstterm> passes.
-   Each deletion pass is triggered in reaction to an anticipated
-   <quote>version churn page split</quote>.  This only happens with
-   indexes that are not logically modified by
-   <command>UPDATE</command> statements, where concentrated build up
-   of obsolete versions in particular pages would occur otherwise.  A
-   page split will usually be avoided, though it's possible that
-   certain implementation-level heuristics will fail to identify and
-   delete even one garbage index tuple (in which case a page split or
-   deduplication pass resolves the issue of an incoming new tuple not
-   fitting on a leaf page).  The worst-case number of versions that
-   any index scan must traverse (for any single logical row) is an
-   important contributor to overall system responsiveness and
-   throughput.  A bottom-up index deletion pass targets suspected
-   garbage tuples in a single leaf page based on
-   <emphasis>qualitative</emphasis> distinctions involving logical
-   rows and versions.  This contrasts with the <quote>top-down</quote>
-   index cleanup performed by autovacuum workers, which is triggered
-   when certain <emphasis>quantitative</emphasis> table-level
-   thresholds are exceeded (see <xref linkend="autovacuum"/>).
+   B-Tree 索引通过执行<firstterm>自底向上索引删除</firstterm>过程来增量删除版本更替索引元组。每次删除过程都是针对预期会发生的<quote>版本更替页分裂</quote>而触发的。这只会发生在未被 <command>UPDATE</command> 语句逻辑修改的索引上，否则这些索引的特定页面中会集中堆积过时版本。通常可以避免页分裂，不过某些实现层面的启发式规则可能无法识别并删除哪怕一个垃圾索引元组（在这种情况下，页分裂或去重过程会解决新传入元组无法放入叶子页的问题）。任何索引扫描（对任何单个逻辑行）必须遍历的最坏情况版本数量，是影响整体系统响应能力和吞吐量的重要因素。自底向上索引删除过程基于涉及逻辑行和版本的<emphasis>定性</emphasis>区分，针对单个叶子页中疑似垃圾的元组进行处理。这与自动清理工作者执行的<quote>自顶向下</quote>索引清理形成对比，后者是在超过某些<emphasis>定量</emphasis>表级阈值时触发的（参见 <xref linkend="autovacuum"/>）。
   </para>
   <note>
    <para>
-    Not all deletion operations that are performed within B-Tree
-    indexes are bottom-up deletion operations.  There is a distinct
-    category of index tuple deletion: <firstterm>simple index tuple
-     deletion</firstterm>.  This is a deferred maintenance operation
-    that deletes index tuples that are known to be safe to delete
-    (those whose item identifier's <literal>LP_DEAD</literal> bit is
-    already set).  Like bottom-up index deletion, simple index
-    deletion takes place at the point that a page split is anticipated
-    as a way of avoiding the split.
+    并非在 B-Tree 索引内执行的所有删除操作都是自底向上删除操作。有一类不同的索引元组删除：<firstterm>简单索引元组删除</firstterm>。这是一种延迟维护操作，
+    用于删除已知可以安全删除的索引元组（即那些项标识符的 <literal>LP_DEAD</literal> 位
+    已经设置的元组）。与自底向上索引删除一样，简单索引删除发生在
+    预期将要发生页分裂的时刻，以此避免分裂。
    </para>
    <para>
-    Simple deletion is opportunistic in the sense that it can only
-    take place when recent index scans set the
-    <literal>LP_DEAD</literal> bits of affected items in passing.
-    Prior to <productname>PostgreSQL</productname> 14, the only
-    category of B-Tree deletion was simple deletion.  The main
-    differences between it and bottom-up deletion are that only the
-    former is opportunistically driven by the activity of passing
-    index scans, while only the latter specifically targets version
-    churn from <command>UPDATE</command>s that do not logically modify
-    indexed columns.
+    简单删除是机会性的，也就是说，它只能在最近的索引扫描
+    顺带设置了受影响项的 <literal>LP_DEAD</literal> 位时进行。
+    在 <productname>PostgreSQL</productname> 14 之前，B-Tree 删除的唯一类别
+    就是简单删除。它与自底向上删除的主要
+    区别在于：只有前者是由经过的索引扫描活动机会性地驱动的，
+    而只有后者专门针对那些不逻辑修改索引列的 <command>UPDATE</command> 所造成的
+    版本更替。
    </para>
   </note>
   <para>
@@ -748,190 +498,93 @@ options(<replaceable>relopts</replaceable> <type>local_relopts *</type>) returns
    each of its indexes.
   </para>
   <para>
-   Unlike <command>VACUUM</command>, bottom-up index deletion does not
-   provide any strong guarantees about how old the oldest garbage
-   index tuple may be.  No index can be permitted to retain
-   <quote>floating garbage</quote> index tuples that became dead prior
-   to a conservative cutoff point shared by the table and all of its
-   indexes collectively.  This fundamental table-level invariant makes
-   it safe to recycle table <acronym>TID</acronym>s.  This is how it
-   is possible for distinct logical rows to reuse the same table
-   <acronym>TID</acronym> over time (though this can never happen with
-   two logical rows whose lifetimes span the same
-   <command>VACUUM</command> cycle).
+   与 <command>VACUUM</command> 不同，自底向上索引删除并不就最旧的垃圾索引元组可能有多旧提供任何强有力的保证。不允许任何索引保留<quote>浮动垃圾</quote>索引元组，这些元组在表和其所有索引共同享有的保守截止点之前就已死亡。这一基本的表级不变式使得回收表 <acronym>TID</acronym> 变得安全。正因如此，不同的逻辑行才有可能随时间推移重用同一个表 <acronym>TID</acronym>（不过，对于生命周期跨越同一 <command>VACUUM</command> 周期的两个逻辑行，这永远不会发生）。
   </para>
  </sect3>
 
  <sect3 id="btree-deduplication">
-  <title>Deduplication</title>
+  <title>去重</title>
   <para>
-   A duplicate is a leaf page tuple (a tuple that points to a table
-   row) where <emphasis>all</emphasis> indexed key columns have values
-   that match corresponding column values from at least one other leaf
-   page tuple in the same index.  Duplicate tuples are quite common in
-   practice.  B-Tree indexes can use a special, space-efficient
-   representation for duplicates when an optional technique is
-   enabled: <firstterm>deduplication</firstterm>.
+   重复项是指叶子页元组（指向表行的元组），其中<emphasis>所有</emphasis>被索引的键列的值都与同一索引中至少一个其他叶子页元组的对应列值相匹配。重复元组在实践中相当常见。当启用一种可选技术时，B-Tree 索引可以为重复项使用一种特殊的、节省空间的表示形式：<firstterm>去重</firstterm>。
   </para>
   <para>
-   Deduplication works by periodically merging groups of duplicate
-   tuples together, forming a single <firstterm>posting list</firstterm> tuple for each
-   group.  The column key value(s) only appear once in this
-   representation.  This is followed by a sorted array of
-   <acronym>TID</acronym>s that point to rows in the table.  This
-   significantly reduces the storage size of indexes where each value
-   (or each distinct combination of column values) appears several
-   times on average.  The latency of queries can be reduced
-   significantly.  Overall query throughput may increase
-   significantly.  The overhead of routine index vacuuming may also be
-   reduced significantly.
+   去重的工作方式是定期将重复元组的分组合并在一起，为每个分组形成一个单独的 <firstterm>公告列表</firstterm> 元组。在这种表示中，列键值只出现一次。其后是一个有序的 <acronym>TID</acronym> 数组，指向表中的行。对于每个值（或每个不同的列值组合）平均出现多次的索引，这显著减小了其存储大小。查询的延迟可以显著降低。总体查询吞吐量可能显著提高。常规索引清理的开销也可能显著减少。
   </para>
   <note>
    <para>
-    B-Tree deduplication is just as effective with
-    <quote>duplicates</quote> that contain a NULL value, even though
-    NULL values are never equal to each other according to the
-    <literal>=</literal> member of any B-Tree operator class.  As far
-    as any part of the implementation that understands the on-disk
-    B-Tree structure is concerned, NULL is just another value from the
-    domain of indexed values.
+    B-Tree 去重对于包含 NULL 值的<quote>重复项</quote>同样有效，尽管根据任何 B-Tree 操作符类的 <literal>=</literal> 成员，NULL 值彼此之间从不相等。就理解磁盘上 B-Tree 结构的实现的任何部分而言，NULL 只是索引值域中的另一个值。
    </para>
   </note>
   <para>
-   The deduplication process occurs lazily, when a new item is
-   inserted that cannot fit on an existing leaf page, though only when
-   index tuple deletion could not free sufficient space for the new
-   item (typically deletion is briefly considered and then skipped
-   over).  Unlike GIN posting list tuples, B-Tree posting list tuples
-   do not need to expand every time a new duplicate is inserted; they
-   are merely an alternative physical representation of the original
-   logical contents of the leaf page.  This design prioritizes
-   consistent performance with mixed read-write workloads.  Most
-   client applications will at least see a moderate performance
-   benefit from using deduplication.  Deduplication is enabled by
-   default.
+   去重过程是惰性发生的：当插入一个新项而它无法放入已有的叶子页时才会触发，而且仅当索引元组删除无法为新项腾出足够空间时才会进行（通常只是短暂考虑一下删除，然后就跳过了）。与 GIN 倒排列表元组不同，B-Tree 倒排列表元组不需要在每次插入重复项时都进行扩展；它们只是叶子页原始逻辑内容的一种替代物理表示。这种设计优先保证在混合读写负载下性能的一致性。大多数客户端应用至少能从使用去重中获得适度的性能收益。去重默认启用。
   </para>
   <para>
-   <command>CREATE INDEX</command> and <command>REINDEX</command>
-   apply deduplication to create posting list tuples, though the
-   strategy they use is slightly different.  Each group of duplicate
-   ordinary tuples encountered in the sorted input taken from the
-   table is merged into a posting list tuple
-   <emphasis>before</emphasis> being added to the current pending leaf
-   page.  Individual posting list tuples are packed with as many
-   <acronym>TID</acronym>s as possible.  Leaf pages are written out in
-   the usual way, without any separate deduplication pass.  This
-   strategy is well-suited to <command>CREATE INDEX</command> and
-   <command>REINDEX</command> because they are once-off batch
-   operations.
+   <command>CREATE INDEX</command> 和 <command>REINDEX</command> 会应用去重来创建倒排列表元组，不过它们采用的策略略有不同。在从表中取出的已排序输入中遇到的每一组重复普通元组，都会在添加到当前待定叶子页<emphasis>之前</emphasis>被合并成一个倒排列表元组。各个倒排列表元组会尽可能多地装入 <acronym>TID</acronym>。叶子页按常规方式写出，不进行任何单独的去重处理。这种策略非常适合 <command>CREATE INDEX</command> 和 <command>REINDEX</command>，因为它们是一次性的批量操作。
   </para>
   <para>
-   Write-heavy workloads that don't benefit from deduplication due to
-   having few or no duplicate values in indexes will incur a small,
-   fixed performance penalty (unless deduplication is explicitly
-   disabled).  The <literal>deduplicate_items</literal> storage
-   parameter can be used to disable deduplication within individual
-   indexes.  There is never any performance penalty with read-only
-   workloads, since reading posting list tuples is at least as
-   efficient as reading the standard tuple representation.  Disabling
-   deduplication isn't usually helpful.
+   由于索引中重复值很少或没有重复值而无法从去重中获益的写密集型负载，会承受少量固定的性能损失（除非显式禁用去重）。<literal>deduplicate_items</literal> 存储参数可用于在单个索引内禁用去重。只读负载则从不会有任何性能损失，因为读取倒排列表元组至少与读取标准元组表示一样高效。禁用去重通常没有好处。
   </para>
   <para>
-   It is sometimes possible for unique indexes (as well as unique
-   constraints) to use deduplication.  This allows leaf pages to
-   temporarily <quote>absorb</quote> extra version churn duplicates.
-   Deduplication in unique indexes augments bottom-up index deletion,
-   especially in cases where a long-running transaction holds a
-   snapshot that blocks garbage collection.  The goal is to buy time
-   for the bottom-up index deletion strategy to become effective
-   again.  Delaying page splits until a single long-running
-   transaction naturally goes away can allow a bottom-up deletion pass
-   to succeed where an earlier deletion pass failed.
+   有时唯一索引（以及唯一约束）也可以使用去重。这使叶子页能够暂时<quote>吸收</quote>额外的版本更替重复项。唯一索引中的去重增强了自底向上索引删除，尤其是在长时间运行的事务持有快照、阻碍垃圾回收的情况下。其目标是为自底向上索引删除策略重新变得有效争取时间。将页分裂推迟到某个长时间运行的事务自然结束之后，可以使自底向上删除处理在先前删除处理失败的地方获得成功。
   </para>
   <tip>
    <para>
-    A special heuristic is applied to determine whether a
-    deduplication pass in a unique index should take place.  It can
-    often skip straight to splitting a leaf page, avoiding a
-    performance penalty from wasting cycles on unhelpful deduplication
-    passes.  If you're concerned about the overhead of deduplication,
-    consider setting <literal>deduplicate_items = off</literal>
-    selectively.  Leaving deduplication enabled in unique indexes has
-    little downside.
+    系统会应用一种特殊的启发式规则，来决定唯一索引中是否应进行去重处理。它通常可以直接跳到分裂叶子页，从而避免因在无益的去重处理上浪费周期而带来的性能损失。如果你担心去重的开销，可以考虑有选择地设置 <literal>deduplicate_items = off</literal>。在唯一索引中保持启用去重几乎没有坏处。
    </para>
   </tip>
   <para>
-   Deduplication cannot be used in all cases due to
-   implementation-level restrictions.  Deduplication safety is
-   determined when <command>CREATE INDEX</command> or
-   <command>REINDEX</command> is run.
+   由于实现层面的限制，去重并非在所有情况下都能使用。去重的安全性在运行 <command>CREATE INDEX</command> 或 <command>REINDEX</command> 时确定。
   </para>
   <para>
-   Note that deduplication is deemed unsafe and cannot be used in the
-   following cases involving semantically significant differences
-   among equal datums:
+   请注意，在以下涉及相等数据值之间具有语义上显著差异的情况下，去重被视为不安全且不能使用：
   </para>
   <para>
    <itemizedlist>
     <listitem>
      <para>
-      <type>text</type>, <type>varchar</type>, and <type>char</type>
-      cannot use deduplication when a
-      <emphasis>nondeterministic</emphasis> collation is used.  Case
-      and accent differences must be preserved among equal datums.
+      <type>text</type>、<type>varchar</type> 和 <type>char</type> 在使用<emphasis>非确定性</emphasis>排序规则时不能使用去重。相等数据值之间的大小写和重音差异必须保留。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <type>numeric</type> cannot use deduplication.  Numeric display
-      scale must be preserved among equal datums.
+      <type>numeric</type> 不能使用去重。相等数据值之间的数值显示标度必须保留。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <type>jsonb</type> cannot use deduplication, since the
-      <type>jsonb</type> B-Tree operator class uses
-      <type>numeric</type> internally.
+      <type>jsonb</type> 不能使用去重，因为 <type>jsonb</type> B-Tree 运算符类内部使用 <type>numeric</type>。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <type>float4</type> and <type>float8</type> cannot use
-      deduplication.  These types have distinct representations for
-      <literal>-0</literal> and <literal>0</literal>, which are
-      nevertheless considered equal.  This difference must be
-      preserved.
+      <type>float4</type> 和 <type>float8</type> 不能使用去重。这些类型对 <literal>-0</literal> 和 <literal>0</literal> 具有不同的表示形式，但二者仍被视为相等。这种差异必须予以保留。
      </para>
     </listitem>
    </itemizedlist>
   </para>
   <para>
-   There is one further implementation-level restriction that may be
-   lifted in a future version of
-   <productname>PostgreSQL</productname>:
+   还有一项实现层面的限制，可能会在 <productname>PostgreSQL</productname> 的未来版本中取消：
   </para>
   <para>
    <itemizedlist>
     <listitem>
      <para>
-      Container types (such as composite types, arrays, or range
-      types) cannot use deduplication.
+      容器类型（例如复合类型、数组或范围类型）不能使用去重。
      </para>
     </listitem>
    </itemizedlist>
   </para>
   <para>
-   There is one further implementation-level restriction that applies
-   regardless of the operator class or collation used:
+   还有一项实现层面的限制，无论使用哪种运算符类或排序规则都适用：
   </para>
   <para>
    <itemizedlist>
     <listitem>
      <para>
-      <literal>INCLUDE</literal> indexes can never use deduplication.
+      <literal>INCLUDE</literal> 索引永远不能使用去重。
      </para>
     </listitem>
    </itemizedlist>
