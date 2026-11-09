@@ -2,82 +2,62 @@
 
 <sect1 id="dict-int" xreflabel="dict_int">
  <title>dict_int &mdash;
-   example full-text search dictionary for integers</title>
+   用于整数的示例全文检索字典</title>
 
  <indexterm zone="dict-int">
   <primary>dict_int</primary>
  </indexterm>
 
  <para>
-  <filename>dict_int</filename> is an example of an add-on dictionary template
-  for full-text search.  The motivation for this example dictionary is to
-  control the indexing of integers (signed and unsigned), allowing such
-  numbers to be indexed while preventing excessive growth in the number of
-  unique words, which greatly affects the performance of searching.
+  <filename>dict_int</filename> 是全文检索附加字典模板的一个示例。这个示例字典的动机是控制整数（有符号和无符号）的索引，允许这类数字被索引，同时防止唯一词数量的过度增长，因为这会极大影响搜索性能。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  本模块被视为 <quote>可信</quote>，也就是说，它可以由在当前数据库上具有 <literal>CREATE</literal> 权限的非超级用户安装。
  </para>
 
  <sect2 id="dict-int-config">
-  <title>Configuration</title>
+  <title>配置</title>
 
   <para>
-   The dictionary accepts three options:
+   该字典接受三个选项：
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     The <literal>maxlen</literal> parameter specifies the maximum number of
-     digits allowed in an integer word.  The default value is 6.
+     <literal>maxlen</literal> 参数指定一个整数词中允许的最大位数。默认值为 6。
     </para>
    </listitem>
    <listitem>
     <para>
-     The <literal>rejectlong</literal> parameter specifies whether an overlength
-     integer should be truncated or ignored.  If <literal>rejectlong</literal> is
-     <literal>false</literal> (the default), the dictionary returns the first
-     <literal>maxlen</literal> digits of the integer. If <literal>rejectlong</literal> is
-     <literal>true</literal>, the dictionary treats an overlength integer as a stop
-     word, so that it will not be indexed.  Note that this also means that
-     such an integer cannot be searched for.
+     <literal>rejectlong</literal> 参数指定超长整数应被截断还是忽略。如果 <literal>rejectlong</literal> 为 <literal>false</literal>（默认值），字典返回该整数的前 <literal>maxlen</literal> 位数字。如果 <literal>rejectlong</literal> 为 <literal>true</literal>，字典将超长整数视为停用词，因此它不会被索引。注意，这也意味着无法搜索这样的整数。
     </para>
    </listitem>
    <listitem>
     <para>
-     The <literal>absval</literal> parameter specifies whether leading
-     <quote><literal>+</literal></quote> or <quote><literal>-</literal></quote>
-     signs should be removed from integer words.  The default
-     is <literal>false</literal>.  When <literal>true</literal>, the sign is
-     removed before <literal>maxlen</literal> is applied.
+     <literal>absval</literal> 参数指定是否应从整数字词中移除前导的 <quote><literal>+</literal></quote> 或 <quote><literal>-</literal></quote> 符号。默认值为 <literal>false</literal>。当 <literal>true</literal> 时，在应用 <literal>maxlen</literal> 之前会移除该符号。
     </para>
    </listitem>
   </itemizedlist>
  </sect2>
 
  <sect2 id="dict-int-usage">
-  <title>Usage</title>
+  <title>用法</title>
 
   <para>
-   Installing the <literal>dict_int</literal> extension creates a text search
-   template <literal>intdict_template</literal> and a dictionary <literal>intdict</literal>
-   based on it, with the default parameters.  You can alter the
-   parameters, for example
+   安装 <literal>dict_int</literal> 扩展会创建一个文本搜索模板 <literal>intdict_template</literal> 以及一个基于该模板的字典 <literal>intdict</literal>，并使用默认参数。你可以修改这些参数，例如
 
 <programlisting>
 mydb# ALTER TEXT SEARCH DICTIONARY intdict (MAXLEN = 4, REJECTLONG = true);
 ALTER TEXT SEARCH DICTIONARY
 </programlisting>
 
-   or create new dictionaries based on the template.
+   或者基于该模板创建新的字典。
   </para>
 
   <para>
-   To test the dictionary, you can try
+   要测试该字典，你可以尝试
 
 <programlisting>
 mydb# select ts_lexize('intdict', '12345678');
@@ -86,9 +66,7 @@ mydb# select ts_lexize('intdict', '12345678');
  {123456}
 </programlisting>
 
-   but real-world usage will involve including it in a text search
-   configuration as described in <xref linkend="textsearch"/>.
-   That might look like this:
+   但实际使用中需要将它包含在文本搜索配置中，如 <xref linkend="textsearch"/> 所述。这可能看起来像这样：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION english
