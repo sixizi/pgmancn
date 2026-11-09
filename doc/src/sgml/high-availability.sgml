@@ -39,49 +39,32 @@
  </para>
 
  <sect1 id="different-replication-solutions">
- <title>Comparison of Different Solutions</title>
+ <title>不同解决方案的比较</title>
 
  <variablelist>
 
   <varlistentry>
-   <term>Shared Disk Failover</term>
+   <term>共享磁盘故障转移</term>
    <listitem>
 
     <para>
-     Shared disk failover avoids synchronization overhead by having only one
-     copy of the database.  It uses a single disk array that is shared by
-     multiple servers.  If the main database server fails, the standby server
-     is able to mount and start the database as though it were recovering from
-     a database crash.  This allows rapid failover with no data loss.
+     共享磁盘故障转移通过只保留一份数据库副本来避免同步开销。它使用一个由多台服务器共享的单一磁盘阵列。如果主数据库服务器发生故障，备用服务器能够挂载并启动该数据库，就如同正在从数据库崩溃中恢复一样。这样就能实现快速故障转移且不丢失数据。
     </para>
 
     <para>
-     Shared hardware functionality is common in network storage devices.
-     Using a network file system is also possible, though care must be
-     taken that the file system has full <acronym>POSIX</acronym> behavior (see <xref
-     linkend="creating-cluster-nfs"/>).  One significant limitation of this
-     method is that if the shared disk array fails or becomes corrupt, the
-     primary and standby servers are both nonfunctional.  Another issue is
-     that the standby server should never access the shared storage while
-     the primary server is running.
+     共享硬件功能在网络存储设备中很常见。使用网络文件系统也是可行的，但必须注意该文件系统具有完整的 <acronym>POSIX</acronym> 行为（参见 <xref
+     linkend="creating-cluster-nfs"/>）。这种方法的一个显著限制是，如果共享磁盘阵列发生故障或损坏，主服务器和备用服务器都将无法工作。另一个问题是，在主服务器运行期间，备用服务器绝不应访问共享存储。
     </para>
 
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>File System (Block Device) Replication</term>
+   <term>文件系统（块设备）复制</term>
    <listitem>
 
     <para>
-     A modified version of shared hardware functionality is file system
-     replication, where all changes to a file system are mirrored to a file
-     system residing on another computer.  The only restriction is that
-     the mirroring must be done in a way that ensures the standby server
-     has a consistent copy of the file system &mdash; specifically, writes
-     to the standby must be done in the same order as those on the primary.
-     <productname>DRBD</productname> is a popular file system replication solution
-     for Linux.
+     共享硬件功能的一种变体是文件系统复制，其中对文件系统的所有更改都会镜像到位于另一台计算机上的文件系统。唯一的限制是，镜像必须以能确保备用服务器拥有文件系统一致副本的方式进行 &mdash; 具体来说，对备用服务器的写入必须与主服务器上的写入顺序相同。<productname>DRBD</productname> 是 Linux 上一种流行的文件系统复制解决方案。
     </para>
 
 <!--
@@ -97,141 +80,92 @@ protocol to make nodes agree on a serializable transactional order.
   </varlistentry>
 
   <varlistentry>
-   <term>Write-Ahead Log Shipping</term>
+   <term>预写式日志传送</term>
    <listitem>
 
     <para>
-     Warm and hot standby servers can be kept current by reading a
-     stream of write-ahead log (<acronym>WAL</acronym>)
-     records.  If the main server fails, the standby contains
-     almost all of the data of the main server, and can be quickly
-     made the new primary database server.  This can be synchronous or
-     asynchronous and can only be done for the entire database server.
+     温备服务器和热备服务器可以通过读取预写式日志（<acronym>WAL</acronym>）
+     记录流来保持最新状态。如果主服务器发生故障，备服务器几乎包含
+     主服务器的全部数据，并且可以快速
+     将其提升为新的主数据库服务器。这可以是同步的，也可以是
+     异步的，并且只能针对整个数据库服务器进行。
     </para>
     <para>
-     A standby server can be implemented using file-based log shipping
-     (<xref linkend="warm-standby"/>) or streaming replication (see
-     <xref linkend="streaming-replication"/>), or a combination of both. For
-     information on hot standby, see <xref linkend="hot-standby"/>.
+     备服务器可以使用基于文件的日志传送
+     （<xref linkend="warm-standby"/>）或流复制（参见
+     <xref linkend="streaming-replication"/>）来实现，也可以将两者结合使用。有关
+     热备的信息，请参见 <xref linkend="hot-standby"/>。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Logical Replication</term>
+   <term>逻辑复制</term>
    <listitem>
     <para>
-     Logical replication allows a database server to send a stream of data
-     modifications to another server.  <productname>PostgreSQL</productname>
-     logical replication constructs a stream of logical data modifications
-     from the WAL.  Logical replication allows replication of data changes on
-     a per-table basis.  In addition, a server that is publishing its own
-     changes can also subscribe to changes from another server, allowing data
-     to flow in multiple directions.  For more information on logical
-     replication, see <xref linkend="logical-replication"/>.  Through the
-     logical decoding interface (<xref linkend="logicaldecoding"/>),
-     third-party extensions can also provide similar functionality.
+     逻辑复制允许一个数据库服务器将数据修改流发送到另一个服务器。<productname>PostgreSQL</productname>
+     逻辑复制从 WAL 中构造出逻辑数据修改流。逻辑复制允许
+     按表复制数据更改。此外，发布自身更改的服务器
+     还可以订阅来自另一个服务器的更改，从而让数据
+     向多个方向流动。有关逻辑
+     复制的更多信息，请参见 <xref linkend="logical-replication"/>。通过
+     逻辑解码接口（<xref linkend="logicaldecoding"/>），
+     第三方扩展也可以提供类似的功能。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Trigger-Based Primary-Standby Replication</term>
+   <term>基于触发器的主备复制</term>
    <listitem>
 
     <para>
-     A trigger-based replication setup typically funnels data modification
-     queries to a designated primary server. Operating on a per-table basis,
-     the primary server sends data changes (typically) asynchronously to the
-     standby servers.  Standby servers can answer queries while the primary is
-     running, and may allow some local data changes or write activity.  This
-     form of replication is often used for offloading large analytical or data
-     warehouse queries.
+     基于触发器的复制设置通常将数据修改查询汇集到指定的主服务器。主服务器按表逐个操作，将数据更改（通常）异步地发送给后备服务器。后备服务器可以在主服务器运行时回答查询，并且可能允许某些本地数据更改或写入活动。这种形式的复制通常用于卸载大型分析或数据仓库查询。
     </para>
 
     <para>
-     <productname>Slony-I</productname> is an example of this type of
-     replication, with per-table granularity, and support for multiple standby
-     servers.  Because it updates the standby server asynchronously (in
-     batches), there is possible data loss during fail over.
+     <productname>Slony-I</productname> 是这类复制的一个例子，具有按表的粒度，并支持多个后备服务器。由于它异步地（成批地）更新后备服务器，在故障转移期间可能会丢失数据。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>SQL-Based Replication Middleware</term>
+   <term>基于 SQL 的复制中间件</term>
    <listitem>
 
     <para>
-     With SQL-based replication middleware, a program intercepts
-     every SQL query and sends it to one or all servers.  Each server
-     operates independently.  Read-write queries must be sent to all servers,
-     so that every server receives any changes.  But read-only queries can be
-     sent to just one server, allowing the read workload to be distributed
-     among them.
+     使用基于 SQL 的复制中间件时，程序会拦截每一条 SQL 查询并将其发送给一个或所有服务器。每个服务器独立运行。读写查询必须发送给所有服务器，以便每个服务器都能收到任何更改。但只读查询可以只发送给一个服务器，从而将读负载分散到它们之间。
     </para>
 
     <para>
-     If queries are simply broadcast unmodified, functions like
-     <function>random()</function>, <function>CURRENT_TIMESTAMP</function>, and
-     sequences can have different values on different servers.
-     This is because each server operates independently, and because
-     SQL queries are broadcast rather than actual data changes.  If
-     this is unacceptable, either the middleware or the application
-     must determine such values from a single source and then use those
-     values in write queries.  Care must also be taken that all
-     transactions either commit or abort on all servers, perhaps
-     using two-phase commit (<xref linkend="sql-prepare-transaction"/>
-     and <xref linkend="sql-commit-prepared"/>).
-     <productname>Pgpool-II</productname> and <productname>Continuent Tungsten</productname>
-     are examples of this type of replication.
+     如果查询只是未经修改地广播，那么像 <function>random()</function>、<function>CURRENT_TIMESTAMP</function> 和序列这样的函数在不同服务器上可能具有不同的值。这是因为每个服务器独立运行，并且因为广播的是 SQL 查询而不是实际的数据更改。如果这不可接受，那么中间件或应用程序必须从单一来源确定这些值，然后在写查询中使用这些值。还必须注意让所有事务在所有服务器上要么提交要么中止，也许可以使用两阶段提交（<xref linkend="sql-prepare-transaction"/> 和 <xref linkend="sql-commit-prepared"/>）。<productname>Pgpool-II</productname> 和 <productname>Continuent Tungsten</productname> 是这类复制的例子。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Asynchronous Multimaster Replication</term>
+   <term>异步多主复制</term>
    <listitem>
 
     <para>
-     For servers that are not regularly connected or have slow
-     communication links, like laptops or
-     remote servers, keeping data consistent among servers is a
-     challenge.  Using asynchronous multimaster replication, each
-     server works independently, and periodically communicates with
-     the other servers to identify conflicting transactions.  The
-     conflicts can be resolved by users or conflict resolution rules.
-     Bucardo is an example of this type of replication.
+     对于不经常连接或通信链路较慢的服务器（如笔记本电脑或远程服务器），在服务器之间保持数据一致是一项挑战。使用异步多主复制时，每台服务器独立工作，并定期与其他服务器通信以识别冲突的事务。冲突可由用户或冲突解决规则来解决。Bucardo 就是这类复制的一个例子。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Synchronous Multimaster Replication</term>
+   <term>同步多主复制</term>
    <listitem>
 
     <para>
-     In synchronous multimaster replication, each server can accept
-     write requests, and modified data is transmitted from the
-     original server to every other server before each transaction
-     commits.  Heavy write activity can cause excessive locking and
-     commit delays, leading to poor performance.  Read requests can
-     be sent to any server.  Some implementations use shared disk
-     to reduce the communication overhead.  Synchronous multimaster
-     replication is best for mostly read workloads, though its big
-     advantage is that any server can accept write requests &mdash;
-     there is no need to partition workloads between primary and
-     standby servers, and because the data changes are sent from one
-     server to another, there is no problem with non-deterministic
-     functions like <function>random()</function>.
+     在同步多主复制中，每台服务器都可以接受写请求，并且在每个事务提交之前，修改过的数据会从原始服务器传输到其他所有服务器。繁重的写活动可能导致过多的锁和提交延迟，从而导致性能不佳。读请求可以发送到任意服务器。一些实现使用共享磁盘来减少通信开销。同步多主复制最适合以读为主的工作负载，不过它的最大优势在于任何服务器都可以接受写请求 &mdash; 无需在主服务器和备用服务器之间划分工作负载，而且由于数据更改是从一台服务器发送到另一台服务器，因此不存在像 <function>random()</function> 这样的非确定性函数的问题。
     </para>
 
     <para>
-     <productname>PostgreSQL</productname> does not offer this type of replication,
-     though <productname>PostgreSQL</productname> two-phase commit (<xref
-     linkend="sql-prepare-transaction"/> and <xref
-     linkend="sql-commit-prepared"/>)
-     can be used to implement this in application code or middleware.
+     <productname>PostgreSQL</productname> 不提供这种类型的复制，不过 <productname>PostgreSQL</productname> 两阶段提交（<xref
+     linkend="sql-prepare-transaction"/> 和 <xref
+     linkend="sql-commit-prepared"/>）
+     可用于在应用程序代码或中间件中实现这一点。
     </para>
    </listitem>
   </varlistentry>
@@ -239,12 +173,11 @@ protocol to make nodes agree on a serializable transactional order.
  </variablelist>
 
  <para>
-  <xref linkend="high-availability-matrix"/> summarizes
-  the capabilities of the various solutions listed above.
+  <xref linkend="high-availability-matrix"/> 总结了上述各种解决方案的能力。
  </para>
 
  <table id="high-availability-matrix">
-  <title>High Availability, Load Balancing, and Replication Feature Matrix</title>
+  <title>高可用性、负载均衡与复制功能矩阵</title>
   <tgroup cols="9">
    <colspec colname="col1" colwidth="1.1*"/>
    <colspec colname="col2" colwidth="1*"/>
@@ -257,109 +190,49 @@ protocol to make nodes agree on a serializable transactional order.
    <colspec colname="col9" colwidth="1*"/>
    <thead>
     <row>
-     <entry>Feature</entry>
-     <entry>Shared Disk</entry>
-     <entry>File System Repl.</entry>
-     <entry>Write-Ahead Log Shipping</entry>
-     <entry>Logical Repl.</entry>
-     <entry>Trigger-&zwsp;Based Repl.</entry>
-     <entry>SQL Repl. Middle-ware</entry>
-     <entry>Async. MM Repl.</entry>
-     <entry>Sync. MM Repl.</entry>
+     <entry>特性</entry>
+     <entry>共享磁盘</entry>
+     <entry>文件系统复制</entry>
+     <entry>预写式日志传送</entry>
+     <entry>逻辑复制</entry>
+     <entry>基于&zwsp;触发器的复制</entry>
+     <entry>SQL 复制中间件</entry>
+     <entry>异步多主复制</entry>
+     <entry>同步多主复制</entry>
     </row>
    </thead>
 
    <tbody>
 
     <row>
-     <entry>Popular examples</entry>
+     <entry>常见示例</entry>
      <entry align="center">NAS</entry>
      <entry align="center">DRBD</entry>
-     <entry align="center">built-in streaming repl.</entry>
-     <entry align="center">built-in logical repl., pglogical</entry>
-     <entry align="center">Londiste, Slony</entry>
+     <entry align="center">内置流复制</entry>
+     <entry align="center">内置逻辑复制，pglogical</entry>
+     <entry align="center">Londiste、Slony</entry>
      <entry align="center">pgpool-II</entry>
      <entry align="center">Bucardo</entry>
      <entry align="center"></entry>
     </row>
 
     <row>
-     <entry>Comm. method</entry>
-     <entry align="center">shared disk</entry>
-     <entry align="center">disk blocks</entry>
-     <entry align="center">WAL</entry>
-     <entry align="center">logical decoding</entry>
-     <entry align="center">table rows</entry>
+     <entry>通信方式</entry>
+     <entry align="center">共享磁盘</entry>
+     <entry align="center">磁盘块</entry>
+     <entry align="center">预写式日志</entry>
+     <entry align="center">逻辑解码</entry>
+     <entry align="center">表行</entry>
      <entry align="center">SQL</entry>
-     <entry align="center">table rows</entry>
-     <entry align="center">table rows and row locks</entry>
+     <entry align="center">表行</entry>
+     <entry align="center">表行和行锁</entry>
     </row>
 
     <row>
-     <entry>No special hardware required</entry>
+     <entry>不需要特殊硬件</entry>
      <entry align="center"></entry>
      <entry align="center">&bull;</entry>
      <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-    </row>
-
-    <row>
-     <entry>Allows multiple primary servers</entry>
-     <entry align="center"></entry>
-     <entry align="center"></entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-    </row>
-
-    <row>
-     <entry>No overhead on primary</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center"></entry>
-    </row>
-
-    <row>
-     <entry>No waiting for multiple servers</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">with sync off</entry>
-     <entry align="center">with sync off</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-    </row>
-
-    <row>
-     <entry>Primary failure will never lose data</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center">with sync on</entry>
-     <entry align="center">with sync on</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-     <entry align="center"></entry>
-     <entry align="center">&bull;</entry>
-    </row>
-
-    <row>
-     <entry>Replicas accept read-only queries</entry>
-     <entry align="center"></entry>
-     <entry align="center"></entry>
-     <entry align="center">with hot standby</entry>
      <entry align="center">&bull;</entry>
      <entry align="center">&bull;</entry>
      <entry align="center">&bull;</entry>
@@ -368,7 +241,67 @@ protocol to make nodes agree on a serializable transactional order.
     </row>
 
     <row>
-     <entry>Per-table granularity</entry>
+     <entry>允许多个主服务器</entry>
+     <entry align="center"></entry>
+     <entry align="center"></entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+    </row>
+
+    <row>
+     <entry>主服务器上没有额外开销</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center"></entry>
+    </row>
+
+    <row>
+     <entry>无需等待多个服务器</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">同步关闭时</entry>
+     <entry align="center">同步关闭时</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+    </row>
+
+    <row>
+     <entry>主库故障绝不会丢失数据</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">同步开启时</entry>
+     <entry align="center">同步开启时</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center"></entry>
+     <entry align="center">&bull;</entry>
+    </row>
+
+    <row>
+     <entry>副本接受只读查询</entry>
+     <entry align="center"></entry>
+     <entry align="center"></entry>
+     <entry align="center">使用热备</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+     <entry align="center">&bull;</entry>
+    </row>
+
+    <row>
+     <entry>按表粒度</entry>
      <entry align="center"></entry>
      <entry align="center"></entry>
      <entry align="center"></entry>
@@ -380,7 +313,7 @@ protocol to make nodes agree on a serializable transactional order.
     </row>
 
     <row>
-     <entry>No conflict resolution necessary</entry>
+     <entry>无需冲突解决</entry>
      <entry align="center">&bull;</entry>
      <entry align="center">&bull;</entry>
      <entry align="center">&bull;</entry>
@@ -396,40 +329,27 @@ protocol to make nodes agree on a serializable transactional order.
  </table>
 
  <para>
-  There are a few solutions that do not fit into the above categories:
+  有几种解决方案不属于上述类别：
  </para>
 
  <variablelist>
 
   <varlistentry>
-   <term>Data Partitioning</term>
+   <term>数据分区</term>
    <listitem>
 
     <para>
-     Data partitioning splits tables into data sets.  Each set can
-     be modified by only one server.  For example, data can be
-     partitioned by offices, e.g., London and Paris, with a server
-     in each office.  If queries combining London and Paris data
-     are necessary, an application can query both servers, or
-     primary/standby replication can be used to keep a read-only copy
-     of the other office's data on each server.
+     数据分区把表拆分成多个数据集。每个数据集只能由一个服务器修改。例如，可以按办公地点对数据分区，比如伦敦和巴黎，每个办公地点各有一个服务器。如果需要合并伦敦和巴黎数据的查询，应用程序可以查询两个服务器，或者可以使用主/备复制在每个服务器上保留另一个办公地点数据的只读副本。
     </para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
-   <term>Multiple-Server Parallel Query Execution</term>
+   <term>多服务器并行查询执行</term>
    <listitem>
 
     <para>
-     Many of the above solutions allow multiple servers to handle multiple
-     queries, but none allow a single query to use multiple servers to
-     complete faster.  This solution allows multiple servers to work
-     concurrently on a single query.  It is usually accomplished by
-     splitting the data among servers and having each server execute its
-     part of the query and return results to a central server where they
-     are combined and returned to the user. This can be implemented using the
-     <productname>PL/Proxy</productname> tool set.
+     上述许多方案允许多台服务器处理多个查询，但都不允许单个查询使用多台服务器来更快完成。本方案允许多台服务器并发处理单个查询。通常的实现方式是将数据分散到各服务器上，让每台服务器执行查询中属于自己的部分，并将结果返回给一台中心服务器，在那里合并结果并返回给用户。这可以使用 <productname>PL/Proxy</productname> 工具集来实现。
     </para>
 
    </listitem>
@@ -438,11 +358,8 @@ protocol to make nodes agree on a serializable transactional order.
  </variablelist>
 
   <para>
-   It should also be noted that because <productname>PostgreSQL</productname>
-   is open source and easily extended, a number of companies have
-   taken <productname>PostgreSQL</productname> and created commercial
-   closed-source solutions with unique failover, replication, and load
-   balancing capabilities.  These are not discussed here.
+   还应注意，由于 <productname>PostgreSQL</productname>
+   是开源的且易于扩展，许多公司基于 <productname>PostgreSQL</productname> 创建了具有独特的故障转移、复制和负载均衡能力的商业闭源解决方案。此处不讨论这些方案。
   </para>
 
  </sect1>
