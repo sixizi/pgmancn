@@ -1,51 +1,41 @@
 <!-- doc/src/sgml/uuid-ossp.sgml -->
 
 <sect1 id="uuid-ossp" xreflabel="uuid-ossp">
- <title>uuid-ossp &mdash; a UUID generator</title>
+ <title>uuid-ossp &mdash; 一个 UUID 生成器</title>
 
  <indexterm zone="uuid-ossp">
   <primary>uuid-ossp</primary>
  </indexterm>
 
  <para>
-  The <filename>uuid-ossp</filename> module provides functions to generate universally
-  unique identifiers (UUIDs) using one of several standard algorithms.  There
-  are also functions to produce certain special UUID constants.
-  This module is only necessary for special requirements beyond what is
-  available in core <productname>PostgreSQL</productname>.  See <xref
-  linkend="functions-uuid"/> for built-in ways to generate UUIDs.
+  <filename>uuid-ossp</filename> 模块提供了使用若干标准算法之一生成通用唯一标识符（UUID）的函数。还有一些函数用于生成某些特殊的 UUID 常量。只有在核心 <productname>PostgreSQL</productname> 所提供功能之外有特殊需求时，才需要此模块。有关生成 UUID 的内置方法，请参见 <xref
+  linkend="functions-uuid"/>。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  此模块被视为<quote>可信</quote>，也就是说，拥有当前数据库 <literal>CREATE</literal> 权限的非超级用户也可以安装它。
  </para>
 
  <sect2 id="uuid-ossp-functions-sect">
-  <title><literal>uuid-ossp</literal> Functions</title>
+  <title><literal>uuid-ossp</literal> 函数</title>
 
   <para>
-   <xref linkend="uuid-ossp-functions"/> shows the functions available to
-   generate UUIDs.
-   The relevant standards ITU-T Rec. X.667, ISO/IEC 9834-8:2005, and
+   <xref linkend="uuid-ossp-functions"/> 显示了可用于生成 UUID 的函数。相关标准 ITU-T Rec. X.667、ISO/IEC 9834-8:2005 以及
    <ulink url="https://datatracker.ietf.org/doc/html/rfc4122">RFC 4122</ulink>
-   specify four algorithms for generating UUIDs, identified by the
-   version numbers 1, 3, 4, and 5.  (There is no version 2 algorithm.)
-   Each of these algorithms could be suitable for a different set of
-   applications.
+   规定了四种生成 UUID 的算法，以版本号 1、3、4 和 5 标识。（没有版本 2 算法。）
+   这些算法各自适用于不同的应用集合。
   </para>
 
   <table id="uuid-ossp-functions">
-   <title>Functions for UUID Generation</title>
+   <title>用于生成 UUID 的函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para></entry>
       </row>
      </thead>
@@ -58,11 +48,10 @@
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Generates a version 1 UUID.  This involves the MAC
-        address of the computer and a time stamp.  Note that UUIDs of this
-        kind reveal the identity of the computer that created the identifier
-        and the time at which it did so, which might make it unsuitable for
-        certain security-sensitive applications.
+        生成一个版本 1 UUID。这涉及计算机的 MAC
+        地址和一个时间戳。注意，这类 UUID 会泄露创建该标识符的计算机的身份
+        以及创建时间，这可能使其不适用于
+        某些对安全性敏感的应用。
        </para></entry>
       </row>
 
@@ -73,8 +62,8 @@
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Generates a version 1 UUID, but uses a random multicast
-        MAC address instead of the real MAC address of the computer.
+        生成一个版本 1 UUID，但使用随机的多播
+        MAC 地址，而不是计算机的真实 MAC 地址。
        </para></entry>
       </row>
 
@@ -85,23 +74,20 @@
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Generates a version 3 UUID in the given namespace using
-        the specified input name.  The namespace should be one of the special
-        constants produced by the <function>uuid_ns_*()</function> functions
-        shown in <xref linkend="uuid-ossp-constants"/>.  (It could be any UUID
-        in theory.)  The name is an identifier in the selected namespace.
+        使用指定的输入名称在给定命名空间中生成一个版本 3 UUID。该命名空间应当是
+        由 <xref linkend="uuid-ossp-constants"/> 中所示的 <function>uuid_ns_*()</function> 函数
+        生成的特殊常量之一。（理论上它可以是任意 UUID。）
+        名称是所选命名空间中的一个标识符。
        </para>
        <para>
-        For example:
+        例如：
 
 <programlisting>
 SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
 </programlisting>
 
-        The name parameter will be MD5-hashed, so the cleartext cannot be
-        derived from the generated UUID.
-        The generation of UUIDs by this method has no random or
-        environment-dependent element and is therefore reproducible.
+        名称参数将经过 MD5 哈希处理，因此无法从生成的 UUID 反推出明文。
+        用这种方法生成 UUID 不包含随机或依赖于环境的成分，因此是可重现的。
        </para></entry>
       </row>
 
@@ -111,8 +97,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Generates a version 4 UUID, which is derived entirely
-        from random numbers.
+        生成一个版本 4 UUID，它完全由随机数派生而来。
        </para></entry>
       </row>
 
@@ -122,10 +107,9 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Generates a version 5 UUID, which works like a version 3
-        UUID except that SHA-1 is used as a hashing method.  Version 5 should
-        be preferred over version 3 because SHA-1 is thought to be more secure
-        than MD5.
+        生成一个版本 5 UUID，其工作方式与版本 3 UUID 类似，
+        只是使用 SHA-1 作为哈希方法。版本 5 应优先于版本 3 使用，
+        因为 SHA-1 被认为比 MD5 更安全。
        </para></entry>
       </row>
      </tbody>
@@ -133,15 +117,15 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
   </table>
 
   <table id="uuid-ossp-constants">
-   <title>Functions Returning UUID Constants</title>
+   <title>返回 UUID 常量的函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para></entry>
       </row>
      </thead>
@@ -153,8 +137,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Returns a <quote>nil</quote> UUID constant, which does not occur as a
-        real UUID.
+        返回一个 <quote>nil</quote> UUID 常量，它不会作为真实的 UUID 出现。
        </para></entry>
       </row>
 
@@ -164,7 +147,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Returns a constant designating the DNS namespace for UUIDs.
+        返回一个指定 UUID 的 DNS 命名空间的常量。
        </para></entry>
       </row>
 
@@ -174,7 +157,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Returns a constant designating the URL namespace for UUIDs.
+        返回一个指定 UUID 的 URL 命名空间的常量。
        </para></entry>
       </row>
 
@@ -184,9 +167,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Returns a constant designating the ISO object identifier (OID) namespace for
-        UUIDs.  (This pertains to ASN.1 OIDs, which are unrelated to the OIDs
-        used in <productname>PostgreSQL</productname>.)
+        返回一个指定 UUID 的 ISO 对象标识符（OID）命名空间的常量。（这涉及 ASN.1 OID，与 <productname>PostgreSQL</productname> 中使用的 OID 无关。）
        </para></entry>
       </row>
 
@@ -196,8 +177,7 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
         <returnvalue>uuid</returnvalue>
        </para>
        <para>
-        Returns a constant designating the X.500 distinguished name (DN)
-        namespace for UUIDs.
+        返回一个常量，指定 UUID 的 X.500 可分辨名称（DN）命名空间。
        </para></entry>
       </row>
      </tbody>
@@ -206,32 +186,24 @@ SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');
  </sect2>
 
  <sect2 id="uuid-ossp-building">
-  <title>Building <filename>uuid-ossp</filename></title>
+  <title>构建 <filename>uuid-ossp</filename></title>
 
   <para>
-   Historically this module depended on the OSSP UUID library, which accounts
-   for the module's name.  While the OSSP UUID library can still be found
-   at <ulink url="http://www.ossp.org/pkg/lib/uuid/"></ulink>, it is not well
-   maintained, and is becoming increasingly difficult to port to newer
-   platforms.  <filename>uuid-ossp</filename> can now be built without the OSSP
-   library on some platforms.  On FreeBSD and some other BSD-derived
-   platforms, suitable UUID creation functions are included in the
-   core <filename>libc</filename> library.  On Linux, macOS, and some other
-   platforms, suitable functions are provided in the <filename>libuuid</filename>
-   library, which originally came from the <literal>e2fsprogs</literal> project
-   (though on modern Linux it is considered part
-   of <literal>util-linux-ng</literal>).  When invoking <filename>configure</filename>,
-   specify <option>--with-uuid=bsd</option> to use the BSD functions,
-   or <option>--with-uuid=e2fs</option> to
-   use <literal>e2fsprogs</literal>' <filename>libuuid</filename>, or
-   <option>--with-uuid=ossp</option> to use the OSSP UUID library.
-   More than one of these libraries might be available on a particular
-   machine, so <filename>configure</filename> does not automatically choose one.
+   历史上，本模块依赖于 OSSP UUID 库，模块名也由此而来。虽然 OSSP UUID 库仍可在
+   <ulink url="http://www.ossp.org/pkg/lib/uuid/"></ulink> 找到，但它维护得并不好，
+   而且越来越难以移植到较新的平台。现在在某些平台上，<filename>uuid-ossp</filename> 可以在没有 OSSP
+   库的情况下构建。在 FreeBSD 和其他一些源自 BSD 的平台上，核心 <filename>libc</filename> 库中
+   包含了合适的 UUID 创建函数。在 Linux、macOS 和其他一些平台上，合适的函数
+   由 <filename>libuuid</filename> 库提供，该库最初来自 <literal>e2fsprogs</literal> 项目（不过在現代 Linux 上它被视为
+   <literal>util-linux-ng</literal> 的一部分）。调用 <filename>configure</filename> 时，请指定 <option>--with-uuid=bsd</option> 以使用 BSD 函数，
+   或指定 <option>--with-uuid=e2fs</option> 以使用 <literal>e2fsprogs</literal> 的 <filename>libuuid</filename>，或指定
+   <option>--with-uuid=ossp</option> 以使用 OSSP UUID 库。
+   特定机器上可能同时存在多个这样的库，因此 <filename>configure</filename> 不会自动选择其中一个。
   </para>
  </sect2>
 
  <sect2 id="uuid-ossp-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Peter Eisentraut <email>peter_e@gmx.net</email>
