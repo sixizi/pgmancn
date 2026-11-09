@@ -1565,7 +1565,7 @@ SELECT * FROM shoelace;
 </sect1>
 
 <sect1 id="rules-privileges">
-<title>Rules and Privileges</title>
+<title>规则与权限</title>
 
 <indexterm zone="rules-privileges">
  <primary>privilege</primary>
@@ -1578,31 +1578,20 @@ SELECT * FROM shoelace;
 </indexterm>
 
 <para>
-    Due to rewriting of queries by the <productname>PostgreSQL</productname>
-    rule system, other tables/views than those used in the original
-    query get accessed. When update rules are used, this can include write access
-    to tables.
+    由于 <productname>PostgreSQL</productname> 规则系统会重写查询，因此会访问到原始查询中所用表/视图之外的其他表/视图。当使用更新规则时，这可能包括对表的写访问。
 </para>
 
 <para>
-    Rewrite rules don't have a separate owner. The owner of
-    a relation (table or view) is automatically the owner of the
-    rewrite rules that are defined for it.
-    The <productname>PostgreSQL</productname> rule system changes the
-    behavior of the default access control system. With the exception of
-    <literal>SELECT</literal> rules associated with security invoker views
-    (see <link linkend="sql-createview"><command>CREATE VIEW</command></link>),
-    all relations that are used due to rules get checked against the
-    privileges of the rule owner, not the user invoking the rule.
-    This means that, except for security invoker views, users only need the
-    required privileges for the tables/views that are explicitly named in
-    their queries.
+    重写规则没有单独的所有者。一个关系（表或视图）的所有者自动就是为其定义的重写规则的所有者。
+    <productname>PostgreSQL</productname> 规则系统改变了默认访问控制系统的行为。除了与安全调用者视图相关联的
+    <literal>SELECT</literal> 规则（参见 <link linkend="sql-createview"><command>CREATE VIEW</command></link>）之外，
+    所有因规则而被使用的关系都会按照规则所有者的权限进行检查，而不是按照调用该规则的用户。
+    这意味着，除了安全调用者视图之外，用户只需要对其查询中显式命名的表/视图具有所需权限。
 </para>
 
 <para>
-    For example: A user has a list of phone numbers where some of
-    them are private, the others are of interest for the assistant of the office.
-    The user can construct the following:
+    例如：某个用户有一份电话号码列表，其中一些是私人的，另一些则是办公室助理感兴趣的。
+    该用户可以构造如下内容：
 
 <programlisting>
 CREATE TABLE phone_data (person text, phone text, private boolean);
@@ -1612,63 +1601,40 @@ CREATE VIEW phone_number AS
 GRANT SELECT ON phone_number TO assistant;
 </programlisting>
 
-    Nobody except that user (and the database superusers) can access the
-    <literal>phone_data</literal> table. But because of the <command>GRANT</command>,
-    the assistant can run a <command>SELECT</command> on the
-    <literal>phone_number</literal> view. The rule system will rewrite the
-    <command>SELECT</command> from <literal>phone_number</literal> into a
-    <command>SELECT</command> from <literal>phone_data</literal>.
-    Since the user is the owner of
-    <literal>phone_number</literal> and therefore the owner of the rule, the
-    read access to <literal>phone_data</literal> is now checked against the user's
-    privileges and the query is permitted. The check for accessing
-    <literal>phone_number</literal> is also performed, but this is done
-    against the invoking user, so nobody but the user and the
-    assistant can use it.
+    除了该用户（以及数据库超级用户）之外，没有人可以访问
+    <literal>phone_data</literal> 表。但是由于 <command>GRANT</command>，
+    助理可以对 <literal>phone_number</literal> 视图执行 <command>SELECT</command>。规则系统会把
+    对 <literal>phone_number</literal> 的 <command>SELECT</command> 重写为
+    对 <literal>phone_data</literal> 的 <command>SELECT</command>。
+    由于该用户是 <literal>phone_number</literal> 的所有者，
+    因而也是该规则的所有者，所以现在对 <literal>phone_data</literal> 的读访问
+    是按照该用户的权限进行检查的，查询被允许。对访问
+    <literal>phone_number</literal> 的检查也会执行，但这是针对调用用户进行的，因此除了该用户和
+    助理之外，没有人可以使用它。
 </para>
 
 <para>
-    The privileges are checked rule by rule. So the assistant is for now the
-    only one who can see the public phone numbers. But the assistant can set up
-    another view and grant access to that to the public. Then, anyone
-    can see the <literal>phone_number</literal> data through the assistant's view.
-    What the assistant cannot do is to create a view that directly
-    accesses <literal>phone_data</literal>.  (Actually the assistant can, but it will not work since
-    every access will be denied during the permission checks.)
-    And as soon as the user notices that the assistant opened
-    their <literal>phone_number</literal> view, the user can revoke the assistant's access. Immediately, any
-    access to the assistant's view would fail.
+    权限是逐条规则检查的。因此目前只有助理能看到公开的电话号码。但助理可以再建立一个视图，
+    并把对该视图的访问权限授予公众。这样，任何人
+    都可以通过助理的视图看到 <literal>phone_number</literal> 数据。
+    助理不能做的是创建一个直接
+    访问 <literal>phone_data</literal> 的视图。（实际上助理可以创建，但它不会工作，因为
+    在权限检查期间每次访问都会被拒绝。）
+    而一旦用户注意到助理开放了他们的 <literal>phone_number</literal> 视图，用户就可以撤销助理的访问权限。随即，对助理视图的任何
+    访问都会失败。
 </para>
 
 <para>
-    One might think that this rule-by-rule checking is a security
-    hole, but in fact it isn't.   But if it did not work this way, the assistant
-    could set up a table with the same columns as <literal>phone_number</literal> and
-    copy the data to there once per day. Then it's the assistant's own data and
-    the assistant can grant access to everyone they want. A
-    <command>GRANT</command> command means, <quote>I trust you</quote>.
-    If someone you trust does the thing above, it's time to
-    think it over and then use <command>REVOKE</command>.
+    有人可能认为这种逐条规则检查是一个安全漏洞，但事实上并非如此。但如果不是这样工作，助手可以建立一个与 <literal>phone_number</literal> 具有相同列的表，并每天将数据复制到那里一次。然后这就是助手自己的数据，助手可以按自己的意愿向所有人授予访问权限。一条 <command>GRANT</command> 命令意味着，<quote>我信任你</quote>。如果你信任的人做了上面的事情，是时候仔细考虑一下，然后使用 <command>REVOKE</command>。
 </para>
 
 <para>
-    Note that while views can be used to hide the contents of certain
-    columns using the technique shown above, they cannot be used to reliably
-    conceal the data in unseen rows unless the
-    <literal>security_barrier</literal> flag has been set.  For example,
-    the following view is insecure:
+    请注意，虽然可以使用上面展示的技术用视图隐藏某些列的内容，但除非已设置 <literal>security_barrier</literal> 标志，否则不能可靠地隐藏未看见的行中的数据。例如，以下视图是不安全的：
 <programlisting>
 CREATE VIEW phone_number AS
     SELECT person, phone FROM phone_data WHERE phone NOT LIKE '412%';
 </programlisting>
-    This view might seem secure, since the rule system will rewrite any
-    <command>SELECT</command> from <literal>phone_number</literal> into a
-    <command>SELECT</command> from <literal>phone_data</literal> and add the
-    qualification that only entries where <literal>phone</literal> does not begin
-    with 412 are wanted.  But if the user can create their own functions,
-    it is not difficult to convince the planner to execute the user-defined
-    function prior to the <function>NOT LIKE</function> expression.
-    For example:
+这个视图可能看起来是安全的，因为规则系统会将来自 <literal>phone_number</literal> 的任何 <command>SELECT</command> 重写为来自 <literal>phone_data</literal> 的 <command>SELECT</command>，并添加限定条件：只希望 <literal>phone</literal> 不以 412 开头的条目。但是，如果用户可以创建自己的函数，就不难说服规划器在 <function>NOT LIKE</function> 表达式之前执行用户定义的函数。例如：
 <programlisting>
 CREATE FUNCTION tricky(text, text) RETURNS bool AS $$
 BEGIN
@@ -1679,91 +1645,32 @@ $$ LANGUAGE plpgsql COST 0.0000000000000000000001;
 
 SELECT * FROM phone_number WHERE tricky(person, phone);
 </programlisting>
-    Every person and phone number in the <literal>phone_data</literal> table will be
-    printed as a <literal>NOTICE</literal>, because the planner will choose to
-    execute the inexpensive <function>tricky</function> function before the
-    more expensive <function>NOT LIKE</function>.  Even if the user is
-    prevented from defining new functions, built-in functions can be used in
-    similar attacks.  (For example, most casting functions include their
-    input values in the error messages they produce.)
+<literal>phone_data</literal> 表中的每个人和电话号码都将被打印为 <literal>NOTICE</literal>，因为规划器会选择在开销更大的 <function>NOT LIKE</function> 之前执行开销较小的 <function>tricky</function> 函数。即使阻止用户定义新函数，也可以使用内置函数进行类似的攻击。（例如，大多数类型转换函数会在其产生的错误消息中包含输入值。）
 </para>
 
 <para>
-    Similar considerations apply to update rules. In the examples of
-    the previous section, the owner of the tables in the example
-    database could grant the privileges <literal>SELECT</literal>,
-    <literal>INSERT</literal>, <literal>UPDATE</literal>, and <literal>DELETE</literal> on
-    the <literal>shoelace</literal> view to someone else, but only
-    <literal>SELECT</literal> on <literal>shoelace_log</literal>. The rule action to
-    write log entries will still be executed successfully, and that
-    other user could see the log entries.  But they could not create fake
-    entries, nor could they manipulate or remove existing ones.  In this
-    case, there is no possibility of subverting the rules by convincing
-    the planner to alter the order of operations, because the only rule
-    which references <literal>shoelace_log</literal> is an unqualified
-    <literal>INSERT</literal>.  This might not be true in more complex scenarios.
+    类似的考虑也适用于更新规则。在上一节的示例中，示例数据库中表的所有者可以将 <literal>shoelace</literal> 视图上的权限 <literal>SELECT</literal>、<literal>INSERT</literal>、<literal>UPDATE</literal> 和 <literal>DELETE</literal> 授予其他人，但只能授予 <literal>shoelace_log</literal> 上的 <literal>SELECT</literal>。写入日志条目的规则动作仍将成功执行，并且该其他用户可以看到日志条目。但是他们不能创建虚假条目，也不能操纵或删除现有条目。在这种情况下，不可能通过说服规划器更改操作顺序来破坏规则，因为唯一引用 <literal>shoelace_log</literal> 的规则是一个未加限定的 <literal>INSERT</literal>。在更复杂的场景中，这可能不成立。
 </para>
 
 <para>
-    When it is necessary for a view to provide row-level security, the
-    <literal>security_barrier</literal> attribute should be applied to
-    the view.  This prevents maliciously-chosen functions and operators from
-    being passed values from rows until after the view has done its work.  For
-    example, if the view shown above had been created like this, it would
-    be secure:
+    当视图需要提供行级安全性时，应当为该视图应用 <literal>security_barrier</literal> 属性。这可以防止恶意选择的函数和运算符在视图完成其工作之前接收到来自行的值。例如，如果上面展示的视图是这样创建的，那么它就是安全的：
 <programlisting>
 CREATE VIEW phone_number WITH (security_barrier) AS
     SELECT person, phone FROM phone_data WHERE phone NOT LIKE '412%';
 </programlisting>
-    Views created with the <literal>security_barrier</literal> may perform
-    far worse than views created without this option.  In general, there is
-    no way to avoid this: the fastest possible plan must be rejected
-    if it may compromise security.  For this reason, this option is not
-    enabled by default.
+    使用 <literal>security_barrier</literal> 创建的视图，其性能可能远差于未使用该选项创建的视图。一般来说，没有办法避免这一点：如果最快的计划可能危及安全性，就必须拒绝它。因此，该选项默认不启用。
 </para>
 
 <para>
-    The query planner has more flexibility when dealing with functions that
-    have no side effects.  Such functions are referred to as <literal>LEAKPROOF</literal>, and
-    include many simple, commonly used operators, such as many equality
-    operators.  The query planner can safely allow such functions to be evaluated
-    at any point in the query execution process, since invoking them on rows
-    invisible to the user will not leak any information about the unseen rows.
-    Further, functions which do not take arguments or which are not passed any
-    arguments from the security barrier view do not have to be marked as
-    <literal>LEAKPROOF</literal> to be pushed down, as they never receive data
-    from the view.  In contrast, a function that might throw an error depending
-    on the values received as arguments (such as one that throws an error in the
-    event of overflow or division by zero) is not leakproof, and could provide
-    significant information about the unseen rows if applied before the security
-    view's row filters.
+    查询规划器在处理没有副作用的函数时具有更大的灵活性。这类函数被称为 <literal>LEAKPROOF</literal>，其中包括许多简单、常用的运算符，例如许多相等运算符。查询规划器可以安全地允许在查询执行过程中的任何位置对这些函数求值，因为对用户不可见的行调用它们不会泄露任何关于这些不可见行的信息。此外，不接受参数、或者没有从安全屏障视图接收到任何参数的函数，不必标记为 <literal>LEAKPROOF</literal> 就可以被下推，因为它们永远不会从视图接收数据。相反，某个函数如果可能根据作为参数接收到的值抛出错误（例如在溢出或除零时抛出错误的函数），那么它就不是防泄漏的，如果在安全视图的行过滤之前被应用，就可能提供关于不可见行的重要信息。
 </para>
 
 <para>
-    For example, an index scan cannot be selected for queries on security
-    barrier views (or tables with row-level security policies) if an
-    operator used in the <literal>WHERE</literal> clause is associated with the
-    operator family of the index, but its underlying function is not marked
-    <literal>LEAKPROOF</literal>. The <xref linkend="app-psql"/> program's
-    <command><link linkend="app-psql-meta-command-dao">\dAo+</link></command>
-    meta-command is useful to list operator families and determine which of
-    their operators are marked as leakproof.
+    例如，如果 <literal>WHERE</literal> 子句中使用的运算符与索引的运算符族相关联，但其底层函数未标记为 <literal>LEAKPROOF</literal>，那么对于安全屏障视图（或具有行级安全策略的表）上的查询，就不能选择索引扫描。<xref linkend="app-psql"/> 程序的 <command><link linkend="app-psql-meta-command-dao">\dAo+</link></command> 元命令可用于列出运算符族，并确定其中哪些运算符被标记为防泄漏。
 </para>
 
 <para>
-    It is important to understand that even a view created with the
-    <literal>security_barrier</literal> option is intended to be secure only
-    in the limited sense that the contents of the invisible tuples will not be
-    passed to possibly-insecure functions.  The user may well have other means
-    of making inferences about the unseen data; for example, they can see the
-    query plan using <command>EXPLAIN</command>, or measure the run time of
-    queries against the view.  A malicious attacker might be able to infer
-    something about the amount of unseen data, or even gain some information
-    about the data distribution or most common values (since these things may
-    affect the run time of the plan; or even, since they are also reflected in
-    the optimizer statistics, the choice of plan).  If these types of "covert
-    channel" attacks are of concern, it is probably unwise to grant any access
-    to the data at all.
+    必须理解，即使是用 <literal>security_barrier</literal> 选项创建的视图，其安全性也仅限于不可见元组的内容不会被传递给可能不安全的函数这一有限意义上。用户完全可能有其他方式来推断未看到的数据；例如，他们可以使用 <command>EXPLAIN</command> 查看查询计划，或者测量针对该视图的查询的运行时间。恶意攻击者或许能够推断出关于不可见数据量的一些信息，甚至获得关于数据分布或最常见值的一些信息（因为这些因素可能影响计划的运行时间；甚至，由于它们也反映在优化器统计信息中，还会影响计划的选择）。如果担心这类“隐蔽通道”攻击，那么完全不授予对数据的任何访问权限可能是明智的。
 </para>
 </sect1>
 
