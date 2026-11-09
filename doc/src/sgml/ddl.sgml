@@ -1056,16 +1056,10 @@ CREATE TABLE circles (
  </sect1>
 
  <sect1 id="ddl-system-columns">
-  <title>System Columns</title>
+  <title>系统列</title>
 
   <para>
-   Every table has several <firstterm>system columns</firstterm> that are
-   implicitly defined by the system.  Therefore, these names cannot be
-   used as names of user-defined columns.  (Note that these
-   restrictions are separate from whether the name is a key word or
-   not; quoting a name will not allow you to escape these
-   restrictions.)  You do not really need to be concerned about these
-   columns; just know they exist.
+   每个表都有若干由系统隐式定义的<firstterm>系统列</firstterm>。因此，这些名称不能用作用户定义列的名称。（请注意，这些限制与名称是否为关键字无关；给名称加引号并不能让你绕过这些限制。）你其实不必关心这些列，只需知道它们存在即可。
   </para>
 
   <indexterm>
@@ -1082,14 +1076,7 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The OID of the table containing this row.  This column is
-      particularly handy for queries that select from partitioned
-      tables (see <xref linkend="ddl-partitioning"/>) or inheritance
-      hierarchies (see <xref linkend="ddl-inherit"/>), since without it,
-      it's difficult to tell which individual table a row came from.  The
-      <structfield>tableoid</structfield> can be joined against the
-      <structfield>oid</structfield> column of
-      <structname>pg_class</structname> to obtain the table name.
+      包含本行的表的 OID。对于从分区表（见 <xref linkend="ddl-partitioning"/>）或继承层次结构（见 <xref linkend="ddl-inherit"/>）中查询数据的查询来说，这一列特别方便，因为如果没有它，就很难分辨某一行来自哪个具体的表。可以将 <structfield>tableoid</structfield> 与 <structname>pg_class</structname> 的 <structfield>oid</structfield> 列进行连接以获取表名。
      </para>
     </listitem>
    </varlistentry>
@@ -1102,10 +1089,7 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The identity (transaction ID) of the inserting transaction for
-      this row version.  (A row version is an individual state of a
-      row; each update of a row creates a new row version for the same
-      logical row.)
+      本行版本的插入事务的标识（事务 ID）。（行版本是行的某个单独状态；每次更新一行都会为同一逻辑行创建一个新的行版本。）
      </para>
     </listitem>
    </varlistentry>
@@ -1118,8 +1102,7 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The command identifier (starting at zero) within the inserting
-      transaction.
+      插入事务内的命令标识符（从零开始）。
      </para>
     </listitem>
    </varlistentry>
@@ -1132,11 +1115,7 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The identity (transaction ID) of the deleting transaction, or
-      zero for an undeleted row version.  It is possible for this column to
-      be nonzero in a visible row version. That usually indicates that the
-      deleting transaction hasn't committed yet, or that an attempted
-      deletion was rolled back.
+      删除事务的标识（事务 ID），对于未删除的行版本为零。在可见的行版本中，这一列也可能非零。这通常表示删除事务尚未提交，或者一次尝试的删除已被回滚。
      </para>
     </listitem>
    </varlistentry>
@@ -1149,7 +1128,7 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The command identifier within the deleting transaction, or zero.
+      删除事务中的命令标识符，或者为零。
      </para>
     </listitem>
    </varlistentry>
@@ -1162,35 +1141,18 @@ CREATE TABLE circles (
      </indexterm>
 
      <para>
-      The physical location of the row version within its table.  Note that
-      although the <structfield>ctid</structfield> can be used to
-      locate the row version very quickly, a row's
-      <structfield>ctid</structfield> will change if it is
-      updated or moved by <command>VACUUM FULL</command>.  Therefore
-      <structfield>ctid</structfield> should not be used as a row
-      identifier.  A primary key should be used to identify logical rows.
+      该行版本在其表中的物理位置。请注意，尽管可以使用 <structfield>ctid</structfield> 非常快速地定位该行版本，但如果该行被 <command>VACUUM FULL</command> 更新或移动，其 <structfield>ctid</structfield> 将会改变。因此，不应将 <structfield>ctid</structfield> 用作行标识符。应当使用主键来标识逻辑行。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
    <para>
-    Transaction identifiers are also 32-bit quantities.  In a
-    long-lived database it is possible for transaction IDs to wrap
-    around.  This is not a fatal problem given appropriate maintenance
-    procedures; see <xref linkend="maintenance"/> for details.  It is
-    unwise, however, to depend on the uniqueness of transaction IDs
-    over the long term (more than one billion transactions).
+    事务标识符也是 32 位的量。在长期运行的数据库中，事务 ID 有可能回卷。只要维护规程得当，这并非致命问题；详情请参见 <xref linkend="maintenance"/>。然而，依赖事务 ID 在长期（超过十亿个事务）内的唯一性是不明智的。
    </para>
 
    <para>
-    Command identifiers are also 32-bit quantities.  This creates a hard limit
-    of 2<superscript>32</superscript> (4 billion) <acronym>SQL</acronym> commands
-    within a single transaction.  In practice this limit is not a
-    problem &mdash; note that the limit is on the number of
-    <acronym>SQL</acronym> commands, not the number of rows processed.
-    Also, only commands that actually modify the database contents will
-    consume a command identifier.
+    命令标识符也是 32 位的量。这就造成了单个事务内 <acronym>SQL</acronym> 命令的硬性上限为 2<superscript>32</superscript>（40 亿）条。在实践中这一限制并不构成问题 &mdash; 请注意，该限制针对的是 <acronym>SQL</acronym> 命令的数量，而不是所处理的行数。此外，只有真正修改数据库内容的命令才会消耗命令标识符。
    </para>
  </sect1>
 
