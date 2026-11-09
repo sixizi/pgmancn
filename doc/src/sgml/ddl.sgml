@@ -2869,7 +2869,7 @@ VALUES ('Albany', NULL, NULL, 'NY');
   </sect1>
 
   <sect1 id="ddl-partitioning">
-   <title>Table Partitioning</title>
+   <title>表分区</title>
 
    <indexterm>
     <primary>partitioning</primary>
@@ -2885,13 +2885,11 @@ VALUES ('Albany', NULL, NULL, 'NY');
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> supports basic table
-    partitioning. This section describes why and how to implement
-    partitioning as part of your database design.
+    <productname>PostgreSQL</productname> 支持基本的表分区。本节描述为什么以及如何将分区作为数据库设计的一部分来实现。
    </para>
 
    <sect2 id="ddl-partitioning-overview">
-     <title>Overview</title>
+     <title>概述</title>
 
     <para>
      Partitioning refers to splitting what is logically one large table into
@@ -2899,40 +2897,26 @@ VALUES ('Albany', NULL, NULL, 'NY');
     <itemizedlist>
      <listitem>
       <para>
-       Query performance can be improved dramatically in certain situations,
-       particularly when most of the heavily accessed rows of the table are in a
-       single partition or a small number of partitions.  Partitioning
-       effectively substitutes for the upper tree levels of indexes,
-       making it more likely that the heavily-used parts of the indexes
-       fit in memory.
+       在某些情况下，查询性能可以显著提高，特别是当表中被频繁访问的大部分行位于单个分区或少量分区中时。分区有效地替代了索引的上层树级，使得索引中频繁使用的部分更有可能放入内存。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When queries or updates access a large percentage of a single
-       partition, performance can be improved by using a
-       sequential scan of that partition instead of using an
-       index, which would require random-access reads scattered across the
-       whole table.
+       当查询或更新访问单个分区的很大比例时，通过使用该分区的顺序扫描而不是使用索引，可以提高性能，因为使用索引需要进行分散在整个表上的随机访问读取。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Bulk loads and deletes can be accomplished by adding or removing
-       partitions, if the usage pattern is accounted for in the
-       partitioning design.  Dropping an individual partition
-       using <command>DROP TABLE</command>, or doing <command>ALTER TABLE
-       DETACH PARTITION</command>, is far faster than a bulk
-       operation.  These commands also entirely avoid the
-       <command>VACUUM</command> overhead caused by a bulk <command>DELETE</command>.
+       如果分区设计中考虑了使用模式，那么可以通过添加或删除分区来完成批量加载和删除。使用 <command>DROP TABLE</command> 删除单个分区，或执行 <command>ALTER TABLE
+       DETACH PARTITION</command>，远比批量操作快得多。这些命令还完全避免了批量 <command>DELETE</command> 引起的 <command>VACUUM</command> 开销。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Seldom-used data can be migrated to cheaper and slower storage media.
+       不常使用的数据可以迁移到更便宜、更慢的存储介质上。
       </para>
      </listitem>
     </itemizedlist>
@@ -2950,46 +2934,33 @@ VALUES ('Albany', NULL, NULL, 'NY');
 
      <variablelist>
       <varlistentry id="ddl-partitioning-overview-range">
-       <term>Range Partitioning</term>
+       <term>范围分区</term>
 
        <listitem>
         <para>
-         The table is partitioned into <quote>ranges</quote> defined
-         by a key column or set of columns, with no overlap between
-         the ranges of values assigned to different partitions.  For
-         example, one might partition by date ranges, or by ranges of
-         identifiers for particular business objects.
-         Each range's bounds are understood as being inclusive at the
-         lower end and exclusive at the upper end.  For example, if one
-         partition's range is from <literal>1</literal>
-         to <literal>10</literal>, and the next one's range is
-         from <literal>10</literal> to <literal>20</literal>, then
-         value <literal>10</literal> belongs to the second partition not
-         the first.
+         表被划分成由一列或多列键定义的<quote>范围</quote>，分配给不同分区的值范围之间没有重叠。例如，可以按日期范围分区，或按特定业务对象的标识符范围分区。
+         每个范围的下界被视为包含在内，上界被视为排除在外。例如，如果一个分区的范围是从 <literal>1</literal>
+         到 <literal>10</literal>，下一个分区的范围是从 <literal>10</literal> 到 <literal>20</literal>，那么值 <literal>10</literal> 属于第二个分区，而不是第一个分区。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry id="ddl-partitioning-overview-list">
-       <term>List Partitioning</term>
+       <term>列表分区</term>
 
        <listitem>
         <para>
-         The table is partitioned by explicitly listing which key value(s)
-         appear in each partition.
+         通过显式列出每个分区中出现的键值来对表进行分区。
         </para>
        </listitem>
       </varlistentry>
 
       <varlistentry id="ddl-partitioning-overview-hash">
-       <term>Hash Partitioning</term>
+       <term>哈希分区</term>
 
        <listitem>
         <para>
-         The table is partitioned by specifying a modulus and a remainder for
-         each partition. Each partition will hold the rows for which the hash
-         value of the partition key divided by the specified modulus will
-         produce the specified remainder.
+         通过为每个分区指定模数和余数来对表进行分区。每个分区将持有这样的行：其分区键的哈希值除以指定的模数后得到指定的余数。
         </para>
        </listitem>
       </varlistentry>
@@ -3004,69 +2975,36 @@ VALUES ('Albany', NULL, NULL, 'NY');
    </sect2>
 
   <sect2 id="ddl-partitioning-declarative">
-   <title>Declarative Partitioning</title>
+   <title>声明式分区</title>
 
    <para>
-    <productname>PostgreSQL</productname> allows you to declare
-    that a table is divided into partitions.  The table that is divided
-    is referred to as a <firstterm>partitioned table</firstterm>.  The
-    declaration includes the <firstterm>partitioning method</firstterm>
-    as described above, plus a list of columns or expressions to be used
-    as the <firstterm>partition key</firstterm>.
+    <productname>PostgreSQL</productname> 允许你声明一个表被划分为若干个分区。被划分的表称为<firstterm>分区表</firstterm>。该声明包括上文所述的<firstterm>分区方法</firstterm>，以及一个用作<firstterm>分区键</firstterm>的列或表达式列表。
    </para>
 
    <para>
-    The partitioned table itself is a <quote>virtual</quote> table having
-    no storage of its own.  Instead, the storage belongs
-    to <firstterm>partitions</firstterm>, which are otherwise-ordinary
-    tables associated with the partitioned table.
-    Each partition stores a subset of the data as defined by its
-    <firstterm>partition bounds</firstterm>.
-    All rows inserted into a partitioned table will be routed to the
-    appropriate one of the partitions based on the values of the partition
-    key column(s).
-    Updating the partition key of a row will cause it to be moved into a
-    different partition if it no longer satisfies the partition bounds
-    of its original partition.
+    分区表本身是一个<quote>虚拟</quote>表，没有自己的存储。相反，存储属于<firstterm>分区</firstterm>，分区是与分区表关联的普通表。
+    每个分区存储由其<firstterm>分区边界</firstterm>所定义的数据子集。
+    插入到分区表中的所有行都将根据分区键列的值被路由到相应的分区。
+    更新某一行的分区键时，如果该行不再满足其原分区的分区边界，它将被移动到另一个分区。
    </para>
 
    <para>
-    Partitions may themselves be defined as partitioned tables, resulting
-    in <firstterm>sub-partitioning</firstterm>.  Although all partitions
-    must have the same columns as their partitioned parent, partitions may
-    have their
-    own indexes, constraints and default values, distinct from those of other
-    partitions.  See <xref linkend="sql-createtable"/> for more details on
-    creating partitioned tables and partitions.
+    分区本身也可以被定义为分区表，从而形成<firstterm>子分区</firstterm>。尽管所有分区都必须与其分区父表具有相同的列，但各分区可以拥有自己的索引、约束和默认值，与其他分区不同。有关创建分区表和分区的更多细节，请参见 <xref linkend="sql-createtable"/>。
    </para>
 
    <para>
-    It is not possible to turn a regular table into a partitioned table or
-    vice versa.  However, it is possible to add an existing regular or
-    partitioned table as a partition of a partitioned table, or remove a
-    partition from a partitioned table turning it into a standalone table;
-    this can simplify and speed up many maintenance processes.
-    See <xref linkend="sql-altertable"/> to learn more about the
-    <command>ATTACH PARTITION</command> and <command>DETACH PARTITION</command>
-    sub-commands.
+    无法将普通表转变为分区表，反之亦然。但是，可以将一个已存在的普通表或分区表添加为某个分区表的分区，或者从分区表中移除一个分区使其成为独立表；这可以简化和加速许多维护过程。要了解有关 <command>ATTACH PARTITION</command> 和 <command>DETACH PARTITION</command> 子命令的更多信息，请参见 <xref linkend="sql-altertable"/>。
    </para>
 
    <para>
-    Partitions can also be <link linkend="ddl-foreign-data">foreign
-    tables</link>, although considerable care is needed because it is then
-    the user's responsibility that the contents of the foreign table
-    satisfy the partitioning rule.  There are some other restrictions as
-    well.  See <xref linkend="sql-createforeigntable"/> for more
-    information.
+    分区也可以是<link linkend="ddl-foreign-data">外部表</link>，不过这需要格外小心，因为此时用户需要负责确保外部表的内容满足分区规则。此外还有一些其他限制。更多信息请参见 <xref linkend="sql-createforeigntable"/>。
    </para>
 
    <sect3 id="ddl-partitioning-declarative-example">
-    <title>Example</title>
+    <title>示例</title>
 
    <para>
-    Suppose we are constructing a database for a large ice cream company.
-    The company measures peak temperatures every day as well as ice cream
-    sales in each region. Conceptually, we want a table like:
+    假设我们正在为一家大型冰淇淋公司构建数据库。该公司每天测量每个地区的最高气温以及冰淇淋销售量。从概念上讲，我们需要一张这样的表：
 
 <programlisting>
 CREATE TABLE measurement (
@@ -3077,13 +3015,7 @@ CREATE TABLE measurement (
 );
 </programlisting>
 
-    We know that most queries will access just the last week's, month's or
-    quarter's data, since the main use of this table will be to prepare
-    online reports for management.  To reduce the amount of old data that
-    needs to be stored, we decide to keep only the most recent 3 years
-    worth of data. At the beginning of each month we will remove the oldest
-    month's data.  In this situation we can use partitioning to help us meet
-    all of our different requirements for the measurements table.
+    我们知道大多数查询只会访问最近一周、一个月或一个季度的数据，因为这张表的主要用途是为管理层准备在线报表。为了减少需要存储的旧数据量，我们决定只保留最近 3 年的数据。每个月月初，我们将删除最旧一个月的数据。在这种情况下，我们可以使用分区来帮助满足我们对 measurements 表的各种不同需求。
    </para>
 
    <para>
@@ -3092,10 +3024,7 @@ CREATE TABLE measurement (
     <orderedlist spacing="compact">
      <listitem>
       <para>
-       Create the <structname>measurement</structname> table as a partitioned
-       table by specifying the <literal>PARTITION BY</literal> clause, which
-       includes the partitioning method (<literal>RANGE</literal> in this
-       case) and the list of column(s) to use as the partition key.
+       通过指定 <literal>PARTITION BY</literal> 子句将 <structname>measurement</structname> 表创建为分区表，该子句包括分区方法（本例中为 <literal>RANGE</literal>）以及用作分区键的列列表。
 
 <programlisting>
 CREATE TABLE measurement (
@@ -3110,24 +3039,15 @@ CREATE TABLE measurement (
 
      <listitem>
       <para>
-       Create partitions.  Each partition's definition must specify bounds
-       that correspond to the partitioning method and partition key of the
-       parent.  Note that specifying bounds such that the new partition's
-       values would overlap with those in one or more existing partitions will
-       cause an error.
+       创建分区。每个分区的定义必须指定与父表的分区方法和分区键相对应的边界。请注意，如果指定的边界使得新分区的值会与一个或多个现有分区中的值重叠，则会引发错误。
       </para>
 
       <para>
-       Partitions thus created are in every way normal
-       <productname>PostgreSQL</productname>
-       tables (or, possibly, foreign tables).  It is possible to specify a
-       tablespace and storage parameters for each partition separately.
+       这样创建的分区在各方面都是普通的 <productname>PostgreSQL</productname> 表（或者可能是外部表）。可以为每个分区单独指定表空间和存储参数。
       </para>
 
       <para>
-       For our example, each partition should hold one month's worth of
-       data, to match the requirement of deleting one month's data at a
-       time.  So the commands might look like:
+       在我们的示例中，每个分区应容纳一个月的数据，以满足一次删除一个月数据的要求。因此，命令可能如下所示：
 
 <programlisting>
 CREATE TABLE measurement_y2006m02 PARTITION OF measurement
@@ -3150,14 +3070,11 @@ CREATE TABLE measurement_y2008m01 PARTITION OF measurement
     TABLESPACE fasttablespace;
 </programlisting>
 
-       (Recall that adjacent partitions can share a bound value, since
-       range upper bounds are treated as exclusive bounds.)
+       （回想一下，相邻分区可以共享一个边界值，因为范围上界被视为排他边界。）
       </para>
 
       <para>
-       If you wish to implement sub-partitioning, again specify the
-       <literal>PARTITION BY</literal> clause in the commands used to create
-       individual partitions, for example:
+       如果你希望实现子分区，同样在用于创建各个分区的命令中指定 <literal>PARTITION BY</literal> 子句，例如：
 
 <programlisting>
 CREATE TABLE measurement_y2006m02 PARTITION OF measurement
@@ -3165,45 +3082,21 @@ CREATE TABLE measurement_y2006m02 PARTITION OF measurement
     PARTITION BY RANGE (peaktemp);
 </programlisting>
 
-       After creating partitions of <structname>measurement_y2006m02</structname>,
-       any data inserted into <structname>measurement</structname> that is mapped to
-       <structname>measurement_y2006m02</structname> (or data that is
-       directly inserted into <structname>measurement_y2006m02</structname>,
-       which is allowed provided its partition constraint is satisfied)
-       will be further redirected to one of its
-       partitions based on the <structfield>peaktemp</structfield> column.  The partition
-       key specified may overlap with the parent's partition key, although
-       care should be taken when specifying the bounds of a sub-partition
-       such that the set of data it accepts constitutes a subset of what
-       the partition's own bounds allow; the system does not try to check
-       whether that's really the case.
+       在创建 <structname>measurement_y2006m02</structname> 的分区之后，任何插入到 <structname>measurement</structname> 中且被映射到 <structname>measurement_y2006m02</structname> 的数据（或者直接插入到 <structname>measurement_y2006m02</structname> 中的数据，只要满足其分区约束即被允许）将根据 <structfield>peaktemp</structfield> 列进一步重定向到它的某个分区。指定的分区键可以与父表的分区键重叠，不过在指定子分区的边界时应小心，使其接受的数据集合构成该分区自身边界所允许数据的子集；系统不会尝试检查实际情况是否确实如此。
       </para>
 
       <para>
-       Inserting data into the parent table that does not map
-       to one of the existing partitions will cause an error; an appropriate
-       partition must be added manually.
+       将不映射到任何现有分区的数据插入父表会导致错误；必须手动添加适当的分区。
       </para>
 
       <para>
-       It is not necessary to manually create table constraints describing
-       the partition boundary conditions for partitions.  Such constraints
-       will be created automatically.
+       不必手动创建描述分区边界条件的表约束。此类约束将自动创建。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Create an index on the key column(s), as well as any other indexes you
-       might want, on the partitioned table. (The key index is not strictly
-       necessary, but in most scenarios it is helpful.)
-       This automatically creates a matching index on each partition, and
-       any partitions you create or attach later will also have such an
-       index.
-       An index or unique constraint declared on a partitioned table
-       is <quote>virtual</quote> in the same way that the partitioned table
-       is: the actual data is in child indexes on the individual partition
-       tables.
+       在分区表上为键列创建索引，以及你可能需要的任何其他索引。（键索引并非严格必需，但在大多数场景中很有帮助。）这会自动在每个分区上创建匹配的索引，你之后创建或附加的任何分区也将具有这样的索引。在分区表上声明的索引或唯一约束与分区表本身一样是<quote>虚拟</quote>的：实际数据位于各个分区表上的子索引中。
 
 <programlisting>
 CREATE INDEX ON measurement (logdate);
@@ -3213,74 +3106,45 @@ CREATE INDEX ON measurement (logdate);
 
       <listitem>
        <para>
-        Ensure that the <xref linkend="guc-enable-partition-pruning"/>
-        configuration parameter is not disabled in <filename>postgresql.conf</filename>.
-        If it is, queries will not be optimized as desired.
+        确保在 <filename>postgresql.conf</filename> 中未禁用 <xref linkend="guc-enable-partition-pruning"/> 配置参数。如果被禁用，查询将无法按期望进行优化。
        </para>
       </listitem>
     </orderedlist>
    </para>
 
    <para>
-    In the above example we would be creating a new partition each month, so
-    it might be wise to write a script that generates the required DDL
-    automatically.
+    在上面的例子中，我们会每个月创建一个新分区，因此编写一个脚本来自动生成所需的 DDL 可能会比较明智。
    </para>
    </sect3>
 
    <sect3 id="ddl-partitioning-declarative-maintenance">
-    <title>Partition Maintenance</title>
+    <title>分区维护</title>
 
     <para>
-      Normally the set of partitions established when initially defining the
-      table is not intended to remain static.  It is common to want to
-      remove partitions holding old data and periodically add new partitions for
-      new data. One of the most important advantages of partitioning is
-      precisely that it allows this otherwise painful task to be executed
-      nearly instantaneously by manipulating the partition structure, rather
-      than physically moving large amounts of data around.
+      通常，最初定义表时建立的分区集合并不打算保持静态不变。常见的情况是希望删除保存旧数据的分区，并定期为新数据添加新分区。分区最重要的优势之一恰恰在于：它允许通过操纵分区结构来近乎瞬时地执行这一原本痛苦的任务，而不是在物理上搬移大量数据。
     </para>
 
     <para>
-     The simplest option for removing old data is to drop the partition that
-     is no longer necessary:
+     删除旧数据最简单的选择是删除不再需要的分区：
 <programlisting>
 DROP TABLE measurement_y2006m02;
 </programlisting>
-     This can very quickly delete millions of records because it doesn't have
-     to individually delete every record.  Note however that the above command
-     requires taking an <literal>ACCESS EXCLUSIVE</literal> lock on the parent
-     table.
+     这可以非常快地删除数百万条记录，因为它不必逐条删除每条记录。但请注意，上述命令需要在父表上获取 <literal>ACCESS EXCLUSIVE</literal> 锁。
     </para>
 
    <para>
-     Another option that is often preferable is to remove the partition from
-     the partitioned table but retain access to it as a table in its own
-     right.  This has two forms:
+     另一种通常更可取的选择是将分区从分区表中移除，但保留其作为独立表的访问能力。这有两种形式：
 
 <programlisting>
 ALTER TABLE measurement DETACH PARTITION measurement_y2006m02;
 ALTER TABLE measurement DETACH PARTITION measurement_y2006m02 CONCURRENTLY;
 </programlisting>
 
-     These allow further operations to be performed on the data before
-     it is dropped. For example, this is often a useful time to back up
-     the data using <command>COPY</command>, <application>pg_dump</application>, or
-     similar tools. It might also be a useful time to aggregate data
-     into smaller formats, perform other data manipulations, or run
-     reports.  The first form of the command requires an
-     <literal>ACCESS EXCLUSIVE</literal> lock on the parent table.
-     Adding the <literal>CONCURRENTLY</literal> qualifier as in the second
-     form allows the detach operation to require only
-     <literal>SHARE UPDATE EXCLUSIVE</literal> lock on the parent table, but see
-     <link linkend="sql-altertable-detach-partition"><literal>ALTER TABLE ... DETACH PARTITION</literal></link>
-     for details on the restrictions.
+     这些形式允许在数据被删除之前对其执行进一步操作。例如，这通常是用 <command>COPY</command>、<application>pg_dump</application> 或类似工具备份数据的好时机。这也可能是将数据聚合为更小的格式、执行其他数据操作或运行报表的好时机。命令的第一种形式需要在父表上获取 <literal>ACCESS EXCLUSIVE</literal> 锁。如第二种形式那样添加 <literal>CONCURRENTLY</literal> 限定符，可使分离操作只需在父表上获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁，但有关限制的详细信息请参见 <link linkend="sql-altertable-detach-partition"><literal>ALTER TABLE ... DETACH PARTITION</literal></link>。
    </para>
 
    <para>
-     Similarly we can add a new partition to handle new data. We can create an
-     empty partition in the partitioned table just as the original partitions
-     were created above:
+     类似地，我们可以添加一个新分区来处理新数据。我们可以像上面创建原始分区那样，在分区表中创建一个空分区：
 
 <programlisting>
 CREATE TABLE measurement_y2008m02 PARTITION OF measurement
@@ -3288,20 +3152,7 @@ CREATE TABLE measurement_y2008m02 PARTITION OF measurement
     TABLESPACE fasttablespace;
 </programlisting>
 
-     As an alternative to creating a new partition, it is sometimes more
-     convenient to create a new table separate from the partition structure
-     and attach it as a partition later.  This allows new data to be loaded,
-     checked, and transformed prior to it appearing in the partitioned table.
-     Moreover, the <literal>ATTACH PARTITION</literal> operation requires
-     only a <literal>SHARE UPDATE EXCLUSIVE</literal> lock on the
-     partitioned table rather than the <literal>ACCESS EXCLUSIVE</literal>
-     lock required by <command>CREATE TABLE ... PARTITION OF</command>,
-     so it is more friendly to concurrent operations on the partitioned table;
-     see <link linkend="sql-altertable-attach-partition"><literal>ALTER TABLE ... ATTACH PARTITION</literal></link>
-     for additional details.  The
-     <link linkend="sql-createtable-parms-like"><literal>CREATE TABLE ... LIKE</literal></link>
-     option can be helpful to avoid tediously repeating the parent table's
-     definition; for example:
+     作为创建新分区的替代方案，有时更方便的做法是创建一个独立于分区结构的新表，稍后再将其作为分区附加。这样可以在新数据出现在分区表之前对其进行加载、检查和转换。此外，<literal>ATTACH PARTITION</literal> 操作只需要在分区表上持有 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁，而不是 <command>CREATE TABLE ... PARTITION OF</command> 所需的 <literal>ACCESS EXCLUSIVE</literal> 锁，因此对分区表上的并发操作更为友好；详情请参见 <link linkend="sql-altertable-attach-partition"><literal>ALTER TABLE ... ATTACH PARTITION</literal></link>。<link linkend="sql-createtable-parms-like"><literal>CREATE TABLE ... LIKE</literal></link> 选项有助于避免繁琐地重复父表的定义；例如：
 
 <programlisting>
 CREATE TABLE measurement_y2008m02
@@ -3320,50 +3171,16 @@ ALTER TABLE measurement ATTACH PARTITION measurement_y2008m02
     </para>
 
     <para>
-     Note that when running the <command>ATTACH PARTITION</command> command,
-     the table will be scanned to validate the partition constraint while
-     holding an <literal>ACCESS EXCLUSIVE</literal> lock on that partition.
-     As shown above, it is recommended to avoid this scan by creating a
-     <literal>CHECK</literal> constraint matching the expected partition
-     constraint on the table prior to attaching it.  Once the
-     <command>ATTACH PARTITION</command> is complete, it is recommended to drop
-     the now-redundant <literal>CHECK</literal> constraint.
-     If the table being attached is itself a partitioned table, then each of its
-     sub-partitions will be recursively locked and scanned until either a
-     suitable <literal>CHECK</literal> constraint is encountered or the leaf
-     partitions are reached.
+     请注意，运行 <command>ATTACH PARTITION</command> 命令时，会在该分区上持有 <literal>ACCESS EXCLUSIVE</literal> 锁的同时扫描该表以验证分区约束。如上所示，建议在附加之前先在表上创建一个与预期分区约束匹配的 <literal>CHECK</literal> 约束，以避免这种扫描。一旦 <command>ATTACH PARTITION</command> 完成，建议删除现在已多余的 <literal>CHECK</literal> 约束。如果要附加的表本身就是一个分区表，那么它的每个子分区都将被递归地锁定和扫描，直到遇到合适的 <literal>CHECK</literal> 约束或到达叶子分区为止。
     </para>
 
     <para>
-     Similarly, if the partitioned table has a <literal>DEFAULT</literal>
-     partition, it is recommended to create a <literal>CHECK</literal>
-     constraint which excludes the to-be-attached partition's constraint.  If
-     this is not done, the <literal>DEFAULT</literal> partition will be
-     scanned to verify that it contains no records which should be located in
-     the partition being attached.  This operation will be performed whilst
-     holding an <literal>ACCESS EXCLUSIVE</literal> lock on the <literal>
-     DEFAULT</literal> partition.  If the <literal>DEFAULT</literal> partition
-     is itself a partitioned table, then each of its partitions will be
-     recursively checked in the same way as the table being attached, as
-     mentioned above.
+     类似地，如果分区表有一个 <literal>DEFAULT</literal> 分区，建议创建一个 <literal>CHECK</literal> 约束，以排除待附加分区的约束。如果不这样做，将扫描 <literal>DEFAULT</literal> 分区以验证其中不包含应位于待附加分区中的记录。此操作将在 <literal>
+     DEFAULT</literal> 分区上持有 <literal>ACCESS EXCLUSIVE</literal> 锁的同时执行。如果 <literal>DEFAULT</literal> 分区本身就是一个分区表，那么它的每个分区都将按照上面提到的与待附加表相同的方式被递归检查。
     </para>
 
     <para>
-     As mentioned earlier, it is possible to create indexes on partitioned
-     tables so that they are applied automatically to the entire hierarchy.
-     This can be very convenient as not only will all existing partitions be
-     indexed, but any future partitions will be as well.  However, one
-     limitation when creating new indexes on partitioned tables is that it
-     is not possible to use the <literal>CONCURRENTLY</literal>
-     qualifier, which could lead to long lock times.  To avoid this, you can
-     use <command>CREATE INDEX ON ONLY</command> the partitioned table, which
-     creates the new index marked as invalid, preventing automatic application
-     to existing partitions.  Instead, indexes can then be created individually
-     on each partition using <literal>CONCURRENTLY</literal> and
-     <firstterm>attached</firstterm> to the partitioned index on the parent
-     using <command>ALTER INDEX ... ATTACH PARTITION</command>.  Once indexes for
-     all the partitions are attached to the parent index, the parent index will
-     be marked valid automatically.  Example:
+     如前所述，可以在分区表上创建索引，使其自动应用于整个层次结构。这非常方便，因为不仅所有现有分区都会被索引，未来创建的分区也会如此。然而，在分区表上创建新索引时的一个限制是，不能使用 <literal>CONCURRENTLY</literal> 限定符，这可能导致较长的锁时间。为避免这种情况，您可以对分区表使用 <command>CREATE INDEX ON ONLY</command>，这会创建标记为无效的新索引，从而阻止自动应用到现有分区。取而代之的是，随后可以使用 <literal>CONCURRENTLY</literal> 在每个分区上单独创建索引，并使用 <command>ALTER INDEX ... ATTACH PARTITION</command> 将其 <firstterm>附加</firstterm> 到父表上的分区索引。一旦所有分区的索引都附加到父索引，父索引将自动标记为有效。示例：
 <programlisting>
 CREATE INDEX measurement_usls_idx ON ONLY measurement (unitsales);
 
@@ -3374,9 +3191,7 @@ ALTER INDEX measurement_usls_idx
 ...
 </programlisting>
 
-     This technique can be used with <literal>UNIQUE</literal> and
-     <literal>PRIMARY KEY</literal> constraints too; the indexes are created
-     implicitly when the constraint is created.  Example:
+此技术也可用于 <literal>UNIQUE</literal> 和 <literal>PRIMARY KEY</literal> 约束；创建约束时会隐式创建索引。示例：
 <programlisting>
 ALTER TABLE ONLY measurement ADD UNIQUE (city_id, logdate);
 
@@ -3389,63 +3204,39 @@ ALTER INDEX measurement_city_id_logdate_key
    </sect3>
 
    <sect3 id="ddl-partitioning-declarative-limitations">
-    <title>Limitations</title>
+    <title>限制</title>
 
    <para>
     The following limitations apply to partitioned tables:
     <itemizedlist>
      <listitem>
       <para>
-       To create a unique or primary key constraint on a partitioned table,
-       the partition keys must not include any expressions or function calls
-       and the constraint's columns must include all of the partition key
-       columns.  This limitation exists because the individual indexes making
-       up the constraint can only directly enforce uniqueness within their own
-       partitions; therefore, the partition structure itself must guarantee
-       that there are not duplicates in different partitions.
+       要在分区表上创建唯一约束或主键约束，分区键不得包含任何表达式或函数调用，并且约束的列必须包含所有分区键列。存在此限制是因为组成该约束的各个索引只能直接在自己的分区内强制唯一性；因此，分区结构本身必须保证不同分区之间不存在重复项。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Similarly an exclusion constraint must include all the
-       partition key columns. Furthermore the constraint must compare those
-       columns for equality (not e.g. <literal>&amp;&amp;</literal>).
-       Again, this limitation stems from not being able to enforce
-       cross-partition restrictions. The constraint may include additional
-       columns that aren't part of the partition key, and it may compare
-       those with any operators you like.
+       类似地，排除约束必须包含所有分区键列。此外，该约束必须对这些列进行相等比较（而不是例如 <literal>&amp;&amp;</literal>）。同样，此限制源于无法强制执行跨分区限制。该约束可以包含不属于分区键的额外列，并且可以使用您喜欢的任何运算符来比较这些列。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <literal>BEFORE ROW</literal> triggers on <literal>INSERT</literal>
-       cannot change which partition is the final destination for a new row.
+       在 <literal>INSERT</literal> 上的 <literal>BEFORE ROW</literal> 触发器不能更改新行的最终目标分区。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Mixing temporary and permanent relations in the same partition tree is
-       not allowed.  Hence, if the partitioned table is permanent, so must be
-       its partitions and likewise if the partitioned table is temporary.  When
-       using temporary relations, all members of the partition tree have to be
-       from the same session.
+       不允许在同一个分区树中混合使用临时关系和永久关系。因此，如果分区表是永久的，那么它的分区也必须是永久的；同样，如果分区表是临时的，其分区也必须是临时的。使用临时关系时，分区树的所有成员都必须来自同一个会话。
       </para>
      </listitem>
     </itemizedlist>
     </para>
 
     <para>
-     Individual partitions are linked to their partitioned table using
-     inheritance behind-the-scenes.  However, it is not possible to use
-     all of the generic features of inheritance with declaratively
-     partitioned tables or their partitions, as discussed below.  Notably,
-     a partition cannot have any parents other than the partitioned table
-     it is a partition of, nor can a table inherit from both a partitioned
-     table and a regular table.  That means partitioned tables and their
-     partitions never share an inheritance hierarchy with regular tables.
+     在幕后，各个分区通过继承与其分区表相关联。然而，如下文所述，无法对声明式分区表或其分区使用继承的所有通用特性。值得注意的是，一个分区除了它所属的分区表之外不能有任何其他父表，表也不能同时继承一个分区表和一个常规表。这意味着分区表及其分区永远不会与常规表共享继承层次结构。
     </para>
 
     <para>
@@ -3458,45 +3249,26 @@ ALTER INDEX measurement_city_id_logdate_key
      <itemizedlist>
       <listitem>
        <para>
-        Partitions cannot have columns that are not present in the parent.  It
-        is not possible to specify columns when creating partitions with
-        <command>CREATE TABLE</command>, nor is it possible to add columns to
-        partitions after-the-fact using <command>ALTER TABLE</command>.
-        Tables may be added as a partition with <command>ALTER TABLE
-        ... ATTACH PARTITION</command> only if their columns exactly match
-        the parent.
+        分区不能包含父表中不存在的列。使用 <command>CREATE TABLE</command> 创建分区时无法指定列，事后也无法使用 <command>ALTER TABLE</command> 向分区添加列。只有当表的列与父表完全匹配时，才能使用 <command>ALTER TABLE
+        ... ATTACH PARTITION</command> 将其添加为分区。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Both <literal>CHECK</literal> and <literal>NOT NULL</literal>
-        constraints of a partitioned table are always inherited by all its
-        partitions; it is not allowed to create <literal>NO INHERIT</literal>
-        constraints of those types.
-        You cannot drop a constraint of those types if the same constraint
-        is present in the parent table.
+        分区表的 <literal>CHECK</literal> 和 <literal>NOT NULL</literal> 约束始终会被其所有分区继承；不允许创建这些类型的 <literal>NO INHERIT</literal> 约束。如果父表中存在相同的约束，则不能删除这些类型的约束。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Using <literal>ONLY</literal> to add or drop a constraint on only
-        the partitioned table is supported as long as there are no
-        partitions.  Once partitions exist, using <literal>ONLY</literal>
-        will result in an error for any constraints other than
-        <literal>UNIQUE</literal> and <literal>PRIMARY KEY</literal>.
-        Instead, constraints on the partitions
-        themselves can be added and (if they are not present in the parent
-        table) dropped.
+        只要还没有分区，就支持使用 <literal>ONLY</literal> 仅在分区表上添加或删除约束。一旦存在分区，对于除 <literal>UNIQUE</literal> 和 <literal>PRIMARY KEY</literal> 之外的任何约束，使用 <literal>ONLY</literal> 都会导致错误。相反，可以在分区本身上添加约束，并且（如果父表中不存在这些约束）可以删除它们。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        As a partitioned table does not have any data itself, attempts to use
-        <command>TRUNCATE</command> <literal>ONLY</literal> on a partitioned
-        table will always return an error.
+        由于分区表本身不包含任何数据，尝试在分区表上使用 <command>TRUNCATE</command> <literal>ONLY</literal> 将总是返回错误。
        </para>
       </listitem>
      </itemizedlist>
@@ -3505,7 +3277,7 @@ ALTER INDEX measurement_city_id_logdate_key
    </sect2>
 
    <sect2 id="ddl-partitioning-using-inheritance">
-    <title>Partitioning Using Inheritance</title>
+    <title>使用继承实现分区</title>
 
     <para>
      While the built-in declarative partitioning is suitable for most
@@ -3517,32 +3289,26 @@ ALTER INDEX measurement_city_id_logdate_key
      <itemizedlist>
       <listitem>
        <para>
-        For declarative partitioning, partitions must have exactly the same set
-        of columns as the partitioned table, whereas with table inheritance,
-        child tables may have extra columns not present in the parent.
+        对于声明式分区，分区必须与分区表具有完全相同的列集合；而使用表继承时，子表可以包含父表中不存在的额外列。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Table inheritance allows for multiple inheritance.
+        表继承允许多重继承。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Declarative partitioning only supports range, list and hash
-        partitioning, whereas table inheritance allows data to be divided in a
-        manner of the user's choosing.  (Note, however, that if constraint
-        exclusion is unable to prune child tables effectively, query performance
-        might be poor.)
+        声明式分区仅支持范围分区、列表分区和哈希分区，而表继承允许按照用户选择的方式划分数据。（但请注意，如果约束排除无法有效地裁剪子表，查询性能可能会很差。）
        </para>
       </listitem>
      </itemizedlist>
     </para>
 
     <sect3 id="ddl-partitioning-inheritance-example">
-     <title>Example</title>
+     <title>示例</title>
 
      <para>
       This example builds a partitioning structure equivalent to the
@@ -3552,13 +3318,7 @@ ALTER INDEX measurement_city_id_logdate_key
       <orderedlist spacing="compact">
        <listitem>
         <para>
-         Create the <quote>root</quote> table, from which all of the
-         <quote>child</quote> tables will inherit.  This table will contain no data.  Do not
-         define any check constraints on this table, unless you intend them
-         to be applied equally to all child tables.  There is no point in
-         defining any indexes or unique constraints on it, either.  For our
-         example, the root table is the <structname>measurement</structname>
-         table as originally defined:
+         创建<quote>根</quote>表，所有<quote>子</quote>表都将从它继承。该表不包含任何数据。不要在此表上定义任何检查约束，除非你打算让它们同样应用于所有子表。在此表上定义任何索引或唯一约束也没有意义。在我们的示例中，根表就是最初定义的 <structname>measurement</structname> 表：
 
 <programlisting>
 CREATE TABLE measurement (
@@ -3573,11 +3333,7 @@ CREATE TABLE measurement (
 
        <listitem>
         <para>
-         Create several <quote>child</quote> tables that each inherit from
-         the root table.  Normally, these tables will not add any columns
-         to the set inherited from the root.  Just as with declarative
-         partitioning, these tables are in every way normal
-         <productname>PostgreSQL</productname> tables (or foreign tables).
+         创建若干个<quote>子</quote>表，每个都从根表继承。通常，这些表不会向从根表继承的列集合中添加任何列。与声明式分区一样，这些表在各方面都是普通的 <productname>PostgreSQL</productname> 表（或外部表）。
         </para>
 
         <para>
@@ -3594,27 +3350,23 @@ CREATE TABLE measurement_y2008m01 () INHERITS (measurement);
 
        <listitem>
         <para>
-         Add non-overlapping table constraints to the child tables to
-         define the allowed key values in each.
+         向子表添加互不重叠的表约束，以定义每个表中允许的键值。
         </para>
 
         <para>
-         Typical examples would be:
+         典型的例子是：
 <programlisting>
 CHECK ( x = 1 )
 CHECK ( county IN ( 'Oxfordshire', 'Buckinghamshire', 'Warwickshire' ))
 CHECK ( outletID &gt;= 100 AND outletID &lt; 200 )
 </programlisting>
-         Ensure that the constraints guarantee that there is no overlap
-         between the key values permitted in different child tables.  A common
-         mistake is to set up range constraints like:
+        确保这些约束保证不同子表中允许的键值之间没有重叠。一个常见的错误是设置这样的范围约束：
 <programlisting>
 CHECK ( outletID BETWEEN 100 AND 200 )
 CHECK ( outletID BETWEEN 200 AND 300 )
 </programlisting>
-         This is wrong since it is not clear which child table the key
-         value 200 belongs in.
-         Instead, ranges should be defined in this style:
+        这是错误的，因为不清楚键值 200 属于哪个子表。
+        相反，范围应该按这种方式定义：
 
 <programlisting>
 CREATE TABLE measurement_y2006m02 (
@@ -3643,8 +3395,7 @@ CREATE TABLE measurement_y2008m01 (
 
        <listitem>
         <para>
-         For each child table, create an index on the key column(s),
-         as well as any other indexes you might want.
+         为每个子表在键列上创建索引，以及你可能需要的任何其他索引。
 <programlisting>
 CREATE INDEX measurement_y2006m02_logdate ON measurement_y2006m02 (logdate);
 CREATE INDEX measurement_y2006m03_logdate ON measurement_y2006m03 (logdate);
@@ -3657,12 +3408,9 @@ CREATE INDEX measurement_y2008m01_logdate ON measurement_y2008m01 (logdate);
 
        <listitem>
         <para>
-         We want our application to be able to say <literal>INSERT INTO
-         measurement ...</literal> and have the data be redirected into the
-         appropriate child table.  We can arrange that by attaching
-         a suitable trigger function to the root table.
-         If data will be added only to the latest child, we can
-         use a very simple trigger function:
+         我们希望应用程序能够执行 <literal>INSERT INTO
+         measurement ...</literal>，并将数据重定向到相应的子表。我们可以通过将合适的触发器函数附加到根表来实现这一点。
+        如果数据只会添加到最新的子表，我们可以使用一个非常简单的触发器函数：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION measurement_insert_trigger()
@@ -3677,8 +3425,7 @@ LANGUAGE plpgsql;
         </para>
 
         <para>
-         After creating the function, we create a trigger which
-         calls the trigger function:
+         创建函数之后，我们创建一个调用该触发器函数的触发器：
 
 <programlisting>
 CREATE TRIGGER insert_measurement_trigger
@@ -3686,15 +3433,11 @@ CREATE TRIGGER insert_measurement_trigger
     FOR EACH ROW EXECUTE FUNCTION measurement_insert_trigger();
 </programlisting>
 
-         We must redefine the trigger function each month so that it always
-         inserts into the current child table.  The trigger definition does
-         not need to be updated, however.
+        我们必须每个月重新定义触发器函数，以便它始终插入到当前子表。不过，触发器定义不需要更新。
         </para>
 
         <para>
-         We might want to insert data and have the server automatically
-         locate the child table into which the row should be added. We
-         could do this with a more complex trigger function, for example:
+         我们可能希望插入数据时让服务器自动定位该行应加入哪个子表。我们可以用一个更复杂的触发器函数来实现，例如：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION measurement_insert_trigger()
@@ -3719,30 +3462,21 @@ $$
 LANGUAGE plpgsql;
 </programlisting>
 
-         The trigger definition is the same as before.
-         Note that each <literal>IF</literal> test must exactly match the
-         <literal>CHECK</literal> constraint for its child table.
+         触发器定义与之前相同。请注意，每个 <literal>IF</literal> 测试都必须与其子表的 <literal>CHECK</literal> 约束完全匹配。
         </para>
 
         <para>
-         While this function is more complex than the single-month case,
-         it doesn't need to be updated as often, since branches can be
-         added in advance of being needed.
+         虽然这个函数比单月的情况更复杂，但它不需要那么频繁地更新，因为可以在需要之前就提前添加分支。
         </para>
 
         <note>
          <para>
-          In practice, it might be best to check the newest child first,
-          if most inserts go into that child.  For simplicity, we have
-          shown the trigger's tests in the same order as in other parts
-          of this example.
+          在实践中，如果大多数插入都进入最新的子表，那么最好先检查最新的子表。为简单起见，我们按照本示例其他部分中的相同顺序展示了触发器的测试。
          </para>
         </note>
 
         <para>
-         A different approach to redirecting inserts into the appropriate
-         child table is to set up rules, instead of a trigger, on the
-         root table.  For example:
+         将插入重定向到适当子表的另一种方法是在根表上建立规则而不是触发器。例如：
 
 <programlisting>
 CREATE RULE measurement_insert_y2006m02 AS
@@ -3758,59 +3492,42 @@ DO INSTEAD
     INSERT INTO measurement_y2008m01 VALUES (NEW.*);
 </programlisting>
 
-         A rule has significantly more overhead than a trigger, but the
-         overhead is paid once per query rather than once per row, so this
-         method might be advantageous for bulk-insert situations.  In most
-         cases, however, the trigger method will offer better performance.
+         规则的开销显著高于触发器，但该开销是每个查询支付一次，而不是每行支付一次，因此这种方法在批量插入场景中可能更有优势。不过，在大多数情况下，触发器方法会提供更好的性能。
         </para>
 
         <para>
-         Be aware that <command>COPY</command> ignores rules.  If you want to
-         use <command>COPY</command> to insert data, you'll need to copy into the
-         correct child table rather than directly into the root. <command>COPY</command>
-         does fire triggers, so you can use it normally if you use the trigger
-         approach.
+         请注意，<command>COPY</command> 会忽略规则。如果你想使用 <command>COPY</command> 插入数据，需要复制到正确的子表，而不是直接复制到根表。<command>COPY</command> 会触发触发器，因此如果你使用触发器方法，可以正常使用它。
         </para>
 
         <para>
-         Another disadvantage of the rule approach is that there is no simple
-         way to force an error if the set of rules doesn't cover the insertion
-         date; the data will silently go into the root table instead.
+         规则方法的另一个缺点是，如果规则集没有覆盖插入日期，就没有简单的方法强制报错；数据会静默地进入根表。
         </para>
        </listitem>
 
        <listitem>
         <para>
-         Ensure that the <xref linkend="guc-constraint-exclusion"/>
-         configuration parameter is not disabled in
-         <filename>postgresql.conf</filename>; otherwise
-         child tables may be accessed unnecessarily.
+         确保在 <filename>postgresql.conf</filename> 中未禁用 <xref linkend="guc-constraint-exclusion"/> 配置参数；否则可能会不必要地访问子表。
         </para>
        </listitem>
       </orderedlist>
      </para>
 
      <para>
-      As we can see, a complex table hierarchy could require a
-      substantial amount of DDL.  In the above example we would be creating
-      a new child table each month, so it might be wise to write a script that
-      generates the required DDL automatically.
+      正如我们所看到的，复杂的表层次结构可能需要大量的 DDL。在上面的例子中，我们每个月都会创建一个新的子表，因此编写一个自动生成所需 DDL 的脚本可能是明智之举。
      </para>
     </sect3>
 
     <sect3 id="ddl-partitioning-inheritance-maintenance">
-     <title>Maintenance for Inheritance Partitioning</title>
+     <title>继承分区的维护</title>
      <para>
-      To remove old data quickly, simply drop the child table that is no longer
-      necessary:
+      要快速删除旧数据，只需删除不再需要的子表：
 <programlisting>
 DROP TABLE measurement_y2006m02;
 </programlisting>
      </para>
 
     <para>
-     To remove the child table from the inheritance hierarchy table but retain access to
-     it as a table in its own right:
+     要从继承层次表中移除子表，但保留其作为独立表的访问能力：
 
 <programlisting>
 ALTER TABLE measurement_y2006m02 NO INHERIT measurement;
@@ -3818,8 +3535,7 @@ ALTER TABLE measurement_y2006m02 NO INHERIT measurement;
     </para>
 
     <para>
-     To add a new child table to handle new data, create an empty child table
-     just as the original children were created above:
+     要添加新的子表来处理新数据，只需像上面创建原始子表那样创建一个空的子表：
 
 <programlisting>
 CREATE TABLE measurement_y2008m02 (
@@ -3827,10 +3543,7 @@ CREATE TABLE measurement_y2008m02 (
 ) INHERITS (measurement);
 </programlisting>
 
-     Alternatively, one may want to create and populate the new child table
-     before adding it to the table hierarchy.  This could allow data to be
-     loaded, checked, and transformed before being made visible to queries on
-     the parent table.
+     或者，也可以先创建并填充新的子表，然后再将其添加到表层次结构中。这样可以在数据对父表上的查询可见之前，先加载、检查并转换数据。
 
 <programlisting>
 CREATE TABLE measurement_y2008m02
@@ -3845,7 +3558,7 @@ ALTER TABLE measurement_y2008m02 INHERIT measurement;
    </sect3>
 
    <sect3 id="ddl-partitioning-inheritance-caveats">
-    <title>Caveats</title>
+    <title>注意事项</title>
 
     <para>
      The following caveats apply to partitioning implemented using
@@ -3853,63 +3566,41 @@ ALTER TABLE measurement_y2008m02 INHERIT measurement;
      <itemizedlist>
       <listitem>
        <para>
-        There is no automatic way to verify that all of the
-        <literal>CHECK</literal> constraints are mutually
-        exclusive.  It is safer to create code that generates
-        child tables and creates and/or modifies associated objects than
-        to write each by hand.
+        没有自动的方法来验证所有 <literal>CHECK</literal> 约束是否互斥。相比手工编写每个子表，创建能够生成子表并创建和/或修改相关对象的代码会更安全。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Indexes and foreign key constraints apply to single tables and not
-        to their inheritance children, hence they have some
-        <link linkend="ddl-inherit-caveats">caveats</link> to be aware of.
+        索引和外键约束只作用于单个表，而不作用于其继承子表，因此有一些需要注意的<link linkend="ddl-inherit-caveats">注意事项</link>。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        The schemes shown here assume that the values of a row's key column(s)
-        never change, or at least do not change enough to require it to move to another partition.
-        An <command>UPDATE</command> that attempts
-        to do that will fail because of the <literal>CHECK</literal> constraints.
-        If you need to handle such cases, you can put suitable update triggers
-        on the child tables, but it makes management of the structure
-        much more complicated.
+        这里展示的方案假设一行的键列的值永远不会改变，或者至少不会改变到需要将其移动到另一个分区的程度。试图这样做的 <command>UPDATE</command> 会因为 <literal>CHECK</literal> 约束而失败。如果需要处理这种情况，可以在子表上放置合适的更新触发器，但这会使结构的管理变得复杂得多。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Manual <command>VACUUM</command> and <command>ANALYZE</command>
-        commands will automatically process all inheritance child tables.  If
-        this is undesirable, you can use the <literal>ONLY</literal> keyword.
-        A command like:
+        手动的 <command>VACUUM</command> 和 <command>ANALYZE</command> 命令会自动处理所有继承子表。如果不希望这样，可以使用 <literal>ONLY</literal> 关键字。像这样的命令：
 <programlisting>
 ANALYZE ONLY measurement;
 </programlisting>
-        will only process the root table.
+        将只处理根表。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        <command>INSERT</command> statements with <literal>ON CONFLICT</literal>
-        clauses are unlikely to work as expected, as the <literal>ON CONFLICT</literal>
-        action is only taken in case of unique violations on the specified
-        target relation, not its child relations.
+        带有 <literal>ON CONFLICT</literal> 子句的 <command>INSERT</command> 语句不太可能按预期工作，因为 <literal>ON CONFLICT</literal> 动作只在指定的目标关系上发生唯一性冲突时才会执行，而不会在其子关系上执行。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Triggers or rules will be needed to route rows to the desired
-        child table, unless the application is explicitly aware of the
-        partitioning scheme.  Triggers may be complicated to write, and will
-        be much slower than the tuple routing performed internally by
-        declarative partitioning.
+        需要触发器或规则来将行路由到期望的子表，除非应用程序显式地了解分区方案。触发器可能编写起来很复杂，并且会比声明式分区内部执行的元组路由慢得多。
        </para>
       </listitem>
      </itemizedlist>
@@ -3918,38 +3609,26 @@ ANALYZE ONLY measurement;
   </sect2>
 
   <sect2 id="ddl-partition-pruning">
-   <title>Partition Pruning</title>
+   <title>分区修剪</title>
 
    <indexterm>
     <primary>partition pruning</primary>
    </indexterm>
 
    <para>
-    <firstterm>Partition pruning</firstterm> is a query optimization technique
-    that improves performance for declaratively partitioned tables.
-    As an example:
+    <firstterm>分区修剪</firstterm>是一种查询优化技术，可提高声明式分区表的性能。例如：
 
 <programlisting>
 SET enable_partition_pruning = on;                 -- the default
 SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
 </programlisting>
 
-    Without partition pruning, the above query would scan each of the
-    partitions of the <structname>measurement</structname> table. With
-    partition pruning enabled, the planner will examine the definition
-    of each partition and prove that the partition need not
-    be scanned because it could not contain any rows meeting the query's
-    <literal>WHERE</literal> clause.  When the planner can prove this, it
-    excludes (<firstterm>prunes</firstterm>) the partition from the query
-    plan.
+    如果不进行分区修剪，上述查询将扫描 <structname>measurement</structname> 表的每个分区。启用分区修剪后，规划器将检查每个分区的定义，并证明无需扫描该分区，因为它不可能包含满足查询的 <literal>WHERE</literal> 子句的任何行。当规划器能够证明这一点时，它就会将该分区从查询计划中排除（<firstterm>修剪</firstterm>）。
    </para>
 
    <para>
-    By using the EXPLAIN command and the <xref
-    linkend="guc-enable-partition-pruning"/> configuration parameter, it's
-    possible to show the difference between a plan for which partitions have
-    been pruned and one for which they have not.  A typical unoptimized
-    plan for this type of table setup is:
+    通过使用 EXPLAIN 命令和 <xref
+    linkend="guc-enable-partition-pruning"/> 配置参数，可以展示已修剪分区的计划与未修剪分区的计划之间的差异。针对此类表设置的典型未优化计划如下：
 <programlisting>
 SET enable_partition_pruning = off;
 EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
@@ -3970,11 +3649,7 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
                Filter: (logdate &gt;= '2008-01-01'::date)
 </programlisting>
 
-    Some or all of the partitions might use index scans instead of
-    full-table sequential scans, but the point here is that there
-    is no need to scan the older partitions at all to answer this query.
-    When we enable partition pruning, we get a significantly
-    cheaper plan that will deliver the same answer:
+    部分或全部分区可能使用索引扫描而不是全表顺序扫描，但这里的要点是，回答此查询根本不需要扫描较旧的分区。当我们启用分区修剪时，会得到一个开销显著降低且能给出相同答案的计划：
 <programlisting>
 SET enable_partition_pruning = on;
 EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
@@ -3987,13 +3662,7 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
    </para>
 
    <para>
-    Note that partition pruning is driven only by the constraints defined
-    implicitly by the partition keys, not by the presence of indexes.
-    Therefore it isn't necessary to define indexes on the key columns.
-    Whether an index needs to be created for a given partition depends on
-    whether you expect that queries that scan the partition will
-    generally scan a large part of the partition or just a small part.
-    An index will be helpful in the latter case but not the former.
+    请注意，分区修剪仅由分区键隐式定义的约束驱动，而不是由索引的存在驱动。因此，不必在键列上定义索引。是否需要为给定分区创建索引，取决于你预期扫描该分区的查询通常会扫描该分区的大部分还是仅一小部分。在后一种情况下索引会有帮助，而在前一种情况下则没有帮助。
    </para>
 
    <para>
@@ -4009,90 +3678,44 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
     <itemizedlist>
      <listitem>
       <para>
-       During initialization of the query plan.  Partition pruning can be
-       performed here for parameter values which are known during the
-       initialization phase of execution.  Partitions which are pruned
-       during this stage will not show up in the query's
-       <command>EXPLAIN</command> or <command>EXPLAIN ANALYZE</command>.
-       It is possible to determine the number of partitions which were
-       removed during this phase by observing the
-       <quote>Subplans Removed</quote> property in the
-       <command>EXPLAIN</command> output.  It's important to note that any
-       partitions removed by the partition pruning done at this stage are
-       still locked at the beginning of execution.
+       在查询计划的初始化期间。对于在执行初始化阶段就已知的参数值，可以在这里执行分区裁剪。在此阶段被裁剪的分区不会出现在查询的 <command>EXPLAIN</command> 或 <command>EXPLAIN ANALYZE</command> 中。通过观察 <command>EXPLAIN</command> 输出中的 <quote>Subplans Removed</quote> 属性，可以确定在此阶段被移除的分区数量。需要注意的是，在此阶段通过分区裁剪移除的任何分区在执行开始时仍然会被锁定。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       During actual execution of the query plan.  Partition pruning may
-       also be performed here to remove partitions using values which are
-       only known during actual query execution.  This includes values
-       from subqueries and values from execution-time parameters such as
-       those from parameterized nested loop joins.  Since the value of
-       these parameters may change many times during the execution of the
-       query, partition pruning is performed whenever one of the
-       execution parameters being used by partition pruning changes.
-       Determining if partitions were pruned during this phase requires
-       careful inspection of the <literal>loops</literal> property in
-       the <command>EXPLAIN ANALYZE</command> output.  Subplans
-       corresponding to different partitions may have different values
-       for it depending on how many times each of them was pruned during
-       execution.  Some may be shown as <literal>(never executed)</literal>
-       if they were pruned every time.
+       在查询计划的实际执行期间。这里也可能执行分区裁剪，以使用仅在实际查询执行期间才知道的值来移除分区。这包括来自子查询的值以及来自执行时参数的值，例如来自参数化嵌套循环连接的值。由于这些参数的值在查询执行期间可能多次变化，因此每当分区裁剪所使用的某个执行参数发生变化时，就会执行分区裁剪。要确定在此阶段是否裁剪了分区，需要仔细检查 <command>EXPLAIN ANALYZE</command> 输出中的 <literal>loops</literal> 属性。对应于不同分区的子计划可能具有不同的该属性值，具体取决于每个子计划在执行期间被裁剪的次数。如果某些子计划每次都被裁剪，则可能显示为 <literal>(never executed)</literal>。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    Partition pruning can be disabled using the
-    <xref linkend="guc-enable-partition-pruning"/> setting.
+    可以使用 <xref linkend="guc-enable-partition-pruning"/> 设置禁用分区裁剪。
    </para>
   </sect2>
 
   <sect2 id="ddl-partitioning-constraint-exclusion">
-   <title>Partitioning and Constraint Exclusion</title>
+   <title>分区与约束排除</title>
 
    <indexterm>
     <primary>constraint exclusion</primary>
    </indexterm>
 
    <para>
-    <firstterm>Constraint exclusion</firstterm> is a query optimization
-    technique similar to partition pruning.  While it is primarily used
-    for partitioning implemented using the legacy inheritance method, it can be
-    used for other purposes, including with declarative partitioning.
+    <firstterm>约束排除</firstterm>是一种类似于分区裁剪的查询优化技术。虽然它主要用于使用传统继承方法实现的分区，但也可用于其他目的，包括与声明式分区一起使用。
    </para>
 
    <para>
-    Constraint exclusion works in a very similar way to partition
-    pruning, except that it uses each table's <literal>CHECK</literal>
-    constraints &mdash; which gives it its name &mdash; whereas partition
-    pruning uses the table's partition bounds, which exist only in the
-    case of declarative partitioning.  Another difference is that
-    constraint exclusion is only applied at plan time; there is no attempt
-    to remove partitions at execution time.
+    约束排除的工作方式与分区裁剪非常相似，不同之处在于它使用每个表的 <literal>CHECK</literal> 约束 &mdash;（这正是其名称 &mdash; 的由来），而分区裁剪使用表的分区边界，后者仅在声明式分区的情况下存在。另一个区别是约束排除仅在计划时应用；不会尝试在执行时移除分区。
    </para>
 
    <para>
-    The fact that constraint exclusion uses <literal>CHECK</literal>
-    constraints, which makes it slow compared to partition pruning, can
-    sometimes be used as an advantage: because constraints can be defined
-    even on declaratively-partitioned tables, in addition to their internal
-    partition bounds, constraint exclusion may be able
-    to elide additional partitions from the query plan.
+    约束排除使用 <literal>CHECK</literal> 约束，这使得它相比分区裁剪要慢，这一事实有时可以被当作一个优势：因为即使在声明式分区表上也可以定义约束（除了它们内部的分区边界之外），约束排除可能能够从查询计划中消除额外的分区。
    </para>
 
    <para>
-    The default (and recommended) setting of
-    <xref linkend="guc-constraint-exclusion"/> is neither
-    <literal>on</literal> nor <literal>off</literal>, but an intermediate setting
-    called <literal>partition</literal>, which causes the technique to be
-    applied only to queries that are likely to be working on inheritance partitioned
-    tables.  The <literal>on</literal> setting causes the planner to examine
-    <literal>CHECK</literal> constraints in all queries, even simple ones that
-    are unlikely to benefit.
+    <xref linkend="guc-constraint-exclusion"/> 的默认（也是推荐的）设置既不是 <literal>on</literal> 也不是 <literal>off</literal>，而是一个称为 <literal>partition</literal> 的中间设置，它使该技术仅应用于可能作用于继承分区表的查询。<literal>on</literal> 设置使规划器检查所有查询中的 <literal>CHECK</literal> 约束，即使是那些不太可能受益的简单查询。
    </para>
 
    <para>
@@ -4101,42 +3724,25 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
    <itemizedlist>
     <listitem>
      <para>
-      Constraint exclusion is only applied during query planning, unlike
-      partition pruning, which can also be applied during query execution.
+      约束排除仅在查询规划期间应用，这一点与分区裁剪不同，后者还可以在查询执行期间应用。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Constraint exclusion only works when the query's <literal>WHERE</literal>
-      clause contains constants (or externally supplied parameters).
-      For example, a comparison against a non-immutable function such as
-      <function>CURRENT_TIMESTAMP</function> cannot be optimized, since the
-      planner cannot know which child table the function's value might fall
-      into at run time.
+      约束排除仅在查询的 <literal>WHERE</literal> 子句包含常量（或外部提供的参数）时才有效。例如，与 <function>CURRENT_TIMESTAMP</function> 这样的非不可变函数的比较无法被优化，因为规划器无法知道该函数的值在运行时可能落入哪个子表。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Keep the partitioning constraints simple, else the planner may not be
-      able to prove that child tables might not need to be visited.  Use simple
-      equality conditions for list partitioning, or simple
-      range tests for range partitioning, as illustrated in the preceding
-      examples.  A good rule of thumb is that partitioning constraints should
-      contain only comparisons of the partitioning column(s) to constants
-      using B-tree-indexable operators, because only B-tree-indexable
-      column(s) are allowed in the partition key.
+      保持分区约束简单，否则规划器可能无法证明子表可能不需要被访问。对于列表分区使用简单的等值条件，对于范围分区使用简单的范围测试，如前面的示例所示。一个好的经验法则是，分区约束应只包含使用 B-tree 可索引运算符对分区列与常量进行的比较，因为分区键中只允许使用 B-tree 可索引的列。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      All constraints on all children of the parent table are examined
-      during constraint exclusion, so large numbers of children are likely
-      to increase query planning time considerably.  So the legacy
-      inheritance based partitioning will work well with up to perhaps a
-      hundred child tables; don't try to use many thousands of children.
+      在约束排除期间会检查父表所有子表上的所有约束，因此大量的子表很可能会显著增加查询规划时间。所以，传统的基于继承的分区在最多大约一百个子表时能很好地工作；不要尝试使用成千上万的子表。
      </para>
     </listitem>
 
@@ -4145,84 +3751,30 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
   </sect2>
 
   <sect2 id="ddl-partitioning-declarative-best-practices">
-   <title>Best Practices for Declarative Partitioning</title>
+   <title>声明式分区的最佳实践</title>
 
    <para>
-    The choice of how to partition a table should be made carefully, as the
-    performance of query planning and execution can be negatively affected by
-    poor design.
+    应谨慎选择表的分区方式，因为糟糕的设计会对查询规划和执行的性能产生负面影响。
    </para>
 
    <para>
-    One of the most critical design decisions will be the column or columns
-    by which you partition your data.  Often the best choice will be to
-    partition by the column or set of columns which most commonly appear in
-    <literal>WHERE</literal> clauses of queries being executed on the
-    partitioned table.  <literal>WHERE</literal> clauses that are compatible
-    with the partition bound constraints can be used to prune unneeded
-    partitions.  However, you may be forced into making other decisions by
-    requirements for the <literal>PRIMARY KEY</literal> or a
-    <literal>UNIQUE</literal> constraint.  Removal of unwanted data is also a
-    factor to consider when planning your partitioning strategy.  An entire
-    partition can be detached fairly quickly, so it may be beneficial to
-    design the partition strategy in such a way that all data to be removed
-    at once is located in a single partition.
+    最关键的设计决策之一是用哪一列或哪些列对数据进行分区。通常最好的选择是按那些最常出现在针对该分区表所执行查询的 <literal>WHERE</literal> 子句中的一列或一组列进行分区。与分区边界约束兼容的 <literal>WHERE</literal> 子句可用于裁剪掉不需要的分区。不过，由于 <literal>PRIMARY KEY</literal> 或 <literal>UNIQUE</literal> 约束的要求，你可能不得不做出其他决定。在规划分区策略时，删除不需要的数据也是一个需要考虑的因素。整个分区可以被相当快速地分离出去，因此以这样的方式设计分区策略可能是有益的：把所有要一次性删除的数据都放在单个分区中。
    </para>
 
    <para>
-    Choosing the target number of partitions that the table should be divided
-    into is also a critical decision to make.  Not having enough partitions
-    may mean that indexes remain too large and that data locality remains poor
-    which could result in low cache hit ratios.  However, dividing the table
-    into too many partitions can also cause issues.  Too many partitions can
-    mean longer query planning times and higher memory consumption during both
-    query planning and execution, as further described below.
-    When choosing how to partition your table,
-    it's also important to consider what changes may occur in the future.  For
-    example, if you choose to have one partition per customer and you
-    currently have a small number of large customers, consider the
-    implications if in several years you instead find yourself with a large
-    number of small customers.  In this case, it may be better to choose to
-    partition by <literal>HASH</literal> and choose a reasonable number of
-    partitions rather than trying to partition by <literal>LIST</literal> and
-    hoping that the number of customers does not increase beyond what it is
-    practical to partition the data by.
+    选择表应划分成的目标分区数也是一项关键决策。分区数不够可能意味着索引仍然过大、数据局部性仍然很差，这可能导致较低的缓存命中率。然而，把表划分成过多的分区也会引发问题。分区过多可能意味着更长的查询规划时间，以及查询规划和执行期间更高的内存消耗，下文将进一步说明。在选择如何对表进行分区时，考虑将来可能发生的变化也很重要。例如，如果你选择每个客户一个分区，而目前你只有少量大客户，那么请考虑若若干年后你面对的是大量小客户会有什么影响。在这种情况下，更好的做法可能是选择按 <literal>HASH</literal> 分区并选择合理的分区数，而不是试图按 <literal>LIST</literal> 分区并寄希望于客户数量不会增长到超出按该方式分区数据的实际可行范围。
    </para>
 
    <para>
-    Sub-partitioning can be useful to further divide partitions that are
-    expected to become larger than other partitions.
-    Another option is to use range partitioning with multiple columns in
-    the partition key.
-    Either of these can easily lead to excessive numbers of partitions,
-    so restraint is advisable.
+    子分区可用于进一步划分那些预计会比其他分区更大的分区。另一种选择是使用以多个列作为分区键的范围分区。这两种做法都很容易导致分区数量过多，因此宜有所节制。
    </para>
 
    <para>
-    It is important to consider the overhead of partitioning during
-    query planning and execution.  The query planner is generally able to
-    handle partition hierarchies with up to a few thousand partitions fairly
-    well, provided that typical queries allow the query planner to prune all
-    but a small number of partitions.  Planning times become longer and memory
-    consumption becomes higher when more partitions remain after the planner
-    performs partition pruning.  Another
-    reason to be concerned about having a large number of partitions is that
-    the server's memory consumption may grow significantly over
-    time, especially if many sessions touch large numbers of partitions.
-    That's because each partition requires its metadata to be loaded into the
-    local memory of each session that touches it.
+    在查询规划和执行期间，考虑分区带来的开销是很重要的。查询规划器通常能够相当好地处理多达几千个分区的分区层次结构，前提是典型查询能让查询规划器裁剪掉除少数分区之外的所有分区。当规划器执行分区裁剪后仍有较多分区剩余时，规划时间会变长，内存消耗也会变高。需要关注分区数量过多的另一个原因是，服务器的内存消耗可能会随着时间显著增长，尤其是当许多会话触及大量分区时。这是因为每个分区都需要将其元数据加载到触及它的每个会话的本地内存中。
    </para>
 
    <para>
-    With data warehouse type workloads, it can make sense to use a larger
-    number of partitions than with an <acronym>OLTP</acronym> type workload.
-    Generally, in data warehouses, query planning time is less of a concern as
-    the majority of processing time is spent during query execution.  With
-    either of these two types of workload, it is important to make the right
-    decisions early, as re-partitioning large quantities of data can be
-    painfully slow.  Simulations of the intended workload are often beneficial
-    for optimizing the partitioning strategy.  Never just assume that more
-    partitions are better than fewer partitions, nor vice-versa.
+    对于数据仓库类型的工作负载，使用比 <acronym>OLTP</acronym> 类型工作负载更多的分区可能是有意义的。通常，在数据仓库中，查询规划时间不太令人担忧，因为大部分处理时间花在查询执行期间。对于这两种类型的工作负载，尽早做出正确的决策都很重要，因为对大量数据重新分区可能会慢得令人痛苦。对预期工作负载进行模拟通常有助于优化分区策略。永远不要只是假定分区越多越好，也不要假定分区越少越好。
    </para>
   </sect2>
 
