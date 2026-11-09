@@ -117,14 +117,8 @@ shared_buffers = 128MB
     </para>
 
     <para>
-     External tools may also
-     modify <filename>postgresql.auto.conf</filename>.  It is not
-     recommended to do this while the server is running unless <xref
-     linkend="guc-allow-alter-system"/> is set to <literal>off</literal>, since a
-     concurrent <command>ALTER SYSTEM</command> command could overwrite
-     such changes.  Such tools might simply append new settings to the end,
-     or they might choose to remove duplicate settings and/or comments
-     (as <command>ALTER SYSTEM</command> will).
+     外部工具也可以修改 <filename>postgresql.auto.conf</filename>。不建议在服务器运行时这样做，除非 <xref
+     linkend="guc-allow-alter-system"/> 被设置为 <literal>off</literal>，因为并发的 <command>ALTER SYSTEM</command> 命令可能会覆盖此类更改。这类工具可能只是将新设置追加到末尾，也可能选择删除重复的设置和/或注释（<command>ALTER SYSTEM</command> 就会这样做）。
     </para>
 
     <para>
@@ -176,9 +170,8 @@ shared_buffers = 128MB
     </itemizedlist>
 
     <para>
-     In addition, the system view <link
-     linkend="view-pg-settings"><structname>pg_settings</structname></link> can be
-     used to view and change session-local values:
+     此外，系统视图 <link
+     linkend="view-pg-settings"><structname>pg_settings</structname></link> 可用于查看和更改会话本地值：
     </para>
 
     <itemizedlist>
@@ -1679,20 +1672,16 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        Specifies the shared memory implementation that the server
-        should use for the main shared memory region that holds
-        <productname>PostgreSQL</productname>'s shared buffers and other
-        shared data.  Possible values are <literal>mmap</literal> (for
-        anonymous shared memory allocated using <function>mmap</function>),
-        <literal>sysv</literal> (for System V shared memory allocated via
-        <function>shmget</function>) and <literal>windows</literal> (for Windows
-        shared memory).  Not all values are supported on all platforms; the
-        first supported option is the default for that platform.  The use of
-        the <literal>sysv</literal> option, which is not the default on any
-        platform, is generally discouraged because it typically requires
-        non-default kernel settings to allow for large allocations (see <xref
-        linkend="sysvipc"/>).
-        This parameter can only be set at server start.
+        指定服务器应用于主共享内存区域的共享内存实现，该区域存放
+        <productname>PostgreSQL</productname> 的共享缓冲区和其他共享数据。可能的值为 <literal>mmap</literal>（用于
+        通过 <function>mmap</function> 分配的匿名共享内存）、
+        <literal>sysv</literal>（用于通过 <function>shmget</function> 分配的 System V 共享内存）和
+        <literal>windows</literal>（用于 Windows 共享内存）。并非所有平台都支持所有值；
+        第一个受支持的选项即为该平台的默认值。通常不鼓励使用
+        <literal>sysv</literal> 选项（它在任何平台上都不是默认值），因为它通常需要
+        非默认的内核设置才能允许大块分配（参见 <xref
+        linkend="sysvipc"/>）。
+        此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -1970,9 +1959,9 @@ include_dir 'conf.d'
         </para>
 
         <para>
-         This value can be overridden for tables in a particular tablespace by
-         setting the tablespace parameter of the same name (see <xref
-         linkend="sql-altertablespace"/>).
+         对于特定表空间中的表，可以通过设置同名的表空间参数来覆盖
+         此值（参见 <xref
+         linkend="sql-altertablespace"/>）。
         </para>
        </listitem>
       </varlistentry>
@@ -4883,20 +4872,17 @@ jsonlog log/postgresql.json
 
        <note>
         <para>
-         On most Unix systems, you will need to alter the configuration of
-         your system's <application>syslog</application> daemon in order
-         to make use of the <systemitem>syslog</systemitem> option for
-         <varname>log_destination</varname>.  <productname>PostgreSQL</productname>
-         can log to <application>syslog</application> facilities
-         <literal>LOCAL0</literal> through <literal>LOCAL7</literal> (see <xref
-         linkend="guc-syslog-facility"/>), but the default
-         <application>syslog</application> configuration on most platforms
-         will discard all such messages.  You will need to add something like:
+         在大多数 Unix 系统上，需要修改系统 <application>syslog</application>
+         守护进程的配置，才能将 <systemitem>syslog</systemitem> 选项用于
+         <varname>log_destination</varname>。<productname>PostgreSQL</productname>
+         可以记录到 <application>syslog</application> 设施
+         <literal>LOCAL0</literal> 到 <literal>LOCAL7</literal>（参见
+         <xref linkend="guc-syslog-facility"/>），但大多数平台上的默认
+         <application>syslog</application> 配置会丢弃所有此类消息。你需要添加类似以下内容：
 <programlisting>
 local0.*    /var/log/postgresql
 </programlisting>
-         to the  <application>syslog</application> daemon's configuration file
-         to make it work.
+         到 <application>syslog</application> 守护进程的配置文件中才能生效。
         </para>
         <para>
          在 Windows 上，当你对 <varname>log_destination</varname> 使用 <literal>eventlog</literal>
@@ -5813,7 +5799,7 @@ local0.*    /var/log/postgresql
             </row>
             <row>
              <entry><literal>%v</literal></entry>
-             <entry>Virtual transaction ID (procNumber/localXID);  see
+             <entry>虚拟事务 ID（procNumber/localXID）；参见
              <xref linkend="transaction-id"/></entry>
              <entry>否</entry>
             </row>
@@ -7080,16 +7066,8 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
        </term>
        <listitem>
         <para>
-         Specifies the cutoff age (in transactions) that
-         <command>VACUUM</command> should use to decide whether to
-         trigger freezing of pages that have an older XID.
-         The default is 50 million transactions.  Although
-         users can set this value anywhere from zero to one billion,
-         <command>VACUUM</command> will silently limit the effective value to half
-         the value of <xref linkend="guc-autovacuum-freeze-max-age"/>, so
-         that there is not an unreasonably short time between forced
-         autovacuums.  For more information see <xref
-         linkend="vacuum-for-wraparound"/>.
+         指定 <command>VACUUM</command> 用来决定是否触发冻结具有更旧 XID 的页面的截止年龄（以事务计）。默认值为 5000 万个事务。尽管用户可以将此值设置为从 0 到 10 亿之间的任意值，但 <command>VACUUM</command> 会悄悄地将有效值限制为 <xref linkend="guc-autovacuum-freeze-max-age"/> 值的一半，以免强制自动清理之间的时间间隔过短。有关更多信息，请参见 <xref
+         linkend="vacuum-for-wraparound"/>。
         </para>
        </listitem>
       </varlistentry>
@@ -7503,11 +7481,10 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
       </term>
       <listitem>
        <para>
-        This parameter reflects the current transaction's isolation level.
-        At the beginning of each transaction, it is set to the current value
-        of <xref linkend="guc-default-transaction-isolation"/>.
-        Any subsequent attempt to change it is equivalent to a <xref
-        linkend="sql-set-transaction"/> command.
+        此参数反映当前事务的隔离级别。
+        在每个事务开始时，它被设置为 <xref linkend="guc-default-transaction-isolation"/> 的当前值。
+        之后任何更改它的尝试都等同于 <xref
+        linkend="sql-set-transaction"/> 命令。
        </para>
       </listitem>
      </varlistentry>
@@ -7523,11 +7500,11 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
       </term>
       <listitem>
        <para>
-        This parameter reflects the current transaction's read-only status.
-        At the beginning of each transaction, it is set to the current value
-        of <xref linkend="guc-default-transaction-read-only"/>.
-        Any subsequent attempt to change it is equivalent to a <xref
-        linkend="sql-set-transaction"/> command.
+        此参数反映当前事务的只读状态。
+        在每个事务开始时，它被设置为
+        <xref linkend="guc-default-transaction-read-only"/> 的当前值。
+        随后任何更改它的尝试都等价于一条 <xref
+        linkend="sql-set-transaction"/> 命令。
        </para>
       </listitem>
      </varlistentry>
@@ -8788,12 +8765,11 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
       </term>
       <listitem>
        <para>
-        Reports the size of a disk block.  It is determined by the value
-        of <literal>BLCKSZ</literal> when building the server. The default
-        value is 8192 bytes.  The meaning of some configuration
-        variables (such as <xref linkend="guc-shared-buffers"/>) is
-        influenced by <varname>block_size</varname>. See <xref
-        linkend="runtime-config-resource"/> for information.
+        报告磁盘块的大小。它由构建服务器时
+        <literal>BLCKSZ</literal> 的值决定。默认值为
+        8192 字节。某些配置变量（例如 <xref linkend="guc-shared-buffers"/>）的含义
+        受 <varname>block_size</varname> 影响。有关信息，请参见 <xref
+        linkend="runtime-config-resource"/>。
        </para>
       </listitem>
      </varlistentry>
