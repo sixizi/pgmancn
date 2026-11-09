@@ -1,75 +1,54 @@
 <!-- doc/src/sgml/btree-gist.sgml -->
 
 <sect1 id="btree-gist" xreflabel="btree_gist">
- <title>btree_gist &mdash; GiST operator classes with B-tree behavior</title>
+ <title>btree_gist &mdash; 具有 B-tree 行为的 GiST 运算符类</title>
 
  <indexterm zone="btree-gist">
   <primary>btree_gist</primary>
  </indexterm>
 
  <para>
-  <filename>btree_gist</filename> provides GiST index operator classes that
-  implement B-tree equivalent behavior for the data types
-  <type>int2</type>, <type>int4</type>, <type>int8</type>, <type>float4</type>,
-  <type>float8</type>, <type>numeric</type>, <type>timestamp with time zone</type>,
-  <type>timestamp without time zone</type>, <type>time with time zone</type>,
-  <type>time without time zone</type>, <type>date</type>, <type>interval</type>,
-  <type>oid</type>, <type>money</type>, <type>char</type>,
-  <type>varchar</type>, <type>text</type>, <type>bytea</type>, <type>bit</type>,
-  <type>varbit</type>, <type>macaddr</type>, <type>macaddr8</type>, <type>inet</type>,
-  <type>cidr</type>, <type>uuid</type>, <type>bool</type> and all <type>enum</type> types.
+  <filename>btree_gist</filename> 提供了 GiST 索引运算符类，为数据类型
+  <type>int2</type>、<type>int4</type>、<type>int8</type>、<type>float4</type>、
+  <type>float8</type>、<type>numeric</type>、<type>timestamp with time zone</type>、
+  <type>timestamp without time zone</type>、<type>time with time zone</type>、
+  <type>time without time zone</type>、<type>date</type>、<type>interval</type>、
+  <type>oid</type>、<type>money</type>、<type>char</type>、
+  <type>varchar</type>、<type>text</type>、<type>bytea</type>、<type>bit</type>、
+  <type>varbit</type>、<type>macaddr</type>、<type>macaddr8</type>、<type>inet</type>、
+  <type>cidr</type>、<type>uuid</type>、<type>bool</type> 以及所有 <type>enum</type> 类型实现与 B-tree 等价的行为。
  </para>
 
  <para>
-  In general, these operator classes will not outperform the equivalent
-  standard B-tree index methods, and they lack one major feature of the
-  standard B-tree code: the ability to enforce uniqueness.  However,
-  they provide some other features that are not available with a B-tree
-  index, as described below.  Also, these operator classes are useful
-  when a multicolumn GiST index is needed, wherein some of the columns
-  are of data types that are only indexable with GiST but other columns
-  are just simple data types.  Lastly, these operator classes are useful for
-  GiST testing and as a base for developing other GiST operator classes.
+  一般而言，这些运算符类不会比等效的标准 B-tree 索引方法性能更好，而且它们缺少标准 B-tree 代码的一个主要特性：强制唯一性的能力。不过，它们提供了 B-tree 索引所不具备的一些其他特性，如下所述。此外，当需要多列 GiST 索引，其中某些列的数据类型只能用 GiST 索引，而其他列只是简单数据类型时，这些运算符类很有用。最后，这些运算符类对于 GiST 测试以及作为开发其他 GiST 运算符类的基础很有用。
  </para>
 
  <para>
-  In addition to the typical B-tree search operators, <filename>btree_gist</filename>
-  also provides index support for <literal>&lt;&gt;</literal> (<quote>not
-  equals</quote>). This may be useful in combination with an
-  <link linkend="sql-createtable-exclude">exclusion constraint</link>,
-  as described below.
+  除了典型的 B-tree 搜索运算符之外，<filename>btree_gist</filename> 还为 <literal>&lt;&gt;</literal>（<quote>不等于</quote>）提供索引支持。如下所述，这在结合<link linkend="sql-createtable-exclude">排除约束</link>使用时可能很有用。
  </para>
 
  <para>
-  Also, for data types for which there is a natural distance metric,
-  <filename>btree_gist</filename> defines a distance operator <literal>&lt;-&gt;</literal>,
-  and provides GiST index support for nearest-neighbor searches using
-  this operator.  Distance operators are provided for
-  <type>int2</type>, <type>int4</type>, <type>int8</type>, <type>float4</type>,
-  <type>float8</type>, <type>timestamp with time zone</type>,
-  <type>timestamp without time zone</type>,
-  <type>time without time zone</type>, <type>date</type>, <type>interval</type>,
-  <type>oid</type>, and <type>money</type>.
+  此外，对于存在自然距离度量的数据类型，<filename>btree_gist</filename> 定义了距离运算符 <literal>&lt;-&gt;</literal>，并为使用该运算符的最近邻搜索提供 GiST 索引支持。距离运算符提供给了
+  <type>int2</type>、<type>int4</type>、<type>int8</type>、<type>float4</type>、
+  <type>float8</type>、<type>timestamp with time zone</type>、
+  <type>timestamp without time zone</type>、
+  <type>time without time zone</type>、<type>date</type>、<type>interval</type>、
+  <type>oid</type> 和 <type>money</type>。
  </para>
 
  <para>
-  By default <filename>btree_gist</filename> builds <acronym>GiST</acronym> index with
-  <function>sortsupport</function> in <firstterm>sorted</firstterm> mode. This usually results in
-  much faster index built speed. It is still possible to revert to buffered built strategy
-  by using the <literal>buffering</literal> parameter when creating the index.
+  默认情况下，<filename>btree_gist</filename> 以<firstterm>排序</firstterm>模式使用 <function>sortsupport</function> 构建 <acronym>GiST</acronym> 索引。这通常会使索引构建速度快得多。在创建索引时使用 <literal>buffering</literal> 参数，仍然可以恢复为缓冲构建策略。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  本模块被视为<quote>可信</quote>，也就是说，拥有当前数据库 <literal>CREATE</literal> 权限的非超级用户也可以安装它。
  </para>
 
  <sect2 id="btree-gist-example-usage">
-  <title>Example Usage</title>
+  <title>使用示例</title>
 
   <para>
-   Simple example using <literal>btree_gist</literal> instead of <literal>btree</literal>:
+   使用 <literal>btree_gist</literal> 代替 <literal>btree</literal> 的简单示例：
   </para>
 
 <programlisting>
@@ -83,9 +62,7 @@ SELECT *, a &lt;-&gt; 42 AS dist FROM test ORDER BY a &lt;-&gt; 42 LIMIT 10;
 </programlisting>
 
   <para>
-   Use an <link linkend="sql-createtable-exclude">exclusion
-   constraint</link> to enforce the rule that a cage at a zoo
-   can contain only one kind of animal:
+   使用<link linkend="sql-createtable-exclude">排除约束</link>来强制实施这样一条规则：动物园中的一个笼子只能容纳一种动物：
   </para>
 
 <programlisting>
@@ -109,15 +86,14 @@ INSERT 0 1
  </sect2>
 
  <sect2 id="btree-gist-authors">
-  <title>Authors</title>
+  <title>作者</title>
 
   <para>
-   Teodor Sigaev (<email>teodor@stack.net</email>),
-   Oleg Bartunov (<email>oleg@sai.msu.su</email>),
-   Janko Richter (<email>jankorichter@yahoo.de</email>), and
-   Paul Jungwirth (<email>pj@illuminatedcomputing.com</email>).  See
-   <ulink url="http://www.sai.msu.su/~megera/postgres/gist/"></ulink>
-   for additional information.
+   Teodor Sigaev（<email>teodor@stack.net</email>）、
+   Oleg Bartunov（<email>oleg@sai.msu.su</email>）、
+   Janko Richter（<email>jankorichter@yahoo.de</email>）和
+   Paul Jungwirth（<email>pj@illuminatedcomputing.com</email>）。更多信息请参见
+   <ulink url="http://www.sai.msu.su/~megera/postgres/gist/"></ulink>。
   </para>
 
  </sect2>
