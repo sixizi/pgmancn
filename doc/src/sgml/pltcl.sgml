@@ -677,7 +677,7 @@ if {[catch { spi_exec $sql_command }]} {
    </sect1>
 
    <sect1 id="pltcl-subtransactions">
-    <title>Explicit Subtransactions in PL/Tcl</title>
+    <title>PL/Tcl 中的显式子事务</title>
 
     <indexterm>
      <primary>subtransactions</primary>
@@ -685,16 +685,14 @@ if {[catch { spi_exec $sql_command }]} {
     </indexterm>
 
     <para>
-     Recovering from errors caused by database access as described in
-     <xref linkend="pltcl-error-handling"/> can lead to an undesirable
-     situation where some operations succeed before one of them fails,
-     and after recovering from that error the data is left in an
-     inconsistent state.  PL/Tcl offers a solution to this problem in
-     the form of explicit subtransactions.
+     如 <xref linkend="pltcl-error-handling"/> 所述，从数据库访问导致的错误中恢复，
+     可能会导致一种不理想的情况：某些操作在其中一个操作失败之前已经成功，
+     而在从该错误恢复之后，数据却处于不一致的状态。PL/Tcl 以显式子事务的形式
+     为这个问题提供了一种解决方案。
     </para>
 
     <para>
-     Consider a function that implements a transfer between two accounts:
+     考虑一个实现两个账户之间转账的函数：
 <programlisting>
 CREATE FUNCTION transfer_funds() RETURNS void AS $$
     if [catch {
@@ -708,21 +706,16 @@ CREATE FUNCTION transfer_funds() RETURNS void AS $$
     spi_exec "INSERT INTO operations (result) VALUES ('[quote $result]')"
 $$ LANGUAGE pltcl;
 </programlisting>
-     If the second <command>UPDATE</command> statement results in an
-     exception being raised, this function will log the failure, but
-     the result of the first <command>UPDATE</command> will
-     nevertheless be committed.  In other words, the funds will be
-     withdrawn from Joe's account, but will not be transferred to
-     Mary's account.  This happens because each <function>spi_exec</function>
-     is a separate subtransaction, and only one of those subtransactions
-     got rolled back.
+     如果第二条 <command>UPDATE</command> 语句导致抛出异常，该函数将记录这次失败，
+     但第一条 <command>UPDATE</command> 的结果仍然会被提交。换句话说，资金将从
+     Joe 的账户中取出，但不会转入 Mary 的账户。出现这种情况是因为每个
+     <function>spi_exec</function> 都是一个单独的子事务，而其中只有一个子事务被回滚了。
     </para>
 
     <para>
-     To handle such cases, you can wrap multiple database operations in an
-     explicit subtransaction, which will succeed or roll back as a whole.
-     PL/Tcl provides a <function>subtransaction</function> command to manage
-     this.  We can rewrite our function as:
+     为了处理这类情况，你可以把多个数据库操作包装在一个显式子事务中，
+     该子事务将作为一个整体成功或回滚。PL/Tcl 提供了 <function>subtransaction</function> 命令来管理
+     这一点。我们可以把函数改写为：
 <programlisting>
 CREATE FUNCTION transfer_funds2() RETURNS void AS $$
     if [catch {
@@ -738,23 +731,17 @@ CREATE FUNCTION transfer_funds2() RETURNS void AS $$
     spi_exec "INSERT INTO operations (result) VALUES ('[quote $result]')"
 $$ LANGUAGE pltcl;
 </programlisting>
-     Note that use of <function>catch</function> is still required for this
-     purpose.  Otherwise the error would propagate to the top level of the
-     function, preventing the desired insertion into
-     the <structname>operations</structname> table.
-     The <function>subtransaction</function> command does not trap errors, it
-     only assures that all database operations executed inside its scope will
-     be rolled back together when an error is reported.
+     注意，为此仍然需要使用 <function>catch</function>。否则错误会传播到函数的顶层，
+     从而阻止向 <structname>operations</structname> 表中插入所需的数据。
+     <function>subtransaction</function> 命令并不捕获错误，它只是确保在其作用域内执行的所有数据库操作
+     在报告错误时一起回滚。
     </para>
 
     <para>
-     A rollback of an explicit subtransaction occurs on any error reported
-     by the contained Tcl code, not only errors originating from database
-     access.  Thus a regular Tcl exception raised inside
-     a <function>subtransaction</function> command will also cause the
-     subtransaction to be rolled back.  However, non-error exits out of the
-     contained Tcl code (for instance, due to <function>return</function>) do
-     not cause a rollback.
+     显式子事务的回滚会在其中包含的 Tcl 代码报告任何错误时发生，
+     而不仅限于源自数据库访问的错误。因此，在 <function>subtransaction</function> 命令内部抛出的
+     普通 Tcl 异常也会导致该子事务回滚。不过，从所包含的 Tcl 代码中
+     以非错误方式退出（例如由于 <function>return</function>）不会导致回滚。
     </para>
    </sect1>
 
