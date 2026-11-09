@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>pg_rewind</refname>
-  <refpurpose>synchronize a <productname>PostgreSQL</productname> data directory with another data directory that was forked from it</refpurpose>
+  <refpurpose>将 <productname>PostgreSQL</productname> 数据目录与从它派生出的另一个数据目录同步</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -38,107 +38,49 @@ PostgreSQL documentation
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <application>pg_rewind</application> is a tool for synchronizing a PostgreSQL cluster
-   with another copy of the same cluster, after the clusters' timelines have
-   diverged. A typical scenario is to bring an old primary server back online
-   after failover as a standby that follows the new primary.
+   <application>pg_rewind</application> 是一个工具，用于在数据库集簇的时间线发生分叉后，将一个 PostgreSQL 集簇与同一集簇的另一个副本同步。典型场景是在故障转移后将旧的主服务器作为跟随新主库的备库重新上线。
   </para>
 
   <para>
-   After a successful rewind, the state of the target data directory is
-   analogous to a base backup of the source data directory. Unlike taking
-   a new base backup or using a tool like <application>rsync</application>,
-   <application>pg_rewind</application> does not require comparing or copying
-   unchanged relation blocks in the cluster. Only changed blocks from existing
-   relation files are copied; all other files, including new relation files,
-   configuration files, and WAL segments, are copied in full. As such the
-   rewind operation is significantly faster than other approaches when the
-   database is large and only a small fraction of blocks differ between the
-   clusters.
+   成功回卷后，目标数据目录的状态类似于源数据目录的基础备份。与执行新的基础备份或使用 <application>rsync</application> 之类的工具不同，<application>pg_rewind</application> 不需要比较或复制集簇中未改变的关系块。只复制现有关系文件中已更改的块；所有其他文件，包括新的关系文件、配置文件和 WAL 段，都会完整复制。因此，当数据库很大且集簇之间只有一小部分块不同时，回卷操作比其他方法快得多。
   </para>
 
   <para>
-   <application>pg_rewind</application> examines the timeline histories of the source
-   and target clusters to determine the point where they diverged, and
-   expects to find WAL in the target cluster's <filename>pg_wal</filename> directory
-   reaching all the way back to the point of divergence. The point of divergence
-   can be found either on the target timeline, the source timeline, or their common
-   ancestor. In the typical failover scenario where the target cluster was
-   shut down soon after the divergence, this is not a problem, but if the
-   target cluster ran for a long time after the divergence, its old WAL
-   files might no longer be present. In this case, you can manually copy them
-   from the WAL archive to the <filename>pg_wal</filename> directory, or run
-   <application>pg_rewind</application> with the <literal>-c</literal> option to
-   automatically retrieve them from the WAL archive. The use of
-   <application>pg_rewind</application> is not limited to failover, e.g.,  a standby
-   server can be promoted, run some write transactions, and then rewound
-   to become a standby again.
+   <application>pg_rewind</application> 检查源集簇和目标集簇的时间线历史，以确定它们分叉的位置，并期望在目标集簇的 <filename>pg_wal</filename> 目录中找到可回溯到分叉点的 WAL。分叉点可以在目标时间线、源时间线或它们的共同祖先上找到。在典型的故障转移场景中，目标集簇在分叉后不久就被关闭，这不成问题；但如果目标集簇在分叉后运行了很长时间，其旧的 WAL 文件可能已不存在。在这种情况下，你可以手动将它们从 WAL 归档复制到 <filename>pg_wal</filename> 目录，或者使用 <literal>-c</literal> 选项运行 <application>pg_rewind</application>，以自动从 WAL 归档中获取它们。<application>pg_rewind</application> 的使用并不限于故障转移，例如，备服务器可以被提升，执行一些写事务，然后再回卷以再次成为备库。
   </para>
 
   <para>
-   After running <application>pg_rewind</application>, WAL replay needs to
-   complete for the data directory to be in a consistent state. When the
-   target server is started again it will enter archive recovery and replay
-   all WAL generated in the source server from the last checkpoint before
-   the point of divergence. If some of the WAL was no longer available in the
-   source server when <application>pg_rewind</application> was run, and
-   therefore could not be copied by the <application>pg_rewind</application>
-   session, it must be made available when the target server is started.
-   This can be done by creating a <filename>recovery.signal</filename> file
-   in the target data directory and by configuring a suitable
-   <xref linkend="guc-restore-command"/> in
-   <filename>postgresql.conf</filename>.
+   运行 <application>pg_rewind</application> 之后，需要完成 WAL 重放，数据目录才能处于一致状态。当目标服务器再次启动时，它将进入归档恢复，并重放源服务器中自分歧点之前最后一个检查点以来生成的所有 WAL。如果在运行 <application>pg_rewind</application> 时源服务器中某些 WAL 已不再可用，因而无法由 <application>pg_rewind</application> 会话复制，那么在启动目标服务器时必须使其可用。这可以通过在目标数据目录中创建 <filename>recovery.signal</filename> 文件并在 <filename>postgresql.conf</filename> 中配置合适的 <xref linkend="guc-restore-command"/> 来完成。
   </para>
 
   <para>
-   <application>pg_rewind</application> requires that the target server either has
-   the <xref linkend="guc-wal-log-hints"/> option enabled
-   in <filename>postgresql.conf</filename> or data checksums enabled when
-   the cluster was initialized with <application>initdb</application> (the
-   default).  <xref linkend="guc-full-page-writes"/> must also be set to
-   <literal>on</literal>, but is enabled by default.
+   <application>pg_rewind</application> 要求目标服务器要么在 <filename>postgresql.conf</filename> 中启用了 <xref linkend="guc-wal-log-hints"/> 选项，要么在数据库集簇使用 <application>initdb</application>（默认值）初始化时启用了数据校验和。<xref linkend="guc-full-page-writes"/> 也必须设置为 <literal>on</literal>，但该选项默认已启用。
   </para>
 
   <warning>
-   <title>Warning: Failures While Rewinding</title>
+   <title>警告：回卷时发生失败</title>
    <para>
-    If <application>pg_rewind</application> fails while processing, then
-    the data folder of the target is likely not in a state that can be
-    recovered.  In such a case, taking a new fresh backup is recommended.
+    如果 <application>pg_rewind</application> 在处理过程中失败，那么目标的数据文件夹很可能处于无法恢复的状态。在这种情况下，建议重新做一次全新的备份。
    </para>
 
    <para>
-    As <application>pg_rewind</application> copies configuration files
-    entirely from the source, it may be required to correct the configuration
-    used for recovery before restarting the target server, especially if
-    the target is reintroduced as a standby of the source. If you restart
-    the server after the rewind operation has finished but without configuring
-    recovery, the target may again diverge from the primary.
+    由于 <application>pg_rewind</application> 会完全从源复制配置文件，可能需要在重启目标服务器之前修正用于恢复的配置，特别是当目标被重新引入作为源的备用服务器时。如果在回卷操作完成后重启服务器但未配置恢复，目标可能再次与主库产生分歧。
    </para>
 
    <para>
-    <application>pg_rewind</application> will fail immediately if it finds
-    files it cannot write directly to.  This can happen for example when
-    the source and the target server use the same file mapping for read-only
-    SSL keys and certificates.  If such files are present on the target server
-    it is recommended to remove them before running
-    <application>pg_rewind</application>.  After doing the rewind, some of
-    those files may have been copied from the source, in which case it may
-    be necessary to remove the data copied and restore back the set of links
-    used before the rewind.
+    如果 <application>pg_rewind</application> 发现无法直接写入的文件，它将立即失败。例如，当源服务器和目标服务器对只读 SSL 密钥和证书使用相同的文件映射时，就可能发生这种情况。如果目标服务器上存在此类文件，建议在运行 <application>pg_rewind</application> 之前删除它们。执行回卷之后，其中一些文件可能已从源复制过来，此时可能需要删除已复制的数据并恢复回卷之前使用的链接集合。
    </para>
   </warning>
  </refsect1>
 
  <refsect1>
-  <title>Options</title>
+  <title>选项</title>
 
    <para>
-    <application>pg_rewind</application> accepts the following command-line
-    arguments:
+    <application>pg_rewind</application> 接受以下命令行参数：
 
     <variablelist>
      <varlistentry>
@@ -146,9 +88,8 @@ PostgreSQL documentation
       <term><option>--target-pgdata=<replaceable class="parameter">directory</replaceable></option></term>
       <listitem>
        <para>
-        This option specifies the target data directory that is synchronized
-        with the source. The target server must be shut down cleanly before
-        running <application>pg_rewind</application>
+        此选项指定与源同步的目标数据目录。在运行 <application>pg_rewind</application>
+        之前，目标服务器必须被干净地关闭。
        </para>
       </listitem>
      </varlistentry>
@@ -157,9 +98,7 @@ PostgreSQL documentation
       <term><option>--source-pgdata=<replaceable class="parameter">directory</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the file system path to the data directory of the source
-        server to synchronize the target with. This option requires the
-        source server to be cleanly shut down.
+        指定源服务器数据目录的文件系统路径，目标将与该源服务器同步。此选项要求源服务器已被干净地关闭。
        </para>
       </listitem>
      </varlistentry>
@@ -168,13 +107,7 @@ PostgreSQL documentation
       <term><option>--source-server=<replaceable class="parameter">connstr</replaceable></option></term>
       <listitem>
        <para>
-        Specifies a libpq connection string to connect to the source
-        <productname>PostgreSQL</productname> server to synchronize the target
-        with. The connection must be a normal (non-replication) connection
-        with a role having sufficient permissions to execute the functions
-        used by <application>pg_rewind</application> on the source server
-        (see Notes section for details) or a superuser role.  This option
-        requires the source server to be running and accepting connections.
+        指定一个 libpq 连接串，用于连接到源 <productname>PostgreSQL</productname> 服务器以便将目标与其同步。该连接必须是普通（非复制）连接，其角色需具有足够权限，能够在源服务器上执行 <application>pg_rewind</application> 所使用的函数（详见 Notes 一节），或者使用超级用户角色。此选项要求源服务器正在运行并接受连接。
        </para>
       </listitem>
      </varlistentry>
@@ -184,12 +117,8 @@ PostgreSQL documentation
       <term><option>--write-recovery-conf</option></term>
       <listitem>
        <para>
-        Create <filename>standby.signal</filename> and append connection
-        settings to <filename>postgresql.auto.conf</filename> in the output
-        directory.  The dbname will be recorded only if the dbname was
-        specified explicitly in the connection string or <link linkend="libpq-envars">
-        environment variable</link>. <literal>--source-server</literal> is
-        mandatory with this option.
+        创建 <filename>standby.signal</filename> 并将连接设置追加到输出目录中的 <filename>postgresql.auto.conf</filename>。仅当 dbname 在连接串或 <link linkend="libpq-envars">
+        环境变量</link> 中被显式指定时，才会记录 dbname。此选项必须与 <literal>--source-server</literal> 一起使用。
        </para>
       </listitem>
      </varlistentry>
@@ -199,7 +128,7 @@ PostgreSQL documentation
       <term><option>--dry-run</option></term>
       <listitem>
        <para>
-        Do everything except actually modifying the target directory.
+        执行除实际修改目标目录之外的所有操作。
        </para>
       </listitem>
      </varlistentry>
@@ -209,13 +138,10 @@ PostgreSQL documentation
       <term><option>--no-sync</option></term>
       <listitem>
        <para>
-        By default, <command>pg_rewind</command> will wait for all files
-        to be written safely to disk.  This option causes
-        <command>pg_rewind</command> to return without waiting, which is
-        faster, but means that a subsequent operating system crash can leave
-        the data directory corrupt.  Generally, this option is useful for
-        testing but should not be used on a production
-        installation.
+        默认情况下，<command>pg_rewind</command> 会等待所有文件安全写入磁盘。此选项使
+        <command>pg_rewind</command> 不等待而直接返回，这样速度更快，但意味着随后发生的
+        操作系统崩溃可能导致数据目录损坏。通常，此选项对测试有用，
+        但不应在生产安装中使用。
        </para>
       </listitem>
      </varlistentry>
@@ -225,8 +151,8 @@ PostgreSQL documentation
       <term><option>--progress</option></term>
       <listitem>
        <para>
-        Enables progress reporting. Turning this on will deliver an approximate
-        progress report while copying data from the source cluster.
+        启用进度报告。开启此项后，在从源数据库集簇复制数据的过程中
+        会提供近似的进度报告。
        </para>
       </listitem>
      </varlistentry>
@@ -236,10 +162,8 @@ PostgreSQL documentation
       <term><option>--restore-target-wal</option></term>
       <listitem>
        <para>
-        Use <varname>restore_command</varname> defined in the target cluster
-        configuration to retrieve WAL files from the WAL archive if these
-        files are no longer available in the <filename>pg_wal</filename>
-        directory.
+        如果 WAL 文件在 <filename>pg_wal</filename> 目录中已不再可用，则使用目标数据库集簇
+        配置中定义的 <varname>restore_command</varname> 从 WAL 归档中取回这些文件。
        </para>
       </listitem>
      </varlistentry>
@@ -263,8 +187,7 @@ PostgreSQL documentation
       <term><option>--debug</option></term>
       <listitem>
        <para>
-        Print verbose debugging output that is mostly useful for developers
-        debugging <application>pg_rewind</application>.
+        打印详细的调试输出，主要对调试 <application>pg_rewind</application> 的开发者有用。
        </para>
       </listitem>
      </varlistentry>
@@ -273,15 +196,7 @@ PostgreSQL documentation
       <term><option>--no-ensure-shutdown</option></term>
       <listitem>
        <para>
-        <application>pg_rewind</application> requires that the target server
-        is cleanly shut down before rewinding. By default, if the target server
-        is not shut down cleanly, <application>pg_rewind</application> starts
-        the target server in single-user mode to complete crash recovery first,
-        and stops it.
-        By passing this option, <application>pg_rewind</application> skips
-        this and errors out immediately if the server is not cleanly shut
-        down. Users are expected to handle the situation themselves in that
-        case.
+        <application>pg_rewind</application> 要求在回卷之前目标服务器已干净地关闭。默认情况下，如果目标服务器未干净关闭，<application>pg_rewind</application> 会以单用户模式启动目标服务器以先完成崩溃恢复，然后将其停止。通过传入此选项，<application>pg_rewind</application> 会跳过这一过程，并在服务器未干净关闭时立即报错退出。在这种情况下，用户需要自行处理。
        </para>
       </listitem>
      </varlistentry>
@@ -290,20 +205,13 @@ PostgreSQL documentation
       <term><option>--sync-method=<replaceable class="parameter">method</replaceable></option></term>
       <listitem>
        <para>
-        When set to <literal>fsync</literal>, which is the default,
-        <command>pg_rewind</command> will recursively open and synchronize all
-        files in the data directory.  The search for files will follow symbolic
-        links for the WAL directory and each configured tablespace.
+        当设置为 <literal>fsync</literal>（这是默认值）时，<command>pg_rewind</command> 将递归地打开并同步数据目录中的所有文件。文件搜索将跟随 WAL 目录和每个已配置表空间的符号链接。
        </para>
        <para>
-        On Linux, <literal>syncfs</literal> may be used instead to ask the
-        operating system to synchronize the whole file systems that contain the
-        data directory, the WAL files, and each tablespace.  See
-        <xref linkend="guc-recovery-init-sync-method"/> for information about
-        the caveats to be aware of when using <literal>syncfs</literal>.
+        在 Linux 上，可以改用 <literal>syncfs</literal> 来要求操作系统同步包含数据目录、WAL 文件和每个表空间的整个文件系统。有关使用 <literal>syncfs</literal> 时需要注意的事项，请参见 <xref linkend="guc-recovery-init-sync-method"/>。
        </para>
        <para>
-        This option has no effect when <option>--no-sync</option> is used.
+        当使用 <option>--no-sync</option> 时，此选项无效。
        </para>
       </listitem>
      </varlistentry>
@@ -311,13 +219,13 @@ PostgreSQL documentation
      <varlistentry>
       <term><option>-V</option></term>
       <term><option>--version</option></term>
-      <listitem><para>Display version information, then exit.</para></listitem>
+      <listitem><para>显示版本信息，然后退出。</para></listitem>
      </varlistentry>
 
      <varlistentry>
       <term><option>-?</option></term>
       <term><option>--help</option></term>
-      <listitem><para>Show help, then exit.</para></listitem>
+      <listitem><para>显示帮助，然后退出。</para></listitem>
      </varlistentry>
 
     </variablelist>
@@ -325,31 +233,22 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1>
-  <title>Environment</title>
+  <title>环境</title>
 
   <para>
-   When <option>--source-server</option> option is used,
-   <application>pg_rewind</application> also uses the environment variables
-   supported by <application>libpq</application> (see <xref linkend="libpq-envars"/>).
+   当使用 <option>--source-server</option> 选项时，<application>pg_rewind</application> 也会使用 <application>libpq</application> 所支持的环境变量（参见 <xref linkend="libpq-envars"/>）。
   </para>
 
   <para>
-   The environment variable <envar>PG_COLOR</envar> specifies whether to use
-   color in diagnostic messages. Possible values are
-   <literal>always</literal>, <literal>auto</literal> and
-   <literal>never</literal>.
+   环境变量 <envar>PG_COLOR</envar> 指定是否在诊断消息中使用颜色。可能的取值为 <literal>always</literal>、<literal>auto</literal> 和 <literal>never</literal>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   When executing <application>pg_rewind</application> using an online
-   cluster as source, a role having sufficient permissions to execute the
-   functions used by <application>pg_rewind</application> on the source
-   cluster can be used instead of a superuser.  Here is how to create such
-   a role, named <literal>rewind_user</literal> here:
+   当使用在线数据库集簇作为源执行 <application>pg_rewind</application> 时，可以使用在源数据库集簇上具有足够权限执行 <application>pg_rewind</application> 所用函数的角色来代替超级用户。下面说明如何创建这样一个角色，这里将其命名为 <literal>rewind_user</literal>：
 <programlisting>
 CREATE USER rewind_user LOGIN;
 GRANT EXECUTE ON function pg_catalog.pg_ls_dir(text, boolean, boolean) TO rewind_user;
@@ -360,72 +259,36 @@ GRANT EXECUTE ON function pg_catalog.pg_read_binary_file(text, bigint, bigint, b
   </para>
 
   <refsect2>
-   <title>How It Works</title>
+   <title>工作原理</title>
 
    <para>
-    The basic idea is to copy all file system-level changes from the source
-    cluster to the target cluster:
+    基本思路是把源集簇中所有文件系统层面的更改复制到目标集簇：
    </para>
 
    <procedure>
     <step>
      <para>
-      Scan the WAL log of the target cluster, starting from the last
-      checkpoint before the point where the source cluster's timeline
-      history forked off from the target cluster. For each WAL record,
-      record each data block that was touched. This yields a list of all
-      the data blocks that were changed in the target cluster, after the
-      source cluster forked off. If some of the WAL files are no longer
-      available, try re-running <application>pg_rewind</application> with
-      the <option>-c</option> option to search for the missing files in
-      the WAL archive.
+      扫描目标集簇的 WAL 日志，从源集簇的时间线历史与目标集簇分叉之前的最后一个检查点开始。对每条 WAL 记录，记录所涉及的每个数据块。这样便得到一份在源集簇分叉之后目标集簇中被更改过的所有数据块的列表。如果某些 WAL 文件已不可用，请尝试使用 <option>-c</option> 选项重新运行 <application>pg_rewind</application>，以便在 WAL 归档中搜索缺失的文件。
      </para>
     </step>
     <step>
      <para>
-      Copy all those changed blocks from the source cluster to
-      the target cluster, either using direct file system access
-      (<option>--source-pgdata</option>) or SQL (<option>--source-server</option>).
-      Relation files are now in a state equivalent to the moment of the last
-      completed checkpoint prior to the point at which the WAL timelines of the
-      source and target diverged plus the current state on the source of any
-      blocks changed on the target after that divergence.
+      将所有这些被更改的块从源集簇复制到目标集簇，可以使用直接文件系统访问（<option>--source-pgdata</option>）或 SQL（<option>--source-server</option>）。此时关系文件的状态相当于：源与目标的 WAL 时间线分叉之前的最后一个已完成检查点时刻的状态，再加上分叉之后目标上被更改的块在源上的当前状态。
      </para>
     </step>
     <step>
      <para>
-      Copy all other files, including new relation files, WAL segments,
-      <filename>pg_xact</filename>, and configuration files from the source
-      cluster to the target cluster. Similarly to base backups, the contents
-      of the directories <filename>pg_dynshmem/</filename>,
-      <filename>pg_notify/</filename>, <filename>pg_replslot/</filename>,
-      <filename>pg_serial/</filename>, <filename>pg_snapshots/</filename>,
-      <filename>pg_stat_tmp/</filename>, and <filename>pg_subtrans/</filename>
-      are omitted from the data copied from the source cluster. The files
-      <filename>backup_label</filename>,
-      <filename>tablespace_map</filename>,
-      <filename>pg_internal.init</filename>,
-      <filename>postmaster.opts</filename>,
-      <filename>postmaster.pid</filename> and
-      <filename>.DS_Store</filename> as well as any file or directory
-      beginning with <filename>pgsql_tmp</filename>, are omitted.
+      将其他所有文件从源集簇复制到目标集簇，包括新的关系文件、WAL 段、<filename>pg_xact</filename> 以及配置文件。与基础备份类似，从源集簇复制的数据中会省略目录 <filename>pg_dynshmem/</filename>、<filename>pg_notify/</filename>、<filename>pg_replslot/</filename>、<filename>pg_serial/</filename>、<filename>pg_snapshots/</filename>、<filename>pg_stat_tmp/</filename> 和 <filename>pg_subtrans/</filename> 的内容。文件 <filename>backup_label</filename>、<filename>tablespace_map</filename>、<filename>pg_internal.init</filename>、<filename>postmaster.opts</filename>、<filename>postmaster.pid</filename> 和 <filename>.DS_Store</filename> 以及任何以 <filename>pgsql_tmp</filename> 开头的文件或目录都会被省略。
      </para>
     </step>
     <step>
      <para>
-      Create a <filename>backup_label</filename> file to begin WAL replay at
-      the checkpoint created at failover and configure the
-      <filename>pg_control</filename> file with a minimum consistency LSN
-      defined as the result of <literal>pg_current_wal_insert_lsn()</literal>
-      when rewinding from a live source or the last checkpoint LSN when
-      rewinding from a stopped source.
+      创建一个 <filename>backup_label</filename> 文件，以便在故障转移时创建的检查点处开始 WAL 重放，并配置 <filename>pg_control</filename> 文件，其最小一致性 LSN 定义为：从运行中的源回卷时 <literal>pg_current_wal_insert_lsn()</literal> 的结果，或从已停止的源回卷时的最后一个检查点 LSN。
      </para>
     </step>
     <step>
      <para>
-      When starting the target, <productname>PostgreSQL</productname> replays
-      all the required WAL, resulting in a data directory in a consistent
-      state.
+      启动目标时，<productname>PostgreSQL</productname> 会重放所有必需的 WAL，从而使数据目录达到一致状态。
      </para>
     </step>
    </procedure>
