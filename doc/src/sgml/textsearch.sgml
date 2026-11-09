@@ -12,165 +12,104 @@
   </indexterm>
 
  <sect1 id="textsearch-intro">
-  <title>Introduction</title>
+  <title>引言</title>
 
   <para>
-   Full Text Searching (or just <firstterm>text search</firstterm>) provides
-   the capability to identify natural-language <firstterm>documents</firstterm> that
-   satisfy a <firstterm>query</firstterm>, and optionally to sort them by
-   relevance to the query.  The most common type of search
-   is to find all documents containing given <firstterm>query terms</firstterm>
-   and return them in order of their <firstterm>similarity</firstterm> to the
-   query.  Notions of <varname>query</varname> and
-   <varname>similarity</varname> are very flexible and depend on the specific
-   application. The simplest search considers <varname>query</varname> as a
-   set of words and <varname>similarity</varname> as the frequency of query
-   words in the document.
+   全文检索（或简称<firstterm>文本检索</firstterm>）提供了识别满足<firstterm>查询</firstterm>的自然语言<firstterm>文档</firstterm>的能力，并且可以选择按与查询的相关性对它们进行排序。最常见的搜索类型是找出包含给定<firstterm>查询词</firstterm>的所有文档，并按它们与查询的<firstterm>相似度</firstterm>顺序返回。<varname>query</varname> 和 <varname>similarity</varname> 的概念非常灵活，取决于具体的应用。最简单的搜索将 <varname>query</varname> 视为一组词，将 <varname>similarity</varname> 视为查询词在文档中的频率。
   </para>
 
   <para>
-   Textual search operators have existed in databases for years.
-   <productname>PostgreSQL</productname> has
-   <literal>~</literal>, <literal>~*</literal>, <literal>LIKE</literal>, and
-   <literal>ILIKE</literal> operators for textual data types, but they lack
-   many essential properties required by modern information systems:
+   文本搜索运算符在数据库中已经存在多年。<productname>PostgreSQL</productname> 为文本数据类型提供了 <literal>~</literal>、<literal>~*</literal>、<literal>LIKE</literal> 和 <literal>ILIKE</literal> 运算符，但它们缺少现代信息系统所需的许多基本特性：
   </para>
 
   <itemizedlist  spacing="compact" mark="bullet">
    <listitem>
     <para>
-     There is no linguistic support, even for English.  Regular expressions
-     are not sufficient because they cannot easily handle derived words, e.g.,
-     <literal>satisfies</literal> and <literal>satisfy</literal>. You might
-     miss documents that contain <literal>satisfies</literal>, although you
-     probably would like to find them when searching for
-     <literal>satisfy</literal>. It is possible to use <literal>OR</literal>
-     to search for multiple derived forms, but this is tedious and error-prone
-     (some words can have several thousand derivatives).
+     没有语言学支持，甚至对英语也是如此。正则表达式不够用，因为它们无法轻松处理派生词，例如 <literal>satisfies</literal> 和 <literal>satisfy</literal>。你可能会漏掉包含 <literal>satisfies</literal> 的文档，尽管在搜索 <literal>satisfy</literal> 时你很可能希望找到它们。可以使用 <literal>OR</literal> 来搜索多个派生形式，但这很繁琐且容易出错（有些词可能有数千个派生词）。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     They provide no ordering (ranking) of search results, which makes them
-     ineffective when thousands of matching documents are found.
+     它们不提供搜索结果的排序（排名），这使得在找到数千个匹配文档时它们效率低下。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     They tend to be slow because there is no index support, so they must
-     process all documents for every search.
+     它们往往很慢，因为没有索引支持，所以每次搜索都必须处理所有文档。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   Full text indexing allows documents to be <emphasis>preprocessed</emphasis>
-   and an index saved for later rapid searching. Preprocessing includes:
+   全文索引允许对文档进行<emphasis>预处理</emphasis>，并保存索引以便之后快速搜索。预处理包括：
   </para>
 
   <itemizedlist  mark="none">
    <listitem>
     <para>
-     <emphasis>Parsing documents into <firstterm>tokens</firstterm></emphasis>. It is
-     useful to identify various classes of tokens, e.g., numbers, words,
-     complex words, email addresses, so that they can be processed
-     differently.  In principle token classes depend on the specific
-     application, but for most purposes it is adequate to use a predefined
-     set of classes.
-     <productname>PostgreSQL</productname> uses a <firstterm>parser</firstterm> to
-     perform this step.  A standard parser is provided, and custom parsers
-     can be created for specific needs.
+     <emphasis>将文档解析为<firstterm>记号</firstterm></emphasis>。识别出各种类别的记号（例如数字、词、复合词、电子邮件地址）是很有用的，这样可以分别对它们进行不同的处理。原则上，记号类别取决于具体的应用，但在大多数情况下，使用一组预定义的类别就足够了。
+     <productname>PostgreSQL</productname> 使用<firstterm>解析器</firstterm>来执行这一步。系统提供了一个标准解析器，也可以针对特定需求创建自定义解析器。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <emphasis>Converting tokens into <firstterm>lexemes</firstterm></emphasis>.
-     A lexeme is a string, just like a token, but it has been
-     <firstterm>normalized</firstterm> so that different forms of the same word
-     are made alike.  For example, normalization almost always includes
-     folding upper-case letters to lower-case, and often involves removal
-     of suffixes (such as <literal>s</literal> or <literal>es</literal> in English).
-     This allows searches to find variant forms of the
-     same word, without tediously entering all the possible variants.
-     Also, this step typically eliminates <firstterm>stop words</firstterm>, which
-     are words that are so common that they are useless for searching.
-     (In short, then, tokens are raw fragments of the document text, while
-     lexemes are words that are believed useful for indexing and searching.)
-     <productname>PostgreSQL</productname> uses <firstterm>dictionaries</firstterm> to
-     perform this step.  Various standard dictionaries are provided, and
-     custom ones can be created for specific needs.
+     <emphasis>将记号转换为<firstterm>词元</firstterm></emphasis>。词元是一个字符串，与记号一样，但它经过了<firstterm>正规化</firstterm>，使得同一个词的不同形式变得相同。例如，正规化几乎总是包括将大写字母折叠为小写，并且常常涉及去除后缀（例如英语中的 <literal>s</literal> 或 <literal>es</literal>）。这样，搜索就能找到同一个词的各种变体形式，而不必繁琐地输入所有可能的变体。此外，这一步通常会消除<firstterm>停用词</firstterm>，也就是那些过于常见、对搜索没有用处的词。（简而言之，记号是文档文本的原始片段，而词元则是被认为对索引和搜索有用的词。）<productname>PostgreSQL</productname> 使用<firstterm>词典</firstterm>来执行这一步。系统提供了各种标准词典，也可以针对特定需求创建自定义词典。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <emphasis>Storing preprocessed documents optimized for
-     searching</emphasis>.  For example, each document can be represented
-     as a sorted array of normalized lexemes. Along with the lexemes it is
-     often desirable to store positional information to use for
-     <firstterm>proximity ranking</firstterm>, so that a document that
-     contains a more <quote>dense</quote> region of query words is
-     assigned a higher rank than one with scattered query words.
+     <emphasis>存储为搜索优化过的预处理文档</emphasis>。例如，每个文档都可以表示为一个经过正规化的词元的有序数组。除了词元之外，通常还希望存储位置信息，以便用于<firstterm>邻近度排名</firstterm>，这样，包含查询词更<quote>密集</quote>区域的文档会比查询词分散的文档获得更高的排名。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   Dictionaries allow fine-grained control over how tokens are normalized.
-   With appropriate dictionaries, you can:
+   词典可以对记号的正规化方式进行细粒度控制。使用适当的词典，你可以：
   </para>
 
   <itemizedlist  spacing="compact" mark="bullet">
    <listitem>
     <para>
-     Define stop words that should not be indexed.
+     定义不应被索引的停用词。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Map synonyms to a single word using <application>Ispell</application>.
+     使用 <application>Ispell</application> 将同义词映射到单个词。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Map phrases to a single word using a thesaurus.
+     使用同义词词典将短语映射到单个词。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Map different variations of a word to a canonical form using
-     an <application>Ispell</application> dictionary.
+     使用 <application>Ispell</application> 词典将同一个词的不同变体映射到规范形式。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Map different variations of a word to a canonical form using
-     <application>Snowball</application> stemmer rules.
+     使用 <application>Snowball</application> 词干提取器规则将同一个词的不同变体映射到规范形式。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   A data type <type>tsvector</type> is provided for storing preprocessed
-   documents, along with a type <type>tsquery</type> for representing processed
-   queries (<xref linkend="datatype-textsearch"/>).  There are many
-   functions and operators available for these data types
-   (<xref linkend="functions-textsearch"/>), the most important of which is
-   the match operator <literal>@@</literal>, which we introduce in
-   <xref linkend="textsearch-matching"/>.  Full text searches can be accelerated
-   using indexes (<xref linkend="textsearch-indexes"/>).
+   提供了一种数据类型 <type>tsvector</type> 用于存储预处理后的文档，还提供了一种类型 <type>tsquery</type> 用于表示处理后的查询（<xref linkend="datatype-textsearch"/>）。这些数据类型有许多可用的函数和运算符（<xref linkend="functions-textsearch"/>），其中最重要的是匹配运算符 <literal>@@</literal>，我们将在 <xref linkend="textsearch-matching"/> 中介绍它。全文检索可以使用索引来加速（<xref linkend="textsearch-indexes"/>）。
   </para>
 
 
   <sect2 id="textsearch-document">
-   <title>What Is a Document?</title>
+   <title>什么是文档？</title>
 
    <indexterm zone="textsearch-document">
     <primary>document</primary>
@@ -178,20 +117,11 @@
    </indexterm>
 
    <para>
-    A <firstterm>document</firstterm> is the unit of searching in a full text search
-    system; for example, a magazine article or email message.  The text search
-    engine must be able to parse documents and store associations of lexemes
-    (key words) with their parent document. Later, these associations are
-    used to search for documents that contain query words.
+    <firstterm>文档</firstterm>是全文检索系统中的搜索单位；例如，一篇杂志文章或一封电子邮件。文本检索引擎必须能够解析文档，并存储词位（关键词）与其所属文档之间的关联。之后，这些关联被用来搜索包含查询词的文档。
    </para>
 
    <para>
-    For searches within <productname>PostgreSQL</productname>,
-    a document is normally a textual field within a row of a database table,
-    or possibly a combination (concatenation) of such fields, perhaps stored
-    in several tables or obtained dynamically. In other words, a document can
-    be constructed from different parts for indexing and it might not be
-    stored anywhere as a whole. For example:
+    对于 <productname>PostgreSQL</productname> 内部的搜索，文档通常是数据库表中某一行的文本字段，也可能是这类字段的组合（连接），这些字段可能存储在多个表中，也可能是动态获取的。换句话说，文档可以由不同部分构造出来用于索引，并且它可能并不以整体形式存储在任何地方。例如：
 
 <programlisting>
 SELECT title || ' ' ||  author || ' ' ||  abstract || ' ' || body AS document
@@ -206,45 +136,24 @@ WHERE m.mid = d.did AND m.mid = 12;
 
    <note>
     <para>
-     Actually, in these example queries, <function>coalesce</function>
-     should be used to prevent a single <literal>NULL</literal> attribute from
-     causing a <literal>NULL</literal> result for the whole document.
+     实际上，在这些示例查询中，应该使用 <function>coalesce</function> 来防止单个 <literal>NULL</literal> 属性导致整个文档出现 <literal>NULL</literal> 结果。
     </para>
    </note>
 
    <para>
-    Another possibility is to store the documents as simple text files in the
-    file system. In this case, the database can be used to store the full text
-    index and to execute searches, and some unique identifier can be used to
-    retrieve the document from the file system.  However, retrieving files
-    from outside the database requires superuser permissions or special
-    function support, so this is usually less convenient than keeping all
-    the data inside <productname>PostgreSQL</productname>.  Also, keeping
-    everything inside the database allows easy access
-    to document metadata to assist in indexing and display.
+    另一种可能是将文档作为简单的文本文件存储在文件系统中。在这种情况下，数据库可以用来存储全文索引并执行搜索，而某些唯一标识符可用来从文件系统中检索文档。不过，从数据库外部检索文件需要超级用户权限或特殊函数支持，因此这通常不如将所有数据都保存在 <productname>PostgreSQL</productname> 中方便。此外，将所有内容都保存在数据库内，可以方便地访问文档元数据，以辅助索引和显示。
    </para>
 
    <para>
-    For text search purposes, each document must be reduced to the
-    preprocessed <type>tsvector</type> format.  Searching and ranking
-    are performed entirely on the <type>tsvector</type> representation
-    of a document &mdash; the original text need only be retrieved
-    when the document has been selected for display to a user.
-    We therefore often speak of the <type>tsvector</type> as being the
-    document, but of course it is only a compact representation of
-    the full document.
+    出于文本检索的目的，每个文档都必须被归约为预处理后的 <type>tsvector</type> 格式。搜索和排名完全在文档的 <type>tsvector</type> 表示上执行 &mdash; 只有在文档被选中要显示给用户时，才需要检索原始文本。因此，我们常常把 <type>tsvector</type> 说成是文档，但当然它只是完整文档的一种紧凑表示。
    </para>
   </sect2>
 
   <sect2 id="textsearch-matching">
-   <title>Basic Text Matching</title>
+   <title>基本文本匹配</title>
 
    <para>
-    Full text searching in <productname>PostgreSQL</productname> is based on
-    the match operator <literal>@@</literal>, which returns
-    <literal>true</literal> if a <type>tsvector</type>
-    (document) matches a <type>tsquery</type> (query).
-    It doesn't matter which data type is written first:
+    <productname>PostgreSQL</productname> 中的全文检索基于匹配运算符 <literal>@@</literal>，如果 <type>tsvector</type>（文档）匹配 <type>tsquery</type>（查询），则返回 <literal>true</literal>。哪个数据类型写在前面并不重要：
 
 <programlisting>
 SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector @@ 'cat &amp; rat'::tsquery;
@@ -260,18 +169,7 @@ SELECT 'fat &amp; cow'::tsquery @@ 'a fat cat sat on a mat and ate a fat rat'::t
    </para>
 
    <para>
-    As the above example suggests, a <type>tsquery</type> is not just raw
-    text, any more than a <type>tsvector</type> is.  A <type>tsquery</type>
-    contains search terms, which must be already-normalized lexemes, and
-    may combine multiple terms using AND, OR, NOT, and FOLLOWED BY operators.
-    (For syntax details see <xref linkend="datatype-tsquery"/>.)  There are
-    functions <function>to_tsquery</function>, <function>plainto_tsquery</function>,
-    and <function>phraseto_tsquery</function>
-    that are helpful in converting user-written text into a proper
-    <type>tsquery</type>, primarily by normalizing words appearing in
-    the text.  Similarly, <function>to_tsvector</function> is used to parse and
-    normalize a document string.  So in practice a text search match would
-    look more like this:
+    正如上面的例子所示，<type>tsquery</type> 并不只是原始文本，<type>tsvector</type> 也是如此。<type>tsquery</type> 包含搜索词，这些词必须是已经规范化的词素，并且可以使用 AND、OR、NOT 和 FOLLOWED BY 运算符组合多个词。（语法细节参见 <xref linkend="datatype-tsquery"/>。）有一些函数 <function>to_tsquery</function>、<function>plainto_tsquery</function> 和 <function>phraseto_tsquery</function> 有助于将用户编写的文本转换为适当的 <type>tsquery</type>，主要是通过规范化文本中出现的词。类似地，<function>to_tsvector</function> 用于解析和规范化文档字符串。因此在实际中，文本搜索匹配更像是这样：
 
 <programlisting>
 SELECT to_tsvector('fat cats ate fat rats') @@ to_tsquery('fat &amp; rat');
@@ -280,7 +178,7 @@ SELECT to_tsvector('fat cats ate fat rats') @@ to_tsquery('fat &amp; rat');
  t
 </programlisting>
 
-    Observe that this match would not succeed if written as
+    请注意，如果写成
 
 <programlisting>
 SELECT 'fat cats ate fat rats'::tsvector @@ to_tsquery('fat &amp; rat');
@@ -289,16 +187,11 @@ SELECT 'fat cats ate fat rats'::tsvector @@ to_tsquery('fat &amp; rat');
  f
 </programlisting>
 
-    since here no normalization of the word <literal>rats</literal> will occur.
-    The elements of a <type>tsvector</type> are lexemes, which are assumed
-    already normalized, so <literal>rats</literal> does not match <literal>rat</literal>.
+    则此匹配不会成功，因为这里不会对词 <literal>rats</literal> 进行任何规范化。<type>tsvector</type> 的元素是词素，它们被假定已经规范化，因此 <literal>rats</literal> 不匹配 <literal>rat</literal>。
    </para>
 
    <para>
-    The <literal>@@</literal> operator also
-    supports <type>text</type> input, allowing explicit conversion of a text
-    string to <type>tsvector</type> or <type>tsquery</type> to be skipped
-    in simple cases.  The variants available are:
+    <literal>@@</literal> 运算符还支持 <type>text</type> 输入，在简单情况下可以跳过将文本字符串显式转换为 <type>tsvector</type> 或 <type>tsquery</type> 的步骤。可用的变体有：
 
 <programlisting>
 tsvector @@ tsquery
@@ -309,29 +202,15 @@ text @@ text
    </para>
 
    <para>
-    The first two of these we saw already.
-    The form <type>text</type> <literal>@@</literal> <type>tsquery</type>
-    is equivalent to <literal>to_tsvector(x) @@ y</literal>.
-    The form <type>text</type> <literal>@@</literal> <type>text</type>
-    is equivalent to <literal>to_tsvector(x) @@ plainto_tsquery(y)</literal>.
+    其中前两个我们已经见过。形式 <type>text</type> <literal>@@</literal> <type>tsquery</type> 等价于 <literal>to_tsvector(x) @@ y</literal>。形式 <type>text</type> <literal>@@</literal> <type>text</type> 等价于 <literal>to_tsvector(x) @@ plainto_tsquery(y)</literal>。
    </para>
 
    <para>
-    Within a <type>tsquery</type>, the <literal>&amp;</literal> (AND) operator
-    specifies that both its arguments must appear in the document to have a
-    match.  Similarly, the <literal>|</literal> (OR) operator specifies that
-    at least one of its arguments must appear, while the <literal>!</literal> (NOT)
-    operator specifies that its argument must <emphasis>not</emphasis> appear in
-    order to have a match.
-    For example, the query <literal>fat &amp; ! rat</literal> matches documents that
-    contain <literal>fat</literal> but not <literal>rat</literal>.
+    在 <type>tsquery</type> 中，<literal>&amp;</literal>（AND）运算符指定其两个参数都必须出现在文档中才算匹配。类似地，<literal>|</literal>（OR）运算符指定其至少一个参数必须出现，而 <literal>!</literal>（NOT）运算符指定其参数必须<emphasis>不</emphasis>出现才算匹配。例如，查询 <literal>fat &amp; ! rat</literal> 匹配包含 <literal>fat</literal> 但不包含 <literal>rat</literal> 的文档。
    </para>
 
    <para>
-    Searching for phrases is possible with the help of
-    the <literal>&lt;-&gt;</literal> (FOLLOWED BY) <type>tsquery</type> operator, which
-    matches only if its arguments have matches that are adjacent and in the
-    given order.  For example:
+    借助 <literal>&lt;-&gt;</literal>（FOLLOWED BY）<type>tsquery</type> 运算符可以搜索短语，该运算符仅当其参数存在相邻且按给定顺序的匹配时才匹配。例如：
 
 <programlisting>
 SELECT to_tsvector('fatal error') @@ to_tsquery('fatal &lt;-&gt; error');
@@ -345,15 +224,7 @@ SELECT to_tsvector('error is not fatal') @@ to_tsquery('fatal &lt;-&gt; error');
  f
 </programlisting>
 
-    There is a more general version of the FOLLOWED BY operator having the
-    form <literal>&lt;<replaceable>N</replaceable>&gt;</literal>,
-    where <replaceable>N</replaceable> is an integer standing for the difference between
-    the positions of the matching lexemes.  <literal>&lt;1&gt;</literal> is
-    the same as <literal>&lt;-&gt;</literal>, while <literal>&lt;2&gt;</literal>
-    allows exactly one other lexeme to appear between the matches, and so
-    on.  The <literal>phraseto_tsquery</literal> function makes use of this
-    operator to construct a <literal>tsquery</literal> that can match a multi-word
-    phrase when some of the words are stop words.  For example:
+    FOLLOWED BY 运算符有一个更通用的版本，形式为 <literal>&lt;<replaceable>N</replaceable>&gt;</literal>，其中 <replaceable>N</replaceable> 是一个整数，表示匹配词位的位置之差。<literal>&lt;1&gt;</literal> 与 <literal>&lt;-&gt;</literal> 相同，而 <literal>&lt;2&gt;</literal> 允许匹配之间恰好出现一个其他词位，依此类推。<literal>phraseto_tsquery</literal> 函数利用该运算符构造一个 <literal>tsquery</literal>，当某些词是停用词时，它可以匹配多词短语。例如：
 
 <programlisting>
 SELECT phraseto_tsquery('cats ate rats');
@@ -369,121 +240,75 @@ SELECT phraseto_tsquery('the cats ate the rats');
    </para>
 
    <para>
-    A special case that's sometimes useful is that <literal>&lt;0&gt;</literal>
-    can be used to require that two patterns match the same word.
+    有时有用的一种特殊情况是，可以用 <literal>&lt;0&gt;</literal> 要求两个模式匹配同一个词。
    </para>
 
    <para>
-    Parentheses can be used to control nesting of the <type>tsquery</type>
-    operators.  Without parentheses, <literal>|</literal> binds least tightly,
-    then <literal>&amp;</literal>, then <literal>&lt;-&gt;</literal>,
-    and <literal>!</literal> most tightly.
+    可以用圆括号控制 <type>tsquery</type> 运算符的嵌套。没有圆括号时，<literal>|</literal> 的结合最松，其次是 <literal>&amp;</literal>，再次是 <literal>&lt;-&gt;</literal>，而 <literal>!</literal> 结合最紧。
    </para>
 
    <para>
-    It's worth noticing that the AND/OR/NOT operators mean something subtly
-    different when they are within the arguments of a FOLLOWED BY operator
-    than when they are not, because within FOLLOWED BY the exact position of
-    the match is significant.  For example, normally <literal>!x</literal> matches
-    only documents that do not contain <literal>x</literal> anywhere.
-    But <literal>!x &lt;-&gt; y</literal> matches <literal>y</literal> if it is not
-    immediately after an <literal>x</literal>; an occurrence of <literal>x</literal>
-    elsewhere in the document does not prevent a match.  Another example is
-    that <literal>x &amp; y</literal> normally only requires that <literal>x</literal>
-    and <literal>y</literal> both appear somewhere in the document, but
-    <literal>(x &amp; y) &lt;-&gt; z</literal> requires <literal>x</literal>
-    and <literal>y</literal> to match at the same place, immediately before
-    a <literal>z</literal>.  Thus this query behaves differently from
-    <literal>x &lt;-&gt; z &amp; y &lt;-&gt; z</literal>, which will match a
-    document containing two separate sequences <literal>x z</literal> and
-    <literal>y z</literal>.  (This specific query is useless as written,
-    since <literal>x</literal> and <literal>y</literal> could not match at the same place;
-    but with more complex situations such as prefix-match patterns, a query
-    of this form could be useful.)
+    值得注意的是，当 AND/OR/NOT 运算符位于 FOLLOWED BY 运算符的参数内部时，它们的含义与不在其中时略有不同，因为在 FOLLOWED BY 内部，匹配的确切位置很重要。例如，通常 <literal>!x</literal> 只匹配任何位置都不包含 <literal>x</literal> 的文档。但 <literal>!x &lt;-&gt; y</literal> 会匹配 <literal>y</literal>，只要它不是紧跟在 <literal>x</literal> 之后；文档中其他地方出现 <literal>x</literal> 并不会阻止匹配。另一个例子是，<literal>x &amp; y</literal> 通常只要求 <literal>x</literal> 和 <literal>y</literal> 都出现在文档中的某处，而 <literal>(x &amp; y) &lt;-&gt; z</literal> 要求 <literal>x</literal> 和 <literal>y</literal> 在同一位置匹配，且紧挨在 <literal>z</literal> 之前。因此这个查询的行为不同于 <literal>x &lt;-&gt; z &amp; y &lt;-&gt; z</literal>，后者会匹配包含两个独立序列 <literal>x z</literal> 和 <literal>y z</literal> 的文档。（这个特定的查询按原样写是没有用的，因为 <literal>x</literal> 和 <literal>y</literal> 不可能在同一位置匹配；但对于更复杂的情况，例如前缀匹配模式，这种形式的查询可能有用。）
    </para>
   </sect2>
 
   <sect2 id="textsearch-intro-configurations">
-   <title>Configurations</title>
+   <title>配置</title>
 
    <para>
-    The above are all simple text search examples.  As mentioned before, full
-    text search functionality includes the ability to do many more things:
-    skip indexing certain words (stop words), process synonyms, and use
-    sophisticated parsing, e.g., parse based on more than just white space.
-    This functionality is controlled by <firstterm>text search
-    configurations</firstterm>.  <productname>PostgreSQL</productname> comes with predefined
-    configurations for many languages, and you can easily create your own
-    configurations.  (<application>psql</application>'s <command>\dF</command> command
-    shows all available configurations.)
+    以上都是简单的文本搜索示例。如前所述，全文检索功能还包括执行更多操作的能力：跳过对某些词（停用词）的索引、处理同义词，以及使用复杂的解析，例如不仅仅基于空白进行解析。这些功能由<firstterm>文本搜索配置</firstterm>控制。<productname>PostgreSQL</productname> 附带了许多语言的预定义配置，你也可以轻松创建自己的配置。（<application>psql</application> 的 <command>\dF</command> 命令会显示所有可用的配置。）
    </para>
 
    <para>
-    During installation an appropriate configuration is selected and
-    <xref linkend="guc-default-text-search-config"/> is set accordingly
-    in <filename>postgresql.conf</filename>.  If you are using the same text search
-    configuration for the entire cluster you can use the value in
-    <filename>postgresql.conf</filename>.  To use different configurations
-    throughout the cluster but the same configuration within any one database,
-    use <command>ALTER DATABASE ... SET</command>.  Otherwise, you can set
-    <varname>default_text_search_config</varname> in each session.
+    在安装过程中会选择一个合适的配置，并在 <filename>postgresql.conf</filename> 中相应地设置
+    <xref linkend="guc-default-text-search-config"/>。如果你要对整个数据库集簇使用相同的文本搜索
+    配置，可以使用 <filename>postgresql.conf</filename> 中的值。要在整个数据库集簇中使用不同的配置，但在任意单个数据库内
+    使用相同的配置，请使用 <command>ALTER DATABASE ... SET</command>。否则，你可以在每个会话中设置
+    <varname>default_text_search_config</varname>。
    </para>
 
    <para>
-    Each text search function that depends on a configuration has an optional
-    <type>regconfig</type> argument, so that the configuration to use can be
-    specified explicitly.  <varname>default_text_search_config</varname>
-    is used only when this argument is omitted.
+    每个依赖于配置的文本搜索函数都有一个可选的
+    <type>regconfig</type> 参数，以便可以显式指定要使用的配置。只有在省略该参数时
+    才会使用 <varname>default_text_search_config</varname>。
    </para>
 
    <para>
-    To make it easier to build custom text search configurations, a
-    configuration is built up from simpler database objects.
-    <productname>PostgreSQL</productname>'s text search facility provides
-    four types of configuration-related database objects:
+    为了更便于构建自定义的文本搜索配置，配置是由更简单的数据库对象
+    构建而成的。<productname>PostgreSQL</productname> 的文本搜索设施提供了
+    四种与配置相关的数据库对象：
    </para>
 
   <itemizedlist  spacing="compact" mark="bullet">
    <listitem>
     <para>
-     <firstterm>Text search parsers</firstterm> break documents into tokens
-     and classify each token (for example, as words or numbers).
+     <firstterm>文本搜索解析器</firstterm>将文档分解为记号，
+     并对每个记号进行分类（例如，分类为词或数字）。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <firstterm>Text search dictionaries</firstterm> convert tokens to normalized
-     form and reject stop words.
+     <firstterm>文本搜索词典</firstterm>将记号转换为规范化
+     形式，并拒绝停用词。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <firstterm>Text search templates</firstterm> provide the functions underlying
-     dictionaries.  (A dictionary simply specifies a template and a set
-     of parameters for the template.)
+     <firstterm>文本检索模板</firstterm>提供字典底层的函数。（字典只是为模板指定一个模板和一组参数。）
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <firstterm>Text search configurations</firstterm> select a parser and a set
-     of dictionaries to use to normalize the tokens produced by the parser.
+     <firstterm>文本检索配置</firstterm>选择一个解析器和一组字典，用于规范化解析器产生的词元。
     </para>
    </listitem>
   </itemizedlist>
 
    <para>
-    Text search parsers and templates are built from low-level C functions;
-    therefore it requires C programming ability to develop new ones, and
-    superuser privileges to install one into a database.  (There are examples
-    of add-on parsers and templates in the <filename>contrib/</filename> area of the
-    <productname>PostgreSQL</productname> distribution.)  Since dictionaries and
-    configurations just parameterize and connect together some underlying
-    parsers and templates, no special privilege is needed to create a new
-    dictionary or configuration.  Examples of creating custom dictionaries and
-    configurations appear later in this chapter.
+    文本检索解析器和模板由底层 C 函数构建；因此开发新的解析器和模板需要 C 编程能力，而将其安装到数据库中需要超级用户权限。（在 <productname>PostgreSQL</productname> 发行版的 <filename>contrib/</filename> 区域中有附加解析器和模板的示例。）由于字典和配置只是对某些底层解析器和模板进行参数化并将它们连接起来，因此创建新的字典或配置不需要特殊权限。本章后面将给出创建自定义字典和配置的示例。
    </para>
 
   </sect2>
