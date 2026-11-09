@@ -17,75 +17,57 @@
  </para>
 
  <sect1 id="jit-reason">
-  <title>What Is <acronym>JIT</acronym> compilation?</title>
+  <title>什么是 <acronym>JIT</acronym> 编译？</title>
 
   <para>
-   Just-in-Time (<acronym>JIT</acronym>) compilation is the process of turning
-   some form of interpreted program evaluation into a native program, and
-   doing so at run time.
-   For example, instead of using general-purpose code that can evaluate
-   arbitrary SQL expressions to evaluate a particular SQL predicate
-   like <literal>WHERE a.col = 3</literal>, it is possible to generate a
-   function that is specific to that expression and can be natively executed
-   by the CPU, yielding a speedup.
+   即时（<acronym>JIT</acronym>）编译是将某种形式的解释型程序求值转换为原生程序的过程，并且是在运行时完成这一转换。
+   例如，与其使用能够对任意 SQL 表达式求值的通用代码来对诸如 <literal>WHERE a.col = 3</literal> 这样的特定 SQL 谓词求值，不如生成一个专用于该表达式的函数，该函数可由 CPU 原生执行，从而带来速度提升。
   </para>
 
   <para>
-   <productname>PostgreSQL</productname> has builtin support to perform
-   <acronym>JIT</acronym> compilation using <ulink
-   url="https://llvm.org/"><productname>LLVM</productname></ulink> when
-   <productname>PostgreSQL</productname> is built with
-   <link linkend="configure-with-llvm"><literal>--with-llvm</literal></link>.
+   当 <productname>PostgreSQL</productname> 使用 <link linkend="configure-with-llvm"><literal>--with-llvm</literal></link> 构建时，<productname>PostgreSQL</productname> 内置支持使用 <ulink
+   url="https://llvm.org/"><productname>LLVM</productname></ulink> 执行 <acronym>JIT</acronym> 编译。
   </para>
 
   <para>
-   See <filename>src/backend/jit/README</filename> for further details.
+   更多细节请参见 <filename>src/backend/jit/README</filename>。
   </para>
 
   <sect2 id="jit-accelerated-operations">
-   <title><acronym>JIT</acronym> Accelerated Operations</title>
+   <title><acronym>JIT</acronym> 加速的操作</title>
    <para>
-    Currently <productname>PostgreSQL</productname>'s <acronym>JIT</acronym>
-    implementation has support for accelerating expression evaluation and
-    tuple deforming.  Several other operations could be accelerated in the
-    future.
+    目前，<productname>PostgreSQL</productname> 的 <acronym>JIT</acronym> 实现支持加速表达式求值和元组解构。未来还可能加速其他若干操作。
    </para>
    <para>
-    Expression evaluation is used to evaluate <literal>WHERE</literal>
-    clauses, target lists, aggregates and projections. It can be accelerated
-    by generating code specific to each case.
+    表达式求值用于对 <literal>WHERE</literal>
+    子句、目标列表、聚合和投影进行求值。可以通过生成针对每种情况的专用代码来加速。
    </para>
    <para>
-    Tuple deforming is the process of transforming an on-disk tuple (see <xref
-    linkend="storage-tuple-layout"/>) into its in-memory representation.
-    It can be accelerated by creating a function specific to the table layout
-    and the number of columns to be extracted.
+    元组解构是将磁盘上的元组（参见 <xref
+    linkend="storage-tuple-layout"/>）转换为其内存表示的过程。
+    可以通过创建针对表布局和要提取的列数专用的函数来加速。
    </para>
   </sect2>
 
   <sect2 id="jit-inlining">
-   <title>Inlining</title>
+   <title>内联</title>
    <para>
-    <productname>PostgreSQL</productname> is very extensible and allows new
-    data types, functions, operators and other database objects to be defined;
-    see <xref linkend="extend"/>. In fact the built-in objects are implemented
-    using nearly the same mechanisms.  This extensibility implies some
-    overhead, for example due to function calls (see <xref linkend="xfunc"/>).
-    To reduce that overhead, <acronym>JIT</acronym> compilation can inline the
-    bodies of small functions into the expressions using them. That allows a
-    significant percentage of the overhead to be optimized away.
+    <productname>PostgreSQL</productname> 具有极强的可扩展性，允许定义新的
+    数据类型、函数、运算符和其他数据库对象；
+    参见 <xref linkend="extend"/>。事实上，内置对象也是使用几乎相同的机制实现的。
+    这种可扩展性带来了一些开销，例如函数调用导致的开销（参见 <xref linkend="xfunc"/>）。
+    为了减少这种开销，<acronym>JIT</acronym> 编译可以将小函数的主体内联到使用它们的表达式中。这样可以优化掉相当大比例的开销。
    </para>
   </sect2>
 
   <sect2 id="jit-optimization">
-   <title>Optimization</title>
+   <title>优化</title>
    <para>
-    <productname>LLVM</productname> has support for optimizing generated
-    code. Some of the optimizations are cheap enough to be performed whenever
-    <acronym>JIT</acronym> is used, while others are only beneficial for
-    longer-running queries.
-    See <ulink url="https://llvm.org/docs/Passes.html#transform-passes"/> for
-    more details about optimizations.
+    <productname>LLVM</productname> 支持对生成的
+    代码进行优化。有些优化的成本足够低，只要使用
+    <acronym>JIT</acronym> 就会执行，而另一些则只对
+    运行时间较长的查询有益。
+    有关优化的更多细节，请参见 <ulink url="https://llvm.org/docs/Passes.html#transform-passes"/>。
    </para>
   </sect2>
 
