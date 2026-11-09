@@ -1579,32 +1579,23 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </indexterm>
 
   <para>
-   The catalog <structname>pg_cast</structname> stores data type conversion
-   paths, both built-in and user-defined.
+   系统目录 <structname>pg_cast</structname> 存储数据类型转换路径，包括内置的和用户定义的。
   </para>
 
   <para>
-   It should be noted that <structname>pg_cast</structname> does not represent
-   every type conversion that the system knows how to perform; only those that
-   cannot be deduced from some generic rule.  For example, casting between a
-   domain and its base type is not explicitly represented in
-   <structname>pg_cast</structname>.  Another important exception is that
-   <quote>automatic I/O conversion casts</quote>, those performed using a data
-   type's own I/O functions to convert to or from <type>text</type> or other
-   string types, are not explicitly represented in
-   <structname>pg_cast</structname>.
+   需要注意，<structname>pg_cast</structname> 并不表示系统知道如何执行的每一种类型转换；只表示那些无法从某些通用规则推导出来的转换。例如，域与其基类型之间的转换并未在 <structname>pg_cast</structname> 中显式表示。另一个重要的例外是<quote>自动 I/O 转换造型</quote>，即使用数据类型自身的 I/O 函数转换到 <type>text</type> 或其他字符串类型或从它们转换，这些并未在 <structname>pg_cast</structname> 中显式表示。
   </para>
 
   <table>
-   <title><structname>pg_cast</structname> Columns</title>
+   <title><structname>pg_cast</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -1615,38 +1606,37 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>oid</structfield> <type>oid</type>
       </para>
       <para>
-       Row identifier
+       行标识符
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>castsource</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the source data type
+       源数据类型的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>casttarget</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-type"><structname>pg_type</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the target data type
+       目标数据类型的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>castfunc</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-proc"><structname>pg_proc</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-proc"><structname>pg_proc</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the function to use to perform this cast.  Zero is
-       stored if the cast method doesn't require a function.
+       用于执行此类型转换的函数的 OID。如果转换方法不需要函数，则存储为零。
       </para></entry>
      </row>
 
@@ -1655,13 +1645,11 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>castcontext</structfield> <type>char</type>
       </para>
       <para>
-       Indicates what contexts the cast can be invoked in.
-       <literal>e</literal> means only as an explicit cast (using
-       <literal>CAST</literal> or <literal>::</literal> syntax).
-       <literal>a</literal> means implicitly in assignment
-       to a target column, as well as explicitly.
-       <literal>i</literal> means implicitly in expressions, as well as the
-       other cases.
+       指示该转换可以在哪些上下文中被调用。
+       <literal>e</literal> 表示只能作为显式转换（使用
+       <literal>CAST</literal> 或 <literal>::</literal> 语法）。
+       <literal>a</literal> 表示在赋值给目标列时隐式进行，以及显式进行。
+       <literal>i</literal> 表示在表达式中隐式进行，以及其他情况。
       </para></entry>
      </row>
 
@@ -1670,10 +1658,10 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>castmethod</structfield> <type>char</type>
       </para>
       <para>
-       Indicates how the cast is performed.
-       <literal>f</literal> means that the function specified in the <structfield>castfunc</structfield> field is used.
-       <literal>i</literal> means that the input/output functions are used.
-       <literal>b</literal> means that the types are binary-coercible, thus no conversion is required.
+       指示该转换是如何执行的。
+       <literal>f</literal> 表示使用 <structfield>castfunc</structfield> 字段中指定的函数。
+       <literal>i</literal> 表示使用输入/输出函数。
+       <literal>b</literal> 表示这些类型是二进制可强制的，因此不需要进行转换。
       </para></entry>
      </row>
     </tbody>
@@ -1681,32 +1669,25 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </table>
 
   <para>
-   The cast functions listed in <structname>pg_cast</structname> must
-   always take the cast source type as their first argument type, and
-   return the cast destination type as their result type.  A cast
-   function can have up to three arguments.  The second argument,
-   if present, must be type <type>integer</type>; it receives the type
-   modifier associated with the destination type, or -1
-   if there is none.  The third argument,
-   if present, must be type <type>boolean</type>; it receives <literal>true</literal>
-   if the cast is an explicit cast, <literal>false</literal> otherwise.
+   <structname>pg_cast</structname> 中列出的转换函数必须始终把转换的源类型作为其第一个参数类型，
+   并返回转换的目标类型作为其结果类型。一个转换函数最多可以有三个参数。
+   第二个参数（如果存在）必须是 <type>integer</type> 类型；它接收与目标类型关联的
+   类型修饰符，如果没有则为 -1。第三个参数（如果存在）必须是
+   <type>boolean</type> 类型；如果该转换是显式转换，它接收 <literal>true</literal>，
+   否则接收 <literal>false</literal>。
   </para>
 
   <para>
-   It is legitimate to create a <structname>pg_cast</structname> entry
-   in which the source and target types are the same, if the associated
-   function takes more than one argument.  Such entries represent
-   <quote>length coercion functions</quote> that coerce values of the type
-   to be legal for a particular type modifier value.
+   如果关联的函数接受多个参数，那么在 <structname>pg_cast</structname> 中创建源类型和目标类型相同的条目
+   是合法的。此类条目表示<quote>长度强制函数</quote>，它们把该类型的值强制
+   为对某个特定类型修饰符值而言合法的值。
   </para>
 
   <para>
-   When a <structname>pg_cast</structname> entry has different source and
-   target types and a function that takes more than one argument, it
-   represents converting from one type to another and applying a length
-   coercion in a single step.  When no such entry is available, coercion
-   to a type that uses a type modifier involves two steps, one to
-   convert between data types and a second to apply the modifier.
+   当 <structname>pg_cast</structname> 条目具有不同的源类型和目标类型，且其函数接受多个参数时，
+   它表示在一步中完成从一种类型到另一种类型的转换并应用长度强制。
+   当没有这样的条目可用时，强制转换为使用类型修饰符的类型需要两个步骤：
+   一步在数据类型之间进行转换，第二步应用该修饰符。
   </para>
  </sect1>
 
