@@ -444,7 +444,7 @@ CREATE INDEX test3_desc_index ON test3 (id DESC NULLS LAST);
 
 
  <sect1 id="indexes-bitmap-scans">
-  <title>Combining Multiple Indexes</title>
+  <title>组合多个索引</title>
 
   <indexterm zone="indexes-bitmap-scans">
    <primary>index</primary>
@@ -456,74 +456,20 @@ CREATE INDEX test3_desc_index ON test3 (id DESC NULLS LAST);
   </indexterm>
 
   <para>
-   A single index scan can only use query clauses that use the index's
-   columns with operators of its operator class and are joined with
-   <literal>AND</literal>.  For example, given an index on <literal>(a, b)</literal>
-   a query condition like <literal>WHERE a = 5 AND b = 6</literal> could
-   use the index, but a query like <literal>WHERE a = 5 OR b = 6</literal> could not
-   directly use the index.
+   单个索引扫描只能使用这样的查询子句：它们使用该索引的列、采用该索引操作符类中的运算符，并且以 <literal>AND</literal> 连接。例如，给定一个建立在 <literal>(a, b)</literal> 上的索引，像 <literal>WHERE a = 5 AND b = 6</literal> 这样的查询条件可以使用该索引，但像 <literal>WHERE a = 5 OR b = 6</literal> 这样的查询则不能直接使用该索引。
   </para>
 
   <para>
-   Fortunately,
-   <productname>PostgreSQL</productname> has the ability to combine multiple indexes
-   (including multiple uses of the same index) to handle cases that cannot
-   be implemented by single index scans.  The system can form <literal>AND</literal>
-   and <literal>OR</literal> conditions across several index scans.  For example,
-   a query like <literal>WHERE x = 42 OR x = 47 OR x = 53 OR x = 99</literal>
-   could be broken down into four separate scans of an index on <literal>x</literal>,
-   each scan using one of the query clauses.  The results of these scans are
-   then ORed together to produce the result.  Another example is that if we
-   have separate indexes on <literal>x</literal> and <literal>y</literal>, one possible
-   implementation of a query like <literal>WHERE x = 5 AND y = 6</literal> is to
-   use each index with the appropriate query clause and then AND together
-   the index results to identify the result rows.
+   幸运的是，<productname>PostgreSQL</productname> 能够组合多个索引（包括对同一索引的多次使用）来处理单个索引扫描无法实现的情况。系统可以在多个索引扫描之间形成 <literal>AND</literal> 和 <literal>OR</literal> 条件。例如，像 <literal>WHERE x = 42 OR x = 47 OR x = 53 OR x = 99</literal> 这样的查询可以分解为对 <literal>x</literal> 上的索引的四次独立扫描，每次扫描使用其中一个查询子句。然后这些扫描的结果被 OR 在一起以产生结果。另一个例子是，如果我们在 <literal>x</literal> 和 <literal>y</literal> 上分别有索引，那么像 <literal>WHERE x = 5 AND y = 6</literal> 这样的查询的一种可能实现方式是：对每个索引使用相应的查询子句，然后将索引结果 AND 在一起以确定结果行。
   </para>
 
   <para>
-   To combine multiple indexes, the system scans each needed index and
-   prepares a <firstterm>bitmap</firstterm> in memory giving the locations of
-   table rows that are reported as matching that index's conditions.
-   The bitmaps are then ANDed and ORed together as needed by the query.
-   Finally, the actual table rows are visited and returned.  The table rows
-   are visited in physical order, because that is how the bitmap is laid
-   out; this means that any ordering of the original indexes is lost, and
-   so a separate sort step will be needed if the query has an <literal>ORDER
-   BY</literal> clause.  For this reason, and because each additional index scan
-   adds extra time, the planner will sometimes choose to use a simple index
-   scan even though additional indexes are available that could have been
-   used as well.
+   为了组合多个索引，系统会扫描每个需要的索引，并在内存中准备一个<firstterm>位图</firstterm>，给出被报告为匹配该索引条件的表行的位置。然后按照查询的需要将这些位图进行 AND 和 OR 组合。最后，访问并返回实际的表行。表行按物理顺序访问，因为位图就是这样布局的；这意味着原有索引的任何顺序都丢失了，因此如果查询带有 <literal>ORDER
+   BY</literal> 子句，就需要一个单独的排序步骤。由于这个原因，并且因为每次额外的索引扫描都会增加额外的时间，规划器有时会选择使用简单的索引扫描，即使还有其他本来也可以使用的索引可用。
   </para>
 
   <para>
-   In all but the simplest applications, there are various combinations of
-   indexes that might be useful, and the database developer must make
-   trade-offs to decide which indexes to provide.  Sometimes multicolumn
-   indexes are best, but sometimes it's better to create separate indexes
-   and rely on the index-combination feature.  For example, if your
-   workload includes a mix of queries that sometimes involve only column
-   <literal>x</literal>, sometimes only column <literal>y</literal>, and sometimes both
-   columns, you might choose to create two separate indexes on
-   <literal>x</literal> and <literal>y</literal>, relying on index combination to
-   process the queries that use both columns.  You could also create a
-   multicolumn index on <literal>(x, y)</literal>.  This index would typically be
-   more efficient than index combination for queries involving both
-   columns, but as discussed in <xref linkend="indexes-multicolumn"/>, it
-   would be less useful for queries involving only <literal>y</literal>.  Just
-   how useful will depend on how effective the B-tree index skip scan
-   optimization is; if <literal>x</literal> has no more than several hundred
-   distinct values, skip scan will make searches for specific
-   <literal>y</literal> values execute reasonably efficiently.  A combination
-   of a multicolumn index on <literal>(x, y)</literal> and a separate index on
-   <literal>y</literal> might also serve reasonably well.  For
-   queries involving only <literal>x</literal>, the multicolumn index could be
-   used, though it would be larger and hence slower than an index on
-   <literal>x</literal> alone.  The last alternative is to create all three
-   indexes, but this is probably only reasonable if the table is searched
-   much more often than it is updated and all three types of query are
-   common.  If one of the types of query is much less common than the
-   others, you'd probably settle for creating just the two indexes that
-   best match the common types.
+   除了最简单的应用之外，各种索引组合都可能有用，数据库开发者必须做出权衡，决定提供哪些索引。有时多列索引是最好的，但有时创建单独的索引并依赖索引组合特性会更好。例如，如果你的工作负载中混合了多种查询，有时只涉及列 <literal>x</literal>，有时只涉及列 <literal>y</literal>，有时涉及两列，那么你可能选择在 <literal>x</literal> 和 <literal>y</literal> 上分别创建两个单独的索引，并依赖索引组合来处理同时使用两列的查询。你也可以在 <literal>(x, y)</literal> 上创建一个多列索引。对于涉及两列的查询，这个索引通常比索引组合更高效，但正如 <xref linkend="indexes-multicolumn"/> 中所讨论的，对于只涉及 <literal>y</literal> 的查询，它的用处就没那么大了。它究竟有多大用处，取决于 B-tree 索引跳跃扫描优化的效果如何；如果 <literal>x</literal> 的不同值不超过几百个，跳跃扫描将使针对特定 <literal>y</literal> 值的搜索执行得相当高效。在 <literal>(x, y)</literal> 上创建多列索引并在 <literal>y</literal> 上创建单独索引的组合也可能相当好用。对于只涉及 <literal>x</literal> 的查询，可以使用多列索引，尽管它比只在 <literal>x</literal> 上创建的索引更大，因而更慢。最后一种选择是创建全部三个索引，但这可能只有在表的搜索频率远高于更新频率、且三种类型的查询都很常见时才合理。如果其中一种类型的查询远不如其他类型常见，你可能最好只创建与常见类型最匹配的两个索引。
   </para>
 
  </sect1>
