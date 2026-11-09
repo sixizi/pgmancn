@@ -21,7 +21,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ROLLBACK TO SAVEPOINT</refname>
-  <refpurpose>roll back to a savepoint</refpurpose>
+  <refpurpose>回滚到保存点</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -31,30 +31,27 @@ ROLLBACK [ WORK | TRANSACTION ] TO [ SAVEPOINT ] <replaceable>savepoint_name</re
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   Roll back all commands that were executed after the savepoint was
-   established and then start a new subtransaction at the same transaction level.
-   The savepoint remains valid and can be rolled back to again later,
-   if needed.
+   回滚在建立该保存点之后执行的所有命令，然后在同一事务级别上开始一个新的子事务。
+   该保存点仍然有效，如有需要，之后还可以再次回滚到它。
   </para>
 
   <para>
-   <command>ROLLBACK TO SAVEPOINT</command> implicitly destroys all savepoints that
-   were established after the named savepoint.
+   <command>ROLLBACK TO SAVEPOINT</command> 会隐式销毁在指定保存点之后建立的所有保存点。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">savepoint_name</replaceable></term>
     <listitem>
      <para>
-      The savepoint to roll back to.
+      要回滚到的保存点。
      </para>
     </listitem>
    </varlistentry>
@@ -62,49 +59,33 @@ ROLLBACK [ WORK | TRANSACTION ] TO [ SAVEPOINT ] <replaceable>savepoint_name</re
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   Use <link linkend="sql-release-savepoint"><command>RELEASE SAVEPOINT</command></link> to destroy a savepoint
-   without discarding the effects of commands executed after it was
-   established.
+   使用 <link linkend="sql-release-savepoint"><command>RELEASE SAVEPOINT</command></link> 销毁一个保存点，而不丢弃在该保存点建立之后所执行命令的效果。
   </para>
 
   <para>
-   Specifying a savepoint name that has not been established is an error.
+   指定一个尚未建立的保存点名称是一种错误。
   </para>
 
   <para>
-   Cursors have somewhat non-transactional behavior with respect to
-   savepoints.  Any cursor that is opened inside a savepoint will be closed
-   when the savepoint is rolled back.  If a previously opened cursor is
-   affected by a <command>FETCH</command> or <command>MOVE</command> command inside a
-   savepoint that is later rolled back, the cursor remains at the
-   position that <command>FETCH</command> left it pointing to (that is, the cursor
-   motion caused by <command>FETCH</command> is not rolled back).
-   Closing a cursor is not undone by rolling back, either.
-   However, other side-effects caused by the cursor's query (such as
-   side-effects of volatile functions called by the query) <emphasis>are</emphasis>
-   rolled back if they occur during a savepoint that is later rolled back.
-   A cursor whose execution causes a transaction to abort is put in a
-   cannot-execute state, so while the transaction can be restored using
-   <command>ROLLBACK TO SAVEPOINT</command>, the cursor can no longer be used.
+   游标在保存点方面的行为有些非事务性。任何在保存点内打开的游标都会在该保存点被回滚时被关闭。如果一个先前打开的游标在保存点内受到 <command>FETCH</command> 或 <command>MOVE</command> 命令的影响，而该保存点后来被回滚，那么该游标仍停留在 <command>FETCH</command> 让它指向的位置（也就是说，由 <command>FETCH</command> 引起的游标移动不会被回滚）。关闭游标也不会因回滚而被撤销。不过，由该游标的查询引起的其他副作用（例如该查询所调用的易变函数的副作用）如果发生在后来被回滚的保存点期间，则<emphasis>会</emphasis>被回滚。执行时导致事务中止的游标会处于无法执行状态，因此虽然可以用 <command>ROLLBACK TO SAVEPOINT</command> 恢复事务，但该游标已不能再使用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To undo the effects of the commands executed after <literal>my_savepoint</literal>
-   was established:
+   要撤销在 <literal>my_savepoint</literal> 建立之后所执行命令的效果：
 <programlisting>
 ROLLBACK TO SAVEPOINT my_savepoint;
 </programlisting>
   </para>
 
   <para>
-   Cursor positions are not affected by savepoint rollback:
+   游标位置不受保存点回滚的影响：
 <programlisting>
 BEGIN;
 
@@ -131,22 +112,15 @@ COMMIT;
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   The <acronym>SQL</acronym> standard specifies that the key word
-   <literal>SAVEPOINT</literal> is mandatory, but <productname>PostgreSQL</productname>
-   and <productname>Oracle</productname> allow it to be omitted.  SQL allows
-   only <literal>WORK</literal>, not <literal>TRANSACTION</literal>, as a noise word
-   after <literal>ROLLBACK</literal>.  Also, SQL has an optional clause
-   <literal>AND [ NO ] CHAIN</literal> which is not currently supported by
-   <productname>PostgreSQL</productname>.  Otherwise, this command conforms to
-   the SQL standard.
+   <acronym>SQL</acronym> 标准规定关键字 <literal>SAVEPOINT</literal> 是必需的，但 <productname>PostgreSQL</productname> 和 <productname>Oracle</productname> 允许省略它。SQL 只允许 <literal>WORK</literal> 而不允许 <literal>TRANSACTION</literal> 作为 <literal>ROLLBACK</literal> 之后的噪声词。此外，SQL 有一个可选子句 <literal>AND [ NO ] CHAIN</literal>，目前 <productname>PostgreSQL</productname> 不支持。除此之外，该命令符合 SQL 标准。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-begin"/></member>
