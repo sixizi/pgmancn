@@ -4663,62 +4663,44 @@ void SPI_start_transaction(void)
  </sect1>
 
  <sect1 id="spi-visibility">
-  <title>Visibility of Data Changes</title>
+  <title>数据更改的可见性</title>
 
   <para>
-   The following rules govern the visibility of data changes in
-   functions that use SPI (or any other C function):
+   以下规则决定了使用 SPI（或任何其他 C 函数）的函数中数据更改的可见性：
 
    <itemizedlist>
     <listitem>
      <para>
-      During the execution of an SQL command, any data changes made by
-      the command are invisible to the command itself.  For
-      example, in:
+      在一条 SQL 命令的执行期间，该命令所做的任何数据更改对该命令自身都是不可见的。例如，在：
 <programlisting>
 INSERT INTO a SELECT * FROM a;
 </programlisting>
-      the inserted rows are invisible to the <command>SELECT</command>
-      part.
+中被插入的行对于 <command>SELECT</command> 部分是不可见的。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Changes made by a command C are visible to all commands that are
-      started after C, no matter whether they are started inside C
-      (during the execution of C) or after C is done.
+      命令 C 所做的更改对所有在 C 之后启动的命令都是可见的，无论这些命令是在 C 内部启动的（在 C 执行期间），还是在 C 完成之后启动的。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      Commands executed via SPI inside a function called by an SQL command
-      (either an ordinary function or a trigger) follow one or the
-      other of the above rules depending on the read/write flag passed
-      to SPI.  Commands executed in read-only mode follow the first
-      rule: they cannot see changes of the calling command.  Commands executed
-      in read-write mode follow the second rule: they can see all changes made
-      so far.
+      在由 SQL 命令调用的函数（普通函数或触发器）内部通过 SPI 执行的命令，会根据传递给 SPI 的读/写标志遵循上述规则中的一条或另一条。以只读模式执行的命令遵循第一条规则：它们看不到调用命令的更改。以读写模式执行的命令遵循第二条规则：它们可以看到到目前为止所做的所有更改。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      All standard procedural languages set the SPI read-write mode
-      depending on the volatility attribute of the function.  Commands of
-      <literal>STABLE</literal> and <literal>IMMUTABLE</literal> functions are done in
-      read-only mode, while commands of <literal>VOLATILE</literal> functions are
-      done in read-write mode.  While authors of C functions are able to
-      violate this convention, it's unlikely to be a good idea to do so.
+      所有标准过程语言都会根据函数的易变性属性设置 SPI 的读写模式。<literal>STABLE</literal> 和 <literal>IMMUTABLE</literal> 函数的命令以只读模式执行，而 <literal>VOLATILE</literal> 函数的命令以读写模式执行。虽然 C 函数的作者可以违反这一约定，但这样做不太可能是个好主意。
      </para>
     </listitem>
    </itemizedlist>
   </para>
 
   <para>
-   The next section contains an example that illustrates the
-   application of these rules.
+   下一节包含一个示例，说明这些规则的应用。
   </para>
  </sect1>
 
