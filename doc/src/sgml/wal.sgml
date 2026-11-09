@@ -215,7 +215,7 @@
   </sect1>
 
  <sect1 id="wal-async-commit">
-  <title>Asynchronous Commit</title>
+  <title>异步提交</title>
 
    <indexterm>
     <primary>synchronous commit</primary>
@@ -226,122 +226,46 @@
    </indexterm>
 
   <para>
-   <firstterm>Asynchronous commit</firstterm> is an option that allows transactions
-   to complete more quickly, at the cost that the most recent transactions may
-   be lost if the database should crash.  In many applications this is an
-   acceptable trade-off.
+   <firstterm>异步提交</firstterm>是一个允许事务更快完成的选项，代价是如果数据库崩溃，最近的事务可能会丢失。在许多应用中，这是可以接受的权衡。
   </para>
 
   <para>
-   As described in the previous section, transaction commit is normally
-   <firstterm>synchronous</firstterm>: the server waits for the transaction's
-   <acronym>WAL</acronym> records to be flushed to permanent storage
-   before returning a success indication to the client.  The client is
-   therefore guaranteed that a transaction reported to be committed will
-   be preserved, even in the event of a server crash immediately after.
-   However, for short transactions this delay is a major component of the
-   total transaction time.  Selecting asynchronous commit mode means that
-   the server returns success as soon as the transaction is logically
-   completed, before the <acronym>WAL</acronym> records it generated have
-   actually made their way to disk.  This can provide a significant boost
-   in throughput for small transactions.
+   如上一节所述，事务提交通常是<firstterm>同步</firstterm>的：服务器在向客户端返回成功指示之前，会等待该事务的 <acronym>WAL</acronym> 记录被刷写到永久存储。因此，客户端可以保证，被报告为已提交的事务将被保留，即使服务器在此之后立即崩溃也是如此。然而，对于短事务来说，这种延迟是事务总时间的主要组成部分。选择异步提交模式意味着，服务器在事务逻辑上完成时就立即返回成功，此时该事务生成的 <acronym>WAL</acronym> 记录尚未真正到达磁盘。这可以显著提升小事务的吞吐量。
   </para>
 
   <para>
-   Asynchronous commit introduces the risk of data loss. There is a short
-   time window between the report of transaction completion to the client
-   and the time that the transaction is truly committed (that is, it is
-   guaranteed not to be lost if the server crashes).  Thus asynchronous
-   commit should not be used if the client will take external actions
-   relying on the assumption that the transaction will be remembered.
-   As an example, a bank would certainly not use asynchronous commit for
-   a transaction recording an ATM's dispensing of cash.  But in many
-   scenarios, such as event logging, there is no need for a strong
-   guarantee of this kind.
+   异步提交引入了数据丢失的风险。在向客户端报告事务完成与事务真正提交（也就是说，保证即使服务器崩溃也不会丢失）之间存在一个短暂的时间窗口。因此，如果客户端将依赖事务会被记住这一假设而采取外部操作，就不应使用异步提交。例如，银行肯定不会对记录 ATM 发放现金的事务使用异步提交。但在许多场景中，例如事件日志记录，并不需要这种强有力的保证。
   </para>
 
   <para>
-   The risk that is taken by using asynchronous commit is of data loss,
-   not data corruption.  If the database should crash, it will recover
-   by replaying <acronym>WAL</acronym> up to the last record that was
-   flushed.  The database will therefore be restored to a self-consistent
-   state, but any transactions that were not yet flushed to disk will
-   not be reflected in that state.  The net effect is therefore loss of
-   the last few transactions.  Because the transactions are replayed in
-   commit order, no inconsistency can be introduced &mdash; for example,
-   if transaction B made changes relying on the effects of a previous
-   transaction A, it is not possible for A's effects to be lost while B's
-   effects are preserved.
+   使用异步提交所承担的风险是数据丢失，而不是数据损坏。如果数据库崩溃，它将通过重放 <acronym>WAL</acronym> 直到最后一条被刷写的记录来进行恢复。因此，数据库将被恢复到一个自洽的状态，但任何尚未刷写到磁盘的事务都不会反映在该状态中。因此，净效果是最后几个事务的丢失。由于事务是按提交顺序重放的，不会引入任何不一致——&mdash;例如，如果事务 B 所做的更改依赖于先前事务 A 的效果，那么不可能出现 A 的效果丢失而 B 的效果被保留的情况。
   </para>
 
   <para>
-   The user can select the commit mode of each transaction, so that
-   it is possible to have both synchronous and asynchronous commit
-   transactions running concurrently.  This allows flexible trade-offs
-   between performance and certainty of transaction durability.
-   The commit mode is controlled by the user-settable parameter
-   <xref linkend="guc-synchronous-commit"/>, which can be changed in any of
-   the ways that a configuration parameter can be set.  The mode used for
-   any one transaction depends on the value of
-   <varname>synchronous_commit</varname> when transaction commit begins.
+   用户可以选择每个事务的提交模式，因此可以同时运行同步提交和异步提交的事务。这使得在性能与事务持久性的确定性之间可以进行灵活的权衡。提交模式由用户可设置的参数 <xref linkend="guc-synchronous-commit"/> 控制，该参数可以通过设置配置参数的任何方式来更改。任一事务所使用的模式取决于事务提交开始时 <varname>synchronous_commit</varname> 的值。
   </para>
 
   <para>
-   Certain utility commands, for instance <command>DROP TABLE</command>, are
-   forced to commit synchronously regardless of the setting of
-   <varname>synchronous_commit</varname>.  This is to ensure consistency
-   between the server's file system and the logical state of the database.
-   The commands supporting two-phase commit, such as <command>PREPARE
-   TRANSACTION</command>, are also always synchronous.
+   某些工具命令，例如 <command>DROP TABLE</command>，无论 <varname>synchronous_commit</varname> 的设置如何，都被强制同步提交。这是为了确保服务器的文件系统与数据库的逻辑状态之间的一致性。支持两阶段提交的命令，例如 <command>PREPARE
+   TRANSACTION</command>，也始终是同步的。
   </para>
 
   <para>
-   If the database crashes during the risk window between an
-   asynchronous commit and the writing of the transaction's
-   <acronym>WAL</acronym> records,
-   then changes made during that transaction <emphasis>will</emphasis> be lost.
-   The duration of the
-   risk window is limited because a background process (the <quote>WAL
-   writer</quote>) flushes unwritten <acronym>WAL</acronym> records to disk
-   every <xref linkend="guc-wal-writer-delay"/> milliseconds.
-   The actual maximum duration of the risk window is three times
-   <varname>wal_writer_delay</varname> because the WAL writer is
-   designed to favor writing whole pages at a time during busy periods.
+   如果在异步提交与该事务的 <acronym>WAL</acronym> 记录写入之间的风险窗口期内数据库崩溃，那么该事务期间所做的更改<emphasis>将</emphasis>丢失。风险窗口的持续时间是有限的，因为后台进程（<quote>WAL writer</quote>）每 <xref linkend="guc-wal-writer-delay"/> 毫秒将未写入的 <acronym>WAL</acronym> 记录刷写到磁盘。风险窗口的实际最大持续时间是 <varname>wal_writer_delay</varname> 的三倍，因为 WAL writer 被设计为在繁忙时段倾向于一次写入整页。
   </para>
 
   <caution>
    <para>
-    An immediate-mode shutdown is equivalent to a server crash, and will
-    therefore cause loss of any unflushed asynchronous commits.
+    立即模式关闭等同于服务器崩溃，因此会导致任何未刷写的异步提交丢失。
    </para>
   </caution>
 
   <para>
-   Asynchronous commit provides behavior different from setting
-   <xref linkend="guc-fsync"/> = off.
-   <varname>fsync</varname> is a server-wide
-   setting that will alter the behavior of all transactions.  It disables
-   all logic within <productname>PostgreSQL</productname> that attempts to synchronize
-   writes to different portions of the database, and therefore a system
-   crash (that is, a hardware or operating system crash, not a failure of
-   <productname>PostgreSQL</productname> itself) could result in arbitrarily bad
-   corruption of the database state.  In many scenarios, asynchronous
-   commit provides most of the performance improvement that could be
-   obtained by turning off <varname>fsync</varname>, but without the risk
-   of data corruption.
+   异步提交提供的行为与设置 <xref linkend="guc-fsync"/> = off 不同。<varname>fsync</varname> 是一个服务器范围的设置，会改变所有事务的行为。它禁用了 <productname>PostgreSQL</productname> 内所有试图同步对数据库不同部分进行写入的逻辑，因此系统崩溃（即硬件或操作系统崩溃，而不是 <productname>PostgreSQL</productname> 本身的故障）可能导致数据库状态出现任意严重的损坏。在许多场景下，异步提交提供了关闭 <varname>fsync</varname> 所能获得的大部分性能提升，但没有数据损坏的风险。
   </para>
 
   <para>
-   <xref linkend="guc-commit-delay"/> also sounds very similar to
-   asynchronous commit, but it is actually a synchronous commit method
-   (in fact, <varname>commit_delay</varname> is ignored during an
-   asynchronous commit).  <varname>commit_delay</varname> causes a delay
-   just before a transaction flushes <acronym>WAL</acronym> to disk, in
-   the hope that a single flush executed by one such transaction can also
-   serve other transactions committing at about the same time.  The
-   setting can be thought of as a way of increasing the time window in
-   which transactions can join a group about to participate in a single
-   flush, to amortize the cost of the flush among multiple transactions.
+   <xref linkend="guc-commit-delay"/> 听起来也与异步提交非常相似，但它实际上是一种同步提交方法（事实上，在异步提交期间会忽略 <varname>commit_delay</varname>）。<varname>commit_delay</varname> 会在事务将 <acronym>WAL</acronym> 刷写到磁盘之前造成一段延迟，希望由这样一个事务执行的一次刷写也能服务于大约同时提交的其他事务。可以将该设置视为一种扩大时间窗口的方式，使得更多事务能够加入即将参与单次刷写的组，从而将刷写成本分摊到多个事务上。
   </para>
 
  </sect1>
