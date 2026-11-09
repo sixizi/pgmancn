@@ -189,21 +189,15 @@ typedef const OAuthValidatorCallbacks *(*OAuthValidatorModuleInit) (void);
  </sect1>
 
  <sect1 id="oauth-validator-callbacks">
-  <title>OAuth Validator Callbacks</title>
+  <title>OAuth 验证器回调</title>
   <para>
-   OAuth validator modules implement their functionality by defining a set of
-   callbacks. The server will call them as required to process the
-   authentication request from the user.
+   OAuth 验证器模块通过定义一组回调来实现其功能。服务器将根据需要调用它们来处理来自用户的身份验证请求。
   </para>
 
   <sect2 id="oauth-validator-callback-startup">
-   <title>Startup Callback</title>
+   <title>启动回调</title>
    <para>
-    The <function>startup_cb</function> callback is executed directly after
-    loading the module. This callback can be used to set up local state and
-    perform additional initialization if required. If the validator module
-    has state it can use <structfield>state->private_data</structfield> to
-    store it.
+    <function>startup_cb</function> 回调在加载模块后直接执行。该回调可用于设置本地状态，并在需要时执行额外的初始化。如果验证器模块有状态，它可以使用 <structfield>state->private_data</structfield> 来存储该状态。
 
 <programlisting>
 typedef void (*ValidatorStartupCB) (ValidatorModuleState *state);
@@ -212,11 +206,9 @@ typedef void (*ValidatorStartupCB) (ValidatorModuleState *state);
   </sect2>
 
   <sect2 id="oauth-validator-callback-validate">
-   <title>Validate Callback</title>
+   <title>验证回调</title>
    <para>
-    The <function>validate_cb</function> callback is executed during the OAuth
-    exchange when a user attempts to authenticate using OAuth.  Any state set in
-    previous calls will be available in <structfield>state->private_data</structfield>.
+    <function>validate_cb</function> 回调在用户尝试使用 OAuth 进行身份验证时的 OAuth 交换期间执行。在之前调用中设置的任何状态都可以在 <structfield>state->private_data</structfield> 中使用。
 
 <programlisting>
 typedef bool (*ValidatorValidateCB) (const ValidatorModuleState *state,
@@ -224,12 +216,7 @@ typedef bool (*ValidatorValidateCB) (const ValidatorModuleState *state,
                                      ValidatorModuleResult *result);
 </programlisting>
 
-    <replaceable>token</replaceable> will contain the bearer token to validate.
-    <application>PostgreSQL</application> has ensured that the token is well-formed syntactically, but no
-    other validation has been performed.  <replaceable>role</replaceable> will
-    contain the role the user has requested to log in as.  The callback must
-    set output parameters in the <literal>result</literal> struct, which is
-    defined as below:
+    <replaceable>token</replaceable> 将包含要验证的持有者令牌。<application>PostgreSQL</application> 已确保该令牌在语法上格式正确，但未执行其他验证。<replaceable>role</replaceable> 将包含用户请求登录的角色。回调必须在 <literal>result</literal> 结构中设置输出参数，该结构定义如下：
 
 <programlisting>
 typedef struct ValidatorModuleResult
@@ -239,40 +226,20 @@ typedef struct ValidatorModuleResult
 } ValidatorModuleResult;
 </programlisting>
 
-    The connection will only proceed if the module sets
-    <structfield>result->authorized</structfield> to <literal>true</literal>.  To
-    authenticate the user, the authenticated user name (as determined using the
-    token) shall be palloc'd and returned in the <structfield>result->authn_id</structfield>
-    field.  Alternatively, <structfield>result->authn_id</structfield> may be set to
-    NULL if the token is valid but the associated user identity cannot be
-    determined.
+    只有当模块将 <structfield>result->authorized</structfield> 设置为 <literal>true</literal> 时，连接才会继续。要验证用户身份，应将经过验证的用户名（根据令牌确定）通过 palloc 分配并返回到 <structfield>result->authn_id</structfield> 字段中。或者，如果令牌有效但无法确定关联的用户身份，可以将 <structfield>result->authn_id</structfield> 设置为 NULL。
    </para>
    <para>
-    A validator may return <literal>false</literal> to signal an internal error,
-    in which case any result parameters are ignored and the connection fails.
-    Otherwise the validator should return <literal>true</literal> to indicate
-    that it has processed the token and made an authorization decision.
+    验证器可以返回 <literal>false</literal> 来表示内部错误，此时任何结果参数都会被忽略，并且连接失败。否则，验证器应返回 <literal>true</literal>，以表明它已处理该令牌并做出了授权决定。
    </para>
    <para>
-    The behavior after <function>validate_cb</function> returns depends on the
-    specific HBA setup.  Normally, the <structfield>result->authn_id</structfield> user
-    name must exactly match the role that the user is logging in as.  (This
-    behavior may be modified with a usermap.)  But when authenticating against
-    an HBA rule with <literal>delegate_ident_mapping</literal> turned on,
-    <productname>PostgreSQL</productname> will not perform any checks on the value of
-    <structfield>result->authn_id</structfield> at all; in this case it is up to the
-    validator to ensure that the token carries enough privileges for the user to
-    log in under the indicated <replaceable>role</replaceable>.
+    <function>validate_cb</function> 返回后的行为取决于具体的 HBA 设置。通常，<structfield>result->authn_id</structfield> 用户名必须与用户登录时所使用的角色完全匹配。（此行为可以通过 usermap 修改。）但是，当针对启用了 <literal>delegate_ident_mapping</literal> 的 HBA 规则进行认证时，<productname>PostgreSQL</productname> 根本不会对 <structfield>result->authn_id</structfield> 的值执行任何检查；在这种情况下，需要由验证器来确保该令牌携带足够的权限，以便用户以指定的 <replaceable>role</replaceable> 登录。
    </para>
   </sect2>
 
   <sect2 id="oauth-validator-callback-shutdown">
-   <title>Shutdown Callback</title>
+   <title>关闭回调</title>
    <para>
-    The <function>shutdown_cb</function> callback is executed when the server
-    backend has finished validating tokens for the connection. If the validator
-    module has any allocated state, this callback should free it to avoid
-    resource leaks.
+    当服务器后端完成对连接的令牌验证后，将执行 <function>shutdown_cb</function> 回调。如果验证器模块有任何已分配的状态，此回调应释放它，以避免资源泄漏。
 <programlisting>
 typedef void (*ValidatorShutdownCB) (ValidatorModuleState *state);
 </programlisting>
