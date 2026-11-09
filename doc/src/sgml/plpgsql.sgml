@@ -3139,7 +3139,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
  </sect1>
 
  <sect1 id="plpgsql-trigger">
-  <title>Trigger Functions</title>
+  <title>触发器函数</title>
 
   <indexterm zone="plpgsql-trigger">
    <primary>trigger</primary>
@@ -3147,41 +3147,31 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
   </indexterm>
 
   <para>
-   <application>PL/pgSQL</application> can be used to define trigger
-   functions on data changes or database events.
-   A trigger function is created with the <command>CREATE FUNCTION</command>
-   command, declaring it as a function with no arguments and a return type of
-   <type>trigger</type> (for data change triggers) or
-   <type>event_trigger</type> (for database event triggers).
-   Special local variables named <varname>TG_<replaceable>something</replaceable></varname> are
-   automatically defined to describe the condition that triggered the call.
+   <application>PL/pgSQL</application> 可用于在数据变更或数据库事件上定义触发器函数。
+   触发器函数使用 <command>CREATE FUNCTION</command> 命令创建，声明为不带参数且返回类型为
+   <type>trigger</type>（用于数据变更触发器）或
+   <type>event_trigger</type>（用于数据库事件触发器）的函数。
+   名为 <varname>TG_<replaceable>something</replaceable></varname> 的特殊局部变量会被自动定义，用于描述触发该调用的条件。
   </para>
 
   <sect2 id="plpgsql-dml-trigger">
-   <title>Triggers on Data Changes</title>
+   <title>数据变更上的触发器</title>
 
   <para>
-   A <link linkend="triggers">data change trigger</link> is declared as a
-   function with no arguments and a return type of <type>trigger</type>.
-   Note that the function must be declared with no arguments even if it
-   expects to receive some arguments specified in <command>CREATE TRIGGER</command>
-   &mdash; such arguments are passed via <varname>TG_ARGV</varname>, as described
-   below.
+   <link linkend="triggers">数据变更触发器</link>被声明为不带参数且返回类型为 <type>trigger</type> 的函数。
+   请注意，即使该函数期望接收在 <command>CREATE TRIGGER</command>
+   &mdash; 中指定的某些参数，也必须声明为不带参数；这些参数通过 <varname>TG_ARGV</varname> 传递，如下文所述。
   </para>
 
   <para>
-   When a <application>PL/pgSQL</application> function is called as a
-   trigger, several special variables are created automatically in the
-   top-level block. They are:
+   当 <application>PL/pgSQL</application> 函数作为触发器被调用时，会在顶层块中自动创建几个特殊变量。它们是：
 
    <variablelist>
     <varlistentry id="plpgsql-dml-trigger-new">
      <term><varname>NEW</varname> <type>record</type></term>
      <listitem>
       <para>
-       new database row for <command>INSERT</command>/<command>UPDATE</command> operations in row-level
-       triggers. This variable is null in statement-level triggers
-       and for <command>DELETE</command> operations.
+       行级触发器中 <command>INSERT</command>/<command>UPDATE</command> 操作的新数据库行。在语句级触发器中以及对于 <command>DELETE</command> 操作，此变量为 null。
       </para>
      </listitem>
     </varlistentry>
@@ -3190,9 +3180,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>OLD</varname> <type>record</type></term>
      <listitem>
       <para>
-       old database row for <command>UPDATE</command>/<command>DELETE</command> operations in row-level
-       triggers. This variable is null in statement-level triggers
-       and for <command>INSERT</command> operations.
+       行级触发器中 <command>UPDATE</command>/<command>DELETE</command> 操作的旧数据库行。在语句级触发器以及 <command>INSERT</command> 操作中，此变量为 null。
       </para>
      </listitem>
     </varlistentry>
@@ -3201,7 +3189,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_NAME</varname> <type>name</type></term>
      <listitem>
       <para>
-       name of the trigger which fired.
+       触发的触发器的名称。
       </para>
      </listitem>
     </varlistentry>
@@ -3210,8 +3198,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_WHEN</varname> <type>text</type></term>
      <listitem>
       <para>
-       <literal>BEFORE</literal>, <literal>AFTER</literal>, or
-       <literal>INSTEAD OF</literal>, depending on the trigger's definition.
+       <literal>BEFORE</literal>、<literal>AFTER</literal> 或 <literal>INSTEAD OF</literal>，取决于触发器的定义。
       </para>
      </listitem>
     </varlistentry>
@@ -3220,8 +3207,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_LEVEL</varname> <type>text</type></term>
      <listitem>
       <para>
-       <literal>ROW</literal> or <literal>STATEMENT</literal>,
-       depending on the trigger's definition.
+       <literal>ROW</literal> 或 <literal>STATEMENT</literal>，取决于触发器的定义。
       </para>
      </listitem>
     </varlistentry>
@@ -3230,18 +3216,16 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_OP</varname> <type>text</type></term>
      <listitem>
       <para>
-       operation for which the trigger was fired:
-       <literal>INSERT</literal>, <literal>UPDATE</literal>,
-       <literal>DELETE</literal>, or <literal>TRUNCATE</literal>.
+       触发该触发器的操作：<literal>INSERT</literal>、<literal>UPDATE</literal>、<literal>DELETE</literal> 或 <literal>TRUNCATE</literal>。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry id="plpgsql-dml-trigger-tg-relid">
-     <term><varname>TG_RELID</varname> <type>oid</type> (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)</term>
+     <term><varname>TG_RELID</varname> <type>oid</type>（引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）</term>
      <listitem>
       <para>
-       object ID of the table that caused the trigger invocation.
+       导致触发器调用的表的对象 ID。
       </para>
      </listitem>
     </varlistentry>
@@ -3250,9 +3234,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_RELNAME</varname> <type>name</type></term>
      <listitem>
       <para>
-       table that caused the trigger
-       invocation. This is now deprecated, and could disappear in a future
-       release. Use <literal>TG_TABLE_NAME</literal> instead.
+       导致触发器调用的表。此列现已废弃，并可能在未来的版本中消失。请改用 <literal>TG_TABLE_NAME</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -3261,7 +3243,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_TABLE_NAME</varname> <type>name</type></term>
      <listitem>
       <para>
-       table that caused the trigger invocation.
+       导致触发器调用的表。
       </para>
      </listitem>
     </varlistentry>
@@ -3270,7 +3252,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_TABLE_SCHEMA</varname> <type>name</type></term>
      <listitem>
       <para>
-       schema of the table that caused the trigger invocation.
+       导致触发器调用的表的模式。
       </para>
      </listitem>
     </varlistentry>
@@ -3279,8 +3261,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_NARGS</varname> <type>integer</type></term>
      <listitem>
       <para>
-       number of arguments given to the trigger
-       function in the <command>CREATE TRIGGER</command> statement.
+       在 <command>CREATE TRIGGER</command> 语句中传递给触发器函数的参数个数。
       </para>
      </listitem>
     </varlistentry>
@@ -3289,11 +3270,7 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
      <term><varname>TG_ARGV</varname> <type>text[]</type></term>
      <listitem>
       <para>
-       arguments from
-       the <command>CREATE TRIGGER</command> statement.
-       The index counts from 0. Invalid
-       indexes (less than 0 or greater than or equal to <varname>tg_nargs</varname>)
-       result in a null value.
+       来自 <command>CREATE TRIGGER</command> 语句的参数。索引从 0 开始计数。无效的索引（小于 0 或大于等于 <varname>tg_nargs</varname>）会得到空值。
       </para>
      </listitem>
     </varlistentry>
@@ -3301,75 +3278,31 @@ ASSERT <replaceable class="parameter">condition</replaceable> <optional> , <repl
   </para>
 
    <para>
-    A trigger function must return either <symbol>NULL</symbol> or a
-    record/row value having exactly the structure of the table the
-    trigger was fired for.
+    触发器函数必须返回 <symbol>NULL</symbol>，或者返回一个结构与被触发触发器的那张表完全相同的记录/行值。
    </para>
 
    <para>
-    Row-level triggers fired <literal>BEFORE</literal> can return null to signal the
-    trigger manager to skip the rest of the operation for this row
-    (i.e., subsequent triggers are not fired, and the
-    <command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command> does not occur
-    for this row).  If a nonnull
-    value is returned then the operation proceeds with that row value.
-    Returning a row value different from the original value
-    of <varname>NEW</varname> alters the row that will be inserted or
-    updated.  Thus, if the trigger function wants the triggering
-    action to succeed normally without altering the row
-    value, <varname>NEW</varname> (or a value equal thereto) has to be
-    returned.  To alter the row to be stored, it is possible to
-    replace single values directly in <varname>NEW</varname> and return the
-    modified <varname>NEW</varname>, or to build a complete new record/row to
-    return.  In the case of a before-trigger
-    on <command>DELETE</command>, the returned value has no direct
-    effect, but it has to be nonnull to allow the trigger action to
-    proceed.  Note that <varname>NEW</varname> is null
-    in <command>DELETE</command> triggers, so returning that is
-    usually not sensible.  The usual idiom in <command>DELETE</command>
-    triggers is to return <varname>OLD</varname>.
+    在 <literal>BEFORE</literal> 触发的行级触发器可以返回 null，以通知触发器管理器跳过本行的其余操作（即不再触发后续触发器，并且本行不会发生 <command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command>）。如果返回非空值，则操作会使用该行值继续执行。返回与 <varname>NEW</varname> 的原始值不同的行值会改变将要插入或更新的行。因此，如果触发器函数希望触发操作正常成功而不改变行值，就必须返回 <varname>NEW</varname>（或与之相等的值）。要改变将要存储的行，可以直接替换 <varname>NEW</varname> 中的单个值并返回修改后的 <varname>NEW</varname>，也可以构造一个完整的新记录/行来返回。对于 <command>DELETE</command> 上的 before 触发器，返回值没有直接影响，但它必须非空，才能让触发操作继续执行。请注意，在 <command>DELETE</command> 触发器中 <varname>NEW</varname> 为 null，因此返回它通常没有意义。<command>DELETE</command> 触发器中的惯用做法是返回 <varname>OLD</varname>。
    </para>
 
    <para>
-    <literal>INSTEAD OF</literal> triggers (which are always row-level triggers,
-    and may only be used on views) can return null to signal that they did
-    not perform any updates, and that the rest of the operation for this
-    row should be skipped (i.e., subsequent triggers are not fired, and the
-    row is not counted in the rows-affected status for the surrounding
-    <command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command>).
-    Otherwise a nonnull value should be returned, to signal
-    that the trigger performed the requested operation. For
-    <command>INSERT</command> and <command>UPDATE</command> operations, the return value
-    should be <varname>NEW</varname>, which the trigger function may modify to
-    support <command>INSERT RETURNING</command> and <command>UPDATE RETURNING</command>
-    (this will also affect the row value passed to any subsequent triggers,
-    or passed to a special <varname>EXCLUDED</varname> alias reference within
-    an <command>INSERT</command> statement with an <literal>ON CONFLICT DO
-    UPDATE</literal> clause).  For <command>DELETE</command> operations, the return
-    value should be <varname>OLD</varname>.
+    <literal>INSTEAD OF</literal> 触发器（始终是行级触发器，且只能用于视图）可以返回 null，以表示它们没有执行任何更新，并且应跳过本行的其余操作（即不再触发后续触发器，并且该行不计入外围 <command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command> 的受影响行数状态）。否则应返回非空值，以表示触发器执行了所请求的操作。对于 <command>INSERT</command> 和 <command>UPDATE</command> 操作，返回值应为 <varname>NEW</varname>，触发器函数可以修改它来支持 <command>INSERT RETURNING</command> 和 <command>UPDATE RETURNING</command>（这也会影响传递给任何后续触发器的行值，或传递给带有 <literal>ON CONFLICT DO
+    UPDATE</literal> 子句的 <command>INSERT</command> 语句中特殊 <varname>EXCLUDED</varname> 别名引用的行值）。对于 <command>DELETE</command> 操作，返回值应为 <varname>OLD</varname>。
    </para>
 
    <para>
-    The return value of a row-level trigger
-    fired <literal>AFTER</literal> or a statement-level trigger
-    fired <literal>BEFORE</literal> or <literal>AFTER</literal> is
-    always ignored; it might as well be null. However, any of these types of
-    triggers might still abort the entire operation by raising an error.
+    在 <literal>AFTER</literal> 触发的行级触发器，或在 <literal>BEFORE</literal> 或 <literal>AFTER</literal> 触发的语句级触发器，其返回值始终被忽略；返回 null 也无妨。但是，这些类型的触发器仍可能通过抛出错误来中止整个操作。
    </para>
 
    <para>
-    <xref linkend="plpgsql-trigger-example"/> shows an example of a
-    trigger function in <application>PL/pgSQL</application>.
+    <xref linkend="plpgsql-trigger-example"/> 展示了 <application>PL/pgSQL</application> 中触发器函数的一个示例。
    </para>
 
    <example id="plpgsql-trigger-example">
-    <title>A <application>PL/pgSQL</application> Trigger Function</title>
+    <title><application>PL/pgSQL</application> 触发器函数</title>
 
     <para>
-     This example trigger ensures that any time a row is inserted or updated
-     in the table, the current user name and time are stamped into the
-     row. And it checks that an employee's name is given and that the
-     salary is a positive value.
+     ​这个示例触发器确保每当表中插入或更新一行时，都会将当前用户名和时间戳记到该行中。它还会检查是否提供了员工姓名，以及工资是否为正数。
     </para>
 
 <programlisting>
@@ -3408,21 +3341,15 @@ CREATE TRIGGER emp_stamp BEFORE INSERT OR UPDATE ON emp
    </example>
 
    <para>
-    Another way to log changes to a table involves creating a new table that
-    holds a row for each insert, update, or delete that occurs. This approach
-    can be thought of as auditing changes to a table.
-    <xref linkend="plpgsql-trigger-audit-example"/> shows an example of an
-    audit trigger function in <application>PL/pgSQL</application>.
+    记录表变更的另一种方法是创建一个新表，为发生的每次插入、更新或删除保存一行。这种方法可以看作是对表的变更进行审计。
+    <xref linkend="plpgsql-trigger-audit-example"/> 展示了 <application>PL/pgSQL</application> 中审计触发器函数的一个示例。
    </para>
 
    <example id="plpgsql-trigger-audit-example">
-    <title>A <application>PL/pgSQL</application> Trigger Function for Auditing</title>
+    <title>用于审计的 <application>PL/pgSQL</application> 触发器函数</title>
 
     <para>
-     This example trigger ensures that any insert, update or delete of a row
-     in the <literal>emp</literal> table is recorded (i.e., audited) in the <literal>emp_audit</literal> table.
-     The current time and user name are stamped into the row, together with
-     the type of operation performed on it.
+     ​这个示例触发器确保对 <literal>emp</literal> 表中行的任何插入、更新或删除都会记录（即审计）到 <literal>emp_audit</literal> 表中。当前时间和用户名会连同对该行执行的操作类型一起被戳记到该行中。
     </para>
 
 <programlisting>
@@ -3463,24 +3390,15 @@ AFTER INSERT OR UPDATE OR DELETE ON emp
    </example>
 
    <para>
-    A variation of the previous example uses a view joining the main table
-    to the audit table, to show when each entry was last modified. This
-    approach still records the full audit trail of changes to the table,
-    but also presents a simplified view of the audit trail, showing just
-    the last modified timestamp derived from the audit trail for each entry.
-    <xref linkend="plpgsql-view-trigger-audit-example"/> shows an example
-    of an audit trigger on a view in <application>PL/pgSQL</application>.
+    前一个示例的一种变体使用一个将主表与审计表连接起来的视图，来显示每个条目最后一次修改的时间。这种方法仍然记录对表的完整审计追踪，但也提供审计追踪的简化视图，仅显示从审计追踪中得出的每个条目的最后修改时间戳。
+    <xref linkend="plpgsql-view-trigger-audit-example"/> 展示了 <application>PL/pgSQL</application> 中视图上的审计触发器的一个示例。
    </para>
 
    <example id="plpgsql-view-trigger-audit-example">
-    <title>A <application>PL/pgSQL</application> View Trigger Function for Auditing</title>
+    <title>用于审计的 <application>PL/pgSQL</application> 视图触发器函数</title>
 
     <para>
-     This example uses a trigger on the view to make it updatable, and
-     ensure that any insert, update or delete of a row in the view is
-     recorded (i.e., audited) in the <literal>emp_audit</literal> table. The current time
-     and user name are recorded, together with the type of operation
-     performed, and the view displays the last modified time of each row.
+     这个例子在视图上使用触发器使其可更新，并确保视图中任何行的插入、更新或删除都被记录（即审计）到 <literal>emp_audit</literal> 表中。当前时间和用户名会连同所执行的操作类型一起被记录下来，并且该视图会显示每一行的最后修改时间。
     </para>
 
 <programlisting>
@@ -3542,25 +3460,15 @@ INSTEAD OF INSERT OR UPDATE OR DELETE ON emp_view
    </example>
 
    <para>
-    One use of triggers is to maintain a summary table
-    of another table. The resulting summary can be used in place of the
-    original table for certain queries &mdash; often with vastly reduced run
-    times.
-    This technique is commonly used in Data Warehousing, where the tables
-    of measured or observed data (called fact tables) might be extremely large.
-    <xref linkend="plpgsql-trigger-summary-example"/> shows an example of a
-    trigger function in <application>PL/pgSQL</application> that maintains
-    a summary table for a fact table in a data warehouse.
+    触发器的一种用途是为另一个表维护汇总表。对于某些查询，生成的汇总表可以代替原始表使用 &mdash;，通常能大幅减少运行时间。这种技术常用于数据仓库，其中测量或观测数据所在的表（称为事实表）可能极其庞大。<xref linkend="plpgsql-trigger-summary-example"/> 展示了一个 <application>PL/pgSQL</application> 中触发器函数的示例，该函数为数据仓库中的事实表维护汇总表。
    </para>
 
 
    <example id="plpgsql-trigger-summary-example">
-    <title>A <application>PL/pgSQL</application> Trigger Function for Maintaining a Summary Table</title>
+    <title>用于维护汇总表的 <application>PL/pgSQL</application> 触发器函数</title>
 
     <para>
-     The schema detailed here is partly based on the <emphasis>Grocery Store
-     </emphasis> example from <emphasis>The Data Warehouse Toolkit</emphasis>
-     by Ralph Kimball.
+     这里详述的模式部分基于 Ralph Kimball 所著 <emphasis>The Data Warehouse Toolkit</emphasis> 中的 <emphasis>Grocery Store</emphasis> 示例。
     </para>
 
 <programlisting>
@@ -3697,29 +3605,21 @@ SELECT * FROM sales_summary_bytime;
    </example>
 
    <para>
-    <literal>AFTER</literal> triggers can also make use of <firstterm>transition
-    tables</firstterm> to inspect the entire set of rows changed by the triggering
-    statement.  The <command>CREATE TRIGGER</command> command assigns names to one
-    or both transition tables, and then the function can refer to those names
-    as though they were read-only temporary tables.
-    <xref linkend="plpgsql-trigger-audit-transition-example"/> shows an example.
+    <literal>AFTER</literal> 触发器还可以利用<firstterm>转换表</firstterm>来检查触发语句所更改的整组行。<command>CREATE TRIGGER</command> 命令为一个或两个转换表指定名称，然后函数就可以像引用只读临时表一样引用这些名称。<xref linkend="plpgsql-trigger-audit-transition-example"/> 展示了一个示例。
    </para>
 
    <example id="plpgsql-trigger-audit-transition-example">
-    <title>Auditing with Transition Tables</title>
+    <title>使用转换表进行审计</title>
 
     <para>
-     This example produces the same results as
-     <xref linkend="plpgsql-trigger-audit-example"/>, but instead of using a
-     trigger that fires for every row, it uses a trigger that fires once
-     per statement, after collecting the relevant information in a transition
-     table.  This can be significantly faster than the row-trigger approach
-     when the invoking statement has modified many rows.  Notice that we must
-     make a separate trigger declaration for each kind of event, since the
-     <literal>REFERENCING</literal> clauses must be different for each case.  But
-     this does not stop us from using a single trigger function if we choose.
-     (In practice, it might be better to use three separate functions and
-     avoid the run-time tests on <varname>TG_OP</varname>.)
+     这个示例产生的结果与
+     <xref linkend="plpgsql-trigger-audit-example"/> 相同，但它没有使用对每一行都触发的触发器，
+     而是使用一个对每条语句触发一次的触发器，并在过渡表中收集相关信息之后再触发。
+     当调用语句修改了许多行时，这可能比行触发器方法快得多。
+     请注意，我们必须为每种事件分别声明触发器，因为每种情况下
+     <literal>REFERENCING</literal> 子句必须不同。但如果我们愿意，
+     这并不妨碍我们使用单个触发器函数。
+     （在实践中，使用三个独立的函数并避免对 <varname>TG_OP</varname> 进行运行时测试可能更好。）
     </para>
 
 <programlisting>
@@ -3774,27 +3674,25 @@ CREATE TRIGGER emp_audit_del
 </sect2>
 
   <sect2 id="plpgsql-event-trigger">
-   <title>Triggers on Events</title>
+   <title>事件上的触发器</title>
 
    <para>
-    <application>PL/pgSQL</application> can be used to define
-    <link linkend="event-triggers">event triggers</link>.
-    <productname>PostgreSQL</productname> requires that a function that
-    is to be called as an event trigger must be declared as a function with
-    no arguments and a return type of <literal>event_trigger</literal>.
+    <application>PL/pgSQL</application> 可用于定义
+    <link linkend="event-triggers">事件触发器</link>。
+    <productname>PostgreSQL</productname> 要求作为事件触发器调用的函数
+    必须声明为不带参数且返回类型为 <literal>event_trigger</literal> 的函数。
    </para>
 
    <para>
-    When a <application>PL/pgSQL</application> function is called as an
-    event trigger, several special variables are created automatically
-    in the top-level block. They are:
+    当一个 <application>PL/pgSQL</application> 函数作为
+    事件触发器被调用时，会在顶层块中自动创建几个特殊变量。它们是：
 
    <variablelist>
     <varlistentry id="plpgsql-event-trigger-tg-event">
      <term><varname>TG_EVENT</varname> <type>text</type></term>
      <listitem>
       <para>
-       event the trigger is fired for.
+       触发器为其触发的事件。
       </para>
      </listitem>
     </varlistentry>
@@ -3803,7 +3701,7 @@ CREATE TRIGGER emp_audit_del
      <term><varname>TG_TAG</varname> <type>text</type></term>
      <listitem>
       <para>
-       command tag for which the trigger is fired.
+       触发器为其触发的命令标签。
       </para>
      </listitem>
     </varlistentry>
@@ -3811,16 +3709,14 @@ CREATE TRIGGER emp_audit_del
   </para>
 
    <para>
-    <xref linkend="plpgsql-event-trigger-example"/> shows an example of an
-    event trigger function in <application>PL/pgSQL</application>.
+    <xref linkend="plpgsql-event-trigger-example"/> 展示了一个 <application>PL/pgSQL</application> 中事件触发器函数的示例。
    </para>
 
    <example id="plpgsql-event-trigger-example">
-    <title>A <application>PL/pgSQL</application> Event Trigger Function</title>
+    <title>一个 <application>PL/pgSQL</application> 事件触发器函数</title>
 
     <para>
-     This example trigger simply raises a <literal>NOTICE</literal> message
-     each time a supported command is executed.
+     这个示例触发器只是在每次执行受支持的命令时抛出一条 <literal>NOTICE</literal> 消息。
     </para>
 
 <programlisting>
