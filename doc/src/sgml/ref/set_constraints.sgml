@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>SET CONSTRAINTS</refname>
-  <refpurpose>set constraint check timing for the current transaction</refpurpose>
+  <refpurpose>设置当前事务的约束检查时机</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -26,99 +26,69 @@ SET CONSTRAINTS { ALL | <replaceable class="parameter">name</replaceable> [, ...
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>SET CONSTRAINTS</command> sets the behavior of constraint
-   checking within the current transaction. <literal>IMMEDIATE</literal>
-   constraints are checked at the end of each
-   statement. <literal>DEFERRED</literal> constraints are not checked until
-   transaction commit.  Each constraint has its own
-   <literal>IMMEDIATE</literal> or <literal>DEFERRED</literal> mode.
+   <command>SET CONSTRAINTS</command> 设置当前事务内约束检查的行为。<literal>IMMEDIATE</literal>
+   约束在每条语句结束时检查。<literal>DEFERRED</literal> 约束直到
+   事务提交时才检查。每个约束都有自己的
+   <literal>IMMEDIATE</literal> 或 <literal>DEFERRED</literal> 模式。
   </para>
 
   <para>
-   Upon creation, a constraint is given one of three
-   characteristics: <literal>DEFERRABLE INITIALLY DEFERRED</literal>,
-   <literal>DEFERRABLE INITIALLY IMMEDIATE</literal>, or
-   <literal>NOT DEFERRABLE</literal>. The third
-   class is always <literal>IMMEDIATE</literal> and is not affected by the
-   <command>SET CONSTRAINTS</command> command.  The first two classes start
-   every transaction in the indicated mode, but their behavior can be changed
-   within a transaction by <command>SET CONSTRAINTS</command>.
+   创建时，约束会被赋予三种特性之一：<literal>DEFERRABLE INITIALLY DEFERRED</literal>、
+   <literal>DEFERRABLE INITIALLY IMMEDIATE</literal> 或
+   <literal>NOT DEFERRABLE</literal>。第三类始终为 <literal>IMMEDIATE</literal>，且不受
+   <command>SET CONSTRAINTS</command> 命令影响。前两类在每个事务开始时处于
+   所指示的模式，但它们的行为可以在事务内
+   通过 <command>SET CONSTRAINTS</command> 改变。
   </para>
 
   <para>
-   <command>SET CONSTRAINTS</command> with a list of constraint names changes
-   the mode of just those constraints (which must all be deferrable).  Each
-   constraint name can be schema-qualified.  The
-   current schema search path is used to find the first matching name if
-   no schema name is specified.  <command>SET CONSTRAINTS ALL</command>
-   changes the mode of all deferrable constraints.
+   带约束名列表的 <command>SET CONSTRAINTS</command> 只改变这些约束的模式
+   （它们必须都是可延迟的）。每个约束名都可以
+   用模式限定。如果未指定模式名，则使用当前
+   模式搜索路径来查找第一个匹配的名称。<command>SET CONSTRAINTS ALL</command>
+   改变所有可延迟约束的模式。
   </para>
 
   <para>
-   When <command>SET CONSTRAINTS</command> changes the mode of a constraint
-   from <literal>DEFERRED</literal>
-   to <literal>IMMEDIATE</literal>, the new mode takes effect
-   retroactively: any outstanding data modifications that would have
-   been checked at the end of the transaction are instead checked during the
-   execution of the <command>SET CONSTRAINTS</command> command.
-   If any such constraint is violated, the <command>SET CONSTRAINTS</command>
-   fails (and does not change the constraint mode).  Thus, <command>SET
-   CONSTRAINTS</command> can be used to force checking of constraints to
-   occur at a specific point in a transaction.
+   当 <command>SET CONSTRAINTS</command> 将约束的模式从 <literal>DEFERRED</literal>
+   改为 <literal>IMMEDIATE</literal> 时，新模式会追溯生效：任何本应在
+   事务结束时检查的未处理数据修改，改为在
+   执行 <command>SET CONSTRAINTS</command> 命令期间检查。
+   如果违反了任何此类约束，<command>SET CONSTRAINTS</command>
+   会失败（并且不会改变约束模式）。因此，<command>SET
+   CONSTRAINTS</command> 可用于强制在事务中的
+   特定时刻检查约束。
   </para>
 
   <para>
-   Currently, only <literal>UNIQUE</literal>, <literal>PRIMARY KEY</literal>,
-   <literal>REFERENCES</literal> (foreign key), and <literal>EXCLUDE</literal>
-   constraints are affected by this setting.
-   <literal>NOT NULL</literal> and <literal>CHECK</literal> constraints are
-   always checked immediately when a row is inserted or modified
-   (<emphasis>not</emphasis> at the end of the statement).
-   Uniqueness and exclusion constraints that have not been declared
-   <literal>DEFERRABLE</literal> are also checked immediately.
+   目前，只有 <literal>UNIQUE</literal>、<literal>PRIMARY KEY</literal>、<literal>REFERENCES</literal>（外键）和 <literal>EXCLUDE</literal> 约束受此设置影响。<literal>NOT NULL</literal> 和 <literal>CHECK</literal> 约束在插入或修改行时总是立即检查（<emphasis>不是</emphasis>在语句结束时）。未声明为 <literal>DEFERRABLE</literal> 的唯一性约束和排除约束也会立即检查。
   </para>
 
   <para>
-   The firing of triggers that are declared as <quote>constraint triggers</quote>
-   is also controlled by this setting &mdash; they fire at the same time
-   that the associated constraint should be checked.
+   声明为<quote>约束触发器</quote>的触发器的触发同样受此设置控制 &mdash; 它们在与相关约束应被检查的同一时间触发。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   Because <productname>PostgreSQL</productname> does not require constraint
-   names to be unique within a schema (but only per-table), it is possible
-   that there is more than one match for a specified constraint name.
-   In this case <command>SET CONSTRAINTS</command> will act on all matches.
-   For a non-schema-qualified name, once a match or matches have been found in
-   some schema in the search path, schemas appearing later in the path are not
-   searched.
+   由于 <productname>PostgreSQL</productname> 不要求约束名在模式内唯一（只要求在每个表内唯一），因此指定的约束名可能匹配到多个约束。在这种情况下，<command>SET CONSTRAINTS</command> 将作用于所有匹配项。对于未限定模式的名字，一旦在搜索路径中的某个模式里找到一个或多个匹配项，就不会再搜索路径中靠后的模式。
   </para>
 
   <para>
-   This command only alters the behavior of constraints within the
-   current transaction.  Issuing this outside of a transaction block
-   emits a warning and otherwise has no effect.
+   此命令只改变当前事务内约束的行为。在事务块之外发出此命令会产生一个警告，除此之外没有任何效果。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   This command complies with the behavior defined in the SQL
-   standard, except for the limitation that, in
-   <productname>PostgreSQL</productname>, it does not apply to
-   <literal>NOT NULL</literal> and <literal>CHECK</literal> constraints.
-   Also, <productname>PostgreSQL</productname> checks non-deferrable
-   uniqueness constraints immediately, not at end of statement as the
-   standard would suggest.
+   本命令遵循 SQL 标准中定义的行为，但有一个限制：在 <productname>PostgreSQL</productname> 中，它不适用于 <literal>NOT NULL</literal> 和 <literal>CHECK</literal> 约束。此外，<productname>PostgreSQL</productname> 会立即检查不可延迟的唯一性约束，而不是像标准所建议的那样在语句结束时检查。
   </para>
 
  </refsect1>
