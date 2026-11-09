@@ -336,18 +336,17 @@ EXEC SQL DISCONNECT <optional><replaceable>connection</replaceable></optional>;
  </sect1>
 
  <sect1 id="ecpg-commands">
-  <title>Running SQL Commands</title>
+  <title>运行 SQL 命令</title>
 
   <para>
-   Any SQL command can be run from within an embedded SQL application.
-   Below are some examples of how to do that.
+   在嵌入式 SQL 应用程序中可以运行任何 SQL 命令。下面是一些如何做到这一点的示例。
   </para>
 
   <sect2 id="ecpg-executing">
-   <title>Executing SQL Statements</title>
+   <title>执行 SQL 语句</title>
 
   <para>
-   Creating a table:
+   创建表：
 <programlisting>
 EXEC SQL CREATE TABLE foo (number integer, ascii char(16));
 EXEC SQL CREATE UNIQUE INDEX num1 ON foo(number);
@@ -356,7 +355,7 @@ EXEC SQL COMMIT;
   </para>
 
   <para>
-   Inserting rows:
+   插入行：
 <programlisting>
 EXEC SQL INSERT INTO foo (number, ascii) VALUES (9999, 'doodad');
 EXEC SQL COMMIT;
@@ -364,7 +363,7 @@ EXEC SQL COMMIT;
   </para>
 
   <para>
-   Deleting rows:
+   删除行：
 <programlisting>
 EXEC SQL DELETE FROM foo WHERE number = 9999;
 EXEC SQL COMMIT;
@@ -372,7 +371,7 @@ EXEC SQL COMMIT;
   </para>
 
   <para>
-   Updates:
+   更新：
 <programlisting>
 EXEC SQL UPDATE foo
     SET ascii = 'foobar'
@@ -382,51 +381,46 @@ EXEC SQL COMMIT;
   </para>
 
   <para>
-   <literal>SELECT</literal> statements that return a single result
-   row can also be executed using
-   <literal>EXEC SQL</literal> directly.  To handle result sets with
-   multiple rows, an application has to use a cursor;
-   see <xref linkend="ecpg-cursors"/> below.  (As a special case, an
-   application can fetch multiple rows at once into an array host
-   variable; see <xref linkend="ecpg-variables-arrays"/>.)
+   返回单个结果行的 <literal>SELECT</literal> 语句也可以直接使用
+   <literal>EXEC SQL</literal> 执行。要处理包含多行的结果集，
+   应用程序必须使用游标；
+   参见下面的 <xref linkend="ecpg-cursors"/>。（作为一种特殊情况，应用
+   程序可以一次将多行取到一个数组宿主
+   变量中；参见 <xref linkend="ecpg-variables-arrays"/>。）
   </para>
 
   <para>
-   Single-row select:
+   单行查询：
 <programlisting>
 EXEC SQL SELECT foo INTO :FooBar FROM table1 WHERE ascii = 'doodad';
 </programlisting>
   </para>
 
   <para>
-   Also, a configuration parameter can be retrieved with the
-   <literal>SHOW</literal> command:
+   此外，还可以使用 <literal>SHOW</literal> 命令检索配置参数：
 <programlisting>
 EXEC SQL SHOW search_path INTO :var;
 </programlisting>
   </para>
 
   <para>
-   The tokens of the form
-   <literal>:<replaceable>something</replaceable></literal> are
-   <firstterm>host variables</firstterm>, that is, they refer to
-   variables in the C program.  They are explained in <xref
-   linkend="ecpg-variables"/>.
+   形如
+   <literal>:<replaceable>something</replaceable></literal> 的记号是
+   <firstterm>宿主变量</firstterm>，也就是说，它们引用
+   C 程序中的变量。它们将在 <xref
+   linkend="ecpg-variables"/> 中解释。
   </para>
   </sect2>
 
   <sect2 id="ecpg-cursors">
-   <title>Using Cursors</title>
+   <title>使用游标</title>
 
   <para>
-   To retrieve a result set holding multiple rows, an application has
-   to declare a cursor and fetch each row from the cursor.  The steps
-   to use a cursor are the following: declare a cursor, open it, fetch
-   a row from the cursor, repeat, and finally close it.
+   要检索包含多行的结果集，应用程序必须声明一个游标并从该游标中取出每一行。使用游标的步骤如下：声明一个游标、打开它、从游标中取出一行、重复此过程，最后关闭它。
   </para>
 
   <para>
-   Select using cursors:
+   使用游标进行选择：
 <programlisting>
 EXEC SQL DECLARE foo_bar CURSOR FOR
     SELECT number, ascii FROM foo
@@ -440,47 +434,36 @@ EXEC SQL COMMIT;
   </para>
 
   <para>
-   For more details about declaring a cursor, see <xref
-   linkend="ecpg-sql-declare"/>; for more details about fetching rows from a
-   cursor, see <xref linkend="sql-fetch"/>.
+   有关声明游标的更多细节，请参见 <xref
+   linkend="ecpg-sql-declare"/>；有关从游标中取出行的更多细节，请参见 <xref linkend="sql-fetch"/>。
   </para>
 
    <note>
     <para>
-     The ECPG <command>DECLARE</command> command does not actually
-     cause a statement to be sent to the PostgreSQL backend.  The
-     cursor is opened in the backend (using the
-     backend's <command>DECLARE</command> command) at the point when
-     the <command>OPEN</command> command is executed.
+     ECPG 的 <command>DECLARE</command> 命令实际上并不会导致语句被发送到 PostgreSQL 后端。游标是在执行 <command>OPEN</command> 命令时在后端中打开的（使用后端的 <command>DECLARE</command> 命令）。
     </para>
    </note>
   </sect2>
 
   <sect2 id="ecpg-transactions">
-   <title>Managing Transactions</title>
+   <title>管理事务</title>
 
   <para>
-   In the default mode, statements are committed only when
-   <command>EXEC SQL COMMIT</command> is issued. The embedded SQL
-   interface also supports autocommit of transactions (similar to
-   <application>psql</application>'s default behavior) via the <option>-t</option>
-   command-line option to <command>ecpg</command> (see <xref
-   linkend="app-ecpg"/>) or via the <literal>EXEC SQL SET AUTOCOMMIT TO
-   ON</literal> statement. In autocommit mode, each command is
-   automatically committed unless it is inside an explicit transaction
-   block. This mode can be explicitly turned off using <literal>EXEC
-   SQL SET AUTOCOMMIT TO OFF</literal>.
+   在默认模式下，只有发出 <command>EXEC SQL COMMIT</command> 时语句才会被提交。嵌入式 SQL 接口还支持事务的自动提交（类似于 <application>psql</application> 的默认行为），这可以通过 <command>ecpg</command> 的 <option>-t</option> 命令行选项（参见 <xref
+   linkend="app-ecpg"/>）或通过 <literal>EXEC SQL SET AUTOCOMMIT TO
+   ON</literal> 语句来实现。在自动提交模式下，除非命令位于显式事务块内，否则每条命令都会被自动提交。可以使用 <literal>EXEC
+   SQL SET AUTOCOMMIT TO OFF</literal> 显式关闭此模式。
   </para>
 
    <para>
-    The following transaction management commands are available:
+    以下事务管理命令可用：
 
     <variablelist>
      <varlistentry id="ecpg-transactions-exec-sql-commit">
       <term><literal>EXEC SQL COMMIT</literal></term>
       <listitem>
        <para>
-        Commit an in-progress transaction.
+        提交一个正在进行的事务。
        </para>
       </listitem>
      </varlistentry>
@@ -489,7 +472,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL ROLLBACK</literal></term>
       <listitem>
        <para>
-        Roll back an in-progress transaction.
+        回滚一个正在进行的事务。
        </para>
       </listitem>
      </varlistentry>
@@ -498,7 +481,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL PREPARE TRANSACTION </literal><replaceable class="parameter">transaction_id</replaceable></term>
       <listitem>
        <para>
-        Prepare the current transaction for two-phase commit.
+        为两阶段提交准备当前事务。
        </para>
       </listitem>
      </varlistentry>
@@ -507,7 +490,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL COMMIT PREPARED </literal><replaceable class="parameter">transaction_id</replaceable></term>
       <listitem>
        <para>
-        Commit a transaction that is in prepared state.
+        提交处于预备状态的事务。
        </para>
       </listitem>
      </varlistentry>
@@ -516,7 +499,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL ROLLBACK PREPARED </literal><replaceable class="parameter">transaction_id</replaceable></term>
       <listitem>
        <para>
-        Roll back a transaction that is in prepared state.
+        回滚处于预备状态的事务。
        </para>
       </listitem>
      </varlistentry>
@@ -525,7 +508,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL SET AUTOCOMMIT TO ON</literal></term>
       <listitem>
        <para>
-        Enable autocommit mode.
+        启用自动提交模式。
        </para>
       </listitem>
      </varlistentry>
@@ -534,7 +517,7 @@ EXEC SQL COMMIT;
       <term><literal>EXEC SQL SET AUTOCOMMIT TO OFF</literal></term>
       <listitem>
        <para>
-        Disable autocommit mode.  This is the default.
+        禁用自动提交模式。这是默认设置。
        </para>
       </listitem>
      </varlistentry>
@@ -543,40 +526,28 @@ EXEC SQL COMMIT;
   </sect2>
 
   <sect2 id="ecpg-prepared">
-   <title>Prepared Statements</title>
+   <title>预备语句</title>
 
    <para>
-    When the values to be passed to an SQL statement are not known at
-    compile time, or the same statement is going to be used many
-    times, then prepared statements can be useful.
+    当传递给 SQL 语句的值在编译时未知，或者同一条语句将被多次使用时，预备语句会很有用。
    </para>
 
    <para>
-    The statement is prepared using the
-    command <literal>PREPARE</literal>.  For the values that are not
-    known yet, use the
-    placeholder <quote><literal>?</literal></quote>:
+    使用 <literal>PREPARE</literal> 命令来预备该语句。对于尚不知道的值，请使用占位符 <quote><literal>?</literal></quote>：
 <programlisting>
 EXEC SQL PREPARE stmt1 FROM "SELECT oid, datname FROM pg_database WHERE oid = ?";
 </programlisting>
    </para>
 
    <para>
-    If a statement returns a single row, the application can
-    call <literal>EXECUTE</literal> after
-    <literal>PREPARE</literal> to execute the statement, supplying the
-    actual values for the placeholders with a <literal>USING</literal>
-    clause:
+    如果语句返回单行，应用程序可以在 <literal>PREPARE</literal> 之后调用 <literal>EXECUTE</literal> 来执行该语句，并通过 <literal>USING</literal> 子句为占位符提供实际值：
 <programlisting>
 EXEC SQL EXECUTE stmt1 INTO :dboid, :dbname USING 1;
 </programlisting>
    </para>
 
    <para>
-    If a statement returns multiple rows, the application can use a
-    cursor declared based on the prepared statement.  To bind input
-    parameters, the cursor must be opened with
-    a <literal>USING</literal> clause:
+    如果一条语句返回多行，应用程序可以使用基于该预备语句声明的游标。要绑定输入参数，必须使用 <literal>USING</literal> 子句打开该游标：
 <programlisting>
 EXEC SQL PREPARE stmt1 FROM "SELECT oid,datname FROM pg_database WHERE oid &gt; ?";
 EXEC SQL DECLARE foo_bar CURSOR FOR stmt1;
@@ -596,18 +567,14 @@ EXEC SQL CLOSE foo_bar;
    </para>
 
    <para>
-    When you don't need the prepared statement anymore, you should
-    deallocate it:
+    当不再需要该预备语句时，应将其释放：
 <programlisting>
 EXEC SQL DEALLOCATE PREPARE <replaceable>name</replaceable>;
 </programlisting>
    </para>
 
    <para>
-    For more details about <literal>PREPARE</literal>,
-    see <xref linkend="ecpg-sql-prepare"/>. Also
-    see <xref linkend="ecpg-dynamic"/> for more details about using
-    placeholders and input parameters.
+    有关 <literal>PREPARE</literal> 的更多细节，请参见 <xref linkend="ecpg-sql-prepare"/>。有关使用占位符和输入参数的更多细节，另请参见 <xref linkend="ecpg-dynamic"/>。
    </para>
   </sect2>
  </sect1>
