@@ -1097,151 +1097,62 @@ SELECT pg_advisory_lock(q.id) FROM
   </sect1>
 
   <sect1 id="applevel-consistency">
-   <title>Data Consistency Checks at the Application Level</title>
+   <title>应用层的数据一致性检查</title>
 
    <para>
-    It is very difficult to enforce business rules regarding data integrity
-    using Read Committed transactions because the view of the data is
-    shifting with each statement, and even a single statement may not
-    restrict itself to the statement's snapshot if a write conflict occurs.
+    使用 Read Committed 事务来强制实施关于数据完整性的业务规则是非常困难的，因为数据的视图在每条语句之间都会发生变化，而且如果发生写冲突，即使单条语句也可能无法仅局限于该语句的快照。
    </para>
 
    <para>
-    While a Repeatable Read transaction has a stable view of the data
-    throughout its execution, there is a subtle issue with using
-    <acronym>MVCC</acronym> snapshots for data consistency checks, involving
-    something known as <firstterm>read/write conflicts</firstterm>.
-    If one transaction writes data and a concurrent transaction attempts
-    to read the same data (whether before or after the write), it cannot
-    see the work of the other transaction.  The reader then appears to have
-    executed first regardless of which started first or which committed
-    first.  If that is as far as it goes, there is no problem, but
-    if the reader also writes data which is read by a concurrent transaction
-    there is now a transaction which appears to have run before either of
-    the previously mentioned transactions.  If the transaction which appears
-    to have executed last actually commits first, it is very easy for a
-    cycle to appear in a graph of the order of execution of the transactions.
-    When such a cycle appears, integrity checks will not work correctly
-    without some help.
+    虽然 Repeatable Read 事务在其整个执行期间具有稳定的数据视图，但使用 <acronym>MVCC</acronym> 快照进行数据一致性检查存在一个微妙的问题，涉及所谓的<firstterm>读/写冲突</firstterm>。如果一个事务写入数据，而一个并发事务试图读取相同的数据（无论是在写入之前还是之后），它都无法看到另一个事务的工作。于是，读取方看起来是先执行的，无论哪个事务先开始或哪个事务先提交。如果情况仅止于此，那没有问题；但如果读取方也写入了被某个并发事务读取的数据，那么现在就会出现一个看起来先于前面提到的两个事务中任何一个执行的事务。如果看起来最后执行的那个事务实际上最先提交，那么在事务执行顺序的图中就很容易出现环。当出现这样的环时，如果没有一些辅助手段，完整性检查将无法正确工作。
    </para>
 
    <para>
-    As mentioned in <xref linkend="xact-serializable"/>, Serializable
-    transactions are just Repeatable Read transactions which add
-    nonblocking monitoring for dangerous patterns of read/write conflicts.
-    When a pattern is detected which could cause a cycle in the apparent
-    order of execution, one of the transactions involved is rolled back to
-    break the cycle.
+    如<xref linkend="xact-serializable"/>中所述，Serializable 事务只是 Repeatable Read 事务，它增加了对危险的读/写冲突模式的非阻塞监控。当检测到可能导致明显执行顺序中出现环的模式时，涉及的事务之一会被回滚以打破该环。
    </para>
 
    <sect2 id="serializable-consistency">
-    <title>Enforcing Consistency with Serializable Transactions</title>
+    <title>使用 Serializable 事务强制实施一致性</title>
 
     <para>
-     If the Serializable transaction isolation level is used for all writes
-     and for all reads which need a consistent view of the data, no other
-     effort is required to ensure consistency.  Software from other
-     environments which is written to use serializable transactions to
-     ensure consistency should <quote>just work</quote> in this regard in
-     <productname>PostgreSQL</productname>.
+     如果对所有写入以及所有需要一致数据视图的读取都使用 Serializable 事务隔离级别，则无需其他努力来确保一致性。在其他环境中编写的、使用可串行化事务来确保一致性的软件，在这方面应该可以在 <productname>PostgreSQL</productname> 中<quote>直接工作</quote>。
     </para>
 
     <para>
-     When using this technique, it will avoid creating an unnecessary burden
-     for application programmers if the application software goes through a
-     framework which automatically retries transactions which are rolled
-     back with a serialization failure.  It may be a good idea to set
-     <literal>default_transaction_isolation</literal> to <literal>serializable</literal>.
-     It would also be wise to take some action to ensure that no other
-     transaction isolation level is used, either inadvertently or to
-     subvert integrity checks, through checks of the transaction isolation
-     level in triggers.
+     使用这种技术时，如果应用软件通过一个框架来自动重试那些因序列化失败而被回滚的事务，就可以避免给应用程序员造成不必要的负担。把 <literal>default_transaction_isolation</literal> 设置为 <literal>serializable</literal> 可能是个好主意。同样明智的是采取一些措施，通过在触发器中检查事务隔离级别，确保不会有意或无意地使用其他事务隔离级别，或借此规避完整性检查。
     </para>
 
     <para>
-     See <xref linkend="xact-serializable"/> for performance suggestions.
+     有关性能方面的建议，请参见 <xref linkend="xact-serializable"/>。
     </para>
 
     <warning>
-     <title>Warning: Serializable Transactions and Data Replication</title>
+     <title>警告：可序列化事务与数据复制</title>
      <para>
-      This level of integrity protection using Serializable transactions
-      does not yet extend to hot standby mode (<xref linkend="hot-standby"/>)
-      or logical replicas.
-      Because of that, those using hot standby or logical replication
-      may want to use Repeatable Read and explicit locking on the primary.
+      这种使用可序列化事务的完整性保护级别尚未扩展到热备模式（<xref linkend="hot-standby"/>）或逻辑副本。因此，使用热备或逻辑复制的人可能希望使用可重复读以及在主库上显式加锁。
      </para>
     </warning>
    </sect2>
 
    <sect2 id="non-serializable-consistency">
-    <title>Enforcing Consistency with Explicit Blocking Locks</title>
+    <title>用显式阻塞锁强制实现一致性</title>
 
     <para>
-     When non-serializable writes are possible,
-     to ensure the current validity of a row and protect it against
-     concurrent updates one must use <command>SELECT FOR UPDATE</command>,
-     <command>SELECT FOR SHARE</command>, or an appropriate <command>LOCK
-     TABLE</command> statement.  (<command>SELECT FOR UPDATE</command>
-     and <command>SELECT FOR SHARE</command> lock just the
-     returned rows against concurrent updates, while <command>LOCK
-     TABLE</command> locks the whole table.)  This should be taken into
-     account when porting applications to
-     <productname>PostgreSQL</productname> from other environments.
+     当可能存在非可序列化写入时，为确保某一行的当前有效性并保护它免受并发更新，必须使用 <command>SELECT FOR UPDATE</command>、<command>SELECT FOR SHARE</command> 或适当的 <command>LOCK
+     TABLE</command> 语句。（<command>SELECT FOR UPDATE</command> 和 <command>SELECT FOR SHARE</command> 只对返回的行加锁以抵御并发更新，而 <command>LOCK
+     TABLE</command> 会锁定整张表。）在把应用从其他环境移植到 <productname>PostgreSQL</productname> 时，应当考虑到这一点。
     </para>
 
     <para>
-     Also of note to those converting from other environments is the fact
-     that <command>SELECT FOR UPDATE</command> does not ensure that a
-     concurrent transaction will not update or delete a selected row.
-     To do that in <productname>PostgreSQL</productname> you must actually
-     update the row, even if no values need to be changed.
-     <command>SELECT FOR UPDATE</command> <emphasis>temporarily blocks</emphasis>
-     other transactions from acquiring the same lock or executing an
-     <command>UPDATE</command> or <command>DELETE</command> which would
-     affect the locked row, but once the transaction holding this lock
-     commits or rolls back, a blocked transaction will proceed with the
-     conflicting operation unless an actual <command>UPDATE</command> of
-     the row was performed while the lock was held.
+     对于那些从其他环境迁移过来的人，还需要注意的是，<command>SELECT FOR UPDATE</command> 并不保证并发事务不会更新或删除被选中的行。要在 <productname>PostgreSQL</productname> 中做到这一点，你必须实际更新该行，即使不需要更改任何值。<command>SELECT FOR UPDATE</command> <emphasis>临时阻塞</emphasis>其他事务获取相同的锁，或执行会影响被锁定行的 <command>UPDATE</command> 或 <command>DELETE</command>，但是一旦持有该锁的事务提交或回滚，被阻塞的事务就会继续执行冲突的操作，除非在持有锁期间对该行执行了实际的 <command>UPDATE</command>。
     </para>
 
     <para>
-     Global validity checks require extra thought under
-     non-serializable <acronym>MVCC</acronym>.
-     For example, a banking application might wish to check that the sum of
-     all credits in one table equals the sum of debits in another table,
-     when both tables are being actively updated.  Comparing the results of two
-     successive <literal>SELECT sum(...)</literal> commands will not work reliably in
-     Read Committed mode, since the second query will likely include the results
-     of transactions not counted by the first.  Doing the two sums in a
-     single repeatable read transaction will give an accurate picture of only the
-     effects of transactions that committed before the repeatable read transaction
-     started &mdash; but one might legitimately wonder whether the answer is still
-     relevant by the time it is delivered.  If the repeatable read transaction
-     itself applied some changes before trying to make the consistency check,
-     the usefulness of the check becomes even more debatable, since now it
-     includes some but not all post-transaction-start changes.  In such cases
-     a careful person might wish to lock all tables needed for the check,
-     in order to get an indisputable picture of current reality.  A
-     <literal>SHARE</literal> mode (or higher) lock guarantees that there are no
-     uncommitted changes in the locked table, other than those of the current
-     transaction.
+     在非可串行化的 <acronym>MVCC</acronym> 下，全局有效性检查需要额外斟酌。例如，银行应用可能希望检查一张表中所有贷方金额之和等于另一张表中借方金额之和，而这两张表都在被积极更新。在读已提交模式下，比较两个连续 <literal>SELECT sum(...)</literal> 命令的结果无法可靠工作，因为第二个查询很可能包含第一个查询未计入的事务结果。在单个可重复读事务中执行这两次求和，可以准确地只反映在可重复读事务开始 &mdash; 之前已提交事务的影响，但人们有理由怀疑，等到结果交付时它是否仍然有意义。如果可重复读事务本身在尝试进行一致性检查之前应用了一些更改，那么该检查的用处就更加值得商榷，因为此时它包含了事务开始后的一部分（而非全部）更改。在这种情况下，谨慎的人可能希望锁定检查所需的所有表，以便获得当前实际情况的无可争议的图景。<literal>SHARE</literal> 模式（或更高）的锁保证被锁定的表中没有未提交的更改，当前事务的更改除外。
     </para>
 
     <para>
-     Note also that if one is relying on explicit locking to prevent concurrent
-     changes, one should either use Read Committed mode, or in Repeatable Read
-     mode be careful to obtain
-     locks before performing queries.  A lock obtained by a
-     repeatable read transaction guarantees that no other transactions modifying
-     the table are still running, but if the snapshot seen by the
-     transaction predates obtaining the lock, it might predate some now-committed
-     changes in the table.  A repeatable read transaction's snapshot is actually
-     frozen at the start of its first query or data-modification command
-     (<literal>SELECT</literal>, <literal>INSERT</literal>,
-     <literal>UPDATE</literal>, <literal>DELETE</literal>, or
-     <literal>MERGE</literal>), so it is possible to obtain locks explicitly
-     before the snapshot is frozen.
+     另请注意，如果依赖显式锁来防止并发修改，那么要么使用读已提交模式，要么在可重复读模式下注意在执行查询之前先获取锁。可重复读事务获取的锁保证没有其他修改该表的事务仍在运行，但如果该事务看到的快照早于获取锁的时间，那么该快照可能早于表中某些现已提交的更改。可重复读事务的快照实际上是在其第一个查询或数据修改命令（<literal>SELECT</literal>、<literal>INSERT</literal>、<literal>UPDATE</literal>、<literal>DELETE</literal> 或 <literal>MERGE</literal>）开始时冻结的，因此可以在快照冻结之前显式获取锁。
     </para>
    </sect2>
   </sect1>
