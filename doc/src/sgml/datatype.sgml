@@ -2626,7 +2626,7 @@ SELECT * FROM test1 WHERE a;
   </sect1>
 
   <sect1 id="datatype-enum">
-   <title>Enumerated Types</title>
+   <title>枚举类型</title>
 
    <indexterm zone="datatype-enum">
     <primary>data type</primary>
@@ -2638,28 +2638,26 @@ SELECT * FROM test1 WHERE a;
    </indexterm>
 
    <para>
-    Enumerated (enum) types are data types that
-    comprise a static, ordered set of values.
-    They are equivalent to the <type>enum</type>
-    types supported in a number of programming languages. An example of an enum
-    type might be the days of the week, or a set of status values for
-    a piece of data.
+    枚举（enum）类型是由一个静态、有序的值集合构成的数据类型。
+    它们等价于多种编程语言中所支持的 <type>enum</type>
+    类型。枚举类型的一个例子可以是星期几，或者某条数据的
+    一组状态值。
    </para>
 
    <sect2 id="datatype-enum-declaration">
-    <title>Declaration of Enumerated Types</title>
+    <title>枚举类型的声明</title>
 
     <para>
-     Enum types are created using the <xref
-     linkend="sql-createtype"/> command,
-     for example:
+     枚举类型使用 <xref
+     linkend="sql-createtype"/> 命令创建，
+     例如：
 
 <programlisting>
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 </programlisting>
 
-     Once created, the enum type can be used in table and function
-     definitions much like any other type:
+     一旦创建，枚举类型就可以像任何其他类型一样用于表和函数
+     定义中：
 <programlisting>
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 CREATE TABLE person (
@@ -2677,13 +2675,13 @@ SELECT * FROM person WHERE current_mood = 'happy';
     </sect2>
 
     <sect2 id="datatype-enum-ordering">
-     <title>Ordering</title>
+     <title>排序</title>
 
      <para>
-      The ordering of the values in an enum type is the
-      order in which the values were listed when the type was created.
-      All standard comparison operators and related
-      aggregate functions are supported for enums.  For example:
+      枚举类型中值的排序就是创建该类型时列出这些值的
+      顺序。
+      枚举支持所有标准的比较运算符以及相关的
+      聚合函数。例如：
 
 <programlisting>
 INSERT INTO person VALUES ('Larry', 'sad');
@@ -2714,11 +2712,10 @@ WHERE current_mood = (SELECT MIN(current_mood) FROM person);
    </sect2>
 
    <sect2 id="datatype-enum-type-safety">
-    <title>Type Safety</title>
+    <title>类型安全</title>
 
     <para>
-     Each enumerated data type is separate and cannot
-     be compared with other enumerated types.  See this example:
+     每个枚举数据类型都是独立的，不能与其他枚举类型进行比较。参见以下示例：
 
 <programlisting>
 CREATE TYPE happiness AS ENUM ('happy', 'very happy', 'ecstatic');
@@ -2738,8 +2735,7 @@ ERROR:  operator does not exist: mood = happiness
     </para>
 
     <para>
-     If you really need to do something like that, you can either
-     write a custom operator or add explicit casts to your query:
+     如果你确实需要做类似的事情，可以编写一个自定义运算符，或者向查询中添加显式转换：
 
 <programlisting>
 SELECT person.name, holidays.num_weeks FROM person, holidays
@@ -2754,34 +2750,25 @@ SELECT person.name, holidays.num_weeks FROM person, holidays
    </sect2>
 
    <sect2 id="datatype-enum-implementation-details">
-    <title>Implementation Details</title>
+    <title>实现细节</title>
 
     <para>
-     Enum labels are case sensitive, so
-     <type>'happy'</type> is not the same as <type>'HAPPY'</type>.
-     White space in the labels is significant too.
+     枚举标签区分大小写，因此
+     <type>'happy'</type> 与 <type>'HAPPY'</type> 并不相同。
+     标签中的空白字符也很重要。
     </para>
 
     <para>
-     Although enum types are primarily intended for static sets of values,
-     there is support for adding new values to an existing enum type, and for
-     renaming values (see <xref linkend="sql-altertype"/>).  Existing values
-     cannot be removed from an enum type, nor can the sort ordering of such
-     values be changed, short of dropping and re-creating the enum type.
+     尽管枚举类型主要用于静态的值集合，
+     但也支持向现有枚举类型添加新值以及重命名值（参见 <xref linkend="sql-altertype"/>）。除非删除并重新创建枚举类型，否则无法从枚举类型中移除现有值，也无法更改这些值的排序顺序。
     </para>
 
     <para>
-     An enum value occupies four bytes on disk.  The length of an enum
-     value's textual label is limited by the <symbol>NAMEDATALEN</symbol>
-     setting compiled into <productname>PostgreSQL</productname>; in standard
-     builds this means at most 63 bytes.
+     一个枚举值在磁盘上占用四个字节。枚举值文本标签的长度受编译进 <productname>PostgreSQL</productname> 的 <symbol>NAMEDATALEN</symbol> 设置限制；在标准构建中，这意味着最多 63 个字节。
     </para>
 
     <para>
-     The translations from internal enum values to textual labels are
-     kept in the system catalog
-     <link linkend="catalog-pg-enum"><structname>pg_enum</structname></link>.
-     Querying this catalog directly can be useful.
+     从内部枚举值到文本标签的转换保存在系统目录 <link linkend="catalog-pg-enum"><structname>pg_enum</structname></link> 中。直接查询该系统目录可能会很有用。
     </para>
 
    </sect2>
