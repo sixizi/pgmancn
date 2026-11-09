@@ -95,11 +95,10 @@ List *(*ReparameterizeCustomPathByChild) (PlannerInfo *root,
  </sect1>
 
  <sect1 id="custom-scan-plan">
-  <title>Creating Custom Scan Plans</title>
+  <title>创建自定义扫描计划</title>
 
   <para>
-    A custom scan is represented in a finished plan tree using the following
-    structure:
+    自定义扫描在最终的计划树中使用以下结构表示：
 <programlisting>
 typedef struct CustomScan
 {
@@ -116,62 +115,36 @@ typedef struct CustomScan
   </para>
 
   <para>
-    <structfield>scan</structfield> must be initialized as for any other scan, including
-    estimated costs, target lists, qualifications, and so on.
-    <structfield>flags</structfield> is a bit mask with the same meaning as in
-    <structname>CustomPath</structname>.
-    <structfield>custom_plans</structfield> can be used to store child
-    <structname>Plan</structname> nodes.
-    <structfield>custom_exprs</structfield> should be used to
-    store expression trees that will need to be fixed up by
-    <filename>setrefs.c</filename> and <filename>subselect.c</filename>, while
-    <structfield>custom_private</structfield> should be used to store other private data
-    that is only used by the custom scan provider itself.
-    <structfield>custom_scan_tlist</structfield> can be NIL when scanning a base
-    relation, indicating that the custom scan returns scan tuples that match
-    the base relation's row type.  Otherwise it is a target list describing
-    the actual scan tuples.  <structfield>custom_scan_tlist</structfield> must be
-    provided for joins, and could be provided for scans if the custom scan
-    provider can compute some non-Var expressions.
-    <structfield>custom_relids</structfield> is set by the core code to the set of
-    relations (range table indexes) that this scan node handles; except when
-    this scan is replacing a join, it will have only one member.
-    <structfield>methods</structfield> must point to a (usually statically allocated)
-    object implementing the required custom scan methods, which are further
-    detailed below.
+    <structfield>scan</structfield> 必须像其他任何扫描一样进行初始化，包括估计代价、目标列表、条件等。
+    <structfield>flags</structfield> 是一个位掩码，其含义与 <structname>CustomPath</structname> 中相同。
+    <structfield>custom_plans</structfield> 可用于存储子 <structname>Plan</structname> 节点。
+    <structfield>custom_exprs</structfield> 应当用于存储需要由 <filename>setrefs.c</filename> 和 <filename>subselect.c</filename> 修正的表达式树，而
+    <structfield>custom_private</structfield> 应当用于存储仅由自定义扫描提供者自身使用的其他私有数据。
+    在扫描基础关系时 <structfield>custom_scan_tlist</structfield> 可以为 NIL，表示自定义扫描返回与基础关系行类型匹配的扫描元组。
+    否则它是一个描述实际扫描元组的目标列表。对于连接必须提供 <structfield>custom_scan_tlist</structfield>，
+    如果自定义扫描提供者能够计算某些非 Var 表达式，则扫描也可以提供它。
+    <structfield>custom_relids</structfield> 由核心代码设置为该扫描节点所处理的关系集合（范围表索引）；
+    除非此扫描正在替代一个连接，否则它将只有一个成员。
+    <structfield>methods</structfield> 必须指向一个（通常是静态分配的）对象，该对象实现所需的
+    自定义扫描方法，这些方法将在下面进一步详述。
   </para>
 
   <para>
-   When a <structname>CustomScan</structname> scans a single relation,
-   <structfield>scan.scanrelid</structfield> must be the range table index of the table
-   to be scanned.  When it replaces a join, <structfield>scan.scanrelid</structfield>
-   should be zero.
+   当 <structname>CustomScan</structname> 扫描单个关系时，<structfield>scan.scanrelid</structfield> 必须是待扫描表的范围表索引。
+   当它替代一个连接时，<structfield>scan.scanrelid</structfield> 应为零。
   </para>
 
   <para>
-   Plan trees must be able to be duplicated using <function>copyObject</function>,
-   so all the data stored within the <quote>custom</quote> fields must consist of
-   nodes that that function can handle.  Furthermore, custom scan providers
-   cannot substitute a larger structure that embeds
-   a <structname>CustomScan</structname> for the structure itself, as would be possible
-   for a <structname>CustomPath</structname> or <structname>CustomScanState</structname>.
+   计划树必须能够使用 <function>copyObject</function> 进行复制，因此存储在 <quote>custom</quote> 字段中的所有数据都必须由该函数能够处理的节点组成。此外，自定义扫描提供者不能用嵌入 <structname>CustomScan</structname> 的更大结构来替代该结构本身，而对于 <structname>CustomPath</structname> 或 <structname>CustomScanState</structname> 则是可能的。
   </para>
 
   <sect2 id="custom-scan-plan-callbacks">
-   <title>Custom Scan Plan Callbacks</title>
+   <title>自定义扫描计划回调</title>
    <para>
 <programlisting>
 Node *(*CreateCustomScanState) (CustomScan *cscan);
 </programlisting>
-    Allocate a <structname>CustomScanState</structname> for this
-    <structname>CustomScan</structname>.  The actual allocation will often be larger than
-    required for an ordinary <structname>CustomScanState</structname>, because many
-    providers will wish to embed that as the first field of a larger structure.
-    The value returned must have the node tag and <structfield>methods</structfield>
-    set appropriately, but other fields should be left as zeroes at this
-    stage; after <function>ExecInitCustomScan</function> performs basic initialization,
-    the <function>BeginCustomScan</function> callback will be invoked to give the
-    custom scan provider a chance to do whatever else is needed.
+    为此 <structname>CustomScan</structname> 分配一个 <structname>CustomScanState</structname>。实际分配的大小通常比普通 <structname>CustomScanState</structname> 所需的大，因为许多提供者希望将其作为更大结构的第一个字段嵌入。返回的值必须正确设置节点标签和 <structfield>methods</structfield>，但其他字段在此阶段应保留为零；在 <function>ExecInitCustomScan</function> 执行基本初始化之后，将调用 <function>BeginCustomScan</function> 回调，以便自定义扫描提供者有机会执行所需的任何其他操作。
    </para>
   </sect2>
  </sect1>
