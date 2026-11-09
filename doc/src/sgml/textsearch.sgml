@@ -1103,22 +1103,18 @@ occurrences to display in the result.',
  </sect1>
 
  <sect1 id="textsearch-features">
-  <title>Additional Features</title>
+  <title>附加功能</title>
 
   <para>
-   This section describes additional functions and operators that are
-   useful in connection with text search.
+   本节介绍与文本检索相关的其他函数和运算符。
   </para>
 
   <sect2 id="textsearch-manipulate-tsvector">
-   <title>Manipulating Documents</title>
+   <title>操纵文档</title>
 
    <para>
-    <xref linkend="textsearch-parsing-documents"/> showed how raw textual
-    documents can be converted into <type>tsvector</type> values.
-    <productname>PostgreSQL</productname> also provides functions and
-    operators that can be used to manipulate documents that are already
-    in <type>tsvector</type> form.
+    <xref linkend="textsearch-parsing-documents"/> 展示了如何将原始文本文档转换为 <type>tsvector</type> 值。
+    <productname>PostgreSQL</productname> 还提供了可用于操纵已经是 <type>tsvector</type> 形式的文档的函数和运算符。
    </para>
 
    <variablelist>
@@ -1135,29 +1131,12 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       The <type>tsvector</type> concatenation operator
-       returns a vector which combines the lexemes and positional information
-       of the two vectors given as arguments.  Positions and weight labels
-       are retained during the concatenation.
-       Positions appearing in the right-hand vector are offset by the largest
-       position mentioned in the left-hand vector, so that the result is
-       nearly equivalent to the result of performing <function>to_tsvector</function>
-       on the concatenation of the two original document strings.  (The
-       equivalence is not exact, because any stop-words removed from the
-       end of the left-hand argument will not affect the result, whereas
-       they would have affected the positions of the lexemes in the
-       right-hand argument if textual concatenation were used.)
+       <type>tsvector</type> 连接运算符返回一个向量，该向量合并了作为参数给出的两个向量的词位和位置信息。在连接过程中，位置和权重标签会被保留。
+       出现在右侧向量中的位置会按左侧向量中提到的最大位置进行偏移，因此结果几乎等同于对两个原始文档字符串的连接执行 <function>to_tsvector</function> 所得到的结果。（这种等价性并不精确，因为从左侧参数末尾移除的任何停用词不会影响结果，而如果使用文本连接，它们本会影响右侧参数中词位的位置。）
       </para>
 
       <para>
-       One advantage of using concatenation in the vector form, rather than
-       concatenating text before applying <function>to_tsvector</function>, is that
-       you can use different configurations to parse different sections
-       of the document.  Also, because the <function>setweight</function> function
-       marks all lexemes of the given vector the same way, it is necessary
-       to parse the text and do <function>setweight</function> before concatenating
-       if you want to label different parts of the document with different
-       weights.
+       在向量形式中使用连接的一个好处是，不必在应用 <function>to_tsvector</function> 之前先连接文本，而是可以用不同的配置来解析文档的不同部分。此外，由于 <function>setweight</function> 函数会以相同的方式标记给定向量的所有词位，因此如果你想用不同的权重标记文档的不同部分，就必须在连接之前解析文本并执行 <function>setweight</function>。
       </para>
      </listitem>
     </varlistentry>
@@ -1174,19 +1153,11 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       <function>setweight</function> returns a copy of the input vector in which every
-       position has been labeled with the given <replaceable>weight</replaceable>, either
-       <literal>A</literal>, <literal>B</literal>, <literal>C</literal>, or
-       <literal>D</literal>.  (<literal>D</literal> is the default for new
-       vectors and as such is not displayed on output.)  These labels are
-       retained when vectors are concatenated, allowing words from different
-       parts of a document to be weighted differently by ranking functions.
+       <function>setweight</function> 返回输入向量的一个副本，其中每个位置都被标记为给定的 <replaceable>weight</replaceable>，即 <literal>A</literal>、<literal>B</literal>、<literal>C</literal> 或 <literal>D</literal> 之一。（<literal>D</literal> 是新向量的默认值，因此不会在输出中显示。）当向量被连接时，这些标记会被保留，从而允许排序函数对文档不同部分的词赋予不同的权重。
       </para>
 
       <para>
-       Note that weight labels apply to <emphasis>positions</emphasis>, not
-       <emphasis>lexemes</emphasis>.  If the input vector has been stripped of
-       positions then <function>setweight</function> does nothing.
+       注意，权重标记作用于<emphasis>位置</emphasis>，而不是<emphasis>词位</emphasis>。如果输入向量已被剥离位置信息，那么 <function>setweight</function> 不会做任何事。
       </para>
      </listitem>
     </varlistentry>
@@ -1202,7 +1173,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns the number of lexemes stored in the vector.
+       返回向量中存储的词位数量。
       </para>
      </listitem>
     </varlistentry>
@@ -1219,14 +1190,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns a vector that lists the same lexemes as the given vector, but
-       lacks any position or weight information.  The result is usually much
-       smaller than an unstripped vector, but it is also less useful.
-       Relevance ranking does not work as well on stripped vectors as
-       unstripped ones.  Also,
-       the <literal>&lt;-&gt;</literal> (FOLLOWED BY) <type>tsquery</type> operator
-       will never match stripped input, since it cannot determine the
-       distance between lexeme occurrences.
+       返回一个向量，其中列出的词位与给定向量相同，但不含任何位置或权重信息。结果通常比未剥离的向量小得多，但用处也较小。在剥离后的向量上进行相关性排名不如在未剥离的向量上效果好。此外，<literal>&lt;-&gt;</literal>（FOLLOWED BY）<type>tsquery</type> 运算符永远不会匹配剥离后的输入，因为它无法确定词位出现之间的距离。
       </para>
      </listitem>
 
@@ -1235,21 +1199,17 @@ occurrences to display in the result.',
    </variablelist>
 
    <para>
-    A full list of <type>tsvector</type>-related functions is available
-    in <xref linkend="textsearch-functions-table"/>.
+    与 <type>tsvector</type> 相关的函数的完整列表见 <xref linkend="textsearch-functions-table"/>。
    </para>
 
   </sect2>
 
   <sect2 id="textsearch-manipulate-tsquery">
-   <title>Manipulating Queries</title>
+   <title>操作查询</title>
 
    <para>
-    <xref linkend="textsearch-parsing-queries"/> showed how raw textual
-    queries can be converted into <type>tsquery</type> values.
-    <productname>PostgreSQL</productname> also provides functions and
-    operators that can be used to manipulate queries that are already
-    in <type>tsquery</type> form.
+    <xref linkend="textsearch-parsing-queries"/> 展示了如何将原始文本查询转换为 <type>tsquery</type> 值。
+    <productname>PostgreSQL</productname> 还提供了可用于操作已经是 <type>tsquery</type> 形式的查询的函数和运算符。
    </para>
 
    <variablelist>
@@ -1262,7 +1222,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns the AND-combination of the two given queries.
+       返回两个给定查询的 AND 组合。
       </para>
      </listitem>
 
@@ -1276,7 +1236,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns the OR-combination of the two given queries.
+       返回两个给定查询的 OR 组合。
       </para>
      </listitem>
 
@@ -1290,7 +1250,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns the negation (NOT) of the given query.
+       返回给定查询的否定（NOT）。
       </para>
      </listitem>
 
@@ -1304,10 +1264,7 @@ occurrences to display in the result.',
 
      <listitem>
       <para>
-       Returns a query that searches for a match to the first given query
-       immediately followed by a match to the second given query, using
-       the <literal>&lt;-&gt;</literal> (FOLLOWED BY)
-       <type>tsquery</type> operator.  For example:
+       返回一个查询，它使用 <literal>&lt;-&gt;</literal>（FOLLOWED BY）<type>tsquery</type> 运算符，搜索与第一个给定查询匹配且紧随其后与第二个给定查询匹配的内容。例如：
 
 <screen>
 SELECT to_tsquery('fat') &lt;-&gt; to_tsquery('cat | rat');
@@ -1332,11 +1289,7 @@ SELECT to_tsquery('fat') &lt;-&gt; to_tsquery('cat | rat');
 
      <listitem>
       <para>
-       Returns a query that searches for a match to the first given query
-       followed by a match to the second given query at a distance of exactly
-       <replaceable>distance</replaceable> lexemes, using
-       the <literal>&lt;<replaceable>N</replaceable>&gt;</literal>
-       <type>tsquery</type> operator.  For example:
+       返回一个查询，它使用 <literal>&lt;<replaceable>N</replaceable>&gt;</literal> <type>tsquery</type> 运算符，搜索与第一个给定查询匹配且其后恰好相隔 <replaceable>distance</replaceable> 个词位处与第二个给定查询匹配的内容。例如：
 
 <screen>
 SELECT tsquery_phrase(to_tsquery('fat'), to_tsquery('cat'), 10);
@@ -1361,11 +1314,11 @@ SELECT tsquery_phrase(to_tsquery('fat'), to_tsquery('cat'), 10);
 
      <listitem>
       <para>
-       Returns the number of nodes (lexemes plus operators) in a
-       <type>tsquery</type>. This function is useful
-       to determine if the <replaceable>query</replaceable> is meaningful
-       (returns &gt; 0), or contains only stop words (returns 0).
-       Examples:
+       返回一个
+       <type>tsquery</type> 中的节点数（词位加运算符）。该函数可用于
+       判断 <replaceable>query</replaceable> 是否有意义
+       （返回 &gt; 0），还是仅包含停用词（返回 0）。
+       示例：
 
 <screen>
 SELECT numnode(plainto_tsquery('the any'));
@@ -1395,10 +1348,9 @@ SELECT numnode('foo &amp; bar'::tsquery);
 
      <listitem>
       <para>
-       Returns the portion of a <type>tsquery</type> that can be used for
-       searching an index.  This function is useful for detecting
-       unindexable queries, for example those containing only stop words
-       or only negated terms.  For example:
+       返回 <type>tsquery</type> 中可用于搜索索引的部分。该函数可用于检测
+       无法使用索引的查询，例如仅包含停用词
+       或仅包含否定词的查询。例如：
 
 <screen>
 SELECT querytree(to_tsquery('defined'));
@@ -1418,29 +1370,28 @@ SELECT querytree(to_tsquery('!defined'));
    </variablelist>
 
    <sect3 id="textsearch-query-rewriting">
-    <title>Query Rewriting</title>
+    <title>查询重写</title>
 
     <indexterm zone="textsearch-query-rewriting">
      <primary>ts_rewrite</primary>
     </indexterm>
 
     <para>
-     The <function>ts_rewrite</function> family of functions search a
-     given <type>tsquery</type> for occurrences of a target
-     subquery, and replace each occurrence with a
-     substitute subquery.  In essence this operation is a
-     <type>tsquery</type>-specific version of substring replacement.
-     A target and substitute combination can be
-     thought of as a <firstterm>query rewrite rule</firstterm>.  A collection
-     of such rewrite rules can be a powerful search aid.
-     For example, you can expand the search using synonyms
-     (e.g., <literal>new york</literal>, <literal>big apple</literal>, <literal>nyc</literal>,
-     <literal>gotham</literal>) or narrow the search to direct the user to some hot
-     topic.  There is some overlap in functionality between this feature
-     and thesaurus dictionaries (<xref linkend="textsearch-thesaurus"/>).
-     However, you can modify a set of rewrite rules on-the-fly without
-     reindexing, whereas updating a thesaurus requires reindexing to be
-     effective.
+     <function>ts_rewrite</function> 系列函数在给定的 <type>tsquery</type> 中搜索目标
+     子查询的出现，并将每次出现替换为
+     替代子查询。本质上，此操作是
+     <type>tsquery</type> 特有的子串替换版本。
+     目标与替代的组合可以
+     视为一条<firstterm>查询重写规则</firstterm>。此类重写规则的集合
+     可以成为强大的搜索辅助手段。
+     例如，你可以使用同义词
+     （如 <literal>new york</literal>、<literal>big apple</literal>、<literal>nyc</literal>、
+     <literal>gotham</literal>）扩展搜索，或缩小搜索范围以将用户引导至某个热门
+     主题。此功能与同义词词典
+     （<xref linkend="textsearch-thesaurus"/>）在功能上存在一些重叠。
+     但是，你可以即时修改一组重写规则而无需
+     重新索引，而更新同义词词典则需要重新索引才能
+     生效。
     </para>
 
     <variablelist>
@@ -1453,11 +1404,10 @@ SELECT querytree(to_tsquery('!defined'));
 
       <listitem>
        <para>
-        This form of <function>ts_rewrite</function> simply applies a single
-        rewrite rule: <replaceable class="parameter">target</replaceable>
-        is replaced by <replaceable class="parameter">substitute</replaceable>
-        wherever it appears in <replaceable
-        class="parameter">query</replaceable>.  For example:
+        这种形式的 <function>ts_rewrite</function> 仅应用一条
+        重写规则：<replaceable class="parameter">target</replaceable>
+        在 <replaceable
+        class="parameter">query</replaceable> 中出现的任何位置都会被替换为 <replaceable class="parameter">substitute</replaceable>。例如：
 
 <screen>
 SELECT ts_rewrite('a &amp; b'::tsquery, 'a'::tsquery, 'c'::tsquery);
@@ -1477,13 +1427,9 @@ SELECT ts_rewrite('a &amp; b'::tsquery, 'a'::tsquery, 'c'::tsquery);
 
       <listitem>
        <para>
-        This form of <function>ts_rewrite</function> accepts a starting
-        <replaceable>query</replaceable> and an SQL <replaceable>select</replaceable> command, which
-        is given as a text string.  The <replaceable>select</replaceable> must yield two
-        columns of <type>tsquery</type> type.  For each row of the
-        <replaceable>select</replaceable> result, occurrences of the first column value
-        (the target) are replaced by the second column value (the substitute)
-        within the current <replaceable>query</replaceable> value.  For example:
+        这种形式的 <function>ts_rewrite</function> 接受一个起始的
+        <replaceable>query</replaceable> 和一个 SQL <replaceable>select</replaceable> 命令，该命令以文本字符串形式给出。<replaceable>select</replaceable> 必须产生两列 <type>tsquery</type> 类型。对于
+        <replaceable>select</replaceable> 结果的每一行，在当前 <replaceable>query</replaceable> 值中，第一列值（目标）的出现位置会被替换为第二列值（替换值）。例如：
 
 <screen>
 CREATE TABLE aliases (t tsquery PRIMARY KEY, s tsquery);
@@ -1507,8 +1453,8 @@ SELECT ts_rewrite('a &amp; b'::tsquery, 'SELECT t,s FROM aliases');
     </variablelist>
 
     <para>
-     Let's consider a real-life astronomical example. We'll expand query
-     <literal>supernovae</literal> using table-driven rewriting rules:
+     让我们考虑一个现实中的天文学示例。我们将使用表驱动的重写规则来展开查询
+     <literal>supernovae</literal>：
 
 <screen>
 CREATE TABLE aliases (t tsquery primary key, s tsquery);
@@ -1520,7 +1466,7 @@ SELECT ts_rewrite(to_tsquery('supernovae &amp; crab'), 'SELECT * FROM aliases');
  'crab' &amp; ( 'supernova' | 'sn' )
 </screen>
 
-     We can change the rewriting rules just by updating the table:
+     我们可以仅通过更新表来更改重写规则：
 
 <screen>
 UPDATE aliases
@@ -1535,11 +1481,11 @@ SELECT ts_rewrite(to_tsquery('supernovae &amp; crab'), 'SELECT * FROM aliases');
     </para>
 
     <para>
-     Rewriting can be slow when there are many rewriting rules, since it
-     checks every rule for a possible match. To filter out obvious non-candidate
-     rules we can use the containment operators for the <type>tsquery</type>
-     type. In the example below, we select only those rules which might match
-     the original query:
+     当重写规则很多时，重写可能会很慢，因为它
+     会检查每条规则是否可能匹配。为了过滤掉明显不是候选的
+     规则，我们可以使用 <type>tsquery</type>
+     类型的包含运算符。在下面的示例中，我们只选择那些可能匹配
+     原始查询的规则：
 
 <screen>
 SELECT ts_rewrite('a &amp; b'::tsquery,
@@ -1555,7 +1501,7 @@ SELECT ts_rewrite('a &amp; b'::tsquery,
   </sect2>
 
   <sect2 id="textsearch-update-triggers">
-   <title>Triggers for Automatic Updates</title>
+   <title>用于自动更新的触发器</title>
 
    <indexterm>
     <primary>trigger</primary>
@@ -1564,18 +1510,13 @@ SELECT ts_rewrite('a &amp; b'::tsquery,
 
    <note>
     <para>
-     The method described in this section has been obsoleted by the use of
-     stored generated columns, as described in <xref
-     linkend="textsearch-tables-index"/>.
+     本节描述的方法已被存储生成列的使用所取代，如 <xref
+     linkend="textsearch-tables-index"/> 中所述。
     </para>
    </note>
 
    <para>
-    When using a separate column to store the <type>tsvector</type> representation
-    of your documents, it is necessary to create a trigger to update the
-    <type>tsvector</type> column when the document content columns change.
-    Two built-in trigger functions are available for this, or you can write
-    your own.
+    当使用一个单独的列来存储文档的 <type>tsvector</type> 表示时，有必要创建一个触发器，以便在文档内容列发生变化时更新 <type>tsvector</type> 列。为此有两个内置触发器函数可用，你也可以编写自己的触发器函数。
    </para>
 
 <synopsis>
@@ -1584,10 +1525,7 @@ tsvector_update_trigger_column(<replaceable class="parameter">tsvector_column_na
 </synopsis>
 
    <para>
-    These trigger functions automatically compute a <type>tsvector</type>
-    column from one or more textual columns, under the control of
-    parameters specified in the <command>CREATE TRIGGER</command> command.
-    An example of their use is:
+    这些触发器函数会根据 <command>CREATE TRIGGER</command> 命令中指定的参数的控制，自动从一个或多个文本列计算出一个 <type>tsvector</type> 列。它们的使用示例如下：
 
 <screen>
 CREATE TABLE messages (
@@ -1613,34 +1551,15 @@ SELECT title, body FROM messages WHERE tsv @@ to_tsquery('title &amp; body');
  title here | the body text is here
 </screen>
 
-    Having created this trigger, any change in <structfield>title</structfield> or
-    <structfield>body</structfield> will automatically be reflected into
-    <structfield>tsv</structfield>, without the application having to worry about it.
+    创建此触发器后，<structfield>title</structfield> 或 <structfield>body</structfield> 中的任何更改都会自动反映到 <structfield>tsv</structfield> 中，应用程序无需关心此事。
    </para>
 
    <para>
-    The first trigger argument must be the name of the <type>tsvector</type>
-    column to be updated.  The second argument specifies the text search
-    configuration to be used to perform the conversion.  For
-    <function>tsvector_update_trigger</function>, the configuration name is simply
-    given as the second trigger argument.  It must be schema-qualified as
-    shown above, so that the trigger behavior will not change with changes
-    in <varname>search_path</varname>.  For
-    <function>tsvector_update_trigger_column</function>, the second trigger argument
-    is the name of another table column, which must be of type
-    <type>regconfig</type>.  This allows a per-row selection of configuration
-    to be made.  The remaining argument(s) are the names of textual columns
-    (of type <type>text</type>, <type>varchar</type>, or <type>char</type>).  These
-    will be included in the document in the order given.  NULL values will
-    be skipped (but the other columns will still be indexed).
+    第一个触发器参数必须是要更新的 <type>tsvector</type> 列的名称。第二个参数指定用于执行转换的文本搜索配置。对于 <function>tsvector_update_trigger</function>，配置名称直接作为第二个触发器参数给出。它必须像上面所示那样带模式限定，这样触发器行为才不会随 <varname>search_path</varname> 的变化而变化。对于 <function>tsvector_update_trigger_column</function>，第二个触发器参数是另一个表列的名称，该列必须是 <type>regconfig</type> 类型。这样可以按行选择配置。其余参数是文本列（类型为 <type>text</type>、<type>varchar</type> 或 <type>char</type>）的名称。这些列将按给定顺序包含在文档中。NULL 值将被跳过（但其他列仍会被索引）。
    </para>
 
    <para>
-    A limitation of these built-in triggers is that they treat all the
-    input columns alike.  To process columns differently &mdash; for
-    example, to weight title differently from body &mdash; it is necessary
-    to write a custom trigger.  Here is an example using
-    <application>PL/pgSQL</application> as the trigger language:
+    这些内置触发器的一个限制是它们对所有输入列一视同仁。要以不同方式处理各列 &mdash; 例如，对标题和正文赋予不同的权重 &mdash; 就必须编写自定义触发器。下面是一个使用 <application>PL/pgSQL</application> 作为触发器语言的示例：
 
 <programlisting>
 CREATE FUNCTION messages_trigger() RETURNS trigger AS $$
@@ -1658,25 +1577,20 @@ CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
    </para>
 
    <para>
-    Keep in mind that it is important to specify the configuration name
-    explicitly when creating <type>tsvector</type> values inside triggers,
-    so that the column's contents will not be affected by changes to
-    <varname>default_text_search_config</varname>.  Failure to do this is likely to
-    lead to problems such as search results changing after a dump and restore.
+    请记住，在触发器内创建 <type>tsvector</type> 值时，显式指定配置名称很重要，这样列的内容就不会受到 <varname>default_text_search_config</varname> 更改的影响。不这样做很可能会导致问题，例如在转储和恢复之后搜索结果发生变化。
    </para>
 
   </sect2>
 
   <sect2 id="textsearch-statistics">
-   <title>Gathering Document Statistics</title>
+   <title>收集文档统计信息</title>
 
    <indexterm>
     <primary>ts_stat</primary>
    </indexterm>
 
    <para>
-    The function <function>ts_stat</function> is useful for checking your
-    configuration and for finding stop-word candidates.
+    函数 <function>ts_stat</function> 可用于检查配置以及查找候选停用词。
    </para>
 
 <synopsis>
@@ -1695,19 +1609,19 @@ ts_stat(<replaceable class="parameter">sqlquery</replaceable> <type>text</type>,
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
-       <replaceable>word</replaceable> <type>text</type> &mdash; the value of a lexeme
+       <replaceable>word</replaceable> <type>text</type> &mdash; 词位的值
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>ndoc</replaceable> <type>integer</type> &mdash; number of documents
-       (<type>tsvector</type>s) the word occurred in
+       <replaceable>ndoc</replaceable> <type>integer</type> &mdash; 该词出现过的文档
+       （<type>tsvector</type>）数量
       </para>
      </listitem>
      <listitem>
       <para>
-       <replaceable>nentry</replaceable> <type>integer</type> &mdash; total number of
-       occurrences of the word
+       <replaceable>nentry</replaceable> <type>integer</type> &mdash; 该词出现的
+       总次数
       </para>
      </listitem>
     </itemizedlist>
@@ -1717,7 +1631,7 @@ ts_stat(<replaceable class="parameter">sqlquery</replaceable> <type>text</type>,
    </para>
 
    <para>
-    For example, to find the ten most frequent words in a document collection:
+    例如，要找出文档集合中出现频率最高的十个词：
 
 <programlisting>
 SELECT * FROM ts_stat('SELECT vector FROM apod')
@@ -1725,8 +1639,8 @@ ORDER BY nentry DESC, ndoc DESC, word
 LIMIT 10;
 </programlisting>
 
-    The same, but counting only word occurrences with weight <literal>A</literal>
-    or <literal>B</literal>:
+    同上，但仅统计权重为 <literal>A</literal>
+    或 <literal>B</literal> 的词出现次数：
 
 <programlisting>
 SELECT * FROM ts_stat('SELECT vector FROM apod', 'ab')
