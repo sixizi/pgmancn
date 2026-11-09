@@ -1440,34 +1440,20 @@ Publications:
  </sect1>
 
  <sect1 id="logical-replication-conflicts">
-  <title>Conflicts</title>
+  <title>冲突</title>
 
   <para>
-   Logical replication behaves similarly to normal DML operations in that
-   the data will be updated even if it was changed locally on the subscriber
-   node.  If incoming data violates any constraints the replication will
-   stop.  This is referred to as a <firstterm>conflict</firstterm>.  When
-   replicating <command>UPDATE</command> or <command>DELETE</command>
-   operations, missing data is also considered as a
-   <firstterm>conflict</firstterm>, but does not result in an error and such
-   operations will simply be skipped.
+   逻辑复制与普通 DML 操作的行为类似，即即使数据在订阅者节点上已在本地被更改，数据也会被更新。如果传入的数据违反任何约束，复制将停止。这被称为<firstterm>冲突</firstterm>。在复制 <command>UPDATE</command> 或 <command>DELETE</command> 操作时，缺失的数据也被视为<firstterm>冲突</firstterm>，但不会导致错误，此类操作将被直接跳过。
   </para>
 
   <para>
-   Additional logging is triggered, and the conflict statistics are collected (displayed in the
-   <link linkend="monitoring-pg-stat-subscription-stats"><structname>pg_stat_subscription_stats</structname></link> view)
-   in the following <firstterm>conflict</firstterm> cases:
+   在以下<firstterm>冲突</firstterm>情况下，会触发额外的日志记录，并收集冲突统计信息（显示在 <link linkend="monitoring-pg-stat-subscription-stats"><structname>pg_stat_subscription_stats</structname></link> 视图中）：
    <variablelist>
     <varlistentry id="conflict-insert-exists" xreflabel="insert_exists">
      <term><literal>insert_exists</literal></term>
      <listitem>
       <para>
-       Inserting a row that violates a <literal>NOT DEFERRABLE</literal>
-       unique constraint. Note that to log the origin and commit
-       timestamp details of the conflicting key,
-       <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-       should be enabled on the subscriber. In this case, an error will be
-       raised until the conflict is resolved manually.
+       插入一行违反 <literal>NOT DEFERRABLE</literal> 唯一约束的数据。请注意，要记录冲突键的源和提交时间戳详细信息，应在订阅者上启用 <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>。在这种情况下，将引发错误，直到冲突被手动解决。
       </para>
      </listitem>
     </varlistentry>
@@ -1475,11 +1461,7 @@ Publications:
      <term><literal>update_origin_differs</literal></term>
      <listitem>
       <para>
-       Updating a row that was previously modified by another origin.
-       Note that this conflict can only be detected when
-       <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-       is enabled on the subscriber. Currently, the update is always applied
-       regardless of the origin of the local row.
+       更新一行先前被另一个源修改过的数据。请注意，只有在订阅者上启用了 <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link> 时才能检测到此冲突。目前，无论本地行的源是什么，更新总是会被应用。
       </para>
      </listitem>
     </varlistentry>
@@ -1487,16 +1469,7 @@ Publications:
      <term><literal>update_exists</literal></term>
      <listitem>
       <para>
-       The updated value of a row violates a <literal>NOT DEFERRABLE</literal>
-       unique constraint. Note that to log the origin and commit
-       timestamp details of the conflicting key,
-       <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-       should be enabled on the subscriber. In this case, an error will be
-       raised until the conflict is resolved manually. Note that when updating a
-       partitioned table, if the updated row value satisfies another partition
-       constraint resulting in the row being inserted into a new partition, the
-       <literal>insert_exists</literal> conflict may arise if the new row
-       violates a <literal>NOT DEFERRABLE</literal> unique constraint.
+       更新后的行值违反 <literal>NOT DEFERRABLE</literal> 唯一约束。请注意，要记录冲突键的源和提交时间戳详细信息，应在订阅者上启用 <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>。在这种情况下，将引发错误，直到冲突被手动解决。请注意，在更新分区表时，如果更新后的行值满足另一个分区约束，导致该行被插入到新分区中，则如果新行违反 <literal>NOT DEFERRABLE</literal> 唯一约束，可能会引发 <literal>insert_exists</literal> 冲突。
       </para>
      </listitem>
     </varlistentry>
@@ -1504,8 +1477,7 @@ Publications:
      <term><literal>update_missing</literal></term>
      <listitem>
       <para>
-       The row to be updated was not found. The update will simply be
-       skipped in this scenario.
+       要更新的行未找到。在这种情况下，更新将被直接跳过。
       </para>
      </listitem>
     </varlistentry>
@@ -1513,11 +1485,9 @@ Publications:
      <term><literal>delete_origin_differs</literal></term>
      <listitem>
       <para>
-       Deleting a row that was previously modified by another origin. Note that
-       this conflict can only be detected when
+       删除一行先前已被另一个源修改过的行。请注意，只有当订阅端启用了
        <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-       is enabled on the subscriber. Currently, the delete is always applied
-       regardless of the origin of the local row.
+       时才能检测到这种冲突。目前，无论本地行的源是什么，删除操作总是会被应用。
       </para>
      </listitem>
     </varlistentry>
@@ -1525,8 +1495,7 @@ Publications:
      <term><literal>delete_missing</literal></term>
      <listitem>
       <para>
-       The row to be deleted was not found. The delete will simply be
-       skipped in this scenario.
+       要删除的行未找到。在这种情况下，删除将被直接跳过。
       </para>
      </listitem>
     </varlistentry>
@@ -1534,23 +1503,17 @@ Publications:
      <term><literal>multiple_unique_conflicts</literal></term>
      <listitem>
       <para>
-       Inserting or updating a row violates multiple
-       <literal>NOT DEFERRABLE</literal> unique constraints. Note that to log
-       the origin and commit timestamp details of conflicting keys, ensure
-       that <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-       is enabled on the subscriber. In this case, an error will be raised until
-       the conflict is resolved manually.
+       插入或更新一行违反了多个 <literal>NOT DEFERRABLE</literal> 唯一约束。请注意，要记录冲突键的源和提交时间戳详细信息，请确保在订阅端启用了
+       <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>。在这种情况下，将引发错误，直到冲突被手动解决。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
-    Note that there are other conflict scenarios, such as exclusion constraint
-    violations. Currently, we do not provide additional details for them in the
-    log.
+    请注意，还存在其他冲突场景，例如违反排除约束。目前，我们不会在日志中为这些场景提供额外的详细信息。
   </para>
 
   <para>
-   The log format for logical replication conflicts is as follows:
+   逻辑复制冲突的日志格式如下：
 <synopsis>
 LOG:  conflict detected on relation "<replaceable>schemaname</replaceable>.<replaceable>tablename</replaceable>": conflict=<replaceable>conflict_type</replaceable>
 DETAIL:  <replaceable class="parameter">detailed_explanation</replaceable>.
@@ -1564,7 +1527,7 @@ DETAIL:  <replaceable class="parameter">detailed_explanation</replaceable>.
     <literal>replica identity</literal> {(<replaceable>column_name</replaceable> <optional>, ...</optional>)=(<replaceable>column_value</replaceable> <optional>, ...</optional>) | full <optional>(<replaceable>column_name</replaceable> <optional>, ...</optional>)=</optional>(<replaceable>column_value</replaceable> <optional>, ...</optional>)}
 </synopsis>
 
-   The log provides the following information:
+   日志提供以下信息：
    <variablelist>
     <varlistentry>
      <term><literal>LOG</literal></term>
@@ -1573,13 +1536,13 @@ DETAIL:  <replaceable class="parameter">detailed_explanation</replaceable>.
         <listitem>
          <para>
          <replaceable>schemaname</replaceable>.<replaceable>tablename</replaceable>
-         identifies the local relation involved in the conflict.
+         标识冲突中涉及的本地关系。
          </para>
         </listitem>
         <listitem>
          <para>
-         <replaceable>conflict_type</replaceable> is the type of conflict that occurred
-         (e.g., <literal>insert_exists</literal>, <literal>update_exists</literal>).
+         <replaceable>conflict_type</replaceable> 是发生的冲突类型
+         （例如 <literal>insert_exists</literal>、<literal>update_exists</literal>）。
          </para>
         </listitem>
        </itemizedlist>
@@ -1592,70 +1555,59 @@ DETAIL:  <replaceable class="parameter">detailed_explanation</replaceable>.
       <itemizedlist>
        <listitem>
         <para>
-         <replaceable class="parameter">detailed_explanation</replaceable> includes
-         the origin, transaction ID, and commit timestamp of the transaction that
-         modified the existing local row, if available.
+         <replaceable class="parameter">detailed_explanation</replaceable> 包含修改现有本地行的
+         事务的源、事务 ID 和提交时间戳（如果可用）。
         </para>
        </listitem>
        <listitem>
         <para>
-         The <literal>Key</literal> section includes the key values of the local
-         row that violated a unique constraint for
-         <literal>insert_exists</literal>, <literal>update_exists</literal> or
-         <literal>multiple_unique_conflicts</literal> conflicts.
+         <literal>Key</literal> 部分包含违反唯一约束的本地
+         行的键值，适用于
+         <literal>insert_exists</literal>、<literal>update_exists</literal> 或
+         <literal>multiple_unique_conflicts</literal> 冲突。
         </para>
        </listitem>
        <listitem>
         <para>
-         The <literal>existing local row</literal> section includes the local
-         row if its origin differs from the remote row for
-         <literal>update_origin_differs</literal> or <literal>delete_origin_differs</literal>
-         conflicts, or if the key value conflicts with the remote row for
-         <literal>insert_exists</literal>, <literal>update_exists</literal> or
-         <literal>multiple_unique_conflicts</literal> conflicts.
+         <literal>existing local row</literal> 部分包含本地行，前提是其源与远端行不同（适用于
+         <literal>update_origin_differs</literal> 或 <literal>delete_origin_differs</literal>
+         冲突），或者其键值与远端行冲突（适用于
+         <literal>insert_exists</literal>、<literal>update_exists</literal> 或
+         <literal>multiple_unique_conflicts</literal> 冲突）。
         </para>
        </listitem>
        <listitem>
         <para>
-         The <literal>remote row</literal> section includes the new row from
-         the remote insert or update operation that caused the conflict. Note that
-         for an update operation, the column value of the new row will be null
-         if the value is unchanged and toasted.
+         <literal>remote row</literal> 部分包含导致冲突的
+         远端插入或更新操作的新行。请注意，
+         对于更新操作，如果值未更改且已被 toasted，则新行的列值将为 null。
         </para>
        </listitem>
        <listitem>
         <para>
-         The <literal>replica identity</literal> section includes the replica
-         identity key values that were used to search for the existing local
-         row to be updated or deleted. This may include the full row value
-         if the local relation is marked with
-         <link linkend="sql-altertable-replica-identity-full"><literal>REPLICA IDENTITY FULL</literal></link>.
+         <literal>replica identity</literal> 部分包含用于搜索要更新或删除的现有本地行的副本标识键值。如果本地关系被标记为
+         <link linkend="sql-altertable-replica-identity-full"><literal>REPLICA IDENTITY FULL</literal></link>，则可能包含完整的行值。
         </para>
        </listitem>
        <listitem>
         <para>
-         <replaceable class="parameter">column_name</replaceable> is the column name.
-         For <literal>existing local row</literal>, <literal>remote row</literal>,
-         and <literal>replica identity full</literal> cases, column names are
-         logged only if the user lacks the privilege to access all columns of
-         the table. If column names are present, they appear in the same order
-         as the corresponding column values.
+         <replaceable class="parameter">column_name</replaceable> 是列名。
+         对于 <literal>existing local row</literal>、<literal>remote row</literal>
+         和 <literal>replica identity full</literal> 情况，仅当用户没有访问表所有列的权限时才会记录列名。如果存在列名，它们出现的顺序与相应列值的顺序相同。
         </para>
        </listitem>
        <listitem>
         <para>
-         <replaceable class="parameter">column_value</replaceable> is the column value.
-         The large column values are truncated to 64 bytes.
+         <replaceable class="parameter">column_value</replaceable> 是列值。
+         较大的列值会被截断为 64 字节。
         </para>
        </listitem>
        <listitem>
         <para>
-         Note that in case of <literal>multiple_unique_conflicts</literal> conflict,
-         multiple <replaceable class="parameter">detailed_explanation</replaceable>
-         and <replaceable class="parameter">detail_values</replaceable> lines
-         will be generated, each detailing the conflict information associated
-         with distinct unique
-         constraints.
+         请注意，在发生 <literal>multiple_unique_conflicts</literal> 冲突的情况下，
+         会生成多个 <replaceable class="parameter">detailed_explanation</replaceable>
+         和 <replaceable class="parameter">detail_values</replaceable> 行，
+         每一行详细说明与不同唯一约束相关联的冲突信息。
         </para>
        </listitem>
       </itemizedlist>
@@ -1665,68 +1617,27 @@ DETAIL:  <replaceable class="parameter">detailed_explanation</replaceable>.
   </para>
 
   <para>
-   Logical replication operations are performed with the privileges of the role
-   which owns the subscription.  Permissions failures on target tables will
-   cause replication conflicts, as will enabled
-   <link linkend="ddl-rowsecurity">row-level security</link> on target tables
-   that the subscription owner is subject to, without regard to whether any
-   policy would ordinarily reject the <command>INSERT</command>,
-   <command>UPDATE</command>, <command>DELETE</command> or
-   <command>TRUNCATE</command> which is being replicated.  This restriction on
-   row-level security may be lifted in a future version of
-   <productname>PostgreSQL</productname>.
+   逻辑复制操作以拥有订阅的角色的权限执行。目标表上的权限失败将导致复制冲突；目标表上启用了
+   <link linkend="ddl-rowsecurity">行级安全性</link> 且订阅所有者受其约束时也会导致复制冲突，
+   无论是否有任何策略通常会拒绝正在复制的 <command>INSERT</command>、
+   <command>UPDATE</command>、<command>DELETE</command> 或
+   <command>TRUNCATE</command>。对行级安全性的这一限制可能会在
+   <productname>PostgreSQL</productname> 的未来版本中取消。
   </para>
 
   <para>
-   A conflict that produces an error will stop the replication; it must be
-   resolved manually by the user.  Details about the conflict can be found in
-   the subscriber's server log.
+   产生错误的冲突将停止复制；必须由用户手动解决。有关冲突的详细信息可在订阅方的服务器日志中找到。
   </para>
 
   <para>
-   The resolution can be done either by changing data or permissions on the subscriber so
-   that it does not conflict with the incoming change or by skipping the
-   transaction that conflicts with the existing data.  When a conflict produces
-   an error, the replication won't proceed, and the logical replication worker will
-   emit the following kind of message to the subscriber's server log:
+   解决方式可以是修改订阅端的数据或权限，使其与传入的更改不冲突，也可以是跳过与现有数据冲突的事务。当冲突产生错误时，复制将无法继续，逻辑复制工作者会向订阅端的服务器日志输出如下类型的消息：
 <screen>
 ERROR:  conflict detected on relation "public.test": conflict=insert_exists
 DETAIL:  Key already exists in unique index "t_pkey", which was modified locally in transaction 740 at 2024-06-26 10:47:04.727375+08.
 Key (c)=(1); existing local row (1, 'local'); remote row (1, 'remote').
 CONTEXT:  processing remote data for replication origin "pg_16395" during "INSERT" for replication target relation "public.test" in transaction 725 finished at 0/14C0378
 </screen>
-   The LSN of the transaction that contains the change violating the constraint and
-   the replication origin name can be found from the server log (LSN 0/14C0378 and
-   replication origin <literal>pg_16395</literal> in the above case).  The
-   transaction that produced the conflict can be skipped by using
-   <link linkend="sql-altersubscription-params-skip"><command>ALTER SUBSCRIPTION ... SKIP</command></link>
-   with the finish LSN
-   (i.e., LSN 0/14C0378).  The finish LSN could be an LSN at which the transaction
-   is committed or prepared on the publisher.  Alternatively, the transaction can
-   also be skipped by calling the <link linkend="pg-replication-origin-advance">
-   <function>pg_replication_origin_advance()</function></link> function.
-   Before using this function, the subscription needs to be disabled temporarily
-   either by <link linkend="sql-altersubscription-params-disable">
-   <command>ALTER SUBSCRIPTION ... DISABLE</command></link> or, the
-   subscription can be used with the
-   <link linkend="sql-createsubscription-params-with-disable-on-error"><literal>disable_on_error</literal></link>
-   option. Then, you can use <function>pg_replication_origin_advance()</function>
-   function with the <parameter>node_name</parameter> (i.e., <literal>pg_16395</literal>)
-   and the next LSN of the finish LSN (i.e., 0/14C0379).  The current position of
-   origins can be seen in the <link linkend="view-pg-replication-origin-status">
-   <structname>pg_replication_origin_status</structname></link> system view.
-   Please note that skipping the whole transaction includes skipping changes that
-   might not violate any constraint.  This can easily make the subscriber
-   inconsistent.
-   The additional details regarding conflicting rows, such as their origin and
-   commit timestamp can be seen in the <literal>DETAIL</literal> line of the
-   log. But note that this information is only available when
-   <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link>
-   is enabled on the subscriber. Users can use this information to decide
-   whether to retain the local change or adopt the remote alteration. For
-   instance, the <literal>DETAIL</literal> line in the above log indicates that
-   the existing row was modified locally. Users can manually perform a
-   remote-change-win.
+   包含违反约束的更改的事务的 LSN 以及复制源名称可以从服务器日志中找到（在上述情况下为 LSN 0/14C0378 和复制源 <literal>pg_16395</literal>）。产生冲突的事务可以通过使用带有结束 LSN（即 LSN 0/14C0378）的 <link linkend="sql-altersubscription-params-skip"><command>ALTER SUBSCRIPTION ... SKIP</command></link> 来跳过。结束 LSN 可以是该事务在发布端提交或预备时的 LSN。或者，也可以通过调用 <link linkend="pg-replication-origin-advance"><function>pg_replication_origin_advance()</function></link> 函数来跳过该事务。在使用此函数之前，需要临时禁用订阅，可以通过 <link linkend="sql-altersubscription-params-disable"><command>ALTER SUBSCRIPTION ... DISABLE</command></link> 禁用，或者让订阅使用 <link linkend="sql-createsubscription-params-with-disable-on-error"><literal>disable_on_error</literal></link> 选项。然后，你可以使用 <function>pg_replication_origin_advance()</function> 函数，传入 <parameter>node_name</parameter>（即 <literal>pg_16395</literal>）以及结束 LSN 的下一个 LSN（即 0/14C0379）。复制源的当前位置可以在 <link linkend="view-pg-replication-origin-status"><structname>pg_replication_origin_status</structname></link> 系统视图中查看。请注意，跳过整个事务会同时跳过那些可能并不违反任何约束的更改。这很容易使订阅端变得不一致。有关冲突行的更多细节，例如其来源和提交时间戳，可以在日志的 <literal>DETAIL</literal> 行中看到。但请注意，只有在订阅端启用了 <link linkend="guc-track-commit-timestamp"><varname>track_commit_timestamp</varname></link> 时，此信息才可用。用户可以使用此信息来决定是保留本地更改还是采纳远端更改。例如，上述日志中的 <literal>DETAIL</literal> 行表明现有行是在本地修改的。用户可以手动执行远端更改获胜。
   </para>
 
   <para>
