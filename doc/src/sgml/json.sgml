@@ -305,9 +305,7 @@ CREATE INDEX idxginp ON api USING GIN (jdoc jsonb_path_ops);
   </para>
 
   <para>
-    Consider the example of a table that stores JSON documents
-    retrieved from a third-party web service, with a documented schema
-    definition.  A typical document is:
+    考虑一个存储从第三方 Web 服务获取的 JSON 文档的表示例，这些文档具有已文档化的模式定义。典型文档如下：
 <programlisting>
 {
     "guid": "9c36adc1-7fb5-4d5b-83b4-90356a46061a",
@@ -325,34 +323,28 @@ CREATE INDEX idxginp ON api USING GIN (jdoc jsonb_path_ops);
     ]
 }
 </programlisting>
-    We store these documents in a table named <structname>api</structname>,
-    in a <type>jsonb</type> column named <structfield>jdoc</structfield>.
-    If a GIN index is created on this column,
-    queries like the following can make use of the index:
+    我们将这些文档存储在名为 <structname>api</structname> 的表中，放在名为
+    <type>jsonb</type> 的列（列名为 <structfield>jdoc</structfield>）里。如果在该列上创建 GIN 索引，
+    如下查询可以使用该索引：
 <programlisting>
 -- Find documents in which the key "company" has value "Magnafone"
 SELECT jdoc-&gt;'guid', jdoc-&gt;'name' FROM api WHERE jdoc @&gt; '{"company": "Magnafone"}';
 </programlisting>
-    However, the index could not be used for queries like the
-    following, because though the operator <literal>?</literal> is indexable,
-    it is not applied directly to the indexed column <structfield>jdoc</structfield>:
+    但如下查询不能使用该索引，因为虽然 <literal>?</literal> 运算符可建立索引，
+    它却并未直接应用于被索引的 <structfield>jdoc</structfield> 列：
 <programlisting>
 -- Find documents in which the key "tags" contains key or array element "qui"
 SELECT jdoc-&gt;'guid', jdoc-&gt;'name' FROM api WHERE jdoc -&gt; 'tags' ? 'qui';
 </programlisting>
-    Still, with appropriate use of expression indexes, the above
-    query can use an index.  If querying for particular items within
-    the <literal>"tags"</literal> key is common, defining an index like this
-    may be worthwhile:
+    不过，通过适当使用表达式索引，上述查询仍可使用索引。如果经常查询
+    <literal>"tags"</literal> 键中的特定项，定义如下索引可能值得：
 <programlisting>
 CREATE INDEX idxgintags ON api USING GIN ((jdoc -&gt; 'tags'));
 </programlisting>
-    Now, the <literal>WHERE</literal> clause <literal>jdoc -&gt; 'tags' ? 'qui'</literal>
-    will be recognized as an application of the indexable
-    operator <literal>?</literal> to the indexed
-    expression <literal>jdoc -&gt; 'tags'</literal>.
-    (More information on expression indexes can be found in <xref
-    linkend="indexes-expressional"/>.)
+    现在，<literal>WHERE</literal> 子句 <literal>jdoc -&gt; 'tags' ? 'qui'</literal>
+    会被识别为可索引运算符 <literal>?</literal> 应用于被索引表达式
+    <literal>jdoc -&gt; 'tags'</literal>。（有关表达式索引的更多信息，
+    请参见 <xref linkend="indexes-expressional"/>。）
   </para>
 
   <para>
@@ -405,22 +397,16 @@ SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc @@ '$.tags[*] == "qui"';
       与对象内的值不同。
      </para>
     </footnote>
-    Basically, each <literal>jsonb_path_ops</literal> index item is
-    a hash of the value and the key(s) leading to it; for example to index
-    <literal>{"foo": {"bar": "baz"}}</literal>, a single index item would
-    be created incorporating all three of <literal>foo</literal>, <literal>bar</literal>,
-    and <literal>baz</literal> into the hash value.  Thus a containment query
-    looking for this structure would result in an extremely specific index
-    search; but there is no way at all to find out whether <literal>foo</literal>
-    appears as a key.  On the other hand, a <literal>jsonb_ops</literal>
-    index would create three index items representing <literal>foo</literal>,
-    <literal>bar</literal>, and <literal>baz</literal> separately; then to do the
-    containment query, it would look for rows containing all three of
-    these items.  While GIN indexes can perform such an AND search fairly
-    efficiently, it will still be less specific and slower than the
-    equivalent <literal>jsonb_path_ops</literal> search, especially if
-    there are a very large number of rows containing any single one of the
-    three index items.
+    基本上，每个 <literal>jsonb_path_ops</literal> 索引项都是该值以及通向它的键的哈希；例如要为
+    <literal>{"foo": {"bar": "baz"}}</literal> 建立索引，会创建一个索引项，把 <literal>foo</literal>、<literal>bar</literal>
+    和 <literal>baz</literal> 这三者都并入哈希值中。因此，查找这种结构的包含查询
+    会得到极其精确的索引搜索；但完全无法查明 <literal>foo</literal>
+    是否作为键出现。另一方面，<literal>jsonb_ops</literal>
+    索引会分别创建三个索引项来表示 <literal>foo</literal>、
+    <literal>bar</literal> 和 <literal>baz</literal>；然后执行包含查询时，它会查找包含这三个
+    项的行。虽然 GIN 索引可以相当高效地执行这种 AND 搜索，
+    但它仍然不如等效的 <literal>jsonb_path_ops</literal> 搜索精确，速度也更慢，
+    尤其是在包含这三个索引项中任意一个的行数非常多的情况下。
   </para>
 
   <para>
@@ -603,8 +589,8 @@ UPDATE table_name SET jsonb_field[1]['a'] = '1';
   </para>
 
   <para>
-   A path expression consists of a sequence of path elements,
-   which can be any of the following:
+   路径表达式由一系列路径元素组成，
+   路径元素可以是以下任意一种：
    <itemizedlist>
     <listitem>
      <para>
