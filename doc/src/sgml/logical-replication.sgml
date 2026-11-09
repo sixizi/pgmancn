@@ -127,161 +127,98 @@
  </sect1>
 
  <sect1 id="logical-replication-subscription">
-  <title>Subscription</title>
+  <title>订阅</title>
 
   <para>
-   A <firstterm>subscription</firstterm> is the downstream side of logical
-   replication.  The node where a subscription is defined is referred to as
-   the <firstterm>subscriber</firstterm>.  A subscription defines the connection
-   to another database and the set of publications (one or more) to which it
-   wants to subscribe.
+   <firstterm>订阅</firstterm>是逻辑复制的下游端。定义订阅的节点称为
+   <firstterm>订阅者</firstterm>。订阅定义了到另一个数据库的连接以及它想要订阅的
+   发布集合（一个或多个）。
   </para>
 
   <para>
-   The subscriber database behaves in the same way as any other PostgreSQL
-   instance and can be used as a publisher for other databases by defining its
-   own publications.
+   订阅者数据库的行为与任何其他 PostgreSQL 实例相同，并且可以通过定义自己的
+   发布来作为其他数据库的发布者。
   </para>
 
   <para>
-   A subscriber node may have multiple subscriptions if desired.  It is
-   possible to define multiple subscriptions between a single
-   publisher-subscriber pair, in which case care must be taken to ensure
-   that the subscribed publication objects don't overlap.
+   如果需要，一个订阅者节点可以有多个订阅。可以在单个发布者-订阅者对之间
+   定义多个订阅，在这种情况下，必须注意确保订阅的发布对象不会重叠。
   </para>
 
   <para>
-   Each subscription will receive changes via one replication slot (see
-   <xref linkend="streaming-replication-slots"/>).  Additional replication
-   slots may be required for the initial data synchronization of
-   pre-existing table data and those will be dropped at the end of data
-   synchronization.
+   每个订阅将通过一个复制槽接收更改（参见
+   <xref linkend="streaming-replication-slots"/>）。对于已有表数据的初始数据同步，
+   可能需要额外的复制槽，这些复制槽将在数据同步结束时被删除。
   </para>
 
   <para>
-   A logical replication subscription can be a standby for synchronous
-   replication (see <xref linkend="synchronous-replication"/>).  The standby
-   name is by default the subscription name.  An alternative name can be
-   specified as <literal>application_name</literal> in the connection
-   information of the subscription.
+   逻辑复制订阅可以作为同步复制的备用节点（参见 <xref linkend="synchronous-replication"/>）。
+   备用节点名称默认是订阅名称。可以在订阅的连接信息中
+   将 <literal>application_name</literal> 指定为替代名称。
   </para>
 
   <para>
-   Subscriptions are dumped by <command>pg_dump</command> if the current user
-   is a superuser.  Otherwise a warning is written and subscriptions are
-   skipped, because non-superusers cannot read all subscription information
-   from the <structname>pg_subscription</structname> catalog.
+   如果当前用户是超级用户，<command>pg_dump</command> 会转储订阅。否则会写入一条警告并跳过订阅，因为非超级用户无法从 <structname>pg_subscription</structname> 系统目录中读取所有订阅信息。
   </para>
 
   <para>
-   The subscription is added using <link linkend="sql-createsubscription"><command>CREATE SUBSCRIPTION</command></link> and
-   can be stopped/resumed at any time using the
-   <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link> command and removed using
-   <link linkend="sql-dropsubscription"><command>DROP SUBSCRIPTION</command></link>.
+   订阅通过 <link linkend="sql-createsubscription"><command>CREATE SUBSCRIPTION</command></link> 添加，可以随时使用
+   <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link> 命令停止/恢复，并使用
+   <link linkend="sql-dropsubscription"><command>DROP SUBSCRIPTION</command></link> 删除。
   </para>
 
   <para>
-   When a subscription is dropped and recreated, the synchronization
-   information is lost.  This means that the data has to be resynchronized
-   afterwards.
+   当订阅被删除并重新创建时，同步信息会丢失。这意味着之后必须重新同步数据。
   </para>
 
   <para>
-   The schema definitions are not replicated, and the published tables must
-   exist on the subscriber.  Only regular tables may be
-   the target of replication.  For example, you can't replicate to a view.
+   模式定义不会被复制，已发布的表必须存在于订阅端。只有常规表可以作为复制的目标。例如，不能复制到视图。
   </para>
 
   <para>
-   The tables are matched between the publisher and the subscriber using the
-   fully qualified table name.  Replication to differently-named tables on the
-   subscriber is not supported.
+   表在发布端和订阅端之间使用完全限定的表名进行匹配。不支持复制到订阅端上名称不同的表。
   </para>
 
   <para>
-   Columns of a table are also matched by name.  The order of columns in the
-   subscriber table does not need to match that of the publisher.  The data
-   types of the columns do not need to match, as long as the text
-   representation of the data can be converted to the target type.  For
-   example, you can replicate from a column of type <type>integer</type> to a
-   column of type <type>bigint</type>.  The target table can also have
-   additional columns not provided by the published table.  Any such columns
-   will be filled with the default value as specified in the definition of the
-   target table. However, logical replication in binary format is more
-   restrictive. See the
+   表的列也按名称匹配。订阅端表中列的顺序不需要与发布端一致。列的数据类型不需要匹配，只要数据的文本表示可以转换为目标类型即可。例如，可以从 <type>integer</type> 类型的列复制到 <type>bigint</type> 类型的列。目标表还可以有已发布表未提供的额外列。任何此类列将用目标表定义中指定的默认值填充。但是，二进制格式的逻辑复制限制更多。详情请参见 <command>CREATE SUBSCRIPTION</command> 的
    <link linkend="sql-createsubscription-params-with-binary"><literal>binary</literal></link>
-   option of <command>CREATE SUBSCRIPTION</command> for details.
+   选项。
   </para>
 
   <sect2 id="logical-replication-subscription-slot">
-   <title>Replication Slot Management</title>
+   <title>复制槽管理</title>
 
    <para>
-    As mentioned earlier, each (active) subscription receives changes from a
-    replication slot on the remote (publishing) side.
+    如前所述，每个（活动）订阅都从远程（发布）端的复制槽接收更改。
    </para>
    <para>
-    Additional table synchronization slots are normally transient, created
-    internally to perform initial table synchronization and dropped
-    automatically when they are no longer needed. These table synchronization
-    slots have generated names: <quote><literal>pg_%u_sync_%u_%llu</literal></quote>
-    (parameters: Subscription <parameter>oid</parameter>,
-    Table <parameter>relid</parameter>, system identifier <parameter>sysid</parameter>)
+    额外的表同步槽通常是临时的，在内部创建以执行初始表同步，并在不再需要时自动删除。这些表同步槽具有生成的名称：<quote><literal>pg_%u_sync_%u_%llu</literal></quote>（参数：Subscription <parameter>oid</parameter>、Table <parameter>relid</parameter>、系统标识符 <parameter>sysid</parameter>）
    </para>
    <para>
-    Normally, the remote replication slot is created automatically when the
-    subscription is created using <link linkend="sql-createsubscription">
-    <command>CREATE SUBSCRIPTION</command></link> and it
-    is dropped automatically when the subscription is dropped using
-    <link linkend="sql-dropsubscription"><command>DROP SUBSCRIPTION</command></link>.
-    In some situations, however, it can
-    be useful or necessary to manipulate the subscription and the underlying
-    replication slot separately.  Here are some scenarios:
+    通常，远程复制槽在使用 <link linkend="sql-createsubscription"><command>CREATE SUBSCRIPTION</command></link> 创建订阅时自动创建，并在使用 <link linkend="sql-dropsubscription"><command>DROP SUBSCRIPTION</command></link> 删除订阅时自动删除。然而，在某些情况下，分别操作订阅和底层的复制槽可能是有用或必要的。以下是一些场景：
 
     <itemizedlist>
      <listitem>
       <para>
-       When creating a subscription, the replication slot already exists.  In
-       that case, the subscription can be created using
-       the <literal>create_slot = false</literal> option to associate with the
-       existing slot.
+       创建订阅时，复制槽已经存在。在这种情况下，可以使用 <literal>create_slot = false</literal> 选项创建订阅，以关联到现有的槽。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When creating a subscription, the remote host is not reachable or in an
-       unclear state.  In that case, the subscription can be created using
-       the <literal>connect = false</literal> option.  The remote host will then not
-       be contacted at all.  This is what <application>pg_dump</application>
-       uses.  The remote replication slot will then have to be created
-       manually before the subscription can be activated.
+       创建订阅时，远程主机不可达或处于不明确的状态。在这种情况下，可以使用 <literal>connect = false</literal> 选项创建订阅。此时完全不会联系远程主机。<application>pg_dump</application> 使用的就是这种方式。之后必须手动创建远程复制槽，订阅才能被激活。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When dropping a subscription, the replication slot should be kept.
-       This could be useful when the subscriber database is being moved to a
-       different host and will be activated from there.  In that case,
-       disassociate the slot from the subscription using
-       <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link>
-       before attempting to drop the subscription.
+       删除订阅时，应保留复制槽。当订阅方数据库被迁移到另一台主机并将从那里激活时，这可能很有用。在这种情况下，在尝试删除订阅之前，请使用 <link linkend="sql-altersubscription"><command>ALTER SUBSCRIPTION</command></link> 解除该槽与订阅的关联。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       When dropping a subscription, the remote host is not reachable.  In
-       that case, disassociate the slot from the subscription
-       using <command>ALTER SUBSCRIPTION</command> before attempting to drop
-       the subscription.  If the remote database instance no longer exists, no
-       further action is then necessary.  If, however, the remote database
-       instance is just unreachable, the replication slot (and any still
-       remaining table synchronization slots) should then be
-       dropped manually; otherwise it/they would continue to reserve WAL and might
-       eventually cause the disk to fill up.  Such cases should be carefully
-       investigated.
+       删除订阅时，远程主机不可达。在这种情况下，在尝试删除订阅之前，请使用 <command>ALTER SUBSCRIPTION</command> 解除该槽与订阅的关联。如果远程数据库实例已不存在，则无需进一步操作。然而，如果远程数据库实例只是不可达，则应手动删除该复制槽（以及任何仍然存在的表同步槽）；否则它/它们将继续保留 WAL，并可能最终导致磁盘被填满。此类情况应仔细调查。
       </para>
      </listitem>
     </itemizedlist>
@@ -289,10 +226,10 @@
   </sect2>
 
   <sect2 id="logical-replication-subscription-examples">
-    <title>Examples: Set Up Logical Replication</title>
+    <title>示例：设置逻辑复制</title>
 
     <para>
-     Create some test tables on the publisher.
+     在发布端创建一些测试表。
 <programlisting>
 /* pub # */ CREATE TABLE t1(a int, b text, PRIMARY KEY(a));
 /* pub # */ CREATE TABLE t2(c int, d text, PRIMARY KEY(c));
@@ -300,7 +237,7 @@
 </programlisting></para>
 
     <para>
-     Create the same tables on the subscriber.
+     在订阅端创建相同的表。
 <programlisting>
 /* sub # */ CREATE TABLE t1(a int, b text, PRIMARY KEY(a));
 /* sub # */ CREATE TABLE t2(c int, d text, PRIMARY KEY(c));
@@ -308,7 +245,7 @@
 </programlisting></para>
 
     <para>
-     Insert data to the tables at the publisher side.
+     在发布端向表中插入数据。
 <programlisting>
 /* pub # */ INSERT INTO t1 VALUES (1, 'one'), (2, 'two'), (3, 'three');
 /* pub # */ INSERT INTO t2 VALUES (1, 'A'), (2, 'B'), (3, 'C');
@@ -316,11 +253,11 @@
 </programlisting></para>
 
     <para>
-     Create publications for the tables. The publications <literal>pub2</literal>
-     and <literal>pub3a</literal> disallow some
+     为这些表创建发布。发布 <literal>pub2</literal>
+     和 <literal>pub3a</literal> 不允许某些
      <link linkend="sql-createpublication-params-with-publish"><literal>publish</literal></link>
-     operations. The publication <literal>pub3b</literal> has a row filter (see
-     <xref linkend="logical-replication-row-filter"/>).
+     操作。发布 <literal>pub3b</literal> 具有行过滤器（参见
+     <xref linkend="logical-replication-row-filter"/>）。
 <programlisting><![CDATA[
 /* pub # */ CREATE PUBLICATION pub1 FOR TABLE t1;
 /* pub # */ CREATE PUBLICATION pub2 FOR TABLE t2 WITH (publish = 'truncate');
@@ -329,9 +266,9 @@
 ]]></programlisting></para>
 
     <para>
-     Create subscriptions for the publications. The subscription
-     <literal>sub3</literal> subscribes to both <literal>pub3a</literal> and
-     <literal>pub3b</literal>. All subscriptions will copy initial data by default.
+     为这些发布创建订阅。订阅
+     <literal>sub3</literal> 同时订阅 <literal>pub3a</literal> 和
+     <literal>pub3b</literal>。默认情况下，所有订阅都会复制初始数据。
 <programlisting>
 /* sub # */ CREATE SUBSCRIPTION sub1
 /* sub - */ CONNECTION 'host=localhost dbname=test_pub application_name=sub1'
@@ -345,8 +282,8 @@
 </programlisting></para>
 
     <para>
-     Observe that initial table data is copied, regardless of the
-     <literal>publish</literal> operation of the publication.
+     请注意，无论发布的
+     <literal>publish</literal> 操作如何，初始表数据都会被复制。
 <programlisting>
 /* sub # */ SELECT * FROM t1;
  a |   b
@@ -366,10 +303,10 @@
 </programlisting></para>
 
     <para>
-     Furthermore, because the initial data copy ignores the <literal>publish</literal>
-     operation, and because publication <literal>pub3a</literal> has no row filter,
-     it means the copied table <literal>t3</literal> contains all rows even when
-     they do not match the row filter of publication <literal>pub3b</literal>.
+     此外，由于初始数据复制会忽略 <literal>publish</literal>
+     操作，并且发布 <literal>pub3a</literal> 没有行过滤器，
+     这意味着被复制的表 <literal>t3</literal> 包含所有行，即使
+     它们与发布 <literal>pub3b</literal> 的行过滤器不匹配。
 <programlisting>
 /* sub # */ SELECT * FROM t3;
  e |  f
@@ -381,7 +318,7 @@
 </programlisting></para>
 
    <para>
-    Insert more data to the tables at the publisher side.
+    在发布端向表中插入更多数据。
 <programlisting>
 /* pub # */ INSERT INTO t1 VALUES (4, 'four'), (5, 'five'), (6, 'six');
 /* pub # */ INSERT INTO t2 VALUES (4, 'D'), (5, 'E'), (6, 'F');
@@ -389,7 +326,7 @@
 </programlisting></para>
 
    <para>
-    Now the publisher side data looks like:
+    现在发布端的数据如下所示：
 <programlisting>
 /* pub # */ SELECT * FROM t1;
  a |   b
@@ -426,12 +363,12 @@
 </programlisting></para>
 
    <para>
-    Observe that during normal replication the appropriate
-    <literal>publish</literal> operations are used. This means publications
-    <literal>pub2</literal> and <literal>pub3a</literal> will not replicate the
-    <literal>INSERT</literal>. Also, publication <literal>pub3b</literal> will
-    only replicate data that matches the row filter of <literal>pub3b</literal>.
-    Now the subscriber side data looks like:
+    注意，在正常复制期间会使用适当的
+    <literal>publish</literal> 操作。这意味着发布
+    <literal>pub2</literal> 和 <literal>pub3a</literal> 不会复制
+    <literal>INSERT</literal>。此外，发布 <literal>pub3b</literal>
+    只会复制与 <literal>pub3b</literal> 的行过滤器匹配的数据。
+    现在订阅端的数据看起来像：
 <programlisting>
 /* sub # */ SELECT * FROM t1;
  a |   b
@@ -464,31 +401,27 @@
   </sect2>
 
   <sect2 id="logical-replication-subscription-examples-deferred-slot">
-   <title>Examples: Deferred Replication Slot Creation</title>
+   <title>示例：延迟创建复制槽</title>
 
    <para>
-    There are some cases (e.g.
-    <xref linkend="logical-replication-subscription-slot"/>) where, if the
-    remote replication slot was not created automatically, the user must create
-    it manually before the subscription can be activated. The steps to create
-    the slot and activate the subscription are shown in the following examples.
-    These examples specify the standard logical decoding output plugin
-    (<literal>pgoutput</literal>), which is what the built-in logical
-    replication uses.
+    在某些情况下（例如
+    <xref linkend="logical-replication-subscription-slot"/>），如果远程复制槽没有被自动创建，用户必须在订阅被激活之前手动创建它。以下示例展示了创建该槽并激活订阅的步骤。
+    这些示例指定了标准的逻辑解码输出插件
+    （<literal>pgoutput</literal>），这也是内置逻辑复制所使用的插件。
    </para>
    <para>
-    First, create a publication for the examples to use.
+    首先，创建一个供示例使用的发布。
 <programlisting>
 /* pub # */ CREATE PUBLICATION pub1 FOR ALL TABLES;
 </programlisting></para>
    <para>
-    Example 1: Where the subscription says <literal>connect = false</literal>
+    示例 1：订阅中指定 <literal>connect = false</literal> 的情况
    </para>
    <para>
     <itemizedlist>
      <listitem>
       <para>
-       Create the subscription.
+       创建订阅。
 <programlisting>
 /* sub # */ CREATE SUBSCRIPTION sub1
 /* sub - */ CONNECTION 'host=localhost dbname=test_pub'
@@ -500,9 +433,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the publisher, manually create a slot. Because the name was not
-       specified during <literal>CREATE SUBSCRIPTION</literal>, the name of the
-       slot to create is same as the subscription name, e.g. "sub1".
+       在发布端，手动创建一个槽。由于在 <literal>CREATE SUBSCRIPTION</literal> 期间未指定名称，要创建的槽的名称与订阅名称相同，例如 "sub1"。
 <programlisting>
 /* pub # */ SELECT * FROM pg_create_logical_replication_slot('sub1', 'pgoutput');
  slot_name |    lsn
@@ -513,8 +444,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the subscriber, complete the activation of the subscription. After
-       this the tables of <literal>pub1</literal> will start replicating.
+       在订阅端，完成订阅的激活。此后 <literal>pub1</literal> 中的表将开始复制。
 <programlisting>
 /* sub # */ ALTER SUBSCRIPTION sub1 ENABLE;
 /* sub # */ ALTER SUBSCRIPTION sub1 REFRESH PUBLICATION;
@@ -524,14 +454,13 @@ HINT:  To initiate replication, you must manually create the replication slot, e
    </para>
 
    <para>
-    Example 2: Where the subscription says <literal>connect = false</literal>,
-    but also specifies the
+    示例 2：订阅中指定了 <literal>connect = false</literal>，但同时指定了
     <link linkend="sql-createsubscription-params-with-slot-name"><literal>slot_name</literal></link>
-    option.
+    选项。
     <itemizedlist>
      <listitem>
       <para>
-       Create the subscription.
+       创建订阅。
 <programlisting>
 /* sub # */ CREATE SUBSCRIPTION sub1
 /* sub - */ CONNECTION 'host=localhost dbname=test_pub'
@@ -543,8 +472,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the publisher, manually create a slot using the same name that was
-       specified during <literal>CREATE SUBSCRIPTION</literal>, e.g. "myslot".
+       在发布端，使用在 <literal>CREATE SUBSCRIPTION</literal> 期间指定的相同名称手动创建一个槽，例如 "myslot"。
 <programlisting>
 /* pub # */ SELECT * FROM pg_create_logical_replication_slot('myslot', 'pgoutput');
  slot_name |    lsn
@@ -555,8 +483,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the subscriber, the remaining subscription activation steps are the
-       same as before.
+       在订阅端，剩余的订阅激活步骤与之前相同。
 <programlisting>
 /* sub # */ ALTER SUBSCRIPTION sub1 ENABLE;
 /* sub # */ ALTER SUBSCRIPTION sub1 REFRESH PUBLICATION;
@@ -566,13 +493,13 @@ HINT:  To initiate replication, you must manually create the replication slot, e
    </para>
 
    <para>
-    Example 3: Where the subscription specifies <literal>slot_name = NONE</literal>
+    示例 3：订阅指定了 <literal>slot_name = NONE</literal> 的情况
     <itemizedlist>
      <listitem>
       <para>
-       Create the subscription. When <literal>slot_name = NONE</literal> then
-       <literal>enabled = false</literal>, and
-       <literal>create_slot = false</literal> are also needed.
+       创建订阅。当 <literal>slot_name = NONE</literal> 时，还需要
+       <literal>enabled = false</literal> 和
+       <literal>create_slot = false</literal>。
 <programlisting>
 /* sub # */ CREATE SUBSCRIPTION sub1
 /* sub - */ CONNECTION 'host=localhost dbname=test_pub'
@@ -582,7 +509,7 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the publisher, manually create a slot using any name, e.g. "myslot".
+       在发布端，使用任意名称手动创建一个槽，例如 "myslot"。
 <programlisting>
 /* pub # */ SELECT * FROM pg_create_logical_replication_slot('myslot', 'pgoutput');
  slot_name |    lsn
@@ -593,15 +520,14 @@ HINT:  To initiate replication, you must manually create the replication slot, e
      </listitem>
      <listitem>
       <para>
-       On the subscriber, associate the subscription with the slot name just
-       created.
+       在订阅端，将订阅与刚创建的槽名称关联起来。
 <programlisting>
 /* sub # */ ALTER SUBSCRIPTION sub1 SET (slot_name='myslot');
 </programlisting></para>
      </listitem>
      <listitem>
       <para>
-       The remaining subscription activation steps are same as before.
+       其余的订阅激活步骤与之前相同。
 <programlisting>
 /* sub # */ ALTER SUBSCRIPTION sub1 ENABLE;
 /* sub # */ ALTER SUBSCRIPTION sub1 REFRESH PUBLICATION;
