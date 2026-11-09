@@ -8489,120 +8489,88 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
    </sect1>
 
    <sect1 id="runtime-config-compatible">
-    <title>Version and Platform Compatibility</title>
+    <title>版本和平台兼容性</title>
 
     <sect2 id="runtime-config-compatible-version">
-     <title>Previous PostgreSQL Versions</title>
+     <title>之前的 PostgreSQL 版本</title>
 
      <variablelist>
 
      <varlistentry id="guc-array-nulls" xreflabel="array_nulls">
       <term><varname>array_nulls</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>array_nulls</varname> configuration parameter</primary>
+       <primary><varname>array_nulls</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This controls whether the array input parser recognizes
-        unquoted <literal>NULL</literal> as specifying a null array element.
-        By default, this is <literal>on</literal>, allowing array values containing
-        null values to be entered.  However, <productname>PostgreSQL</productname> versions
-        before 8.2 did not support null values in arrays, and therefore would
-        treat <literal>NULL</literal> as specifying a normal array element with
-        the string value <quote>NULL</quote>.  For backward compatibility with
-        applications that require the old behavior, this variable can be
-        turned <literal>off</literal>.
+        此项控制数组输入解析器是否将未加引号的 <literal>NULL</literal> 识别为指定空数组元素。
+        默认值为 <literal>on</literal>，允许输入包含空值的数组值。然而，8.2 之前的 <productname>PostgreSQL</productname> 版本
+        不支持数组中的空值，因此会把 <literal>NULL</literal> 当作指定一个普通数组元素，
+        其字符串值为 <quote>NULL</quote>。为了与需要旧行为的应用程序保持向后兼容，
+        可以将此变量设为 <literal>off</literal>。
        </para>
 
        <para>
-        Note that it is possible to create array values containing null values
-        even when this variable is <literal>off</literal>.
+        请注意，即使此变量为 <literal>off</literal>，也可以创建包含空值的数组值。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-backslash-quote" xreflabel="backslash_quote">
       <term><varname>backslash_quote</varname> (<type>enum</type>)
-      <indexterm><primary>strings</primary><secondary>backslash quotes</secondary></indexterm>
+      <indexterm><primary>字符串</primary><secondary>反斜线引号</secondary></indexterm>
       <indexterm>
-       <primary><varname>backslash_quote</varname> configuration parameter</primary>
+       <primary><varname>backslash_quote</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This controls whether a quote mark can be represented by
-        <literal>\'</literal> in a string literal.  The preferred, SQL-standard way
-        to represent a quote mark is by doubling it (<literal>''</literal>) but
-        <productname>PostgreSQL</productname> has historically also accepted
-        <literal>\'</literal>. However, use of <literal>\'</literal> creates security risks
-        because in some client character set encodings, there are multibyte
-        characters in which the last byte is numerically equivalent to ASCII
-        <literal>\</literal>.  If client-side code does escaping incorrectly then an
-        SQL-injection attack is possible.  This risk can be prevented by
-        making the server reject queries in which a quote mark appears to be
-        escaped by a backslash.
-        The allowed values of <varname>backslash_quote</varname> are
-        <literal>on</literal> (allow <literal>\'</literal> always),
-        <literal>off</literal> (reject always), and
-        <literal>safe_encoding</literal> (allow only if client encoding does not
-        allow ASCII <literal>\</literal> within a multibyte character).
-        <literal>safe_encoding</literal> is the default setting.
+        此参数控制引号能否在字符串字面量中用 <literal>\'</literal> 表示。表示引号的首选且符合 SQL 标准的方式是将其双写（<literal>''</literal>），但 <productname>PostgreSQL</productname> 在历史上也接受 <literal>\'</literal>。然而，使用 <literal>\'</literal> 会带来安全风险，因为在某些客户端字符集编码中，存在多字节字符，其最后一个字节在数值上等同于 ASCII 的 <literal>\</literal>。如果客户端代码进行转义时出错，就可能遭受 SQL 注入攻击。通过让服务器拒绝那些引号看似由反斜杠转义的查询，可以防止这种风险。
+        <varname>backslash_quote</varname> 的允许取值为
+        <literal>on</literal>（始终允许 <literal>\'</literal>）、
+        <literal>off</literal>（始终拒绝）以及
+        <literal>safe_encoding</literal>（仅当客户端编码不允许多字节字符中包含 ASCII <literal>\</literal> 时才允许）。
+        <literal>safe_encoding</literal> 是默认设置。
        </para>
 
        <para>
-        Note that in a standard-conforming string literal, <literal>\</literal> just
-        means <literal>\</literal> anyway.  This parameter only affects the handling of
-        non-standard-conforming literals, including
-        escape string syntax (<literal>E'...'</literal>).
+        请注意，在符合标准的字符串字面量中，<literal>\</literal> 本来就只表示 <literal>\</literal>。此参数只影响对不符合标准的字面量的处理，包括转义字符串语法（<literal>E'...'</literal>）。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-escape-string-warning" xreflabel="escape_string_warning">
-      <term><varname>escape_string_warning</varname> (<type>boolean</type>)
+      <term><varname>escape_string_warning</varname>（<type>boolean</type>）
       <indexterm><primary>strings</primary><secondary>escape warning</secondary></indexterm>
       <indexterm>
-       <primary><varname>escape_string_warning</varname> configuration parameter</primary>
+       <primary><varname>escape_string_warning</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When on, a warning is issued if a backslash (<literal>\</literal>)
-        appears in an ordinary string literal (<literal>'...'</literal>
-        syntax) and <varname>standard_conforming_strings</varname> is off.
-        The default is <literal>on</literal>.
+        当此参数开启时，如果普通字符串字面量（<literal>'...'</literal> 语法）中出现反斜杠（<literal>\</literal>）且 <varname>standard_conforming_strings</varname> 关闭，则会发出警告。
+        默认值为 <literal>on</literal>。
        </para>
        <para>
-        Applications that wish to use backslash as escape should be
-        modified to use escape string syntax (<literal>E'...'</literal>),
-        because the default behavior of ordinary strings is now to treat
-        backslash as an ordinary character, per SQL standard.  This variable
-        can be enabled to help locate code that needs to be changed.
+        希望使用反斜杠作为转义的应用程序应改为使用转义字符串语法（<literal>E'...'</literal>），因为按照 SQL 标准，普通字符串的默认行为现在是将反斜杠视为普通字符。可以启用此变量来帮助定位需要修改的代码。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-lo-compat-privileges" xreflabel="lo_compat_privileges">
-      <term><varname>lo_compat_privileges</varname> (<type>boolean</type>)
+      <term><varname>lo_compat_privileges</varname>（<type>boolean</type>）
       <indexterm>
-       <primary><varname>lo_compat_privileges</varname> configuration parameter</primary>
+       <primary><varname>lo_compat_privileges</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        In <productname>PostgreSQL</productname> releases prior to 9.0, large objects
-        did not have access privileges and were, therefore, always readable
-        and writable by all users.  Setting this variable to <literal>on</literal>
-        disables the new privilege checks, for compatibility with prior
-        releases.  The default is <literal>off</literal>.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        在 9.0 之前的<productname>PostgreSQL</productname>版本中，大对象没有访问权限，因此所有用户始终可以读写它们。将此变量设置为 <literal>on</literal> 会禁用新的权限检查，以兼容之前的版本。默认值为 <literal>off</literal>。
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
        <para>
-        Setting this variable does not disable all security checks related to
-        large objects &mdash; only those for which the default behavior has
-        changed in <productname>PostgreSQL</productname> 9.0.
+        设置此变量并不会禁用与大对象相关的所有安全检查&mdash;只会禁用那些在 <productname>PostgreSQL</productname> 9.0 中默认行为发生改变的安全检查。
        </para>
       </listitem>
      </varlistentry>
@@ -8610,42 +8578,30 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
     <varlistentry id="guc-quote-all-identifiers" xreflabel="quote-all-identifiers">
       <term><varname>quote_all_identifiers</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>quote_all_identifiers</varname> configuration parameter</primary>
+       <primary><varname>quote_all_identifiers</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When the database generates SQL, force all identifiers to be quoted,
-        even if they are not (currently) keywords.  This will affect the
-        output of <command>EXPLAIN</command> as well as the results of functions
-        like <function>pg_get_viewdef</function>.  See also the
-        <option>--quote-all-identifiers</option> option of
-        <xref linkend="app-pgdump"/> and <xref linkend="app-pg-dumpall"/>.
+        当数据库生成 SQL 时，强制为所有标识符加上引号，即使它们（当前）不是关键字。这会影响 <command>EXPLAIN</command> 的输出，以及类似 <function>pg_get_viewdef</function> 这类函数的结果。另请参阅 <xref linkend="app-pgdump"/> 和 <xref linkend="app-pg-dumpall"/> 的 <option>--quote-all-identifiers</option> 选项。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-standard-conforming-strings" xreflabel="standard_conforming_strings">
       <term><varname>standard_conforming_strings</varname> (<type>boolean</type>)
-      <indexterm><primary>strings</primary><secondary>standard conforming</secondary></indexterm>
+      <indexterm><primary>字符串</primary><secondary>标准符合</secondary></indexterm>
       <indexterm>
-       <primary><varname>standard_conforming_strings</varname> configuration parameter</primary>
+       <primary><varname>standard_conforming_strings</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This controls whether ordinary string literals
-        (<literal>'...'</literal>) treat backslashes literally, as specified in
-        the SQL standard.
-        Beginning in <productname>PostgreSQL</productname> 9.1, the default is
-        <literal>on</literal> (prior releases defaulted to <literal>off</literal>).
-        Applications can check this
-        parameter to determine how string literals will be processed.
-        The presence of this parameter can also be taken as an indication
-        that the escape string syntax (<literal>E'...'</literal>) is supported.
-        Escape string syntax (<xref linkend="sql-syntax-strings-escape"/>)
-        should be used if an application desires
-        backslashes to be treated as escape characters.
+        这控制普通字符串字面量（<literal>'...'</literal>）是否按 SQL 标准的规定将反斜线视为普通字符。
+        从 <productname>PostgreSQL</productname> 9.1 开始，默认值为 <literal>on</literal>（之前的版本默认为 <literal>off</literal>）。
+        应用程序可以检查此参数，以确定字符串字面量将如何处理。
+        此参数的存在也可以作为支持转义字符串语法（<literal>E'...'</literal>）的指示。
+        如果应用程序希望将反斜线视为转义字符，则应使用转义字符串语法（<xref linkend="sql-syntax-strings-escape"/>）。
        </para>
       </listitem>
      </varlistentry>
@@ -8653,22 +8609,12 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-synchronize-seqscans" xreflabel="synchronize_seqscans">
       <term><varname>synchronize_seqscans</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>synchronize_seqscans</varname> configuration parameter</primary>
+       <primary><varname>synchronize_seqscans</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This allows sequential scans of large tables to synchronize with each
-        other, so that concurrent scans read the same block at about the
-        same time and hence share the I/O workload.  When this is enabled,
-        a scan might start in the middle of the table and then <quote>wrap
-        around</quote> the end to cover all rows, so as to synchronize with the
-        activity of scans already in progress.  This can result in
-        unpredictable changes in the row ordering returned by queries that
-        have no <literal>ORDER BY</literal> clause.  Setting this parameter to
-        <literal>off</literal> ensures the pre-8.3 behavior in which a sequential
-        scan always starts from the beginning of the table.  The default
-        is <literal>on</literal>.
+        这允许对大表的顺序扫描彼此同步，使得并发扫描大约在同一时间读取同一个块，从而共享 I/O 工作量。启用此项后，一次扫描可能从表的中间开始，然后<quote>回绕</quote>到末尾以覆盖所有行，从而与已在进行中的扫描活动同步。这可能导致没有 <literal>ORDER BY</literal> 子句的查询所返回的行顺序发生不可预测的变化。将此参数设置为 <literal>off</literal> 可确保 8.3 之前的行为，即顺序扫描总是从表的开头开始。默认值为 <literal>on</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -8677,53 +8623,34 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
     </sect2>
 
     <sect2 id="runtime-config-compatible-clients">
-     <title>Platform and Client Compatibility</title>
+     <title>平台与客户端兼容性</title>
      <variablelist>
 
      <varlistentry id="guc-transform-null-equals" xreflabel="transform_null_equals">
       <term><varname>transform_null_equals</varname> (<type>boolean</type>)
       <indexterm><primary>IS NULL</primary></indexterm>
       <indexterm>
-       <primary><varname>transform_null_equals</varname> configuration parameter</primary>
+       <primary><varname>transform_null_equals</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When on, expressions of the form <literal><replaceable>expr</replaceable> =
-        NULL</literal> (or <literal>NULL =
-        <replaceable>expr</replaceable></literal>) are treated as
-        <literal><replaceable>expr</replaceable> IS NULL</literal>, that is, they
-        return true if <replaceable>expr</replaceable> evaluates to the null value,
-        and false otherwise. The correct SQL-spec-compliant behavior of
-        <literal><replaceable>expr</replaceable> = NULL</literal> is to always
-        return null (unknown). Therefore this parameter defaults to
-        <literal>off</literal>.
+        启用时，形如 <literal><replaceable>expr</replaceable> =
+        NULL</literal>（或 <literal>NULL =
+        <replaceable>expr</replaceable></literal>）的表达式会被当作 <literal><replaceable>expr</replaceable> IS NULL</literal> 处理，即如果 <replaceable>expr</replaceable> 求值为空值则返回真，否则返回假。<literal><replaceable>expr</replaceable> = NULL</literal> 符合 SQL 规范的正确行为是始终返回空值（未知）。因此此参数默认为 <literal>off</literal>。
        </para>
 
        <para>
-        However, filtered forms in <productname>Microsoft
-        Access</productname> generate queries that appear to use
-        <literal><replaceable>expr</replaceable> = NULL</literal> to test for
-        null values, so if you use that interface to access the database you
-        might want to turn this option on.  Since expressions of the
-        form <literal><replaceable>expr</replaceable> = NULL</literal> always
-        return the null value (using the SQL standard interpretation), they are not
-        very useful and do not appear often in normal applications so
-        this option does little harm in practice.  But new users are
-        frequently confused about the semantics of expressions
-        involving null values, so this option is off by default.
+        不过，<productname>Microsoft
+        Access</productname> 中的过滤形式生成的查询看起来会使用 <literal><replaceable>expr</replaceable> = NULL</literal> 来测试空值，因此如果你使用该接口访问数据库，可能希望打开此选项。由于形如 <literal><replaceable>expr</replaceable> = NULL</literal> 的表达式总是返回空值（采用 SQL 标准解释），它们不太有用，在普通应用中也不常出现，所以此选项在实践中危害不大。但新用户常常对涉及空值的表达式的语义感到困惑，因此此选项默认关闭。
        </para>
 
        <para>
-        Note that this option only affects the exact form <literal>= NULL</literal>,
-        not other comparison operators or other expressions
-        that are computationally equivalent to some expression
-        involving the equals operator (such as <literal>IN</literal>).
-        Thus, this option is not a general fix for bad programming.
+        请注意，此选项只影响精确形式 <literal>= NULL</literal>，而不影响其他比较运算符，也不影响在计算上等价于某个涉及等号运算符的表达式（例如 <literal>IN</literal>）的其他表达式。因此，此选项并不是针对不良编程的通用修复方案。
        </para>
 
        <para>
-        Refer to <xref linkend="functions-comparison"/> for related information.
+        相关信息请参阅 <xref linkend="functions-comparison"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -8731,47 +8658,28 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-allow-alter-system" xreflabel="allow_alter_system">
       <term><varname>allow_alter_system</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>allow_alter_system</varname> configuration parameter</primary>
+       <primary><varname>allow_alter_system</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When <literal>allow_alter_system</literal> is set to
-        <literal>off</literal>, an error is returned if the <command>ALTER
-        SYSTEM</command> command is executed. This parameter can only be set in
-        the <filename>postgresql.conf</filename> file or on the server command
-        line. The default value is <literal>on</literal>.
+        当 <literal>allow_alter_system</literal> 被设置为 <literal>off</literal> 时，如果执行 <command>ALTER
+        SYSTEM</command> 命令，则会返回一个错误。此参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。默认值为 <literal>on</literal>。
        </para>
 
        <para>
-        Note that this setting must not be regarded as a security feature. It
-        only disables the <literal>ALTER SYSTEM</literal> command. It does not
-        prevent a superuser from changing the configuration using other SQL
-        commands. A superuser has many ways of executing shell commands at
-        the operating system level, and can therefore modify
-        <literal>postgresql.auto.conf</literal> regardless of the value of
-        this setting.
+        请注意，不能将此设置视为一项安全特性。它只是禁用了 <literal>ALTER SYSTEM</literal> 命令。它并不能阻止超级用户使用其他 SQL 命令更改配置。超级用户有许多在操作系统层面执行 shell 命令的方法，因此无论此设置的值是什么，都可以修改 <literal>postgresql.auto.conf</literal>。
        </para>
 
        <para>
-        Turning this setting off is intended for environments where the
-        configuration of <productname>PostgreSQL</productname> is managed by
-        some external tool.
-        In such environments, a well-intentioned superuser might
-        <emphasis>mistakenly</emphasis> use <command>ALTER SYSTEM</command>
-        to change the configuration instead of using the external tool.
-        This might result in unintended behavior, such as the external tool
-        overwriting the change at some later point in time when it updates the
-        configuration.
-        Setting this parameter to <literal>off</literal> can
-        help avoid such mistakes.
+        关闭此设置适用于 <productname>PostgreSQL</productname> 的配置由某个外部工具管理的环境。在此类环境中，一位好心的超级用户可能会<emphasis>错误地</emphasis>使用 <command>ALTER SYSTEM</command> 来更改配置，而不是使用该外部工具。这可能会导致意外行为，例如外部工具在之后某个时间点更新配置时覆盖掉该更改。将此参数设置为 <literal>off</literal> 有助于避免此类错误。
        </para>
 
        <para>
-        This parameter only controls the use of <command>ALTER SYSTEM</command>.
-        The settings stored in <filename>postgresql.auto.conf</filename>
-        take effect even if <literal>allow_alter_system</literal> is set to
-        <literal>off</literal>.
+        此参数仅控制 <command>ALTER SYSTEM</command> 的使用。
+        即使 <literal>allow_alter_system</literal> 被设置为
+        <literal>off</literal>，存储在 <filename>postgresql.auto.conf</filename>
+        中的设置仍会生效。
        </para>
       </listitem>
      </varlistentry>
