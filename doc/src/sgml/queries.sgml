@@ -1258,7 +1258,7 @@ SELECT DISTINCT ON (<replaceable>expression</replaceable> <optional>, <replaceab
 
 
  <sect1 id="queries-union">
-  <title>Combining Queries (<literal>UNION</literal>, <literal>INTERSECT</literal>, <literal>EXCEPT</literal>)</title>
+  <title>组合查询（<literal>UNION</literal>、<literal>INTERSECT</literal>、<literal>EXCEPT</literal>）</title>
 
   <indexterm zone="queries-union">
    <primary>UNION</primary>
@@ -1283,86 +1283,62 @@ SELECT DISTINCT ON (<replaceable>expression</replaceable> <optional>, <replaceab
   </indexterm>
 
   <para>
-   The results of two queries can be combined using the set operations
-   union, intersection, and difference.  The syntax is
+   两条查询的结果可以使用集合运算 union、intersection 和 difference 组合起来。语法为
 <synopsis>
 <replaceable>query1</replaceable> UNION <optional>ALL</optional> <replaceable>query2</replaceable>
 <replaceable>query1</replaceable> INTERSECT <optional>ALL</optional> <replaceable>query2</replaceable>
 <replaceable>query1</replaceable> EXCEPT <optional>ALL</optional> <replaceable>query2</replaceable>
 </synopsis>
-   where <replaceable>query1</replaceable> and
-   <replaceable>query2</replaceable> are queries that can use any of
-   the features discussed up to this point.
+其中 <replaceable>query1</replaceable> 和 <replaceable>query2</replaceable> 是查询，可以使用到目前为止讨论过的任何特性。
   </para>
 
   <para>
-   <literal>UNION</literal> effectively appends the result of
-   <replaceable>query2</replaceable> to the result of
-   <replaceable>query1</replaceable> (although there is no guarantee
-   that this is the order in which the rows are actually returned).
-   Furthermore, it eliminates duplicate rows from its result, in the same
-   way as <literal>DISTINCT</literal>, unless <literal>UNION ALL</literal> is used.
+   <literal>UNION</literal> 实际上把 <replaceable>query2</replaceable> 的结果追加到 <replaceable>query1</replaceable> 的结果上（尽管并不保证行实际返回的顺序就是如此）。此外，除非使用 <literal>UNION ALL</literal>，否则它会像 <literal>DISTINCT</literal> 那样从结果中消除重复行。
   </para>
 
   <para>
-   <literal>INTERSECT</literal> returns all rows that are both in the result
-   of <replaceable>query1</replaceable> and in the result of
-   <replaceable>query2</replaceable>.  Duplicate rows are eliminated
-   unless <literal>INTERSECT ALL</literal> is used.
+   <literal>INTERSECT</literal> 返回同时位于 <replaceable>query1</replaceable> 的结果和 <replaceable>query2</replaceable> 的结果中的所有行。除非使用 <literal>INTERSECT ALL</literal>，否则重复行会被消除。
   </para>
 
   <para>
-   <literal>EXCEPT</literal> returns all rows that are in the result of
-   <replaceable>query1</replaceable> but not in the result of
-   <replaceable>query2</replaceable>.  (This is sometimes called the
-   <firstterm>difference</firstterm> between two queries.)  Again, duplicates
-   are eliminated unless <literal>EXCEPT ALL</literal> is used.
+   <literal>EXCEPT</literal> 返回位于 <replaceable>query1</replaceable> 的结果中但不在 <replaceable>query2</replaceable> 的结果中的所有行。（这有时被称为两个查询之间的<firstterm>差集</firstterm>。）同样，除非使用 <literal>EXCEPT ALL</literal>，否则重复行会被消除。
   </para>
 
   <para>
-   In order to calculate the union, intersection, or difference of two
-   queries, the two queries must be <quote>union compatible</quote>,
-   which means that they return the same number of columns and
-   the corresponding columns have compatible data types, as
-   described in <xref linkend="typeconv-union-case"/>.
+   为了计算两个查询的 union、intersection 或 difference，这两个查询必须是<quote>并集兼容</quote>的，这意味着它们返回相同数量的列，且对应列具有兼容的数据类型，如 <xref linkend="typeconv-union-case"/> 所述。
   </para>
 
   <para>
-   Set operations can be combined, for example
+   集合操作可以组合使用，例如
 <synopsis>
 <replaceable>query1</replaceable> UNION <replaceable>query2</replaceable> EXCEPT <replaceable>query3</replaceable>
 </synopsis>
-   which is equivalent to
+   等价于
 <synopsis>
 (<replaceable>query1</replaceable> UNION <replaceable>query2</replaceable>) EXCEPT <replaceable>query3</replaceable>
 </synopsis>
-   As shown here, you can use parentheses to control the order of
-   evaluation.  Without parentheses, <literal>UNION</literal>
-   and <literal>EXCEPT</literal> associate left-to-right,
-   but <literal>INTERSECT</literal> binds more tightly than those two
-   operators.  Thus
+   如此处所示，你可以使用圆括号来控制求值顺序。如果不使用圆括号，<literal>UNION</literal>
+   和 <literal>EXCEPT</literal> 从左到右结合，
+   但 <literal>INTERSECT</literal> 比这两个运算符结合得更紧。因此
 <synopsis>
 <replaceable>query1</replaceable> UNION <replaceable>query2</replaceable> INTERSECT <replaceable>query3</replaceable>
 </synopsis>
-   means
+   表示
 <synopsis>
 <replaceable>query1</replaceable> UNION (<replaceable>query2</replaceable> INTERSECT <replaceable>query3</replaceable>)
 </synopsis>
-   You can also surround an individual <replaceable>query</replaceable>
-   with parentheses.  This is important if
-   the <replaceable>query</replaceable> needs to use any of the clauses
-   discussed in following sections, such as <literal>LIMIT</literal>.
-   Without parentheses, you'll get a syntax error, or else the clause will
-   be understood as applying to the output of the set operation rather
-   than one of its inputs.  For example,
+   你也可以用圆括号将单个 <replaceable>query</replaceable>
+   括起来。如果 <replaceable>query</replaceable> 需要使用后续章节中讨论的任何子句，例如 <literal>LIMIT</literal>，这一点很重要。
+   如果不使用圆括号，你会得到语法错误，否则该子句会被理解为作用于集合操作的输出，
+   而不是作用于它的某个输入。例如，
 <synopsis>
 SELECT a FROM b UNION SELECT x FROM y LIMIT 10
 </synopsis>
-   is accepted, but it means
+   会被接受，但它表示
 <synopsis>
 (SELECT a FROM b UNION SELECT x FROM y) LIMIT 10
 </synopsis>
-   not
+   而不是
 <synopsis>
 SELECT a FROM b UNION (SELECT x FROM y LIMIT 10)
 </synopsis>
