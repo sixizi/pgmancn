@@ -398,33 +398,22 @@ CREATE TABLE people (
  </sect1>
 
  <sect1 id="ddl-constraints">
-  <title>Constraints</title>
+  <title>约束</title>
 
   <indexterm zone="ddl-constraints">
    <primary>constraint</primary>
   </indexterm>
 
   <para>
-   Data types are a way to limit the kind of data that can be stored
-   in a table.  For many applications, however, the constraint they
-   provide is too coarse.  For example, a column containing a product
-   price should probably only accept positive values.  But there is no
-   standard data type that accepts only positive numbers.  Another issue is
-   that you might want to constrain column data with respect to other
-   columns or rows.  For example, in a table containing product
-   information, there should be only one row for each product number.
+   数据类型是一种限制能够存储在表中数据类别的方法。但是对于很多应用来说，这样的限制太粗糙了。例如，一个包含产品价格的列应该只接受正值。但是没有任何一种标准数据类型只接受正数。另一个问题是你可能希望相对于其他列或行来约束一个列中的数据。例如，在一个包含产品信息的表中，每个产品编号应该只有一行。
   </para>
 
   <para>
-   To that end, SQL allows you to define constraints on columns and
-   tables.  Constraints give you as much control over the data in your
-   tables as you wish.  If a user attempts to store data in a column
-   that would violate a constraint, an error is raised.  This applies
-   even if the value came from the default value definition.
+   为此，SQL 允许你在列和表上定义约束。约束让你能够按照自己的意愿对表中的数据进行控制。如果一个用户试图在一个列中保存违反约束的数据，会抛出一个错误。即便是这个值来自于默认值定义，这个规则也同样适用。
   </para>
 
   <sect2 id="ddl-constraints-check-constraints">
-   <title>Check Constraints</title>
+   <title>检查约束</title>
 
    <indexterm>
     <primary>check constraint</primary>
@@ -436,10 +425,7 @@ CREATE TABLE people (
    </indexterm>
 
    <para>
-    A check constraint is the most generic constraint type.  It allows
-    you to specify that the value in a certain column must satisfy a
-    Boolean (truth-value) expression.  For instance, to require positive
-    product prices, you could use:
+    检查约束是最通用的约束类型。它允许你指定某个列中的值必须满足一个布尔（真值）表达式。例如，要要求正的产品价格，你可以使用：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -450,13 +436,7 @@ CREATE TABLE products (
    </para>
 
    <para>
-    As you see, the constraint definition comes after the data type,
-    just like default value definitions.  Default values and
-    constraints can be listed in any order.  A check constraint
-    consists of the key word <literal>CHECK</literal> followed by an
-    expression in parentheses.  The check constraint expression should
-    involve the column thus constrained, otherwise the constraint
-    would not make too much sense.
+    如你所见，约束定义放在数据类型之后，就像默认值定义一样。默认值和约束可以用任意的顺序列出。检查约束由关键字 <literal>CHECK</literal> 和紧随其后的括号中的表达式组成。检查约束表达式应该涉及到被约束的列，否则这个约束就没什么意义了。
    </para>
 
    <indexterm>
@@ -465,9 +445,7 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    You can also give the constraint a separate name.  This clarifies
-    error messages and allows you to refer to the constraint when you
-    need to change it.  The syntax is:
+    你还可以为约束指定一个单独的名称。这能让错误消息更清晰，并允许你在需要修改约束时引用它。语法是：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -475,16 +453,12 @@ CREATE TABLE products (
     price numeric <emphasis>CONSTRAINT positive_price</emphasis> CHECK (price &gt; 0)
 );
 </programlisting>
-    So, to specify a named constraint, use the key word
-    <literal>CONSTRAINT</literal> followed by an identifier followed
-    by the constraint definition.  (If you don't specify a constraint
-    name in this way, the system chooses a name for you.)
+    因此，要指定一个命名约束，请使用关键字
+    <literal>CONSTRAINT</literal>，后跟一个标识符，再跟约束定义。（如果你没有以这种方式指定约束名，系统会为你选择一个名称。）
    </para>
 
    <para>
-    A check constraint can also refer to several columns.  Say you
-    store a regular price and a discounted price, and you want to
-    ensure that the discounted price is lower than the regular price:
+    检查约束也可以引用多个列。假设你存储常规价格和折扣价格，并且想确保折扣价格低于常规价格：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -497,23 +471,11 @@ CREATE TABLE products (
    </para>
 
    <para>
-    The first two constraints should look familiar.  The third one
-    uses a new syntax.  It is not attached to a particular column,
-    instead it appears as a separate item in the comma-separated
-    column list.  Column definitions and these constraint
-    definitions can be listed in mixed order.
+    前两个约束应该看起来很熟悉。第三个使用了新语法。它没有附加到某个特定列，而是作为逗号分隔的列列表中的一个独立项出现。列定义和这些约束定义可以按混合顺序列出。
    </para>
 
    <para>
-    We say that the first two constraints are column constraints, whereas the
-    third one is a table constraint because it is written separately
-    from any one column definition.  Column constraints can also be
-    written as table constraints, while the reverse is not necessarily
-    possible, since a column constraint is supposed to refer to only the
-    column it is attached to.  (<productname>PostgreSQL</productname> doesn't
-    enforce that rule, but you should follow it if you want your table
-    definitions to work with other database systems.)  The above example could
-    also be written as:
+    我们说前两个约束是列约束，而第三个是表约束，因为它与任何列定义分开书写。列约束也可以写成表约束，但反过来不一定可行，因为列约束应该只引用它所附加的列。（<productname>PostgreSQL</productname> 并不强制该规则，但如果你希望表定义能与其他数据库系统一起工作，就应该遵循它。）上面的例子也可以写成：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -525,7 +487,7 @@ CREATE TABLE products (
     CHECK (price &gt; discounted_price)
 );
 </programlisting>
-    or even:
+    甚至：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -535,12 +497,11 @@ CREATE TABLE products (
     CHECK (discounted_price &gt; 0 AND price &gt; discounted_price)
 );
 </programlisting>
-    It's a matter of taste.
+    这只是个人喜好问题。
    </para>
 
    <para>
-    Names can be assigned to table constraints in the same way as
-    column constraints:
+    表约束可以用与列约束相同的方式命名：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -560,70 +521,32 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    It should be noted that a check constraint is satisfied if the
-    check expression evaluates to true or the null value.  Since most
-    expressions will evaluate to the null value if any operand is null,
-    they will not prevent null values in the constrained columns.  To
-    ensure that a column does not contain null values, the not-null
-    constraint described in the next section can be used.
+    应当注意，如果检查表达式求值为真或空值，则检查约束即得到满足。由于大多数表达式在任一操作数为空时都会求值为空值，因此它们不会阻止受约束列中的空值。要确保某列不包含空值，可以使用下一节中描述的非空约束。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> does not support
-     <literal>CHECK</literal> constraints that reference table data other than
-     the new or updated row being checked.  While a <literal>CHECK</literal>
-     constraint that violates this rule may appear to work in simple
-     tests, it cannot guarantee that the database will not reach a state
-     in which the constraint condition is false (due to subsequent changes
-     of the other row(s) involved).  This would cause a database dump and
-     restore to fail.  The restore could fail even when the complete
-     database state is consistent with the constraint, due to rows not
-     being loaded in an order that will satisfy the constraint.  If
-     possible, use <literal>UNIQUE</literal>, <literal>EXCLUDE</literal>,
-     or <literal>FOREIGN KEY</literal> constraints to express
-     cross-row and cross-table restrictions.
+     <productname>PostgreSQL</productname> 不支持引用被检查的新行或更新行之外的表数据的 <literal>CHECK</literal> 约束。虽然违反此规则的 <literal>CHECK</literal> 约束在简单测试中可能看起来可以工作，但它无法保证数据库不会达到约束条件为假的状态（由于涉及的其他行后续发生更改）。这会导致数据库转储和恢复失败。即使完整的数据库状态与该约束一致，恢复也可能失败，因为行未按满足该约束的顺序加载。如果可能，请使用 <literal>UNIQUE</literal>、<literal>EXCLUDE</literal> 或 <literal>FOREIGN KEY</literal> 约束来表达跨行和跨表的限制。
     </para>
 
     <para>
-     If what you desire is a one-time check against other rows at row
-     insertion, rather than a continuously-maintained consistency
-     guarantee, a custom <link linkend="triggers">trigger</link> can be used
-     to implement that.  (This approach avoids the dump/restore problem because
-     <application>pg_dump</application> does not reinstall triggers until after
-     restoring data, so that the check will not be enforced during a
-     dump/restore.)
+     如果您想要的是在插入行时对其他行进行一次性检查，而不是持续维护的一致性保证，可以使用自定义的 <link linkend="triggers">触发器</link> 来实现。（这种方法避免了转储/恢复问题，因为 <application>pg_dump</application> 直到恢复数据之后才会重新安装触发器，因此在转储/恢复期间不会强制执行该检查。）
     </para>
    </note>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> assumes that
-     <literal>CHECK</literal> constraints' conditions are immutable, that
-     is, they will always give the same result for the same input row.
-     This assumption is what justifies examining <literal>CHECK</literal>
-     constraints only when rows are inserted or updated, and not at other
-     times.  (The warning above about not referencing other table data is
-     really a special case of this restriction.)
+     <productname>PostgreSQL</productname> 假定 <literal>CHECK</literal> 约束的条件是不可变的，也就是说，对于相同的输入行，它们将始终给出相同的结果。正是这一假定，才使得只在插入或更新行时检查 <literal>CHECK</literal> 约束、而在其他时候不检查是合理的。（上面关于不要引用其他表数据的警告实际上是这一限制的一个特例。）
     </para>
 
     <para>
-     An example of a common way to break this assumption is to reference a
-     user-defined function in a <literal>CHECK</literal> expression, and
-     then change the behavior of that
-     function.  <productname>PostgreSQL</productname> does not disallow
-     that, but it will not notice if there are rows in the table that now
-     violate the <literal>CHECK</literal> constraint. That would cause a
-     subsequent database dump and restore to fail.
-     The recommended way to handle such a change is to drop the constraint
-     (using <command>ALTER TABLE</command>), adjust the function definition,
-     and re-add the constraint, thereby rechecking it against all table rows.
+     破坏这一假定的常见方式的一个例子是：在 <literal>CHECK</literal> 表达式中引用用户定义的函数，然后更改该函数的行为。<productname>PostgreSQL</productname> 并不禁止这样做，但如果表中有行现在违反了 <literal>CHECK</literal> 约束，它不会察觉。这会导致后续的数据库转储和恢复失败。处理此类更改的推荐方法是删除该约束（使用 <command>ALTER TABLE</command>）、调整函数定义，然后重新添加该约束，从而对所有表行重新检查该约束。
     </para>
    </note>
   </sect2>
 
   <sect2 id="ddl-constraints-not-null">
-   <title>Not-Null Constraints</title>
+   <title>非空约束</title>
 
    <indexterm>
     <primary>not-null constraint</primary>
@@ -635,8 +558,7 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    A not-null constraint simply specifies that a column must not
-    assume the null value.  A syntax example:
+    非空约束简单地指定某列不能取空值。语法示例：
 <programlisting>
 CREATE TABLE products (
     product_no integer <emphasis>NOT NULL</emphasis>,
@@ -644,7 +566,7 @@ CREATE TABLE products (
     price numeric
 );
 </programlisting>
-    An explicit constraint name can also be specified, for example:
+    也可以指定显式的约束名称，例如：
 <programlisting>
 CREATE TABLE products (
     product_no integer NOT NULL,
@@ -655,8 +577,7 @@ CREATE TABLE products (
    </para>
 
    <para>
-    A not-null constraint is usually written as a column constraint.  The
-    syntax for writing it as a table constraint is
+    非空约束通常写作列约束。将其写作表约束的语法是
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -666,21 +587,19 @@ CREATE TABLE products (
     <emphasis>NOT NULL name</emphasis>
 );
 </programlisting>
-    But this syntax is not standard and mainly intended for use by
-    <application>pg_dump</application>.
+    但这种语法不是标准语法，主要是供 <application>pg_dump</application> 使用。
    </para>
 
    <para>
-    A not-null constraint is functionally equivalent to creating a check
-    constraint <literal>CHECK (<replaceable>column_name</replaceable>
-    IS NOT NULL)</literal>, but in
-    <productname>PostgreSQL</productname> creating an explicit
-    not-null constraint is more efficient.
+    非空约束在功能上等价于创建一个检查约束 <literal>CHECK (<replaceable>column_name</replaceable>
+    IS NOT NULL)</literal>，但在
+    <productname>PostgreSQL</productname> 中创建显式的
+    非空约束更高效。
    </para>
 
    <para>
-    Of course, a column can have more than one constraint.  Just write
-    the constraints one after another:
+    当然，一个列可以有多个约束。只需将
+    约束一个接一个地写出来：
 <programlisting>
 CREATE TABLE products (
     product_no integer NOT NULL,
@@ -688,25 +607,24 @@ CREATE TABLE products (
     price numeric NOT NULL CHECK (price &gt; 0)
 );
 </programlisting>
-    The order doesn't matter.  It does not necessarily determine in which
-    order the constraints are checked.
+    顺序无关紧要。它不一定决定
+    约束的检查顺序。
    </para>
 
    <para>
-    However, a column can have at most one explicit not-null constraint.
+    然而，一个列最多只能有一个显式的非空约束。
    </para>
 
    <para>
-    The <literal>NOT NULL</literal> constraint has an inverse: the
-    <literal>NULL</literal> constraint.  This does not mean that the
-    column must be null, which would surely be useless.  Instead, this
-    simply selects the default behavior that the column might be null.
-    The <literal>NULL</literal> constraint is not present in the SQL
-    standard and should not be used in portable applications.  (It was
-    only added to <productname>PostgreSQL</productname> to be
-    compatible with some other database systems.)  Some users, however,
-    like it because it makes it easy to toggle the constraint in a
-    script file.  For example, you could start with:
+    <literal>NOT NULL</literal> 约束有一个逆约束：<literal>NULL</literal>
+    约束。这并不意味着该列必须为空，那样肯定毫无用处。相反，这
+    只是选择该列可以为空的默认行为。
+    <literal>NULL</literal> 约束不在 SQL
+    标准中，不应在可移植应用中使用。（它被
+    添加到 <productname>PostgreSQL</productname> 只是为了
+    与某些其他数据库系统兼容。）然而，有些用户
+    喜欢它，因为它便于在
+    脚本文件中切换约束。例如，你可以从以下开始：
 <programlisting>
 CREATE TABLE products (
     product_no integer NULL,
@@ -714,19 +632,19 @@ CREATE TABLE products (
     price numeric NULL
 );
 </programlisting>
-    and then insert the <literal>NOT</literal> key word where desired.
+    然后在需要的地方插入 <literal>NOT</literal> 关键字。
    </para>
 
    <tip>
     <para>
-     In most database designs the majority of columns should be marked
-     not null.
+     在大多数数据库设计中，大多数列应标记为
+     非空。
     </para>
    </tip>
   </sect2>
 
   <sect2 id="ddl-constraints-unique-constraints">
-   <title>Unique Constraints</title>
+   <title>唯一约束</title>
 
    <indexterm>
     <primary>unique constraint</primary>
@@ -738,9 +656,7 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    Unique constraints ensure that the data contained in a column, or a
-    group of columns, is unique among all the rows in the
-    table.  The syntax is:
+    唯一约束确保一列或一组列中包含的数据在表的所有行中是唯一的。语法为：
 <programlisting>
 CREATE TABLE products (
     product_no integer <emphasis>UNIQUE</emphasis>,
@@ -748,7 +664,7 @@ CREATE TABLE products (
     price numeric
 );
 </programlisting>
-    when written as a column constraint, and:
+    作为列约束书写时，以及：
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -757,12 +673,11 @@ CREATE TABLE products (
     <emphasis>UNIQUE (product_no)</emphasis>
 );
 </programlisting>
-    when written as a table constraint.
+    作为表约束书写时。
    </para>
 
    <para>
-    To define a unique constraint for a group of columns, write it as a
-    table constraint with the column names separated by commas:
+    要为某一组列定义唯一约束，可将其写成表约束，并用逗号分隔列名：
 <programlisting>
 CREATE TABLE example (
     a integer,
@@ -771,13 +686,11 @@ CREATE TABLE example (
     <emphasis>UNIQUE (a, c)</emphasis>
 );
 </programlisting>
-    This specifies that the combination of values in the indicated columns
-    is unique across the whole table, though any one of the columns
-    need not be (and ordinarily isn't) unique.
+    这指定了指定列中值的组合在整个表中是唯一的，不过其中任何单独一列不必（通常也不是）唯一的。
    </para>
 
    <para>
-    You can assign your own name for a unique constraint, in the usual way:
+    你可以按通常的方式为唯一约束指定自己的名称：
 <programlisting>
 CREATE TABLE products (
     product_no integer <emphasis>CONSTRAINT must_be_different</emphasis> UNIQUE,
@@ -788,11 +701,7 @@ CREATE TABLE products (
    </para>
 
    <para>
-    Adding a unique constraint will automatically create a unique B-tree
-    index on the column or group of columns listed in the constraint.
-    A uniqueness restriction covering only some rows cannot be written as
-    a unique constraint, but it is possible to enforce such a restriction by
-    creating a unique <link linkend="indexes-partial">partial index</link>.
+    添加唯一约束会自动在约束中列出的一列或一组列上创建一个唯一 B-tree 索引。仅覆盖部分行的唯一性限制不能写成唯一约束，但可以通过创建唯一 <link linkend="indexes-partial">部分索引</link> 来实施这样的限制。
    </para>
 
    <indexterm>
@@ -801,15 +710,8 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    In general, a unique constraint is violated if there is more than
-    one row in the table where the values of all of the
-    columns included in the constraint are equal.
-    By default, two null values are not considered equal in this
-    comparison.  That means even in the presence of a
-    unique constraint it is possible to store duplicate
-    rows that contain a null value in at least one of the constrained
-    columns.  This behavior can be changed by adding the clause <literal>NULLS
-    NOT DISTINCT</literal>, like
+    一般而言，如果表中存在多行，且这些行中约束所包含的所有列的值都相等，则违反了唯一约束。默认情况下，在此比较中两个空值不被视为相等。这意味着即使存在唯一约束，也仍然可能存储至少在一个受约束列中包含空值的重复行。可以通过添加子句 <literal>NULLS
+    NOT DISTINCT</literal> 来改变此行为，例如
 <programlisting>
 CREATE TABLE products (
     product_no integer UNIQUE <emphasis>NULLS NOT DISTINCT</emphasis>,
@@ -817,7 +719,7 @@ CREATE TABLE products (
     price numeric
 );
 </programlisting>
-    or
+    或
 <programlisting>
 CREATE TABLE products (
     product_no integer,
@@ -826,16 +728,13 @@ CREATE TABLE products (
     UNIQUE <emphasis>NULLS NOT DISTINCT</emphasis> (product_no)
 );
 </programlisting>
-    The default behavior can be specified explicitly using <literal>NULLS
-    DISTINCT</literal>.  The default null treatment in unique constraints is
-    implementation-defined according to the SQL standard, and other
-    implementations have a different behavior.  So be careful when developing
-    applications that are intended to be portable.
+    可以使用 <literal>NULLS
+    DISTINCT</literal> 显式指定默认行为。根据 SQL 标准，唯一约束中默认的空值处理方式是实现定义的，其他实现具有不同的行为。因此，在开发旨在可移植的应用程序时要小心。
    </para>
   </sect2>
 
   <sect2 id="ddl-constraints-primary-keys">
-   <title>Primary Keys</title>
+   <title>主键</title>
 
    <indexterm>
     <primary>primary key</primary>
@@ -847,10 +746,7 @@ CREATE TABLE products (
    </indexterm>
 
    <para>
-    A primary key constraint indicates that a column, or group of columns,
-    can be used as a unique identifier for rows in the table.  This
-    requires that the values be both unique and not null.  So, the following
-    two table definitions accept the same data:
+    主键约束表示一列或一组列可以作为表中行的唯一标识符。这要求这些值既唯一又不为空。因此，下面两个表定义接受相同的数据：
 <programlisting>
 CREATE TABLE products (
     product_no integer UNIQUE NOT NULL,
@@ -869,8 +765,7 @@ CREATE TABLE products (
    </para>
 
    <para>
-    Primary keys can span more than one column; the syntax
-    is similar to unique constraints:
+    主键可以跨越多列；其语法与唯一约束类似：
 <programlisting>
 CREATE TABLE example (
     a integer,
@@ -882,35 +777,20 @@ CREATE TABLE example (
    </para>
 
    <para>
-    Adding a primary key will automatically create a unique B-tree index
-    on the column or group of columns listed in the primary key, and will
-    force the column(s) to be marked <literal>NOT NULL</literal>.
+    添加主键会自动在主键所列出的列或列组上创建一个唯一的 B 树索引，并强制将这些列标记为 <literal>NOT NULL</literal>。
    </para>
 
    <para>
-    A table can have at most one primary key.  (There can be any number
-    of unique constraints, which combined with not-null constraints are functionally almost the
-    same thing, but only one can be identified as the primary key.)
-    Relational database theory
-    dictates that every table must have a primary key.  This rule is
-    not enforced by <productname>PostgreSQL</productname>, but it is
-    usually best to follow it.
+    一个表最多只能有一个主键。（唯一约束可以有任意多个，它们与非空约束结合起来在功能上几乎相同，但只有一个可以被标识为主键。）关系数据库理论要求每个表都必须有一个主键。<productname>PostgreSQL</productname> 并不强制这条规则，但通常最好遵循它。
    </para>
 
    <para>
-    Primary keys are useful both for
-    documentation purposes and for client applications.  For example,
-    a GUI application that allows modifying row values probably needs
-    to know the primary key of a table to be able to identify rows
-    uniquely.  There are also various ways in which the database system
-    makes use of a primary key if one has been declared; for example,
-    the primary key defines the default target column(s) for foreign keys
-    referencing its table.
+    主键对于文档记录和客户端应用程序都很有用。例如，一个允许修改行值的 GUI 应用程序可能需要知道表的主键才能唯一地标识行。如果声明了主键，数据库系统还会以多种方式使用它；例如，主键定义了引用其表的外键的默认目标列。
    </para>
   </sect2>
 
   <sect2 id="ddl-constraints-fk">
-   <title>Foreign Keys</title>
+   <title>外键</title>
 
    <indexterm>
     <primary>foreign key</primary>
@@ -926,15 +806,12 @@ CREATE TABLE example (
    </indexterm>
 
    <para>
-    A foreign key constraint specifies that the values in a column (or
-    a group of columns) must match the values appearing in some row
-    of another table.
-    We say this maintains the <firstterm>referential
-    integrity</firstterm> between two related tables.
+    外键约束指定一列（或一组列）中的值必须匹配出现在另一个表中某些行的值。
+    我们说这维持了两个关联表之间的<firstterm>引用完整性</firstterm>。
    </para>
 
    <para>
-    Say you have the product table that we have used several times already:
+    假设我们已经有多次使用过的产品表：
 <programlisting>
 CREATE TABLE products (
     product_no integer PRIMARY KEY,
@@ -942,11 +819,7 @@ CREATE TABLE products (
     price numeric
 );
 </programlisting>
-    Let's also assume you have a table storing orders of those
-    products.  We want to ensure that the orders table only contains
-    orders of products that actually exist.  So we define a foreign
-    key constraint in the orders table that references the products
-    table:
+    我们还假设有一个表存储这些产品的订单。我们希望确保订单表只包含确实存在的产品的订单。因此，我们在订单表中定义一个引用产品表的外键约束：
 <programlisting>
 CREATE TABLE orders (
     order_id integer PRIMARY KEY,
@@ -954,20 +827,15 @@ CREATE TABLE orders (
     quantity integer
 );
 </programlisting>
-    Now it is impossible to create orders with non-NULL
-    <structfield>product_no</structfield> entries that do not appear in the
-    products table.
+    现在就不可能创建 <structfield>product_no</structfield> 条目为非 NULL 且不出现在产品表中的订单了。
    </para>
 
    <para>
-    We say that in this situation the orders table is the
-    <firstterm>referencing</firstterm> table and the products table is
-    the <firstterm>referenced</firstterm> table.  Similarly, there are
-    referencing and referenced columns.
+    在这种情况下，我们说订单表是<firstterm>引用</firstterm>表，产品表是<firstterm>被引用</firstterm>表。类似地，也有引用列和被引用列。
    </para>
 
    <para>
-    You can also shorten the above command to:
+    你也可以将上面的命令简写为：
 <programlisting>
 CREATE TABLE orders (
     order_id integer PRIMARY KEY,
@@ -975,19 +843,15 @@ CREATE TABLE orders (
     quantity integer
 );
 </programlisting>
-    because in absence of a column list the primary key of the
-    referenced table is used as the referenced column(s).
+    因为在没有列列表的情况下，被引用表的主键被用作被引用列。
    </para>
 
    <para>
-    You can assign your own name for a foreign key constraint,
-    in the usual way.
+    你可以按通常的方式为外键约束指定自己的名称。
    </para>
 
    <para>
-    A foreign key can also constrain and reference a group of columns.
-    As usual, it then needs to be written in table constraint form.
-    Here is a contrived syntax example:
+    外键也可以约束和引用一组列。按照惯例，此时它需要以表约束的形式书写。下面是一个刻意构造的语法示例：
 <programlisting>
 CREATE TABLE t1 (
   a integer PRIMARY KEY,
@@ -996,8 +860,7 @@ CREATE TABLE t1 (
   <emphasis>FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)</emphasis>
 );
 </programlisting>
-    Of course, the number and type of the constrained columns need to
-    match the number and type of the referenced columns.
+    当然，被约束列的数量和类型需要与被引用列的数量和类型相匹配。
    </para>
 
    <indexterm>
@@ -1006,11 +869,7 @@ CREATE TABLE t1 (
    </indexterm>
 
    <para>
-    Sometimes it is useful for the <quote>other table</quote> of a
-    foreign key constraint to be the same table; this is called
-    a <firstterm>self-referential</firstterm> foreign key.  For
-    example, if you want rows of a table to represent nodes of a tree
-    structure, you could write
+    有时，让外键约束的<quote>另一张表</quote>就是同一张表是很有用的；这被称为<firstterm>自引用</firstterm>外键。例如，如果你希望表中的行表示树结构的节点，可以这样写：
 <programlisting>
 CREATE TABLE tree (
     node_id integer PRIMARY KEY,
@@ -1019,17 +878,11 @@ CREATE TABLE tree (
     ...
 );
 </programlisting>
-    A top-level node would have NULL <structfield>parent_id</structfield>,
-    while non-NULL <structfield>parent_id</structfield> entries would be
-    constrained to reference valid rows of the table.
+    顶层节点的 <structfield>parent_id</structfield> 为 NULL，而非 NULL 的 <structfield>parent_id</structfield> 条目则被约束为引用表中的有效行。
    </para>
 
    <para>
-    A table can have more than one foreign key constraint.  This is
-    used to implement many-to-many relationships between tables.  Say
-    you have tables about products and orders, but now you want to
-    allow one order to contain possibly many products (which the
-    structure above did not allow).  You could use this table structure:
+    一张表可以有多个外键约束。这用于实现表之间的多对多关系。假设你有关于产品和订单的表，但现在你希望允许一个订单包含多个产品（上面的结构不允许这样做）。你可以使用这样的表结构：
 <programlisting>
 CREATE TABLE products (
     product_no integer PRIMARY KEY,
@@ -1050,8 +903,7 @@ CREATE TABLE order_items (
     PRIMARY KEY (product_no, order_id)
 );
 </programlisting>
-    Notice that the primary key overlaps with the foreign keys in
-    the last table.
+    注意，最后一张表中的主键与外键有重叠。
    </para>
 
    <indexterm>
@@ -1070,18 +922,14 @@ CREATE TABLE order_items (
     after an order is created that references it?  SQL allows you to
     handle that as well.  Intuitively, we have a few options:
     <itemizedlist spacing="compact">
-     <listitem><para>Disallow deleting a referenced product</para></listitem>
-     <listitem><para>Delete the orders as well</para></listitem>
-     <listitem><para>Something else?</para></listitem>
+     <listitem><para>禁止删除被引用的产品</para></listitem>
+     <listitem><para>同时删除订单</para></listitem>
+     <listitem><para>其他操作？</para></listitem>
     </itemizedlist>
    </para>
 
    <para>
-    To illustrate this, let's implement the following policy on the
-    many-to-many relationship example above: when someone wants to
-    remove a product that is still referenced by an order (via
-    <literal>order_items</literal>), we disallow it.  If someone
-    removes an order, the order items are removed as well:
+    为了说明这一点，让我们在上面的多对多关系示例上实施以下策略：当有人想要删除一个仍被订单引用的产品时（通过 <literal>order_items</literal>），我们禁止这样做。如果有人删除一个订单，订单项也会被一并删除：
 <programlisting>
 CREATE TABLE products (
     product_no integer PRIMARY KEY,
@@ -1105,69 +953,30 @@ CREATE TABLE order_items (
    </para>
 
    <para>
-    The default <literal>ON DELETE</literal> action is <literal>ON DELETE NO
-    ACTION</literal>; this does not need to be specified.  This means that the
-    deletion in the referenced table is allowed to proceed.  But the
-    foreign-key constraint is still required to be satisfied, so this
-    operation will usually result in an error.  But checking of foreign-key
-    constraints can also be deferred to later in the transaction (not covered
-    in this chapter).  In that case, the <literal>NO ACTION</literal> setting
-    would allow other commands to <quote>fix</quote> the situation before the
-    constraint is checked, for example by inserting another suitable row into
-    the referenced table or by deleting the now-dangling rows from the
-    referencing table.
+    默认的 <literal>ON DELETE</literal> 动作是 <literal>ON DELETE NO
+    ACTION</literal>；这不需要指定。这意味着允许在被引用表中执行删除。但外键约束仍然必须被满足，因此该操作通常会导致错误。不过，外键约束的检查也可以推迟到事务的稍后阶段（本章不涉及）。在这种情况下，<literal>NO ACTION</literal> 设置将允许其他命令在检查约束之前<quote>修复</quote>该状况，例如向被引用表插入另一行合适的行，或从引用表中删除现在悬空的行。
    </para>
 
    <para>
-    <literal>RESTRICT</literal> is a stricter setting than <literal>NO
-    ACTION</literal>.  It prevents deletion of a referenced row.
-    <literal>RESTRICT</literal> does not allow the check to be deferred until
-    later in the transaction.
+    <literal>RESTRICT</literal> 是比 <literal>NO
+    ACTION</literal> 更严格的设置。它阻止删除被引用的行。<literal>RESTRICT</literal> 不允许将检查推迟到事务的稍后阶段。
    </para>
 
    <para>
-    <literal>CASCADE</literal> specifies that when a referenced row is deleted,
-    row(s) referencing it should be automatically deleted as well.
+    <literal>CASCADE</literal> 指定当被引用行被删除时，引用它的行也应被自动删除。
    </para>
 
    <para>
-    There are two other options:
-    <literal>SET NULL</literal> and <literal>SET DEFAULT</literal>.
-    These cause the referencing column(s) in the referencing row(s)
-    to be set to nulls or their default
-    values, respectively, when the referenced row is deleted.
-    Note that these do not excuse you from observing any constraints.
-    For example, if an action specifies <literal>SET DEFAULT</literal>
-    but the default value would not satisfy the foreign key constraint, the
-    operation will fail.
+    还有另外两个选项：<literal>SET NULL</literal> 和 <literal>SET DEFAULT</literal>。当被引用行被删除时，它们分别使引用行中的引用列被设置为空值或它们的默认值。请注意，这些选项并不能免除你遵守任何约束。例如，如果某个动作指定了 <literal>SET DEFAULT</literal>，但默认值不满足外键约束，则该操作将失败。
    </para>
 
    <para>
-    The appropriate choice of <literal>ON DELETE</literal> action depends on
-    what kinds of objects the related tables represent.  When the referencing
-    table represents something that is a component of what is represented by
-    the referenced table and cannot exist independently, then
-    <literal>CASCADE</literal> could be appropriate.  If the two tables
-    represent independent objects, then <literal>RESTRICT</literal> or
-    <literal>NO ACTION</literal> is more appropriate; an application that
-    actually wants to delete both objects would then have to be explicit about
-    this and run two delete commands.  In the above example, order items are
-    part of an order, and it is convenient if they are deleted automatically
-    if an order is deleted.  But products and orders are different things, and
-    so making a deletion of a product automatically cause the deletion of some
-    order items could be considered problematic.  The actions <literal>SET
-    NULL</literal> or <literal>SET DEFAULT</literal> can be appropriate if a
-    foreign-key relationship represents optional information.  For example, if
-    the products table contained a reference to a product manager, and the
-    product manager entry gets deleted, then setting the product's product
-    manager to null or a default might be useful.
+    <literal>ON DELETE</literal> 动作的恰当选择取决于相关表所表示的对象种类。当引用表表示的是被引用表所表示内容的组成部分，且不能独立存在时，<literal>CASCADE</literal> 可能是合适的。如果两个表表示独立的对象，那么 <literal>RESTRICT</literal> 或 <literal>NO ACTION</literal> 更合适；如果应用程序确实想要删除两个对象，就必须显式地这样做并执行两条删除命令。在上面的例子中，订单项是订单的一部分，如果删除订单时它们被自动删除，那会很方便。但产品和订单是不同的东西，因此让删除产品自动导致某些订单项被删除可能会被认为是有问题的。如果外键关系表示可选信息，那么 <literal>SET
+    NULL</literal> 或 <literal>SET DEFAULT</literal> 动作可能是合适的。例如，如果 products 表包含对产品经理的引用，而该产品经理条目被删除，那么将该产品的产品经理设置为空值或默认值可能是有用的。
    </para>
 
    <para>
-    The actions <literal>SET NULL</literal> and <literal>SET DEFAULT</literal>
-    can take a column list to specify which columns to set.  Normally, all
-    columns of the foreign-key constraint are set; setting only a subset is
-    useful in some special cases.  Consider the following example:
+    <literal>SET NULL</literal> 和 <literal>SET DEFAULT</literal> 动作可以接受一个列列表来指定要设置哪些列。通常，外键约束的所有列都会被设置；只设置一个子集在某些特殊情况下是有用的。考虑下面的例子：
 <programlisting>
 CREATE TABLE tenants (
     tenant_id integer PRIMARY KEY
@@ -1187,65 +996,32 @@ CREATE TABLE posts (
     FOREIGN KEY (tenant_id, author_id) REFERENCES users ON DELETE SET NULL <emphasis>(author_id)</emphasis>
 );
 </programlisting>
-    Without the specification of the column, the foreign key would also set
-    the column <literal>tenant_id</literal> to null, but that column is still
-    required as part of the primary key.
+    如果不指定该列，外键还会把 <literal>tenant_id</literal> 列设置为空值，但该列作为主键的一部分仍然是必需的。
    </para>
 
    <para>
-    Analogous to <literal>ON DELETE</literal> there is also
-    <literal>ON UPDATE</literal> which is invoked when a referenced
-    column is changed (updated).  The possible actions are the same,
-    except that column lists cannot be specified for <literal>SET
-    NULL</literal> and <literal>SET DEFAULT</literal>.
-    In this case, <literal>CASCADE</literal> means that the updated values of the
-    referenced column(s) should be copied into the referencing row(s).
-    There is also a noticeable difference between <literal>ON UPDATE NO
-    ACTION</literal> (the default) and <literal>ON UPDATE RESTRICT</literal>.
-    The former will allow the update to proceed and the foreign-key constraint
-    will be checked against the state after the update.  The latter will
-    prevent the update to run even if the state after the update would still
-    satisfy the constraint.  This prevents updating a referenced row to a
-    value that is distinct but compares as equal (for example, a character
-    string with a different case variant, if a character string type with a
-    case-insensitive collation is used).
+    与 <literal>ON DELETE</literal> 类似，还有 <literal>ON UPDATE</literal>，它在被引用列被更改（更新）时被调用。可能的动作相同，只是不能为 <literal>SET
+    NULL</literal> 和 <literal>SET DEFAULT</literal> 指定列列表。在这种情况下，<literal>CASCADE</literal> 意味着被引用列的更新值应被复制到引用行中。<literal>ON UPDATE NO
+    ACTION</literal>（默认值）和 <literal>ON UPDATE RESTRICT</literal> 之间也有一个明显的区别。前者将允许更新继续进行，并且外键约束将针对更新后的状态进行检查。后者将阻止更新运行，即使更新后的状态仍然满足该约束。这可以防止将被引用行更新为一个不同但比较结果相等的值（例如，如果使用了具有不区分大小写排序规则的字符串类型，则是一个大小写变体不同的字符串）。
    </para>
 
    <para>
-    Normally, a referencing row need not satisfy the foreign key constraint
-    if any of its referencing columns are null.  If <literal>MATCH FULL</literal>
-    is added to the foreign key declaration, a referencing row escapes
-    satisfying the constraint only if all its referencing columns are null
-    (so a mix of null and non-null values is guaranteed to fail a
-    <literal>MATCH FULL</literal> constraint).  If you don't want referencing rows
-    to be able to avoid satisfying the foreign key constraint, declare the
-    referencing column(s) as <literal>NOT NULL</literal>.
+    通常情况下，如果引用行的任一引用列为空，该引用行就不需要满足外键约束。如果在外部键声明中加入 <literal>MATCH FULL</literal>，则只有当引用行的所有引用列都为空时，该引用行才能免于满足该约束（因此，空值与非空值的混合必定会导致 <literal>MATCH FULL</literal> 约束失败）。如果不希望引用行能够规避满足外键约束，请将引用列声明为 <literal>NOT NULL</literal>。
    </para>
 
    <para>
-    A foreign key must reference columns that either are a primary key or
-    form a unique constraint, or are columns from a non-partial unique index.
-    This means that the referenced columns always have an index to allow
-    efficient lookups on whether a referencing row has a match.  Since a
-    <command>DELETE</command> of a row from the referenced table or an
-    <command>UPDATE</command> of a referenced column will require a scan of
-    the referencing table for rows matching the old value, it is often a good
-    idea to index the referencing columns too.  Because this is not always
-    needed, and there are many choices available on how to index, the
-    declaration of a foreign key constraint does not automatically create an
-    index on the referencing columns.
+    外键必须引用这样的列：要么是主键，要么构成唯一约束，要么是非部分唯一索引中的列。这意味着被引用的列始终有一个索引，以便高效地查找引用行是否有匹配项。由于对被引用表中某行的 <command>DELETE</command> 或对被引用列的 <command>UPDATE</command> 需要扫描引用表以查找与旧值匹配的行，因此通常也最好为引用列建立索引。由于这并非总是必需，而且关于如何建立索引有多种选择，因此声明外键约束不会自动在引用列上创建索引。
    </para>
 
    <para>
-    More information about updating and deleting data is in <xref
-    linkend="dml"/>.  Also see the description of foreign key constraint
-    syntax in the reference documentation for
-    <xref linkend="sql-createtable"/>.
+    有关更新和删除数据的更多信息，请参见 <xref
+    linkend="dml"/>。另请参见
+    <xref linkend="sql-createtable"/> 参考文档中对外键约束语法的描述。
    </para>
   </sect2>
 
   <sect2 id="ddl-constraints-exclusion">
-   <title>Exclusion Constraints</title>
+   <title>排除约束</title>
 
    <indexterm>
     <primary>exclusion constraint</primary>
@@ -1257,10 +1033,9 @@ CREATE TABLE posts (
    </indexterm>
 
    <para>
-    Exclusion constraints ensure that if any two rows are compared on
-    the specified columns or expressions using the specified operators,
-    at least one of these operator comparisons will return false or null.
-    The syntax is:
+    排除约束确保：如果使用指定的运算符在指定的列或表达式上比较任意两行，
+    这些运算符比较中至少有一个会返回 false 或 null。
+    语法为：
 <programlisting>
 CREATE TABLE circles (
     c circle,
@@ -1270,13 +1045,12 @@ CREATE TABLE circles (
    </para>
 
    <para>
-    See also <link linkend="sql-createtable-exclude"><command>CREATE
-    TABLE ... CONSTRAINT ... EXCLUDE</command></link> for details.
+    详情另请参见 <link linkend="sql-createtable-exclude"><command>CREATE
+    TABLE ... CONSTRAINT ... EXCLUDE</command></link>。
    </para>
 
    <para>
-    Adding an exclusion constraint will automatically create an index
-    of the type specified in the constraint declaration.
+    添加排除约束将自动创建一个在约束声明中指定类型的索引。
    </para>
   </sect2>
  </sect1>
