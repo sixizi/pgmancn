@@ -13,130 +13,121 @@
 
 
  <sect1 id="indexes-intro">
-  <title>Introduction</title>
+  <title>简介</title>
 
   <para>
-   Suppose we have a table similar to this:
+   假设我们有一个类似这样的表：
 <programlisting>
 CREATE TABLE test1 (
     id integer,
     content varchar
 );
 </programlisting>
-   and the application issues many queries of the form:
+   并且应用程序发出许多如下形式的查询：
 <programlisting>
 SELECT content FROM test1 WHERE id = <replaceable>constant</replaceable>;
 </programlisting>
-   With no advance preparation, the system would have to scan the entire
-   <structname>test1</structname> table, row by row, to find all
-   matching entries.  If there are many rows in
-   <structname>test1</structname> and only a few rows (perhaps zero
-   or one) that would be returned by such a query, this is clearly an
-   inefficient method.  But if the system has been instructed to maintain an
-   index on the <structfield>id</structfield> column, it can use a more
-   efficient method for locating matching rows.  For instance, it
-   might only have to walk a few levels deep into a search tree.
+   在没有预先准备的情况下，系统将不得不逐行扫描整个
+   <structname>test1</structname> 表，以找出所有匹配的条目。如果
+   <structname>test1</structname> 中有很多行，而这样的查询只返回少数几行（也许是零行
+   或一行），这显然是一种低效的方法。但如果系统已被指示在
+   <structfield>id</structfield> 列上维护一个索引，它就可以使用更高效的方法来定位匹配的行。例如，
+   它可能只需在搜索树中向下遍历几层。
   </para>
 
   <para>
-   A similar approach is used in most non-fiction books:  terms and
-   concepts that are frequently looked up by readers are collected in
-   an alphabetic index at the end of the book.  The interested reader
-   can scan the index relatively quickly and flip to the appropriate
-   page(s), rather than having to read the entire book to find the
-   material of interest.  Just as it is the task of the author to
-   anticipate the items that readers are likely to look up,
-   it is the task of the database programmer to foresee which indexes
-   will be useful.
+   大多数非虚构类书籍也采用类似的方法：读者经常查阅的术语和
+   概念被收集在书末按字母顺序排列的索引中。感兴趣的读者
+   可以相对快速地浏览索引并翻到相应的
+   页面，而不必为了找到感兴趣的内容而阅读整本书。正如作者的任务是
+   预判读者可能查阅的条目一样，
+   数据库程序员的任务是预见哪些索引
+   会有用。
   </para>
 
   <para>
-   The following command can be used to create an index on the
-   <structfield>id</structfield> column, as discussed:
+   如下所述，可以使用以下命令在
+   <structfield>id</structfield> 列上创建索引：
 <programlisting>
 CREATE INDEX test1_id_index ON test1 (id);
 </programlisting>
-   The name <structname>test1_id_index</structname> can be chosen
-   freely, but you should pick something that enables you to remember
-   later what the index was for.
+   名称 <structname>test1_id_index</structname> 可以自由选择，
+   但你应该选一个能让你日后记得
+   该索引用途的名字。
   </para>
 
   <para>
-   To remove an index, use the <command>DROP INDEX</command> command.
-   Indexes can be added to and removed from tables at any time.
+   要删除索引，请使用 <command>DROP INDEX</command> 命令。
+   索引可以随时添加到表中或从表中删除。
   </para>
 
   <para>
-   Once an index is created, no further intervention is required: the
-   system will update the index when the table is modified, and it will
-   use the index in queries when it thinks doing so would be more efficient
-   than a sequential table scan.  But you might have to run the
-   <command>ANALYZE</command> command regularly to update
-   statistics to allow the query planner to make educated decisions.
-   See <xref linkend="performance-tips"/> for information about
-   how to find out whether an index is used and when and why the
-   planner might choose <emphasis>not</emphasis> to use an index.
+   一旦创建了索引，就无需进一步干预：系统会在表被修改时
+   更新索引，并且在认为使用索引比顺序扫描表更高效时，
+   会在查询中使用索引。但你可能需要定期运行
+   <command>ANALYZE</command> 命令来更新
+   统计信息，以便查询规划器做出明智的决策。
+   有关如何查明索引是否被使用，以及规划器何时、为何可能选择
+   <emphasis>不</emphasis>使用索引的信息，请参阅 <xref linkend="performance-tips"/>。
   </para>
 
   <para>
-   Indexes can also benefit <command>UPDATE</command> and
-   <command>DELETE</command> commands with search conditions.
-   Indexes can moreover be used in join searches.  Thus,
-   an index defined on a column that is part of a join condition can
-   also significantly speed up queries with joins.
+   索引也可以使带有搜索条件的 <command>UPDATE</command> 和
+   <command>DELETE</command> 命令受益。
+   此外，索引还可以用于连接搜索。因此，
+   定义在连接条件中某一列上的索引
+   也能显著加快带连接的查询。
   </para>
 
   <para>
-   In general, <productname>PostgreSQL</productname> indexes can be used
-   to optimize queries that contain one or more <literal>WHERE</literal>
-   or <literal>JOIN</literal> clauses of the form
+   一般来说，<productname>PostgreSQL</productname> 索引可用于
+   优化包含一个或多个如下形式的 <literal>WHERE</literal>
+   或 <literal>JOIN</literal> 子句的查询
 
 <synopsis>
 <replaceable>indexed-column</replaceable> <replaceable>indexable-operator</replaceable> <replaceable>comparison-value</replaceable>
 </synopsis>
 
-   Here, the <replaceable>indexed-column</replaceable> is whatever
-   column or expression the index has been defined on.
-   The <replaceable>indexable-operator</replaceable> is an operator that
-   is a member of the index's <firstterm>operator class</firstterm> for
-   the indexed column.  (More details about that appear below.)
-   And the <replaceable>comparison-value</replaceable> can be any
-   expression that is not volatile and does not reference the index's
-   table.
+   这里，<replaceable>indexed-column</replaceable> 是索引定义所在的
+   任意列或表达式。
+   <replaceable>indexable-operator</replaceable> 是一个运算符，
+   它属于该索引列对应的索引 <firstterm>运算符类</firstterm> 的成员。
+   （更多细节见下文。）
+   而 <replaceable>comparison-value</replaceable> 可以是任何
+   非易失且不引用该索引所属表的
+   表达式。
   </para>
 
   <para>
-   In some cases the query planner can extract an indexable clause of
-   this form from another SQL construct.  A simple example is that if
-   the original clause was
+   在某些情况下，查询规划器可以从
+   其他 SQL 结构中提取出这种形式的可索引子句。一个简单的例子是，如果
+   原始子句是
 
 <synopsis>
 <replaceable>comparison-value</replaceable> <replaceable>operator</replaceable> <replaceable>indexed-column</replaceable>
 </synopsis>
 
-   then it can be flipped around into indexable form if the
-   original <replaceable>operator</replaceable> has a commutator
-   operator that is a member of the index's operator class.
+   那么只要原来的 <replaceable>operator</replaceable> 具有一个
+   属于该索引运算符类的交换运算符，
+   就可以把它翻转成可索引的形式。
   </para>
 
   <para>
-   Creating an index on a large table can take a long time.  By default,
-   <productname>PostgreSQL</productname> allows reads (<command>SELECT</command> statements) to occur
-   on the table in parallel with index creation, but writes (<command>INSERT</command>,
-   <command>UPDATE</command>, <command>DELETE</command>) are blocked until the index build is finished.
-   In production environments this is often unacceptable.
-   It is possible to allow writes to occur in parallel with index
-   creation, but there are several caveats to be aware of &mdash;
-   for more information see <xref linkend="sql-createindex-concurrently"/>.
+   在大表上创建索引可能耗时很长。默认情况下，
+   <productname>PostgreSQL</productname> 允许在创建索引的同时对该表进行读取（<command>SELECT</command> 语句），
+   但写入（<command>INSERT</command>、
+   <command>UPDATE</command>、<command>DELETE</command>）会被阻塞，直到索引构建完成。
+   在生产环境中，这通常是不可接受的。
+   可以让写入与索引创建并行进行，但需要注意若干注意事项 &mdash;
+   更多信息请参见 <xref linkend="sql-createindex-concurrently"/>。
   </para>
 
   <para>
-   After an index is created, the system has to keep it synchronized with the
-   table.  This adds overhead to data manipulation operations.  Indexes can
-   also prevent the creation of <link linkend="storage-hot">heap-only
-   tuples</link>.
-   Therefore indexes that are seldom or never used in queries
-   should be removed.
+   索引创建后，系统必须使其与表保持同步。
+   这会给数据操纵操作增加开销。索引还可能阻止创建
+   <link linkend="storage-hot">仅堆元组</link>。
+   因此，在查询中很少使用或从不使用的索引
+   应当删除。
   </para>
  </sect1>
 
