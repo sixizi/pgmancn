@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER OPERATOR FAMILY</refname>
-  <refpurpose>change the definition of an operator family</refpurpose>
+  <refpurpose>更改运算符族的定义</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -45,63 +45,38 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER OPERATOR FAMILY</command> changes the definition of
-   an operator family.  You can add operators and support functions
-   to the family, remove them from the family,
-   or change the family's name or owner.
+   <command>ALTER OPERATOR FAMILY</command> 更改运算符族的定义。您可以向该族中添加运算符和支持函数、从该族中移除它们，或者更改该族的名称或所有者。
   </para>
 
   <para>
-   When operators and support functions are added to a family with
-   <command>ALTER OPERATOR FAMILY</command>, they are not part of any
-   specific operator class within the family, but are just <quote>loose</quote>
-   within the family.  This indicates that these operators and functions
-   are compatible with the family's semantics, but are not required for
-   correct functioning of any specific index.  (Operators and functions
-   that are so required should be declared as part of an operator class,
-   instead; see <xref linkend="sql-createopclass"/>.)
-   <productname>PostgreSQL</productname> will allow loose members of a
-   family to be dropped from the family at any time, but members of an
-   operator class cannot be dropped without dropping the whole class and
-   any indexes that depend on it.
-   Typically, single-data-type operators
-   and functions are part of operator classes because they are needed to
-   support an index on that specific data type, while cross-data-type
-   operators and functions are made loose members of the family.
+   当使用 <command>ALTER OPERATOR FAMILY</command> 向一个族中添加运算符和支持函数时，它们并不属于该族中任何特定的运算符类，而只是在该族中处于<quote>松散</quote>状态。这表明这些运算符和函数与该族的语义兼容，但并不是任何特定索引正确运行所必需的。（那些确属必需的运算符和函数应当改为声明为某个运算符类的一部分；参见 <xref linkend="sql-createopclass"/>。）<productname>PostgreSQL</productname> 允许随时从族中删除该族的松散成员，但运算符类的成员不能删除，除非删除整个类以及依赖于它的所有索引。通常，单一数据类型的运算符和函数是运算符类的一部分，因为支持该特定数据类型的索引需要它们；而跨数据类型的运算符和函数则作为族的松散成员。
   </para>
 
   <para>
-   You must be a superuser to use <command>ALTER OPERATOR FAMILY</command>.
-   (This restriction is made because an erroneous operator family definition
-   could confuse or even crash the server.)
+   必须是超级用户才能使用 <command>ALTER OPERATOR FAMILY</command>。（之所以有此限制，是因为错误的运算符族定义可能会使服务器困惑甚至崩溃。）
   </para>
 
   <para>
-   <command>ALTER OPERATOR FAMILY</command> does not presently check
-   whether the operator family definition includes all the operators and
-   functions required by the index method, nor whether the operators and
-   functions form a self-consistent set.  It is the user's
-   responsibility to define a valid operator family.
+   <command>ALTER OPERATOR FAMILY</command> 目前不检查运算符族定义是否包含索引方法所需的所有运算符和函数，也不检查这些运算符和函数是否构成一个自洽的集合。定义有效的运算符族是用户的责任。
   </para>
 
   <para>
-   Refer to <xref linkend="xindex"/> for further information.
+   更多信息请参阅 <xref linkend="xindex"/>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of an existing operator
-      family.
+      现有运算符族的名称（可选模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -110,7 +85,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">index_method</replaceable></term>
     <listitem>
      <para>
-      The name of the index method this operator family is for.
+      该运算符族所属的索引方法的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -119,8 +94,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">strategy_number</replaceable></term>
     <listitem>
      <para>
-      The index method's strategy number for an operator
-      associated with the operator family.
+      与该运算符族关联的运算符在索引方法中的策略编号。
      </para>
     </listitem>
    </varlistentry>
@@ -129,8 +103,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">operator_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of an operator associated
-      with the operator family.
+      与该运算符族关联的运算符的名称（可选模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -139,29 +112,16 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">op_type</replaceable></term>
     <listitem>
      <para>
-      In an <literal>OPERATOR</literal> clause,
-      the operand data type(s) of the operator, or <literal>NONE</literal> to
-      signify a prefix operator.  Unlike the comparable
-      syntax in <command>CREATE OPERATOR CLASS</command>, the operand data types
-      must always be specified.
+      在 <literal>OPERATOR</literal> 子句中，为运算符的操作数数据类型，或者用 <literal>NONE</literal> 表示前缀运算符。与 <command>CREATE OPERATOR CLASS</command> 中类似的语法不同，操作数数据类型必须始终指定。
      </para>
 
      <para>
-      In an <literal>ADD FUNCTION</literal> clause, the operand data type(s) the
-      function is intended to support, if different from
-      the input data type(s) of the function.  For B-tree comparison functions
-      and hash functions it is not necessary to specify <replaceable
-      class="parameter">op_type</replaceable> since the function's input
-      data type(s) are always the correct ones to use.  For B-tree sort
-      support functions, B-Tree equal image functions, and all
-      functions in GiST, SP-GiST and GIN operator classes, it is
-      necessary to specify the operand data type(s) the function is to
-      be used with.
+      在 <literal>ADD FUNCTION</literal> 子句中，为函数打算支持的操作数数据类型（如果与函数的输入数据类型不同）。对于 B-tree 比较函数和哈希函数，不必指定 <replaceable
+      class="parameter">op_type</replaceable>，因为函数的输入数据类型始终是应当使用的正确类型。对于 B-tree 排序支持函数、B-Tree 等值映像函数，以及 GiST、SP-GiST 和 GIN 运算符类中的所有函数，必须指定该函数要与之配合使用的操作数数据类型。
      </para>
 
      <para>
-      In a <literal>DROP FUNCTION</literal> clause, the operand data type(s) the
-      function is intended to support must be specified.
+      在 <literal>DROP FUNCTION</literal> 子句中，必须指定函数打算支持的操作数数据类型。
      </para>
     </listitem>
    </varlistentry>
@@ -170,14 +130,11 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">sort_family_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of an existing <literal>btree</literal> operator
-      family that describes the sort ordering associated with an ordering
-      operator.
+      现有 <literal>btree</literal> 运算符族的名称（可选带模式限定），该运算符族描述与排序运算符相关联的排序顺序。
      </para>
 
      <para>
-      If neither <literal>FOR SEARCH</literal> nor <literal>FOR ORDER BY</literal> is
-      specified, <literal>FOR SEARCH</literal> is the default.
+      如果 <literal>FOR SEARCH</literal> 和 <literal>FOR ORDER BY</literal> 都未指定，则 <literal>FOR SEARCH</literal> 为默认值。
      </para>
     </listitem>
    </varlistentry>
@@ -186,8 +143,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">support_number</replaceable></term>
     <listitem>
      <para>
-      The index method's support function number for a
-      function associated with the operator family.
+      与运算符族相关联的函数的索引方法支持函数编号。
      </para>
     </listitem>
    </varlistentry>
@@ -196,9 +152,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">function_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of a function that is an index
-      method support function for the operator family.  If no argument list
-      is specified, the name must be unique in its schema.
+      作为该运算符族的索引方法支持函数的名称（可选地限定模式）。如果未指定参数列表，则该名称在其模式中必须唯一。
      </para>
     </listitem>
    </varlistentry>
@@ -207,7 +161,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">argument_type</replaceable></term>
     <listitem>
      <para>
-      The parameter data type(s) of the function.
+      函数的参数数据类型。
      </para>
     </listitem>
    </varlistentry>
@@ -216,7 +170,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">new_name</replaceable></term>
     <listitem>
      <para>
-      The new name of the operator family.
+      运算符族的新名称。
      </para>
     </listitem>
    </varlistentry>
@@ -225,7 +179,7 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">new_owner</replaceable></term>
     <listitem>
      <para>
-      The new owner of the operator family.
+      运算符族的新所有者。
      </para>
     </listitem>
    </varlistentry>
@@ -234,54 +188,39 @@ ALTER OPERATOR FAMILY <replaceable>name</replaceable> USING <replaceable class="
     <term><replaceable class="parameter">new_schema</replaceable></term>
     <listitem>
      <para>
-      The new schema for the operator family.
+      运算符族的新模式。
      </para>
     </listitem>
    </varlistentry>
  </variablelist>
 
   <para>
-   The <literal>OPERATOR</literal> and <literal>FUNCTION</literal>
-   clauses can appear in any order.
+   <literal>OPERATOR</literal> 和 <literal>FUNCTION</literal> 子句可以以任意顺序出现。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>注意事项</title>
 
   <para>
-   Notice that the <literal>DROP</literal> syntax only specifies the <quote>slot</quote>
-   in the operator family, by strategy or support number and input data
-   type(s).  The name of the operator or function occupying the slot is not
-   mentioned.  Also, for <literal>DROP FUNCTION</literal> the type(s) to specify
-   are the input data type(s) the function is intended to support; for
-   GiST, SP-GiST and GIN indexes this might have nothing to do with the actual
-   input argument types of the function.
+   请注意，<literal>DROP</literal> 语法只指定了运算符族中的<quote>槽位</quote>，即通过策略或支持编号以及输入数据类型来指定。占用该槽位的运算符或函数的名称并未提及。另外，对于 <literal>DROP FUNCTION</literal>，要指定的类型是该函数打算支持的输入数据类型；对于 GiST、SP-GiST 和 GIN 索引，这可能与该函数的实际输入参数类型毫无关系。
   </para>
 
   <para>
-   Because the index machinery does not check access permissions on functions
-   before using them, including a function or operator in an operator family
-   is tantamount to granting public execute permission on it.  This is usually
-   not an issue for the sorts of functions that are useful in an operator
-   family.
+   由于索引机制在使用函数之前不会检查其访问权限，因此将某个函数或运算符包含在运算符族中，就等同于对其授予公共执行权限。对于运算符族中有用的那类函数而言，这通常不是问题。
   </para>
 
   <para>
-   The operators should not be defined by SQL functions.  An SQL function
-   is likely to be inlined into the calling query, which will prevent
-   the optimizer from recognizing that the query matches an index.
+   这些运算符不应由 SQL 函数定义。SQL 函数很可能会被内联到调用它的查询中，这会阻止优化器识别出该查询匹配某个索引。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   The following example command adds cross-data-type operators and
-   support functions to an operator family that already contains B-tree
-   operator classes for data types <type>int4</type> and <type>int2</type>.
+   以下示例命令将跨数据类型运算符和支持函数添加到一个已经包含数据类型 <type>int4</type> 和 <type>int2</type> 的 B-tree 运算符类的运算符族中。
   </para>
 
 <programlisting>
@@ -305,7 +244,7 @@ ALTER OPERATOR FAMILY integer_ops USING btree ADD
 </programlisting>
 
   <para>
-   To remove these entries again:
+   要再次移除这些条目：
   </para>
 
 <programlisting>
@@ -330,16 +269,15 @@ ALTER OPERATOR FAMILY integer_ops USING btree DROP
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>ALTER OPERATOR FAMILY</command> statement in
-   the SQL standard.
+   SQL 标准中没有 <command>ALTER OPERATOR FAMILY</command> 语句。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createopfamily"/></member>
