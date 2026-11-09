@@ -1347,23 +1347,19 @@ END;
   </sect1>
 
   <sect1 id="plpgsql-control-structures">
-   <title>Control Structures</title>
+   <title>控制结构</title>
 
    <para>
-    Control structures are probably the most useful (and
-    important) part of <application>PL/pgSQL</application>. With
-    <application>PL/pgSQL</application>'s control structures,
-    you can manipulate <productname>PostgreSQL</productname> data in a very
-    flexible and powerful way.
+    控制结构可能是 <application>PL/pgSQL</application> 中最有用（也最重要）的部分。借助
+    <application>PL/pgSQL</application> 的控制结构，你可以以非常灵活且强大的方式操纵 <productname>PostgreSQL</productname> 数据。
    </para>
 
    <sect2 id="plpgsql-statements-returning">
-    <title>Returning from a Function</title>
+    <title>从函数返回</title>
 
     <para>
-     There are two commands available that allow you to return data
-     from a function: <command>RETURN</command> and <command>RETURN
-     NEXT</command>.
+     有两个命令可用于从函数返回数据：<command>RETURN</command> 和 <command>RETURN
+     NEXT</command>。
     </para>
 
     <sect3 id="plpgsql-statements-returning-return">
@@ -1374,46 +1370,33 @@ RETURN <replaceable>expression</replaceable>;
 </synopsis>
 
      <para>
-      <command>RETURN</command> with an expression terminates the
-      function and returns the value of
-      <replaceable>expression</replaceable> to the caller.  This form
-      is used for <application>PL/pgSQL</application> functions that do
-      not return a set.
+      带表达式的 <command>RETURN</command> 会终止函数并将
+      <replaceable>expression</replaceable> 的值返回给调用者。这种形式
+      用于不返回集合的 <application>PL/pgSQL</application> 函数。
      </para>
 
      <para>
-      In a function that returns a scalar type, the expression's result will
-      automatically be cast into the function's return type as described for
-      assignments.  But to return a composite (row) value, you must write an
-      expression delivering exactly the requested column set.  This may
-      require use of explicit casting.
+      在返回标量类型的函数中，表达式的结果将
+      自动转换为该函数的返回类型，如赋值中所述。
+      但要返回复合（行）值，你必须编写一个
+      恰好提供所请求列集的表达式。这可能需要
+      使用显式转换。
      </para>
 
      <para>
-      If you declared the function with output parameters, write just
-      <command>RETURN</command> with no expression.  The current values
-      of the output parameter variables will be returned.
+      如果你用输出参数声明了函数，只需写 <command>RETURN</command> 而不带任何表达式。将返回输出参数变量的当前值。
      </para>
 
      <para>
-      If you declared the function to return <type>void</type>, a
-      <command>RETURN</command> statement can be used to exit the function
-      early; but do not write an expression following
-      <command>RETURN</command>.
+      如果你声明函数返回 <type>void</type>，可以使用 <command>RETURN</command> 语句提前退出函数；但不要在 <command>RETURN</command> 后面写表达式。
      </para>
 
      <para>
-      The return value of a function cannot be left undefined. If
-      control reaches the end of the top-level block of the function
-      without hitting a <command>RETURN</command> statement, a run-time
-      error will occur.  This restriction does not apply to functions
-      with output parameters and functions returning <type>void</type>,
-      however.  In those cases a <command>RETURN</command> statement is
-      automatically executed if the top-level block finishes.
+      函数的返回值不能未定义。如果控制到达函数顶层块的末尾而没有遇到 <command>RETURN</command> 语句，将发生运行时错误。不过，此限制不适用于带输出参数的函数以及返回 <type>void</type> 的函数。在这些情况下，如果顶层块结束，将自动执行 <command>RETURN</command> 语句。
      </para>
 
      <para>
-      Some examples:
+      一些示例：
 
 <programlisting>
 -- functions returning a scalar type
@@ -1428,7 +1411,7 @@ RETURN (1, 2, 'three'::text);  -- must cast columns to correct types
     </sect3>
 
     <sect3 id="plpgsql-statements-returning-return-next">
-     <title><command>RETURN NEXT</command> and <command>RETURN QUERY</command></title>
+     <title><command>RETURN NEXT</command> 和 <command>RETURN QUERY</command></title>
     <indexterm>
      <primary>RETURN NEXT</primary>
      <secondary>in PL/pgSQL</secondary>
@@ -1445,60 +1428,42 @@ RETURN QUERY EXECUTE <replaceable class="command">command-string</replaceable> <
 </synopsis>
 
      <para>
-      When a <application>PL/pgSQL</application> function is declared to return
-      <literal>SETOF <replaceable>sometype</replaceable></literal>, the procedure
-      to follow is slightly different.  In that case, the individual
-      items to return are specified by a sequence of <command>RETURN
-      NEXT</command> or <command>RETURN QUERY</command> commands, and
-      then a final <command>RETURN</command> command with no argument
-      is used to indicate that the function has finished executing.
-      <command>RETURN NEXT</command> can be used with both scalar and
-      composite data types; with a composite result type, an entire
-      <quote>table</quote> of results will be returned.
-      <command>RETURN QUERY</command> appends the results of executing
-      a query to the function's result set. <command>RETURN
-      NEXT</command> and <command>RETURN QUERY</command> can be freely
-      intermixed in a single set-returning function, in which case
-      their results will be concatenated.
+      当声明一个 <application>PL/pgSQL</application> 函数返回 <literal>SETOF <replaceable>sometype</replaceable></literal> 时，要遵循的过程略有不同。在这种情况下，要返回的各个项由一系列 <command>RETURN
+      NEXT</command> 或 <command>RETURN QUERY</command> 命令指定，然后用一个不带参数的最终 <command>RETURN</command> 命令表示函数已执行完毕。<command>RETURN NEXT</command> 可用于标量数据类型和复合数据类型；对于复合结果类型，将返回整个结果的<quote>表</quote>。<command>RETURN QUERY</command> 将执行查询的结果追加到函数的结果集。<command>RETURN
+      NEXT</command> 和 <command>RETURN QUERY</command> 可以在单个集合返回函数中自由混合使用，此时它们的结果将被串接。
      </para>
 
      <para>
-      <command>RETURN NEXT</command> and <command>RETURN
-      QUERY</command> do not actually return from the function &mdash;
-      they simply append zero or more rows to the function's result
-      set.  Execution then continues with the next statement in the
-      <application>PL/pgSQL</application> function.  As successive
-      <command>RETURN NEXT</command> or <command>RETURN
-      QUERY</command> commands are executed, the result set is built
-      up.  A final <command>RETURN</command>, which should have no
-      argument, causes control to exit the function (or you can just
-      let control reach the end of the function).
+      <command>RETURN NEXT</command> 和 <command>RETURN
+      QUERY</command> 实际上并不从函数 &mdash; 返回，
+      它们只是向函数的结果集追加零行或多行。随后执行会继续执行
+      <application>PL/pgSQL</application> 函数中的下一条语句。随着相继执行
+      <command>RETURN NEXT</command> 或 <command>RETURN
+      QUERY</command> 命令，结果集逐步构建起来。
+      最后的 <command>RETURN</command>（不应带参数）会使控制退出函数
+      （或者你也可以让控制到达函数的末尾）。
      </para>
 
      <para>
-      <command>RETURN QUERY</command> has a variant
-      <command>RETURN QUERY EXECUTE</command>, which specifies the
-      query to be executed dynamically.  Parameter expressions can
-      be inserted into the computed query string via <literal>USING</literal>,
-      in just the same way as in the <command>EXECUTE</command> command.
+      <command>RETURN QUERY</command> 有一个变体
+      <command>RETURN QUERY EXECUTE</command>，它指定要动态执行的查询。
+      可以通过 <literal>USING</literal> 将参数表达式插入到计算出的查询字符串中，
+      方式与 <command>EXECUTE</command> 命令中完全相同。
      </para>
 
      <para>
-      If you declared the function with output parameters, write just
-      <command>RETURN NEXT</command> with no expression.  On each
-      execution, the current values of the output parameter
-      variable(s) will be saved for eventual return as a row of the
-      result.  Note that you must declare the function as returning
-      <literal>SETOF record</literal> when there are multiple output
-      parameters, or <literal>SETOF <replaceable>sometype</replaceable></literal>
-      when there is just one output parameter of type
-      <replaceable>sometype</replaceable>, in order to create a set-returning
-      function with output parameters.
+      如果你用输出参数声明了函数，只需写
+      <command>RETURN NEXT</command> 而不带表达式。每次执行时，
+      输出参数变量的当前值将被保存下来，最终作为结果的一行
+      返回。注意，为了创建带输出参数的集合返回函数，
+      当有多个输出参数时，必须将函数声明为返回
+      <literal>SETOF record</literal>；当只有一个类型为 <replaceable>sometype</replaceable>
+      的输出参数时，必须声明为返回 <literal>SETOF <replaceable>sometype</replaceable></literal>。
      </para>
 
      <para>
-      Here is an example of a function using <command>RETURN
-      NEXT</command>:
+      下面是一个使用 <command>RETURN
+      NEXT</command> 的函数的例子：
 
 <programlisting>
 CREATE TABLE foo (fooid INT, foosubid INT, fooname TEXT);
@@ -1526,8 +1491,8 @@ SELECT * FROM get_all_foo();
      </para>
 
      <para>
-      Here is an example of a function using <command>RETURN
-      QUERY</command>:
+      下面是一个使用 <command>RETURN
+      QUERY</command> 的函数的例子：
 
 <programlisting>
 CREATE FUNCTION get_available_flightid(date) RETURNS SETOF integer AS
@@ -1557,55 +1522,38 @@ SELECT * FROM get_available_flightid(CURRENT_DATE);
 
      <note>
       <para>
-       The current implementation of <command>RETURN NEXT</command>
-       and <command>RETURN QUERY</command> stores the entire result set
-       before returning from the function, as discussed above.  That
-       means that if a <application>PL/pgSQL</application> function produces a
-       very large result set, performance might be poor: data will be
-       written to disk to avoid memory exhaustion, but the function
-       itself will not return until the entire result set has been
-       generated.  A future version of <application>PL/pgSQL</application> might
-       allow users to define set-returning functions
-       that do not have this limitation.  Currently, the point at
-       which data begins being written to disk is controlled by the
-       <xref linkend="guc-work-mem"/>
-       configuration variable.  Administrators who have sufficient
-       memory to store larger result sets in memory should consider
-       increasing this parameter.
+       如上所述，<command>RETURN NEXT</command>
+      和 <command>RETURN QUERY</command> 的当前实现会在从函数返回之前存储整个结果集。
+      这意味着，如果一个 <application>PL/pgSQL</application> 函数产生非常大的结果集，
+      性能可能会很差：数据将被写入磁盘以避免内存耗尽，
+      但函数本身要等到整个结果集生成完毕才会返回。
+      <application>PL/pgSQL</application> 的未来版本可能会允许用户定义
+      没有此限制的集合返回函数。目前，数据开始写入磁盘的时机
+      由 <xref linkend="guc-work-mem"/>
+      配置变量控制。拥有足够内存以在内存中存储更大结果集的管理员
+      应考虑增大此参数。
       </para>
      </note>
     </sect3>
    </sect2>
 
    <sect2 id="plpgsql-statements-returning-procedure">
-    <title>Returning from a Procedure</title>
+    <title>从过程返回</title>
 
     <para>
-     A procedure does not have a return value.  A procedure can therefore end
-     without a <command>RETURN</command> statement.  If you wish to use
-     a <command>RETURN</command> statement to exit the code early, write
-     just <command>RETURN</command> with no expression.
+     过程没有返回值。因此，过程可以没有 <command>RETURN</command> 语句就结束。如果你希望使用 <command>RETURN</command> 语句提前退出代码，只需写 <command>RETURN</command> 而不带表达式。
     </para>
 
     <para>
-     If the procedure has output parameters, the final values of the output
-     parameter variables will be returned to the caller.
+     如果过程有输出参数，输出参数变量的最终值将返回给调用者。
     </para>
    </sect2>
 
    <sect2 id="plpgsql-statements-calling-procedure">
-    <title>Calling a Procedure</title>
+    <title>调用过程</title>
 
     <para>
-     A <application>PL/pgSQL</application> function, procedure,
-     or <command>DO</command> block can call a procedure
-     using <command>CALL</command>.  Output parameters are handled
-     differently from the way that <command>CALL</command> works in plain
-     SQL.  Each <literal>OUT</literal> or <literal>INOUT</literal>
-     parameter of the procedure must
-     correspond to a variable in the <command>CALL</command> statement, and
-     whatever the procedure returns is assigned back to that variable after
-     it returns.  For example:
+     <application>PL/pgSQL</application> 函数、过程或 <command>DO</command> 块可以使用 <command>CALL</command> 调用过程。输出参数的处理方式与普通 SQL 中 <command>CALL</command> 的工作方式不同。过程的每个 <literal>OUT</literal> 或 <literal>INOUT</literal> 参数必须对应于 <command>CALL</command> 语句中的一个变量，过程返回的任何内容都会在返回后赋回给该变量。例如：
 <programlisting>
 CREATE PROCEDURE triple(INOUT x int)
 LANGUAGE plpgsql
@@ -1623,19 +1571,15 @@ BEGIN
 END;
 $$;
 </programlisting>
-     The variable corresponding to an output parameter can be a simple
-     variable or a field of a composite-type variable.  Currently,
-     it cannot be an element of an array.
+     对应于输出参数的变量可以是简单变量或复合类型变量的字段。目前，它不能是数组的元素。
     </para>
    </sect2>
 
    <sect2 id="plpgsql-conditionals">
-    <title>Conditionals</title>
+    <title>条件语句</title>
 
     <para>
-     <command>IF</command> and <command>CASE</command> statements let you execute
-     alternative commands based on certain conditions.
-     <application>PL/pgSQL</application> has three forms of <command>IF</command>:
+     <command>IF</command> 和 <command>CASE</command> 语句让你可以基于特定条件执行不同的命令。<application>PL/pgSQL</application> 有三种形式的 <command>IF</command>：
     <itemizedlist>
      <listitem>
       <para><literal>IF ... THEN ... END IF</literal></para>
@@ -1648,7 +1592,7 @@ $$;
      </listitem>
     </itemizedlist>
 
-    and two forms of <command>CASE</command>:
+    以及两种形式的 <command>CASE</command>：
     <itemizedlist>
      <listitem>
       <para><literal>CASE ... WHEN ... THEN ... ELSE ... END CASE</literal></para>
@@ -1669,15 +1613,11 @@ END IF;
 </synopsis>
 
        <para>
-        <literal>IF-THEN</literal> statements are the simplest form of
-        <literal>IF</literal>. The statements between
-        <literal>THEN</literal> and <literal>END IF</literal> will be
-        executed if the condition is true. Otherwise, they are
-        skipped.
+        <literal>IF-THEN</literal> 语句是 <literal>IF</literal> 的最简单形式。如果条件为真，则执行 <literal>THEN</literal> 与 <literal>END IF</literal> 之间的语句。否则，这些语句将被跳过。
        </para>
 
        <para>
-        Example:
+        示例：
 <programlisting>
 IF v_user_id &lt;&gt; 0 THEN
     UPDATE users SET email = v_email WHERE user_id = v_user_id;
@@ -1698,15 +1638,11 @@ END IF;
 </synopsis>
 
        <para>
-        <literal>IF-THEN-ELSE</literal> statements add to
-        <literal>IF-THEN</literal> by letting you specify an
-        alternative set of statements that should be executed if the
-        condition is not true.  (Note this includes the case where the
-        condition evaluates to NULL.)
+        <literal>IF-THEN-ELSE</literal> 语句对 <literal>IF-THEN</literal> 做了扩展，允许你指定一组在条件不成立时应予执行的替代语句。（注意，这包括条件求值为 NULL 的情况。）
        </para>
 
        <para>
-        Examples:
+        示例：
 <programlisting>
 IF parentid IS NULL OR parentid = ''
 THEN
@@ -1746,20 +1682,14 @@ END IF;
 </synopsis>
 
        <para>
-        Sometimes there are more than just two alternatives.
-        <literal>IF-THEN-ELSIF</literal> provides a convenient
-        method of checking several alternatives in turn.
-        The <literal>IF</literal> conditions are tested successively
-        until the first one that is true is found.  Then the
-        associated statement(s) are executed, after which control
-        passes to the next statement after <literal>END IF</literal>.
-        (Any subsequent <literal>IF</literal> conditions are <emphasis>not</emphasis>
-        tested.)  If none of the <literal>IF</literal> conditions is true,
-        then the <literal>ELSE</literal> block (if any) is executed.
+        有时不止两个备选方案。
+        <literal>IF-THEN-ELSIF</literal> 提供了一种方便的方法来依次检查多个备选方案。
+        <literal>IF</literal> 条件会被依次测试，直到找到第一个为真的条件。然后执行关联的语句，之后控制权传递到 <literal>END IF</literal> 之后的下一条语句。
+        （后续的任何 <literal>IF</literal> 条件都<emphasis>不会</emphasis>被测试。）如果没有任何 <literal>IF</literal> 条件为真，则执行 <literal>ELSE</literal> 块（如果有）。
        </para>
 
        <para>
-        Here is an example:
+        下面是一个示例：
 
 <programlisting>
 IF number = 0 THEN
@@ -1776,14 +1706,11 @@ END IF;
        </para>
 
        <para>
-        The key word <literal>ELSIF</literal> can also be spelled
-        <literal>ELSEIF</literal>.
+        关键字 <literal>ELSIF</literal> 也可以拼写为 <literal>ELSEIF</literal>。
        </para>
 
        <para>
-        An alternative way of accomplishing the same task is to nest
-        <literal>IF-THEN-ELSE</literal> statements, as in the
-        following example:
+        完成同一任务的另一种方式是嵌套 <literal>IF-THEN-ELSE</literal> 语句，如下例所示：
 
 <programlisting>
 IF demo_row.sex = 'm' THEN
@@ -1797,14 +1724,12 @@ END IF;
        </para>
 
        <para>
-        However, this method requires writing a matching <literal>END IF</literal>
-        for each <literal>IF</literal>, so it is much more cumbersome than
-        using <literal>ELSIF</literal> when there are many alternatives.
+        然而，这种方法需要为每个 <literal>IF</literal> 编写一个匹配的 <literal>END IF</literal>，因此当备选方案很多时，它比使用 <literal>ELSIF</literal> 要繁琐得多。
        </para>
      </sect3>
 
      <sect3 id="plpgsql-conditionals-simple-case">
-      <title>Simple <literal>CASE</literal></title>
+      <title>简单 <literal>CASE</literal></title>
 
 <synopsis>
 CASE <replaceable>search-expression</replaceable>
@@ -1819,21 +1744,11 @@ END CASE;
 </synopsis>
 
       <para>
-       The simple form of <command>CASE</command> provides conditional execution
-       based on equality of operands.  The <replaceable>search-expression</replaceable>
-       is evaluated (once) and successively compared to each
-       <replaceable>expression</replaceable> in the <literal>WHEN</literal> clauses.
-       If a match is found, then the corresponding
-       <replaceable>statements</replaceable> are executed, and then control
-       passes to the next statement after <literal>END CASE</literal>.  (Subsequent
-       <literal>WHEN</literal> expressions are not evaluated.)  If no match is
-       found, the <literal>ELSE</literal> <replaceable>statements</replaceable> are
-       executed; but if <literal>ELSE</literal> is not present, then a
-       <literal>CASE_NOT_FOUND</literal> exception is raised.
+       <command>CASE</command> 的简单形式基于操作数的相等性提供条件执行。先（一次性地）计算 <replaceable>search-expression</replaceable>，然后依次与 <literal>WHEN</literal> 子句中的每个 <replaceable>expression</replaceable> 进行比较。如果找到匹配项，则执行相应的 <replaceable>statements</replaceable>，然后控制权转到 <literal>END CASE</literal> 之后的下一条语句。（后续的 <literal>WHEN</literal> 表达式不会被计算。）如果没有找到匹配项，则执行 <literal>ELSE</literal> 的 <replaceable>statements</replaceable>；但如果 <literal>ELSE</literal> 不存在，则会抛出 <literal>CASE_NOT_FOUND</literal> 异常。
       </para>
 
       <para>
-       Here is a simple example:
+       下面是一个简单的例子：
 
 <programlisting>
 CASE x
@@ -1847,7 +1762,7 @@ END CASE;
      </sect3>
 
      <sect3 id="plpgsql-conditionals-searched-case">
-      <title>Searched <literal>CASE</literal></title>
+      <title>搜索形式的 <literal>CASE</literal></title>
 
 <synopsis>
 CASE
@@ -1862,21 +1777,11 @@ END CASE;
 </synopsis>
 
       <para>
-       The searched form of <command>CASE</command> provides conditional execution
-       based on truth of Boolean expressions.  Each <literal>WHEN</literal> clause's
-       <replaceable>boolean-expression</replaceable> is evaluated in turn,
-       until one is found that yields <literal>true</literal>.  Then the
-       corresponding <replaceable>statements</replaceable> are executed, and
-       then control passes to the next statement after <literal>END CASE</literal>.
-       (Subsequent <literal>WHEN</literal> expressions are not evaluated.)
-       If no true result is found, the <literal>ELSE</literal>
-       <replaceable>statements</replaceable> are executed;
-       but if <literal>ELSE</literal> is not present, then a
-       <literal>CASE_NOT_FOUND</literal> exception is raised.
+       <command>CASE</command> 的搜索形式基于布尔表达式的真值提供条件执行。依次计算每个 <literal>WHEN</literal> 子句的 <replaceable>boolean-expression</replaceable>，直到找到一个结果为 <literal>true</literal> 的子句。然后执行相应的 <replaceable>statements</replaceable>，随后控制权转到 <literal>END CASE</literal> 之后的下一条语句。（后续的 <literal>WHEN</literal> 表达式不会被计算。）如果没有找到为真的结果，则执行 <literal>ELSE</literal> 的 <replaceable>statements</replaceable>；但如果 <literal>ELSE</literal> 不存在，则会抛出 <literal>CASE_NOT_FOUND</literal> 异常。
       </para>
 
       <para>
-       Here is an example:
+       下面是一个例子：
 
 <programlisting>
 CASE
@@ -1889,17 +1794,14 @@ END CASE;
       </para>
 
       <para>
-       This form of <command>CASE</command> is entirely equivalent to
-       <literal>IF-THEN-ELSIF</literal>, except for the rule that reaching
-       an omitted <literal>ELSE</literal> clause results in an error rather
-       than doing nothing.
+       <command>CASE</command> 的这种形式与 <literal>IF-THEN-ELSIF</literal> 完全等价，区别仅在于：执行到被省略的 <literal>ELSE</literal> 子句时会导致错误，而不是什么都不做。
       </para>
 
      </sect3>
    </sect2>
 
    <sect2 id="plpgsql-control-structures-loops">
-    <title>Simple Loops</title>
+    <title>简单循环</title>
 
     <indexterm zone="plpgsql-control-structures-loops">
      <primary>loop</primary>
@@ -1907,10 +1809,10 @@ END CASE;
     </indexterm>
 
     <para>
-     With the <literal>LOOP</literal>, <literal>EXIT</literal>,
-     <literal>CONTINUE</literal>, <literal>WHILE</literal>, <literal>FOR</literal>,
-     and <literal>FOREACH</literal> statements, you can arrange for your
-     <application>PL/pgSQL</application> function to repeat a series of commands.
+     使用 <literal>LOOP</literal>、<literal>EXIT</literal>、
+     <literal>CONTINUE</literal>、<literal>WHILE</literal>、<literal>FOR</literal>
+     和 <literal>FOREACH</literal> 语句，你可以让自己的
+     <application>PL/pgSQL</application> 函数重复执行一系列命令。
     </para>
 
     <sect3 id="plpgsql-control-structures-loops-loop">
@@ -1924,12 +1826,12 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
 
      <para>
-      <literal>LOOP</literal> defines an unconditional loop that is repeated
-      indefinitely until terminated by an <literal>EXIT</literal> or
-      <command>RETURN</command> statement.  The optional
-      <replaceable>label</replaceable> can be used by <literal>EXIT</literal>
-      and <literal>CONTINUE</literal> statements within nested loops to
-      specify which loop those statements refer to.
+      <literal>LOOP</literal> 定义一个无条件循环，该循环会无限重复，
+      直到被 <literal>EXIT</literal> 或
+      <command>RETURN</command> 语句终止。可选的
+      <replaceable>label</replaceable> 可供嵌套循环内的 <literal>EXIT</literal>
+      和 <literal>CONTINUE</literal> 语句使用，以
+      指定这些语句引用哪个循环。
      </para>
     </sect3>
 
@@ -1946,40 +1848,31 @@ EXIT <optional> <replaceable>label</replaceable> </optional> <optional> WHEN <re
 </synopsis>
 
        <para>
-        If no <replaceable>label</replaceable> is given, the innermost
-        loop is terminated and the statement following <literal>END
-        LOOP</literal> is executed next.  If <replaceable>label</replaceable>
-        is given, it must be the label of the current or some outer
-        level of nested loop or block. Then the named loop or block is
-        terminated and control continues with the statement after the
-        loop's/block's corresponding <literal>END</literal>.
+        如果没有给出 <replaceable>label</replaceable>，则终止最内层
+        循环，接下来执行 <literal>END
+        LOOP</literal> 之后的语句。如果给出了 <replaceable>label</replaceable>，
+        它必须是当前或某一外层
+        嵌套循环或块的标签。然后终止指定的循环或块，
+        控制权继续执行该循环/块对应的 <literal>END</literal> 之后的语句。
        </para>
 
        <para>
-        If <literal>WHEN</literal> is specified, the loop exit occurs only if
-        <replaceable>boolean-expression</replaceable> is true. Otherwise, control passes
-        to the statement after <literal>EXIT</literal>.
+        如果指定了 <literal>WHEN</literal>，则仅当
+        <replaceable>boolean-expression</replaceable> 为真时才退出循环。否则，控制权
+        转到 <literal>EXIT</literal> 之后的语句。
        </para>
 
        <para>
-        <literal>EXIT</literal> can be used with all types of loops; it is
-        not limited to use with unconditional loops.
+        <literal>EXIT</literal> 可用于所有类型的循环；它
+        并不限于用在无条件循环中。
        </para>
 
        <para>
-        When used with a
-        <literal>BEGIN</literal> block, <literal>EXIT</literal> passes
-        control to the next statement after the end of the block.
-        Note that a label must be used for this purpose; an unlabeled
-        <literal>EXIT</literal> is never considered to match a
-        <literal>BEGIN</literal> block.  (This is a change from
-        pre-8.4 releases of <productname>PostgreSQL</productname>, which
-        would allow an unlabeled <literal>EXIT</literal> to match
-        a <literal>BEGIN</literal> block.)
+        当与 <literal>BEGIN</literal> 块一起使用时，<literal>EXIT</literal> 会把控制权转交给该块结束之后的下一条语句。注意，为此必须使用标签；未加标签的 <literal>EXIT</literal> 永远不会被视为与 <literal>BEGIN</literal> 块匹配。（这是对 <productname>PostgreSQL</productname> 8.4 之前版本的更改，那些版本允许未加标签的 <literal>EXIT</literal> 匹配 <literal>BEGIN</literal> 块。）
        </para>
 
        <para>
-        Examples:
+        示例：
 <programlisting>
 LOOP
     -- some computations
@@ -2018,30 +1911,19 @@ CONTINUE <optional> <replaceable>label</replaceable> </optional> <optional> WHEN
 </synopsis>
 
        <para>
-        If no <replaceable>label</replaceable> is given, the next iteration of
-        the innermost loop is begun. That is, all statements remaining
-        in the loop body are skipped, and control returns
-        to the loop control expression (if any) to determine whether
-        another loop iteration is needed.
-        If <replaceable>label</replaceable> is present, it
-        specifies the label of the loop whose execution will be
-        continued.
+        如果没有给出 <replaceable>label</replaceable>，则开始最内层循环的下一次迭代。也就是说，跳过循环体中剩余的所有语句，控制权返回到循环控制表达式（如果有），以确定是否需要进行另一次循环迭代。如果存在 <replaceable>label</replaceable>，它指定要继续执行的循环的标签。
        </para>
 
        <para>
-        If <literal>WHEN</literal> is specified, the next iteration of the
-        loop is begun only if <replaceable>boolean-expression</replaceable> is
-        true. Otherwise, control passes to the statement after
-        <literal>CONTINUE</literal>.
+        如果指定了 <literal>WHEN</literal>，则仅当 <replaceable>boolean-expression</replaceable> 为真时才开始循环的下一次迭代。否则，控制权传递给 <literal>CONTINUE</literal> 之后的语句。
        </para>
 
        <para>
-        <literal>CONTINUE</literal> can be used with all types of loops; it
-        is not limited to use with unconditional loops.
+        <literal>CONTINUE</literal> 可用于所有类型的循环；它并不限于与无条件循环一起使用。
        </para>
 
        <para>
-        Examples:
+        示例：
 <programlisting>
 LOOP
     -- some computations
@@ -2070,15 +1952,11 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
 
        <para>
-        The <literal>WHILE</literal> statement repeats a
-        sequence of statements so long as the
-        <replaceable>boolean-expression</replaceable>
-        evaluates to true.  The expression is checked just before
-        each entry to the loop body.
+        <literal>WHILE</literal> 语句重复执行一系列语句，只要 <replaceable>boolean-expression</replaceable> 求值为真。该表达式在每次进入循环体之前检查。
        </para>
 
        <para>
-        For example:
+        例如：
 <programlisting>
 WHILE amount_owed &gt; 0 AND gift_certificate_balance &gt; 0 LOOP
     -- some computations here
@@ -2092,7 +1970,7 @@ END LOOP;
      </sect3>
 
      <sect3 id="plpgsql-integer-for">
-      <title><literal>FOR</literal> (Integer Variant)</title>
+      <title><literal>FOR</literal>（整数变体）</title>
 
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
@@ -2102,22 +1980,18 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
 
        <para>
-        This form of <literal>FOR</literal> creates a loop that iterates over a range
-        of integer values. The variable
-        <replaceable>name</replaceable> is automatically defined as type
-        <type>integer</type> and exists only inside the loop (any existing
-        definition of the variable name is ignored within the loop).
-        The two expressions giving
-        the lower and upper bound of the range are evaluated once when entering
-        the loop. If the <literal>BY</literal> clause isn't specified the iteration
-        step is 1, otherwise it's the value specified in the <literal>BY</literal>
-        clause, which again is evaluated once on loop entry.
-        If <literal>REVERSE</literal> is specified then the step value is
-        subtracted, rather than added, after each iteration.
+        这种形式的 <literal>FOR</literal> 创建一个在整数范围内迭代的循环。变量
+        <replaceable>name</replaceable> 自动定义为 <type>integer</type> 类型，并且只存在于循环内部（循环内忽略
+        该变量名的任何已有定义）。
+        给出范围下界和上界的两个表达式在进入循环时求值一次。如果未指定
+        <literal>BY</literal> 子句，则迭代步长为 1，否则为 <literal>BY</literal>
+        子句中指定的值，该值同样在进入循环时求值一次。
+        如果指定了 <literal>REVERSE</literal>，则在每次迭代后减去步长值，
+        而不是加上它。
        </para>
 
        <para>
-        Some examples of integer <literal>FOR</literal> loops:
+        一些整数 <literal>FOR</literal> 循环的示例：
 <programlisting>
 FOR i IN 1..10 LOOP
     -- i will take on the values 1,2,3,4,5,6,7,8,9,10 within the loop
@@ -2134,38 +2008,29 @@ END LOOP;
        </para>
 
        <para>
-        If the lower bound is greater than the upper bound (or less than,
-        in the <literal>REVERSE</literal> case), the loop body is not
-        executed at all.  No error is raised.
+        如果下界大于上界（在 <literal>REVERSE</literal> 情况下为小于），
+        则循环体完全不执行。不会引发错误。
        </para>
 
        <para>
-        If a <replaceable>label</replaceable> is attached to the
-        <literal>FOR</literal> loop then the integer loop variable can be
-        referenced with a qualified name, using that
-        <replaceable>label</replaceable>.
+        如果一个 <replaceable>label</replaceable> 被附加到 <literal>FOR</literal> 循环上，那么就可以使用该 <replaceable>label</replaceable> 以限定名来引用整数循环变量。
        </para>
      </sect3>
    </sect2>
 
    <sect2 id="plpgsql-records-iterating">
-    <title>Looping through Query Results</title>
+    <title>遍历查询结果</title>
 
     <para>
-     Using a different type of <literal>FOR</literal> loop, you can iterate through
-     the results of a query and manipulate that data
-     accordingly. The syntax is:
+     使用另一种类型的 <literal>FOR</literal> 循环，可以遍历查询的结果并相应地处理这些数据。语法为：
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
 FOR <replaceable>target</replaceable> IN <replaceable>query</replaceable> LOOP
     <replaceable>statements</replaceable>
 END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
-     The <replaceable>target</replaceable> is a record variable, row variable,
-     or comma-separated list of scalar variables.
-     The <replaceable>target</replaceable> is successively assigned each row
-     resulting from the <replaceable>query</replaceable> and the loop body is
-     executed for each row. Here is an example:
+     其中的 <replaceable>target</replaceable> 是一个记录变量、行变量，或以逗号分隔的标量变量列表。
+     <replaceable>target</replaceable> 会依次被赋予 <replaceable>query</replaceable> 产生的每一行，并且对每一行执行循环体。下面是一个例子：
 <programlisting>
 CREATE FUNCTION refresh_mviews() RETURNS integer AS $$
 DECLARE
@@ -2198,43 +2063,33 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-     If the loop is terminated by an <literal>EXIT</literal> statement, the last
-     assigned row value is still accessible after the loop.
+     如果循环被 <literal>EXIT</literal> 语句终止，那么在循环之后仍然可以访问最后赋予的行值。
     </para>
 
     <para>
-     The <replaceable>query</replaceable> used in this type of <literal>FOR</literal>
-     statement can be any SQL command that returns rows to the caller:
-     <command>SELECT</command> is the most common case,
-     but you can also use <command>INSERT</command>, <command>UPDATE</command>,
-     <command>DELETE</command>, or <command>MERGE</command> with a
-     <literal>RETURNING</literal> clause.  Some utility
-     commands such as <command>EXPLAIN</command> will work too.
+     这类 <literal>FOR</literal> 语句中使用的 <replaceable>query</replaceable> 可以是任何向调用者返回行的 SQL 命令：
+     <command>SELECT</command> 是最常见的情况，
+     但也可以使用带 <literal>RETURNING</literal> 子句的 <command>INSERT</command>、<command>UPDATE</command>、
+     <command>DELETE</command> 或 <command>MERGE</command>。某些工具命令（例如 <command>EXPLAIN</command>）也可以使用。
     </para>
 
     <para>
-     <application>PL/pgSQL</application> variables are replaced by query parameters,
-     and the query plan is cached for possible re-use, as discussed in
-     detail in <xref linkend="plpgsql-var-subst"/> and
-     <xref linkend="plpgsql-plan-caching"/>.
+     <application>PL/pgSQL</application> 变量会被替换为查询参数，
+     并且查询计划会被缓存以便可能的重用，详见
+     <xref linkend="plpgsql-var-subst"/> 和
+     <xref linkend="plpgsql-plan-caching"/>。
     </para>
 
     <para>
-     The <literal>FOR-IN-EXECUTE</literal> statement is another way to iterate over
-     rows:
+     <literal>FOR-IN-EXECUTE</literal> 语句是遍历行的另一种方式：
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
 FOR <replaceable>target</replaceable> IN EXECUTE <replaceable>text_expression</replaceable> <optional> USING <replaceable>expression</replaceable> <optional>, ... </optional> </optional> LOOP
     <replaceable>statements</replaceable>
 END LOOP <optional> <replaceable>label</replaceable> </optional>;
 </synopsis>
-     This is like the previous form, except that the source query
-     is specified as a string expression, which is evaluated and replanned
-     on each entry to the <literal>FOR</literal> loop.  This allows the programmer to
-     choose the speed of a preplanned query or the flexibility of a dynamic
-     query, just as with a plain <command>EXECUTE</command> statement.
-     As with <command>EXECUTE</command>, parameter values can be inserted
-     into the dynamic command via <literal>USING</literal>.
+     这与前面的形式类似，不同之处在于源查询被指定为一个字符串表达式，该表达式在每次进入 <literal>FOR</literal> 循环时都会被求值并重新规划。这使程序员可以像使用普通 <command>EXECUTE</command> 语句那样，在预规划查询的速度与动态查询的灵活性之间进行选择。
+     与 <command>EXECUTE</command> 一样，可以通过 <literal>USING</literal> 将参数值插入到动态命令中。
     </para>
 
     <para>
@@ -2245,16 +2100,12 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
    </sect2>
 
    <sect2 id="plpgsql-foreach-array">
-    <title>Looping through Arrays</title>
+    <title>遍历数组</title>
 
     <para>
-     The <literal>FOREACH</literal> loop is much like a <literal>FOR</literal> loop,
-     but instead of iterating through the rows returned by an SQL query,
-     it iterates through the elements of an array value.
-     (In general, <literal>FOREACH</literal> is meant for looping through
-     components of a composite-valued expression; variants for looping
-     through composites besides arrays may be added in future.)
-     The <literal>FOREACH</literal> statement to loop over an array is:
+     <literal>FOREACH</literal> 循环与 <literal>FOR</literal> 循环非常相似，但它不是遍历 SQL 查询返回的行，而是遍历数组值的元素。
+     （通常，<literal>FOREACH</literal> 旨在遍历复合值表达式的组成部分；将来可能会添加除数组之外用于遍历复合值的变体。）
+     用于遍历数组的 <literal>FOREACH</literal> 语句是：
 
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
@@ -2265,13 +2116,10 @@ END LOOP <optional> <replaceable>label</replaceable> </optional>;
     </para>
 
     <para>
-     Without <literal>SLICE</literal>, or if <literal>SLICE 0</literal> is specified,
-     the loop iterates through individual elements of the array produced
-     by evaluating the <replaceable>expression</replaceable>.
-     The <replaceable>target</replaceable> variable is assigned each
-     element value in sequence, and the loop body is executed for each element.
-     Here is an example of looping through the elements of an integer
-     array:
+     如果不指定 <literal>SLICE</literal>，或者指定了 <literal>SLICE 0</literal>，
+     则循环遍历对 <replaceable>expression</replaceable> 求值所生成的数组的各个元素。
+     <replaceable>target</replaceable> 变量依次被赋予每个元素值，并对每个元素执行循环体。
+     下面是一个遍历整数数组元素的示例：
 
 <programlisting>
 CREATE FUNCTION sum(int[]) RETURNS int8 AS $$
@@ -2288,23 +2136,18 @@ END;
 $$ LANGUAGE plpgsql;
 </programlisting>
 
-     The elements are visited in storage order, regardless of the number of
-     array dimensions.  Although the <replaceable>target</replaceable> is
-     usually just a single variable, it can be a list of variables when
-     looping through an array of composite values (records).  In that case,
-     for each array element, the variables are assigned from successive
-     columns of the composite value.
+     无论数组的维数是多少，元素都按存储顺序访问。尽管 <replaceable>target</replaceable>
+     通常只是一个变量，但在遍历复合值（记录）数组时，它可以是变量列表。在这种情况下，
+     对于每个数组元素，变量依次从复合值的连续列赋值。
     </para>
 
     <para>
-     With a positive <literal>SLICE</literal> value, <literal>FOREACH</literal>
-     iterates through slices of the array rather than single elements.
-     The <literal>SLICE</literal> value must be an integer constant not larger
-     than the number of dimensions of the array.  The
-     <replaceable>target</replaceable> variable must be an array,
-     and it receives successive slices of the array value, where each slice
-     is of the number of dimensions specified by <literal>SLICE</literal>.
-     Here is an example of iterating through one-dimensional slices:
+     当 <literal>SLICE</literal> 值为正数时，<literal>FOREACH</literal>
+     遍历数组的切片而不是单个元素。
+     <literal>SLICE</literal> 值必须是不大于数组维数的整数常量。
+     <replaceable>target</replaceable> 变量必须是数组，
+     它依次接收数组值的各个切片，其中每个切片具有 <literal>SLICE</literal> 指定的维数。
+     下面是一个遍历一维切片的示例：
 
 <programlisting>
 CREATE FUNCTION scan_rows(int[]) RETURNS void AS $$
@@ -2329,7 +2172,7 @@ NOTICE:  row = {10,11,12}
    </sect2>
 
    <sect2 id="plpgsql-error-trapping">
-    <title>Trapping Errors</title>
+    <title>捕获错误</title>
 
     <indexterm>
      <primary>exceptions</primary>
@@ -2337,12 +2180,7 @@ NOTICE:  row = {10,11,12}
     </indexterm>
 
     <para>
-     By default, any error occurring in a <application>PL/pgSQL</application>
-     function aborts execution of the function and the
-     surrounding transaction.  You can trap errors and recover
-     from them by using a <command>BEGIN</command> block with an
-     <literal>EXCEPTION</literal> clause.  The syntax is an extension of the
-     normal syntax for a <command>BEGIN</command> block:
+     默认情况下，在 <application>PL/pgSQL</application> 函数中发生的任何错误都会中止该函数的执行以及周围的事务。你可以使用带有 <literal>EXCEPTION</literal> 子句的 <command>BEGIN</command> 块来捕获错误并从中恢复。其语法是对 <command>BEGIN</command> 块常规语法的扩展：
 
 <synopsis>
 <optional> &lt;&lt;<replaceable>label</replaceable>&gt;&gt; </optional>
@@ -2361,33 +2199,11 @@ END;
     </para>
 
     <para>
-     If no error occurs, this form of block simply executes all the
-     <replaceable>statements</replaceable>, and then control passes
-     to the next statement after <literal>END</literal>.  But if an error
-     occurs within the <replaceable>statements</replaceable>, further
-     processing of the <replaceable>statements</replaceable> is
-     abandoned, and control passes to the <literal>EXCEPTION</literal> list.
-     The list is searched for the first <replaceable>condition</replaceable>
-     matching the error that occurred.  If a match is found, the
-     corresponding <replaceable>handler_statements</replaceable> are
-     executed, and then control passes to the next statement after
-     <literal>END</literal>.  If no match is found, the error propagates out
-     as though the <literal>EXCEPTION</literal> clause were not there at all:
-     the error can be caught by an enclosing block with
-     <literal>EXCEPTION</literal>, or if there is none it aborts processing
-     of the function.
+     如果没有错误发生，这种形式的块只是执行所有 <replaceable>statements</replaceable>，然后控制权传递到 <literal>END</literal> 之后的下一条语句。但如果在 <replaceable>statements</replaceable> 内发生错误，则放弃对 <replaceable>statements</replaceable> 的进一步处理，控制权转到 <literal>EXCEPTION</literal> 列表。在该列表中搜索第一个与所发生错误匹配的 <replaceable>condition</replaceable>。如果找到匹配项，则执行相应的 <replaceable>handler_statements</replaceable>，然后控制权传递到 <literal>END</literal> 之后的下一条语句。如果未找到匹配项，错误会向外传播，就好像 <literal>EXCEPTION</literal> 子句根本不存在一样：该错误可以被带有 <literal>EXCEPTION</literal> 的外层块捕获，如果没有这样的块，则中止该函数的处理。
     </para>
 
     <para>
-     The <replaceable>condition</replaceable> names can be any of
-     those shown in <xref linkend="errcodes-appendix"/>.  A category
-     name matches any error within its category.  The special
-     condition name <literal>OTHERS</literal> matches every error type except
-     <literal>QUERY_CANCELED</literal> and <literal>ASSERT_FAILURE</literal>.
-     (It is possible, but often unwise, to trap those two error types
-     by name.)  Condition names are
-     not case-sensitive.  Also, an error condition can be specified
-     by <literal>SQLSTATE</literal> code; for example these are equivalent:
+     <replaceable>condition</replaceable> 名称可以是 <xref linkend="errcodes-appendix"/> 中所示的任意名称。类别名称匹配该类别内的任何错误。特殊条件名 <literal>OTHERS</literal> 匹配除 <literal>QUERY_CANCELED</literal> 和 <literal>ASSERT_FAILURE</literal> 之外的每一种错误类型。（按名称捕获这两种错误类型是可能的，但通常并不明智。）条件名不区分大小写。此外，错误条件也可以通过 <literal>SQLSTATE</literal> 代码指定；例如下面这些是等价的：
 <programlisting>
 WHEN division_by_zero THEN ...
 WHEN SQLSTATE '22012' THEN ...
@@ -2395,18 +2211,11 @@ WHEN SQLSTATE '22012' THEN ...
     </para>
 
     <para>
-     If a new error occurs within the selected
-     <replaceable>handler_statements</replaceable>, it cannot be caught
-     by this <literal>EXCEPTION</literal> clause, but is propagated out.
-     A surrounding <literal>EXCEPTION</literal> clause could catch it.
+     如果在选定的 <replaceable>handler_statements</replaceable> 内发生新的错误，它不能被这个 <literal>EXCEPTION</literal> 子句捕获，而是向外传播。外层的 <literal>EXCEPTION</literal> 子句可以捕获它。
     </para>
 
     <para>
-     When an error is caught by an <literal>EXCEPTION</literal> clause,
-     the local variables of the <application>PL/pgSQL</application> function
-     remain as they were when the error occurred, but all changes
-     to persistent database state within the block are rolled back.
-     As an example, consider this fragment:
+     当错误被 <literal>EXCEPTION</literal> 子句捕获时，<application>PL/pgSQL</application> 函数的局部变量保持错误发生时的状态，但块内对持久数据库状态的所有更改都会回滚。例如，考虑下面这个片段：
 
 <programlisting>
 INSERT INTO mytab(firstname, lastname) VALUES('Tom', 'Jones');
@@ -2421,34 +2230,20 @@ EXCEPTION
 END;
 </programlisting>
 
-     When control reaches the assignment to <literal>y</literal>, it will
-     fail with a <literal>division_by_zero</literal> error.  This will be caught by
-     the <literal>EXCEPTION</literal> clause.  The value returned in the
-     <command>RETURN</command> statement will be the incremented value of
-     <literal>x</literal>, but the effects of the <command>UPDATE</command> command will
-     have been rolled back.  The <command>INSERT</command> command preceding the
-     block is not rolled back, however, so the end result is that the database
-     contains <literal>Tom Jones</literal> not <literal>Joe Jones</literal>.
+     当控制权到达对 <literal>y</literal> 的赋值时，会因 <literal>division_by_zero</literal> 错误而失败。这将被 <literal>EXCEPTION</literal> 子句捕获。<command>RETURN</command> 语句中返回的值将是 <literal>x</literal> 递增后的值，但 <command>UPDATE</command> 命令的效果已被回滚。然而，块之前的 <command>INSERT</command> 命令不会被回滚，因此最终结果是数据库中包含 <literal>Tom Jones</literal> 而不是 <literal>Joe Jones</literal>。
     </para>
 
     <tip>
      <para>
-      A block containing an <literal>EXCEPTION</literal> clause is significantly
-      more expensive to enter and exit than a block without one.  Therefore,
-      don't use <literal>EXCEPTION</literal> without need.
+      包含 <literal>EXCEPTION</literal> 子句的块在进入和退出时比不包含该子句的块开销显著更大。因此，不要不必要地使用 <literal>EXCEPTION</literal>。
      </para>
     </tip>
 
     <example id="plpgsql-upsert-example">
-    <title>Exceptions with <command>UPDATE</command>/<command>INSERT</command></title>
+    <title>带 <command>UPDATE</command>/<command>INSERT</command> 的异常</title>
     <para>
 
-    This example uses exception handling to perform either
-    <command>UPDATE</command> or <command>INSERT</command>, as appropriate.  It is
-    recommended that applications use <command>INSERT</command> with
-    <literal>ON CONFLICT DO UPDATE</literal> rather than actually using
-    this pattern.  This example serves primarily to illustrate use of
-    <application>PL/pgSQL</application> control flow structures:
+    此示例使用异常处理来按需执行 <command>UPDATE</command> 或 <command>INSERT</command>。建议应用程序使用 <command>INSERT</command> 配合 <literal>ON CONFLICT DO UPDATE</literal>，而不是实际使用这种模式。此示例主要用来演示 <application>PL/pgSQL</application> 控制流结构的使用：
 
 <programlisting>
 CREATE TABLE db (a INT PRIMARY KEY, b TEXT);
@@ -2480,128 +2275,105 @@ SELECT merge_db(1, 'david');
 SELECT merge_db(1, 'dennis');
 </programlisting>
 
-     This coding assumes the <literal>unique_violation</literal> error is caused by
-     the <command>INSERT</command>, and not by, say, an <command>INSERT</command> in a
-     trigger function on the table.  It might also misbehave if there is
-     more than one unique index on the table, since it will retry the
-     operation regardless of which index caused the error.
-     More safety could be had by using the
-     features discussed next to check that the trapped error was the one
-     expected.
+     这种写法假定 <literal>unique_violation</literal> 错误是由 <command>INSERT</command> 引起的，而不是由（比如说）表上触发器函数中的 <command>INSERT</command> 引起的。如果表上有多个唯一索引，它也可能出错，因为无论哪个索引导致该错误，它都会重试该操作。使用接下来讨论的特性来检查捕获的错误是否正是预期的那个，可以获得更高的安全性。
     </para>
     </example>
 
    <sect3 id="plpgsql-exception-diagnostics">
-    <title>Obtaining Information about an Error</title>
+    <title>获取有关错误的信息</title>
 
     <para>
-     Exception handlers frequently need to identify the specific error that
-     occurred.  There are two ways to get information about the current
-     exception in <application>PL/pgSQL</application>: special variables and the
-     <command>GET STACKED DIAGNOSTICS</command> command.
+     异常处理器经常需要识别所发生的具体错误。在 <application>PL/pgSQL</application> 中有两种方式获取关于当前异常的信息：特殊变量和 <command>GET STACKED DIAGNOSTICS</command> 命令。
     </para>
 
     <para>
-     Within an exception handler, the special variable
-     <varname>SQLSTATE</varname> contains the error code that corresponds to
-     the exception that was raised (refer to <xref linkend="errcodes-table"/>
-     for a list of possible error codes). The special variable
-     <varname>SQLERRM</varname> contains the error message associated with the
-     exception. These variables are undefined outside exception handlers.
+     在异常处理器内部，特殊变量 <varname>SQLSTATE</varname> 包含与所引发异常对应的错误代码（可能的错误代码列表请参阅 <xref linkend="errcodes-table"/>）。特殊变量 <varname>SQLERRM</varname> 包含与该异常关联的错误消息。这些变量在异常处理器之外是未定义的。
     </para>
 
     <para>
-     Within an exception handler, one may also retrieve
-     information about the current exception by using the
-     <command>GET STACKED DIAGNOSTICS</command> command, which has the form:
+     在异常处理器中，还可以使用 <command>GET STACKED DIAGNOSTICS</command> 命令检索当前异常的信息，其形式为：
 
 <synopsis>
 GET STACKED DIAGNOSTICS <replaceable>variable</replaceable> { = | := } <replaceable>item</replaceable> <optional> , ... </optional>;
 </synopsis>
 
-     Each <replaceable>item</replaceable> is a key word identifying a status
-     value to be assigned to the specified <replaceable>variable</replaceable>
-     (which should be of the right data type to receive it).  The currently
-     available status items are shown
-     in <xref linkend="plpgsql-exception-diagnostics-values"/>.
+     每个 <replaceable>item</replaceable> 都是一个关键字，用于标识要赋给指定 <replaceable>variable</replaceable> 的状态值（该变量应具有接收它的正确数据类型）。当前可用的状态项显示在 <xref linkend="plpgsql-exception-diagnostics-values"/> 中。
     </para>
 
      <table id="plpgsql-exception-diagnostics-values">
-      <title>Error Diagnostics Items</title>
+      <title>错误诊断项</title>
       <tgroup cols="3">
        <colspec colname="col1" colwidth="2*"/>
        <colspec colname="col2" colwidth="1*"/>
        <colspec colname="col3" colwidth="2*"/>
        <thead>
         <row>
-         <entry>Name</entry>
-         <entry>Type</entry>
-         <entry>Description</entry>
+         <entry>名称</entry>
+         <entry>类型</entry>
+         <entry>描述</entry>
         </row>
        </thead>
        <tbody>
         <row>
          <entry><literal>RETURNED_SQLSTATE</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the SQLSTATE error code of the exception</entry>
+         <entry>异常的 SQLSTATE 错误代码</entry>
         </row>
         <row>
          <entry><literal>COLUMN_NAME</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the name of the column related to exception</entry>
+         <entry>与异常相关的列的名称</entry>
         </row>
         <row>
          <entry><literal>CONSTRAINT_NAME</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the name of the constraint related to exception</entry>
+         <entry>与异常相关的约束的名称</entry>
         </row>
         <row>
          <entry><literal>PG_DATATYPE_NAME</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the name of the data type related to exception</entry>
+         <entry>与异常相关的数据类型的名称</entry>
         </row>
         <row>
          <entry><literal>MESSAGE_TEXT</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the text of the exception's primary message</entry>
+         <entry>异常主要消息的文本</entry>
         </row>
         <row>
          <entry><literal>TABLE_NAME</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the name of the table related to exception</entry>
+         <entry>与异常相关的表的名称</entry>
         </row>
         <row>
          <entry><literal>SCHEMA_NAME</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the name of the schema related to exception</entry>
+         <entry>与异常相关的模式的名称</entry>
         </row>
         <row>
          <entry><literal>PG_EXCEPTION_DETAIL</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the text of the exception's detail message, if any</entry>
+         <entry>异常详细消息的文本（如果有）</entry>
         </row>
         <row>
          <entry><literal>PG_EXCEPTION_HINT</literal></entry>
          <entry><type>text</type></entry>
-         <entry>the text of the exception's hint message, if any</entry>
+         <entry>异常提示消息的文本（如果有）</entry>
         </row>
         <row>
          <entry><literal>PG_EXCEPTION_CONTEXT</literal></entry>
          <entry><type>text</type></entry>
-         <entry>line(s) of text describing the call stack at the time of the
-          exception (see <xref linkend="plpgsql-call-stack"/>)</entry>
+         <entry>描述异常发生时调用栈的文本行（见 <xref linkend="plpgsql-call-stack"/>）</entry>
         </row>
        </tbody>
       </tgroup>
      </table>
 
     <para>
-     If the exception did not set a value for an item, an empty string
-     will be returned.
+     如果异常未为某项设置值，则将返回空字符串。
     </para>
 
     <para>
-     Here is an example:
+     下面是一个示例：
 <programlisting>
 DECLARE
   text_var1 text;
@@ -2621,20 +2393,11 @@ END;
   </sect2>
 
   <sect2 id="plpgsql-call-stack">
-   <title>Obtaining Execution Location Information</title>
+   <title>获取执行位置信息</title>
 
    <para>
-    The <command>GET DIAGNOSTICS</command> command, previously described
-    in <xref linkend="plpgsql-statements-diagnostics"/>, retrieves information
-    about current execution state (whereas the <command>GET STACKED
-    DIAGNOSTICS</command> command discussed above reports information about
-    the execution state as of a previous error).  Its <literal>PG_CONTEXT</literal>
-    status item is useful for identifying the current execution
-    location.  <literal>PG_CONTEXT</literal> returns a text string with line(s)
-    of text describing the call stack.  The first line refers to the current
-    function and currently executing <command>GET DIAGNOSTICS</command>
-    command.  The second and any subsequent lines refer to calling functions
-    further up the call stack.  For example:
+    <command>GET DIAGNOSTICS</command> 命令已在 <xref linkend="plpgsql-statements-diagnostics"/> 中描述过，它检索有关当前执行状态的信息（而上面讨论的 <command>GET STACKED
+    DIAGNOSTICS</command> 命令报告的是截至先前错误时的执行状态信息）。它的 <literal>PG_CONTEXT</literal> 状态项可用于标识当前的执行位置。<literal>PG_CONTEXT</literal> 返回一个文本字符串，其中包含描述调用栈的一行或多行文本。第一行指向当前函数以及当前正在执行的 <command>GET DIAGNOSTICS</command> 命令。第二行及后续各行指向调用栈中更上层的调用函数。例如：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION outer_func() RETURNS integer AS $$
@@ -2669,8 +2432,7 @@ CONTEXT:  PL/pgSQL function outer_func() line 3 at RETURN
 
    <para>
     <literal>GET STACKED DIAGNOSTICS ... PG_EXCEPTION_CONTEXT</literal>
-    returns the same sort of stack trace, but describing the location
-    at which an error was detected, rather than the current location.
+    返回同类栈回溯，但描述的是检测到错误的位置，而不是当前位置。
    </para>
   </sect2>
   </sect1>
