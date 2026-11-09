@@ -389,7 +389,7 @@ SELECT * FROM mytable WHERE val = text 'foo';
 </sect1>
 
 <sect1 id="typeconv-func">
-<title>Functions</title>
+<title>函数</title>
 
 <indexterm zone="typeconv-func">
  <primary>function</primary>
@@ -397,53 +397,33 @@ SELECT * FROM mytable WHERE val = text 'foo';
 </indexterm>
 
   <para>
-   The specific function that is referenced by a function call
-   is determined using the following procedure.
+   函数调用所引用的具体函数，由以下过程确定。
   </para>
 
 <procedure>
-<title>Function Type Resolution</title>
+<title>函数类型解析</title>
 
 <step performance="required">
 <para>
-Select the functions to be considered from the
-<classname>pg_proc</classname> system catalog.  If a non-schema-qualified
-function name was used, the functions
-considered are those with the matching name and argument count that are
-visible in the current search path (see <xref linkend="ddl-schemas-path"/>).
-If a qualified function name was given, only functions in the specified
-schema are considered.
+从 <classname>pg_proc</classname> 系统目录中选择要考虑的函数。如果使用的是未限定模式的函数名，则考虑的函数是那些名称和参数个数匹配、并且在当前搜索路径中可见的函数（参见 <xref linkend="ddl-schemas-path"/>）。如果给出的是限定模式的函数名，则只考虑指定模式中的函数。
 </para>
 
 <substeps>
 <step performance="optional">
 <para>
-If the search path finds multiple functions of identical argument types,
-only the one appearing earliest in the path is considered.  Functions of
-different argument types are considered on an equal footing regardless of
-search path position.
+如果搜索路径找到多个参数类型完全相同的函数，则只考虑在路径中出现最早的那个函数。参数类型不同的函数被视为地位相同，与搜索路径中的位置无关。
 </para>
 </step>
 <step performance="optional">
 <para>
-If a function is declared with a <literal>VARIADIC</literal> array parameter, and
-the call does not use the <literal>VARIADIC</literal> keyword, then the function
-is treated as if the array parameter were replaced by one or more occurrences
-of its element type, as needed to match the call.  After such expansion the
-function might have effective argument types identical to some non-variadic
-function.  In that case the function appearing earlier in the search path is
-used, or if the two functions are in the same schema, the non-variadic one is
-preferred.
+如果某个函数声明时带有 <literal>VARIADIC</literal> 数组参数，而调用中没有使用 <literal>VARIADIC</literal> 关键字，则该函数会被视为其数组参数已按需要替换为一个或多个该元素类型的出现，以匹配该调用。经过这样的展开后，该函数可能具有与某个非可变参数函数相同的有效参数类型。在这种情况下，将使用在搜索路径中出现较早的函数；如果这两个函数位于同一模式中，则优先选择非可变参数的那个函数。
 </para>
 <para>
 This creates a security hazard when calling, via qualified name
   <footnote id="func-qualified-security">
    <!-- If you edit this, consider editing op-qualified-security. -->
    <para>
-    The hazard does not arise with a non-schema-qualified name, because a
-    search path containing schemas that permit untrusted users to create
-    objects is not a <link linkend="ddl-schemas-patterns">secure schema usage
-    pattern</link>.
+    对于未用模式限定的名称，不会出现这种风险，因为包含允许不受信任用户创建对象的模式的搜索路径不是一种<link linkend="ddl-schemas-patterns">安全的模式使用模式</link>。
    </para>
   </footnote>,
 a variadic function found in a schema that permits untrusted users to create
@@ -458,24 +438,10 @@ to create objects.
 </step>
 <step performance="optional">
 <para>
-Functions that have default values for parameters are considered to match any
-call that omits zero or more of the defaultable parameter positions.  If more
-than one such function matches a call, the one appearing earliest in the
-search path is used.  If there are two or more such functions in the same
-schema with identical parameter types in the non-defaulted positions (which is
-possible if they have different sets of defaultable parameters), the system
-will not be able to determine which to prefer, and so an <quote>ambiguous
-function call</quote> error will result if no better match to the call can be
-found.
+对于参数具有默认值的函数，认为它们与省略了零个或多个可默认参数位置的任何调用相匹配。如果有多个这样的函数与某个调用匹配，则使用在搜索路径中出现最早的那个。如果同一模式中有两个或更多这样的函数，且它们在非默认位置上的参数类型完全相同（如果它们具有不同的可默认参数集合，这是可能的），系统将无法确定优先选择哪一个，因此如果找不到与该调用更匹配的函数，就会产生<quote>函数调用不明确</quote>错误。
 </para>
 <para>
-This creates an availability hazard when calling, via qualified
-name<footnoteref linkend="func-qualified-security"/>, any function found in a
-schema that permits untrusted users to create objects.  A malicious user can
-create a function with the name of an existing function, replicating that
-function's parameters and appending novel parameters having default values.
-This precludes new calls to the original function.  To forestall this hazard,
-place functions in schemas that permit only trusted users to create objects.
+当通过限定名称<footnoteref linkend="func-qualified-security"/>调用在允许不受信任用户创建对象的模式中找到的任何函数时，这会造成可用性风险。恶意用户可以创建一个与现有函数同名的函数，复制该函数的参数，并追加具有默认值的新参数。这会妨碍对原始函数的新调用。为防止这种风险，请将函数放在只允许受信任用户创建对象的模式中。
 </para>
 </step>
 </substeps>
@@ -483,14 +449,7 @@ place functions in schemas that permit only trusted users to create objects.
 
 <step performance="required">
 <para>
-Check for a function accepting exactly the input argument types.
-If one exists (there can be only one exact match in the set of
-functions considered), use it.  Lack of an exact match creates a security
-hazard when calling, via qualified
-name<footnoteref linkend="func-qualified-security"/>, a function found in a
-schema that permits untrusted users to create objects.  In such situations,
-cast arguments to force an exact match.  (Cases involving <type>unknown</type>
-will never find a match at this step.)
+检查是否存在恰好接受输入参数类型的函数。如果存在（在考虑的函数集合中只能有一个完全匹配），则使用它。当通过限定名称<footnoteref linkend="func-qualified-security"/>调用在允许不受信任用户创建对象的模式中找到的函数时，缺少完全匹配会造成安全风险。在这种情况下，请对参数进行类型转换以强制实现完全匹配。（涉及 <type>unknown</type> 的情况在此步骤中永远不会找到匹配。）
 </para>
 </step>
 
@@ -507,79 +466,45 @@ from one of the standard string types).  When these conditions are met,
 the function call is treated as a form of <literal>CAST</literal> specification.
   <footnote>
    <para>
-    The reason for this step is to support function-style cast specifications
-    in cases where there is not an actual cast function.  If there is a cast
-    function, it is conventionally named after its output type, and so there
-    is no need to have a special case.  See
-    <xref linkend="sql-createcast"/>
-    for additional commentary.
+    此步骤的原因是在没有实际转换函数的情况下支持函数风格的转换说明。如果有转换函数，按照惯例它以输出类型命名，因此不需要特殊处理。有关更多说明，请参见
+    <xref linkend="sql-createcast"/>。
    </para>
   </footnote>
 </para>
 </step>
 <step performance="required">
 <para>
-Look for the best match.
+寻找最佳匹配。
 </para>
 <substeps>
 <step performance="required">
 <para>
-Discard candidate functions for which the input types do not match
-and cannot be converted (using an implicit conversion) to match.
-<type>unknown</type> literals are
-assumed to be convertible to anything for this purpose.  If only one
-candidate remains, use it; else continue to the next step.
+丢弃输入类型不匹配且无法（通过隐式转换）转换为匹配的候选函数。为此，<type>unknown</type> 字面量被假定为可转换为任何类型。如果只剩下一个候选函数，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-If any input argument is of a domain type, treat it as being of the
-domain's base type for all subsequent steps.  This ensures that domains
-act like their base types for purposes of ambiguous-function resolution.
+如果任何输入参数是域类型，则在所有后续步骤中将其视为该域的基类型。这确保了在歧义函数解析时，域的行为与其基类型相同。
 </para>
 </step>
 <step performance="required">
 <para>
-Run through all candidates and keep those with the most exact matches
-on input types.  Keep all candidates if none have exact matches.
-If only one candidate remains, use it; else continue to the next step.
+遍历所有候选函数，保留在输入类型上具有最多精确匹配的候选函数。如果没有任何候选函数具有精确匹配，则保留所有候选函数。如果只剩下一个候选函数，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-Run through all candidates and keep those that accept preferred types (of the
-input data type's type category) at the most positions where type conversion
-will be required.
-Keep all candidates if none accept preferred types.
-If only one candidate remains, use it; else continue to the next step.
+遍历所有候选函数，保留在需要进行类型转换的位置上最多地接受首选类型（属于输入数据类型的类型分类）的候选函数。如果没有任何候选函数接受首选类型，则保留所有候选函数。如果只剩下一个候选函数，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-If any input arguments are <type>unknown</type>, check the type categories
-accepted
-at those argument positions by the remaining candidates.  At each position,
-select the <type>string</type> category if any candidate accepts that category.
-(This bias towards string
-is appropriate since an unknown-type literal looks like a string.)
-Otherwise, if all the remaining candidates accept the same type category,
-select that category; otherwise fail because
-the correct choice cannot be deduced without more clues.
-Now discard candidates that do not accept the selected type category.
-Furthermore, if any candidate accepts a preferred type in that category,
-discard candidates that accept non-preferred types for that argument.
-Keep all candidates if none survive these tests.
-If only one candidate remains, use it; else continue to the next step.
+如果任何输入参数是 <type>unknown</type>，则检查剩余候选函数在这些参数位置上接受的类型分类。在每个位置上，如果有任何候选函数接受 <type>string</type> 分类，则选择该分类。（这种对字符串的偏向是合适的，因为未知类型的字面量看起来像字符串。）否则，如果所有剩余候选函数都接受相同的类型分类，则选择该分类；否则失败，因为在没有更多线索的情况下无法推断出正确的选择。现在丢弃不接受所选类型分类的候选函数。此外，如果任何候选函数接受该分类中的首选类型，则丢弃在该参数上接受非首选类型的候选函数。如果没有任何候选函数通过这些测试，则保留所有候选函数。如果只剩下一个候选函数，则使用它；否则继续下一步。
 </para>
 </step>
 <step performance="required">
 <para>
-If there are both <type>unknown</type> and known-type arguments, and all
-the known-type arguments have the same type, assume that the
-<type>unknown</type> arguments are also of that type, and check which
-candidates can accept that type at the <type>unknown</type>-argument
-positions.  If exactly one candidate passes this test, use it.
-Otherwise, fail.
+如果同时存在 <type>unknown</type> 和已知类型的参数，并且所有已知类型的参数都具有相同的类型，则假定 <type>unknown</type> 参数也是该类型，并检查哪些候选函数可以在 <type>unknown</type> 参数位置上接受该类型。如果恰好有一个候选函数通过此测试，则使用它。否则失败。
 </para>
 </step>
 </substeps>
@@ -587,21 +512,16 @@ Otherwise, fail.
 </procedure>
 
 <para>
-Note that the <quote>best match</quote> rules are identical for operator and
-function type resolution.
-Some examples follow.
+请注意，<quote>最佳匹配</quote>规则对于运算符和函数类型解析是相同的。
+下面给出一些示例。
 </para>
 
 <example>
-<title>Rounding Function Argument Type Resolution</title>
+<title>舍入函数参数类型解析</title>
 
 <para>
-There is only one <function>round</function> function that takes two
-arguments; it takes a first argument of type <type>numeric</type> and
-a second argument of type <type>integer</type>.
-So the following query automatically converts
-the first argument of type <type>integer</type> to
-<type>numeric</type>:
+只有一个 <function>round</function> 函数接受两个参数；它的第一个参数类型为 <type>numeric</type>，第二个参数类型为 <type>integer</type>。
+因此下面的查询会自动把类型为 <type>integer</type> 的第一个参数转换为 <type>numeric</type>：
 
 <screen>
 SELECT round(4, 4);
@@ -612,16 +532,14 @@ SELECT round(4, 4);
 (1 row)
 </screen>
 
-That query is actually transformed by the parser to:
+该查询实际上会被解析器转换为：
 <screen>
 SELECT round(CAST (4 AS numeric), 4);
 </screen>
 </para>
 
 <para>
-Since numeric constants with decimal points are initially assigned the
-type <type>numeric</type>, the following query will require no type
-conversion and therefore might be slightly more efficient:
+由于带小数点的数字常量最初被赋予类型 <type>numeric</type>，下面的查询将不需要类型转换，因此可能稍微更高效一些：
 <screen>
 SELECT round(4.0, 4);
 </screen>
@@ -629,7 +547,7 @@ SELECT round(4.0, 4);
 </example>
 
 <example>
-<title>Variadic Function Resolution</title>
+<title>可变参数函数解析</title>
 
 <para>
 <screen>
@@ -638,8 +556,7 @@ CREATE FUNCTION public.variadic_example(VARIADIC numeric[]) RETURNS int
 CREATE FUNCTION
 </screen>
 
-This function accepts, but does not require, the VARIADIC keyword.  It
-tolerates both integer and numeric arguments:
+该函数接受但不要求 VARIADIC 关键字。它同时容忍 integer 和 numeric 参数：
 
 <screen>
 SELECT public.variadic_example(0),
@@ -651,8 +568,7 @@ SELECT public.variadic_example(0),
 (1 row)
 </screen>
 
-However, the first and second calls will prefer more-specific functions, if
-available:
+不过，如果存在更具体的函数，第一次和第二次调用会优先选择它们：
 
 <screen>
 CREATE FUNCTION public.variadic_example(numeric) RETURNS int
@@ -672,22 +588,15 @@ SELECT public.variadic_example(0),
 (1 row)
 </screen>
 
-Given the default configuration and only the first function existing, the
-first and second calls are insecure.  Any user could intercept them by
-creating the second or third function.  By matching the argument type exactly
-and using the <literal>VARIADIC</literal> keyword, the third call is secure.
+在默认配置下且只存在第一个函数时，第一次和第二次调用是不安全的。任何用户都可以通过创建第二个或第三个函数来拦截它们。通过精确匹配参数类型并使用 <literal>VARIADIC</literal> 关键字，第三次调用是安全的。
 </para>
 </example>
 
 <example>
-<title>Substring Function Type Resolution</title>
+<title>子串函数的类型解析</title>
 
 <para>
-There are several <function>substr</function> functions, one of which
-takes types <type>text</type> and <type>integer</type>.  If called
-with a string constant of unspecified type, the system chooses the
-candidate function that accepts an argument of the preferred category
-<literal>string</literal> (namely of type <type>text</type>).
+有若干个 <function>substr</function> 函数，其中一个接受类型 <type>text</type> 和 <type>integer</type>。如果以未指定类型的字符串常量调用，系统会选择接受首选类别 <literal>string</literal>（即类型 <type>text</type>）参数的候选函数。
 
 <screen>
 SELECT substr('1234', 3);
@@ -700,8 +609,7 @@ SELECT substr('1234', 3);
 </para>
 
 <para>
-If the string is declared to be of type <type>varchar</type>, as might be the case
-if it comes from a table, then the parser will try to convert it to become <type>text</type>:
+如果该字符串被声明为类型 <type>varchar</type>，就像它来自表时可能出现的情况那样，那么解析器将尝试把它转换为 <type>text</type>：
 <screen>
 SELECT substr(varchar '1234', 3);
 
@@ -711,7 +619,7 @@ SELECT substr(varchar '1234', 3);
 (1 row)
 </screen>
 
-This is transformed by the parser to effectively become:
+解析器会将其转换为实际上等价于：
 <screen>
 SELECT substr(CAST (varchar '1234' AS text), 3);
 </screen>
@@ -719,18 +627,13 @@ SELECT substr(CAST (varchar '1234' AS text), 3);
 <para>
 <note>
 <para>
-The parser learns from the <structname>pg_cast</structname> catalog that
-<type>text</type> and <type>varchar</type>
-are binary-compatible, meaning that one can be passed to a function that
-accepts the other without doing any physical conversion.  Therefore, no
-type conversion call is really inserted in this case.
+解析器从 <structname>pg_cast</structname> 系统目录中得知 <type>text</type> 和 <type>varchar</type> 是二进制兼容的，这意味着可以把其中一个传递给接受另一个的函数，而无需进行任何物理转换。因此，在这种情况下实际上不会插入类型转换调用。
 </para>
 </note>
 </para>
 
 <para>
-And, if the function is called with an argument of type <type>integer</type>,
-the parser will try to convert that to <type>text</type>:
+另外，如果以类型 <type>integer</type> 的参数调用该函数，解析器将尝试将其转换为 <type>text</type>：
 <screen>
 SELECT substr(1234, 3);
 ERROR:  function substr(integer, integer) does not exist
@@ -738,8 +641,7 @@ HINT:  No function matches the given name and argument types. You might need
 to add explicit type casts.
 </screen>
 
-This does not work because <type>integer</type> does not have an implicit cast
-to <type>text</type>.  An explicit cast will work, however:
+这样做不行，因为 <type>integer</type> 没有到 <type>text</type> 的隐式转换。不过，显式转换可以奏效：
 <screen>
 SELECT substr(CAST (1234 AS text), 3);
 
