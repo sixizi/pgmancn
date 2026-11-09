@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE AGGREGATE</refname>
-  <refpurpose>define a new aggregate function</refpurpose>
+  <refpurpose>定义一个新的聚合函数</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -85,51 +85,33 @@ CREATE [ OR REPLACE ] AGGREGATE <replaceable class="parameter">name</replaceable
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE AGGREGATE</command> defines a new aggregate function.
-   <command>CREATE OR REPLACE AGGREGATE</command> will either define a new
-   aggregate function or replace an existing definition. Some basic and
-   commonly-used aggregate functions are included with the distribution; they
-   are documented in <xref linkend="functions-aggregate"/>. If one defines new
-   types or needs an aggregate function not already provided, then
-   <command>CREATE AGGREGATE</command> can be used to provide the desired
-   features.
+   <command>CREATE AGGREGATE</command> 定义一个新的聚合函数。
+   <command>CREATE OR REPLACE AGGREGATE</command> 将定义一个新的聚合函数或替换现有定义。发行版中包含一些基本且常用的聚合函数；它们记录在 <xref linkend="functions-aggregate"/> 中。如果定义了新类型或需要尚未提供的聚合函数，则可以使用 <command>CREATE AGGREGATE</command> 来提供所需的功能。
   </para>
 
   <para>
-   When replacing an existing definition, the argument types, result type,
-   and number of direct arguments may not be changed. Also, the new definition
-   must be of the same kind (ordinary aggregate, ordered-set aggregate, or
-   hypothetical-set aggregate) as the old one.
+   替换现有定义时，参数类型、结果类型和直接参数的数量不能更改。此外，新定义必须与旧定义属于同一种类（普通聚合、有序集聚合或假设集聚合）。
   </para>
 
   <para>
-   If a schema name is given (for example, <literal>CREATE AGGREGATE
-   myschema.myagg ...</literal>) then the aggregate function is created in the
-   specified schema.  Otherwise it is created in the current schema.
+   如果给出了模式名（例如 <literal>CREATE AGGREGATE
+   myschema.myagg ...</literal>），则在该指定模式中创建聚合函数。否则在当前模式中创建。
   </para>
 
   <para>
-   An aggregate function is identified by its name and input data type(s).
-   Two aggregates in the same schema can have the same name if they operate on
-   different input types.  The
-   name and input data type(s) of an aggregate must also be distinct from
-   the name and input data type(s) of every ordinary function in the same
-   schema.
-   This behavior is identical to overloading of ordinary function names
-   (see <xref linkend="sql-createfunction"/>).
+   聚合函数由其名称和输入数据类型标识。同一模式中的两个聚合如果操作不同的输入类型，则可以具有相同的名称。聚合的名称和输入数据类型还必须与同一模式中每个普通函数的名称和输入数据类型不同。此行为与普通函数名的重载相同（参见 <xref linkend="sql-createfunction"/>）。
   </para>
 
   <para>
-   A simple aggregate function is made from one or two ordinary
-   functions:
-   a state transition function
-   <replaceable class="parameter">sfunc</replaceable>,
-   and an optional final calculation function
-   <replaceable class="parameter">ffunc</replaceable>.
-   These are used as follows:
+   一个简单的聚合函数由一个或两个普通函数构成：
+一个状态转移函数
+<replaceable class="parameter">sfunc</replaceable>，
+以及一个可选的最终计算函数
+<replaceable class="parameter">ffunc</replaceable>。
+它们的使用方式如下：
 <programlisting>
 <replaceable class="parameter">sfunc</replaceable>( internal-state, next-data-values ) ---> next-internal-state
 <replaceable class="parameter">ffunc</replaceable>( internal-state ) ---> aggregate-value
@@ -137,157 +119,96 @@ CREATE [ OR REPLACE ] AGGREGATE <replaceable class="parameter">name</replaceable
   </para>
 
   <para>
-   <productname>PostgreSQL</productname> creates a temporary variable
-   of data type <replaceable class="parameter">stype</replaceable>
-   to hold the current internal state of the aggregate.  At each input row,
-   the aggregate argument value(s) are calculated and
-   the state transition function is invoked with the current state value
-   and the new argument value(s) to calculate a new
-   internal state value.  After all the rows have been processed,
-   the final function is invoked once to calculate the aggregate's return
-   value.  If there is no final function then the ending state value
-   is returned as-is.
+   <productname>PostgreSQL</productname> 创建一个数据类型为 <replaceable class="parameter">stype</replaceable>
+的临时变量，用于保存该聚合的当前内部状态。在处理每个输入行时，
+计算聚合参数值，并以当前状态值和
+新的参数值调用状态转移函数，计算出新的
+内部状态值。处理完所有行之后，
+调用一次最终函数以计算该聚合的返回
+值。如果没有最终函数，则按原样返回结束时的
+状态值。
   </para>
 
   <para>
-   An aggregate function can provide an initial condition,
-   that is, an initial value for the internal state value.
-   This is specified and stored in the database as a value of type
-   <type>text</type>, but it must be a valid external representation
-   of a constant of the state value data type.  If it is not supplied
-   then the state value starts out null.
+   聚合函数可以提供一个初始条件，
+即内部状态值的初始值。
+它在数据库中以 <type>text</type> 类型的值来指定和存储，
+但它必须是状态值数据类型的一个常量的
+合法外部表示。如果未提供，
+则状态值初始为 null。
   </para>
 
   <para>
-   If the state transition function is declared <quote>strict</quote>,
-   then it cannot be called with null inputs.  With such a transition
-   function, aggregate execution behaves as follows.  Rows with any null input
-   values are ignored (the function is not called and the previous state value
-   is retained).  If the initial state value is null, then at the first row
-   with all-nonnull input values, the first argument value replaces the state
-   value, and the transition function is invoked at each subsequent row with
-   all-nonnull input values.
-   This is handy for implementing aggregates like <function>max</function>.
-   Note that this behavior is only available when
-   <replaceable class="parameter">state_data_type</replaceable>
-   is the same as the first
-   <replaceable class="parameter">arg_data_type</replaceable>.
-   When these types are different, you must supply a nonnull initial
-   condition or use a nonstrict transition function.
+   如果状态转移函数被声明为 <quote>strict</quote>，
+那么它不能用 null 输入调用。使用这样的转移
+函数时，聚合的执行行为如下。任何含有 null 输入
+值的行都会被忽略（不调用该函数，并保留之前的
+状态值）。如果初始状态值为 null，那么在第一个
+所有输入值均非 null 的行上，第一个参数值将替换
+状态值，并在其后每个所有输入值均非 null 的行上
+调用转移函数。
+这对于实现像 <function>max</function> 这样的聚合很方便。
+注意，仅当
+<replaceable class="parameter">state_data_type</replaceable>
+与第一个
+<replaceable class="parameter">arg_data_type</replaceable> 相同时，才能使用此行为。
+当这些类型不同时，必须提供一个非 null 的初始
+条件，或使用非严格的状态转移函数。
   </para>
 
   <para>
-   If the state transition function is not strict, then it will be called
-   unconditionally at each input row, and must deal with null inputs
-   and null state values for itself.  This allows the aggregate
-   author to have full control over the aggregate's handling of null values.
+   如果状态转移函数不是严格的，那么它将在每个输入行上
+被无条件地调用，并且必须自行处理 null 输入
+和 null 状态值。这使聚合的作者能够完全控制
+聚合对 null 值的处理。
   </para>
 
   <para>
-   If the final function is declared <quote>strict</quote>, then it will not
-   be called when the ending state value is null; instead a null result
-   will be returned automatically.  (Of course this is just the normal
-   behavior of strict functions.)  In any case the final function has
-   the option of returning a null value.  For example, the final function for
-   <function>avg</function> returns null when it sees there were zero
-   input rows.
+   如果最终函数被声明为 <quote>strict</quote>，那么当结束状态值为 null 时它不会被调用；而是自动返回一个 null 结果。（当然，这不过是 strict 函数的正常行为。）无论如何，最终函数都可以选择返回 null 值。例如，<function>avg</function> 的最终函数在发现输入行数为零时返回 null。
   </para>
 
   <para>
-   Sometimes it is useful to declare the final function as taking not just
-   the state value, but extra parameters corresponding to the aggregate's
-   input values.  The main reason for doing this is if the final function
-   is polymorphic and the state value's data type would be inadequate to
-   pin down the result type.  These extra parameters are always passed as
-   NULL (and so the final function must not be strict when
-   the <literal>FINALFUNC_EXTRA</literal> option is used), but nonetheless they
-   are valid parameters.  The final function could for example make use
-   of <function>get_fn_expr_argtype</function> to identify the actual argument type
-   in the current call.
+   有时把最终函数声明为不仅接受状态值，还接受与聚合输入值对应的额外参数是很有用的。这样做的主要原因是，如果最终函数是多态的，而状态值的数据类型不足以确定结果类型。这些额外参数总是以 NULL 传递（因此在使用 <literal>FINALFUNC_EXTRA</literal> 选项时最终函数不能是 strict 的），但它们仍然是有效的参数。例如，最终函数可以利用 <function>get_fn_expr_argtype</function> 来标识当前调用中的实际参数类型。
   </para>
 
   <para>
-   An aggregate can optionally support <firstterm>moving-aggregate mode</firstterm>,
-   as described in <xref linkend="xaggr-moving-aggregates"/>.  This requires
-   specifying the <literal>MSFUNC</literal>, <literal>MINVFUNC</literal>,
-   and <literal>MSTYPE</literal> parameters, and optionally
-   the <literal>MSSPACE</literal>, <literal>MFINALFUNC</literal>,
-   <literal>MFINALFUNC_EXTRA</literal>, <literal>MFINALFUNC_MODIFY</literal>,
-   and <literal>MINITCOND</literal> parameters.  Except for <literal>MINVFUNC</literal>,
-   these parameters work like the corresponding simple-aggregate parameters
-   without <literal>M</literal>; they define a separate implementation of the
-   aggregate that includes an inverse transition function.
+   聚合可以选择支持<firstterm>移动聚合模式</firstterm>，如 <xref linkend="xaggr-moving-aggregates"/> 中所述。这需要指定 <literal>MSFUNC</literal>、<literal>MINVFUNC</literal> 和 <literal>MSTYPE</literal> 参数，以及可选的 <literal>MSSPACE</literal>、<literal>MFINALFUNC</literal>、<literal>MFINALFUNC_EXTRA</literal>、<literal>MFINALFUNC_MODIFY</literal> 和 <literal>MINITCOND</literal> 参数。除 <literal>MINVFUNC</literal> 之外，这些参数的作用类似于不带 <literal>M</literal> 的相应简单聚合参数；它们定义了聚合的一个单独实现，其中包含一个逆转移函数。
   </para>
 
   <para>
-   The syntax with <literal>ORDER BY</literal> in the parameter list creates
-   a special type of aggregate called an <firstterm>ordered-set
-   aggregate</firstterm>; or if <literal>HYPOTHETICAL</literal> is specified, then
-   a <firstterm>hypothetical-set aggregate</firstterm> is created.  These
-   aggregates operate over groups of sorted values in order-dependent ways,
-   so that specification of an input sort order is an essential part of a
-   call.  Also, they can have <firstterm>direct</firstterm> arguments, which are
-   arguments that are evaluated only once per aggregation rather than once
-   per input row.  Hypothetical-set aggregates are a subclass of ordered-set
-   aggregates in which some of the direct arguments are required to match,
-   in number and data types, the aggregated argument columns.  This allows
-   the values of those direct arguments to be added to the collection of
-   aggregate-input rows as an additional <quote>hypothetical</quote> row.
+   参数列表中含有 <literal>ORDER BY</literal> 的语法会创建一种特殊类型的聚合，称为<firstterm>有序集聚合</firstterm>；如果指定了 <literal>HYPOTHETICAL</literal>，则创建<firstterm>假想集聚合</firstterm>。这些聚合以依赖于顺序的方式对已排序的值组进行操作，因此指定输入排序顺序是调用中必不可少的一部分。此外，它们还可以有<firstterm>直接</firstterm>参数，这些参数在每次聚合中只求值一次，而不是每个输入行求值一次。假想集聚合是有序集聚合的一个子类，其中某些直接参数在数量和数据类型上必须与聚合参数列相匹配。这使得这些直接参数的值可以作为额外的<quote>假想</quote>行添加到聚合输入行的集合中。
   </para>
 
   <para>
-   An aggregate can optionally support <firstterm>partial aggregation</firstterm>,
-   as described in <xref linkend="xaggr-partial-aggregates"/>.
-   This requires specifying the <literal>COMBINEFUNC</literal> parameter.
-   If the <replaceable class="parameter">state_data_type</replaceable>
-   is <type>internal</type>, it's usually also appropriate to provide the
-   <literal>SERIALFUNC</literal> and <literal>DESERIALFUNC</literal> parameters so that
-   parallel aggregation is possible.  Note that the aggregate must also be
-   marked <literal>PARALLEL SAFE</literal> to enable parallel aggregation.
+   聚合函数可以选择支持<firstterm>部分聚合</firstterm>，如<xref linkend="xaggr-partial-aggregates"/>所述。这需要指定 <literal>COMBINEFUNC</literal> 参数。如果 <replaceable class="parameter">state_data_type</replaceable> 为 <type>internal</type>，通常还应当提供 <literal>SERIALFUNC</literal> 和 <literal>DESERIALFUNC</literal> 参数，以便能够进行并行聚合。注意，还必须把该聚合函数标记为 <literal>PARALLEL SAFE</literal> 才能启用并行聚合。
   </para>
 
   <para>
-   Aggregates that behave like <function>MIN</function> or <function>MAX</function> can
-   sometimes be optimized by looking into an index instead of scanning every
-   input row.  If this aggregate can be so optimized, indicate it by
-   specifying a <firstterm>sort operator</firstterm>.  The basic requirement is that
-   the aggregate must yield the first element in the sort ordering induced by
-   the operator; in other words:
+   行为类似于 <function>MIN</function> 或 <function>MAX</function> 的聚合函数有时可以通过查询索引而不是扫描每一行输入来优化。如果该聚合函数可以这样优化，请通过指定一个<firstterm>排序运算符</firstterm>来表明这一点。基本要求是，该聚合函数必须产生由该运算符所诱导的排序中的第一个元素；换句话说：
 <programlisting>
 SELECT agg(col) FROM tab;
 </programlisting>
-   must be equivalent to:
+   必须等价于：
 <programlisting>
 SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
 </programlisting>
-   Further assumptions are that the aggregate ignores null inputs, and that
-   it delivers a null result if and only if there were no non-null inputs.
-   Ordinarily, a data type's <literal>&lt;</literal> operator is the proper sort
-   operator for <function>MIN</function>, and <literal>&gt;</literal> is the proper sort
-   operator for <function>MAX</function>.  Note that the optimization will never
-   actually take effect unless the specified operator is the <quote>less
-   than</quote> or <quote>greater than</quote> strategy member of a B-tree
-   index operator class.
+   进一步的假设是，该聚合函数忽略空输入，并且当且仅当没有非空输入时才返回空结果。通常，数据类型的 <literal>&lt;</literal> 运算符是 <function>MIN</function> 的合适排序运算符，而 <literal>&gt;</literal> 是 <function>MAX</function> 的合适排序运算符。注意，除非指定的运算符是 B-tree 索引运算符类中的<quote>小于</quote>或<quote>大于</quote>策略成员，否则该优化实际上永远不会生效。
   </para>
 
   <para>
-   To be able to create an aggregate function, you must
-   have <literal>USAGE</literal> privilege on the argument types, the state
-   type(s), and the return type, as well as <literal>EXECUTE</literal>
-   privilege on the supporting functions.
+   要能够创建聚合函数，你必须对参数类型、状态类型以及返回类型具有 <literal>USAGE</literal> 权限，并且对支撑函数具有 <literal>EXECUTE</literal> 权限。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the aggregate function
-      to create.
+      要创建的聚合函数的名称（可以选择性地使用模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -297,10 +218,9 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
 
     <listitem>
      <para>
-      The mode of an argument: <literal>IN</literal> or <literal>VARIADIC</literal>.
-      (Aggregate functions do not support <literal>OUT</literal> arguments.)
-      If omitted, the default is <literal>IN</literal>.  Only the last argument
-      can be marked <literal>VARIADIC</literal>.
+      参数的模式：<literal>IN</literal> 或 <literal>VARIADIC</literal>。
+      （聚合函数不支持 <literal>OUT</literal> 参数。）
+      如果省略，默认为 <literal>IN</literal>。只有最后一个参数可以标记为 <literal>VARIADIC</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -310,8 +230,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
 
     <listitem>
      <para>
-      The name of an argument.  This is currently only useful for
-      documentation purposes.  If omitted, the argument has no name.
+      一个参数的名字。当前这仅对文档目的有用。如果省略，该参数没有名字。
      </para>
     </listitem>
    </varlistentry>
@@ -320,10 +239,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">arg_data_type</replaceable></term>
     <listitem>
      <para>
-      An input data type on which this aggregate function operates.
-      To create a zero-argument aggregate function, write <literal>*</literal>
-      in place of the list of argument specifications.  (An example of such an
-      aggregate is <function>count(*)</function>.)
+      该聚合函数所操作的输入数据类型。要创建一个零参数聚合函数，请写 <literal>*</literal> 来代替参数说明列表。（这种聚合的一个例子是 <function>count(*)</function>。）
      </para>
     </listitem>
    </varlistentry>
@@ -332,13 +248,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">base_type</replaceable></term>
     <listitem>
      <para>
-      In the old syntax for <command>CREATE AGGREGATE</command>, the input data type
-      is specified by a <literal>basetype</literal> parameter rather than being
-      written next to the aggregate name.  Note that this syntax allows
-      only one input parameter.  To define a zero-argument aggregate function
-      with this syntax, specify the <literal>basetype</literal> as
-      <literal>"ANY"</literal> (not <literal>*</literal>).
-      Ordered-set aggregates cannot be defined with the old syntax.
+      在 <command>CREATE AGGREGATE</command> 的旧语法中，输入数据类型由 <literal>basetype</literal> 参数指定，而不是写在聚合名旁边。注意这种语法只允许一个输入参数。要用这种语法定义零参数聚合函数，请把 <literal>basetype</literal> 指定为 <literal>"ANY"</literal>（而不是 <literal>*</literal>）。有序集聚合不能用旧语法定义。
      </para>
     </listitem>
    </varlistentry>
@@ -347,24 +257,13 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">sfunc</replaceable></term>
     <listitem>
      <para>
-      The name of the state transition function to be called for each
-      input row.  For a normal <replaceable class="parameter">N</replaceable>-argument
-      aggregate function, the <replaceable class="parameter">sfunc</replaceable>
-      must take <replaceable class="parameter">N</replaceable>+1 arguments,
-      the first being of type <replaceable
-      class="parameter">state_data_type</replaceable> and the rest
-      matching the declared input data type(s) of the aggregate.
-      The function must return a value of type <replaceable
-      class="parameter">state_data_type</replaceable>.  This function
-      takes the current state value and the current input data value(s),
-      and returns the next state value.
+      要为每个输入行调用的状态转移函数的名字。对于普通的 <replaceable class="parameter">N</replaceable> 参数聚合函数，<replaceable class="parameter">sfunc</replaceable> 必须接受 <replaceable class="parameter">N</replaceable>+1 个参数，第一个参数的类型为 <replaceable
+      class="parameter">state_data_type</replaceable>，其余参数与聚合所声明的输入数据类型相匹配。该函数必须返回 <replaceable
+      class="parameter">state_data_type</replaceable> 类型的值。该函数接受当前状态值和当前输入数据值，并返回下一个状态值。
      </para>
 
      <para>
-      For ordered-set (including hypothetical-set) aggregates, the state
-      transition function receives only the current state value and the
-      aggregated arguments, not the direct arguments.  Otherwise it is the
-      same.
+      对于有序集（包括假设集）聚合，状态转移函数只接收当前状态值和被聚合的参数，而不接收直接参数。除此之外，其他方面相同。
      </para>
     </listitem>
    </varlistentry>
@@ -373,7 +272,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">state_data_type</replaceable></term>
     <listitem>
      <para>
-      The data type for the aggregate's state value.
+      聚合的状态值的数据类型。
      </para>
     </listitem>
    </varlistentry>
@@ -382,11 +281,9 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">state_data_size</replaceable></term>
     <listitem>
      <para>
-      The approximate average size (in bytes) of the aggregate's state value.
-      If this parameter is omitted or is zero, a default estimate is used
-      based on the <replaceable>state_data_type</replaceable>.
-      The planner uses this value to estimate the memory required for a
-      grouped aggregate query.
+      聚合状态值的大致平均大小（以字节计）。
+      如果省略此参数或将其设为零，则会基于 <replaceable>state_data_type</replaceable> 使用一个默认估计值。
+      查询规划器使用该值来估计分组聚合查询所需的内存。
      </para>
     </listitem>
    </varlistentry>
@@ -395,31 +292,18 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">ffunc</replaceable></term>
     <listitem>
      <para>
-      The name of the final function called to compute the aggregate's
-      result after all input rows have been traversed.
-      For a normal aggregate, this function
-      must take a single argument of type <replaceable
-      class="parameter">state_data_type</replaceable>.  The return
-      data type of the aggregate is defined as the return type of this
-      function.  If <replaceable class="parameter">ffunc</replaceable>
-      is not specified, then the ending state value is used as the
-      aggregate's result, and the return type is <replaceable
-      class="parameter">state_data_type</replaceable>.
+      在所有输入行都被遍历之后，用于计算聚合结果的最终函数名。
+      对于普通聚合，此函数必须接受一个类型为 <replaceable
+      class="parameter">state_data_type</replaceable> 的单一参数。聚合的返回数据类型被定义为该函数的返回类型。如果未指定 <replaceable class="parameter">ffunc</replaceable>，则使用结束状态值作为聚合的结果，并且返回类型为 <replaceable
+      class="parameter">state_data_type</replaceable>。
      </para>
 
      <para>
-      For ordered-set (including hypothetical-set) aggregates, the
-      final function receives not only the final state value,
-      but also the values of all the direct arguments.
+      对于有序集聚合（包括假设集聚合），最终函数不仅接收最终状态值，还接收所有直接参数的值。
      </para>
 
      <para>
-      If <literal>FINALFUNC_EXTRA</literal> is specified, then in addition to the
-      final state value and any direct arguments, the final function
-      receives extra NULL values corresponding to the aggregate's regular
-      (aggregated) arguments.  This is mainly useful to allow correct
-      resolution of the aggregate result type when a polymorphic aggregate
-      is being defined.
+      如果指定了 <literal>FINALFUNC_EXTRA</literal>，那么除了最终状态值和任何直接参数之外，最终函数还会接收与聚合的常规（被聚合）参数相对应的额外 NULL 值。这主要用于在定义多态聚合时能够正确解析聚合结果类型。
      </para>
     </listitem>
    </varlistentry>
@@ -428,13 +312,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><literal>FINALFUNC_MODIFY</literal> = { <literal>READ_ONLY</literal> | <literal>SHAREABLE</literal> | <literal>READ_WRITE</literal> }</term>
     <listitem>
      <para>
-      This option specifies whether the final function is a pure function
-      that does not modify its arguments.  <literal>READ_ONLY</literal> indicates
-      it does not; the other two values indicate that it may change the
-      transition state value.  See <xref linkend="sql-createaggregate-notes"/>
-      below for more detail.  The
-      default is <literal>READ_ONLY</literal>, except for ordered-set aggregates,
-      for which the default is <literal>READ_WRITE</literal>.
+      此选项指定最终函数是否为不修改其参数的纯函数。<literal>READ_ONLY</literal> 表示它不是；另外两个值表示它可能更改转移状态值。更多细节请参见下面的 <xref linkend="sql-createaggregate-notes"/>。默认值为 <literal>READ_ONLY</literal>，但对于有序集聚合，默认值为 <literal>READ_WRITE</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -443,41 +321,15 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">combinefunc</replaceable></term>
     <listitem>
      <para>
-      The <replaceable class="parameter">combinefunc</replaceable> function
-      may optionally be specified to allow the aggregate function to support
-      partial aggregation.  If provided,
-      the <replaceable class="parameter">combinefunc</replaceable> must
-      combine two <replaceable class="parameter">state_data_type</replaceable>
-      values, each containing the result of aggregation over some subset of
-      the input values, to produce a
-      new <replaceable class="parameter">state_data_type</replaceable> that
-      represents the result of aggregating over both sets of inputs.  This
-      function can be thought of as
-      an <replaceable class="parameter">sfunc</replaceable>, where instead of
-      acting upon an individual input row and adding it to the running
-      aggregate state, it adds another aggregate state to the running state.
+      可以选择指定 <replaceable class="parameter">combinefunc</replaceable> 函数，以允许聚合函数支持部分聚合。如果提供，<replaceable class="parameter">combinefunc</replaceable> 必须组合两个 <replaceable class="parameter">state_data_type</replaceable> 值（每个值都包含对输入值的某个子集进行聚合的结果），以产生一个新的 <replaceable class="parameter">state_data_type</replaceable>，它表示对两组输入进行聚合的结果。可以将此函数视为一个 <replaceable class="parameter">sfunc</replaceable>，只不过它不是作用于单个输入行并将其添加到运行中的聚合状态，而是将另一个聚合状态添加到运行状态中。
      </para>
 
      <para>
-      The <replaceable class="parameter">combinefunc</replaceable> must be
-      declared as taking two arguments of
-      the <replaceable class="parameter">state_data_type</replaceable> and
-      returning a value of
-      the <replaceable class="parameter">state_data_type</replaceable>.
-      Optionally this function may be <quote>strict</quote>. In this case the
-      function will not be called when either of the input states are null;
-      the other state will be taken as the correct result.
+      <replaceable class="parameter">combinefunc</replaceable> 必须声明为接受两个 <replaceable class="parameter">state_data_type</replaceable> 类型的参数并返回一个 <replaceable class="parameter">state_data_type</replaceable> 类型的值。此函数可选地可以是<quote>严格的</quote>。在这种情况下，当任一输入状态为空时不会调用该函数；另一个状态将被视为正确的结果。
      </para>
 
      <para>
-      For aggregate functions
-      whose <replaceable class="parameter">state_data_type</replaceable>
-      is <type>internal</type>,
-      the <replaceable class="parameter">combinefunc</replaceable> must not
-      be strict. In this case
-      the <replaceable class="parameter">combinefunc</replaceable> must
-      ensure that null states are handled correctly and that the state being
-      returned is properly stored in the aggregate memory context.
+      对于 <replaceable class="parameter">state_data_type</replaceable> 为 <type>internal</type> 的聚合函数，<replaceable class="parameter">combinefunc</replaceable> 不能是严格的。在这种情况下，<replaceable class="parameter">combinefunc</replaceable> 必须确保正确处理空状态，并确保返回的状态被正确地存储在聚合内存上下文中。
      </para>
     </listitem>
    </varlistentry>
@@ -486,15 +338,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">serialfunc</replaceable></term>
     <listitem>
      <para>
-      An aggregate function
-      whose <replaceable class="parameter">state_data_type</replaceable>
-      is <type>internal</type> can participate in parallel aggregation only if it
-      has a <replaceable class="parameter">serialfunc</replaceable> function,
-      which must serialize the aggregate state into a <type>bytea</type> value for
-      transmission to another process.  This function must take a single
-      argument of type <type>internal</type> and return type <type>bytea</type>.  A
-      corresponding <replaceable class="parameter">deserialfunc</replaceable>
-      is also required.
+      <replaceable class="parameter">state_data_type</replaceable> 为 <type>internal</type> 的聚合函数只有在具有 <replaceable class="parameter">serialfunc</replaceable> 函数时才能参与并行聚合，该函数必须把聚合状态序列化为一个 <type>bytea</type> 值以便传输到另一个进程。此函数必须接受一个类型为 <type>internal</type> 的单一参数并返回类型 <type>bytea</type>。还需要一个对应的 <replaceable class="parameter">deserialfunc</replaceable>。
      </para>
     </listitem>
    </varlistentry>
@@ -503,12 +347,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">deserialfunc</replaceable></term>
     <listitem>
      <para>
-      Deserialize a previously serialized aggregate state back into
-      <replaceable class="parameter">state_data_type</replaceable>. This
-      function must take two arguments of types <type>bytea</type>
-      and <type>internal</type>, and produce a result of type <type>internal</type>.
-      (Note: the second, <type>internal</type> argument is unused, but is required
-      for type safety reasons.)
+      将先前序列化的聚合状态反序列化回 <replaceable class="parameter">state_data_type</replaceable>。此函数必须接受两个类型分别为 <type>bytea</type> 和 <type>internal</type> 的参数，并产生一个类型为 <type>internal</type> 的结果。（注意：第二个 <type>internal</type> 参数未被使用，但出于类型安全的考虑是必需的。）
      </para>
     </listitem>
    </varlistentry>
@@ -517,10 +356,8 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">initial_condition</replaceable></term>
     <listitem>
      <para>
-      The initial setting for the state value.  This must be a string
-      constant in the form accepted for the data type <replaceable
-      class="parameter">state_data_type</replaceable>.  If not
-      specified, the state value starts out null.
+      状态值的初始设置。这必须是一个采用数据类型 <replaceable
+      class="parameter">state_data_type</replaceable> 所接受形式的字符串常量。如果未指定，状态值初始为空。
      </para>
     </listitem>
    </varlistentry>
@@ -529,11 +366,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">msfunc</replaceable></term>
     <listitem>
      <para>
-      The name of the forward state transition function to be called for each
-      input row in moving-aggregate mode.  This is exactly like the regular
-      transition function, except that its first argument and result are of
-      type <replaceable>mstate_data_type</replaceable>, which might be different
-      from <replaceable>state_data_type</replaceable>.
+      在移动聚合模式下为每个输入行调用的正向状态转移函数的名称。这与常规转移函数完全相同，只是其第一个参数和结果的类型为 <replaceable>mstate_data_type</replaceable>，这可能与 <replaceable>state_data_type</replaceable> 不同。
      </para>
     </listitem>
    </varlistentry>
@@ -542,12 +375,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">minvfunc</replaceable></term>
     <listitem>
      <para>
-      The name of the inverse state transition function to be used in
-      moving-aggregate mode.  This function has the same argument and
-      result types as <replaceable>msfunc</replaceable>, but it is used to remove
-      a value from the current aggregate state, rather than add a value to
-      it.  The inverse transition function must have the same strictness
-      attribute as the forward state transition function.
+      在移动聚合模式下使用的逆向状态转移函数的名称。此函数具有与 <replaceable>msfunc</replaceable> 相同的参数类型和结果类型，但它用于从当前聚合状态中移除一个值，而不是向其中添加一个值。逆向转移函数必须具有与正向状态转移函数相同的严格性属性。
      </para>
     </listitem>
    </varlistentry>
@@ -556,8 +384,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">mstate_data_type</replaceable></term>
     <listitem>
      <para>
-      The data type for the aggregate's state value, when using
-      moving-aggregate mode.
+      使用移动聚合模式时，聚合状态值的数据类型。
      </para>
     </listitem>
    </varlistentry>
@@ -566,9 +393,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">mstate_data_size</replaceable></term>
     <listitem>
      <para>
-      The approximate average size (in bytes) of the aggregate's state
-      value, when using moving-aggregate mode.  This works the same as
-      <replaceable>state_data_size</replaceable>.
+      使用移动聚合模式时，聚合状态值的近似平均大小（以字节计）。其工作方式与 <replaceable>state_data_size</replaceable> 相同。
      </para>
     </listitem>
    </varlistentry>
@@ -577,15 +402,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">mffunc</replaceable></term>
     <listitem>
      <para>
-      The name of the final function called to compute the aggregate's
-      result after all input rows have been traversed, when using
-      moving-aggregate mode.  This works the same as <replaceable>ffunc</replaceable>,
-      except that its first argument's type
-      is <replaceable>mstate_data_type</replaceable> and extra dummy arguments are
-      specified by writing <literal>MFINALFUNC_EXTRA</literal>.
-      The aggregate result type determined by <replaceable>mffunc</replaceable>
-      or <replaceable>mstate_data_type</replaceable> must match that determined by the
-      aggregate's regular implementation.
+      在使用移动聚合模式时，遍历完所有输入行后调用以计算聚合结果的最终函数的名称。其工作方式与 <replaceable>ffunc</replaceable> 相同，只是其第一个参数的类型为 <replaceable>mstate_data_type</replaceable>，并且通过书写 <literal>MFINALFUNC_EXTRA</literal> 来指定额外的哑参数。由 <replaceable>mffunc</replaceable> 或 <replaceable>mstate_data_type</replaceable> 确定的聚合结果类型必须与聚合的常规实现所确定的类型相匹配。
      </para>
     </listitem>
    </varlistentry>
@@ -594,8 +411,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><literal>MFINALFUNC_MODIFY</literal> = { <literal>READ_ONLY</literal> | <literal>SHAREABLE</literal> | <literal>READ_WRITE</literal> }</term>
     <listitem>
      <para>
-      This option is like <literal>FINALFUNC_MODIFY</literal>, but it describes
-      the behavior of the moving-aggregate final function.
+      此选项类似于 <literal>FINALFUNC_MODIFY</literal>，但它描述的是移动聚合最终函数的行为。
      </para>
     </listitem>
    </varlistentry>
@@ -604,8 +420,7 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">minitial_condition</replaceable></term>
     <listitem>
      <para>
-      The initial setting for the state value, when using moving-aggregate
-      mode.  This works the same as <replaceable>initial_condition</replaceable>.
+      使用移动聚合模式时状态值的初始设置。其工作方式与 <replaceable>initial_condition</replaceable> 相同。
      </para>
     </listitem>
    </varlistentry>
@@ -614,11 +429,10 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><replaceable class="parameter">sort_operator</replaceable></term>
     <listitem>
      <para>
-      The associated sort operator for a <function>MIN</function>- or
-      <function>MAX</function>-like aggregate.
-      This is just an operator name (possibly schema-qualified).
-      The operator is assumed to have the same input data types as
-      the aggregate (which must be a single-argument normal aggregate).
+      用于 <function>MIN</function> 或 <function>MAX</function> 类聚合函数的关联排序运算符。
+      这只是一个运算符名称（可以带模式限定）。
+      假定该运算符具有与聚合函数相同的输入数据类型
+      （该聚合函数必须是单参数普通聚合函数）。
      </para>
     </listitem>
    </varlistentry>
@@ -627,14 +441,13 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><literal>PARALLEL =</literal> { <literal>SAFE</literal> | <literal>RESTRICTED</literal> | <literal>UNSAFE</literal> }</term>
     <listitem>
      <para>
-      The meanings of <literal>PARALLEL SAFE</literal>, <literal>PARALLEL
-      RESTRICTED</literal>, and <literal>PARALLEL UNSAFE</literal> are the same as
-      in <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link>.  An aggregate will not be
-      considered for parallelization if it is marked <literal>PARALLEL
-      UNSAFE</literal> (which is the default!) or <literal>PARALLEL RESTRICTED</literal>.
-      Note that the parallel-safety markings of the aggregate's support
-      functions are not consulted by the planner, only the marking of the
-      aggregate itself.
+      <literal>PARALLEL SAFE</literal>、<literal>PARALLEL
+      RESTRICTED</literal> 和 <literal>PARALLEL UNSAFE</literal> 的含义与
+      <link linkend="sql-createfunction"><command>CREATE FUNCTION</command></link> 中相同。如果聚合函数被标记为 <literal>PARALLEL
+      UNSAFE</literal>（这是默认值！）或 <literal>PARALLEL RESTRICTED</literal>，
+      则不会考虑将其并行化。
+      请注意，规划器不会参考聚合函数的支持函数的并行安全性标记，
+      只参考聚合函数本身的标记。
      </para>
     </listitem>
    </varlistentry>
@@ -643,159 +456,83 @@ SELECT col FROM tab ORDER BY col USING sortop LIMIT 1;
     <term><literal>HYPOTHETICAL</literal></term>
     <listitem>
      <para>
-      For ordered-set aggregates only, this flag specifies that the aggregate
-      arguments are to be processed according to the requirements for
-      hypothetical-set aggregates: that is, the last few direct arguments must
-      match the data types of the aggregated (<literal>WITHIN GROUP</literal>)
-      arguments.  The <literal>HYPOTHETICAL</literal> flag has no effect on
-      run-time behavior, only on parse-time resolution of the data types and
-      collations of the aggregate's arguments.
+      仅对于有序集聚合函数，此标志指定按照假想集聚合函数的要求
+      处理聚合函数参数：也就是说，最后几个直接参数必须
+      与聚合（<literal>WITHIN GROUP</literal>）参数的数据类型匹配。
+      <literal>HYPOTHETICAL</literal> 标志对运行时行为没有影响，
+      只影响解析时对聚合函数参数的数据类型和排序规则的解析。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   The parameters of <command>CREATE AGGREGATE</command> can be
-   written in any order, not just the order illustrated above.
+   <command>CREATE AGGREGATE</command> 的参数可以按任意顺序书写，
+   而不只是上面示例中的顺序。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createaggregate-notes" xreflabel="Notes">
-  <title>Notes</title>
+  <title>说明</title>
 
    <para>
-    In parameters that specify support function names, you can write
-    a schema name if needed, for example <literal>SFUNC = public.sum</literal>.
-    Do not write argument types there, however &mdash; the argument types
-    of the support functions are determined from other parameters.
+    在指定支持函数名称的参数中，如有需要可以写上
+    模式名，例如 <literal>SFUNC = public.sum</literal>。
+    但是不要在那里写参数类型，&mdash; 支持函数的参数类型
+    是由其他参数决定的。
    </para>
 
    <para>
-    Ordinarily, PostgreSQL functions are expected to be true functions that
-    do not modify their input values.  However, an aggregate transition
-    function, <emphasis>when used in the context of an aggregate</emphasis>,
-    is allowed to cheat and modify its transition-state argument in place.
-    This can provide substantial performance benefits compared to making
-    a fresh copy of the transition state each time.
+    通常，PostgreSQL 函数应当是真正的函数，即不修改其输入值。不过，聚合转移函数<emphasis>在聚合的上下文中使用时</emphasis>，允许取巧并就地修改其转移状态参数。与每次都为转移状态制作一份新副本相比，这可以带来可观的性能收益。
    </para>
 
    <para>
-    Likewise, while an aggregate final function is normally expected not to
-    modify its input values, sometimes it is impractical to avoid modifying
-    the transition-state argument.  Such behavior must be declared using
-    the <literal>FINALFUNC_MODIFY</literal> parameter.
-    The <literal>READ_WRITE</literal>
-    value indicates that the final function modifies the transition state in
-    unspecified ways.  This value prevents use of the aggregate as a window
-    function, and it also prevents merging of transition states for aggregate
-    calls that share the same input values and transition functions.
-    The <literal>SHAREABLE</literal> value indicates that the transition function
-    cannot be applied after the final function, but multiple final-function
-    calls can be performed on the ending transition state value.  This value
-    prevents use of the aggregate as a window function, but it allows merging
-    of transition states.  (That is, the optimization of interest here is not
-    applying the same final function repeatedly, but applying different final
-    functions to the same ending transition state value.  This is allowed as
-    long as none of the final functions are marked <literal>READ_WRITE</literal>.)
+    同样，虽然聚合最终函数通常不应修改其输入值，但有时无法避免修改转移状态参数。此类行为必须使用 <literal>FINALFUNC_MODIFY</literal> 参数来声明。<literal>READ_WRITE</literal> 值表示最终函数以未指定的方式修改转移状态。该值会阻止将该聚合用作窗口函数，同时也会阻止对共享相同输入值和转移函数的聚合调用进行转移状态合并。<literal>SHAREABLE</literal> 值表示在最终函数之后不能再应用转移函数，但可以对结束时的转移状态值执行多次最终函数调用。该值会阻止将该聚合用作窗口函数，但允许合并转移状态。（也就是说，这里关注的优化不是重复应用同一个最终函数，而是将不同的最终函数应用于同一个结束时的转移状态值。只要没有任何最终函数被标记为 <literal>READ_WRITE</literal>，这就是允许的。）
    </para>
 
    <para>
-    If an aggregate supports moving-aggregate mode, it will improve
-    calculation efficiency when the aggregate is used as a window function
-    for a window with moving frame start (that is, a frame start mode other
-    than <literal>UNBOUNDED PRECEDING</literal>).  Conceptually, the forward
-    transition function adds input values to the aggregate's state when
-    they enter the window frame from the bottom, and the inverse transition
-    function removes them again when they leave the frame at the top.  So,
-    when values are removed, they are always removed in the same order they
-    were added.  Whenever the inverse transition function is invoked, it will
-    thus receive the earliest added but not yet removed argument value(s).
-    The inverse transition function can assume that at least one row will
-    remain in the current state after it removes the oldest row.  (When this
-    would not be the case, the window function mechanism simply starts a
-    fresh aggregation, rather than using the inverse transition function.)
+    如果一个聚合支持移动聚合模式，那么当该聚合被用作窗口函数、且窗口的帧起点是移动的（即帧起点模式不是 <literal>UNBOUNDED PRECEDING</literal>）时，它将提高计算效率。从概念上讲，正向转移函数在输入值从底部进入窗口帧时把它们加入聚合的状态，而逆向转移函数在它们从顶部离开帧时再把它们移除。因此，当值被移除时，它们总是按照被加入时的相同顺序被移除。于是，每当逆向转移函数被调用时，它接收到的总是最早加入但尚未移除的参数值。逆向转移函数可以假定，在它移除最旧的行之后，当前状态中至少还会保留一行。（当情况并非如此时，窗口函数机制会直接开始一次全新的聚合，而不是使用逆向转移函数。）
    </para>
 
    <para>
-    The forward transition function for moving-aggregate mode is not
-    allowed to return NULL as the new state value. If the inverse
-    transition function returns NULL, this is taken as an indication that
-    the inverse function cannot reverse the state calculation for this
-    particular input, and so the aggregate calculation will be redone from
-    scratch for the current frame starting position.  This convention
-    allows moving-aggregate mode to be used in situations where there are
-    some infrequent cases that are impractical to reverse out of the
-    running state value.
+    移动聚合模式的正向转移函数不允许返回 NULL 作为新的状态值。如果逆向转移函数返回 NULL，这被视为一种指示：逆向函数无法针对这个特定输入逆转状态计算，因此将针对当前帧起始位置从头重新进行聚合计算。这一约定使得移动聚合模式可以用于这样的情形：其中存在一些不常见的、无法从运行中的状态值中逆转出来的情况。
    </para>
 
    <para>
-    If no moving-aggregate implementation is supplied,
-    the aggregate can still be used with moving frames,
-    but <productname>PostgreSQL</productname> will recompute the whole
-    aggregation whenever the start of the frame moves.
-    Note that whether or not the aggregate supports moving-aggregate
-    mode, <productname>PostgreSQL</productname> can handle a moving frame
-    end without recalculation; this is done by continuing to add new values
-    to the aggregate's state.  This is why use of an aggregate as a window
-    function requires that the final function be read-only: it must
-    not damage the aggregate's state value, so that the aggregation can be
-    continued even after an aggregate result value has been obtained for
-    one set of frame boundaries.
+    如果没有提供移动聚合实现，该聚合仍然可以与移动帧一起使用，但每当帧的起点移动时，<productname>PostgreSQL</productname> 都会重新计算整个聚合。请注意，无论聚合是否支持移动聚合模式，<productname>PostgreSQL</productname> 都能在不重新计算的情况下处理移动的帧终点；这是通过继续向聚合的状态中添加新值来实现的。这就是为什么将聚合用作窗口函数要求最终函数是只读的：它不得破坏聚合的状态值，以便即使在针对某一组帧边界获得了一个聚合结果值之后，聚合仍能继续下去。
    </para>
 
    <para>
-    The syntax for ordered-set aggregates allows <literal>VARIADIC</literal>
-    to be specified for both the last direct parameter and the last
-    aggregated (<literal>WITHIN GROUP</literal>) parameter.  However, the
-    current implementation restricts use of <literal>VARIADIC</literal>
-    in two ways.  First, ordered-set aggregates can only use
-    <literal>VARIADIC "any"</literal>, not other variadic array types.
-    Second, if the last direct parameter is <literal>VARIADIC "any"</literal>,
-    then there can be only one aggregated parameter and it must also
-    be <literal>VARIADIC "any"</literal>.  (In the representation used in the
-    system catalogs, these two parameters are merged into a single
-    <literal>VARIADIC "any"</literal> item, since <structname>pg_proc</structname> cannot
-    represent functions with more than one <literal>VARIADIC</literal> parameter.)
-    If the aggregate is a hypothetical-set aggregate, the direct arguments
-    that match the <literal>VARIADIC "any"</literal> parameter are the hypothetical
-    ones; any preceding parameters represent additional direct arguments
-    that are not constrained to match the aggregated arguments.
+    有序集聚合的语法允许为最后一个直接参数和最后一个聚合（<literal>WITHIN GROUP</literal>）参数指定 <literal>VARIADIC</literal>。然而，当前的实现从两个方面限制了 <literal>VARIADIC</literal> 的使用。首先，有序集聚合只能使用 <literal>VARIADIC "any"</literal>，不能使用其他可变数组类型。其次，如果最后一个直接参数是 <literal>VARIADIC "any"</literal>，那么只能有一个聚合参数，并且它也必须为 <literal>VARIADIC "any"</literal>。（在系统目录所使用的表示中，这两个参数被合并为单个 <literal>VARIADIC "any"</literal> 项，因为 <structname>pg_proc</structname> 无法表示带有多个 <literal>VARIADIC</literal> 参数的函数。）如果该聚合是假想集聚合，那么与 <literal>VARIADIC "any"</literal> 参数匹配的直接参数就是假想参数；任何前面的参数都表示额外的直接参数，它们不受匹配聚合参数的约束。
    </para>
 
    <para>
-    Currently, ordered-set aggregates do not need to support
-    moving-aggregate mode, since they cannot be used as window functions.
+    目前，有序集聚合不需要支持移动聚合模式，因为它们不能用作窗口函数。
    </para>
 
    <para>
-    Partial (including parallel) aggregation is currently not supported for
-    ordered-set aggregates.  Also, it will never be used for aggregate calls
-    that include <literal>DISTINCT</literal> or <literal>ORDER BY</literal> clauses, since
-    those semantics cannot be supported during partial aggregation.
+    目前，有序集聚合不支持部分（包括并行）聚合。此外，对于包含 <literal>DISTINCT</literal> 或 <literal>ORDER BY</literal> 子句的聚合调用，它将永远不会被使用，因为这些语义无法在部分聚合期间得到支持。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   See <xref linkend="xaggr"/>.
+   请参阅 <xref linkend="xaggr"/>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE AGGREGATE</command> is a
-   <productname>PostgreSQL</productname> language extension.  The SQL
-   standard does not provide for user-defined aggregate functions.
+   <command>CREATE AGGREGATE</command> 是一种 <productname>PostgreSQL</productname> 语言扩展。SQL 标准没有规定用户定义的聚合函数。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alteraggregate"/></member>
