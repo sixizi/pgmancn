@@ -1,68 +1,55 @@
 <!-- doc/src/sgml/ltree.sgml -->
 
 <sect1 id="ltree" xreflabel="ltree">
- <title>ltree &mdash; hierarchical tree-like data type</title>
+ <title>ltree &mdash; 层次树状数据类型</title>
 
  <indexterm zone="ltree">
   <primary>ltree</primary>
  </indexterm>
 
  <para>
-  This module implements a data type <type>ltree</type> for representing
-  labels of data stored in a hierarchical tree-like structure.
-  Extensive facilities for searching through label trees are provided.
+  本模块实现了一种数据类型 <type>ltree</type>，用于表示存储在层次树状结构中的数据的标签。
+  提供了大量用于在标签树中搜索的功能。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  本模块被视为<quote>可信</quote>的，也就是说，它可以由在当前数据库上具有 <literal>CREATE</literal> 权限的非超级用户安装。
  </para>
 
  <sect2 id="ltree-definitions">
-  <title>Definitions</title>
+  <title>定义</title>
 
   <para>
-   A <firstterm>label</firstterm> is a sequence of alphanumeric characters,
-   underscores, and hyphens. Valid alphanumeric character ranges are
-   dependent on the database locale. For example, in C locale, the characters
-   <literal>A-Za-z0-9_-</literal> are allowed.
-   Labels must be no more than 1000 characters long.
+   <firstterm>标签</firstterm>是由字母数字字符、下划线和连字符组成的序列。有效的字母数字字符范围取决于数据库的排序规则。例如，在 C 排序规则中，允许使用字符 <literal>A-Za-z0-9_-</literal>。
+   标签长度不得超过 1000 个字符。
   </para>
 
   <para>
-   Examples: <literal>42</literal>, <literal>Personal_Services</literal>
+   示例：<literal>42</literal>、<literal>Personal_Services</literal>
   </para>
 
   <para>
-   A <firstterm>label path</firstterm> is a sequence of zero or more
-   labels separated by dots, for example <literal>L1.L2.L3</literal>, representing
-   a path from the root of a hierarchical tree to a particular node.  The
-   length of a label path cannot exceed 65535 labels.
+   <firstterm>标签路径</firstterm>是由点分隔的零个或多个标签组成的序列，例如 <literal>L1.L2.L3</literal>，表示从层次树的根到某个特定节点的路径。标签路径的长度不能超过 65535 个标签。
   </para>
 
   <para>
-   Example: <literal>Top.Countries.Europe.Russia</literal>
+   示例：<literal>Top.Countries.Europe.Russia</literal>
   </para>
 
   <para>
-   The <filename>ltree</filename> module provides several data types:
+   <filename>ltree</filename> 模块提供了若干数据类型：
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     <type>ltree</type> stores a label path.
+     <type>ltree</type> 存储一个标签路径。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     <type>lquery</type> represents a regular-expression-like pattern
-     for matching <type>ltree</type> values.  A simple word matches that
-     label within a path.  A star symbol (<literal>*</literal>) matches zero
-     or more labels.  These can be joined with dots to form a pattern that
-     must match the whole label path.  For example:
+     <type>lquery</type> 表示一种类似于正则表达式的模式，用于匹配 <type>ltree</type> 值。一个简单词匹配路径中的该标签。星号符号（<literal>*</literal>）匹配零个或多个标签。这些可以用点连接起来，形成一个必须匹配整个标签路径的模式。例如：
 <synopsis>
 foo         <lineannotation>Match the exact label path <literal>foo</literal></lineannotation>
 *.foo.*     <lineannotation>Match any label path containing the label <literal>foo</literal></lineannotation>
@@ -71,8 +58,7 @@ foo         <lineannotation>Match the exact label path <literal>foo</literal></l
     </para>
 
     <para>
-     Both star symbols and simple words can be quantified to restrict how many
-     labels they can match:
+     星号符号和简单词都可以被量化，以限制它们能匹配多少个标签：
 <synopsis>
 *{<replaceable>n</replaceable>}        <lineannotation>Match exactly <replaceable>n</replaceable> labels</lineannotation>
 *{<replaceable>n</replaceable>,}       <lineannotation>Match at least <replaceable>n</replaceable> labels</lineannotation>
@@ -81,135 +67,111 @@ foo         <lineannotation>Match the exact label path <literal>foo</literal></l
 foo{<replaceable>n</replaceable>,<replaceable>m</replaceable>}    <lineannotation>Match at least <replaceable>n</replaceable> but not more than <replaceable>m</replaceable> occurrences of <literal>foo</literal></lineannotation>
 foo{,}      <lineannotation>Match any number of occurrences of <literal>foo</literal>, including zero</lineannotation>
 </synopsis>
-     In the absence of any explicit quantifier, the default for a star symbol
-     is to match any number of labels (that is, <literal>{,}</literal>) while
-     the default for a non-star item is to match exactly once (that
-     is, <literal>{1}</literal>).
+     在没有任何显式量词的情况下，星号符号的默认行为是匹配任意数量的标签（即 <literal>{,}</literal>），而非星号项的默认行为是恰好匹配一次（即 <literal>{1}</literal>）。
     </para>
 
     <para>
-     There are several modifiers that can be put at the end of a non-star
-     <type>lquery</type> item to make it match more than just the exact match:
+     有几个修饰符可以放在非星号 <type>lquery</type> 项的末尾，使其匹配不止精确匹配的内容：
 <synopsis>
 @           <lineannotation>Match case-insensitively, for example <literal>a@</literal> matches <literal>A</literal></lineannotation>
 *           <lineannotation>Match any label with this prefix, for example <literal>foo*</literal> matches <literal>foobar</literal></lineannotation>
 %           <lineannotation>Match initial underscore-separated words</lineannotation>
 </synopsis>
-     The behavior of <literal>%</literal> is a bit complicated.  It tries to match
-     words rather than the entire label.  For example
-     <literal>foo_bar%</literal> matches <literal>foo_bar_baz</literal> but not
-     <literal>foo_barbaz</literal>.  If combined with <literal>*</literal>, prefix
-     matching applies to each word separately, for example
-     <literal>foo_bar%*</literal> matches <literal>foo1_bar2_baz</literal> but
-     not <literal>foo1_br2_baz</literal>.
+    <literal>%</literal> 的行为有点复杂。它尝试匹配单词而不是整个标签。例如 <literal>foo_bar%</literal> 匹配 <literal>foo_bar_baz</literal> 但不匹配 <literal>foo_barbaz</literal>。如果与 <literal>*</literal> 组合，前缀匹配会分别应用于每个单词，例如 <literal>foo_bar%*</literal> 匹配 <literal>foo1_bar2_baz</literal> 但不匹配 <literal>foo1_br2_baz</literal>。
     </para>
 
     <para>
-     Also, you can write several possibly-modified non-star items separated with
-     <literal>|</literal> (OR) to match any of those items, and you can put
-     <literal>!</literal> (NOT) at the start of a non-star group to match any
-     label that doesn't match any of the alternatives.  A quantifier, if any,
-     goes at the end of the group; it means some number of matches for the
-     group as a whole (that is, some number of labels matching or not matching
-     any of the alternatives).
+     此外，你可以编写多个可能带有修饰符的非星号项，用 <literal>|</literal>（OR）分隔，以匹配其中任意一项；还可以在非星号组的开头放置 <literal>!</literal>（NOT），以匹配不匹配任何备选项的任何标签。量词（如果有）放在组的末尾；它表示整个组的匹配次数（即匹配或不匹配任何备选项的标签数量）。
     </para>
 
     <para>
-     Here's an annotated example of <type>lquery</type>:
+     下面是一个带注释的 <type>lquery</type> 示例：
 <programlisting>
 Top.*{0,2}.sport*@.!football|tennis{1,}.Russ*|Spain
 a.  b.     c.      d.                   e.
 </programlisting>
-     This query will match any label path that:
+    此查询将匹配满足以下条件的任何标签路径：
     </para>
     <orderedlist numeration="loweralpha">
      <listitem>
       <para>
-       begins with the label <literal>Top</literal>
+       以标签 <literal>Top</literal> 开头
       </para>
      </listitem>
      <listitem>
       <para>
-       and next has zero to two labels before
+       并且接下来有零到两个标签，然后
       </para>
      </listitem>
      <listitem>
       <para>
-       a label beginning with the case-insensitive prefix <literal>sport</literal>
+       一个以不区分大小写的前缀 <literal>sport</literal> 开头的标签
       </para>
      </listitem>
      <listitem>
       <para>
-       then has one or more labels, none of which
-       match <literal>football</literal> nor <literal>tennis</literal>
+       然后有一个或多个标签，其中没有任何一个匹配 <literal>football</literal> 或 <literal>tennis</literal>
       </para>
      </listitem>
      <listitem>
       <para>
-       and then ends with a label beginning with <literal>Russ</literal> or
-       exactly matching <literal>Spain</literal>.
+       然后以一个以 <literal>Russ</literal> 开头或与 <literal>Spain</literal> 完全匹配的标签结尾。
       </para>
      </listitem>
     </orderedlist>
    </listitem>
 
    <listitem>
-    <para><type>ltxtquery</type> represents a full-text-search-like
-    pattern for matching <type>ltree</type> values.  An
-    <type>ltxtquery</type> value contains words, possibly with the
-    modifiers <literal>@</literal>, <literal>*</literal>, <literal>%</literal> at the end;
-    the modifiers have the same meanings as in <type>lquery</type>.
-    Words can be combined with <literal>&amp;</literal> (AND),
-    <literal>|</literal> (OR), <literal>!</literal> (NOT), and parentheses.
-    The key difference from
-    <type>lquery</type> is that <type>ltxtquery</type> matches words without
-    regard to their position in the label path.
+    <para><type>ltxtquery</type> 表示一种类似全文检索的模式，用于匹配 <type>ltree</type> 值。一个
+    <type>ltxtquery</type> 值包含若干词，末尾可能带有修饰符 <literal>@</literal>、<literal>*</literal>、<literal>%</literal>；
+    这些修饰符的含义与 <type>lquery</type> 中相同。
+    词可以用 <literal>&amp;</literal>（AND）、<literal>|</literal>（OR）、<literal>!</literal>（NOT）以及括号组合。
+    与 <type>lquery</type> 的关键区别在于，<type>ltxtquery</type> 匹配词时不考虑
+    它们在标签路径中的位置。
     </para>
 
     <para>
-     Here's an example <type>ltxtquery</type>:
+     下面是一个 <type>ltxtquery</type> 示例：
 <programlisting>
 Europe &amp; Russia*@ &amp; !Transportation
 </programlisting>
-     This will match paths that contain the label <literal>Europe</literal> and
-     any label beginning with <literal>Russia</literal> (case-insensitive),
-     but not paths containing the label <literal>Transportation</literal>.
-     The location of these words within the path is not important.
-     Also, when <literal>%</literal> is used, the word can be matched to any
-     underscore-separated word within a label, regardless of position.
+     这将匹配包含标签 <literal>Europe</literal> 以及任何以 <literal>Russia</literal> 开头的标签（不区分大小写）
+     的路径，但不匹配包含标签 <literal>Transportation</literal> 的路径。
+     这些词在路径中的位置并不重要。
+     此外，当使用 <literal>%</literal> 时，词可以匹配标签内任何
+     以下划线分隔的词，无论其位置如何。
     </para>
    </listitem>
 
   </itemizedlist>
 
   <para>
-   Note: <type>ltxtquery</type> allows whitespace between symbols, but
-   <type>ltree</type> and <type>lquery</type> do not.
+   注意：<type>ltxtquery</type> 允许符号之间有空白，但
+   <type>ltree</type> 和 <type>lquery</type> 不允许。
   </para>
  </sect2>
 
  <sect2 id="ltree-ops-funcs">
-  <title>Operators and Functions</title>
+  <title>运算符和函数</title>
 
   <para>
-   Type <type>ltree</type> has the usual comparison operators
-   <literal>=</literal>, <literal>&lt;&gt;</literal>,
-   <literal>&lt;</literal>, <literal>&gt;</literal>, <literal>&lt;=</literal>, <literal>&gt;=</literal>.
-   Comparison sorts in the order of a tree traversal, with the children
-   of a node sorted by label text.  In addition, the specialized
-   operators shown in <xref linkend="ltree-op-table"/> are available.
+   类型 <type>ltree</type> 具有通常的比较运算符
+   <literal>=</literal>、<literal>&lt;&gt;</literal>、
+   <literal>&lt;</literal>、<literal>&gt;</literal>、<literal>&lt;=</literal>、<literal>&gt;=</literal>。
+   比较按照树遍历的顺序排序，节点的子节点按标签文本排序。此外，
+   还可以使用 <xref linkend="ltree-op-table"/> 中所示的专用运算符。
   </para>
 
   <table id="ltree-op-table">
-   <title><type>ltree</type> Operators</title>
+   <title><type>ltree</type> 运算符</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Operator
+        运算符
        </para>
        <para>
-        Description
+        描述
        </para></entry>
       </row>
      </thead>
@@ -221,7 +183,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Is left argument an ancestor of right (or equal)?
+        左参数是右参数的祖先（或相等）吗？
        </para></entry>
       </row>
 
@@ -231,7 +193,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Is left argument a descendant of right (or equal)?
+        左参数是右参数的后代（或相等）吗？
        </para></entry>
       </row>
 
@@ -245,7 +207,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>ltree</type> match <type>lquery</type>?
+        <type>ltree</type> 是否匹配 <type>lquery</type>？
        </para></entry>
       </row>
 
@@ -259,7 +221,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>ltree</type> match any <type>lquery</type> in array?
+        <type>ltree</type> 是否匹配数组中的任意 <type>lquery</type>？
        </para></entry>
       </row>
 
@@ -273,7 +235,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>ltree</type> match <type>ltxtquery</type>?
+        <type>ltree</type> 是否匹配 <type>ltxtquery</type>？
        </para></entry>
       </row>
 
@@ -283,7 +245,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Concatenates <type>ltree</type> paths.
+        连接 <type>ltree</type> 路径。
        </para></entry>
       </row>
 
@@ -297,7 +259,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Converts text to <type>ltree</type> and concatenates.
+        将文本转换为 <type>ltree</type> 并连接。
        </para></entry>
       </row>
 
@@ -311,7 +273,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does array contain an ancestor of <type>ltree</type>?
+        数组是否包含 <type>ltree</type> 的祖先？
        </para></entry>
       </row>
 
@@ -325,7 +287,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does array contain a descendant of <type>ltree</type>?
+        数组是否包含 <type>ltree</type> 的后代？
        </para></entry>
       </row>
 
@@ -339,7 +301,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does array contain any path matching <type>lquery</type>?
+        数组是否包含与 <type>lquery</type> 匹配的任何路径？
        </para></entry>
       </row>
 
@@ -353,8 +315,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>ltree</type> array contain any path matching
-        any <type>lquery</type>?
+        <type>ltree</type> 数组是否包含与任何 <type>lquery</type> 匹配的任何路径？
        </para></entry>
       </row>
 
@@ -368,7 +329,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does array contain any path matching <type>ltxtquery</type>?
+        数组是否包含与 <type>ltxtquery</type> 匹配的任何路径？
        </para></entry>
       </row>
 
@@ -378,8 +339,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns first array entry that is an ancestor of <type>ltree</type>,
-        or <literal>NULL</literal> if none.
+        返回第一个作为 <type>ltree</type> 祖先的数组项，如果没有则返回 <literal>NULL</literal>。
        </para></entry>
       </row>
 
@@ -389,8 +349,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns first array entry that is a descendant of <type>ltree</type>,
-        or <literal>NULL</literal> if none.
+        返回第一个作为 <type>ltree</type> 后代的数组项，如果没有则返回 <literal>NULL</literal>。
        </para></entry>
       </row>
 
@@ -400,8 +359,8 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns first array entry that matches <type>lquery</type>,
-        or <literal>NULL</literal> if none.
+        返回第一个匹配 <type>lquery</type> 的数组项，
+        如果没有匹配项则返回 <literal>NULL</literal>。
        </para></entry>
       </row>
 
@@ -411,8 +370,8 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns first array entry that matches <type>ltxtquery</type>,
-        or <literal>NULL</literal> if none.
+        返回第一个匹配 <type>ltxtquery</type> 的数组项，
+        如果没有匹配项则返回 <literal>NULL</literal>。
        </para></entry>
       </row>
      </tbody>
@@ -420,30 +379,30 @@ Europe &amp; Russia*@ &amp; !Transportation
   </table>
 
   <para>
-   The operators <literal>&lt;@</literal>, <literal>@&gt;</literal>,
-   <literal>@</literal> and <literal>~</literal> have analogues
-   <literal>^&lt;@</literal>, <literal>^@&gt;</literal>, <literal>^@</literal>,
-   <literal>^~</literal>, which are the same except they do not use
-   indexes.  These are useful only for testing purposes.
+   运算符 <literal>&lt;@</literal>、<literal>@&gt;</literal>、
+   <literal>@</literal> 和 <literal>~</literal> 有类似运算符
+   <literal>^&lt;@</literal>、<literal>^@&gt;</literal>、<literal>^@</literal>、
+   <literal>^~</literal>，它们除不使用
+   索引外完全相同。这些运算符仅用于测试目的。
   </para>
 
   <para>
-   The available functions are shown in <xref linkend="ltree-func-table"/>.
+   可用的函数如 <xref linkend="ltree-func-table"/> 所示。
   </para>
 
   <table id="ltree-func-table">
-   <title><type>ltree</type> Functions</title>
+   <title><type>ltree</type> 函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example(s)
+        示例
        </para></entry>
       </row>
      </thead>
@@ -456,9 +415,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns subpath of <type>ltree</type> from
-        position <parameter>start</parameter> to
-        position <parameter>end</parameter>-1 (counting from 0).
+        返回 <type>ltree</type> 从位置 <parameter>start</parameter> 到位置 <parameter>end</parameter>-1 的子路径（从 0 开始计数）。
        </para>
        <para>
         <literal>subltree('Top.Child1.Child2', 1, 2)</literal>
@@ -473,12 +430,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns subpath of <type>ltree</type> starting at
-        position <parameter>offset</parameter>, with
-        length <parameter>len</parameter>.  If <parameter>offset</parameter>
-        is negative, subpath starts that far from the end of the path.
-        If <parameter>len</parameter> is negative, leaves that many labels off
-        the end of the path.
+        返回 <type>ltree</type> 从位置 <parameter>offset</parameter> 开始、长度为 <parameter>len</parameter> 的子路径。如果 <parameter>offset</parameter> 为负数，则子路径从路径末尾往前数该距离处开始。如果 <parameter>len</parameter> 为负数，则从路径末尾去掉该数量的标签。
        </para>
        <para>
         <literal>subpath('Top.Child1.Child2', 0, 2)</literal>
@@ -492,10 +444,8 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Returns subpath of <type>ltree</type> starting at
-        position <parameter>offset</parameter>, extending to end of path.
-        If <parameter>offset</parameter> is negative, subpath starts that far
-        from the end of the path.
+        返回 <type>ltree</type> 的子路径，从位置 <parameter>offset</parameter> 开始，一直延伸到路径末尾。
+        如果 <parameter>offset</parameter> 为负数，则子路径从路径末尾往前数该距离处开始。
        </para>
        <para>
         <literal>subpath('Top.Child1.Child2', 1)</literal>
@@ -510,7 +460,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>integer</returnvalue>
        </para>
        <para>
-        Returns number of labels in path.
+        返回路径中的标签数量。
        </para>
        <para>
         <literal>nlevel('Top.Child1.Child2')</literal>
@@ -525,8 +475,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>integer</returnvalue>
        </para>
        <para>
-        Returns position of first occurrence of <parameter>b</parameter> in
-        <parameter>a</parameter>, or -1 if not found.
+        返回 <parameter>b</parameter> 在 <parameter>a</parameter> 中第一次出现的位置，如果未找到则返回 -1。
        </para>
        <para>
         <literal>index('0.1.2.3.5.4.5.6.8.5.6.8', '5.6')</literal>
@@ -540,11 +489,8 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>integer</returnvalue>
        </para>
        <para>
-        Returns position of first occurrence of <parameter>b</parameter>
-        in <parameter>a</parameter>, or -1 if not found.  The search starts at
-        position <parameter>offset</parameter>;
-        negative <parameter>offset</parameter> means
-        start <parameter>-offset</parameter> labels from the end of the path.
+        返回 <parameter>b</parameter> 在 <parameter>a</parameter> 中第一次出现的位置，如果未找到则返回 -1。搜索从位置 <parameter>offset</parameter> 开始；
+        <parameter>offset</parameter> 为负数表示从路径末尾往前数 <parameter>-offset</parameter> 个标签处开始。
        </para>
        <para>
         <literal>index('0.1.2.3.5.4.5.6.8.5.6.8', '5.6', -4)</literal>
@@ -559,7 +505,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Casts <type>text</type> to <type>ltree</type>.
+        将 <type>text</type> 转换为 <type>ltree</type>。
        </para></entry>
       </row>
 
@@ -570,7 +516,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>text</returnvalue>
        </para>
        <para>
-        Casts <type>ltree</type> to <type>text</type>.
+        将 <type>ltree</type> 转换为 <type>text</type>。
        </para></entry>
       </row>
 
@@ -581,8 +527,8 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Computes longest common ancestor of paths
-        (up to 8 arguments are supported).
+        计算路径的最长公共祖先
+        （最多支持 8 个参数）。
        </para>
        <para>
         <literal>lca('1.2.3', '1.2.3.4.5.6')</literal>
@@ -596,7 +542,7 @@ Europe &amp; Russia*@ &amp; !Transportation
         <returnvalue>ltree</returnvalue>
        </para>
        <para>
-        Computes longest common ancestor of paths in array.
+        计算数组中各路径的最长公共祖先。
        </para>
        <para>
         <literal>lca(array['1.2.3'::ltree,'1.2.3.4'])</literal>
@@ -609,54 +555,46 @@ Europe &amp; Russia*@ &amp; !Transportation
  </sect2>
 
  <sect2 id="ltree-indexes">
-  <title>Indexes</title>
+  <title>索引</title>
   <para>
-   <filename>ltree</filename> supports several types of indexes that can speed
-   up the indicated operators:
+   <filename>ltree</filename> 支持多种索引类型，可以加速指定的运算符：
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     B-tree index over <type>ltree</type>:
-     <literal>&lt;</literal>, <literal>&lt;=</literal>, <literal>=</literal>,
-     <literal>&gt;=</literal>, <literal>&gt;</literal>
+     基于 <type>ltree</type> 的 B-tree 索引：
+     <literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>=</literal>、
+     <literal>&gt;=</literal>、<literal>&gt;</literal>
     </para>
    </listitem>
    <listitem>
     <para>
-     Hash index over <type>ltree</type>:
+     基于 <type>ltree</type> 的哈希索引：
      <literal>=</literal>
     </para>
    </listitem>
 
    <listitem>
     <para>
-     GiST index over <type>ltree</type> (<literal>gist_ltree_ops</literal>
-     opclass):
-     <literal>&lt;</literal>, <literal>&lt;=</literal>, <literal>=</literal>,
-     <literal>&gt;=</literal>, <literal>&gt;</literal>,
-     <literal>@&gt;</literal>, <literal>&lt;@</literal>,
-     <literal>@</literal>, <literal>~</literal>, <literal>?</literal>
+     基于 <type>ltree</type> 的 GiST 索引（<literal>gist_ltree_ops</literal>
+     运算符类）：
+     <literal>&lt;</literal>、<literal>&lt;=</literal>、<literal>=</literal>、
+     <literal>&gt;=</literal>、<literal>&gt;</literal>、
+     <literal>@&gt;</literal>、<literal>&lt;@</literal>、
+     <literal>@</literal>、<literal>~</literal>、<literal>?</literal>
     </para>
     <para>
-     <literal>gist_ltree_ops</literal> GiST opclass approximates a set of
-     path labels as a bitmap signature.  Its optional integer parameter
-     <literal>siglen</literal> determines the
-     signature length in bytes.  The default signature length is 8 bytes.
-     The length must be a positive multiple of <type>int</type> alignment
-     (4 bytes on most machines)) up to 2024.  Longer
-     signatures lead to a more precise search (scanning a smaller fraction of the index and
-     fewer heap pages), at the cost of a larger index.
+     <literal>gist_ltree_ops</literal> GiST 运算符类将一组路径标签近似为位图签名。其可选的整数参数 <literal>siglen</literal> 决定签名的长度（以字节为单位）。默认签名长度为 8 字节。该长度必须是 <type>int</type> 对齐（在大多数机器上是 4 字节））的正整数倍，最大为 2024。更长的签名可带来更精确的搜索（扫描索引中更小的一部分以及更少的堆页面），代价是索引更大。
     </para>
     <para>
-     Example of creating such an index with the default signature length of 8 bytes:
+     使用默认签名长度 8 字节创建此类索引的示例：
     </para>
 <programlisting>
 CREATE INDEX path_gist_idx ON test USING GIST (path);
 </programlisting>
     <para>
-     Example of creating such an index with a signature length of 100 bytes:
+     使用签名长度 100 字节创建此类索引的示例：
     </para>
 <programlisting>
 CREATE INDEX path_gist_idx ON test USING GIST (path gist_ltree_ops(siglen=100));
@@ -664,42 +602,37 @@ CREATE INDEX path_gist_idx ON test USING GIST (path gist_ltree_ops(siglen=100));
    </listitem>
    <listitem>
     <para>
-     GiST index over <type>ltree[]</type> (<literal>gist__ltree_ops</literal>
-     opclass):
-     <literal>ltree[] &lt;@ ltree</literal>, <literal>ltree @&gt; ltree[]</literal>,
-     <literal>@</literal>, <literal>~</literal>, <literal>?</literal>
+     基于 <type>ltree[]</type> 的 GiST 索引（<literal>gist__ltree_ops</literal> 运算符类）：
+     <literal>ltree[] &lt;@ ltree</literal>、<literal>ltree @&gt; ltree[]</literal>、
+     <literal>@</literal>、<literal>~</literal>、<literal>?</literal>
     </para>
     <para>
-     <literal>gist__ltree_ops</literal> GiST opclass works similarly to
-     <literal>gist_ltree_ops</literal> and also takes signature length as
-     a parameter.  The default value of <literal>siglen</literal> in
-      <literal>gist__ltree_ops</literal> is 28 bytes.
+     <literal>gist__ltree_ops</literal> GiST 运算符类的工作方式与 <literal>gist_ltree_ops</literal> 类似，同样将签名长度作为参数。<literal>gist__ltree_ops</literal> 中 <literal>siglen</literal> 的默认值为 28 字节。
     </para>
     <para>
-     Example of creating such an index with the default signature length of 28 bytes:
+     使用默认签名长度 28 字节创建此类索引的示例：
     </para>
 <programlisting>
 CREATE INDEX path_gist_idx ON test USING GIST (array_path);
 </programlisting>
     <para>
-     Example of creating such an index with a signature length of 100 bytes:
+     创建这样一个签名长度为 100 字节的索引的示例：
     </para>
 <programlisting>
 CREATE INDEX path_gist_idx ON test USING GIST (array_path gist__ltree_ops(siglen=100));
 </programlisting>
     <para>
-     Note: This index type is lossy.
+     注意：这种索引类型是有损的。
     </para>
    </listitem>
   </itemizedlist>
  </sect2>
 
  <sect2 id="ltree-example">
-  <title>Example</title>
+  <title>示例</title>
 
   <para>
-   This example uses the following data (also available in file
-   <filename>contrib/ltree/ltreetest.sql</filename> in the source distribution):
+   本示例使用以下数据（也可在源代码分发包中的文件 <filename>contrib/ltree/ltreetest.sql</filename> 中找到）：
   </para>
 
 <programlisting>
@@ -723,8 +656,7 @@ CREATE INDEX path_hash_idx ON test USING HASH (path);
 </programlisting>
 
   <para>
-   Now, we have a table <structname>test</structname> populated with data describing
-   the hierarchy shown below:
+   现在，我们有一个表 <structname>test</structname>，其中填充了描述下图所示层次结构的数据：
   </para>
 
 <literallayout class="monospaced">
@@ -740,7 +672,7 @@ Astrophysics  Cosmology                Astronomy
 </literallayout>
 
   <para>
-   We can do inheritance:
+   我们可以进行继承：
 <screen>
 ltreetest=&gt; SELECT path FROM test WHERE path &lt;@ 'Top.Science';
                 path
@@ -754,7 +686,7 @@ ltreetest=&gt; SELECT path FROM test WHERE path &lt;@ 'Top.Science';
   </para>
 
   <para>
-   Here are some examples of path matching:
+   以下是一些路径匹配的示例：
 <screen>
 ltreetest=&gt; SELECT path FROM test WHERE path ~ '*.Astronomy.*';
                      path
@@ -779,7 +711,7 @@ ltreetest=&gt; SELECT path FROM test WHERE path ~ '*.!pictures@.Astronomy.*';
   </para>
 
   <para>
-   Here are some examples of full text search:
+   以下是一些全文检索的示例：
 <screen>
 ltreetest=&gt; SELECT path FROM test WHERE path @ 'Astro*% &amp; !pictures@';
                 path
@@ -801,7 +733,7 @@ ltreetest=&gt; SELECT path FROM test WHERE path @ 'Astro* &amp; !pictures@';
   </para>
 
   <para>
-   Path construction using functions:
+   使用函数构造路径：
 <screen>
 ltreetest=&gt; SELECT subpath(path,0,2)||'Space'||subpath(path,2) FROM test WHERE path &lt;@ 'Top.Science.Astronomy';
                  ?column?
@@ -814,8 +746,7 @@ ltreetest=&gt; SELECT subpath(path,0,2)||'Space'||subpath(path,2) FROM test WHER
   </para>
 
   <para>
-   We could simplify this by creating an SQL function that inserts a label
-   at a specified position in a path:
+   我们可以通过创建一个 SQL 函数来简化这一过程，该函数在路径的指定位置插入一个标签：
 <screen>
 CREATE FUNCTION ins_label(ltree, int, text) RETURNS ltree
     AS 'select subpath($1,0,$2) || $3 || subpath($1,$2);'
@@ -833,25 +764,22 @@ ltreetest=&gt; SELECT ins_label(path,2,'Space') FROM test WHERE path &lt;@ 'Top.
  </sect2>
 
  <sect2 id="ltree-transforms">
-  <title>Transforms</title>
+  <title>转换</title>
 
   <para>
-   The <literal>ltree_plpython3u</literal> extension implements transforms for
-   the <type>ltree</type> type for PL/Python. If installed and specified when
-   creating a function, <type>ltree</type> values are mapped to Python lists.
-   (The reverse is currently not supported, however.)
+   <literal>ltree_plpython3u</literal> 扩展为 PL/Python 的 <type>ltree</type> 类型实现了转换。如果已安装并在创建函数时指定，<type>ltree</type> 值会映射为 Python 列表。（不过目前不支持反向转换。）
   </para>
  </sect2>
 
  <sect2 id="ltree-authors">
-  <title>Authors</title>
+  <title>作者</title>
 
   <para>
-   All work was done by Teodor Sigaev (<email>teodor@stack.net</email>) and
-   Oleg Bartunov (<email>oleg@sai.msu.su</email>). See
-   <ulink url="http://www.sai.msu.su/~megera/postgres/gist/"></ulink> for
-   additional information. Authors would like to thank Eugeny Rodichev for
-   helpful discussions. Comments and bug reports are welcome.
+   所有工作由 Teodor Sigaev（<email>teodor@stack.net</email>）和
+   Oleg Bartunov（<email>oleg@sai.msu.su</email>）完成。有关
+   更多信息，请参见
+   <ulink url="http://www.sai.msu.su/~megera/postgres/gist/"></ulink>。
+   作者感谢 Eugeny Rodichev 的有益讨论。欢迎提出意见和报告缺陷。
   </para>
  </sect2>
 
