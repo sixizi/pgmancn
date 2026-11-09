@@ -647,117 +647,50 @@ amtranslatecmptype (CompareType cmptype, Oid opfamily, Oid opcintype);
  </sect1>
 
  <sect1 id="index-locking">
-  <title>Index Locking Considerations</title>
+  <title>索引锁注意事项</title>
 
   <para>
-   Index access methods must handle concurrent updates
-   of the index by multiple processes.
-   The core <productname>PostgreSQL</productname> system obtains
-   <literal>AccessShareLock</literal> on the index during an index scan, and
-   <literal>RowExclusiveLock</literal> when updating the index (including plain
-   <command>VACUUM</command>).  Since these lock types do not conflict, the access
-   method is responsible for handling any fine-grained locking it might need.
-   An <literal>ACCESS EXCLUSIVE</literal> lock on the index as a whole will be
-   taken only during index creation, destruction, or <command>REINDEX</command>
-   (<literal>SHARE UPDATE EXCLUSIVE</literal> is taken instead with
-   <literal>CONCURRENTLY</literal>).
+   索引访问方法必须处理多个进程对索引的并发更新。核心 <productname>PostgreSQL</productname> 系统在索引扫描期间在索引上获得 <literal>AccessShareLock</literal>，在更新索引时（包括普通 <command>VACUUM</command>）获得 <literal>RowExclusiveLock</literal>。由于这些锁类型并不冲突，访问方法负责处理它可能需要的任何细粒度锁。对整个索引的 <literal>ACCESS EXCLUSIVE</literal> 锁只会在创建索引、销毁索引或 <command>REINDEX</command> 期间获得（<literal>SHARE UPDATE EXCLUSIVE</literal> 则通过 <literal>CONCURRENTLY</literal> 获得）。
   </para>
 
   <para>
-   Building an index type that supports concurrent updates usually requires
-   extensive and subtle analysis of the required behavior.  For the b-tree
-   and hash index types, you can read about the design decisions involved in
-   <filename>src/backend/access/nbtree/README</filename> and
-   <filename>src/backend/access/hash/README</filename>.
+   构建支持并发更新的索引类型通常需要对所需行为进行广泛而细致的分析。对于 b-tree 和 hash 索引类型，你可以阅读 <filename>src/backend/access/nbtree/README</filename> 和 <filename>src/backend/access/hash/README</filename> 中涉及的设计决策。
   </para>
 
   <para>
-   Aside from the index's own internal consistency requirements, concurrent
-   updates create issues about consistency between the parent table (the
-   <firstterm>heap</firstterm>) and the index.  Because
-   <productname>PostgreSQL</productname> separates accesses
-   and updates of the heap from those of the index, there are windows in
-   which the index might be inconsistent with the heap.  We handle this problem
-   with the following rules:
+   除了索引自身的内部一致性要求之外，并发更新还会引发父表（<firstterm>堆</firstterm>）与索引之间的一致性问题。因为 <productname>PostgreSQL</productname> 将对堆的访问和更新与对索引的访问和更新分开，所以存在索引可能与堆不一致的时间窗口。我们通过以下规则来处理这个问题：
 
     <itemizedlist>
      <listitem>
       <para>
-       A new heap entry is made before making its index entries.  (Therefore
-       a concurrent index scan is likely to fail to see the heap entry.
-       This is okay because the index reader would be uninterested in an
-       uncommitted row anyway.  But see <xref linkend="index-unique-checks"/>.)
+       在创建索引项之前先创建新的堆项。（因此并发索引扫描很可能看不到该堆项。这没关系，因为索引读取者无论如何都不会关心未提交的行。但请参见 <xref linkend="index-unique-checks"/>。）
       </para>
      </listitem>
      <listitem>
       <para>
-       When a heap entry is to be deleted (by <command>VACUUM</command>), all its
-       index entries must be removed first.
+       当要删除某个堆项时（由 <command>VACUUM</command> 执行），必须先删除它的所有索引项。
       </para>
      </listitem>
      <listitem>
       <para>
-       An index scan must maintain a pin
-       on the index page holding the item last returned by
-       <function>amgettuple</function>, and <function>ambulkdelete</function> cannot delete
-       entries from pages that are pinned by other backends.  The need
-       for this rule is explained below.
+       索引扫描必须在持有最近由 <function>amgettuple</function> 返回项的那个索引页上保持一个 pin，而 <function>ambulkdelete</function> 不能从被其他后端 pin 住的页中删除条目。下面解释这条规则的必要性。
       </para>
      </listitem>
     </itemizedlist>
 
-   Without the third rule, it is possible for an index reader to
-   see an index entry just before it is removed by <command>VACUUM</command>, and
-   then to arrive at the corresponding heap entry after that was removed by
-   <command>VACUUM</command>.
-   This creates no serious problems if that item
-   number is still unused when the reader reaches it, since an empty
-   item slot will be ignored by <function>heap_fetch()</function>.  But what if a
-   third backend has already re-used the item slot for something else?
-   When using an MVCC-compliant snapshot, there is no problem because
-   the new occupant of the slot is certain to be too new to pass the
-   snapshot test.  However, with a non-MVCC-compliant snapshot (such as
-   <literal>SnapshotAny</literal>), it would be possible to accept and return
-   a row that does not in fact match the scan keys.  We could defend
-   against this scenario by requiring the scan keys to be rechecked
-   against the heap row in all cases, but that is too expensive.  Instead,
-   we use a pin on an index page as a proxy to indicate that the reader
-   might still be <quote>in flight</quote> from the index entry to the matching
-   heap entry.  Making <function>ambulkdelete</function> block on such a pin ensures
-   that <command>VACUUM</command> cannot delete the heap entry before the reader
-   is done with it.  This solution costs little in run time, and adds blocking
-   overhead only in the rare cases where there actually is a conflict.
+   如果没有第三条规则，索引读取者就有可能在其被 <command>VACUUM</command> 移除之前看到一个索引条目，然后在该条目被 <command>VACUUM</command> 移除之后到达对应的堆条目。如果当读取者到达该位置时该条目编号仍然未被使用，这不会造成严重问题，因为空的条目槽会被 <function>heap_fetch()</function> 忽略。但如果第三个后端已经将该条目槽重新用于其他用途呢？在使用符合 MVCC 的快照时，这没有问题，因为该槽的新占用者肯定太新，无法通过快照测试。然而，对于不符合 MVCC 的快照（例如 <literal>SnapshotAny</literal>），就有可能接受并返回一行实际上不匹配扫描键的数据。我们可以通过要求在所有情况下都针对堆行重新检查扫描键来防御这种情形，但那样代价太高。相反，我们使用索引页上的一个 pin 作为代理，表明读取者可能仍处于从索引条目到匹配堆条目的<quote>途中</quote>。让 <function>ambulkdelete</function> 在此类 pin 上阻塞，可确保 <command>VACUUM</command> 在读取者完成之前无法删除该堆条目。此解决方案在运行时开销很小，并且只在确实发生冲突的罕见情况下才会增加阻塞开销。
   </para>
 
   <para>
-   This solution requires that index scans be <quote>synchronous</quote>: we have
-   to fetch each heap tuple immediately after scanning the corresponding index
-   entry.  This is expensive for a number of reasons.  An
-   <quote>asynchronous</quote> scan in which we collect many TIDs from the index,
-   and only visit the heap tuples sometime later, requires much less index
-   locking overhead and can allow a more efficient heap access pattern.
-   Per the above analysis, we must use the synchronous approach for
-   non-MVCC-compliant snapshots, but an asynchronous scan is workable
-   for a query using an MVCC snapshot.
+   此解决方案要求索引扫描是<quote>同步</quote>的：我们必须在扫描完相应的索引条目后立即取出每个堆元组。由于多种原因，这样做代价很高。一种<quote>异步</quote>扫描会从索引中收集许多 TID，然后过一段时间才访问堆元组，它所需的索引锁开销要少得多，并且可以实现更高效的堆访问模式。根据上述分析，对于不符合 MVCC 的快照，我们必须使用同步方式，但对于使用 MVCC 快照的查询，异步扫描是可行的。
   </para>
 
   <para>
-   In an <function>amgetbitmap</function> index scan, the access method does not
-   keep an index pin on any of the returned tuples.  Therefore
-   it is only safe to use such scans with MVCC-compliant snapshots.
+   在 <function>amgetbitmap</function> 索引扫描中，访问方法不会对任何返回的元组保持索引 pin。因此，只有使用符合 MVCC 的快照时，使用此类扫描才是安全的。
   </para>
 
   <para>
-   When the <structfield>ampredlocks</structfield> flag is not set, any scan using that
-   index access method within a serializable transaction will acquire a
-   nonblocking predicate lock on the full index.  This will generate a
-   read-write conflict with the insert of any tuple into that index by a
-   concurrent serializable transaction.  If certain patterns of read-write
-   conflicts are detected among a set of concurrent serializable
-   transactions, one of those transactions may be canceled to protect data
-   integrity.  When the flag is set, it indicates that the index access
-   method implements finer-grained predicate locking, which will tend to
-   reduce the frequency of such transaction cancellations.
+   当未设置 <structfield>ampredlocks</structfield> 标志时，在可串行化事务中使用该索引访问方法的任何扫描都会在整个索引上获取非阻塞的谓词锁。这会与并发的可串行化事务向该索引插入任何元组产生读写冲突。如果在一组并发的可串行化事务中检测到某些读写冲突模式，为了保护数据完整性，可能会取消其中一个事务。当设置了该标志时，表示该索引访问方法实现了更细粒度的谓词锁定，这往往会降低此类事务取消的发生频率。
   </para>
 
  </sect1>
