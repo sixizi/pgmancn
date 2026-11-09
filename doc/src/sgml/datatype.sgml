@@ -3481,7 +3481,7 @@ SELECT * FROM test;
   </sect1>
 
   <sect1 id="datatype-textsearch">
-   <title>Text Search Types</title>
+   <title>文本检索类型</title>
 
    <indexterm zone="datatype-textsearch">
     <primary>full text search</primary>
@@ -3494,16 +3494,8 @@ SELECT * FROM test;
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> provides two data types that
-    are designed to support full text search, which is the activity of
-    searching through a collection of natural-language <firstterm>documents</firstterm>
-    to locate those that best match a <firstterm>query</firstterm>.
-    The <type>tsvector</type> type represents a document in a form optimized
-    for text search; the <type>tsquery</type> type similarly represents
-    a text query.
-    <xref linkend="textsearch"/> provides a detailed explanation of this
-    facility, and <xref linkend="functions-textsearch"/> summarizes the
-    related functions and operators.
+    <productname>PostgreSQL</productname> 提供了两种数据类型，旨在支持全文检索，即在一组自然语言<firstterm>文档</firstterm>中搜索，以找出与<firstterm>查询</firstterm>最匹配的文档的活动。<type>tsvector</type> 类型以针对文本检索优化的形式表示文档；<type>tsquery</type> 类型类似地表示文本查询。
+    <xref linkend="textsearch"/> 详细解释了此功能，<xref linkend="functions-textsearch"/> 汇总了相关的函数和运算符。
    </para>
 
    <sect2 id="datatype-tsvector">
@@ -3514,12 +3506,7 @@ SELECT * FROM test;
     </indexterm>
 
     <para>
-     A <type>tsvector</type> value is a sorted list of distinct
-     <firstterm>lexemes</firstterm>, which are words that have been
-     <firstterm>normalized</firstterm> to merge different variants of the same word
-     (see <xref linkend="textsearch"/> for details).  Sorting and
-     duplicate-elimination are done automatically during input, as shown in
-     this example:
+     <type>tsvector</type> 值是一个已排序的、去重的<firstterm>词位</firstterm>列表，词位是经过<firstterm>规范化</firstterm>以合并同一单词不同变体的词（详见 <xref linkend="textsearch"/>）。排序和去重在输入时自动完成，如下例所示：
 
 <programlisting>
 SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector;
@@ -3528,8 +3515,7 @@ SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector;
  'a' 'and' 'ate' 'cat' 'fat' 'mat' 'on' 'rat' 'sat'
 </programlisting>
 
-     To represent
-     lexemes containing whitespace or punctuation, surround them with quotes:
+     要表示包含空白或标点的词位，请用引号将其括起来：
 
 <programlisting>
 SELECT $$the lexeme '    ' contains spaces$$::tsvector;
@@ -3538,9 +3524,7 @@ SELECT $$the lexeme '    ' contains spaces$$::tsvector;
  '    ' 'contains' 'lexeme' 'spaces' 'the'
 </programlisting>
 
-     (We use dollar-quoted string literals in this example and the next one
-     to avoid the confusion of having to double quote marks within the
-     literals.)  Embedded quotes and backslashes must be doubled:
+     （在本例和下一例中，我们使用美元引号字符串常量，以避免在常量内部需要双写引号的困扰。）嵌入的引号和反斜杠必须双写：
 
 <programlisting>
 SELECT $$the lexeme 'Joe''s' contains a quote$$::tsvector;
@@ -3549,8 +3533,7 @@ SELECT $$the lexeme 'Joe''s' contains a quote$$::tsvector;
  'Joe''s' 'a' 'contains' 'lexeme' 'quote' 'the'
 </programlisting>
 
-     Optionally, integer <firstterm>positions</firstterm>
-     can be attached to lexemes:
+     可选地，可以为词位附加整数<firstterm>位置</firstterm>：
 
 <programlisting>
 SELECT 'a:1 fat:2 cat:3 sat:4 on:5 a:6 mat:7 and:8 ate:9 a:10 fat:11 rat:12'::tsvector;
@@ -3559,18 +3542,11 @@ SELECT 'a:1 fat:2 cat:3 sat:4 on:5 a:6 mat:7 and:8 ate:9 a:10 fat:11 rat:12'::ts
  'a':1,6,10 'and':8 'ate':9 'cat':3 'fat':2,11 'mat':7 'on':5 'rat':12 'sat':4
 </programlisting>
 
-     A position normally indicates the source word's location in the
-     document.  Positional information can be used for
-     <firstterm>proximity ranking</firstterm>.  Position values can
-     range from 1 to 16383; larger numbers are silently set to 16383.
-     Duplicate positions for the same lexeme are discarded.
+     位置通常表示源单词在文档中的位置。位置信息可用于<firstterm>邻近度排名</firstterm>。位置值的范围可以是 1 到 16383；更大的数字会被静默设置为 16383。同一词位的重复位置会被丢弃。
     </para>
 
     <para>
-     Lexemes that have positions can further be labeled with a
-     <firstterm>weight</firstterm>, which can be <literal>A</literal>,
-     <literal>B</literal>, <literal>C</literal>, or <literal>D</literal>.
-     <literal>D</literal> is the default and hence is not shown on output:
+     带位置的词位还可以用<firstterm>权重</firstterm>标记，权重可以是 <literal>A</literal>、<literal>B</literal>、<literal>C</literal> 或 <literal>D</literal>。<literal>D</literal> 是默认值，因此不会在输出中显示：
 
 <programlisting>
 SELECT 'a:1A fat:2B,4C cat:5D'::tsvector;
@@ -3579,17 +3555,11 @@ SELECT 'a:1A fat:2B,4C cat:5D'::tsvector;
  'a':1A 'cat':5 'fat':2B,4C
 </programlisting>
 
-     Weights are typically used to reflect document structure, for example
-     by marking title words differently from body words.  Text search
-     ranking functions can assign different priorities to the different
-     weight markers.
+     权重通常用于反映文档结构，例如将标题词与正文词标记为不同。文本检索排名函数可以为不同的权重标记分配不同的优先级。
     </para>
 
     <para>
-     It is important to understand that the
-     <type>tsvector</type> type itself does not perform any word
-     normalization; it assumes the words it is given are normalized
-     appropriately for the application.  For example,
+     需要理解的是，<type>tsvector</type> 类型本身并不执行任何词规范化；它假定传给它的词已经针对应用做了适当的规范化。例如，
 
 <programlisting>
 SELECT 'The Fat Rats'::tsvector;
@@ -3598,11 +3568,7 @@ SELECT 'The Fat Rats'::tsvector;
  'Fat' 'Rats' 'The'
 </programlisting>
 
-     For most English-text-searching applications the above words would
-     be considered non-normalized, but <type>tsvector</type> doesn't care.
-     Raw document text should usually be passed through
-     <function>to_tsvector</function> to normalize the words appropriately
-     for searching:
+    对于大多数英文文本检索应用来说，上面这些词会被视为未规范化的，但 <type>tsvector</type> 并不在意。原始文档文本通常应当先经过 <function>to_tsvector</function> 处理，以便为检索把词适当地规范化：
 
 <programlisting>
 SELECT to_tsvector('english', 'The Fat Rats');
@@ -3611,7 +3577,7 @@ SELECT to_tsvector('english', 'The Fat Rats');
  'fat':2 'rat':3
 </programlisting>
 
-     Again, see <xref linkend="textsearch"/> for more detail.
+    同样，更多细节请参见 <xref linkend="textsearch"/>。
     </para>
 
    </sect2>
@@ -3624,27 +3590,15 @@ SELECT to_tsvector('english', 'The Fat Rats');
     </indexterm>
 
     <para>
-     A <type>tsquery</type> value stores lexemes that are to be
-     searched for, and can combine them using the Boolean operators
-     <literal>&amp;</literal> (AND), <literal>|</literal> (OR), and
-     <literal>!</literal> (NOT), as well as the phrase search operator
-     <literal>&lt;-&gt;</literal> (FOLLOWED BY).  There is also a variant
-     <literal>&lt;<replaceable>N</replaceable>&gt;</literal> of the FOLLOWED BY
-     operator, where <replaceable>N</replaceable> is an integer constant that
-     specifies the distance between the two lexemes being searched
-     for.  <literal>&lt;-&gt;</literal> is equivalent to <literal>&lt;1&gt;</literal>.
+     一个 <type>tsquery</type> 值存储要搜索的词位，并且可以用布尔运算符 <literal>&amp;</literal>（AND）、<literal>|</literal>（OR）和 <literal>!</literal>（NOT），以及短语搜索运算符 <literal>&lt;-&gt;</literal>（FOLLOWED BY）把它们组合起来。FOLLOWED BY 运算符还有一个变体 <literal>&lt;<replaceable>N</replaceable>&gt;</literal>，其中 <replaceable>N</replaceable> 是一个整数常量，用于指定要搜索的两个词位之间的距离。<literal>&lt;-&gt;</literal> 等价于 <literal>&lt;1&gt;</literal>。
     </para>
 
     <para>
-     Parentheses can be used to enforce grouping of these operators.
-     In the absence of parentheses, <literal>!</literal> (NOT) binds most tightly,
-     <literal>&lt;-&gt;</literal> (FOLLOWED BY) next most tightly, then
-     <literal>&amp;</literal> (AND), with <literal>|</literal> (OR) binding
-     the least tightly.
+     可以使用圆括号来强制这些运算符的分组。在没有圆括号的情况下，<literal>!</literal>（NOT）结合得最紧，<literal>&lt;-&gt;</literal>（FOLLOWED BY）次之，然后是 <literal>&amp;</literal>（AND），而 <literal>|</literal>（OR）结合得最松。
     </para>
 
     <para>
-     Here are some examples:
+     下面是一些例子：
 
 <programlisting>
 SELECT 'fat &amp; rat'::tsquery;
@@ -3665,9 +3619,7 @@ SELECT 'fat &amp; rat &amp; ! cat'::tsquery;
     </para>
 
     <para>
-     Optionally, lexemes in a <type>tsquery</type> can be labeled with
-     one or more weight letters, which restricts them to match only
-     <type>tsvector</type> lexemes with one of those weights:
+     可选地，<type>tsquery</type> 中的词位可以带有一个或多个权重字母作为标记，这会限制它们只匹配具有其中某个权重的 <type>tsvector</type> 词位：
 
 <programlisting>
 SELECT 'fat:ab &amp; cat'::tsquery;
@@ -3678,24 +3630,18 @@ SELECT 'fat:ab &amp; cat'::tsquery;
     </para>
 
     <para>
-     Also, lexemes in a <type>tsquery</type> can be labeled with <literal>*</literal>
-     to specify prefix matching:
+     此外，<type>tsquery</type> 中的词位可以带有 <literal>*</literal> 标记以指定前缀匹配：
 <programlisting>
 SELECT 'super:*'::tsquery;
   tsquery
 -----------
  'super':*
 </programlisting>
-     This query will match any word in a <type>tsvector</type> that begins
-     with <quote>super</quote>.
+    这个查询将匹配 <type>tsvector</type> 中以 <quote>super</quote> 开头的任何词。
     </para>
 
     <para>
-     Quoting rules for lexemes are the same as described previously for
-     lexemes in <type>tsvector</type>; and, as with <type>tsvector</type>,
-     any required normalization of words must be done before converting
-     to the <type>tsquery</type> type.  The <function>to_tsquery</function>
-     function is convenient for performing such normalization:
+     lexeme 的引用规则与前面针对 <type>tsvector</type> 中的 lexeme 所述相同；并且，与 <type>tsvector</type> 一样，必须在转换为 <type>tsquery</type> 类型之前完成任何所需的词规范化。<function>to_tsquery</function> 函数便于执行此类规范化：
 
 <programlisting>
 SELECT to_tsquery('Fat:ab &amp; Cats');
@@ -3704,8 +3650,7 @@ SELECT to_tsquery('Fat:ab &amp; Cats');
  'fat':AB &amp; 'cat'
 </programlisting>
 
-     Note that <function>to_tsquery</function> will process prefixes in the same way
-     as other words, which means this comparison returns true:
+     请注意，<function>to_tsquery</function> 会像处理其他词一样处理前缀，这意味着此比较返回 true：
 
 <programlisting>
 SELECT to_tsvector( 'postgraduate' ) @@ to_tsquery( 'postgres:*' );
@@ -3713,14 +3658,14 @@ SELECT to_tsvector( 'postgraduate' ) @@ to_tsquery( 'postgres:*' );
 ----------
  t
 </programlisting>
-     because <literal>postgres</literal> gets stemmed to <literal>postgr</literal>:
+     因为 <literal>postgres</literal> 会被词干化为 <literal>postgr</literal>：
 <programlisting>
 SELECT to_tsvector( 'postgraduate' ), to_tsquery( 'postgres:*' );
   to_tsvector  | to_tsquery
 ---------------+------------
  'postgradu':1 | 'postgr':*
 </programlisting>
-     which will match the stemmed form of <literal>postgraduate</literal>.
+     它将匹配 <literal>postgraduate</literal> 的词干化形式。
     </para>
 
    </sect2>
