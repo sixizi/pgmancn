@@ -14,80 +14,45 @@
  </para>
 
  <sect1 id="manage-ag-overview">
-  <title>Overview</title>
+  <title>概述</title>
 
   <indexterm zone="manage-ag-overview">
    <primary>schema</primary>
   </indexterm>
 
   <para>
-   A small number of objects, like role, database, and tablespace
-   names, are defined at the cluster level and stored in the
-   <literal>pg_global</literal> tablespace.  Inside the cluster are
-   multiple databases, which are isolated from each other but can access
-   cluster-level objects.  Inside each database are multiple schemas,
-   which contain objects like tables and functions.  So the full hierarchy
-   is: cluster, database, schema, table (or some other kind of object,
-   such as a function).
+   少数对象（如角色、数据库和表空间名称）定义在数据库集簇级别，并存储在 <literal>pg_global</literal> 表空间中。集簇内部有多个数据库，它们彼此隔离，但可以访问集簇级对象。每个数据库内部有多个模式，模式中包含表和函数等对象。因此完整的层次结构是：数据库集簇、数据库、模式、表（或其他类型的对象，例如函数）。
   </para>
 
   <para>
-   When connecting to the database server, a client must specify the
-   database name in its connection request.
-   It is not possible to access more than one database per
-   connection. However, clients can open multiple connections to
-   the same database, or different databases.
-   Database-level security has two components: access control
-   (see <xref linkend="auth-pg-hba-conf"/>), managed at the
-   connection level, and authorization control
-   (see <xref linkend="ddl-priv"/>), managed via the grant system.
-   Foreign data wrappers (see <xref linkend="postgres-fdw"/>)
-   allow for objects within one database to act as proxies for objects in
-   other database or clusters.
-   The older dblink module (see <xref linkend="dblink"/>) provides a similar capability.
-   By default, all users can connect to all databases using all connection methods.
+   连接到数据库服务器时，客户端必须在其连接请求中指定数据库名。每个连接不可能访问多个数据库。不过，客户端可以打开多个连接，连接到同一个数据库或不同的数据库。数据库级安全性有两个组成部分：访问控制（参见 <xref linkend="auth-pg-hba-conf"/>），在连接级别管理；以及授权控制（参见 <xref linkend="ddl-priv"/>），通过授权系统管理。外部数据包装器（参见 <xref linkend="postgres-fdw"/>）允许一个数据库中的对象充当其他数据库或集簇中对象的代理。较旧的 dblink 模块（参见 <xref linkend="dblink"/>）提供了类似的能力。默认情况下，所有用户都可以使用所有连接方法连接到所有数据库。
   </para>
 
   <para>
-   If one <productname>PostgreSQL</productname> server cluster is planned to contain
-   unrelated projects or users that should be, for the most part, unaware
-   of each other, it is recommended to put them into separate databases and
-   adjust authorizations and access controls accordingly.
-   If the projects or users are interrelated, and thus should be able to use
-   each other's resources, they should be put in the same database but probably
-   into separate schemas;  this provides a modular structure with namespace
-   isolation and authorization control.
-   More information about managing schemas is in <xref linkend="ddl-schemas"/>.
+   如果计划让一个 <productname>PostgreSQL</productname> 服务器集簇包含互不相关的项目或用户，而这些项目或用户在很大程度上不应感知到彼此的存在，建议将它们放入单独的数据库，并相应地调整授权和访问控制。如果项目或用户相互关联，因而应当能够使用彼此的资源，则应将它们放入同一个数据库，但很可能应放入不同的模式；这样可提供具有命名空间隔离和授权控制的模块化结构。有关管理模式的更多信息，请参见 <xref linkend="ddl-schemas"/>。
   </para>
 
   <para>
-   While multiple databases can be created within a single cluster, it is advised
-   to consider carefully whether the benefits outweigh the risks and limitations.
-   In particular, the impact that having a shared WAL (see <xref linkend="wal"/>)
-   has on backup and recovery options. While individual databases in the cluster
-   are isolated when considered from the user's perspective, they are closely bound
-   from the database administrator's point-of-view.
+   虽然可以在单个集簇内创建多个数据库，但建议仔细考虑其收益是否超过风险和限制。特别是，共享 WAL（参见 <xref linkend="wal"/>）对备份和恢复选项的影响。从用户的角度看，集簇中的各个数据库是隔离的，但从数据库管理员的角度看，它们紧密绑定在一起。
   </para>
 
   <para>
-   Databases are created with the <command>CREATE DATABASE</command> command
-   (see <xref linkend="manage-ag-createdb"/>) and destroyed with the
-   <command>DROP DATABASE</command> command
-   (see <xref linkend="manage-ag-dropdb"/>).
-   To determine the set of existing databases, examine the
-   <structname>pg_database</structname> system catalog, for example
+   数据库用 <command>CREATE DATABASE</command> 命令创建
+   （参见 <xref linkend="manage-ag-createdb"/>），用 <command>DROP DATABASE</command> 命令销毁
+   （参见 <xref linkend="manage-ag-dropdb"/>）。
+   要确定现有数据库的集合，请检查
+   <structname>pg_database</structname> 系统目录，例如
 <synopsis>
 SELECT datname FROM pg_database;
 </synopsis>
-   The <xref linkend="app-psql"/> program's <literal>\l</literal> meta-command
-   and <option>-l</option> command-line option are also useful for listing the
-   existing databases.
+   <xref linkend="app-psql"/> 程序的 <literal>\l</literal> 元命令
+   和 <option>-l</option> 命令行选项对于列出现有数据库也很有用。
   </para>
 
   <note>
    <para>
-    The <acronym>SQL</acronym> standard calls databases <quote>catalogs</quote>, but there
-    is no difference in practice.
+    <acronym>SQL</acronym> 标准将数据库称为<quote>目录</quote>，但在实践中
+    没有区别。
    </para>
   </note>
  </sect1>
