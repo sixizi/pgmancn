@@ -1846,17 +1846,10 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
  </sect1>
 
  <sect1 id="textsearch-dictionaries">
-  <title>Dictionaries</title>
+  <title>词典</title>
 
   <para>
-   Dictionaries are used to eliminate words that should not be considered in a
-   search (<firstterm>stop words</firstterm>), and to <firstterm>normalize</firstterm> words so
-   that different derived forms of the same word will match.  A successfully
-   normalized word is called a <firstterm>lexeme</firstterm>.  Aside from
-   improving search quality, normalization and removal of stop words reduce the
-   size of the <type>tsvector</type> representation of a document, thereby
-   improving performance.  Normalization does not always have linguistic meaning
-   and usually depends on application semantics.
+   词典用于消除不应在搜索中考虑的单词（<firstterm>停用词</firstterm>），以及<firstterm>规范化</firstterm>单词，使同一单词的不同派生形式能够匹配。成功规范化的单词称为<firstterm>词元</firstterm>。除了提高搜索质量外，规范化和移除停用词还能减小文档的 <type>tsvector</type> 表示的大小，从而提高性能。规范化并不总是具有语言学意义，通常取决于应用语义。
   </para>
 
   <para>
@@ -1866,8 +1859,7 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
 
     <listitem>
      <para>
-      Linguistic &mdash; Ispell dictionaries try to reduce input words to a
-      normalized form; stemmer dictionaries remove word endings
+      语言学 &mdash; Ispell 词典试图将输入单词缩减为规范形式；词干词典则移除单词词尾
      </para>
     </listitem>
     <listitem>
@@ -1896,17 +1888,12 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
     </listitem>
     <listitem>
      <para>
-      Color names can be replaced by their hexadecimal values, e.g.,
-      <literal>red, green, blue, magenta -> FF0000, 00FF00, 0000FF, FF00FF</literal>
+      颜色名可以用它们的十六进制值替换，例如 <literal>red, green, blue, magenta -> FF0000, 00FF00, 0000FF, FF00FF</literal>
      </para>
     </listitem>
     <listitem>
      <para>
-      If indexing numbers, we can
-      remove some fractional digits to reduce the range of possible
-      numbers, so for example <emphasis>3.14</emphasis>159265359,
-      <emphasis>3.14</emphasis>15926, <emphasis>3.14</emphasis> will be the same
-      after normalization if only two digits are kept after the decimal point.
+      如果对数字建立索引，我们可以去掉一些小数位来缩小可能数字的范围，因此例如 <emphasis>3.14</emphasis>159265359、<emphasis>3.14</emphasis>15926、<emphasis>3.14</emphasis> 在只保留小数点后两位数字的情况下，归一化之后将是相同的。
      </para>
     </listitem>
    </itemizedlist>
@@ -1919,66 +1906,37 @@ SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.h
    <itemizedlist  spacing="compact" mark="bullet">
     <listitem>
      <para>
-      an array of lexemes if the input token is known to the dictionary
-      (notice that one token can produce more than one lexeme)
+      如果词典认识输入记号，则为一个词位数组（注意一个记号可以产生多个词位）
      </para>
     </listitem>
     <listitem>
      <para>
-      a single lexeme with the <literal>TSL_FILTER</literal> flag set, to replace
-      the original token with a new token to be passed to subsequent
-      dictionaries (a dictionary that does this is called a
-      <firstterm>filtering dictionary</firstterm>)
+      一个设置了 <literal>TSL_FILTER</literal> 标志的单一词位，用于把原始记号替换为一个新记号并传递给后续词典（执行此操作的词典称为<firstterm>过滤词典</firstterm>）
      </para>
     </listitem>
     <listitem>
      <para>
-      an empty array if the dictionary knows the token, but it is a stop word
+      如果词典认识该记号但它是停用词，则为空数组
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>NULL</literal> if the dictionary does not recognize the input token
+      如果词典不能识别输入记号，则为 <literal>NULL</literal>
      </para>
     </listitem>
    </itemizedlist>
   </para>
 
   <para>
-   <productname>PostgreSQL</productname> provides predefined dictionaries for
-   many languages.  There are also several predefined templates that can be
-   used to create new dictionaries with custom parameters.  Each predefined
-   dictionary template is described below.  If no existing
-   template is suitable, it is possible to create new ones; see the
-   <filename>contrib/</filename> area of the <productname>PostgreSQL</productname> distribution
-   for examples.
+   <productname>PostgreSQL</productname> 为多种语言提供了预定义词典。此外还有若干预定义模板，可用于创建带有自定义参数的新词典。下面将逐一介绍每个预定义词典模板。如果没有合适的现有模板，也可以创建新的模板；示例请参见 <productname>PostgreSQL</productname> 发行版中的 <filename>contrib/</filename> 区域。
   </para>
 
   <para>
-   A text search configuration binds a parser together with a set of
-   dictionaries to process the parser's output tokens.  For each token
-   type that the parser can return, a separate list of dictionaries is
-   specified by the configuration.  When a token of that type is found
-   by the parser, each dictionary in the list is consulted in turn,
-   until some dictionary recognizes it as a known word.  If it is identified
-   as a stop word, or if no dictionary recognizes the token, it will be
-   discarded and not indexed or searched for.
-   Normally, the first dictionary that returns a non-<literal>NULL</literal>
-   output determines the result, and any remaining dictionaries are not
-   consulted; but a filtering dictionary can replace the given word
-   with a modified word, which is then passed to subsequent dictionaries.
+   文本检索配置将一个解析器与一组词典绑定在一起，以处理解析器输出的词元。对于解析器能够返回的每一种词元类型，配置都会指定一个单独的词典列表。当解析器找到该类型的词元时，会依次查询列表中的每个词典，直到某个词典将其识别为已知词为止。如果它被识别为停用词，或者没有任何词典识别该词元，它就会被丢弃，既不会被索引也不会被搜索。通常，第一个返回非 <literal>NULL</literal> 输出的词典决定结果，其余词典不再被查询；但过滤词典可以用修改后的词替换给定的词，修改后的词随后会传递给后续词典。
   </para>
 
   <para>
-   The general rule for configuring a list of dictionaries
-   is to place first the most narrow, most specific dictionary, then the more
-   general dictionaries, finishing with a very general dictionary, like
-   a <application>Snowball</application> stemmer or <literal>simple</literal>, which
-   recognizes everything.  For example, for an astronomy-specific search
-   (<literal>astro_en</literal> configuration) one could bind token type
-   <type>asciiword</type> (ASCII word) to a synonym dictionary of astronomical
-   terms, a general English dictionary and a <application>Snowball</application> English
-   stemmer:
+   配置词典列表的一般规则是：把最狭窄、最具体的词典放在最前面，然后是更通用的词典，最后是一个非常通用的词典，例如 <application>Snowball</application> 词干分析器或 <literal>simple</literal>，它们能识别所有内容。例如，对于天文学专用的搜索（<literal>astro_en</literal> 配置），可以将词元类型 <type>asciiword</type>（ASCII 词）绑定到天文学术语的同义词词典、通用英语词典和 <application>Snowball</application> 英语词干分析器：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION astro_en
@@ -1987,23 +1945,14 @@ ALTER TEXT SEARCH CONFIGURATION astro_en
   </para>
 
   <para>
-   A filtering dictionary can be placed anywhere in the list, except at the
-   end where it'd be useless.  Filtering dictionaries are useful to partially
-   normalize words to simplify the task of later dictionaries.  For example,
-   a filtering dictionary could be used to remove accents from accented
-   letters, as is done by the <xref linkend="unaccent"/> module.
+   过滤词典可以放在列表中的任何位置，但不能放在末尾，因为放在末尾毫无用处。过滤词典可用于对词进行部分规范化，以简化后续词典的任务。例如，可以使用过滤词典去除带重音字母上的重音，正如 <xref linkend="unaccent"/> 模块所做的那样。
   </para>
 
   <sect2 id="textsearch-stopwords">
-   <title>Stop Words</title>
+   <title>停用词</title>
 
    <para>
-    Stop words are words that are very common, appear in almost every
-    document, and have no discrimination value. Therefore, they can be ignored
-    in the context of full text searching. For example, every English text
-    contains words like <literal>a</literal> and <literal>the</literal>, so it is
-    useless to store them in an index.  However, stop words do affect the
-    positions in <type>tsvector</type>, which in turn affect ranking:
+    停用词是非常常见、几乎出现在每个文档中、没有区分价值的词。因此，在全文检索的上下文中可以忽略它们。例如，每个英文文本都包含像 <literal>a</literal> 和 <literal>the</literal> 这样的词，因此把它们存储在索引中是没有用的。然而，停用词确实会影响 <type>tsvector</type> 中的位置，进而影响排名：
 
 <screen>
 SELECT to_tsvector('english', 'in the list of stop words');
@@ -2012,8 +1961,7 @@ SELECT to_tsvector('english', 'in the list of stop words');
  'list':3 'stop':5 'word':6
 </screen>
 
-    The missing positions 1,2,4 are because of stop words.  Ranks
-    calculated for documents with and without stop words are quite different:
+    缺失的位置 1、2、4 是因为停用词。为包含停用词和不包含停用词的文档计算出的排名相当不同：
 
 <screen>
 SELECT ts_rank_cd (to_tsvector('english', 'in the list of stop words'), to_tsquery('list &amp; stop'));
@@ -2030,31 +1978,20 @@ SELECT ts_rank_cd (to_tsvector('english', 'list stop words'), to_tsquery('list &
    </para>
 
    <para>
-    It is up to the specific dictionary how it treats stop words. For example,
-    <literal>ispell</literal> dictionaries first normalize words and then
-    look at the list of stop words, while <literal>Snowball</literal> stemmers
-    first check the list of stop words. The reason for the different
-    behavior is an attempt to decrease noise.
+    具体字典如何处理停用词取决于该字典本身。例如，<literal>ispell</literal> 字典先规范化词，然后查看停用词列表，而 <literal>Snowball</literal> 词干分析器先检查停用词列表。行为不同的原因是试图减少噪声。
    </para>
 
   </sect2>
 
   <sect2 id="textsearch-simple-dictionary">
-   <title>Simple Dictionary</title>
+   <title>简单字典</title>
 
    <para>
-    The <literal>simple</literal> dictionary template operates by converting the
-    input token to lower case and checking it against a file of stop words.
-    If it is found in the file then an empty array is returned, causing
-    the token to be discarded.  If not, the lower-cased form of the word
-    is returned as the normalized lexeme.  Alternatively, the dictionary
-    can be configured to report non-stop-words as unrecognized, allowing
-    them to be passed on to the next dictionary in the list.
+    <literal>simple</literal> 字典模板的工作方式是将输入记号转换为小写，并将其与停用词文件进行比对。如果在文件中找到它，则返回空数组，导致该记号被丢弃。如果没有找到，则返回该词的小写形式作为规范化的词位。或者，可以将字典配置为将非停用词报告为无法识别，从而允许它们传递给列表中的下一个字典。
    </para>
 
    <para>
-    Here is an example of a dictionary definition using the <literal>simple</literal>
-    template:
+    下面是一个使用 <literal>simple</literal> 模板的字典定义示例：
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY public.simple_dict (
@@ -2063,21 +2000,12 @@ CREATE TEXT SEARCH DICTIONARY public.simple_dict (
 );
 </programlisting>
 
-    Here, <literal>english</literal> is the base name of a file of stop words.
-    The file's full name will be
-    <filename>$SHAREDIR/tsearch_data/english.stop</filename>,
-    where <literal>$SHAREDIR</literal> means the
-    <productname>PostgreSQL</productname> installation's shared-data directory,
-    often <filename>/usr/local/share/postgresql</filename> (use <command>pg_config
-    --sharedir</command> to determine it if you're not sure).
-    The file format is simply a list
-    of words, one per line.  Blank lines and trailing spaces are ignored,
-    and upper case is folded to lower case, but no other processing is done
-    on the file contents.
+    这里，<literal>english</literal> 是停用词文件的基本名称。该文件的完整名称将是 <filename>$SHAREDIR/tsearch_data/english.stop</filename>，其中 <literal>$SHAREDIR</literal> 表示 <productname>PostgreSQL</productname> 安装的共享数据目录，通常是 <filename>/usr/local/share/postgresql</filename>（如果不确定，可以使用 <command>pg_config
+    --sharedir</command> 来确定）。文件格式就是一个词列表，每行一个。空行和行尾空格会被忽略，大写会折叠为小写，但不会对文件内容做其他处理。
    </para>
 
    <para>
-    Now we can test our dictionary:
+    现在我们可以测试我们的字典：
 
 <screen>
 SELECT ts_lexize('public.simple_dict', 'YeS');
@@ -2093,10 +2021,7 @@ SELECT ts_lexize('public.simple_dict', 'The');
    </para>
 
    <para>
-    We can also choose to return <literal>NULL</literal>, instead of the lower-cased
-    word, if it is not found in the stop words file.  This behavior is
-    selected by setting the dictionary's <literal>Accept</literal> parameter to
-    <literal>false</literal>.  Continuing the example:
+    我们也可以选择返回 <literal>NULL</literal>，而不是返回小写形式的词，前提是该词未在停用词文件中找到。这一行为通过将字典的 <literal>Accept</literal> 参数设置为 <literal>false</literal> 来选择。继续前面的例子：
 
 <screen>
 ALTER TEXT SEARCH DICTIONARY public.simple_dict ( Accept = false );
@@ -2114,47 +2039,28 @@ SELECT ts_lexize('public.simple_dict', 'The');
    </para>
 
    <para>
-    With the default setting of <literal>Accept</literal> = <literal>true</literal>,
-    it is only useful to place a <literal>simple</literal> dictionary at the end
-    of a list of dictionaries, since it will never pass on any token to
-    a following dictionary.  Conversely, <literal>Accept</literal> = <literal>false</literal>
-    is only useful when there is at least one following dictionary.
+    在 <literal>Accept</literal> = <literal>true</literal> 的默认设置下，只有把 <literal>simple</literal> 字典放在字典列表的末尾才有用，因为它永远不会把任何记号传递给后面的字典。反之，<literal>Accept</literal> = <literal>false</literal> 只有在至少有一个后续字典时才有用。
    </para>
 
    <caution>
     <para>
-     Most types of dictionaries rely on configuration files, such as files of
-     stop words.  These files <emphasis>must</emphasis> be stored in UTF-8 encoding.
-     They will be translated to the actual database encoding, if that is
-     different, when they are read into the server.
+     大多数类型的字典依赖于配置文件，例如停用词文件。这些文件<emphasis>必须</emphasis>以 UTF-8 编码存储。当它们被读入服务器时，如果数据库编码不同，它们将被转换为实际的数据库编码。
     </para>
    </caution>
 
    <caution>
     <para>
-     Normally, a database session will read a dictionary configuration file
-     only once, when it is first used within the session.  If you modify a
-     configuration file and want to force existing sessions to pick up the
-     new contents, issue an <command>ALTER TEXT SEARCH DICTIONARY</command> command
-     on the dictionary.  This can be a <quote>dummy</quote> update that doesn't
-     actually change any parameter values.
+     通常，数据库会话只会在会话中首次使用字典配置文件时读取它一次。如果你修改了配置文件并希望强制现有会话采用新内容，请对该字典发出 <command>ALTER TEXT SEARCH DICTIONARY</command> 命令。这可以是一个并不实际更改任何参数值的<quote>哑</quote>更新。
     </para>
    </caution>
 
   </sect2>
 
   <sect2 id="textsearch-synonym-dictionary">
-   <title>Synonym Dictionary</title>
+   <title>同义词字典</title>
 
    <para>
-    This dictionary template is used to create dictionaries that replace a
-    word with a synonym. Phrases are not supported (use the thesaurus
-    template (<xref linkend="textsearch-thesaurus"/>) for that).  A synonym
-    dictionary can be used to overcome linguistic problems, for example, to
-    prevent an English stemmer dictionary from reducing the word <quote>Paris</quote> to
-    <quote>pari</quote>.  It is enough to have a <literal>Paris paris</literal> line in the
-    synonym dictionary and put it before the <literal>english_stem</literal>
-    dictionary.  For example:
+    此字典模板用于创建将词替换为同义词的字典。不支持短语（为此请使用同义词库模板（<xref linkend="textsearch-thesaurus"/>））。同义词字典可用于克服语言问题，例如，防止英语词干字典将词 <quote>Paris</quote> 缩减为 <quote>pari</quote>。只需在同义词字典中有一行 <literal>Paris paris</literal>，并将其放在 <literal>english_stem</literal> 字典之前即可。例如：
 
 <screen>
 SELECT * FROM ts_debug('english', 'Paris');
@@ -2179,37 +2085,33 @@ SELECT * FROM ts_debug('english', 'Paris');
    </para>
 
    <para>
-    The only parameter required by the <literal>synonym</literal> template is
-    <literal>SYNONYMS</literal>, which is the base name of its configuration file
-    &mdash; <literal>my_synonyms</literal> in the above example.
-    The file's full name will be
+    <literal>synonym</literal> 模板唯一必需的参数是 <literal>SYNONYMS</literal>，它是其配置文件的基名
+    &mdash; <literal>my_synonyms</literal>（在上面的示例中）。
+    该文件的完整名称将是
     <filename>$SHAREDIR/tsearch_data/my_synonyms.syn</filename>
-    (where <literal>$SHAREDIR</literal> means the
-    <productname>PostgreSQL</productname> installation's shared-data directory).
-    The file format is just one line
-    per word to be substituted, with the word followed by its synonym,
-    separated by white space.  Blank lines and trailing spaces are ignored.
+    （其中 <literal>$SHAREDIR</literal> 表示
+    <productname>PostgreSQL</productname> 安装的共享数据目录）。
+    文件格式为每行一个待替换的词，词后跟其同义词，
+    以空白分隔。空行和尾随空格会被忽略。
    </para>
 
    <para>
-    The <literal>synonym</literal> template also has an optional parameter
-    <literal>CaseSensitive</literal>, which defaults to <literal>false</literal>.  When
-    <literal>CaseSensitive</literal> is <literal>false</literal>, words in the synonym file
-    are folded to lower case, as are input tokens.  When it is
-    <literal>true</literal>, words and tokens are not folded to lower case,
-    but are compared as-is.
+    <literal>synonym</literal> 模板还有一个可选参数
+    <literal>CaseSensitive</literal>，其默认值为 <literal>false</literal>。当
+    <literal>CaseSensitive</literal> 为 <literal>false</literal> 时，同义词文件中的词
+    以及输入记号都会被折叠为小写。当其为
+    <literal>true</literal> 时，词和记号不会折叠为小写，
+    而是按原样进行比较。
    </para>
 
    <para>
-    An asterisk (<literal>*</literal>) can be placed at the end of a synonym
-    in the configuration file.  This indicates that the synonym is a prefix.
-    The asterisk is ignored when the entry is used in
-    <function>to_tsvector()</function>, but when it is used in
-    <function>to_tsquery()</function>, the result will be a query item with
-    the prefix match marker (see
-    <xref linkend="textsearch-parsing-queries"/>).
-    For example, suppose we have these entries in
-    <filename>$SHAREDIR/tsearch_data/synonym_sample.syn</filename>:
+    星号（<literal>*</literal>）可以放在配置文件中同义词的
+    末尾。这表示该同义词是一个前缀。
+    当该条目用于 <function>to_tsvector()</function> 时，星号会被忽略，
+    但当它用于 <function>to_tsquery()</function> 时，结果将是一个带有
+    前缀匹配标记的查询项（参见
+    <xref linkend="textsearch-parsing-queries"/>）。
+    例如，假设我们在 <filename>$SHAREDIR/tsearch_data/synonym_sample.syn</filename> 中有以下条目：
 <programlisting>
 postgres        pgsql
 postgresql      pgsql
@@ -2217,7 +2119,7 @@ postgre pgsql
 gogle   googl
 indices index*
 </programlisting>
-    Then we will get these results:
+    那么我们将得到以下结果：
 <screen>
 mydb=# CREATE TEXT SEARCH DICTIONARY syn (template=synonym, synonyms='synonym_sample');
 mydb=# SELECT ts_lexize('syn', 'indices');
@@ -2256,23 +2158,21 @@ mydb=# SELECT 'indexes are very useful'::tsvector @@ to_tsquery('tst', 'indices'
   </sect2>
 
   <sect2 id="textsearch-thesaurus">
-   <title>Thesaurus Dictionary</title>
+   <title>同义词典</title>
 
    <para>
-    A thesaurus dictionary (sometimes abbreviated as <acronym>TZ</acronym>) is
-    a collection of words that includes information about the relationships
-    of words and phrases, i.e., broader terms (<acronym>BT</acronym>), narrower
-    terms (<acronym>NT</acronym>), preferred terms, non-preferred terms, related
-    terms, etc.
+    同义词典（有时缩写为 <acronym>TZ</acronym>）是
+    一个词的集合，其中包含有关词和短语之间关系的信息，
+    即上位词（<acronym>BT</acronym>）、下位词（<acronym>NT</acronym>）、首选词、非首选词、
+    相关词等。
    </para>
 
    <para>
-    Basically a thesaurus dictionary replaces all non-preferred terms by one
-    preferred term and, optionally, preserves the original terms for indexing
-    as well.  <productname>PostgreSQL</productname>'s current implementation of the
-    thesaurus dictionary is an extension of the synonym dictionary with added
-    <firstterm>phrase</firstterm> support.  A thesaurus dictionary requires
-    a configuration file of the following format:
+    基本上，同义词典会用首选词替换所有非首选词，
+    并且可选地保留原始词以便也用于索引。
+    <productname>PostgreSQL</productname> 当前对同义词典的实现是
+    同义词词典的扩展，增加了<firstterm>短语</firstterm>支持。
+    同义词典需要如下格式的配置文件：
 
 <programlisting>
 # this is a comment
@@ -2281,64 +2181,40 @@ more sample word(s) : more indexed word(s)
 ...
 </programlisting>
 
-    where  the colon (<symbol>:</symbol>) symbol acts as a delimiter between a
-    phrase and its replacement.
+    其中冒号（<symbol>:</symbol>）符号充当短语与其替换内容之间的
+    分隔符。
    </para>
 
    <para>
-    A thesaurus dictionary uses a <firstterm>subdictionary</firstterm> (which
-    is specified in the dictionary's configuration) to normalize the input
-    text before checking for phrase matches. It is only possible to select one
-    subdictionary.  An error is reported if the subdictionary fails to
-    recognize a word. In that case, you should remove the use of the word or
-    teach the subdictionary about it.  You can place an asterisk
-    (<symbol>*</symbol>) at the beginning of an indexed word to skip applying
-    the subdictionary to it, but all sample words <emphasis>must</emphasis> be known
-    to the subdictionary.
+    同义词词典使用一个<firstterm>子词典</firstterm>（在词典的配置中指定）来规范化输入文本，然后再检查短语匹配。只能选择一个子词典。如果子词典无法识别某个词，则会报告错误。在这种情况下，您应该去掉对该词的使用，或者让子词典学会该词。您可以在被索引的词前面放置一个星号（<symbol>*</symbol>）以跳过对该词应用子词典，但所有示例词都<emphasis>必须</emphasis>能被该子词典识别。
    </para>
 
    <para>
-    The thesaurus dictionary chooses the longest match if there are multiple
-    phrases matching the input, and ties are broken by using the last
-    definition.
+    如果有多个短语与输入匹配，同义词词典会选择最长的匹配；若长度相同，则使用最后一个定义来打破平局。
    </para>
 
    <para>
-    Specific stop words recognized by the subdictionary cannot be
-    specified;  instead use <literal>?</literal> to mark the location where any
-    stop word can appear.  For example, assuming that <literal>a</literal> and
-    <literal>the</literal> are stop words according to the subdictionary:
+    无法指定由子词典识别的特定停用词；而应使用 <literal>?</literal> 标记任何停用词可以出现的位置。例如，假设根据子词典 <literal>a</literal> 和 <literal>the</literal> 是停用词：
 
 <programlisting>
 ? one ? two : swsw
 </programlisting>
 
-    matches <literal>a one the two</literal> and <literal>the one a two</literal>;
-    both would be replaced by <literal>swsw</literal>.
+    匹配 <literal>a one the two</literal> 和 <literal>the one a two</literal>；两者都将被替换为 <literal>swsw</literal>。
    </para>
 
    <para>
-    Since a thesaurus dictionary has the capability to recognize phrases it
-    must remember its state and interact with the parser. A thesaurus dictionary
-    uses these assignments to check if it should handle the next word or stop
-    accumulation.  The thesaurus dictionary must be configured
-    carefully. For example, if the thesaurus dictionary is assigned to handle
-    only the <literal>asciiword</literal> token, then a thesaurus dictionary
-    definition like <literal>one 7</literal> will not work since token type
-    <literal>uint</literal> is not assigned to the thesaurus dictionary.
+    由于同义词词典具有识别短语的能力，它必须记住自己的状态并与解析器交互。同义词词典使用这些赋值来检查它是否应处理下一个词或停止累积。必须仔细配置同义词词典。例如，如果同义词词典被指定为只处理 <literal>asciiword</literal> 记号，那么像 <literal>one 7</literal> 这样的同义词词典定义将无法工作，因为记号类型 <literal>uint</literal> 未分配给该同义词词典。
    </para>
 
    <caution>
     <para>
-     Thesauruses are used during indexing so any change in the thesaurus
-     dictionary's parameters <emphasis>requires</emphasis> reindexing.
-     For most other dictionary types, small changes such as adding or
-     removing stopwords does not force reindexing.
+     同义词词典在索引期间使用，因此同义词词典参数的任何更改都<emphasis>需要</emphasis>重新索引。对于大多数其他词典类型，诸如添加或删除停用词之类的小改动不会强制重新索引。
     </para>
    </caution>
 
   <sect3 id="textsearch-thesaurus-config">
-   <title>Thesaurus Configuration</title>
+   <title>同义词词典配置</title>
 
    <para>
     To define a new thesaurus dictionary, use the <literal>thesaurus</literal>
@@ -2356,24 +2232,21 @@ CREATE TEXT SEARCH DICTIONARY thesaurus_simple (
     <itemizedlist  spacing="compact" mark="bullet">
      <listitem>
       <para>
-       <literal>thesaurus_simple</literal> is the new dictionary's name
+       <literal>thesaurus_simple</literal> 是新词典的名称
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>mythesaurus</literal> is the base name of the thesaurus
-       configuration file.
-       (Its full name will be <filename>$SHAREDIR/tsearch_data/mythesaurus.ths</filename>,
-       where <literal>$SHAREDIR</literal> means the installation shared-data
-       directory.)
+       <literal>mythesaurus</literal> 是同义词词典配置文件的基名。
+       （其完整名称将是 <filename>$SHAREDIR/tsearch_data/mythesaurus.ths</filename>，
+       其中 <literal>$SHAREDIR</literal> 表示安装的共享数据目录。）
       </para>
      </listitem>
      <listitem>
       <para>
-       <literal>pg_catalog.english_stem</literal> is the subdictionary (here,
-       a Snowball English stemmer) to use for thesaurus normalization.
-       Notice that the subdictionary will have its own
-       configuration (for example, stop words), which is not shown here.
+       <literal>pg_catalog.english_stem</literal> 是用于同义词词典规范化的子词典（这里是
+       一个 Snowball 英语词干分析器）。
+       请注意，该子词典将有自己的配置（例如停用词），此处未显示。
       </para>
      </listitem>
     </itemizedlist>
@@ -2391,19 +2264,19 @@ ALTER TEXT SEARCH CONFIGURATION russian
   </sect3>
 
   <sect3 id="textsearch-thesaurus-examples">
-   <title>Thesaurus Example</title>
+   <title>同义词词典示例</title>
 
    <para>
-    Consider a simple astronomical thesaurus <literal>thesaurus_astro</literal>,
-    which contains some astronomical word combinations:
+    考虑一个简单的天文学同义词词典 <literal>thesaurus_astro</literal>，
+    其中包含一些天文学词语组合：
 
 <programlisting>
 supernovae stars : sn
 crab nebulae : crab
 </programlisting>
 
-    Below we create a dictionary and bind some token types to
-    an astronomical thesaurus and English stemmer:
+    下面我们创建一个词典，并将一些词元类型绑定到
+    一个天文学同义词词典和英语词干分析器：
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY thesaurus_astro (
@@ -2417,11 +2290,11 @@ ALTER TEXT SEARCH CONFIGURATION russian
     WITH thesaurus_astro, english_stem;
 </programlisting>
 
-    Now we can see how it works.
-    <function>ts_lexize</function> is not very useful for testing a thesaurus,
-    because it treats its input as a single token.  Instead we can use
-    <function>plainto_tsquery</function> and <function>to_tsvector</function>
-    which will break their input strings into multiple tokens:
+    现在我们来看看它是如何工作的。
+    <function>ts_lexize</function> 对于测试同义词词典不太有用，
+    因为它将其输入视为单个词元。相反，我们可以使用
+    <function>plainto_tsquery</function> 和 <function>to_tsvector</function>，
+    它们会将输入字符串拆分为多个词元：
 
 <screen>
 SELECT plainto_tsquery('supernova star');
@@ -2435,8 +2308,7 @@ SELECT to_tsvector('supernova star');
  'sn':1
 </screen>
 
-    In principle, one can use <function>to_tsquery</function> if you quote
-    the argument:
+    原则上，如果给参数加上引号，也可以使用 <function>to_tsquery</function>：
 
 <screen>
 SELECT to_tsquery('''supernova star''');
@@ -2445,15 +2317,15 @@ SELECT to_tsquery('''supernova star''');
  'sn'
 </screen>
 
-    Notice that <literal>supernova star</literal> matches <literal>supernovae
-    stars</literal> in <literal>thesaurus_astro</literal> because we specified
-    the <literal>english_stem</literal> stemmer in the thesaurus definition.
-    The stemmer removed the <literal>e</literal> and <literal>s</literal>.
+    请注意，<literal>supernova star</literal> 在 <literal>thesaurus_astro</literal> 中匹配 <literal>supernovae
+    stars</literal>，因为我们在同义词词典定义中
+    指定了 <literal>english_stem</literal> 词干分析器。
+    该词干分析器去掉了 <literal>e</literal> 和 <literal>s</literal>。
    </para>
 
    <para>
-    To index the original phrase as well as the substitute, just include it
-    in the right-hand part of the definition:
+    要同时索引原始短语和替代短语，只需将其包含在
+    定义的右侧部分：
 
 <screen>
 supernovae stars : sn supernovae stars
@@ -2470,43 +2342,39 @@ SELECT plainto_tsquery('supernova star');
   </sect2>
 
   <sect2 id="textsearch-ispell-dictionary">
-   <title><application>Ispell</application> Dictionary</title>
+   <title><application>Ispell</application> 词典</title>
 
    <para>
-    The <application>Ispell</application> dictionary template supports
-    <firstterm>morphological dictionaries</firstterm>, which can normalize many
-    different linguistic forms of a word into the same lexeme.  For example,
-    an English <application>Ispell</application> dictionary can match all declensions and
-    conjugations of the search term <literal>bank</literal>, e.g.,
-    <literal>banking</literal>, <literal>banked</literal>, <literal>banks</literal>,
-    <literal>banks'</literal>, and <literal>bank's</literal>.
+    <application>Ispell</application> 词典模板支持<firstterm>形态学词典</firstterm>，它可以把一个词的许多不同语言形式规范化为同一个词位。例如，英语 <application>Ispell</application> 词典可以匹配搜索词 <literal>bank</literal> 的所有变格和变位形式，例如
+    <literal>banking</literal>、<literal>banked</literal>、<literal>banks</literal>、
+    <literal>banks'</literal> 和 <literal>bank's</literal>。
    </para>
 
    <para>
-    The standard <productname>PostgreSQL</productname> distribution does
-    not include any <application>Ispell</application> configuration files.
-    Dictionaries for a large number of languages are available from <ulink
-    url="https://www.cs.hmc.edu/~geoff/ispell.html">Ispell</ulink>.
-    Also, some more modern dictionary file formats are supported &mdash; <ulink
-    url="https://en.wikipedia.org/wiki/MySpell">MySpell</ulink> (OO &lt; 2.0.1)
-    and <ulink url="https://hunspell.github.io/">Hunspell</ulink>
-    (OO &gt;= 2.0.2).  A large list of dictionaries is available on the <ulink
+    标准的 <productname>PostgreSQL</productname> 发行版
+    不包含任何 <application>Ispell</application> 配置文件。
+    大量语言的词典可从 <ulink
+    url="https://www.cs.hmc.edu/~geoff/ispell.html">Ispell</ulink> 获得。
+    此外，还支持一些更现代的词典文件格式 &mdash; <ulink
+    url="https://en.wikipedia.org/wiki/MySpell">MySpell</ulink>（OO &lt; 2.0.1）
+    和 <ulink url="https://hunspell.github.io/">Hunspell</ulink>
+    （OO &gt;= 2.0.2）。大量词典列表可在 <ulink
     url="https://wiki.openoffice.org/wiki/Dictionaries">OpenOffice
-    Wiki</ulink>.
+    Wiki</ulink> 上获得。
    </para>
 
    <para>
-    To create an <application>Ispell</application> dictionary perform these steps:
+    要创建一个 <application>Ispell</application> 词典，请执行以下步骤：
    </para>
    <itemizedlist spacing="compact" mark="bullet">
     <listitem>
      <para>
-      download dictionary configuration files. <productname>OpenOffice</productname>
-      extension files have the <filename>.oxt</filename> extension. It is necessary
-      to extract <filename>.aff</filename> and <filename>.dic</filename> files, change
-      extensions to <filename>.affix</filename> and <filename>.dict</filename>. For some
-      dictionary files it is also needed to convert characters to the UTF-8
-      encoding with commands (for example, for a Norwegian language dictionary):
+      下载词典配置文件。<productname>OpenOffice</productname>
+      扩展名文件具有 <filename>.oxt</filename> 扩展名。需要
+      提取 <filename>.aff</filename> 和 <filename>.dic</filename> 文件，将
+      扩展名改为 <filename>.affix</filename> 和 <filename>.dict</filename>。对于某些
+      词典文件，还需要用命令将字符转换为 UTF-8
+      编码（例如，对于挪威语词典）：
 <programlisting>
 iconv -f ISO_8859-1 -t UTF-8 -o nn_no.affix nn_NO.aff
 iconv -f ISO_8859-1 -t UTF-8 -o nn_no.dict nn_NO.dic
@@ -2515,12 +2383,12 @@ iconv -f ISO_8859-1 -t UTF-8 -o nn_no.dict nn_NO.dic
     </listitem>
     <listitem>
      <para>
-      copy files to the <filename>$SHAREDIR/tsearch_data</filename> directory
+      将文件复制到 <filename>$SHAREDIR/tsearch_data</filename> 目录
      </para>
     </listitem>
     <listitem>
      <para>
-      load files into PostgreSQL with the following command:
+      使用以下命令将文件载入 PostgreSQL：
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY english_hunspell (
     TEMPLATE = ispell,
@@ -2533,22 +2401,19 @@ CREATE TEXT SEARCH DICTIONARY english_hunspell (
    </itemizedlist>
 
    <para>
-    Here, <literal>DictFile</literal>, <literal>AffFile</literal>, and <literal>StopWords</literal>
-    specify the base names of the dictionary, affixes, and stop-words files.
-    The stop-words file has the same format explained above for the
-    <literal>simple</literal> dictionary type.  The format of the other files is
-    not specified here but is available from the above-mentioned web sites.
+    这里，<literal>DictFile</literal>、<literal>AffFile</literal> 和 <literal>StopWords</literal>
+    分别指定词典文件、词缀文件和停用词文件的基本名称。
+    停用词文件的格式与上文针对 <literal>simple</literal> 词典类型所说明的格式相同。
+    其他文件的格式此处不作说明，但可从上述网站获取。
    </para>
 
    <para>
-    Ispell dictionaries usually recognize a limited set of words, so they
-    should be followed by another broader dictionary; for
-    example, a Snowball dictionary, which recognizes everything.
+    Ispell 词典通常只能识别有限的词集，因此其后应跟随另一个范围更广的词典；
+    例如 Snowball 词典，它可以识别所有内容。
    </para>
 
    <para>
-    The <filename>.affix</filename> file of <application>Ispell</application> has the following
-    structure:
+    <application>Ispell</application> 的 <filename>.affix</filename> 文件具有以下结构：
 <programlisting>
 prefixes
 flag *A:
@@ -2562,7 +2427,7 @@ flag T:
 </programlisting>
    </para>
    <para>
-    And the <filename>.dict</filename> file has the following structure:
+    而 <filename>.dict</filename> 文件具有以下结构：
 <programlisting>
 lapse/ADGRS
 lard/DGRS
@@ -2572,42 +2437,35 @@ lark/MRS
    </para>
 
    <para>
-    Format of the <filename>.dict</filename> file is:
+    <filename>.dict</filename> 文件的格式为：
 <programlisting>
 basic_form/affix_class_name
 </programlisting>
    </para>
 
    <para>
-    In the <filename>.affix</filename> file every affix flag is described in the
-    following format:
+    在 <filename>.affix</filename> 文件中，每个词缀标志都按以下格式描述：
 <programlisting>
 condition > [-stripping_letters,] adding_affix
 </programlisting>
    </para>
 
    <para>
-    Here, condition has a format similar to the format of regular expressions.
-    It can use groupings <literal>[...]</literal> and <literal>[^...]</literal>.
-    For example, <literal>[AEIOU]Y</literal> means that the last letter of the word
-    is <literal>"y"</literal> and the penultimate letter is <literal>"a"</literal>,
-    <literal>"e"</literal>, <literal>"i"</literal>, <literal>"o"</literal> or <literal>"u"</literal>.
-    <literal>[^EY]</literal> means that the last letter is neither <literal>"e"</literal>
-    nor <literal>"y"</literal>.
+    这里，condition 的格式与正则表达式的格式类似。
+    它可以使用分组 <literal>[...]</literal> 和 <literal>[^...]</literal>。
+    例如，<literal>[AEIOU]Y</literal> 表示单词的最后一个字母是 <literal>"y"</literal>，倒数第二个字母是 <literal>"a"</literal>、<literal>"e"</literal>、<literal>"i"</literal>、<literal>"o"</literal> 或 <literal>"u"</literal>。
+    <literal>[^EY]</literal> 表示最后一个字母既不是 <literal>"e"</literal> 也不是 <literal>"y"</literal>。
    </para>
 
    <para>
-    Ispell dictionaries support splitting compound words;
-    a useful feature.
-    Notice that the affix file should specify a special flag using the
-    <literal>compoundwords controlled</literal> statement that marks dictionary
-    words that can participate in compound formation:
+    Ispell 词典支持拆分复合词；这是一个有用的特性。
+    请注意，词缀文件应使用 <literal>compoundwords controlled</literal> 语句指定一个特殊标志，用于标记可参与复合词构成的词典单词：
 
 <programlisting>
 compoundwords  controlled z
 </programlisting>
 
-    Here are some examples for the Norwegian language:
+    以下是挪威语的一些示例：
 
 <programlisting>
 SELECT ts_lexize('norwegian_ispell', 'overbuljongterningpakkmesterassistent');
@@ -2618,9 +2476,8 @@ SELECT ts_lexize('norwegian_ispell', 'sjokoladefabrikk');
    </para>
 
    <para>
-    <application>MySpell</application> format is a subset of <application>Hunspell</application>.
-    The <filename>.affix</filename> file of <application>Hunspell</application> has the following
-    structure:
+    <application>MySpell</application> 格式是 <application>Hunspell</application> 的子集。
+    <application>Hunspell</application> 的 <filename>.affix</filename> 文件具有以下结构：
 <programlisting>
 PFX A Y 1
 PFX A   0     re         .
@@ -2633,41 +2490,38 @@ SFX T   0     est        [^ey]
    </para>
 
    <para>
-    The first line of an affix class is the header. Fields of an affix rules are
-    listed after the header:
+    词缀类的第一行是头部。词缀规则的字段列在头部之后：
    </para>
    <itemizedlist spacing="compact" mark="bullet">
     <listitem>
      <para>
-      parameter name (PFX or SFX)
+      参数名（PFX 或 SFX）
      </para>
     </listitem>
     <listitem>
      <para>
-      flag (name of the affix class)
+      标志（词缀类的名称）
      </para>
     </listitem>
     <listitem>
      <para>
-      stripping characters from beginning (at prefix) or end (at suffix) of the
-      word
+      从单词开头（前缀处）或结尾（后缀处）去除字符
      </para>
     </listitem>
     <listitem>
      <para>
-      adding affix
+      添加词缀
      </para>
     </listitem>
     <listitem>
      <para>
-      condition that has a format similar to the format of regular expressions.
+      格式类似于正则表达式格式的条件。
      </para>
     </listitem>
    </itemizedlist>
 
    <para>
-    The <filename>.dict</filename> file looks like the <filename>.dict</filename> file of
-    <application>Ispell</application>:
+    <filename>.dict</filename> 文件看起来像 <application>Ispell</application> 的 <filename>.dict</filename> 文件：
 <programlisting>
 larder/M
 lardy/RT
@@ -2678,31 +2532,18 @@ largehearted
 
    <note>
     <para>
-     <application>MySpell</application> does not support compound words.
-     <application>Hunspell</application> has sophisticated support for compound words. At
-     present, <productname>PostgreSQL</productname> implements only the basic
-     compound word operations of Hunspell.
+     <application>MySpell</application> 不支持复合词。
+     <application>Hunspell</application> 对复合词有完善的支持。目前，<productname>PostgreSQL</productname> 只实现了 Hunspell 的基本复合词操作。
     </para>
    </note>
 
   </sect2>
 
   <sect2 id="textsearch-snowball-dictionary">
-   <title><application>Snowball</application> Dictionary</title>
+   <title><application>Snowball</application> 词典</title>
 
    <para>
-    The <application>Snowball</application> dictionary template is based on a project
-    by Martin Porter, inventor of the popular Porter's stemming algorithm
-    for the English language.  Snowball now provides stemming algorithms for
-    many languages (see the <ulink url="https://snowballstem.org/">Snowball
-    site</ulink> for more information).  Each algorithm understands how to
-    reduce common variant forms of words to a base, or stem, spelling within
-    its language.  A Snowball dictionary requires a <literal>language</literal>
-    parameter to identify which stemmer to use, and optionally can specify a
-    <literal>stopword</literal> file name that gives a list of words to eliminate.
-    (<productname>PostgreSQL</productname>'s standard stopword lists are also
-    provided by the Snowball project.)
-    For example, there is a built-in definition equivalent to
+    <application>Snowball</application> 词典模板基于 Martin Porter 的一个项目，他是广受欢迎的英语 Porter 词干提取算法的发明者。Snowball 现在为多种语言提供了词干提取算法（更多信息请参见 <ulink url="https://snowballstem.org/">Snowball 站点</ulink>）。每种算法都了解如何将其语言中常见的单词变体形式归约为词干拼写。Snowball 词典需要一个 <literal>language</literal> 参数来指定使用哪个词干提取器，并且可以选择指定一个 <literal>stopword</literal> 文件名，其中给出要消除的单词列表。（<productname>PostgreSQL</productname> 的标准停用词列表也由 Snowball 项目提供。）例如，有一个内置定义等价于
 
 <programlisting>
 CREATE TEXT SEARCH DICTIONARY english_stem (
@@ -2712,15 +2553,11 @@ CREATE TEXT SEARCH DICTIONARY english_stem (
 );
 </programlisting>
 
-    The stopword file format is the same as already explained.
+    停用词文件的格式与前面已经说明的相同。
    </para>
 
    <para>
-    A <application>Snowball</application> dictionary recognizes everything, whether
-    or not it is able to simplify the word, so it should be placed
-    at the end of the dictionary list. It is useless to have it
-    before any other dictionary because a token will never pass through it to
-    the next dictionary.
+    <application>Snowball</application> 词典会识别所有内容，无论它是否能够简化单词，因此它应放在词典列表的末尾。将它放在任何其他词典之前都是没有用的，因为词元永远不会穿过它进入下一个词典。
    </para>
 
   </sect2>
