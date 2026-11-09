@@ -1192,7 +1192,7 @@ $$ LANGUAGE SQL;
   </sect1>
 
   <sect1 id="xfunc-overload">
-   <title>Function Overloading</title>
+   <title>函数重载</title>
 
    <indexterm zone="xfunc-overload">
     <primary>overloading</primary>
@@ -1200,69 +1200,30 @@ $$ LANGUAGE SQL;
    </indexterm>
 
    <para>
-    More than one function can be defined with the same SQL name, so long
-    as the arguments they take are different.  In other words,
-    function names can be <firstterm>overloaded</firstterm>.  Whether or not
-    you use it, this capability entails security precautions when calling
-    functions in databases where some users mistrust other users; see
-    <xref linkend="typeconv-func"/>.  When a query is executed, the server
-    will determine which function to call from the data types and the number
-    of the provided arguments.  Overloading can also be used to simulate
-    functions with a variable number of arguments, up to a finite maximum
-    number.
+    可以定义多个具有相同 SQL 名称的函数，只要它们接受的参数不同即可。换句话说，函数名可以被<firstterm>重载</firstterm>。无论你是否使用这一特性，当在某些用户不信任其他用户的数据库中调用函数时，该能力都要求采取安全预防措施；参见 <xref linkend="typeconv-func"/>。当执行查询时，服务器将根据所提供参数的数据类型和数量来确定调用哪个函数。重载还可用于模拟参数数量可变的函数，最多可达到一个有限的最大数量。
    </para>
 
    <para>
-    When creating a family of overloaded functions, one should be
-    careful not to create ambiguities.  For instance, given the
-    functions:
+    在创建一组重载函数时，应当小心避免产生歧义。例如，给定以下函数：
 <programlisting>
 CREATE FUNCTION test(int, real) RETURNS ...
 CREATE FUNCTION test(smallint, double precision) RETURNS ...
 </programlisting>
-    it is not immediately clear which function would be called with
-    some trivial input like <literal>test(1, 1.5)</literal>.  The
-    currently implemented resolution rules are described in
-    <xref linkend="typeconv"/>, but it is unwise to design a system that subtly
-    relies on this behavior.
+    对于像 <literal>test(1, 1.5)</literal> 这样简单的输入，并不能一眼看出会调用哪个函数。当前实现的解析规则在 <xref linkend="typeconv"/> 中描述，但设计一个微妙地依赖这一行为的系统是不明智的。
    </para>
 
    <para>
-    A function that takes a single argument of a composite type should
-    generally not have the same name as any attribute (field) of that type.
-    Recall that <literal><replaceable>attribute</replaceable>(<replaceable>table</replaceable>)</literal>
-    is considered equivalent
-    to <literal><replaceable>table</replaceable>.<replaceable>attribute</replaceable></literal>.
-    In the case that there is an
-    ambiguity between a function on a composite type and an attribute of
-    the composite type, the attribute will always be used.  It is possible
-    to override that choice by schema-qualifying the function name
-    (that is, <literal><replaceable>schema</replaceable>.<replaceable>func</replaceable>(<replaceable>table</replaceable>)
-    </literal>) but it's better to
-    avoid the problem by not choosing conflicting names.
+    接受单个复合类型参数的函数通常不应与该类型的任何属性（字段）同名。回想一下，<literal><replaceable>attribute</replaceable>(<replaceable>table</replaceable>)</literal> 被认为等价于 <literal><replaceable>table</replaceable>.<replaceable>attribute</replaceable></literal>。在复合类型上的函数与该复合类型的属性之间存在歧义的情况下，将始终使用该属性。可以通过用模式限定函数名（即 <literal><replaceable>schema</replaceable>.<replaceable>func</replaceable>(<replaceable>table</replaceable>)
+    </literal>）来覆盖该选择，但更好的做法是通过不选择冲突的名称来避免该问题。
    </para>
 
    <para>
-    Another possible conflict is between variadic and non-variadic functions.
-    For instance, it is possible to create both <literal>foo(numeric)</literal> and
-    <literal>foo(VARIADIC numeric[])</literal>.  In this case it is unclear which one
-    should be matched to a call providing a single numeric argument, such as
-    <literal>foo(10.1)</literal>.  The rule is that the function appearing
-    earlier in the search path is used, or if the two functions are in the
-    same schema, the non-variadic one is preferred.
+    另一种可能的冲突是可变参数函数与非可变参数函数之间的冲突。例如，可以同时创建 <literal>foo(numeric)</literal> 和 <literal>foo(VARIADIC numeric[])</literal>。在这种情况下，对于提供一个数值参数的调用（例如 <literal>foo(10.1)</literal>），并不清楚应该匹配哪一个。规则是使用在搜索路径中出现较早的函数，或者如果这两个函数位于同一模式中，则优先选择非可变参数的那个。
    </para>
 
    <para>
-    When overloading C-language functions, there is an additional
-    constraint: The C name of each function in the family of
-    overloaded functions must be different from the C names of all
-    other functions, either internal or dynamically loaded.  If this
-    rule is violated, the behavior is not portable.  You might get a
-    run-time linker error, or one of the functions will get called
-    (usually the internal one).  The alternative form of the
-    <literal>AS</literal> clause for the SQL <command>CREATE
-    FUNCTION</command> command decouples the SQL function name from
-    the function name in the C source code.  For instance:
+    重载 C 语言函数时还有一个额外的约束：重载函数族中每个函数的 C 名称必须不同于所有其他函数（无论是内部函数还是动态加载函数）的 C 名称。如果违反此规则，行为将不可移植。你可能会遇到运行时链接器错误，或者其中一个函数会被调用（通常是内部函数）。SQL <command>CREATE
+    FUNCTION</command> 命令的 <literal>AS</literal> 子句的另一种形式将 SQL 函数名与 C 源代码中的函数名解耦。例如：
 <programlisting>
 CREATE FUNCTION test(int) RETURNS int
     AS '<replaceable>filename</replaceable>', 'test_1arg'
@@ -1271,7 +1232,7 @@ CREATE FUNCTION test(int, int) RETURNS int
     AS '<replaceable>filename</replaceable>', 'test_2arg'
     LANGUAGE C;
 </programlisting>
-    The names of the C functions here reflect one of many possible conventions.
+    这里的 C 函数名反映了众多可能约定中的一种。
    </para>
   </sect1>
 
