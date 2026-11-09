@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE COLLATION</refname>
-  <refpurpose>define a new collation</refpurpose>
+  <refpurpose>定义一个新的排序规则</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -35,32 +35,29 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
  </refsynopsisdiv>
 
  <refsect1 id="sql-createcollation-description">
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE COLLATION</command> defines a new collation using
-   the specified operating system locale settings,
-   or by copying an existing collation.
+   <command>CREATE COLLATION</command> 使用指定的操作系统区域设置定义一个新的排序规则，或者通过复制一个已有的排序规则来定义。
  </para>
 
   <para>
-   To be able to create a collation, you must
-   have <literal>CREATE</literal> privilege on the destination schema.
+   要能够创建排序规则，你必须对目标模式具有 <literal>CREATE</literal> 权限。
   </para>
  </refsect1>
 
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
    <variablelist>
     <varlistentry>
      <term><literal>IF NOT EXISTS</literal></term>
      <listitem>
       <para>
-       Do not throw an error if a collation with the same name already exists.
-       A notice is issued in this case. Note that there is no guarantee that
-       the existing collation is anything like the one that would have been created.
+       如果同名排序规则已经存在，不要抛出错误。
+       这种情况下会发出一个提示。注意，不保证
+       现有排序规则与将要创建的排序规则有任何相似之处。
       </para>
      </listitem>
     </varlistentry>
@@ -70,12 +67,7 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       The name of the collation. The collation name can be
-       schema-qualified. If it is not, the collation is defined in the
-       current schema. The collation name must be unique within that
-       schema.  (The system catalogs can contain collations with the
-       same name for other encodings, but these are ignored if the
-       database encoding does not match.)
+       排序规则的名字。排序规则名可以用模式限定。如果没有限定，排序规则定义在当前模式中。排序规则名在该模式中必须是唯一的。（系统目录中可能包含用于其他编码的同名排序规则，但如果数据库编码不匹配，这些排序规则会被忽略。）
       </para>
      </listitem>
     </varlistentry>
@@ -90,17 +82,10 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
        linkend="collation-managing-create-icu"/> for details.
       </para>
       <para>
-       If <replaceable>provider</replaceable> is <literal>libc</literal>, this
-       is a shortcut for setting <symbol>LC_COLLATE</symbol> and
-       <symbol>LC_CTYPE</symbol> at once.  If you specify
-       <replaceable>locale</replaceable>, you cannot specify either of those
-       parameters.
+       如果 <replaceable>provider</replaceable> 为 <literal>libc</literal>，这是同时设置 <symbol>LC_COLLATE</symbol> 和 <symbol>LC_CTYPE</symbol> 的快捷方式。如果指定了 <replaceable>locale</replaceable>，则不能指定这两个参数中的任何一个。
       </para>
       <para>
-       If <replaceable>provider</replaceable> is <literal>builtin</literal>,
-       then <replaceable>locale</replaceable> must be specified and set to
-       either <literal>C</literal>, <literal>C.UTF-8</literal> or
-       <literal>PG_UNICODE_FAST</literal>.
+       如果 <replaceable>provider</replaceable> 为 <literal>builtin</literal>，则必须指定 <replaceable>locale</replaceable>，并将其设置为 <literal>C</literal>、<literal>C.UTF-8</literal> 或 <literal>PG_UNICODE_FAST</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -110,9 +95,7 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       If <replaceable>provider</replaceable> is <literal>libc</literal>, use
-       the specified operating system locale for the
-       <symbol>LC_COLLATE</symbol> locale category.
+       如果 <replaceable>provider</replaceable> 为 <literal>libc</literal>，则对 <symbol>LC_COLLATE</symbol> 区域类别使用指定的操作系统区域。
       </para>
      </listitem>
     </varlistentry>
@@ -122,9 +105,7 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       If <replaceable>provider</replaceable> is <literal>libc</literal>, use
-       the specified operating system locale for the <symbol>LC_CTYPE</symbol>
-       locale category.
+       如果 <replaceable>provider</replaceable> 为 <literal>libc</literal>，则对 <symbol>LC_CTYPE</symbol> 区域类别使用指定的操作系统区域。
       </para>
      </listitem>
     </varlistentry>
@@ -149,18 +130,11 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       Specifies whether the collation should use deterministic comparisons.
-       The default is true.  A deterministic comparison considers strings that
-       are not byte-wise equal to be unequal even if they are considered
-       logically equal by the comparison.  PostgreSQL breaks ties using a
-       byte-wise comparison.  Comparison that is not deterministic can make the
-       collation be, say, case- or accent-insensitive.  For that, you need to
-       choose an appropriate <literal>LOCALE</literal> setting
-       <emphasis>and</emphasis> set the collation to not deterministic here.
+       指定排序规则是否应使用确定性比较。默认值为 true。确定性比较会将按字节不相等、即使比较认为逻辑上相等的字符串视为不相等。PostgreSQL 使用按字节比较来打破平局。非确定性比较可以使排序规则例如不区分大小写或不区分重音。为此，您需要选择合适的 <literal>LOCALE</literal> 设置<emphasis>并且</emphasis>在此处将排序规则设置为非确定性。
       </para>
 
       <para>
-       Nondeterministic collations are only supported with the ICU provider.
+       非确定性排序规则仅受 ICU 提供者支持。
       </para>
      </listitem>
     </varlistentry>
@@ -182,17 +156,11 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       Specifies the version string to store with the collation.  Normally,
-       this should be omitted, which will cause the version to be computed
-       from the actual version of the collation as provided by the operating
-       system.  This option is intended to be used
-       by <command>pg_upgrade</command> for copying the version from an
-       existing installation.
+       指定要与排序规则一起存储的版本字符串。通常应省略此项，这将导致版本根据操作系统提供的排序规则实际版本计算得出。此选项旨在供 <command>pg_upgrade</command> 用于从现有安装复制版本。
       </para>
 
       <para>
-       See also <xref linkend="sql-altercollation"/> for how to handle
-       collation version mismatches.
+       有关如何处理排序规则版本不匹配的信息，另请参见 <xref linkend="sql-altercollation"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -202,9 +170,7 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
      <listitem>
       <para>
-       The name of an existing collation to copy.  The new collation
-       will have the same properties as the existing one, but it
-       will be an independent object.
+       要复制的现有排序规则的名称。新排序规则将具有与现有排序规则相同的属性，但它将是一个独立的对象。
       </para>
      </listitem>
     </varlistentry>
@@ -213,84 +179,74 @@ CREATE COLLATION [ IF NOT EXISTS ] <replaceable>name</replaceable> FROM <replace
 
 
  <refsect1 id="sql-createcollation-notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   <command>CREATE COLLATION</command> takes a <literal>SHARE ROW
-   EXCLUSIVE</literal> lock, which is self-conflicting, on the
-   <structname>pg_collation</structname> system catalog, so only one
-   <command>CREATE COLLATION</command> command can run at a time.
+   <command>CREATE COLLATION</command> 会在 <structname>pg_collation</structname> 系统目录上获取一个 <literal>SHARE ROW
+   EXCLUSIVE</literal> 锁，该锁与自身冲突，因此同一时间只能运行一个 <command>CREATE COLLATION</command> 命令。
   </para>
 
   <para>
-   Use <command>DROP COLLATION</command> to remove user-defined collations.
+   使用 <command>DROP COLLATION</command> 删除用户定义的排序规则。
   </para>
 
   <para>
-   See <xref linkend="collation-create"/> for more information on how to create collations.
+   有关如何创建排序规则的更多信息，请参见 <xref linkend="collation-create"/>。
   </para>
 
   <para>
-   When using the <literal>libc</literal> collation provider, the locale must
-   be applicable to the current database encoding.
-   See <xref linkend="sql-createdatabase"/> for the precise rules.
+   使用 <literal>libc</literal> 排序规则提供程序时，区域设置必须适用于当前数据库编码。有关确切规则，请参见 <xref linkend="sql-createdatabase"/>。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createcollation-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To create a collation from the operating system locale
-   <literal>fr_FR.utf8</literal>
-   (assuming the current database encoding is <literal>UTF8</literal>):
+   要从操作系统区域设置创建排序规则 <literal>fr_FR.utf8</literal>
+   （假设当前数据库编码为 <literal>UTF8</literal>）：
 <programlisting>
 CREATE COLLATION french (locale = 'fr_FR.utf8');
 </programlisting>
   </para>
 
   <para>
-   To create a collation using the ICU provider using German phone book sort order:
+   要使用 ICU 提供程序并采用德语电话簿排序顺序创建排序规则：
 <programlisting>
 CREATE COLLATION german_phonebook (provider = icu, locale = 'de-u-co-phonebk');
 </programlisting>
   </para>
 
   <para>
-   To create a collation using the ICU provider, based on the root ICU locale,
-   with custom rules:
+   要基于根 ICU 区域设置使用 ICU 提供程序创建排序规则，
+   并使用自定义规则：
 <programlisting>
 <![CDATA[CREATE COLLATION custom (provider = icu, locale = 'und', rules = '&V << w <<< W');]]>
 </programlisting>
-   See <xref linkend="icu-tailoring-rules"/> for further details and examples
-   on the rules syntax.
+   有关规则语法的更多详细信息和示例，请参见 <xref linkend="icu-tailoring-rules"/>。
   </para>
 
   <para>
-   To create a collation from an existing collation:
+   要从现有排序规则创建排序规则：
 <programlisting>
 CREATE COLLATION german FROM "de_DE";
 </programlisting>
-   This can be convenient to be able to use operating-system-independent
-   collation names in applications.
+   这样可以方便地在应用程序中使用与操作系统无关的排序规则名称。
   </para>
  </refsect1>
 
 
  <refsect1 id="sql-createcollation-compat">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is a <command>CREATE COLLATION</command> statement in the SQL
-   standard, but it is limited to copying an existing collation.  The
-   syntax to create a new collation is
-   a <productname>PostgreSQL</productname> extension.
+   SQL 标准中有一个 <command>CREATE COLLATION</command> 语句，但它仅限于复制现有排序规则。创建新排序规则的语法是 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
 
  <refsect1 id="sql-createcollation-seealso">
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-altercollation"/></member>
