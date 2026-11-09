@@ -5988,10 +5988,10 @@ void PQuntrace(PGconn *conn);
  </sect1>
 
  <sect1 id="libpq-misc">
-  <title>Miscellaneous Functions</title>
+  <title>杂项函数</title>
 
   <para>
-   As always, there are some functions that just don't fit anywhere.
+   一如既往，有些函数就是无法归入任何类别。
   </para>
 
   <variablelist>
@@ -6000,25 +6000,22 @@ void PQuntrace(PGconn *conn);
 
     <listitem>
      <para>
-      Frees memory allocated by <application>libpq</application>.
+      释放由 <application>libpq</application> 分配的内存。
 <synopsis>
 void PQfreemem(void *ptr);
 </synopsis>
      </para>
 
      <para>
-      Frees memory allocated by <application>libpq</application>, particularly
-      <xref linkend="libpq-PQescapeByteaConn"/>,
-      <xref linkend="libpq-PQescapeBytea"/>,
-      <xref linkend="libpq-PQunescapeBytea"/>,
-      and <function>PQnotifies</function>.
-      It is particularly important that this function, rather than
-      <function>free()</function>, be used on Microsoft Windows.  This is because
-      allocating memory in a DLL and releasing it in the application works
-      only if multithreaded/single-threaded, release/debug, and static/dynamic
-      flags are the same for the DLL and the application.  On non-Microsoft
-      Windows platforms, this function is the same as the standard library
-      function <function>free()</function>.
+      释放由 <application>libpq</application> 分配的内存，特别是
+      <xref linkend="libpq-PQescapeByteaConn"/>、
+      <xref linkend="libpq-PQescapeBytea"/>、
+      <xref linkend="libpq-PQunescapeBytea"/>
+      以及 <function>PQnotifies</function> 分配的内存。
+      特别重要的是，在 Microsoft Windows 上应当使用本函数而不是
+      <function>free()</function>。这是因为，只有在 DLL 与应用程序的多线程/单线程、发布/调试以及静态/动态
+      标志都相同时，在 DLL 中分配内存并在应用程序中释放内存才能正常工作。在非 Microsoft
+      Windows 平台上，本函数与标准库函数 <function>free()</function> 相同。
      </para>
     </listitem>
    </varlistentry>
@@ -6028,18 +6025,16 @@ void PQfreemem(void *ptr);
 
     <listitem>
      <para>
-      Frees the data structures allocated by
-      <xref linkend="libpq-PQconndefaults"/> or <xref linkend="libpq-PQconninfoParse"/>.
+      释放由
+      <xref linkend="libpq-PQconndefaults"/> 或 <xref linkend="libpq-PQconninfoParse"/> 分配的数据结构。
 <synopsis>
 void PQconninfoFree(PQconninfoOption *connOptions);
 </synopsis>
-      If the argument is a <symbol>NULL</symbol> pointer, no operation is
-      performed.
+      如果参数是 <symbol>NULL</symbol> 指针，则不执行任何操作。
      </para>
 
      <para>
-      A simple <xref linkend="libpq-PQfreemem"/> will not do for this, since
-      the array contains references to subsidiary strings.
+      对于这种情况，简单地使用 <xref linkend="libpq-PQfreemem"/> 是不够的，因为数组中包含对附属字符串的引用。
      </para>
     </listitem>
    </varlistentry>
@@ -6049,45 +6044,31 @@ void PQconninfoFree(PQconninfoOption *connOptions);
 
     <listitem>
      <para>
-      Prepares the encrypted form of a <productname>PostgreSQL</productname> password.
+      准备 <productname>PostgreSQL</productname> 密码的加密形式。
 <synopsis>
 char *PQencryptPasswordConn(PGconn *conn, const char *passwd, const char *user, const char *algorithm);
 </synopsis>
-      This function is intended to be used by client applications that
-      wish to send commands like <literal>ALTER USER joe PASSWORD
-      'pwd'</literal>.  It is good practice not to send the original cleartext
-      password in such a command, because it might be exposed in command
-      logs, activity displays, and so on.  Instead, use this function to
-      convert the password to encrypted form before it is sent.
+      此函数旨在供希望发送诸如 <literal>ALTER USER joe PASSWORD
+      'pwd'</literal> 之类命令的客户端应用程序使用。在此类命令中，最好不要发送原始的明文密码，因为它可能会暴露在命令日志、活动显示等地方。相反，在发送之前，请使用此函数将密码转换为加密形式。
      </para>
 
      <para>
-      The <parameter>passwd</parameter> and <parameter>user</parameter> arguments
-      are the cleartext password, and the SQL name of the user it is for.
-      <parameter>algorithm</parameter> specifies the encryption algorithm
-      to use to encrypt the password. Currently supported algorithms are
-      <literal>md5</literal> and <literal>scram-sha-256</literal> (<literal>on</literal> and
-      <literal>off</literal> are also accepted as aliases for <literal>md5</literal>, for
-      compatibility with older server versions). Note that support for
-      <literal>scram-sha-256</literal> was introduced in <productname>PostgreSQL</productname>
-      version 10, and will not work correctly with older server versions. If
-      <parameter>algorithm</parameter> is <symbol>NULL</symbol>, this function will query
-      the server for the current value of the
-      <xref linkend="guc-password-encryption"/> setting. That can block, and
-      will fail if the current transaction is aborted, or if the connection
-      is busy executing another query. If you wish to use the default
-      algorithm for the server but want to avoid blocking, query
-      <varname>password_encryption</varname> yourself before calling
-      <xref linkend="libpq-PQencryptPasswordConn"/>, and pass that value as the
-      <parameter>algorithm</parameter>.
+      <parameter>passwd</parameter> 和 <parameter>user</parameter> 参数分别是明文密码以及该密码所属用户的 SQL 名称。
+      <parameter>algorithm</parameter> 指定用于加密密码的加密算法。目前支持的算法有
+      <literal>md5</literal> 和 <literal>scram-sha-256</literal>（<literal>on</literal> 和
+      <literal>off</literal> 也作为 <literal>md5</literal> 的别名被接受，以兼容旧版本的服务器）。请注意，对
+      <literal>scram-sha-256</literal> 的支持是在 <productname>PostgreSQL</productname>
+      版本 10 中引入的，在旧版本的服务器上无法正常工作。如果
+      <parameter>algorithm</parameter> 为 <symbol>NULL</symbol>，此函数将向服务器查询
+      <xref linkend="guc-password-encryption"/> 设置的当前值。这可能会阻塞，并且如果当前事务已中止，或者连接正忙于执行另一个查询，则会失败。如果您希望使用服务器的默认算法但又想避免阻塞，请在调用
+      <xref linkend="libpq-PQencryptPasswordConn"/> 之前自行查询
+      <varname>password_encryption</varname>，并将该值作为
+      <parameter>algorithm</parameter> 传入。
      </para>
 
      <para>
-      The return value is a string allocated by <function>malloc</function>.
-      The caller can assume the string doesn't contain any special characters
-      that would require escaping.  Use <xref linkend="libpq-PQfreemem"/> to free the
-      result when done with it. On error, returns <symbol>NULL</symbol>, and
-      a suitable message is stored in the connection object.
+      返回值是由 <function>malloc</function> 分配的字符串。
+      调用者可以假定该字符串不包含任何需要转义的特殊字符。使用完毕后，请使用 <xref linkend="libpq-PQfreemem"/> 释放结果。出错时返回 <symbol>NULL</symbol>，并将相应的消息存储在连接对象中。
      </para>
 
     </listitem>
@@ -6098,36 +6079,32 @@ char *PQencryptPasswordConn(PGconn *conn, const char *passwd, const char *user, 
 
     <listitem>
      <para>
-      Changes a <productname>PostgreSQL</productname> password.
+      更改 <productname>PostgreSQL</productname> 密码。
 <synopsis>
 PGresult *PQchangePassword(PGconn *conn, const char *user, const char *passwd);
 </synopsis>
-      This function uses <function>PQencryptPasswordConn</function>
-      to build and execute the command <literal>ALTER USER ... PASSWORD
-      '...'</literal>, thereby changing the user's password. It exists for
-      the same reason as <function>PQencryptPasswordConn</function>, but
-      is more convenient as it both builds and runs the command for you.
-      <xref linkend="libpq-PQencryptPasswordConn"/> is passed a
-      <symbol>NULL</symbol> for the algorithm argument, hence encryption is
-      done according to the server's <xref linkend="guc-password-encryption"/>
-      setting.
+      此函数使用 <function>PQencryptPasswordConn</function>
+      构建并执行命令 <literal>ALTER USER ... PASSWORD
+      '...'</literal>，从而更改用户的密码。它存在的原因与 <function>PQencryptPasswordConn</function> 相同，但更为方便，因为它会为您构建并运行该命令。
+      <xref linkend="libpq-PQencryptPasswordConn"/> 的算法参数传入的是
+      <symbol>NULL</symbol>，因此加密按照服务器的 <xref linkend="guc-password-encryption"/>
+      设置进行。
      </para>
 
      <para>
-      The <parameter>user</parameter> and <parameter>passwd</parameter> arguments
-      are the SQL name of the target user, and the new cleartext password.
+      <parameter>user</parameter> 和 <parameter>passwd</parameter> 参数
+      分别是目标用户的 SQL 名称和新明文密码。
      </para>
 
      <para>
-      Returns a <structname>PGresult</structname> pointer representing
-      the result of the <literal>ALTER USER</literal> command, or
-      a null pointer if the routine failed before issuing any command.
-      The <xref linkend="libpq-PQresultStatus"/> function should be called
-      to check the return value for any errors (including the value of a null
-      pointer, in which case it will return
-      <symbol>PGRES_FATAL_ERROR</symbol>). Use
-      <xref linkend="libpq-PQerrorMessage"/> to get more information about
-      such errors.
+      返回一个 <structname>PGresult</structname> 指针，表示
+      <literal>ALTER USER</literal> 命令的结果；如果例程在发出任何命令之前就失败，
+      则返回空指针。
+      应调用 <xref linkend="libpq-PQresultStatus"/> 函数
+      检查返回值是否有错误（包括空指针值，此时它将返回
+      <symbol>PGRES_FATAL_ERROR</symbol>）。使用
+      <xref linkend="libpq-PQerrorMessage"/> 获取有关
+      此类错误的更多信息。
      </para>
     </listitem>
    </varlistentry>
@@ -6137,15 +6114,15 @@ PGresult *PQchangePassword(PGconn *conn, const char *user, const char *passwd);
 
     <listitem>
      <para>
-      Prepares the md5-encrypted form of a <productname>PostgreSQL</productname> password.
+      准备 <productname>PostgreSQL</productname> 密码的 md5 加密形式。
 <synopsis>
 char *PQencryptPassword(const char *passwd, const char *user);
 </synopsis>
-      <xref linkend="libpq-PQencryptPassword"/> is an older, deprecated version of
-      <xref linkend="libpq-PQencryptPasswordConn"/>. The difference is that
-      <xref linkend="libpq-PQencryptPassword"/> does not
-      require a connection object, and <literal>md5</literal> is always used as the
-      encryption algorithm.
+      <xref linkend="libpq-PQencryptPassword"/> 是
+      <xref linkend="libpq-PQencryptPasswordConn"/> 的一个较旧的、已废弃的版本。区别在于
+      <xref linkend="libpq-PQencryptPassword"/> 不需要
+      连接对象，并且始终使用 <literal>md5</literal> 作为
+      加密算法。
      </para>
     </listitem>
    </varlistentry>
@@ -6155,29 +6132,14 @@ char *PQencryptPassword(const char *passwd, const char *user);
 
     <listitem>
      <para>
-      Constructs an empty <structname>PGresult</structname> object with the given status.
+      用给定的状态构造一个空的 <structname>PGresult</structname> 对象。
 <synopsis>
 PGresult *PQmakeEmptyPGresult(PGconn *conn, ExecStatusType status);
 </synopsis>
      </para>
 
      <para>
-      This is <application>libpq</application>'s internal function to allocate and
-      initialize an empty <structname>PGresult</structname> object.  This
-      function returns <symbol>NULL</symbol> if memory could not be allocated. It is
-      exported because some applications find it useful to generate result
-      objects (particularly objects with error status) themselves.  If
-      <parameter>conn</parameter> is not null and <parameter>status</parameter>
-      indicates an error, the current error message of the specified
-      connection is copied into the <structname>PGresult</structname>.
-      Also, if <parameter>conn</parameter> is not null, any event procedures
-      registered in the connection are copied into the
-      <structname>PGresult</structname>.  (They do not get
-      <literal>PGEVT_RESULTCREATE</literal> calls, but see
-      <xref linkend="libpq-PQfireResultCreateEvents"/>.)
-      Note that <xref linkend="libpq-PQclear"/> should eventually be called
-      on the object, just as with a <structname>PGresult</structname>
-      returned by <application>libpq</application> itself.
+      这是 <application>libpq</application> 的内部函数，用于分配并初始化一个空的 <structname>PGresult</structname> 对象。如果无法分配内存，该函数返回 <symbol>NULL</symbol>。它之所以被导出，是因为某些应用发现自行生成结果对象（尤其是带错误状态的对象）很有用。如果 <parameter>conn</parameter> 不为空且 <parameter>status</parameter> 表示错误，则指定连接的当前错误消息会被复制到 <structname>PGresult</structname> 中。此外，如果 <parameter>conn</parameter> 不为空，连接中注册的所有事件过程都会被复制到 <structname>PGresult</structname> 中。（它们不会收到 <literal>PGEVT_RESULTCREATE</literal> 调用，但请参见 <xref linkend="libpq-PQfireResultCreateEvents"/>。）注意最终应对该对象调用 <xref linkend="libpq-PQclear"/>，就像对 <application>libpq</application> 自身返回的 <structname>PGresult</structname> 一样。
      </para>
     </listitem>
    </varlistentry>
@@ -6186,10 +6148,8 @@ PGresult *PQmakeEmptyPGresult(PGconn *conn, ExecStatusType status);
     <term><function>PQfireResultCreateEvents</function><indexterm><primary>PQfireResultCreateEvents</primary></indexterm></term>
     <listitem>
      <para>
-      Fires a <literal>PGEVT_RESULTCREATE</literal> event (see <xref
-      linkend="libpq-events"/>) for each event procedure registered in the
-      <structname>PGresult</structname> object.  Returns non-zero for success,
-      zero if any event procedure fails.
+      为 <structname>PGresult</structname> 对象中注册的每个事件过程触发一个 <literal>PGEVT_RESULTCREATE</literal> 事件（参见 <xref
+      linkend="libpq-events"/>）。成功时返回非零值，任一事件过程失败时返回零。
 
 <synopsis>
 int PQfireResultCreateEvents(PGconn *conn, PGresult *res);
@@ -6197,22 +6157,15 @@ int PQfireResultCreateEvents(PGconn *conn, PGresult *res);
      </para>
 
      <para>
-      The <literal>conn</literal> argument is passed through to event procedures
-      but not used directly.  It can be <symbol>NULL</symbol> if the event
-      procedures won't use it.
+      <literal>conn</literal> 参数会原样传递给事件过程，但不会被直接使用。如果事件过程不会使用它，可以将其设为 <symbol>NULL</symbol>。
      </para>
 
      <para>
-      Event procedures that have already received a
-      <literal>PGEVT_RESULTCREATE</literal> or <literal>PGEVT_RESULTCOPY</literal> event
-      for this object are not fired again.
+      已经为此对象接收到 <literal>PGEVT_RESULTCREATE</literal> 或 <literal>PGEVT_RESULTCOPY</literal> 事件的事件过程不会再次触发。
      </para>
 
      <para>
-      The main reason that this function is separate from
-      <xref linkend="libpq-PQmakeEmptyPGresult"/> is that it is often appropriate
-      to create a <structname>PGresult</structname> and fill it with data
-      before invoking the event procedures.
+      此函数与 <xref linkend="libpq-PQmakeEmptyPGresult"/> 分开的主要原因是，通常适合在调用事件过程之前创建一个 <structname>PGresult</structname> 并向其中填充数据。
      </para>
     </listitem>
    </varlistentry>
@@ -6222,10 +6175,7 @@ int PQfireResultCreateEvents(PGconn *conn, PGresult *res);
 
     <listitem>
      <para>
-      Makes a copy of a <structname>PGresult</structname> object.  The copy is
-      not linked to the source result in any way and
-      <xref linkend="libpq-PQclear"/> must be called when the copy is no longer
-      needed.  If the function fails, <symbol>NULL</symbol> is returned.
+      复制一个 <structname>PGresult</structname> 对象。副本与源结果没有任何关联，当不再需要该副本时必须调用 <xref linkend="libpq-PQclear"/>。如果函数失败，则返回 <symbol>NULL</symbol>。
 
 <synopsis>
 PGresult *PQcopyResult(const PGresult *src, int flags);
@@ -6233,21 +6183,7 @@ PGresult *PQcopyResult(const PGresult *src, int flags);
      </para>
 
      <para>
-      This is not intended to make an exact copy.  The returned result is
-      always put into <literal>PGRES_TUPLES_OK</literal> status, and does not
-      copy any error message in the source.  (It does copy the command status
-      string, however.)  The <parameter>flags</parameter> argument determines
-      what else is copied.  It is a bitwise OR of several flags.
-      <literal>PG_COPYRES_ATTRS</literal> specifies copying the source
-      result's attributes (column definitions).
-      <literal>PG_COPYRES_TUPLES</literal> specifies copying the source
-      result's tuples.  (This implies copying the attributes, too.)
-      <literal>PG_COPYRES_NOTICEHOOKS</literal> specifies
-      copying the source result's notify hooks.
-      <literal>PG_COPYRES_EVENTS</literal> specifies copying the source
-      result's events.  (But any instance data associated with the source
-      is not copied.)
-      The event procedures receive <literal>PGEVT_RESULTCOPY</literal> events.
+      这并非要制作精确的副本。返回的结果总是被置于 <literal>PGRES_TUPLES_OK</literal> 状态，并且不会复制源中的任何错误消息。（但它确实会复制命令状态字符串。）<parameter>flags</parameter> 参数决定还复制哪些其他内容。它是若干标志的按位 OR。<literal>PG_COPYRES_ATTRS</literal> 指定复制源结果的属性（列定义）。<literal>PG_COPYRES_TUPLES</literal> 指定复制源结果的元组。（这也意味着复制属性。）<literal>PG_COPYRES_NOTICEHOOKS</literal> 指定复制源结果的通知钩子。<literal>PG_COPYRES_EVENTS</literal> 指定复制源结果的事件。（但与源关联的任何实例数据不会被复制。）事件过程接收 <literal>PGEVT_RESULTCOPY</literal> 事件。
      </para>
     </listitem>
    </varlistentry>
@@ -6257,20 +6193,18 @@ PGresult *PQcopyResult(const PGresult *src, int flags);
 
     <listitem>
      <para>
-      Sets the attributes of a <structname>PGresult</structname> object.
+      设置一个 <structname>PGresult</structname> 对象的属性。
 <synopsis>
 int PQsetResultAttrs(PGresult *res, int numAttributes, PGresAttDesc *attDescs);
 </synopsis>
      </para>
 
      <para>
-      The provided <parameter>attDescs</parameter> are copied into the result.
-      If the <parameter>attDescs</parameter> pointer is <symbol>NULL</symbol> or
-      <parameter>numAttributes</parameter> is less than one, the request is
-      ignored and the function succeeds.  If <parameter>res</parameter>
-      already contains attributes, the function will fail.  If the function
-      fails, the return value is zero.  If the function succeeds, the return
-      value is non-zero.
+      所提供的 <parameter>attDescs</parameter> 会被复制到结果中。
+      如果 <parameter>attDescs</parameter> 指针为 <symbol>NULL</symbol>，或者
+      <parameter>numAttributes</parameter> 小于 1，则该请求会被忽略，函数执行成功。如果 <parameter>res</parameter>
+      已经包含属性，函数将失败。如果函数失败，返回值为零。如果函数成功，返回
+      值为非零。
      </para>
     </listitem>
    </varlistentry>
@@ -6280,26 +6214,23 @@ int PQsetResultAttrs(PGresult *res, int numAttributes, PGresAttDesc *attDescs);
 
     <listitem>
      <para>
-      Sets a tuple field value of a <structname>PGresult</structname> object.
+      设置一个 <structname>PGresult</structname> 对象的元组字段值。
 <synopsis>
 int PQsetvalue(PGresult *res, int tup_num, int field_num, char *value, int len);
 </synopsis>
      </para>
 
      <para>
-      The function will automatically grow the result's internal tuples array
-      as needed.  However, the <parameter>tup_num</parameter> argument must be
-      less than or equal to <xref linkend="libpq-PQntuples"/>, meaning this
-      function can only grow the tuples array one tuple at a time.  But any
-      field of any existing tuple can be modified in any order.  If a value at
-      <parameter>field_num</parameter> already exists, it will be overwritten.
-      If <parameter>len</parameter> is -1 or
-      <parameter>value</parameter> is <symbol>NULL</symbol>, the field value
-      will be set to an SQL null value.  The
-      <parameter>value</parameter> is copied into the result's private storage,
-      thus is no longer needed after the function
-      returns.  If the function fails, the return value is zero.  If the
-      function succeeds, the return value is non-zero.
+      该函数会根据需要自动扩展结果内部的元组数组。
+      不过，<parameter>tup_num</parameter> 参数必须小于或等于 <xref linkend="libpq-PQntuples"/>，这意味着该
+      函数一次只能扩展元组数组中的一个元组。但是，任意现有元组的任意
+      字段都可以按任意顺序修改。如果 <parameter>field_num</parameter> 处的值已经存在，它将被覆盖。
+      如果 <parameter>len</parameter> 为 -1，或者
+      <parameter>value</parameter> 为 <symbol>NULL</symbol>，则该字段值
+      将被设置为 SQL null 值。
+      <parameter>value</parameter> 会被复制到结果的私有存储中，
+      因此在函数返回后就不再需要它了。如果函数失败，返回值为零。如果
+      函数成功，返回值为非零。
      </para>
     </listitem>
    </varlistentry>
@@ -6309,18 +6240,14 @@ int PQsetvalue(PGresult *res, int tup_num, int field_num, char *value, int len);
 
     <listitem>
      <para>
-      Allocate subsidiary storage for a <structname>PGresult</structname> object.
+      为 <structname>PGresult</structname> 对象分配附属存储。
 <synopsis>
 void *PQresultAlloc(PGresult *res, size_t nBytes);
 </synopsis>
      </para>
 
      <para>
-      Any memory allocated with this function will be freed when
-      <parameter>res</parameter> is cleared.  If the function fails,
-      the return value is <symbol>NULL</symbol>.  The result is
-      guaranteed to be adequately aligned for any type of data,
-      just as for <function>malloc</function>.
+      使用此函数分配的任何内存都会在清除 <parameter>res</parameter> 时被释放。如果函数失败，返回值为 <symbol>NULL</symbol>。与 <function>malloc</function> 一样，结果保证对任何类型的数据都具有足够的对齐。
      </para>
     </listitem>
    </varlistentry>
@@ -6330,18 +6257,14 @@ void *PQresultAlloc(PGresult *res, size_t nBytes);
 
     <listitem>
      <para>
-      Retrieves the number of bytes allocated for
-      a <structname>PGresult</structname> object.
+      检索为 <structname>PGresult</structname> 对象分配的字节数。
 <synopsis>
 size_t PQresultMemorySize(const PGresult *res);
 </synopsis>
      </para>
 
      <para>
-      This value is the sum of all <function>malloc</function> requests
-      associated with the <structname>PGresult</structname> object, that is,
-      all the memory that will be freed by <xref linkend="libpq-PQclear"/>.
-      This information can be useful for managing memory consumption.
+      该值是所有与 <structname>PGresult</structname> 对象关联的 <function>malloc</function> 请求之和，也就是说，是由 <xref linkend="libpq-PQclear"/> 释放的全部内存。此信息可用于管理内存消耗。
      </para>
     </listitem>
    </varlistentry>
@@ -6352,50 +6275,31 @@ size_t PQresultMemorySize(const PGresult *res);
 
     <listitem>
      <para>
-      Return the version of <application>libpq</application> that is being used.
+      返回正在使用的 <application>libpq</application> 版本。
 <synopsis>
 int PQlibVersion(void);
 </synopsis>
      </para>
 
      <para>
-      The result of this function can be used to determine, at
-      run time, whether specific functionality is available in the currently
-      loaded version of libpq. The function can be used, for example,
-      to determine which connection options are available in
-      <xref linkend="libpq-PQconnectdb"/>.
+      该函数的结果可用于在运行时确定当前加载的 libpq 版本中是否提供特定功能。例如，该函数可用于确定 <xref linkend="libpq-PQconnectdb"/> 中有哪些连接选项可用。
      </para>
 
      <para>
-      The result is formed by multiplying the library's major version
-      number by 10000 and adding the minor version number.  For example,
-      version 10.1 will be returned as 100001, and version 11.0 will be
-      returned as 110000.
+      结果由库的主版本号乘以 10000 再加上次版本号构成。例如，版本 10.1 将返回为 100001，版本 11.0 将返回为 110000。
      </para>
 
      <para>
-      Prior to major version 10, <productname>PostgreSQL</productname> used
-      three-part version numbers in which the first two parts together
-      represented the major version.  For those
-      versions, <xref linkend="libpq-PQlibVersion"/> uses two digits for each
-      part; for example version 9.1.5 will be returned as 90105, and
-      version 9.2.0 will be returned as 90200.
+      在 10 之前的主版本中，<productname>PostgreSQL</productname> 使用由三部分组成的版本号，其中前两部分共同表示主版本。对于这些版本，<xref linkend="libpq-PQlibVersion"/> 对每一部分使用两位数字；例如版本 9.1.5 将返回为 90105，版本 9.2.0 将返回为 90200。
      </para>
 
      <para>
-      Therefore, for purposes of determining feature compatibility,
-      applications should divide the result of <xref linkend="libpq-PQlibVersion"/>
-      by 100 not 10000 to determine a logical major version number.
-      In all release series, only the last two digits differ between
-      minor releases (bug-fix releases).
+      因此，为了确定功能兼容性，应用程序应将 <xref linkend="libpq-PQlibVersion"/> 的结果除以 100 而不是 10000，以确定逻辑主版本号。在所有发布系列中，次版本（缺陷修复版本）之间只有最后两位数字不同。
      </para>
 
      <note>
       <para>
-       This function appeared in <productname>PostgreSQL</productname> version 9.1, so
-       it cannot be used to detect required functionality in earlier
-       versions, since calling it will create a link dependency
-       on version 9.1 or later.
+       该函数出现在 <productname>PostgreSQL</productname> 9.1 版本中，因此不能用于检测更早版本中所需的功能，因为调用它会创建对 9.1 或更高版本的链接依赖。
       </para>
      </note>
     </listitem>
@@ -6406,16 +6310,15 @@ int PQlibVersion(void);
 
     <listitem>
      <para>
-      Retrieves the current time, expressed as the number of microseconds
-      since the Unix epoch (that is, <type>time_t</type> times 1 million).
+      检索当前时间，以自 Unix 纪元以来的微秒数表示
+      （即 <type>time_t</type> 乘以 100 万）。
 <synopsis>
 pg_usec_time_t PQgetCurrentTimeUSec(void);
 </synopsis>
      </para>
 
      <para>
-      This is primarily useful for calculating timeout values to use with
-      <xref linkend="libpq-PQsocketPoll"/>.
+      这主要用于计算与 <xref linkend="libpq-PQsocketPoll"/> 配合使用的超时值。
      </para>
     </listitem>
    </varlistentry>
