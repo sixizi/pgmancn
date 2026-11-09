@@ -7467,7 +7467,7 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
 
 
  <sect1 id="libpq-ssl">
-  <title>SSL Support</title>
+  <title>SSL 支持</title>
 
   <indexterm zone="libpq-ssl">
    <primary>SSL</primary>
@@ -7475,191 +7475,92 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> has native support for using <acronym>SSL</acronym>
-   connections to encrypt client/server communications using
-   <acronym>TLS</acronym> protocols for increased security.
-   See <xref linkend="ssl-tcp"/> for details about the server-side
-   <acronym>SSL</acronym> functionality.
+   <productname>PostgreSQL</productname> 原生支持使用 <acronym>SSL</acronym> 连接，通过 <acronym>TLS</acronym> 协议加密客户端/服务器通信以提高安全性。
+   有关服务器端 <acronym>SSL</acronym> 功能的详细信息，请参见 <xref linkend="ssl-tcp"/>。
   </para>
 
   <para>
-   <application>libpq</application> reads the system-wide
-   <productname>OpenSSL</productname> configuration file. By default, this
-   file is named <filename>openssl.cnf</filename> and is located in the
-   directory reported by <literal>openssl version -d</literal>.  This default
-   can be overridden by setting environment variable
-   <envar>OPENSSL_CONF</envar> to the name of the desired configuration
-   file.
+   <application>libpq</application> 读取系统范围的 <productname>OpenSSL</productname> 配置文件。默认情况下，该文件名为
+   <filename>openssl.cnf</filename>，位于 <literal>openssl version -d</literal> 所报告的目录中。可以通过将环境变量
+   <envar>OPENSSL_CONF</envar> 设置为所需配置文件的名称来覆盖此默认值。
   </para>
 
  <sect2 id="libq-ssl-certificates">
-  <title>Client Verification of Server Certificates</title>
+  <title>客户端验证服务器证书</title>
 
   <para>
-   By default, <productname>PostgreSQL</productname> will not perform any verification of
-   the server certificate. This means that it is possible to spoof the server
-   identity (for example by modifying a DNS record or by taking over the server
-   IP address) without the client knowing. In order to prevent spoofing,
-   the client must be able to verify the server's identity via a chain of
-   trust.  A chain of trust is established by placing a root (self-signed)
-   certificate authority (<acronym>CA</acronym>) certificate on one
-   computer and a leaf certificate <emphasis>signed</emphasis> by the
-   root certificate on another computer.  It is also possible to use an
-   <quote>intermediate</quote> certificate which is signed by the root
-   certificate and signs leaf certificates.
+   默认情况下，<productname>PostgreSQL</productname> 不会对服务器证书进行任何验证。这意味着
+   可以在客户端不知情的情况下伪造服务器身份（例如通过修改 DNS 记录
+   或接管服务器 IP 地址）。为了防止伪造，
+   客户端必须能够通过信任链验证服务器的身份。信任链的建立方式是：
+   将根（自签名）证书颁发机构（<acronym>CA</acronym>）证书放在一台
+   计算机上，并将由根证书<emphasis>签名</emphasis>的叶子证书放在另一台计算机上。
+   也可以使用<quote>中间</quote>证书，该证书由根证书签名，
+   并用于签署叶子证书。
   </para>
 
   <para>
-   To allow the client to verify the identity of the server, place a root
-   certificate on the client and a leaf certificate signed by the root
-   certificate on the server.  To allow the server to verify the identity
-   of the client, place a root certificate on the server and a leaf
-   certificate signed by the root certificate on the client.  One or more
-   intermediate certificates (usually stored with the leaf certificate)
-   can also be used to link the leaf certificate to the root certificate.
+   要让客户端验证服务器的身份，请将根证书放在客户端上，
+   并将由根证书签名的叶子证书放在服务器上。要让服务器验证
+   客户端的身份，请将根证书放在服务器上，并将由根证书签名的
+   叶子证书放在客户端上。也可以使用一个或多个
+   中间证书（通常与叶子证书一起存储）将叶子证书链接到根证书。
   </para>
 
   <para>
-   Once a chain of trust has been established, there are two ways for
-   the client to validate the leaf certificate sent by the server.
-   If the parameter <literal>sslmode</literal> is set to <literal>verify-ca</literal>,
-   libpq will verify that the server is trustworthy by checking the
-   certificate chain up to the root certificate stored on the client.
-   If <literal>sslmode</literal> is set to <literal>verify-full</literal>,
-   libpq will <emphasis>also</emphasis> verify that the server host
-   name matches the name stored in the server certificate. The
-   SSL connection will fail if the server certificate cannot be
-   verified. <literal>verify-full</literal> is recommended in most
-   security-sensitive environments.
+   一旦信任链建立，客户端有两种方式验证服务器发送的叶子证书。如果将参数 <literal>sslmode</literal> 设置为 <literal>verify-ca</literal>，libpq 将通过检查证书链直至存储在客户端的根证书来验证服务器是否可信。如果将 <literal>sslmode</literal> 设置为 <literal>verify-full</literal>，libpq 还会<emphasis>同时</emphasis>验证服务器主机名与服务器证书中存储的名称是否匹配。如果无法验证服务器证书，SSL 连接将失败。在大多数安全敏感的环境中，建议使用 <literal>verify-full</literal>。
   </para>
 
   <para>
-   In <literal>verify-full</literal> mode, the host name is matched against the
-   certificate's Subject Alternative Name attribute(s) (SAN), or against the
-   Common Name attribute if no SAN of type <literal>dNSName</literal> is
-   present.  If the certificate's name attribute starts with an asterisk
-   (<literal>*</literal>), the asterisk will be treated as
-   a wildcard, which will match all characters <emphasis>except</emphasis> a dot
-   (<literal>.</literal>). This means the certificate will not match subdomains.
-   If the connection is made using an IP address instead of a host name, the
-   IP address will be matched (without doing any DNS lookups) against SANs of
-   type <literal>iPAddress</literal> or <literal>dNSName</literal>.  If no
-   <literal>iPAddress</literal> SAN is present and no
-   matching <literal>dNSName</literal> SAN is present, the host IP address is
-   matched against the Common Name attribute.
+   在 <literal>verify-full</literal> 模式下，主机名将与证书的 Subject Alternative Name 属性（SAN）进行匹配；如果不存在类型为 <literal>dNSName</literal> 的 SAN，则与 Common Name 属性匹配。如果证书的名称属性以星号（<literal>*</literal>）开头，该星号将被视为通配符，可匹配<emphasis>除</emphasis>点（<literal>.</literal>）之外的所有字符。这意味着证书不会匹配子域。如果使用 IP 地址而非主机名建立连接，则该 IP 地址将（不进行任何 DNS 查询）与类型为 <literal>iPAddress</literal> 或 <literal>dNSName</literal> 的 SAN 进行匹配。如果不存在 <literal>iPAddress</literal> SAN 且不存在匹配的 <literal>dNSName</literal> SAN，则主机 IP 地址将与 Common Name 属性匹配。
   </para>
 
   <note>
    <para>
-    For backward compatibility with earlier versions of PostgreSQL, the host
-    IP address is verified in a manner different
-    from <ulink url="https://datatracker.ietf.org/doc/html/rfc6125">RFC 6125</ulink>.
-    The host IP address is always matched against <literal>dNSName</literal>
-    SANs as well as <literal>iPAddress</literal> SANs, and can be matched
-    against the Common Name attribute if no relevant SANs exist.
+    为了向后兼容早期版本的 PostgreSQL，主机 IP 地址的验证方式与 <ulink url="https://datatracker.ietf.org/doc/html/rfc6125">RFC 6125</ulink> 不同。主机 IP 地址始终与 <literal>dNSName</literal> SAN 以及 <literal>iPAddress</literal> SAN 进行匹配，并且在不存在相关 SAN 的情况下可以与 Common Name 属性匹配。
    </para>
   </note>
 
   <para>
-   To allow server certificate verification, one or more root certificates
-   must be placed in the file <filename>~/.postgresql/root.crt</filename>
-   in the user's home directory.  (On Microsoft Windows the file is named
-   <filename>%APPDATA%\postgresql\root.crt</filename>.)  Intermediate
-   certificates should also be added to the file if they are needed to link
-   the certificate chain sent by the server to the root certificates
-   stored on the client.
+   要允许验证服务器证书，必须将一个或多个根证书放入用户主目录下的文件 <filename>~/.postgresql/root.crt</filename> 中。（在 Microsoft Windows 上，该文件名为 <filename>%APPDATA%\postgresql\root.crt</filename>。）如果需要在服务器发送的证书链与存储在客户端的根证书之间建立链接，还应将中间证书添加到该文件中。
   </para>
 
   <para>
-   Certificate Revocation List (CRL) entries are also checked
-   if the file <filename>~/.postgresql/root.crl</filename> exists
-   (<filename>%APPDATA%\postgresql\root.crl</filename> on Microsoft
-   Windows).
+   如果文件 <filename>~/.postgresql/root.crl</filename> 存在（在 Microsoft Windows 上为 <filename>%APPDATA%\postgresql\root.crl</filename>），还会检查证书吊销列表（CRL）条目。
   </para>
 
   <para>
-   The location of the root certificate file and the CRL can be changed by
-   setting
-   the connection parameters <literal>sslrootcert</literal> and <literal>sslcrl</literal>
-   or the environment variables <envar>PGSSLROOTCERT</envar> and <envar>PGSSLCRL</envar>.
-   <literal>sslcrldir</literal> or the environment variable <envar>PGSSLCRLDIR</envar>
-   can also be used to specify a directory containing CRL files.
+   根证书文件和 CRL 的位置可以通过设置连接参数 <literal>sslrootcert</literal> 和 <literal>sslcrl</literal> 或环境变量 <envar>PGSSLROOTCERT</envar> 和 <envar>PGSSLCRL</envar> 来更改。也可以使用 <literal>sslcrldir</literal> 或环境变量 <envar>PGSSLCRLDIR</envar> 来指定包含 CRL 文件的目录。
   </para>
 
   <note>
    <para>
-    For backwards compatibility with earlier versions of PostgreSQL, if a
-    root CA file exists, the behavior of
-    <literal>sslmode=require</literal> will be the same
-    as that of <literal>verify-ca</literal>, meaning the server certificate
-    is validated against the CA. Relying on this behavior is discouraged,
-    and applications that need certificate validation should always use
-    <literal>verify-ca</literal> or <literal>verify-full</literal>.
+    为了与早期版本的 PostgreSQL 向后兼容，如果存在根 CA 文件，<literal>sslmode=require</literal> 的行为将与 <literal>verify-ca</literal> 相同，即根据 CA 验证服务器证书。不鼓励依赖此行为，需要证书验证的应用程序应始终使用 <literal>verify-ca</literal> 或 <literal>verify-full</literal>。
    </para>
   </note>
  </sect2>
 
  <sect2 id="libpq-ssl-clientcert">
-  <title>Client Certificates</title>
+  <title>客户端证书</title>
 
   <para>
-   If the server attempts to verify the identity of the
-   client by requesting the client's leaf certificate,
-   <application>libpq</application> will send the certificate(s) stored in
-   file <filename>~/.postgresql/postgresql.crt</filename> in the user's home
-   directory.  The certificates must chain to the root certificate trusted
-   by the server.  A matching
-   private key file <filename>~/.postgresql/postgresql.key</filename> must also
-   be present.
-   On Microsoft Windows these files are named
-   <filename>%APPDATA%\postgresql\postgresql.crt</filename> and
-   <filename>%APPDATA%\postgresql\postgresql.key</filename>.
-   The location of the certificate and key files can be overridden by the
-   connection parameters <literal>sslcert</literal>
-   and <literal>sslkey</literal>, or by the
-   environment variables <envar>PGSSLCERT</envar> and <envar>PGSSLKEY</envar>.
+   如果服务器通过请求客户端的叶子证书来尝试验证客户端的身份，<application>libpq</application> 将发送存储在用户主目录中的文件 <filename>~/.postgresql/postgresql.crt</filename> 里的证书。这些证书必须能链接到服务器信任的根证书。还必须存在匹配的私钥文件 <filename>~/.postgresql/postgresql.key</filename>。在 Microsoft Windows 上，这些文件名为 <filename>%APPDATA%\postgresql\postgresql.crt</filename> 和 <filename>%APPDATA%\postgresql\postgresql.key</filename>。证书和密钥文件的位置可以通过连接参数 <literal>sslcert</literal> 和 <literal>sslkey</literal>，或通过环境变量 <envar>PGSSLCERT</envar> 和 <envar>PGSSLKEY</envar> 覆盖。
   </para>
 
   <para>
-   On Unix systems, the permissions on the private key file must disallow
-   any access to world or group; achieve this by a command such as
-   <command>chmod 0600 ~/.postgresql/postgresql.key</command>.
-   Alternatively, the file can be owned by root and have group read access
-   (that is, <literal>0640</literal> permissions).  That setup is intended
-   for installations where certificate and key files are managed by the
-   operating system.  The user of <application>libpq</application> should
-   then be made a member of the group that has access to those certificate
-   and key files.  (On Microsoft Windows, there is no file permissions
-   check, since the <filename>%APPDATA%\postgresql</filename> directory is
-   presumed secure.)
+   在 Unix 系统上，私钥文件的权限必须禁止任何 world 或 group 访问；可通过类似 <command>chmod 0600 ~/.postgresql/postgresql.key</command> 的命令实现。或者，该文件可以归 root 所有并具有组读权限（即 <literal>0640</literal> 权限）。这种设置适用于证书和密钥文件由操作系统管理的安装。此时应将 <application>libpq</application> 的用户设为有权访问这些证书和密钥文件的组的成员。（在 Microsoft Windows 上，没有文件权限检查，因为 <filename>%APPDATA%\postgresql</filename> 目录被认为是安全的。）
   </para>
 
   <para>
-   The first certificate in <filename>postgresql.crt</filename> must be the
-   client's certificate because it must match the client's private key.
-   <quote>Intermediate</quote> certificates can be optionally appended
-   to the file &mdash; doing so avoids requiring storage of intermediate
-   certificates on the server (<xref linkend="guc-ssl-ca-file"/>).
+   <filename>postgresql.crt</filename> 中的第一个证书必须是客户端证书，因为它必须与客户端的私钥匹配。可以选择将<quote>中间</quote>证书追加到文件 &mdash; 这样做可避免需要在服务器上存储中间证书（<xref linkend="guc-ssl-ca-file"/>）。
   </para>
 
   <para>
-   The certificate and key may be in PEM or ASN.1 DER format.
+   证书和密钥可以采用 PEM 或 ASN.1 DER 格式。
   </para>
 
   <para>
-   The key may be
-   stored in cleartext or encrypted with a passphrase using any algorithm
-   supported by <productname>OpenSSL</productname>, like AES-128. If the key
-   is stored encrypted, then the passphrase may be provided in the
-   <xref linkend="libpq-connect-sslpassword"/> connection option. If an
-   encrypted key is supplied and the <literal>sslpassword</literal> option
-   is absent or blank, a password will be prompted for interactively by
-   <productname>OpenSSL</productname> with a
-   <literal>Enter PEM pass phrase:</literal> prompt if a TTY is available.
-   Applications can override the client certificate prompt and the handling
-   of the <literal>sslpassword</literal> parameter by supplying their own
-   key password callback; see
-   <xref linkend="libpq-pqsetsslkeypasshook-openssl"/>.
+   密钥可以明文存储，也可以使用 <productname>OpenSSL</productname> 支持的任何算法（如 AES-128）通过口令加密存储。如果密钥以加密形式存储，则可以在 <xref linkend="libpq-connect-sslpassword"/> 连接选项中提供口令。如果提供了加密密钥，而 <literal>sslpassword</literal> 选项缺失或为空，则在有 TTY 可用时，<productname>OpenSSL</productname> 会以 <literal>Enter PEM pass phrase:</literal> 提示符交互式地提示输入口令。应用程序可以通过提供自己的密钥口令回调来覆盖客户端证书提示以及对 <literal>sslpassword</literal> 参数的处理；参见 <xref linkend="libpq-pqsetsslkeypasshook-openssl"/>。
   </para>
 
   <para>
@@ -7669,49 +7570,32 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
  </sect2>
 
  <sect2 id="libpq-ssl-protection">
-  <title>Protection Provided in Different Modes</title>
+  <title>不同模式下提供的保护</title>
 
   <para>
-   The different values for the <literal>sslmode</literal> parameter provide different
-   levels of protection. SSL can provide
-   protection against three types of attacks:
+   <literal>sslmode</literal> 参数的不同取值提供不同级别的保护。SSL 可以针对三类攻击提供保护：
 
    <variablelist>
     <varlistentry>
-     <term>Eavesdropping</term>
+     <term>窃听</term>
      <listitem>
-      <para>If a third party can examine the network traffic between the
-       client and the server, it can read both connection information (including
-       the user name and password) and the data that is passed. <acronym>SSL</acronym>
-       uses encryption to prevent this.
+      <para>如果第三方能够检查客户端和服务器之间的网络流量，它就可以读取连接信息（包括用户名和密码）以及所传递的数据。<acronym>SSL</acronym> 使用加密来防止这种情况。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry>
-     <term>Man-in-the-middle (<acronym>MITM</acronym>)</term>
+     <term>中间人（<acronym>MITM</acronym>）</term>
      <listitem>
-      <para>If a third party can modify the data while passing between the
-       client and server, it can pretend to be the server and therefore see and
-       modify data <emphasis>even if it is encrypted</emphasis>. The third party can then
-       forward the connection information and data to the original server,
-       making it impossible to detect this attack. Common vectors to do this
-       include DNS poisoning and address hijacking, whereby the client is directed
-       to a different server than intended. There are also several other
-       attack methods that can accomplish this. <acronym>SSL</acronym> uses certificate
-       verification to prevent this, by authenticating the server to the client.
+      <para>如果第三方能够在数据于客户端和服务器之间传递时修改数据，它就可以冒充服务器，从而查看并修改数据<emphasis>即使数据已加密</emphasis>。然后，第三方可以将连接信息和数据转发给原始服务器，使得这种攻击无法被检测到。实现此目的的常见途径包括 DNS 投毒和地址劫持，即把客户端引导到并非预期的其他服务器。此外还有若干其他攻击方法可以实现这一点。<acronym>SSL</acronym> 通过向客户端认证服务器来使用证书验证防止这种情况。
       </para>
      </listitem>
     </varlistentry>
 
     <varlistentry>
-     <term>Impersonation</term>
+     <term>冒充</term>
      <listitem>
-      <para>If a third party can pretend to be an authorized client, it can
-       simply access data it should not have access to. Typically this can
-       happen through insecure password management. <acronym>SSL</acronym> uses
-       client certificates to prevent this, by making sure that only holders
-       of valid certificates can access the server.
+      <para>如果第三方能够冒充已授权的客户端，它就可以直接访问本不应访问的数据。通常这可以通过不安全的密码管理发生。<acronym>SSL</acronym> 通过确保只有有效证书的持有者才能访问服务器，使用客户端证书来防止这种情况。
       </para>
      </listitem>
     </varlistentry>
@@ -7719,35 +7603,19 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
   </para>
 
   <para>
-   For a connection to be known SSL-secured, SSL usage must be configured
-   on <emphasis>both the client and the server</emphasis> before the connection
-   is made. If it is only configured on the server, the client may end up
-   sending sensitive information (e.g., passwords) before
-   it knows that the server requires high security. In libpq, secure
-   connections can be ensured
-   by setting the <literal>sslmode</literal> parameter to <literal>verify-full</literal> or
-   <literal>verify-ca</literal>, and providing the system with a root certificate to
-   verify against. This is analogous to using an <literal>https</literal>
-   <acronym>URL</acronym> for encrypted web browsing.
+   要使一个连接被认为是 SSL 安全的，必须在建立连接之前<emphasis>在客户端和服务器两端</emphasis>都配置 SSL 的使用。如果只在服务器上配置，客户端可能会在得知服务器要求高安全性之前就发送敏感信息（例如密码）。在 libpq 中，可以通过将 <literal>sslmode</literal> 参数设置为 <literal>verify-full</literal> 或 <literal>verify-ca</literal>，并向系统提供用于验证的根证书来确保安全连接。这类似于使用 <literal>https</literal> <acronym>URL</acronym> 进行加密的网页浏览。
   </para>
 
   <para>
-   Once the server has been authenticated, the client can pass sensitive data.
-   This means that up until this point, the client does not need to know if
-   certificates will be used for authentication, making it safe to specify that
-   only in the server configuration.
+   一旦服务器通过认证，客户端就可以传递敏感数据。这意味着在此之前，客户端不需要知道是否会使用证书进行认证，因此可以安全地只在服务器配置中指定这一点。
   </para>
 
   <para>
-   All <acronym>SSL</acronym> options carry overhead in the form of encryption and
-   key-exchange, so there is a trade-off that has to be made between performance
-   and security. <xref linkend="libpq-ssl-sslmode-statements"/>
-   illustrates the risks the different <literal>sslmode</literal> values
-   protect against, and what statement they make about security and overhead.
+   所有 <acronym>SSL</acronym> 选项都会带来加密和密钥交换方面的开销，因此必须在性能与安全性之间做出权衡。<xref linkend="libpq-ssl-sslmode-statements"/> 说明了不同的 <literal>sslmode</literal> 值所防范的风险，以及它们对安全性和开销所做的声明。
   </para>
 
   <table id="libpq-ssl-sslmode-statements">
-   <title>SSL Mode Descriptions</title>
+   <title>SSL 模式说明</title>
    <tgroup cols="4">
     <colspec colname="col1" colwidth="1*"/>
     <colspec colname="col2" colwidth="1*"/>
@@ -7756,65 +7624,58 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
     <thead>
      <row>
       <entry><literal>sslmode</literal></entry>
-      <entry>Eavesdropping protection</entry>
-      <entry><acronym>MITM</acronym> protection</entry>
-      <entry>Statement</entry>
+      <entry>窃听防护</entry>
+      <entry><acronym>MITM</acronym> 防护</entry>
+      <entry>声明</entry>
      </row>
     </thead>
 
     <tbody>
      <row>
       <entry><literal>disable</literal></entry>
-      <entry>No</entry>
-      <entry>No</entry>
-      <entry>I don't care about security, and I don't want to pay the overhead
-       of encryption.
+      <entry>否</entry>
+      <entry>否</entry>
+      <entry>我不关心安全性，并且我不想支付加密的开销。
       </entry>
      </row>
 
      <row>
       <entry><literal>allow</literal></entry>
-      <entry>Maybe</entry>
-      <entry>No</entry>
-      <entry>I don't care about security, but I will pay the overhead of
-       encryption if the server insists on it.
+      <entry>也许</entry>
+      <entry>否</entry>
+      <entry>我不关心安全性，但如果服务器坚持，我愿意支付加密的开销。
       </entry>
      </row>
 
      <row>
       <entry><literal>prefer</literal></entry>
-      <entry>Maybe</entry>
-      <entry>No</entry>
-      <entry>I don't care about encryption, but I wish to pay the overhead of
-       encryption if the server supports it.
+      <entry>也许</entry>
+      <entry>否</entry>
+      <entry>我不关心加密，但如果服务器支持加密，我愿意承担加密带来的开销。
       </entry>
      </row>
 
      <row>
       <entry><literal>require</literal></entry>
-      <entry>Yes</entry>
-      <entry>No</entry>
-      <entry>I want my data to be encrypted, and I accept the overhead. I trust
-       that the network will make sure I always connect to the server I want.
+      <entry>是</entry>
+      <entry>否</entry>
+      <entry>我希望我的数据被加密，并且我接受由此带来的开销。我相信网络会确保我总是连接到我想连接的服务器。
       </entry>
      </row>
 
      <row>
       <entry><literal>verify-ca</literal></entry>
-      <entry>Yes</entry>
-      <entry>Depends on CA policy</entry>
-      <entry>I want my data encrypted, and I accept the overhead. I want to be
-       sure that I connect to a server that I trust.
+      <entry>是</entry>
+      <entry>取决于 CA 策略</entry>
+      <entry>我希望我的数据被加密，并且我接受由此带来的开销。我希望确保我连接到我信任的服务器。
       </entry>
      </row>
 
      <row>
       <entry><literal>verify-full</literal></entry>
-       <entry>Yes</entry>
-       <entry>Yes</entry>
-       <entry>I want my data encrypted, and I accept the overhead. I want to be
-        sure that I connect to a server I trust, and that it's the one I
-        specify.
+       <entry>是</entry>
+       <entry>是</entry>
+       <entry>我希望我的数据被加密，并且我接受由此带来的开销。我希望确保我连接到我信任的服务器，并且那正是我所指定的服务器。
        </entry>
       </row>
 
@@ -7823,40 +7684,40 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
   </table>
 
   <para>
-   The difference between <literal>verify-ca</literal> and <literal>verify-full</literal>
-   depends on the policy of the root <acronym>CA</acronym>. If a public
-   <acronym>CA</acronym> is used, <literal>verify-ca</literal> allows connections to a server
-   that <emphasis>somebody else</emphasis> may have registered with the <acronym>CA</acronym>.
-   In this case, <literal>verify-full</literal> should always be used. If
-   a local <acronym>CA</acronym> is used, or even a self-signed certificate, using
-   <literal>verify-ca</literal> often provides enough protection.
+   <literal>verify-ca</literal> 与 <literal>verify-full</literal> 之间的区别
+   取决于根 <acronym>CA</acronym> 的策略。如果使用公共
+   <acronym>CA</acronym>，<literal>verify-ca</literal> 允许连接到
+   <emphasis>其他人</emphasis> 可能已在 <acronym>CA</acronym> 中注册的服务器。
+   在这种情况下，应始终使用 <literal>verify-full</literal>。如果
+   使用本地 <acronym>CA</acronym>，甚至使用自签名证书，那么使用
+   <literal>verify-ca</literal> 通常能提供足够的保护。
   </para>
 
   <para>
-   The default value for <literal>sslmode</literal> is <literal>prefer</literal>. As is shown
-   in the table, this makes no sense from a security point of view, and it only
-   promises performance overhead if possible. It is only provided as the default
-   for backward compatibility, and is not recommended in secure deployments.
+   <literal>sslmode</literal> 的默认值是 <literal>prefer</literal>。如表
+   所示，从安全角度看这没有意义，而且它只可能
+   带来性能开销。它仅为了向后兼容而作为默认值
+   提供，不建议在安全部署中使用。
   </para>
 
  </sect2>
 
  <sect2 id="libpq-ssl-fileusage">
-  <title>SSL Client File Usage</title>
+  <title>SSL 客户端文件用法</title>
 
   <para>
-   <xref linkend="libpq-ssl-file-usage"/> summarizes the files that are
-   relevant to the SSL setup on the client.
+   <xref linkend="libpq-ssl-file-usage"/> 总结了与
+   客户端 SSL 设置相关的文件。
   </para>
 
   <table id="libpq-ssl-file-usage">
-   <title>Libpq/Client SSL File Usage</title>
+   <title>Libpq/客户端 SSL 文件用法</title>
    <tgroup cols="3">
     <thead>
      <row>
-      <entry>File</entry>
-      <entry>Contents</entry>
-      <entry>Effect</entry>
+      <entry>文件</entry>
+      <entry>目录</entry>
+      <entry>作用</entry>
      </row>
     </thead>
 
@@ -7864,28 +7725,27 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
 
      <row>
       <entry><filename>~/.postgresql/postgresql.crt</filename></entry>
-      <entry>client certificate</entry>
-      <entry>sent to server</entry>
+      <entry>客户端证书</entry>
+      <entry>发送到服务器</entry>
      </row>
 
      <row>
       <entry><filename>~/.postgresql/postgresql.key</filename></entry>
-      <entry>client private key</entry>
-      <entry>proves client certificate sent by owner; does not indicate
-      certificate owner is trustworthy</entry>
+      <entry>客户端私钥</entry>
+      <entry>证明客户端证书是由所有者发送的；并不表示
+      证书所有者可信</entry>
      </row>
 
      <row>
       <entry><filename>~/.postgresql/root.crt</filename></entry>
-      <entry>trusted certificate authorities</entry>
-      <entry>checks that server certificate is signed by a trusted certificate
-      authority</entry>
+      <entry>受信任的证书颁发机构</entry>
+      <entry>检查服务器证书是否由受信任的证书颁发机构签名</entry>
      </row>
 
      <row>
       <entry><filename>~/.postgresql/root.crl</filename></entry>
-      <entry>certificates revoked by certificate authorities</entry>
-      <entry>server certificate must not be on this list</entry>
+      <entry>被证书颁发机构吊销的证书</entry>
+      <entry>服务器证书不得出现在此列表中</entry>
      </row>
 
     </tbody>
@@ -7894,24 +7754,19 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
  </sect2>
 
  <sect2 id="libpq-ssl-initialize">
-  <title>SSL Library Initialization</title>
+  <title>SSL 库初始化</title>
 
   <para>
-   Applications which need to be compatible with older versions of
-   <productname>PostgreSQL</productname>, using <productname>OpenSSL</productname>
-   version 1.0.2 or older, need to initialize the SSL library before using it.
-   Applications which initialize <literal>libssl</literal> and/or
-   <literal>libcrypto</literal> libraries should call
-   <xref linkend="libpq-PQinitOpenSSL"/> to tell <application>libpq</application>
-   that the <literal>libssl</literal> and/or <literal>libcrypto</literal> libraries
-   have been initialized by your application, so that
-   <application>libpq</application> will not also initialize those libraries.
-   However, this is unnecessary when using <productname>OpenSSL</productname>
-   version 1.1.0 or later, as duplicate initializations are no longer problematic.
+   需要与较旧版本的 <productname>PostgreSQL</productname> 兼容、使用 1.0.2 或更旧版本的
+  <productname>OpenSSL</productname> 的应用程序，需要在使用 SSL 库之前对其进行初始化。
+  初始化 <literal>libssl</literal> 和/或 <literal>libcrypto</literal> 库的应用程序应调用
+  <xref linkend="libpq-PQinitOpenSSL"/> 来告知 <application>libpq</application>，
+  <literal>libssl</literal> 和/或 <literal>libcrypto</literal> 库已由您的应用程序初始化，这样
+  <application>libpq</application> 就不会再初始化这些库。
+  不过，在使用 1.1.0 或更高版本的 <productname>OpenSSL</productname> 时，这没有必要，因为重复初始化不再有问题。
   </para>
   <para>
-   Refer to the documentation for the version of <productname>PostgreSQL</productname>
-   that you are targeting for details on their use.
+   关于它们的使用细节，请参阅你所针对的 <productname>PostgreSQL</productname> 版本的文档。
   </para>
 
   <para>
@@ -7921,15 +7776,14 @@ ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)
 
      <listitem>
       <para>
-       Allows applications to select which security libraries to initialize.
+       允许应用程序选择要初始化哪些安全库。
 <synopsis>
 void PQinitOpenSSL(int do_ssl, int do_crypto);
 </synopsis>
       </para>
 
       <para>
-       This function is deprecated and only present for backwards compatibility,
-       it does nothing.
+       该函数已被废弃，仅为向后兼容而保留，它不做任何事情。
       </para>
      </listitem>
     </varlistentry>
@@ -7937,28 +7791,27 @@ void PQinitOpenSSL(int do_ssl, int do_crypto);
     <varlistentry id="libpq-PQinitSSL">
      <term><function>PQinitSSL</function><indexterm><primary>PQinitSSL</primary></indexterm></term><listitem>
       <para>
-       Allows applications to select which security libraries to initialize.
+       允许应用程序选择要初始化哪些安全库。
 <synopsis>
 void PQinitSSL(int do_ssl);
 </synopsis>
       </para>
 
       <para>
-       This function is equivalent to
-       <literal>PQinitOpenSSL(do_ssl, do_ssl)</literal>.
-       This function is deprecated and only present for backwards compatibility,
-       it does nothing.
+       该函数等价于
+       <literal>PQinitOpenSSL(do_ssl, do_ssl)</literal>。
+       该函数已被废弃，仅为向后兼容而保留，
+       它不做任何事情。
       </para>
 
       <para>
-       <xref linkend="libpq-PQinitSSL"/> and <xref linkend="libpq-PQinitOpenSSL"/>
-       are maintained for backwards compatibility, but are no longer required
-       since <productname>PostgreSQL</productname> 18.
-       <xref linkend="libpq-PQinitSSL"/> has been present since
-       <productname>PostgreSQL</productname> 8.0, while <xref linkend="libpq-PQinitOpenSSL"/>
-       was added in <productname>PostgreSQL</productname> 8.4, so <xref linkend="libpq-PQinitSSL"/>
-       might be preferable for applications that need to work with older
-       versions of <application>libpq</application>.
+       <xref linkend="libpq-PQinitSSL"/> 和 <xref linkend="libpq-PQinitOpenSSL"/>
+       为了向后兼容而保留，但自 <productname>PostgreSQL</productname> 18 起已不再需要。
+       <xref linkend="libpq-PQinitSSL"/> 自
+       <productname>PostgreSQL</productname> 8.0 起就已存在，而 <xref linkend="libpq-PQinitOpenSSL"/>
+       是在 <productname>PostgreSQL</productname> 8.4 中添加的，因此对于需要兼容较旧版本
+       <application>libpq</application> 的应用程序，<xref linkend="libpq-PQinitSSL"/>
+       可能更可取。
       </para>
      </listitem>
     </varlistentry>
