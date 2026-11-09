@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>SET</refname>
-  <refpurpose>change a run-time parameter</refpurpose>
+  <refpurpose>更改运行时参数</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -27,81 +27,53 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   The <command>SET</command> command changes run-time configuration
-   parameters.  Many of the run-time parameters listed in
-   <xref linkend="runtime-config"/> can be changed on-the-fly with
-   <command>SET</command>.
-   (Some parameters can only be changed by superusers and users who
-   have been granted <literal>SET</literal> privilege on that parameter.
-   There are also parameters that cannot be changed after server or
-   session start.)
-   <command>SET</command> only affects the value used by the current
-   session.
+   <command>SET</command> 命令更改运行时配置参数。<xref linkend="runtime-config"/> 中列出的许多运行时参数都可以用 <command>SET</command> 动态更改。（有些参数只能由超级用户以及被授予该参数 <literal>SET</literal> 权限的用户更改。还有一些参数在服务器或会话启动后无法更改。）<command>SET</command> 只影响当前会话所使用的值。
   </para>
 
   <para>
-   If <command>SET</command> (or equivalently <command>SET SESSION</command>)
-   is issued within a transaction that is later aborted, the effects of the
-   <command>SET</command> command disappear when the transaction is rolled
-   back.  Once the surrounding transaction is committed, the effects
-   will persist until the end of the session, unless overridden by another
-   <command>SET</command>.
+   如果在稍后中止的事务中发出 <command>SET</command>（或等价的 <command>SET SESSION</command>），则 <command>SET</command> 命令的效果会在事务回滚时消失。一旦外围事务被提交，该效果将持续到会话结束，除非被另一个 <command>SET</command> 覆盖。
   </para>
 
   <para>
-   The effects of <command>SET LOCAL</command> last only till the end of
-   the current transaction, whether committed or not.  A special case is
-   <command>SET</command> followed by <command>SET LOCAL</command> within
-   a single transaction: the <command>SET LOCAL</command> value will be
-   seen until the end of the transaction, but afterwards (if the transaction
-   is committed) the <command>SET</command> value will take effect.
+   <command>SET LOCAL</command> 的效果仅持续到当前事务结束，无论该事务是否提交。一个特殊情况是在单个事务中先执行 <command>SET</command> 再执行 <command>SET LOCAL</command>：在事务结束之前看到的是 <command>SET LOCAL</command> 的值，但之后（如果事务被提交）<command>SET</command> 的值将生效。
   </para>
 
   <para>
-   The effects of <command>SET</command> or <command>SET LOCAL</command> are
-   also canceled by rolling back to a savepoint that is earlier than the
-   command.
+   回滚到早于该命令的保存点也会取消 <command>SET</command> 或 <command>SET LOCAL</command> 的效果。
   </para>
 
   <para>
-   If <command>SET LOCAL</command> is used within a function that has a
-   <literal>SET</literal> option for the same variable (see
-   <xref linkend="sql-createfunction"/>),
-   the effects of the <command>SET LOCAL</command> command disappear at
-   function exit; that is, the value in effect when the function was called is
-   restored anyway.  This allows <command>SET LOCAL</command> to be used for
-   dynamic or repeated changes of a parameter within a function, while still
-   having the convenience of using the <literal>SET</literal> option to save and
-   restore the caller's value.  However, a regular <command>SET</command> command
-   overrides any surrounding function's <literal>SET</literal> option; its effects
-   will persist unless rolled back.
+   如果在具有针对同一变量的 <literal>SET</literal> 选项的函数内使用 <command>SET LOCAL</command>（参见
+   <xref linkend="sql-createfunction"/>），
+   则 <command>SET LOCAL</command> 命令的效果会在函数退出时消失；也就是说，无论如何都会恢复调用该函数时生效的值。
+   这使得 <command>SET LOCAL</command> 可用于在函数内动态或重复地更改参数，同时仍然可以方便地使用
+   <literal>SET</literal> 选项来保存和恢复调用者的值。但是，普通的 <command>SET</command> 命令
+   会覆盖任何外围函数的 <literal>SET</literal> 选项；其效果将持续存在，除非回滚。
   </para>
 
   <note>
    <para>
-    In <productname>PostgreSQL</productname> versions 8.0 through 8.2,
-    the effects of a <command>SET LOCAL</command> would be canceled by
-    releasing an earlier savepoint, or by successful exit from a
-    <application>PL/pgSQL</application> exception block.  This behavior
-    has been changed because it was deemed unintuitive.
+    在 <productname>PostgreSQL</productname> 8.0 到 8.2 版本中，
+    <command>SET LOCAL</command> 的效果会因释放较早的保存点或成功退出
+    <application>PL/pgSQL</application> 异常块而被取消。此行为
+    已被更改，因为它被认为不符合直觉。
    </para>
   </note>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>SESSION</literal></term>
     <listitem>
      <para>
-      Specifies that the command takes effect for the current session.
-      (This is the default if neither <literal>SESSION</literal> nor
-      <literal>LOCAL</literal> appears.)
+      指定该命令对当前会话生效。
+      （如果 <literal>SESSION</literal> 和 <literal>LOCAL</literal> 都未出现，则这是默认值。）
      </para>
     </listitem>
    </varlistentry>
@@ -110,11 +82,9 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
     <term><literal>LOCAL</literal></term>
     <listitem>
      <para>
-      Specifies that the command takes effect for only the current
-      transaction.  After <command>COMMIT</command> or <command>ROLLBACK</command>,
-      the session-level setting takes effect again.  Issuing this
-      outside of a transaction block emits a warning and otherwise has
-      no effect.
+      指定该命令仅对当前事务生效。在 <command>COMMIT</command> 或 <command>ROLLBACK</command> 之后，
+      会话级设置将再次生效。在事务块之外发出此命令会产生警告，除此之外
+      没有效果。
      </para>
     </listitem>
    </varlistentry>
@@ -123,8 +93,8 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
     <term><replaceable class="parameter">configuration_parameter</replaceable></term>
     <listitem>
      <para>
-      Name of a settable run-time parameter.  Available parameters are
-      documented in <xref linkend="runtime-config"/> and below.
+      可设置的运行时参数名称。可用参数记录在
+      <xref linkend="runtime-config"/> 及下文。
      </para>
     </listitem>
    </varlistentry>
@@ -133,31 +103,23 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
     <term><replaceable class="parameter">value</replaceable></term>
     <listitem>
      <para>
-      New value of parameter.  Values can be specified as string
-      constants, identifiers, numbers, or comma-separated lists of
-      these, as appropriate for the particular parameter.
-      <literal>DEFAULT</literal> can be written to specify
-      resetting the parameter to its default value (that is, whatever
-      value it would have had if no <command>SET</command> had been executed
-      in the current session).
+      参数的新值。值可以指定为字符串常量、标识符、数字或逗号分隔的列表，具体取决于特定参数。
+      可以写入 <literal>DEFAULT</literal> 来指定将参数重置为其默认值（即，如果在当前会话中没有执行过 <command>SET</command>，该参数将具有的值）。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   Besides the configuration parameters documented in <xref
-   linkend="runtime-config"/>, there are a few that can only be
-   adjusted using the <command>SET</command> command or that have a
-   special syntax:
+   除了 <xref
+   linkend="runtime-config"/> 中记录的配置参数外，还有一些只能使用 <command>SET</command> 命令调整或具有特殊语法的参数：
 
    <variablelist>
     <varlistentry>
      <term><literal>SCHEMA</literal></term>
      <listitem>
-      <para><literal>SET SCHEMA '<replaceable>value</replaceable>'</literal> is an alias for
-       <literal>SET search_path TO <replaceable>value</replaceable></literal>.  Only one
-       schema can be specified using this syntax.
+      <para><literal>SET SCHEMA '<replaceable>value</replaceable>'</literal> 是
+       <literal>SET search_path TO <replaceable>value</replaceable></literal> 的别名。使用此语法只能指定一个模式。
       </para>
      </listitem>
     </varlistentry>
@@ -165,8 +127,8 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
     <varlistentry>
      <term><literal>NAMES</literal></term>
      <listitem>
-      <para><literal>SET NAMES '<replaceable>value</replaceable>'</literal> is an alias for
-       <literal>SET client_encoding TO <replaceable>value</replaceable></literal>.
+      <para><literal>SET NAMES '<replaceable>value</replaceable>'</literal> 是
+       <literal>SET client_encoding TO <replaceable>value</replaceable></literal> 的别名。
       </para>
      </listitem>
     </varlistentry>
@@ -175,14 +137,13 @@ SET [ SESSION | LOCAL ] TIME ZONE { <replaceable class="parameter">value</replac
      <term><literal>SEED</literal></term>
      <listitem>
       <para>
-       Sets the internal seed for the random number generator (the
-       function <function>random</function>).  Allowed values are
-       floating-point numbers between -1 and 1 inclusive.
+       设置随机数生成器（函数 <function>random</function>）的内部种子。允许的值为
+       -1 到 1（含）之间的浮点数。
       </para>
 
       <para>
-       The seed can also be set by invoking the function
-       <function>setseed</function>:
+       也可以通过调用函数
+       <function>setseed</function> 来设置种子：
 <programlisting>
 SELECT setseed(<replaceable>value</replaceable>);
 </programlisting></para>
@@ -192,18 +153,14 @@ SELECT setseed(<replaceable>value</replaceable>);
     <varlistentry>
      <term><literal>TIME ZONE</literal></term>
      <listitem>
-      <para><literal>SET TIME ZONE '<replaceable>value</replaceable>'</literal> is an alias
-       for <literal>SET timezone TO '<replaceable>value</replaceable>'</literal>.  The
-       syntax <literal>SET TIME ZONE</literal> allows special syntax
-       for the time zone specification.  Here are examples of valid
-       values:
+      <para><literal>SET TIME ZONE '<replaceable>value</replaceable>'</literal> 是 <literal>SET timezone TO '<replaceable>value</replaceable>'</literal> 的别名。语法 <literal>SET TIME ZONE</literal> 允许使用特殊语法来指定时区。以下是有效值的示例：
 
        <variablelist>
         <varlistentry>
          <term><literal>'America/Los_Angeles'</literal></term>
          <listitem>
           <para>
-           The time zone for Berkeley, California.
+           加利福尼亚州伯克利的时区。
           </para>
          </listitem>
         </varlistentry>
@@ -211,7 +168,7 @@ SELECT setseed(<replaceable>value</replaceable>);
          <term><literal>'Europe/Rome'</literal></term>
          <listitem>
           <para>
-           The time zone for Italy.
+           意大利的时区。
           </para>
          </listitem>
         </varlistentry>
@@ -219,8 +176,7 @@ SELECT setseed(<replaceable>value</replaceable>);
          <term><literal>-7</literal></term>
          <listitem>
           <para>
-           The time zone 7 hours west from UTC (equivalent
-           to PDT).  Positive values are east from UTC.
+           比 UTC 向西 7 小时的时区（等价于 PDT）。正值表示从 UTC 向东。
           </para>
          </listitem>
         </varlistentry>
@@ -228,8 +184,7 @@ SELECT setseed(<replaceable>value</replaceable>);
          <term><literal>INTERVAL '-08:00' HOUR TO MINUTE</literal></term>
          <listitem>
           <para>
-           The time zone 8 hours west from UTC (equivalent
-           to PST).
+           比 UTC 向西 8 小时的时区（等价于 PST）。
           </para>
          </listitem>
         </varlistentry>
@@ -238,8 +193,7 @@ SELECT setseed(<replaceable>value</replaceable>);
          <term><literal>DEFAULT</literal></term>
          <listitem>
           <para>
-           Set the time zone to your local time zone (that is, the
-           server's default value of <varname>timezone</varname>).
+           将时区设置为你的本地时区（即服务器的默认值 <varname>timezone</varname>）。
           </para>
          </listitem>
         </varlistentry>
@@ -247,16 +201,11 @@ SELECT setseed(<replaceable>value</replaceable>);
       </para>
 
       <para>
-       Timezone settings given as numbers or intervals are internally
-       translated to POSIX timezone syntax.  For example, after
-       <literal>SET TIME ZONE -7</literal>, <command>SHOW TIME ZONE</command> would
-       report <literal>&lt;-07&gt;+07</literal>.
+       以数字或时间间隔形式给出的时区设置会在内部被转换为 POSIX 时区语法。例如，在 <literal>SET TIME ZONE -7</literal> 之后，<command>SHOW TIME ZONE</command> 将报告 <literal>&lt;-07&gt;+07</literal>。
       </para>
 
       <para>
-       Time zone abbreviations are not supported by <command>SET</command>;
-       see <xref linkend="datatype-timezones"/> for more information
-       about time zones.
+       <command>SET</command> 不支持时区缩写；关于时区的更多信息，请参见 <xref linkend="datatype-timezones"/>。
       </para>
      </listitem>
     </varlistentry>
@@ -265,64 +214,54 @@ SELECT setseed(<replaceable>value</replaceable>);
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   The function <function>set_config</function> provides equivalent
-   functionality; see <xref linkend="functions-admin-set"/>.
-   Also, it is possible to UPDATE the
-   <link linkend="view-pg-settings"><structname>pg_settings</structname></link>
-   system view to perform the equivalent of <command>SET</command>.
+   函数 <function>set_config</function> 提供等效的功能；请参见 <xref linkend="functions-admin-set"/>。此外，也可以 UPDATE <link linkend="view-pg-settings"><structname>pg_settings</structname></link> 系统视图来执行与 <command>SET</command> 等效的操作。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Set the schema search path:
+   设置模式搜索路径：
 <programlisting>
 SET search_path TO my_schema, public;
 </programlisting>
   </para>
 
   <para>
-   Set the style of date to traditional
-   <productname>POSTGRES</productname> with <quote>day before month</quote>
-   input convention:
+   将日期风格设置为传统的 <productname>POSTGRES</productname>，并使用 <quote>日在月之前</quote> 的输入约定：
 <screen>
 SET datestyle TO postgres, dmy;
 </screen>
   </para>
 
   <para>
-   Set the time zone for Berkeley, California:
+   设置加利福尼亚州伯克利的时区：
 <screen>
 SET TIME ZONE 'America/Los_Angeles';
 </screen>
   </para>
 
   <para>
-   Set the time zone for Italy:
+   设置意大利的时区：
 <screen>
 SET TIME ZONE 'Europe/Rome';
 </screen></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <literal>SET TIME ZONE</literal> extends syntax defined in the SQL
-   standard.  The standard allows only numeric time zone offsets while
-   <productname>PostgreSQL</productname> allows more flexible
-   time-zone specifications.  All other <literal>SET</literal>
-   features are <productname>PostgreSQL</productname> extensions.
+   <literal>SET TIME ZONE</literal> 扩展了 SQL 标准中定义的语法。标准只允许数字形式的时区偏移量，而 <productname>PostgreSQL</productname> 允许更灵活的时区规范。所有其他 <literal>SET</literal> 特性都是 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-reset"/></member>
