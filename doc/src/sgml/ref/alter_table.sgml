@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER TABLE</refname>
-  <refpurpose>change the definition of a table</refpurpose>
+  <refpurpose>更改表的定义</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -146,24 +146,18 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER TABLE</command> changes the definition of an existing table.
-   There are several subforms described below. Note that the lock level required
-   may differ for each subform. An <literal>ACCESS EXCLUSIVE</literal> lock is
-   acquired unless explicitly noted. When multiple subcommands are given, the
-   lock acquired will be the strictest one required by any subcommand.
+   <command>ALTER TABLE</command> 更改一个现有表的定义。
+   下面描述了若干种子形式。注意每种子形式所需的锁级别可能不同。除非另有说明，否则会获取 <literal>ACCESS EXCLUSIVE</literal> 锁。当给出多个子命令时，所获取的锁将是任何子命令所要求的最严格的锁。
 
   <variablelist>
    <varlistentry id="sql-altertable-desc-add-column">
     <term><literal>ADD [ COLUMN ] [ IF NOT EXISTS ]</literal></term>
     <listitem>
      <para>
-      This form adds a new column to the table, using the same syntax as
-      <link linkend="sql-createtable"><command>CREATE TABLE</command></link>. If <literal>IF NOT EXISTS</literal>
-      is specified and a column already exists with this name,
-      no error is thrown.
+      这种形式向表中增加一个新列，使用与 <link linkend="sql-createtable"><command>CREATE TABLE</command></link> 相同的语法。如果指定了 <literal>IF NOT EXISTS</literal> 并且已经存在同名的列，则不会抛出错误。
      </para>
     </listitem>
    </varlistentry>
@@ -172,17 +166,10 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DROP [ COLUMN ] [ IF EXISTS ]</literal></term>
     <listitem>
      <para>
-      This form drops a column from a table.  Indexes and
-      table constraints involving the column will be automatically
-      dropped as well.
-      Multivariate statistics referencing the dropped column will also be
-      removed if the removal of the column would cause the statistics to
-      contain data for only a single column.
-      You will need to say <literal>CASCADE</literal> if anything outside the table
-      depends on the column, for example, foreign key references or views.
-      If <literal>IF EXISTS</literal> is specified and the column
-      does not exist, no error is thrown. In this case a notice
-      is issued instead.
+      这种形式从表中删除一个列。涉及该列的索引和表约束也将被自动删除。
+      如果删除该列会导致多变量统计信息只包含单个列的数据，那么引用被删除列的多变量统计信息也会被移除。
+      如果表之外的任何东西依赖于该列，例如外键引用或视图，你将需要写上 <literal>CASCADE</literal>。
+      如果指定了 <literal>IF EXISTS</literal> 并且该列不存在，则不会抛出错误。在这种情况下会改为发出一个提示。
      </para>
     </listitem>
    </varlistentry>
@@ -191,27 +178,13 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET DATA TYPE</literal></term>
     <listitem>
      <para>
-      This form changes the type of a column of a table. Indexes and
-      simple table constraints involving the column will be automatically
-      converted to use the new column type by reparsing the originally
-      supplied expression.
-      The optional <literal>COLLATE</literal> clause specifies a collation
-      for the new column; if omitted, the collation is the default for the
-      new column type.
-      The optional <literal>USING</literal>
-      clause specifies how to compute the new column value from the old;
-      if omitted, the default conversion is the same as an assignment
-      cast from old data type to new.  A  <literal>USING</literal>
-      clause must be provided if there is no implicit or assignment
-      cast from old to new type.
+      这种形式更改表中某一列的类型。涉及该列的索引和简单表约束将通过重新解析最初提供的表达式而自动转换为使用新的列类型。
+      可选的 <literal>COLLATE</literal> 子句为新列指定排序规则；如果省略，排序规则就是新列类型的默认排序规则。
+      可选的 <literal>USING</literal> 子句指定如何从旧值计算新列值；如果省略，默认转换与从旧数据类型到新数据类型的赋值转换相同。如果从旧类型到新类型没有隐式转换或赋值转换，则必须提供 <literal>USING</literal> 子句。
      </para>
 
      <para>
-      When this form is used, the column's statistics are removed,
-      so running <link linkend="sql-analyze"><command>ANALYZE</command></link>
-      on the table afterwards is recommended.
-      For a virtual generated column, <command>ANALYZE</command>
-      is not necessary because such columns never have statistics.
+      使用这种形式时，该列的统计信息会被删除，因此建议之后对表运行 <link linkend="sql-analyze"><command>ANALYZE</command></link>。对于虚拟生成列，不需要 <command>ANALYZE</command>，因为这类列永远不会有统计信息。
      </para>
     </listitem>
    </varlistentry>
@@ -220,11 +193,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET</literal>/<literal>DROP DEFAULT</literal></term>
     <listitem>
      <para>
-      These forms set or remove the default value for a column (where
-      removal is equivalent to setting the default value to NULL).  The new
-      default value will only apply in subsequent <command>INSERT</command>
-      or <command>UPDATE</command> commands; it does not cause rows already
-      in the table to change.
+      这些形式设置或移除列的默认值（移除等同于将默认值设为 NULL）。新的默认值只会在后续的 <command>INSERT</command> 或 <command>UPDATE</command> 命令中生效；它不会导致表中已有的行发生变化。
      </para>
     </listitem>
    </varlistentry>
@@ -233,34 +202,15 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET</literal>/<literal>DROP NOT NULL</literal></term>
     <listitem>
      <para>
-      These forms change whether a column is marked to allow null
-      values or to reject null values.
+      这些形式更改列被标记为允许空值还是拒绝空值。
      </para>
 
      <para>
-      <literal>SET NOT NULL</literal> may only be applied to a column
-      provided none of the records in the table contain a
-      <literal>NULL</literal> value for the column.  Ordinarily this is
-      checked during the <literal>ALTER TABLE</literal> by scanning the
-      entire table, unless <literal>NOT VALID</literal> is specified;
-      however, if a valid <literal>CHECK</literal> constraint exists
-      (and is not dropped in the same command) which proves no
-      <literal>NULL</literal> can exist, then the table scan is skipped.
-      If a column has an invalid not-null constraint,
-      <literal>SET NOT NULL</literal> validates it.
+      只有当表中没有任何记录在该列上包含 <literal>NULL</literal> 值时，才能对列应用 <literal>SET NOT NULL</literal>。通常这会在 <literal>ALTER TABLE</literal> 期间通过扫描整个表来检查，除非指定了 <literal>NOT VALID</literal>；但是，如果存在一个有效的 <literal>CHECK</literal> 约束（且未在同一命令中被删除）能够证明不可能存在 <literal>NULL</literal>，则会跳过表扫描。如果某列有一个无效的非空约束，<literal>SET NOT NULL</literal> 会验证它。
      </para>
 
      <para>
-      If this table is a partition, one cannot perform <literal>DROP NOT NULL</literal>
-      on a column if it is marked <literal>NOT NULL</literal> in the parent
-      table.  To drop the <literal>NOT NULL</literal> constraint from all the
-      partitions, perform <literal>DROP NOT NULL</literal> on the parent
-      table.  Even if there is no <literal>NOT NULL</literal> constraint on the
-      parent, such a constraint can still be added to individual partitions,
-      if desired; that is, the children can disallow nulls even if the parent
-      allows them, but not the other way around.  It is also possible to drop
-      the <literal>NOT NULL</literal> constraint from <literal>ONLY</literal>
-      the parent table, which does not remove it from the children.
+      如果此表是一个分区，则当某列在父表中被标记为 <literal>NOT NULL</literal> 时，无法对该列执行 <literal>DROP NOT NULL</literal>。要从所有分区中删除 <literal>NOT NULL</literal> 约束，请在父表上执行 <literal>DROP NOT NULL</literal>。即使父表上没有 <literal>NOT NULL</literal> 约束，如果需要，仍然可以将此类约束添加到各个分区；也就是说，子表可以禁止空值，即使父表允许空值，但反之则不行。也可以从 <literal>ONLY</literal> 父表中删除 <literal>NOT NULL</literal> 约束，这不会从子表中移除该约束。
      </para>
     </listitem>
    </varlistentry>
@@ -269,18 +219,14 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET EXPRESSION AS</literal></term>
     <listitem>
      <para>
-      This form replaces the expression of a generated column.  Existing data
-      in a stored generated column is rewritten and all the future changes
-      will apply the new generation expression.
+      此形式替换生成列的表达式。存储生成列中的现有数据会被重写，并且所有未来的更改都将应用新的生成表达式。
      </para>
 
      <para>
-      When this form is used on a stored generated column, its statistics
-      are removed, so running
-      <link linkend="sql-analyze"><command>ANALYZE</command></link>
-      on the table afterwards is recommended.
-      For a virtual generated column, <command>ANALYZE</command>
-      is not necessary because such columns never have statistics.
+      当此形式用于存储生成列时，其统计信息会被移除，因此建议之后对表运行
+      <link linkend="sql-analyze"><command>ANALYZE</command></link>。
+      对于虚拟生成列，则不需要 <command>ANALYZE</command>，
+      因为这类列永远不会有统计信息。
      </para>
     </listitem>
    </varlistentry>
@@ -289,20 +235,19 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DROP EXPRESSION [ IF EXISTS ]</literal></term>
     <listitem>
      <para>
-      This form turns a stored generated column into a normal base column.
-      Existing data in the columns is retained, but future changes will no
-      longer apply the generation expression.
+      此形式将存储生成列转换为普通基列。
+      列中的现有数据会被保留，但将来的更改将不再
+      应用生成表达式。
      </para>
 
      <para>
-      This form is currently only supported for stored generated columns (not
-      virtual ones).
+      此形式目前仅支持存储生成列（不支持
+      虚拟生成列）。
      </para>
 
      <para>
-      If <literal>DROP EXPRESSION IF EXISTS</literal> is specified and the
-      column is not a generated column, no error is thrown.  In this case a
-      notice is issued instead.
+      如果指定了 <literal>DROP EXPRESSION IF EXISTS</literal> 而该列不是生成列，则不会抛出错误。
+      在这种情况下，会改为发出一个提示。
      </para>
     </listitem>
    </varlistentry>
@@ -313,19 +258,17 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DROP IDENTITY [ IF EXISTS ]</literal></term>
     <listitem>
      <para>
-      These forms change whether a column is an identity column or change the
-      generation attribute of an existing identity column.
-      See <link linkend="sql-createtable"><command>CREATE TABLE</command></link> for details.
-      Like <literal>SET DEFAULT</literal>, these forms only affect the
-      behavior of subsequent <command>INSERT</command>
-      and <command>UPDATE</command> commands; they do not cause rows
-      already in the table to change.
+      这些形式用于更改列是否为标识列，或更改现有标识列的
+      生成属性。
+      详情请参见 <link linkend="sql-createtable"><command>CREATE TABLE</command></link>。
+      与 <literal>SET DEFAULT</literal> 一样，这些形式只影响后续
+      <command>INSERT</command> 和 <command>UPDATE</command> 命令的行为；它们不会导致表中
+      已有的行发生变化。
      </para>
 
      <para>
-      If <literal>DROP IDENTITY IF EXISTS</literal> is specified and the
-      column is not an identity column, no error is thrown.  In this case a
-      notice is issued instead.
+      如果指定了 <literal>DROP IDENTITY IF EXISTS</literal> 而该列不是标识列，则不会抛出错误。
+      在这种情况下，会改为发出一个提示。
      </para>
     </listitem>
    </varlistentry>
@@ -335,10 +278,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>RESTART</literal></term>
     <listitem>
      <para>
-      These forms alter the sequence that underlies an existing identity
-      column.  <replaceable>sequence_option</replaceable> is an option
-      supported by <link linkend="sql-altersequence"><command>ALTER SEQUENCE</command></link> such
-      as <literal>INCREMENT BY</literal>.
+      这些形式会更改作为现有标识列基础的序列。<replaceable>sequence_option</replaceable> 是 <link linkend="sql-altersequence"><command>ALTER SEQUENCE</command></link> 支持的选项，例如 <literal>INCREMENT BY</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -347,21 +287,10 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET STATISTICS</literal></term>
     <listitem>
      <para>
-      This form
-      sets the per-column statistics-gathering target for subsequent
-      <link linkend="sql-analyze"><command>ANALYZE</command></link> operations.
-      The target can be set in the range 0 to 10000.  Set it
-      to <literal>DEFAULT</literal> to revert to using the system default
-      statistics target (<xref linkend="guc-default-statistics-target"/>).
-      (Setting to a value of -1 is an obsolete way spelling to get the same
-      outcome.)
-      For more information on the use of statistics by the
-      <productname>PostgreSQL</productname> query planner, refer to
-      <xref linkend="planner-stats"/>.
+      此形式为后续的 <link linkend="sql-analyze"><command>ANALYZE</command></link> 操作设置按列的统计收集目标。该目标可以设置在 0 到 10000 的范围内。将其设置为 <literal>DEFAULT</literal> 可恢复使用系统默认的统计目标（<xref linkend="guc-default-statistics-target"/>）。（设置为 -1 是获得相同结果的过时写法。）有关 <productname>PostgreSQL</productname> 查询规划器使用统计信息的更多信息，请参阅 <xref linkend="planner-stats"/>。
      </para>
      <para>
-      <literal>SET STATISTICS</literal> acquires a
-      <literal>SHARE UPDATE EXCLUSIVE</literal> lock.
+      <literal>SET STATISTICS</literal> 会获取一个 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -371,31 +300,10 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>RESET ( <replaceable class="parameter">attribute_option</replaceable> [, ... ] )</literal></term>
     <listitem>
      <para>
-      This form sets or resets per-attribute options.  Currently, the only
-      defined per-attribute options are <literal>n_distinct</literal> and
-      <literal>n_distinct_inherited</literal>, which override the
-      number-of-distinct-values estimates made by subsequent
-      <link linkend="sql-analyze"><command>ANALYZE</command></link>
-      operations. <literal>n_distinct</literal> affects the statistics for the
-      table itself, while <literal>n_distinct_inherited</literal> affects the
-      statistics gathered for the table plus its inheritance children, and for
-      the statistics gathered for partitioned tables.  When the value
-      specified is a positive value, the query planner will assume that the
-      column contains exactly the specified number of distinct nonnull values.
-      Fractional values may also be specified by using values below 0 and
-      above or equal to -1.  This instructs the query planner to estimate the
-      number of distinct values by multiplying the absolute value of the
-      specified number by the estimated number of rows in the table.  For
-      example, a value of -1 implies that all values in the column are
-      distinct, while a value of -0.5 implies that each value appears twice on
-      average.  This can be useful when the size of the table changes over
-      time.  For more information on the use of statistics by the
-      <productname>PostgreSQL</productname> query planner, refer to
-      <xref linkend="planner-stats"/>.
+      此形式设置或重置按属性的选项。目前，已定义的按属性选项只有 <literal>n_distinct</literal> 和 <literal>n_distinct_inherited</literal>，它们会覆盖后续 <link linkend="sql-analyze"><command>ANALYZE</command></link> 操作所做的不同值数量估计。<literal>n_distinct</literal> 影响表本身的统计信息，而 <literal>n_distinct_inherited</literal> 影响为表及其继承子表收集的统计信息，以及为分区表收集的统计信息。当指定的值为正值时，查询规划器将假定该列恰好包含指定数量的非空不同值。也可以通过使用小于 0 且大于或等于 -1 的值来指定小数值。这会指示查询规划器通过将指定数字的绝对值乘以表中估计的行数来估计不同值的数量。例如，值为 -1 意味着该列中的所有值都不同，而值为 -0.5 意味着每个值平均出现两次。当表的大小随时间变化时，这可能很有用。有关 <productname>PostgreSQL</productname> 查询规划器使用统计信息的更多信息，请参阅 <xref linkend="planner-stats"/>。
      </para>
      <para>
-      Changing per-attribute options acquires a
-      <literal>SHARE UPDATE EXCLUSIVE</literal> lock.
+      更改按属性选项会获取一个 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -405,31 +313,26 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
      <literal>SET STORAGE { PLAIN | EXTERNAL | EXTENDED | MAIN | DEFAULT }</literal>
      <indexterm>
       <primary>TOAST</primary>
-      <secondary>per-column storage settings</secondary>
+      <secondary>按列的存储设置</secondary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      This form sets the storage mode for a column. This controls whether this
-      column is held inline or in a secondary <acronym>TOAST</acronym> table,
-      and whether the data
-      should be compressed or not. <literal>PLAIN</literal> must be used
-      for fixed-length values such as <type>integer</type> and is
-      inline, uncompressed. <literal>MAIN</literal> is for inline,
-      compressible data. <literal>EXTERNAL</literal> is for external,
-      uncompressed data, and <literal>EXTENDED</literal> is for external,
-      compressed data.
-      Writing <literal>DEFAULT</literal> sets the storage mode to the default
-      mode for the column's data type.  <literal>EXTENDED</literal> is the
-      default for most data types that support non-<literal>PLAIN</literal>
-      storage.
-      Use of <literal>EXTERNAL</literal> will make substring operations on
-      very large <type>text</type> and <type>bytea</type> values run faster,
-      at the penalty of increased storage space.
-      Note that <literal>ALTER TABLE ... SET STORAGE</literal> doesn't itself
-      change anything in the table; it just sets the strategy to be pursued
-      during future table updates.
-      See <xref linkend="storage-toast"/> for more information.
+      这种形式设置列的存储模式。它控制该列是内联保存还是保存在辅助的 <acronym>TOAST</acronym> 表中，
+以及数据是否应被压缩。<literal>PLAIN</literal> 必须用于
+<type>integer</type> 等固定长度的值，并且是内联、未压缩的。<literal>MAIN</literal> 用于内联、
+可压缩的数据。<literal>EXTERNAL</literal> 用于外部、
+未压缩的数据，<literal>EXTENDED</literal> 用于外部、
+压缩的数据。
+写入 <literal>DEFAULT</literal> 会将存储模式设置为该列数据类型的
+默认模式。对于大多数支持非 <literal>PLAIN</literal>
+存储的数据类型，<literal>EXTENDED</literal> 是默认值。
+使用 <literal>EXTERNAL</literal> 将使对非常大的 <type>text</type> 和 <type>bytea</type> 值的子串操作
+运行得更快，代价是增加存储空间。
+请注意，<literal>ALTER TABLE ... SET STORAGE</literal> 本身
+不会更改表中的任何内容；它只是设置未来表更新期间
+要采用的策略。
+更多信息请参见 <xref linkend="storage-toast"/>。
      </para>
     </listitem>
    </varlistentry>
@@ -440,26 +343,19 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     </term>
     <listitem>
      <para>
-      This form sets the compression method for a column, determining how
-      values inserted in future will be compressed (if the storage mode
-      permits compression at all).
-      This does not cause the table to be rewritten, so existing data may still
-      be compressed with other compression methods.  If the table is restored
-      with <application>pg_restore</application>, then all values are rewritten
-      with the configured compression method.
-      However, when data is inserted from another relation (for example,
-      by <command>INSERT ... SELECT</command>), values from the source table are
-      not necessarily detoasted, so any previously compressed data may retain
-      its existing compression method, rather than being recompressed with the
-      compression method of the target column.
-      The supported compression
-      methods are <literal>pglz</literal> and <literal>lz4</literal>.
-      (<literal>lz4</literal> is available only if <option>--with-lz4</option>
-      was used when building <productname>PostgreSQL</productname>.)  In
-      addition, <replaceable class="parameter">compression_method</replaceable>
-      can be <literal>default</literal>, which selects the default behavior of
-      consulting the <xref linkend="guc-default-toast-compression"/> setting
-      at the time of data insertion to determine the method to use.
+      这种形式设置列的压缩方法，决定将来插入的值如何被压缩（如果存储模式
+允许压缩的话）。
+这不会导致表被重写，因此现有数据可能仍以其他压缩方法压缩。如果使用
+<application>pg_restore</application> 恢复表，则所有值都会用配置的压缩方法重写。
+但是，当从另一个关系插入数据时（例如
+通过 <command>INSERT ... SELECT</command>），源表中的值不一定会被展开（detoast），
+因此任何先前压缩的数据可能保留其现有的压缩方法，而不是用
+目标列的压缩方法重新压缩。
+支持的压缩
+方法有 <literal>pglz</literal> 和 <literal>lz4</literal>。
+（仅当构建 <productname>PostgreSQL</productname> 时使用了 <option>--with-lz4</option>，
+<literal>lz4</literal> 才可用。）此外，<replaceable class="parameter">compression_method</replaceable>
+可以是 <literal>default</literal>，它选择在插入数据时参考 <xref linkend="guc-default-toast-compression"/> 设置来确定要使用的方法的默认行为。
      </para>
     </listitem>
    </varlistentry>
@@ -468,42 +364,26 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>ADD <replaceable class="parameter">table_constraint</replaceable> [ NOT VALID ]</literal></term>
     <listitem>
      <para>
-      This form adds a new constraint to a table using the same constraint
-      syntax as <link linkend="sql-createtable"><command>CREATE TABLE</command></link>, plus the option <literal>NOT
-      VALID</literal>, which is currently only allowed for foreign-key,
-      <literal>CHECK</literal>, and not-null constraints.
+      这种形式使用与 <link linkend="sql-createtable"><command>CREATE TABLE</command></link> 相同的约束
+语法向表添加新约束，外加选项 <literal>NOT
+      VALID</literal>，该选项目前仅允许用于外键、
+<literal>CHECK</literal> 和非空约束。
      </para>
 
      <para>
-      Normally, this form will cause a scan of the table to verify that all
-      existing rows in the table satisfy the new constraint.  But if
-      the <literal>NOT VALID</literal> option is used, this
-      potentially-lengthy scan is skipped.  The constraint will still be
-      applied against subsequent inserts or updates (that is, they'll fail
-      unless there is a matching row in the referenced table, in the case
-      of foreign keys, or they'll fail unless the new row matches the
-      specified check condition).  But the
-      database will not assume that the constraint holds for all rows in
-      the table, until it is validated by using the <literal>VALIDATE
-      CONSTRAINT</literal> option.
-      See <xref linkend="sql-altertable-notes"/> below for more information
-      about using the <literal>NOT VALID</literal> option.
+      通常情况下，这种形式会导致对表进行扫描，以验证表中所有现有行都满足新约束。但如果使用了 <literal>NOT VALID</literal> 选项，则会跳过这一可能耗时很长的扫描。该约束仍会应用于后续的插入或更新（也就是说，对于外键，除非被引用表中存在匹配的行，否则它们会失败；或者，除非新行满足指定的检查条件，否则它们会失败）。但在使用 <literal>VALIDATE
+      CONSTRAINT</literal> 选项验证之前，数据库不会假定该约束对表中的所有行都成立。有关使用 <literal>NOT VALID</literal> 选项的更多信息，请参见下面的 <xref linkend="sql-altertable-notes"/>。
      </para>
 
      <para>
-      Although most forms of <literal>ADD
-      <replaceable class="parameter">table_constraint</replaceable></literal>
-      require an <literal>ACCESS EXCLUSIVE</literal> lock, <literal>ADD
-      FOREIGN KEY</literal> requires only a <literal>SHARE ROW
-      EXCLUSIVE</literal> lock.  Note that <literal>ADD FOREIGN KEY</literal>
-      also acquires a <literal>SHARE ROW EXCLUSIVE</literal> lock on the
-      referenced table, in addition to the lock on the table on which the
-      constraint is declared.
+      尽管 <literal>ADD
+      <replaceable class="parameter">table_constraint</replaceable></literal> 的大多数形式都需要 <literal>ACCESS EXCLUSIVE</literal> 锁，但 <literal>ADD
+      FOREIGN KEY</literal> 只需要 <literal>SHARE ROW
+      EXCLUSIVE</literal> 锁。请注意，<literal>ADD FOREIGN KEY</literal> 除了在声明约束的表上获取锁之外，还会在被引用表上获取 <literal>SHARE ROW EXCLUSIVE</literal> 锁。
      </para>
 
      <para>
-      Additional restrictions apply when unique or primary key constraints
-      are added to partitioned tables; see <link linkend="sql-createtable"><command>CREATE TABLE</command></link>.
+      向分区表添加唯一约束或主键约束时，还适用其他限制；请参见 <link linkend="sql-createtable"><command>CREATE TABLE</command></link>。
      </para>
 
     </listitem>
@@ -513,52 +393,32 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>ADD <replaceable class="parameter">table_constraint_using_index</replaceable></literal></term>
     <listitem>
      <para>
-      This form adds a new <literal>PRIMARY KEY</literal> or <literal>UNIQUE</literal>
-      constraint to a table based on an existing unique index.  All the
-      columns of the index will be included in the constraint.
+      这种形式基于现有的唯一索引向表中添加新的 <literal>PRIMARY KEY</literal> 或 <literal>UNIQUE</literal> 约束。索引的所有列都将包含在该约束中。
      </para>
 
      <para>
-      The index cannot have expression columns nor be a partial index.
-      Also, it must be a b-tree index with default sort ordering.  These
-      restrictions ensure that the index is equivalent to one that would be
-      built by a regular <literal>ADD PRIMARY KEY</literal> or <literal>ADD UNIQUE</literal>
-      command.
+      该索引不能包含表达式列，也不能是部分索引。此外，它必须是采用默认排序顺序的 b-tree 索引。这些限制确保该索引等同于由常规 <literal>ADD PRIMARY KEY</literal> 或 <literal>ADD UNIQUE</literal> 命令构建的索引。
      </para>
 
      <para>
-      If <literal>PRIMARY KEY</literal> is specified, and the index's columns are not
-      already marked <literal>NOT NULL</literal>, then this command will attempt to
-      do <literal>ALTER COLUMN SET NOT NULL</literal> against each such column.
-      That requires a full table scan to verify the column(s) contain no
-      nulls.  In all other cases, this is a fast operation.
+      如果指定了 <literal>PRIMARY KEY</literal>，并且索引的列尚未标记为 <literal>NOT NULL</literal>，那么此命令将尝试对每个这样的列执行 <literal>ALTER COLUMN SET NOT NULL</literal>。这需要全表扫描来验证这些列不包含空值。在所有其他情况下，这是一项快速操作。
      </para>
 
      <para>
-      If a constraint name is provided then the index will be renamed to match
-      the constraint name.  Otherwise the constraint will be named the same as
-      the index.
+      如果提供了约束名称，则索引将被重命名以匹配该约束名称。否则，约束将与索引同名。
      </para>
 
      <para>
-      After this command is executed, the index is <quote>owned</quote> by the
-      constraint, in the same way as if the index had been built by
-      a regular <literal>ADD PRIMARY KEY</literal> or <literal>ADD UNIQUE</literal>
-      command.  In particular, dropping the constraint will make the index
-      disappear too.
+      执行此命令后，索引就由该约束<quote>拥有</quote>，就如同该索引是由常规的 <literal>ADD PRIMARY KEY</literal> 或 <literal>ADD UNIQUE</literal> 命令建立的一样。特别是，删除该约束也会使索引消失。
      </para>
 
      <para>
-      This form is not currently supported on partitioned tables.
+      此形式目前不支持分区表。
      </para>
 
      <note>
       <para>
-       Adding a constraint using an existing index can be helpful in
-       situations where a new constraint needs to be added without blocking
-       table updates for a long time.  To do that, create the index using
-       <command>CREATE UNIQUE INDEX CONCURRENTLY</command>, and then convert it to a
-       constraint using this syntax.  See the example below.
+       在需要添加新约束而又不想长时间阻塞表更新的情况下，使用现有索引添加约束会很有帮助。为此，使用 <command>CREATE UNIQUE INDEX CONCURRENTLY</command> 创建索引，然后使用此语法将其转换为约束。参见下面的示例。
       </para>
      </note>
     </listitem>
@@ -568,9 +428,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>ALTER CONSTRAINT</literal></term>
     <listitem>
      <para>
-      This form alters the attributes of a constraint that was previously
-      created. Currently only foreign key constraints may be altered in
-      this fashion, but see below.
+      此形式修改先前创建的约束的属性。目前只有外键约束可以用这种方式修改，但请参见下文。
      </para>
     </listitem>
    </varlistentry>
@@ -580,16 +438,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>ALTER CONSTRAINT ... NO INHERIT</literal></term>
     <listitem>
      <para>
-      These forms modify a inheritable constraint so that it becomes not
-      inheritable, or vice-versa. Only not-null constraints may be altered
-      in this fashion at present.
-      In addition to changing the inheritability status of the constraint,
-      in the case where a non-inheritable constraint is being marked
-      inheritable, if the table has children, an equivalent constraint
-      will be added to them. If marking an inheritable constraint as
-      non-inheritable on a table with children, then the corresponding
-      constraint on children will be marked as no longer inherited,
-      but not removed.
+      这些形式修改可继承约束，使其变为不可继承，或反之。目前只有非空约束可以用这种方式修改。除了更改约束的可继承状态之外，在将不可继承约束标记为可继承的情况下，如果该表有子表，则会向子表添加一个等效约束。如果在有子表的表上将可继承约束标记为不可继承，则子表上对应的约束将被标记为不再继承，但不会被移除。
       </para>
      </listitem>
     </varlistentry>
@@ -598,16 +447,10 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>VALIDATE CONSTRAINT</literal></term>
     <listitem>
      <para>
-      This form validates a foreign key, check, or not-null constraint that was
-      previously created as <literal>NOT VALID</literal>, by scanning the
-      table to ensure there are no rows for which the constraint is not
-      satisfied.  If the constraint was set to <literal>NOT ENFORCED</literal>, an error is thrown.
-      Nothing happens if the constraint is already marked valid.
-      (See <xref linkend="sql-altertable-notes"/> below for an explanation
-      of the usefulness of this command.)
+      这种形式验证之前创建为 <literal>NOT VALID</literal> 的外键、检查或非空约束，其方式是扫描表以确保不存在不满足该约束的行。如果该约束被设置为 <literal>NOT ENFORCED</literal>，则抛出错误。如果该约束已被标记为有效，则什么也不做。（关于此命令用途的说明，请参见下面的 <xref linkend="sql-altertable-notes"/>。）
      </para>
      <para>
-      This command acquires a <literal>SHARE UPDATE EXCLUSIVE</literal> lock.
+      此命令会获取一个 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -616,10 +459,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DROP CONSTRAINT [ IF EXISTS ]</literal></term>
     <listitem>
      <para>
-      This form drops the specified constraint on a table, along with
-      any index underlying the constraint.
-      If <literal>IF EXISTS</literal> is specified and the constraint
-      does not exist, no error is thrown. In this case a notice is issued instead.
+      这种形式删除表上的指定约束，以及该约束底层的任何索引。如果指定了 <literal>IF EXISTS</literal> 而该约束不存在，则不会抛出错误。在这种情况下，会改为发出一个提示。
      </para>
     </listitem>
    </varlistentry>
@@ -628,51 +468,24 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DISABLE</literal>/<literal>ENABLE [ REPLICA | ALWAYS ] TRIGGER</literal></term>
     <listitem>
      <para>
-      These forms configure the firing of trigger(s) belonging to the table.
-      A disabled trigger is still known to the system, but is not executed
-      when its triggering event occurs.  (For a deferred trigger, the enable
-      status is checked when the event occurs, not when the trigger function
-      is actually executed.)  One can disable or enable a single
-      trigger specified by name, or all triggers on the table, or only
-      user triggers (this option excludes internally generated constraint
-      triggers, such as those that are used to implement foreign key
-      constraints or deferrable uniqueness and exclusion constraints).
-      Disabling or enabling internally generated constraint triggers
-      requires superuser privileges; it should be done with caution since
-      of course the integrity of the constraint cannot be guaranteed if the
-      triggers are not executed.
+      这些形式配置表中触发器的触发。被禁用的触发器对系统而言仍然存在，但当其触发事件发生时不会被执行。（对于延迟触发器，启用状态是在事件发生时检查的，而不是在触发器函数实际执行时检查的。）可以禁用或启用按名称指定的单个触发器，或表上的所有触发器，或仅用户触发器（此选项排除内部生成的约束触发器，例如用于实现外键约束或可延迟的唯一性和排他性约束的触发器）。禁用或启用内部生成的约束触发器需要超级用户权限；应谨慎操作，因为如果触发器不执行，当然无法保证约束的完整性。
      </para>
 
      <para>
-      The trigger firing mechanism is also affected by the configuration
-      variable <xref linkend="guc-session-replication-role"/>. Simply enabled
-      triggers (the default) will fire when the replication role is <quote>origin</quote>
-      (the default) or <quote>local</quote>. Triggers configured as <literal>ENABLE
-      REPLICA</literal> will only fire if the session is in <quote>replica</quote>
-      mode, and triggers configured as <literal>ENABLE ALWAYS</literal> will
-      fire regardless of the current replication role.
+      触发器的触发机制还受配置变量 <xref linkend="guc-session-replication-role"/> 的影响。简单启用的触发器（默认）在复制角色为 <quote>origin</quote>（默认）或 <quote>local</quote> 时会触发。配置为 <literal>ENABLE
+      REPLICA</literal> 的触发器仅在会话处于 <quote>replica</quote> 模式时才会触发，而配置为 <literal>ENABLE ALWAYS</literal> 的触发器无论当前复制角色如何都会触发。
      </para>
 
      <para>
-      The effect of this mechanism is that in the default configuration,
-      triggers do not fire on replicas.  This is useful because if a trigger
-      is used on the origin to propagate data between tables, then the
-      replication system will also replicate the propagated data; so the
-      trigger should not fire a second time on the replica, because that would
-      lead to duplication.  However, if a trigger is used for another purpose
-      such as creating external alerts, then it might be appropriate to set it
-      to <literal>ENABLE ALWAYS</literal> so that it is also fired on
-      replicas.
+      这个机制的效果是，在默认配置下，触发器不会在副本上触发。这很有用，因为如果在源端使用触发器在表之间传播数据，那么复制系统也会复制传播的数据；因此该触发器不应在副本上再次触发，因为那会导致重复。不过，如果触发器用于其他目的（例如创建外部告警），那么可能适合将其设置为 <literal>ENABLE ALWAYS</literal>，以便它也在副本上触发。
      </para>
 
      <para>
-      When this command is applied to a partitioned table, the states of
-      corresponding clone triggers in the partitions are updated too,
-      unless <literal>ONLY</literal> is specified.
+      当此命令应用于分区表时，分区中相应克隆触发器的状态也会被更新，除非指定了 <literal>ONLY</literal>。
      </para>
 
      <para>
-      This command acquires a <literal>SHARE ROW EXCLUSIVE</literal> lock.
+      此命令会获取一个 <literal>SHARE ROW EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -681,18 +494,11 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DISABLE</literal>/<literal>ENABLE [ REPLICA | ALWAYS ] RULE</literal></term>
     <listitem>
      <para>
-      These forms configure the firing of rewrite rules belonging to the table.
-      A disabled rule is still known to the system, but is not applied
-      during query rewriting. The semantics are as for disabled/enabled
-      triggers. This configuration is ignored for <literal>ON SELECT</literal> rules, which
-      are always applied in order to keep views working even if the current
-      session is in a non-default replication role.
+      这些形式配置属于该表的改写规则的触发。被禁用的规则系统仍然知道，但在查询改写期间不会应用。其语义与禁用/启用触发器相同。对于 <literal>ON SELECT</literal> 规则，此配置会被忽略，这些规则总是会被应用，以便即使当前会话处于非默认的复制角色，视图也能正常工作。
      </para>
 
      <para>
-      The rule firing mechanism is also affected by the configuration variable
-      <xref linkend="guc-session-replication-role"/>, analogous to triggers as
-      described above.
+      规则触发机制也受配置变量 <xref linkend="guc-session-replication-role"/> 的影响，与上文所述的触发器类似。
      </para>
     </listitem>
    </varlistentry>
@@ -701,13 +507,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>DISABLE</literal>/<literal>ENABLE ROW LEVEL SECURITY</literal></term>
     <listitem>
      <para>
-      These forms control the application of row security policies belonging
-      to the table.  If enabled and no policies exist for the table, then a
-      default-deny policy is applied.  Note that policies can exist for a table
-      even if row-level security is disabled.  In this case, the policies will
-      <emphasis>not</emphasis> be applied and the policies will be ignored.
-      See also
-      <link linkend="sql-createpolicy"><command>CREATE POLICY</command></link>.
+      这些形式控制属于该表的行安全策略的应用。如果启用且该表不存在任何策略，则会应用默认拒绝策略。请注意，即使行级安全被禁用，表上也可以存在策略。在这种情况下，这些策略<emphasis>不会</emphasis>被应用，策略将被忽略。另请参见
+      <link linkend="sql-createpolicy"><command>CREATE POLICY</command></link>。
      </para>
     </listitem>
    </varlistentry>
@@ -716,13 +517,9 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>NO FORCE</literal>/<literal>FORCE ROW LEVEL SECURITY</literal></term>
     <listitem>
      <para>
-      These forms control the application of row security policies belonging
-      to the table when the user is the table owner.  If enabled, row-level
-      security policies will be applied when the user is the table owner.  If
-      disabled (the default) then row-level security will not be applied when
-      the user is the table owner.
-      See also
-      <link linkend="sql-createpolicy"><command>CREATE POLICY</command></link>.
+      这些形式控制当用户是表所有者时，属于该表的行安全策略的应用。如果启用，则当用户是表所有者时将应用行级安全策略。如果禁用（默认），则当用户是表所有者时不会应用行级安全。
+      另请参见
+      <link linkend="sql-createpolicy"><command>CREATE POLICY</command></link>。
      </para>
     </listitem>
    </varlistentry>
@@ -731,12 +528,12 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>CLUSTER ON</literal></term>
     <listitem>
      <para>
-      This form selects the default index for future
+      这种形式为未来的
       <link linkend="sql-cluster"><command>CLUSTER</command></link>
-      operations.  It does not actually re-cluster the table.
+      操作选择默认索引。它实际上不会重新聚簇该表。
      </para>
      <para>
-      Changing cluster options acquires a <literal>SHARE UPDATE EXCLUSIVE</literal> lock.
+      更改聚簇选项会获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -745,13 +542,12 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET WITHOUT CLUSTER</literal></term>
     <listitem>
      <para>
-      This form removes the most recently used
+      这种形式从表中移除最近使用的
       <link linkend="sql-cluster"><command>CLUSTER</command></link>
-      index specification from the table.  This affects
-      future cluster operations that don't specify an index.
+      索引指定。这会影响未指定索引的未来聚簇操作。
      </para>
      <para>
-      Changing cluster options acquires a <literal>SHARE UPDATE EXCLUSIVE</literal> lock.
+      更改聚簇选项会获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -760,9 +556,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET WITHOUT OIDS</literal></term>
     <listitem>
      <para>
-      Backward-compatible syntax for removing the <literal>oid</literal>
-      system column.  As <literal>oid</literal> system columns cannot be
-      added anymore, this never has an effect.
+      用于移除 <literal>oid</literal>
+      系统列的向后兼容语法。由于 <literal>oid</literal> 系统列已无法再添加，因此这永远不会产生效果。
      </para>
     </listitem>
    </varlistentry>
@@ -771,20 +566,10 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET ACCESS METHOD</literal></term>
     <listitem>
      <para>
-      This form changes the access method of the table by rewriting it
-      using the indicated access method; specifying
-      <literal>DEFAULT</literal> selects the access method set as the
-      <xref linkend="guc-default-table-access-method"/> configuration
-      parameter.
-      See <xref linkend="tableam"/> for more information.
+      这种形式通过使用指定的访问方法重写表来更改表的访问方法；指定 <literal>DEFAULT</literal> 会选择设置为 <xref linkend="guc-default-table-access-method"/> 配置参数的访问方法。更多信息请参见 <xref linkend="tableam"/>。
      </para>
      <para>
-      When applied to a partitioned table, there is no data to rewrite,
-      but partitions created afterwards will default to the given access
-      method unless overridden by a <literal>USING</literal> clause.
-      Specifying <varname>DEFAULT</varname> removes a previous value,
-      causing future partitions to default to
-      <varname>default_table_access_method</varname>.
+      当应用于分区表时，没有数据需要重写，但之后创建的分区将默认使用给定的访问方法，除非被 <literal>USING</literal> 子句覆盖。指定 <varname>DEFAULT</varname> 会移除先前的值，使未来的分区默认使用 <varname>default_table_access_method</varname>。
      </para>
     </listitem>
    </varlistentry>
@@ -793,30 +578,11 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET TABLESPACE</literal></term>
     <listitem>
      <para>
-      This form changes the table's tablespace to the specified tablespace and
-      moves the data file(s) associated with the table to the new tablespace.
-      Indexes on the table, if any, are not moved; but they can be moved
-      separately with additional <literal>SET TABLESPACE</literal> commands.
-      When applied to a partitioned table, nothing is moved, but any
-      partitions created afterwards with
-      <command>CREATE TABLE PARTITION OF</command> will use that tablespace,
-      unless overridden by a <literal>TABLESPACE</literal> clause.
+      这种形式将表的表空间更改为指定的表空间，并将与该表关联的数据文件移动到新的表空间。表上的索引（如果有）不会被移动；但可以使用额外的 <literal>SET TABLESPACE</literal> 命令单独移动它们。当应用于分区表时，不会移动任何内容，但之后使用 <command>CREATE TABLE PARTITION OF</command> 创建的任何分区都将使用该表空间，除非被 <literal>TABLESPACE</literal> 子句覆盖。
      </para>
 
      <para>
-      All tables in the current database in a tablespace can be moved by using
-      the <literal>ALL IN TABLESPACE</literal> form, which will lock all tables
-      to be moved first and then move each one.  This form also supports
-      <literal>OWNED BY</literal>, which will only move tables owned by the
-      roles specified.  If the <literal>NOWAIT</literal> option is specified
-      then the command will fail if it is unable to acquire all of the locks
-      required immediately.  Note that system catalogs are not moved by this
-      command; use <command>ALTER DATABASE</command> or explicit
-      <command>ALTER TABLE</command> invocations instead if desired.  The
-      <literal>information_schema</literal> relations are not considered part
-      of the system catalogs and will be moved.
-      See also
-      <link linkend="sql-createtablespace"><command>CREATE TABLESPACE</command></link>.
+      通过使用 <literal>ALL IN TABLESPACE</literal> 形式，可以移动表空间中当前数据库内的所有表，该形式会先锁定所有要移动的表，然后逐个移动它们。这种形式还支持 <literal>OWNED BY</literal>，它只移动由指定角色拥有的表。如果指定了 <literal>NOWAIT</literal> 选项，那么当命令无法立即获取所有需要的锁时将会失败。注意，系统目录不会由此命令移动；如果需要，请改用 <command>ALTER DATABASE</command> 或显式调用 <command>ALTER TABLE</command>。<literal>information_schema</literal> 关系不被视为系统目录的一部分，将会被移动。另请参见 <link linkend="sql-createtablespace"><command>CREATE TABLESPACE</command></link>。
      </para>
     </listitem>
    </varlistentry>
@@ -825,19 +591,15 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET { LOGGED | UNLOGGED }</literal></term>
     <listitem>
      <para>
-      This form changes the table from unlogged to logged or vice-versa
-      (see <xref linkend="sql-createtable-unlogged"/>).  It cannot be applied
-      to a temporary table.
+      这种形式将表从不记录日志改为记录日志，或反之（参见 <xref linkend="sql-createtable-unlogged"/>）。它不能应用于临时表。
      </para>
 
      <para>
-      This also changes the persistence of any sequences linked to the table
-      (for identity or serial columns).  However, it is also possible to
-      change the persistence of such sequences separately.
+      这还会更改与该表关联的任何序列（用于标识列或 serial 列）的持久性。不过，也可以单独更改此类序列的持久性。
      </para>
 
      <para>
-      This form is not supported for partitioned tables.
+      这种形式不支持分区表。
      </para>
     </listitem>
    </varlistentry>
@@ -846,24 +608,19 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET ( <replaceable class="parameter">storage_parameter</replaceable> [= <replaceable class="parameter">value</replaceable>] [, ... ] )</literal></term>
     <listitem>
      <para>
-      This form changes one or more storage parameters for the table.  See
-      <xref linkend="sql-createtable-storage-parameters"/> in the
-      <link linkend="sql-createtable"><command>CREATE TABLE</command></link> documentation
-      for details on the available parameters.  Note that the table contents
-      will not be modified immediately by this command; depending on the
-      parameter you might need to rewrite the table to get the desired effects.
-      That can be done with <link linkend="sql-vacuum"><command>VACUUM
-      FULL</command></link>, <link linkend="sql-cluster"><command>CLUSTER</command></link> or one of the forms
-      of <command>ALTER TABLE</command> that forces a table rewrite.
-      For planner related parameters, changes will take effect from the next
-      time the table is locked so currently executing queries will not be
-      affected.
+      这种形式会更改表的一个或多个存储参数。有关可用参数的详细信息，请参阅
+      <link linkend="sql-createtable"><command>CREATE TABLE</command></link> 文档中的
+      <xref linkend="sql-createtable-storage-parameters"/>。请注意，该命令不会立即修改表的内容；
+      取决于所设置的参数，你可能需要重写表才能获得想要的效果。
+      这可以通过 <link linkend="sql-vacuum"><command>VACUUM
+      FULL</command></link>、<link linkend="sql-cluster"><command>CLUSTER</command></link> 或
+      强制重写表的某种形式的 <command>ALTER TABLE</command> 来完成。
+      对于与查询规划器相关的参数，更改将在下次锁定该表时生效，因此当前正在执行的查询不会受到影响。
      </para>
 
      <para>
-      <literal>SHARE UPDATE EXCLUSIVE</literal> lock will be taken for
-      fillfactor, toast and autovacuum storage parameters, as well as the
-      planner parameter <varname>parallel_workers</varname>.
+      对于 fillfactor、toast 和 autovacuum 存储参数，以及规划器参数 <varname>parallel_workers</varname>，
+      将获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。
      </para>
     </listitem>
    </varlistentry>
@@ -872,9 +629,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>RESET ( <replaceable class="parameter">storage_parameter</replaceable> [, ... ] )</literal></term>
     <listitem>
      <para>
-      This form resets one or more storage parameters to their
-      defaults.  As with <literal>SET</literal>, a table rewrite might be
-      needed to update the table entirely.
+      这种形式会将一个或多个存储参数重置为它们的默认值。与 <literal>SET</literal> 一样，
+      可能需要重写表才能完全更新表。
      </para>
     </listitem>
    </varlistentry>
@@ -883,23 +639,18 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>INHERIT <replaceable class="parameter">parent_table</replaceable></literal></term>
     <listitem>
      <para>
-      This form adds the target table as a new child of the specified parent
-      table.  Subsequently, queries against the parent will include records
-      of the target table.  To be added as a child, the target table must
-      already contain all the same columns as the parent (it could have
-      additional columns, too).  The columns must have matching data types.
+      这种形式会将目标表添加为指定父表的新子表。随后，针对父表的查询将包含目标表的记录。
+      要作为子表添加，目标表必须已经包含与父表相同的所有列（它也可以有额外的列）。
+      这些列必须具有匹配的数据类型。
      </para>
 
      <para>
-      In addition, all <literal>CHECK</literal> and <literal>NOT NULL</literal>
-      constraints on the parent must also exist on the child, except those
-      marked non-inheritable (that is, created with
-      <literal>ALTER TABLE ... ADD CONSTRAINT ... NO INHERIT</literal>), which
-      are ignored.  All child-table constraints matched must not be marked
-      non-inheritable.  Currently
-      <literal>UNIQUE</literal>, <literal>PRIMARY KEY</literal>, and
-      <literal>FOREIGN KEY</literal> constraints are not considered, but
-      this might change in the future.
+      此外，父表上的所有 <literal>CHECK</literal> 和 <literal>NOT NULL</literal>
+      约束也必须存在于子表上，但标记为不可继承的约束（即使用
+      <literal>ALTER TABLE ... ADD CONSTRAINT ... NO INHERIT</literal> 创建的约束）除外，它们会被忽略。所有匹配的子表约束都不能标记为不可继承。
+      目前不考虑
+      <literal>UNIQUE</literal>、<literal>PRIMARY KEY</literal> 和
+      <literal>FOREIGN KEY</literal> 约束，但将来可能会改变。
      </para>
     </listitem>
    </varlistentry>
@@ -908,10 +659,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>NO INHERIT <replaceable class="parameter">parent_table</replaceable></literal></term>
     <listitem>
      <para>
-      This form removes the target table from the list of children of the
-      specified parent table.
-      Queries against the parent table will no longer include records drawn
-      from the target table.
+      这种形式从指定父表的子表列表中移除目标表。
+      针对父表的查询将不再包含从目标表中提取的记录。
      </para>
     </listitem>
    </varlistentry>
@@ -920,12 +669,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>OF <replaceable class="parameter">type_name</replaceable></literal></term>
     <listitem>
      <para>
-      This form links the table to a composite type as though <command>CREATE
-      TABLE OF</command> had formed it.  The table's list of column names and types
-      must precisely match that of the composite type.  The table must
-      not inherit from any other table.  These restrictions ensure
-      that <command>CREATE TABLE OF</command> would permit an equivalent table
-      definition.
+      这种形式将表链接到一个复合类型，就好像该表是由 <command>CREATE
+      TABLE OF</command> 形成的一样。表的列名和类型列表必须与该复合类型完全匹配。该表不得继承自任何其他表。这些限制确保 <command>CREATE TABLE OF</command> 会允许一个等价的表定义。
      </para>
     </listitem>
    </varlistentry>
@@ -934,7 +679,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>NOT OF</literal></term>
     <listitem>
      <para>
-      This form dissociates a typed table from its type.
+      这种形式将类型化表与其类型解除关联。
      </para>
     </listitem>
    </varlistentry>
@@ -943,8 +688,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>OWNER TO</literal></term>
     <listitem>
      <para>
-      This form changes the owner of the table, sequence, view, materialized view,
-      or foreign table to the specified user.
+      这种形式将表、序列、视图、物化视图或外部表的所有者更改为指定用户。
      </para>
     </listitem>
    </varlistentry>
@@ -953,20 +697,17 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>REPLICA IDENTITY</literal></term>
     <listitem>
      <para>
-      This form changes the information which is written to the write-ahead log
-      to identify rows which are updated or deleted.
-      In most cases, the old value of each column is only logged if it differs
-      from the new value; however, if the old value is stored externally, it is
-      always logged regardless of whether it changed.
-      This option has no effect except when logical replication is in use.
+      这种形式更改写入预写式日志中以标识被更新或删除的行的信息。
+      在大多数情况下，只有当每列的旧值与新值不同时才会记录旧值；但是，如果旧值存储在外部，则无论其是否发生变化都会始终记录。
+      除非正在使用逻辑复制，否则此选项没有效果。
      <variablelist>
       <varlistentry id="sql-altertable-replica-identity-default">
        <term><literal>DEFAULT</literal></term>
        <listitem>
         <para>
-         Records the old values of the columns of the primary key.
-         This is the default for non-system tables.
-         When there is no primary key, the behavior is the same as <literal>NOTHING</literal>.
+         记录主键各列的旧值。
+         这是非系统表的默认值。
+         当没有主键时，行为与 <literal>NOTHING</literal> 相同。
         </para>
        </listitem>
       </varlistentry>
@@ -975,10 +716,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
        <term><literal>USING INDEX <replaceable class="parameter">index_name</replaceable></literal></term>
        <listitem>
         <para>
-         Records the old values of the columns covered by the named index,
-         that must be unique, not partial, not deferrable, and include only
-         columns marked <literal>NOT NULL</literal>. If this index is
-         dropped, the behavior is the same as <literal>NOTHING</literal>.
+         记录指定索引所覆盖列的旧值，该索引必须是唯一的、非部分的、不可延迟的，并且只包含标记为 <literal>NOT NULL</literal> 的列。如果该索引被删除，行为与 <literal>NOTHING</literal> 相同。
         </para>
        </listitem>
       </varlistentry>
@@ -987,7 +725,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
        <term><literal>FULL</literal></term>
        <listitem>
         <para>
-         Records the old values of all columns in the row.
+         记录该行所有列的旧值。
         </para>
        </listitem>
       </varlistentry>
@@ -996,8 +734,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
        <term><literal>NOTHING</literal></term>
        <listitem>
         <para>
-         Records no information about the old row. This is the default for
-         system tables.
+         不记录旧行的任何信息。这是系统表的默认值。
         </para>
        </listitem>
       </varlistentry>
@@ -1009,12 +746,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>RENAME</literal></term>
     <listitem>
      <para>
-      The <literal>RENAME</literal> forms change the name of a table
-      (or an index, sequence, view, materialized view, or foreign table), the
-      name of an individual column in a table, or the name of a constraint of
-      the table.  When renaming a constraint that has an underlying index,
-      the index is renamed as well.
-      There is no effect on the stored data.
+      <literal>RENAME</literal> 形式用于更改表（或索引、序列、视图、物化视图或外部表）的名称、表中单个列的名称，或表的约束的名称。当重命名具有底层索引的约束时，该索引也会被重命名。对存储的数据没有影响。
      </para>
     </listitem>
    </varlistentry>
@@ -1023,8 +755,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>SET SCHEMA</literal></term>
     <listitem>
      <para>
-      This form moves the table into another schema.  Associated indexes,
-      constraints, and sequences owned by table columns are moved as well.
+      这种形式将表移动到另一个模式中。关联的索引、约束以及表列拥有的序列也会一并移动。
      </para>
     </listitem>
    </varlistentry>
@@ -1033,88 +764,34 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
     <term><literal>ATTACH PARTITION <replaceable class="parameter">partition_name</replaceable> { FOR VALUES <replaceable class="parameter">partition_bound_spec</replaceable> | DEFAULT }</literal></term>
     <listitem>
      <para>
-      This form attaches an existing table (which might itself be partitioned)
-      as a partition of the target table. The table can be attached
-      as a partition for specific values using <literal>FOR VALUES</literal>
-      or as a default partition by using <literal>DEFAULT</literal>.
-      For each index in the target table, if a valid equivalent index
-      already exists in the partition, it will be attached to the target
-      table's index, as if ALTER INDEX ATTACH PARTITION had been executed;
-      otherwise, a new corresponding index will be created.  Invalid indexes
-      on the partition are skipped.
-      Note that if the existing table is a foreign table, it is currently not
-      allowed to attach the table as a partition of the target table if there
-      are <literal>UNIQUE</literal> indexes on the target table.  (See also
-      <xref linkend="sql-createforeigntable"/>.)  For each user-defined
-      row-level trigger that exists in the target table, a corresponding one
-      is created in the attached table.
+      这种形式将一个已有的表（它本身可能已分区）作为目标表的分区附加。可以使用 <literal>FOR VALUES</literal> 将该表作为特定值的分区附加，或使用 <literal>DEFAULT</literal> 将其作为默认分区附加。对于目标表中的每个索引，如果该分区中已存在有效的等效索引，它将被附加到目标表的索引上，就像执行了 ALTER INDEX ATTACH PARTITION 一样；否则，将创建一个新的对应索引。分区上的无效索引会被跳过。请注意，如果已有的表是外部表，则当目标表上存在 <literal>UNIQUE</literal> 索引时，目前不允许将该表作为目标表的分区附加。（另请参见 <xref linkend="sql-createforeigntable"/>。）对于目标表中存在的每个用户定义的行级触发器，都会在附加的表中创建一个对应的触发器。
      </para>
 
      <para>
-      A partition using <literal>FOR VALUES</literal> uses same syntax for
-      <replaceable class="parameter">partition_bound_spec</replaceable> as
-      <link linkend="sql-createtable"><command>CREATE TABLE</command></link>.
-      The partition bound specification
-      must correspond to the partitioning strategy and partition key of the
-      target table.  The table to be attached must have all the same columns
-      as the target table and no more; moreover, the column types must also
-      match.  Also, it must have all the <literal>NOT NULL</literal> and
-      <literal>CHECK</literal> constraints of the target table, not marked
-      <literal>NO INHERIT</literal>.  Currently
-      <literal>FOREIGN KEY</literal> constraints are not considered.
-      <literal>UNIQUE</literal> and <literal>PRIMARY KEY</literal> constraints
-      from the parent table will be created in the partition, if they don't
-      already exist.
+      使用 <literal>FOR VALUES</literal> 的分区使用与 <link linkend="sql-createtable"><command>CREATE TABLE</command></link> 相同的语法来指定 <replaceable class="parameter">partition_bound_spec</replaceable>。分区边界说明必须与目标表的分区策略和分区键相对应。要附加的表必须具有与目标表完全相同的列，不能多；此外，列类型也必须匹配。同时，它必须具有目标表的所有 <literal>NOT NULL</literal> 和 <literal>CHECK</literal> 约束，且未标记为 <literal>NO INHERIT</literal>。目前不考虑 <literal>FOREIGN KEY</literal> 约束。父表中的 <literal>UNIQUE</literal> 和 <literal>PRIMARY KEY</literal> 约束将在分区中创建（如果尚不存在）。
      </para>
 
      <para>
-      If the new partition is a regular table, a full table scan is performed
-      to check that existing rows in the table do not violate the partition
-      constraint. It is possible to avoid this scan by adding a valid
-      <literal>CHECK</literal> constraint to the table that allows only
-      rows satisfying the desired partition constraint before running this
-      command. The <literal>CHECK</literal> constraint will be used to
-      determine that the table need not be scanned to validate the partition
-      constraint. This does not work, however, if any of the partition keys
-      is an expression and the partition does not accept
-      <literal>NULL</literal> values. If attaching a list partition that will
-      not accept <literal>NULL</literal> values, also add a
-      <literal>NOT NULL</literal> constraint to the partition key column,
-      unless it's an expression.
+      如果新分区是常规表，则会执行全表扫描以检查表中的现有行是否违反分区约束。可以通过在运行此命令之前向表中添加一个有效的 <literal>CHECK</literal> 约束来避免此扫描，该约束只允许满足所需分区约束的行。<literal>CHECK</literal> 约束将用于确定无需扫描表来验证分区约束。但是，如果任何分区键是表达式，并且分区不接受 <literal>NULL</literal> 值，则此方法无效。如果要附加的列表分区不接受 <literal>NULL</literal> 值，还要向分区键列添加 <literal>NOT NULL</literal> 约束，除非它是表达式。
      </para>
 
      <para>
-      If the new partition is a foreign table, nothing is done to verify
-      that all the rows in the foreign table obey the partition constraint.
-      (See the discussion in <xref linkend="sql-createforeigntable"/> about
-      constraints on the foreign table.)
+      如果新分区是外部表，则不会执行任何操作来验证外部表中的所有行是否遵守分区约束。（有关外部表上约束的讨论，请参见 <xref linkend="sql-createforeigntable"/>。）
      </para>
 
      <para>
-      When a table has a default partition, defining a new partition changes
-      the partition constraint for the default partition. The default
-      partition can't contain any rows that would need to be moved to the new
-      partition, and will be scanned to verify that none are present. This
-      scan, like the scan of the new partition, can be avoided if an
-      appropriate <literal>CHECK</literal> constraint is present. Also like
-      the scan of the new partition, it is always skipped when the default
-      partition is a foreign table.
+      当表具有默认分区时，定义新分区会更改默认分区的分区约束。默认分区不能包含任何需要移动到新分区的行，并且将被扫描以验证不存在此类行。与新分区的扫描一样，如果存在适当的 <literal>CHECK</literal> 约束，则可以避免此扫描。同样与新分区的扫描一样，当默认分区是外部表时，此扫描始终会被跳过。
      </para>
 
      <para>
-      Attaching a partition acquires a
-      <literal>SHARE UPDATE EXCLUSIVE</literal> lock on the parent table,
-      in addition to the <literal>ACCESS EXCLUSIVE</literal> locks on the table
-      being attached and on the default partition (if any).
+      附加分区会在父表上获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁，此外还会在要附加的表和默认分区（如果有）上获取 <literal>ACCESS EXCLUSIVE</literal> 锁。
      </para>
 
      <para>
-      Further locks must also be held on all sub-partitions if the table being
-      attached is itself a partitioned table.  Likewise if the default
-      partition is itself a partitioned table.  The locking of the
-      sub-partitions can be avoided by adding a <literal>CHECK</literal>
-      constraint as described in
-      <xref linkend="ddl-partitioning-declarative-maintenance"/>.
+      如果被附加的表本身就是一个分区表，则还必须对所有子分区持有进一步的锁。
+      同样，如果默认分区本身就是一个分区表，也是如此。可以通过添加一个 <literal>CHECK</literal>
+      约束来避免对子分区加锁，如
+      <xref linkend="ddl-partitioning-declarative-maintenance"/> 中所述。
      </para>
     </listitem>
    </varlistentry>
@@ -1124,36 +801,23 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
 
     <listitem>
      <para>
-      This form detaches the specified partition of the target table.  The detached
-      partition continues to exist as a standalone table, but no longer has any
-      ties to the table from which it was detached.  Any indexes that were
-      attached to the target table's indexes are detached.  Any triggers that
-      were created as clones of those in the target table are removed.
-      <literal>SHARE</literal> lock is obtained on any tables that reference
-      this partitioned table in foreign key constraints.
+      这种形式会分离目标表的指定分区。被分离的分区继续作为独立表存在，
+      但不再与它被分离出来的表有任何关联。任何曾附加到目标表索引上的索引
+      都会被分离。任何作为目标表中触发器的克隆而创建的触发器都会被移除。
+      对于在外键约束中引用此分区表的任何表，都会获取 <literal>SHARE</literal> 锁。
      </para>
      <para>
-      If <literal>CONCURRENTLY</literal> is specified, it runs using a reduced
-      lock level to avoid blocking other sessions that might be accessing the
-      partitioned table.  In this mode, two transactions are used internally.
-      During the first transaction, a <literal>SHARE UPDATE EXCLUSIVE</literal>
-      lock is taken on both parent table and partition, and the partition is
-      marked as undergoing detach; at that point, the transaction is committed
-      and all other transactions using the partitioned table are waited for.
-      Once all those transactions have completed, the second transaction
-      acquires <literal>SHARE UPDATE EXCLUSIVE</literal> on the partitioned
-      table and <literal>ACCESS EXCLUSIVE</literal> on the partition,
-      and the detach process completes.  A <literal>CHECK</literal> constraint
-      that duplicates the partition constraint is added to the partition.
-      <literal>CONCURRENTLY</literal> cannot be run in a transaction block and
-      is not allowed if the partitioned table contains a default partition.
+      如果指定了 <literal>CONCURRENTLY</literal>，它会使用降低的锁级别运行，以避免阻塞可能正在访问
+      该分区表的其他会话。在此模式下，内部会使用两个事务。在第一个事务中，
+      会在父表和分区上都获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁，并将该分区标记为正在分离；此时，
+      事务被提交，并等待所有其他使用该分区表的事务。一旦所有这些事务完成，
+      第二个事务会在分区表上获取 <literal>SHARE UPDATE EXCLUSIVE</literal>，在分区上获取 <literal>ACCESS EXCLUSIVE</literal>，然后分离过程
+      完成。会向该分区添加一个复制分区约束的 <literal>CHECK</literal> 约束。<literal>CONCURRENTLY</literal> 不能在
+      事务块中运行，并且如果分区表包含默认分区，则不允许使用。
      </para>
      <para>
-      If <literal>FINALIZE</literal> is specified, a previous
-      <literal>DETACH CONCURRENTLY</literal> invocation that was canceled or
-      interrupted is completed.
-      At most one partition in a partitioned table can be pending detach at
-      a time.
+      如果指定了 <literal>FINALIZE</literal>，则会完成之前被取消或中断的 <literal>DETACH CONCURRENTLY</literal> 调用。
+      一个分区表中同一时间最多只能有一个分区处于待分离状态。
      </para>
     </listitem>
    </varlistentry>
@@ -1162,37 +826,29 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
   </para>
 
   <para>
-   All the forms of <command>ALTER TABLE</command> that act on a single table,
-   except <literal>RENAME</literal>, <literal>SET SCHEMA</literal>,
-   <literal>ATTACH PARTITION</literal>, and
-   <literal>DETACH PARTITION</literal> can be combined into
-   a list of multiple alterations to be applied together.  For example, it
-   is possible to add several columns and/or alter the type of several
-   columns in a single command.  This is particularly useful with large
-   tables, since only one pass over the table need be made.
+   <command>ALTER TABLE</command> 中所有作用于单个表的形式，除 <literal>RENAME</literal>、<literal>SET SCHEMA</literal>、
+   <literal>ATTACH PARTITION</literal> 和 <literal>DETACH PARTITION</literal> 之外，都可以合并成一个要一起应用的
+   多个更改的列表。例如，可以在单个命令中添加若干列和/或更改
+   若干列的类型。这对大表特别有用，因为只需对表进行一次扫描。
   </para>
 
   <para>
-   You must own the table to use <command>ALTER TABLE</command>.
-   To change the schema or tablespace of a table, you must also have
-   <literal>CREATE</literal> privilege on the new schema or tablespace.
-   To add the table as a new child of a parent table, you must own the parent
-   table as well.  Also, to attach a table as a new partition of the table,
-   you must own the table being attached.
-   To alter the owner, you must be able to <literal>SET ROLE</literal> to the
-   new owning role, and that role must have <literal>CREATE</literal>
-   privilege on the table's schema.
-   (These restrictions enforce that altering the owner
-   doesn't do anything you couldn't do by dropping and recreating the table.
-   However, a superuser can alter ownership of any table anyway.)
-   To add a column or alter a column type or use the <literal>OF</literal>
-   clause, you must also have <literal>USAGE</literal> privilege on the data
-   type.
+   要使用 <command>ALTER TABLE</command>，您必须是该表的所有者。
+   要更改表的模式或表空间，您还必须对新模式或表空间具有
+   <literal>CREATE</literal> 权限。
+   要将该表添加为某个父表的新子表，您还必须拥有该父表。
+   此外，要将一个表作为该表的新分区附加，您必须拥有被附加的表。
+   要更改所有者，您必须能够 <literal>SET ROLE</literal> 到新的拥有角色，
+   并且该角色必须对表的模式具有 <literal>CREATE</literal> 权限。
+   （这些限制确保更改所有者不会做任何您无法通过删除并重新创建表来完成的事情。
+   不过，超级用户无论如何都可以更改任何表的所有权。）
+   要添加列、更改列类型或使用 <literal>OF</literal>
+   子句，您还必须对数据类型具有 <literal>USAGE</literal> 权限。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
 
@@ -1200,8 +856,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><literal>IF EXISTS</literal></term>
       <listitem>
        <para>
-        Do not throw an error if the table does not exist. A notice is issued
-        in this case.
+        如果表不存在，不要抛出错误。这种情况下会发出一个提示。
        </para>
       </listitem>
      </varlistentry>
@@ -1210,12 +865,11 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name (optionally schema-qualified) of an existing table to
-        alter. If <literal>ONLY</literal> is specified before the table name, only
-        that table is altered. If <literal>ONLY</literal> is not specified, the table
-        and all its descendant tables (if any) are altered.  Optionally,
-        <literal>*</literal> can be specified after the table name to explicitly
-        indicate that descendant tables are included.
+        要更改的现有表的名称（可以选择用模式限定）。如果在表名之前指定了
+        <literal>ONLY</literal>，则只更改该表。如果未指定 <literal>ONLY</literal>，则更改该表
+        及其所有后代表（如果有）。可选地，
+        可以在表名之后指定 <literal>*</literal>，以明确
+        表示包含后代表。
        </para>
       </listitem>
      </varlistentry>
@@ -1224,7 +878,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">column_name</replaceable></term>
       <listitem>
        <para>
-        Name of a new or existing column.
+        新列或现有列的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1233,7 +887,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_column_name</replaceable></term>
       <listitem>
        <para>
-        New name for an existing column.
+        现有列的新名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1242,7 +896,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_name</replaceable></term>
       <listitem>
        <para>
-        New name for the table.
+        表的新名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1251,8 +905,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">data_type</replaceable></term>
       <listitem>
        <para>
-        Data type of the new column, or new data type for an existing
-        column.
+        新列的数据类型，或现有列的新数据类型。
        </para>
       </listitem>
      </varlistentry>
@@ -1261,7 +914,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">table_constraint</replaceable></term>
       <listitem>
        <para>
-        New table constraint for the table.
+        表的新约束。
        </para>
       </listitem>
      </varlistentry>
@@ -1270,7 +923,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">constraint_name</replaceable></term>
       <listitem>
        <para>
-        Name of a new or existing constraint.
+        新约束或现有约束的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1279,10 +932,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><literal>CASCADE</literal></term>
       <listitem>
        <para>
-        Automatically drop objects that depend on the dropped column
-        or constraint (for example, views referencing the column),
-        and in turn all objects that depend on those objects
-        (see <xref linkend="ddl-depend"/>).
+        自动删除依赖于被删除列或约束的对象（例如引用该列的视图），并进而删除所有依赖于这些对象的对象（参见 <xref linkend="ddl-depend"/>）。
        </para>
       </listitem>
      </varlistentry>
@@ -1291,8 +941,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><literal>RESTRICT</literal></term>
       <listitem>
        <para>
-        Refuse to drop the column or constraint if there are any dependent
-        objects. This is the default behavior.
+        如果存在任何依赖对象，则拒绝删除该列或约束。这是默认行为。
        </para>
       </listitem>
      </varlistentry>
@@ -1301,7 +950,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">trigger_name</replaceable></term>
       <listitem>
        <para>
-        Name of a single trigger to disable or enable.
+        要禁用或启用的单个触发器的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1310,11 +959,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><literal>ALL</literal></term>
       <listitem>
        <para>
-        Disable or enable all triggers belonging to the table.
-        (This requires superuser privilege if any of the triggers are
-        internally generated constraint triggers, such as those that are used
-        to implement foreign key constraints or deferrable uniqueness and
-        exclusion constraints.)
+        禁用或启用属于该表的所有触发器。
+        （如果其中任何触发器是内部生成的约束触发器，例如用于实现外键约束或可延迟的唯一性和排除约束的触发器，则需要超级用户权限。）
        </para>
       </listitem>
      </varlistentry>
@@ -1323,10 +969,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><literal>USER</literal></term>
       <listitem>
        <para>
-        Disable or enable all triggers belonging to the table except for
-        internally generated constraint triggers, such as those that are used
-        to implement foreign key constraints or deferrable uniqueness and
-        exclusion constraints.
+        禁用或启用属于该表的所有触发器，但内部生成的约束触发器除外，例如用于实现外键约束或可延迟的唯一性和排除约束的触发器。
        </para>
       </listitem>
      </varlistentry>
@@ -1335,7 +978,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">index_name</replaceable></term>
       <listitem>
        <para>
-        The name of an existing index.
+        现有索引的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1344,7 +987,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">storage_parameter</replaceable></term>
       <listitem>
        <para>
-        The name of a table storage parameter.
+        表存储参数的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1353,8 +996,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">value</replaceable></term>
       <listitem>
        <para>
-        The new value for a table storage parameter.
-        This might be a number or a word depending on the parameter.
+        表存储参数的新值。
+        根据参数的不同，这可能是一个数字或一个词。
        </para>
       </listitem>
      </varlistentry>
@@ -1363,7 +1006,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">parent_table</replaceable></term>
       <listitem>
        <para>
-        A parent table to associate or de-associate with this table.
+        要与此表关联或取消关联的父表。
        </para>
       </listitem>
      </varlistentry>
@@ -1372,7 +1015,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_owner</replaceable></term>
       <listitem>
        <para>
-        The user name of the new owner of the table.
+        表的新所有者的用户名。
        </para>
       </listitem>
      </varlistentry>
@@ -1381,7 +1024,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_access_method</replaceable></term>
       <listitem>
        <para>
-        The name of the access method to which the table will be converted.
+        表将转换成的访问方法的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1390,7 +1033,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_tablespace</replaceable></term>
       <listitem>
        <para>
-        The name of the tablespace to which the table will be moved.
+        表将移动到的表空间的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1399,7 +1042,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">new_schema</replaceable></term>
       <listitem>
        <para>
-        The name of the schema to which the table will be moved.
+        表将移动到的模式的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1408,7 +1051,7 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">partition_name</replaceable></term>
       <listitem>
        <para>
-        The name of the table to attach as a new partition or to detach from this table.
+        要作为新分区附加或从此表分离的表的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -1417,8 +1060,8 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
       <term><replaceable class="parameter">partition_bound_spec</replaceable></term>
       <listitem>
        <para>
-        The partition bound specification for a new partition.  Refer to
-        <xref linkend="sql-createtable"/> for more details on the syntax of the same.
+        新分区的分区边界声明。有关相同语法的更多细节，请参考
+        <xref linkend="sql-createtable"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -1427,239 +1070,152 @@ WITH ( MODULUS <replaceable class="parameter">numeric_literal</replaceable>, REM
  </refsect1>
 
  <refsect1 id="sql-altertable-notes" xreflabel="Notes">
-  <title>Notes</title>
+  <title>说明</title>
 
    <para>
-    The key word <literal>COLUMN</literal> is noise and can be omitted.
+    关键字 <literal>COLUMN</literal> 是噪声，可以省略。
    </para>
 
    <para>
-    When a column is added with <literal>ADD COLUMN</literal> and a
-    non-volatile <literal>DEFAULT</literal> is specified, the default value is
-    evaluated at the time of the statement and the result stored in the
-    table's metadata, where it will be returned when any existing rows are
-    accessed.  The value will be only applied when the table is rewritten,
-    making the <command>ALTER TABLE</command> very fast even on large tables.
-    If no column constraints are specified, NULL is used as the
-    <literal>DEFAULT</literal>.  In neither case is a rewrite of the table
-    required.
+    当使用 <literal>ADD COLUMN</literal> 添加列并且指定了非易失性的 <literal>DEFAULT</literal> 时，
+    默认值在语句执行时求值，结果存储在表的元数据中，
+    当访问任何已有行时将返回该结果。该值只有在表被重写时才会被应用，
+    这使得 <command>ALTER TABLE</command> 即使在大表上也非常快。
+    如果没有指定列约束，则使用 NULL 作为
+    <literal>DEFAULT</literal>。这两种情况都不需要重写表。
    </para>
 
    <para>
-    Adding a column with a volatile <literal>DEFAULT</literal>
-    (e.g., <function>clock_timestamp()</function>), a stored generated column,
-    an identity column, or a column with a domain data type that has
-    constraints will cause the entire table and its indexes to be rewritten.
-    Adding a virtual generated column never requires a rewrite.
+    添加带有易失性 <literal>DEFAULT</literal>
+    （例如 <function>clock_timestamp()</function>）的列、存储生成列、
+    标识列，或者带有具有约束的域数据类型的列，
+    将导致整个表及其索引被重写。
+    添加虚拟生成列从不需要重写。
    </para>
 
    <para>
-    Changing the type of an existing column will normally cause the entire table
-    and its indexes to be rewritten.
-    As an exception, when changing the type of an existing column,
-    if the <literal>USING</literal> clause does not change the column
-    contents and the old type is either binary coercible to the new type
-    or an unconstrained domain over the new type, a table rewrite is not
-    needed.  However, indexes will still be rebuilt unless the system
-    can verify that the new index would be logically equivalent to the
-    existing one.  For example, if the collation for a column has been
-    changed, an index rebuild is required because the new sort
-    order might be different.  However, in the absence of a collation
-    change, a column can be changed from <type>text</type> to
-    <type>varchar</type> (or vice versa) without rebuilding the indexes
-    because these data types sort identically.
+    更改现有列的类型通常会导致整个表
+    及其索引被重写。
+    作为例外，在更改现有列的类型时，
+    如果 <literal>USING</literal> 子句不改变列内容，
+    并且旧类型可以二进制强制转换为新类型，
+    或者是新类型上的无约束域，则不需要重写表。
+    但是，索引仍将被重建，除非系统
+    能够验证新索引在逻辑上等同于
+    现有索引。例如，如果列的排序规则已
+    更改，则需要重建索引，因为新的排序
+    顺序可能不同。但是，在没有排序规则
+    更改的情况下，可以将列从 <type>text</type> 更改为
+    <type>varchar</type>（或反之），而无需重建索引，
+    因为这些数据类型的排序方式相同。
    </para>
 
    <para>
-    Table and/or index
-    rebuilds may take a significant amount of time for a large table,
-    and will temporarily require as much as double the disk space.
+    对于大表，表和/或索引的重建可能需要相当长的时间，并且会临时需要多达两倍的磁盘空间。
    </para>
 
    <para>
-    Adding a <literal>CHECK</literal> or <literal>NOT NULL</literal>
-    constraint requires scanning the table to verify that existing rows meet the
-    constraint, but does not require a table rewrite.  If a <literal>CHECK</literal>
-    constraint is added as <literal>NOT ENFORCED</literal>, no verification will
-    be performed.
+    添加 <literal>CHECK</literal> 或 <literal>NOT NULL</literal> 约束需要扫描表以验证现有行满足该约束，但不需要重写表。如果以 <literal>NOT ENFORCED</literal> 方式添加 <literal>CHECK</literal> 约束，则不会执行验证。
    </para>
 
    <para>
-    Similarly, when attaching a new partition it may be scanned to verify that
-    existing rows meet the partition constraint.
+    类似地，在挂载新分区时，可能会扫描该分区以验证现有行满足分区约束。
    </para>
 
    <para>
-    The main reason for providing the option to specify multiple changes
-    in a single <command>ALTER TABLE</command> is that multiple table scans or
-    rewrites can thereby be combined into a single pass over the table.
+    提供在单个 <command>ALTER TABLE</command> 中指定多项变更这一选项的主要原因是，这样可以将多次表扫描或重写合并为对表的一次遍历。
    </para>
 
    <para>
-    Scanning a large table to verify new foreign-key, check, or not-null constraints
-    can take a long time, and other updates to the table are locked out
-    until the <command>ALTER TABLE ADD CONSTRAINT</command> command is
-    committed.  The main purpose of the <literal>NOT VALID</literal>
-    constraint option is to reduce the impact of adding a constraint on
-    concurrent updates.  With <literal>NOT VALID</literal>,
-    the <command>ADD CONSTRAINT</command> command does not scan the table
-    and can be committed immediately.  After that, a <literal>VALIDATE
-    CONSTRAINT</literal> command can be issued to verify that existing rows
-    satisfy the constraint.  The validation step does not need to lock out
-    concurrent updates, since it knows that other transactions will be
-    enforcing the constraint for rows that they insert or update; only
-    pre-existing rows need to be checked.  Hence, validation acquires only
-    a <literal>SHARE UPDATE EXCLUSIVE</literal> lock on the table being
-    altered.  (If the constraint is a foreign key then a <literal>ROW
-    SHARE</literal> lock is also required on the table referenced by the
-    constraint.)  In addition to improving concurrency, it can be useful to
-    use <literal>NOT VALID</literal> and <literal>VALIDATE
-    CONSTRAINT</literal> in cases where the table is known to contain
-    pre-existing violations.  Once the constraint is in place, no new
-    violations can be inserted, and the existing problems can be corrected
-    at leisure until <literal>VALIDATE CONSTRAINT</literal> finally
-    succeeds.
+    扫描大表以验证新的外键、检查或非空约束可能耗时很长，并且在 <command>ALTER TABLE ADD CONSTRAINT</command> 命令提交之前，对表的其他更新会被锁定在外。<literal>NOT VALID</literal> 约束选项的主要目的是减少添加约束对并发更新的影响。使用 <literal>NOT VALID</literal> 时，<command>ADD CONSTRAINT</command> 命令不会扫描表，可以立即提交。之后，可以发出 <literal>VALIDATE
+    CONSTRAINT</literal> 命令来验证现有行满足该约束。验证步骤不需要锁定并发更新，因为它知道其他事务会对其插入或更新的行强制执行该约束；只有先前已存在的行需要检查。因此，验证仅在被变更的表上获取 <literal>SHARE UPDATE EXCLUSIVE</literal> 锁。（如果该约束是外键，则还需要在约束所引用的表上获取 <literal>ROW
+    SHARE</literal> 锁。）除了改善并发性之外，在已知表中包含先前已存在的违规行的情况下，使用 <literal>NOT VALID</literal> 和 <literal>VALIDATE
+    CONSTRAINT</literal> 也可能很有用。一旦约束就位，就无法插入新的违规行，可以从容地修正现有问题，直到 <literal>VALIDATE CONSTRAINT</literal> 最终成功。
    </para>
 
    <para>
-    The <literal>DROP COLUMN</literal> form does not physically remove
-    the column, but simply makes it invisible to SQL operations.  Subsequent
-    insert and update operations in the table will store a null value for the
-    column. Thus, dropping a column is quick but it will not immediately
-    reduce the on-disk size of your table, as the space occupied
-    by the dropped column is not reclaimed.  The space will be
-    reclaimed over time as existing rows are updated.
+    <literal>DROP COLUMN</literal> 形式不会物理删除该列，而只是使其对 SQL 操作不可见。之后对该表的插入和更新操作将为该列存储空值。因此，删除列很快，但不会立即减小表的磁盘大小，因为被删除列占用的空间不会被回收。随着现有行被更新，该空间会逐渐被回收。
    </para>
 
    <para>
-    To force immediate reclamation of space occupied by a dropped column,
-    you can execute one of the forms of <command>ALTER TABLE</command> that
-    performs a rewrite of the whole table.  This results in reconstructing
-    each row with the dropped column replaced by a null value.
+    要强制立即回收被删除的列所占用的空间，可以执行 <command>ALTER TABLE</command> 中会重写整张表的某种形式。这会重建每一行，并把被删除的列替换为空值。
    </para>
 
    <para>
-    The rewriting forms of <command>ALTER TABLE</command> are not MVCC-safe.
-    After a table rewrite, the table will appear empty to concurrent
-    transactions, if they are using a snapshot taken before the rewrite
-    occurred.  See <xref linkend="mvcc-caveats"/> for more details.
+    <command>ALTER TABLE</command> 的重写形式不是 MVCC 安全的。在表重写之后，如果并发事务使用的是在重写发生之前取得的快照，那么该表对它们来说会显示为空。更多细节请参见 <xref linkend="mvcc-caveats"/>。
    </para>
 
    <para>
-    The <literal>USING</literal> option of <literal>SET DATA TYPE</literal> can actually
-    specify any expression involving the old values of the row; that is, it
-    can refer to other columns as well as the one being converted.  This allows
-    very general conversions to be done with the <literal>SET DATA TYPE</literal>
-    syntax.  Because of this flexibility, the <literal>USING</literal>
-    expression is not applied to the column's default value (if any); the
-    result might not be a constant expression as required for a default.
-    This means that when there is no implicit or assignment cast from old to
-    new type, <literal>SET DATA TYPE</literal> might fail to convert the default even
-    though a <literal>USING</literal> clause is supplied.  In such cases,
-    drop the default with <literal>DROP DEFAULT</literal>, perform the <literal>ALTER
-    TYPE</literal>, and then use <literal>SET DEFAULT</literal> to add a suitable new
-    default.  Similar considerations apply to indexes and constraints involving
-    the column.
+    <literal>SET DATA TYPE</literal> 的 <literal>USING</literal> 选项实际上可以指定任何涉及该行旧值的表达式；也就是说，它既可以引用被转换的列，也可以引用其他列。这使得用 <literal>SET DATA TYPE</literal> 语法可以完成非常通用的转换。由于这种灵活性，<literal>USING</literal> 表达式不会应用于列的默认值（如果有的话）；其结果可能不是默认值所要求的常量表达式。这意味着，当从旧类型到新类型不存在隐式转换或赋值转换时，即使提供了 <literal>USING</literal> 子句，<literal>SET DATA TYPE</literal> 也可能无法转换默认值。在这种情况下，请用 <literal>DROP DEFAULT</literal> 删除默认值，执行 <literal>ALTER
+    TYPE</literal>，然后使用 <literal>SET DEFAULT</literal> 添加合适的新默认值。类似的考虑也适用于涉及该列的索引和约束。
    </para>
 
    <para>
-    If a table has any descendant tables, it is not permitted to add,
-    rename, or change the type of a column in the parent table without doing
-    the same to the descendants.  This ensures that the descendants always
-    have columns matching the parent.  Similarly, a <literal>CHECK</literal>
-    constraint cannot be renamed in the parent without also renaming it in
-    all descendants, so that <literal>CHECK</literal> constraints also match
-    between the parent and its descendants.  (That restriction does not apply
-    to index-based constraints, however.)
-    Also, because selecting from the parent also selects from its descendants,
-    a constraint on the parent cannot be marked valid unless it is also marked
-    valid for those descendants.  In all of these cases, <command>ALTER TABLE
-    ONLY</command> will be rejected.
+    如果一张表有任何后代表，则不允许在父表中添加、重命名或更改列的类型，除非对后代表做同样的操作。这确保后代表始终具有与父表匹配的列。同样，如果不也在所有后代表中重命名 <literal>CHECK</literal> 约束，就不能在父表中重命名它，这样 <literal>CHECK</literal> 约束在父表与其后代表之间也能匹配。（不过，该限制不适用于基于索引的约束。）此外，由于从父表中选择也会从其所有后代表中选择，除非父表上的约束对那些后代表也被标记为有效，否则不能将其标记为有效。在所有这些情况下，<command>ALTER TABLE
+    ONLY</command> 都会被拒绝。
    </para>
 
    <para>
-    A recursive <literal>DROP COLUMN</literal> operation will remove a
-    descendant table's column only if the descendant does not inherit
-    that column from any other parents and never had an independent
-    definition of the column.  A nonrecursive <literal>DROP
-    COLUMN</literal> (i.e., <command>ALTER TABLE ONLY ... DROP
-    COLUMN</command>) never removes any descendant columns, but
-    instead marks them as independently defined rather than inherited.
-    A nonrecursive <literal>DROP COLUMN</literal> command will fail for a
-    partitioned table, because all partitions of a table must have the same
-    columns as the partitioning root.
+    递归的 <literal>DROP COLUMN</literal> 操作只有在后代没有从任何其他父表继承该列、且从未有过该列的独立定义时，才会删除后代表的列。非递归的 <literal>DROP
+    COLUMN</literal>（即 <command>ALTER TABLE ONLY ... DROP
+    COLUMN</command>）从不删除任何后代列，而是将它们标记为独立定义而非继承。非递归的 <literal>DROP COLUMN</literal> 命令对分区表会失败，因为表的所有分区必须与分区根具有相同的列。
    </para>
 
    <para>
-    The actions for identity columns (<literal>ADD
-    GENERATED</literal>, <literal>SET</literal> etc., <literal>DROP
-    IDENTITY</literal>), as well as the actions
-    <literal>CLUSTER</literal>, <literal>OWNER</literal>,
-    and <literal>TABLESPACE</literal> never recurse to descendant tables;
-    that is, they always act as though <literal>ONLY</literal> were specified.
-    Actions affecting trigger states recurse to partitions of partitioned
-    tables (unless <literal>ONLY</literal> is specified), but never to
-    traditional-inheritance descendants.
-    Adding a constraint recurses only for <literal>CHECK</literal> constraints
-    that are not marked <literal>NO INHERIT</literal>.
+    标识列的操作（<literal>ADD
+    GENERATED</literal>、<literal>SET</literal> 等，<literal>DROP
+    IDENTITY</literal>），以及操作 <literal>CLUSTER</literal>、<literal>OWNER</literal> 和 <literal>TABLESPACE</literal> 从不递归到后代表；也就是说，它们总是如同指定了 <literal>ONLY</literal> 一样行事。影响触发器状态的操作会递归到分区表的分区（除非指定了 <literal>ONLY</literal>），但从不递归到传统继承的后代。添加约束仅对未标记 <literal>NO INHERIT</literal> 的 <literal>CHECK</literal> 约束递归。
    </para>
 
    <para>
-    Changing any part of a system catalog table is not permitted.
+    不允许更改系统目录表的任何部分。
    </para>
 
    <para>
-    Refer to <xref linkend="sql-createtable"/> for a further description of valid
-    parameters. <xref linkend="ddl"/> has further information on
-    inheritance.
+    有关有效参数的进一步说明，请参阅 <xref linkend="sql-createtable"/>。<xref linkend="ddl"/> 中有关于继承的更多信息。
    </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To add a column of type <type>varchar</type> to a table:
+   要向表中添加一个类型为 <type>varchar</type> 的列：
 <programlisting>
 ALTER TABLE distributors ADD COLUMN address varchar(30);
 </programlisting>
-   That will cause all existing rows in the table to be filled with null
-   values for the new column.
+   这将导致表中所有现有行的新列被填充为空值。
   </para>
 
   <para>
-   To add a column with a non-null default:
+   要添加一个带非空默认值的列：
 <programlisting>
 ALTER TABLE measurements
   ADD COLUMN mtime timestamp with time zone DEFAULT now();
 </programlisting>
-   Existing rows will be filled with the current time as the value of the
-   new column, and then new rows will receive the time of their insertion.
+   现有行将用当前时间填充为新列的值，之后新插入的行将接收其插入时间。
   </para>
 
   <para>
-   To add a column and fill it with a value different from the default to
-   be used later:
+   要添加一个列并用一个不同于以后要使用的默认值来填充它：
 <programlisting>
 ALTER TABLE transactions
   ADD COLUMN status varchar(30) DEFAULT 'old',
   ALTER COLUMN status SET default 'current';
 </programlisting>
-   Existing rows will be filled with <literal>old</literal>, but then
-   the default for subsequent commands will be <literal>current</literal>.
-   The effects are the same as if the two sub-commands had been issued
-   in separate <command>ALTER TABLE</command> commands.
+   现有行将用 <literal>old</literal> 填充，但随后命令的默认值将是 <literal>current</literal>。
+   其效果与在单独的 <command>ALTER TABLE</command> 命令中发出这两个子命令相同。
   </para>
 
   <para>
-   To drop a column from a table:
+   要从表中删除一个列：
 <programlisting>
 ALTER TABLE distributors DROP COLUMN address RESTRICT;
 </programlisting>
   </para>
 
   <para>
-   To change the types of two existing columns in one operation:
+   要在一次操作中更改两个现有列的类型：
 <programlisting>
 ALTER TABLE distributors
     ALTER COLUMN address TYPE varchar(80),
@@ -1668,8 +1224,8 @@ ALTER TABLE distributors
   </para>
 
   <para>
-   To change an integer column containing Unix timestamps to <type>timestamp
-   with time zone</type> via a <literal>USING</literal> clause:
+   要通过 <literal>USING</literal> 子句将包含 Unix 时间戳的整数列更改为 <type>timestamp
+   with time zone</type>：
 <programlisting>
 ALTER TABLE foo
     ALTER COLUMN foo_timestamp SET DATA TYPE timestamp with time zone
@@ -1679,8 +1235,7 @@ ALTER TABLE foo
   </para>
 
   <para>
-   The same, when the column has a default expression that won't automatically
-   cast to the new data type:
+   同上，当该列具有一个不会自动转换为新数据类型的默认表达式时：
 <programlisting>
 ALTER TABLE foo
     ALTER COLUMN foo_timestamp DROP DEFAULT,
@@ -1692,76 +1247,76 @@ ALTER TABLE foo
   </para>
 
   <para>
-   To rename an existing column:
+   要重命名一个现有列：
 <programlisting>
 ALTER TABLE distributors RENAME COLUMN address TO city;
 </programlisting>
   </para>
 
   <para>
-   To rename an existing table:
+   要重命名一个现有表：
 <programlisting>
 ALTER TABLE distributors RENAME TO suppliers;
 </programlisting>
   </para>
 
   <para>
-   To rename an existing constraint:
+   要重命名一个现有约束：
 <programlisting>
 ALTER TABLE distributors RENAME CONSTRAINT zipchk TO zip_check;
 </programlisting>
   </para>
 
   <para>
-   To add a not-null constraint to a column:
+   要向一个列添加非空约束：
 <programlisting>
 ALTER TABLE distributors ALTER COLUMN street SET NOT NULL;
 </programlisting>
-   To remove a not-null constraint from a column:
+   要从一个列移除非空约束：
 <programlisting>
 ALTER TABLE distributors ALTER COLUMN street DROP NOT NULL;
 </programlisting>
   </para>
 
   <para>
-   To add a check constraint to a table and all its children:
+   要向一个表及其所有子表添加检查约束：
 <programlisting>
 ALTER TABLE distributors ADD CONSTRAINT zipchk CHECK (char_length(zipcode) = 5);
 </programlisting>
   </para>
 
   <para>
-   To add a check constraint only to a table and not to its children:
+   要仅向一个表添加检查约束而不向其子表添加：
 <programlisting>
 ALTER TABLE distributors ADD CONSTRAINT zipchk CHECK (char_length(zipcode) = 5) NO INHERIT;
 </programlisting>
-   (The check constraint will not be inherited by future children, either.)
+   （该检查约束也不会被未来的子表继承。）
   </para>
 
   <para>
-   To remove a check constraint from a table and all its children:
+   要从一张表及其所有子表中移除检查约束：
 <programlisting>
 ALTER TABLE distributors DROP CONSTRAINT zipchk;
 </programlisting>
   </para>
 
   <para>
-   To remove a check constraint from one table only:
+   仅从一张表中移除检查约束：
 <programlisting>
 ALTER TABLE ONLY distributors DROP CONSTRAINT zipchk;
 </programlisting>
-   (The check constraint remains in place for any child tables.)
+   （对于任何子表，该检查约束仍保留在原处。）
   </para>
 
   <para>
-   To add a foreign key constraint to a table:
+   要向表中添加外键约束：
 <programlisting>
 ALTER TABLE distributors ADD CONSTRAINT distfk FOREIGN KEY (address) REFERENCES addresses (address);
 </programlisting>
   </para>
 
   <para>
-   To add a foreign key constraint to a table with the least impact on other work:
+   要以对其他工作影响最小的方式向表中添加外键约束：
 <programlisting>
 ALTER TABLE distributors ADD CONSTRAINT distfk FOREIGN KEY (address) REFERENCES addresses (address) NOT VALID;
 ALTER TABLE distributors VALIDATE CONSTRAINT distfk;
@@ -1769,37 +1324,35 @@ ALTER TABLE distributors VALIDATE CONSTRAINT distfk;
   </para>
 
   <para>
-   To add a (multicolumn) unique constraint to a table:
+   要向表中添加（多列）唯一约束：
 <programlisting>
 ALTER TABLE distributors ADD CONSTRAINT dist_id_zipcode_key UNIQUE (dist_id, zipcode);
 </programlisting>
   </para>
 
   <para>
-   To add an automatically named primary key constraint to a table, noting
-   that a table can only ever have one primary key:
+   要向表中添加自动命名的主键约束，注意一张表只能有一个主键：
 <programlisting>
 ALTER TABLE distributors ADD PRIMARY KEY (dist_id);
 </programlisting>
   </para>
 
   <para>
-   To move a table to a different tablespace:
+   要把一个表移动到不同的表空间：
 <programlisting>
 ALTER TABLE distributors SET TABLESPACE fasttablespace;
 </programlisting>
   </para>
 
   <para>
-   To move a table to a different schema:
+   要把一个表移动到不同的模式：
 <programlisting>
 ALTER TABLE myschema.distributors SET SCHEMA yourschema;
 </programlisting>
   </para>
 
   <para>
-   To recreate a primary key constraint, without blocking updates while the
-   index is rebuilt:
+   要在重建索引时不阻塞更新地重新创建主键约束：
 <programlisting>
 CREATE UNIQUE INDEX CONCURRENTLY dist_id_temp_idx ON distributors (dist_id);
 ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
@@ -1807,35 +1360,35 @@ ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
 </programlisting></para>
 
   <para>
-   To attach a partition to a range-partitioned table:
+   要把一个分区附加到范围分区表：
 <programlisting>
 ALTER TABLE measurement
     ATTACH PARTITION measurement_y2016m07 FOR VALUES FROM ('2016-07-01') TO ('2016-08-01');
 </programlisting></para>
 
   <para>
-   To attach a partition to a list-partitioned table:
+   要把一个分区附加到列表分区表：
 <programlisting>
 ALTER TABLE cities
     ATTACH PARTITION cities_ab FOR VALUES IN ('a', 'b');
 </programlisting></para>
 
   <para>
-   To attach a partition to a hash-partitioned table:
+   要把一个分区附加到哈希分区表：
 <programlisting>
 ALTER TABLE orders
     ATTACH PARTITION orders_p4 FOR VALUES WITH (MODULUS 4, REMAINDER 3);
 </programlisting></para>
 
   <para>
-   To attach a default partition to a partitioned table:
+   要把默认分区附加到一个分区表：
 <programlisting>
 ALTER TABLE cities
     ATTACH PARTITION cities_partdef DEFAULT;
 </programlisting></para>
 
   <para>
-   To detach a partition from a partitioned table:
+   要从一个分区表分离一个分区：
 <programlisting>
 ALTER TABLE measurement
     DETACH PARTITION measurement_y2015m12;
@@ -1844,34 +1397,19 @@ ALTER TABLE measurement
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   The forms <literal>ADD [COLUMN]</literal>,
-   <literal>DROP [COLUMN]</literal>, <literal>DROP IDENTITY</literal>, <literal>RESTART</literal>,
-   <literal>SET DEFAULT</literal>, <literal>SET DATA TYPE</literal> (without <literal>USING</literal>),
-   <literal>SET GENERATED</literal>, and <literal>SET <replaceable>sequence_option</replaceable></literal>
-   conform with the SQL standard.
-   The form <literal>ADD <replaceable>table_constraint</replaceable></literal>
-   conforms with the SQL standard when the <literal>USING INDEX</literal> and
-   <literal>NOT VALID</literal> clauses are omitted and the constraint type is
-   one of <literal>CHECK</literal>, <literal>UNIQUE</literal>, <literal>PRIMARY KEY</literal>,
-   or <literal>REFERENCES</literal>.
-   The other forms are
-   <productname>PostgreSQL</productname> extensions of the SQL standard.
-   Also, the ability to specify more than one manipulation in a single
-   <command>ALTER TABLE</command> command is an extension.
+   形式 <literal>ADD [COLUMN]</literal>、<literal>DROP [COLUMN]</literal>、<literal>DROP IDENTITY</literal>、<literal>RESTART</literal>、<literal>SET DEFAULT</literal>、<literal>SET DATA TYPE</literal>（不带 <literal>USING</literal>）、<literal>SET GENERATED</literal> 和 <literal>SET <replaceable>sequence_option</replaceable></literal> 符合 SQL 标准。当省略 <literal>USING INDEX</literal> 和 <literal>NOT VALID</literal> 子句且约束类型为 <literal>CHECK</literal>、<literal>UNIQUE</literal>、<literal>PRIMARY KEY</literal> 或 <literal>REFERENCES</literal> 之一时，形式 <literal>ADD <replaceable>table_constraint</replaceable></literal> 符合 SQL 标准。其他形式是 SQL 标准的 <productname>PostgreSQL</productname> 扩展。此外，在单个 <command>ALTER TABLE</command> 命令中指定多个操作的能力是一种扩展。
   </para>
 
   <para>
-   <command>ALTER TABLE DROP COLUMN</command> can be used to drop the only
-   column of a table, leaving a zero-column table.  This is an
-   extension of SQL, which disallows zero-column tables.
+   <command>ALTER TABLE DROP COLUMN</command> 可用于删除表的唯一一列，留下一个零列的表。这是对 SQL 的扩展，SQL 不允许零列的表。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createtable"/></member>
