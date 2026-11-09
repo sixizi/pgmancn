@@ -530,26 +530,24 @@ SELECT *
 
 
   <sect1 id="tutorial-agg">
-   <title>Aggregate Functions</title>
+   <title>聚合函数</title>
 
    <indexterm zone="tutorial-agg">
     <primary>aggregate function</primary>
    </indexterm>
 
    <para>
-    Like  most  other relational database products,
-    <productname>PostgreSQL</productname> supports
-    <firstterm>aggregate functions</firstterm>.
-    An aggregate function computes a single result from multiple input rows.
-    For example, there are aggregates to compute the
-    <function>count</function>, <function>sum</function>,
-    <function>avg</function> (average), <function>max</function> (maximum) and
-    <function>min</function> (minimum) over a set of rows.
+    与大多数其他关系数据库产品一样，<productname>PostgreSQL</productname> 支持
+    <firstterm>聚合函数</firstterm>。
+    聚合函数从多个输入行计算出一个单一结果。
+    例如，有在一组行上计算
+    <function>count</function>、<function>sum</function>、
+    <function>avg</function>（平均值）、<function>max</function>（最大值）和
+    <function>min</function>（最小值）的聚合函数。
    </para>
 
    <para>
-    As an example, we can find the highest low-temperature reading anywhere
-    with:
+    作为一个例子，我们可以用下面的语句找出任何地方记录的最低温度中的最高值：
 
 <programlisting>
 SELECT max(temp_lo) FROM weather;
@@ -564,24 +562,23 @@ SELECT max(temp_lo) FROM weather;
    </para>
 
    <para>
-    <indexterm><primary>subquery</primary></indexterm>
+    <indexterm><primary>子查询</primary></indexterm>
 
-    If we wanted to know what city (or cities) that reading occurred in,
-    we might try:
+    如果我们想知道那个读数发生在哪个（或哪些）城市，
+    我们可能会尝试：
 
 <programlisting>
 SELECT city FROM weather WHERE temp_lo = max(temp_lo);     <lineannotation>-- WRONG</lineannotation>
 </programlisting>
 
-    but this will not work since the aggregate
-    <function>max</function> cannot be used in the
-    <literal>WHERE</literal> clause.  (This restriction exists because
-    the <literal>WHERE</literal> clause determines which rows will be
-    included in the aggregate calculation; so obviously it has to be evaluated
-    before aggregate functions are computed.)
-    However, as is often the case
-    the query can be restated to accomplish the desired result, here
-    by using a <firstterm>subquery</firstterm>:
+    但这行不通，因为聚合函数
+    <function>max</function> 不能用在
+    <literal>WHERE</literal> 子句中。（存在这个限制是因为
+    <literal>WHERE</literal> 子句决定哪些行会被包含在聚合计算中；所以显然它必须在
+    计算聚合函数之前被求值。）
+    不过，正如常见的情况那样，
+    可以改写查询来达到想要的结果，这里
+    通过使用<firstterm>子查询</firstterm>：
 
 <programlisting>
 SELECT city FROM weather
@@ -595,9 +592,8 @@ SELECT city FROM weather
 (1 row)
 </screen>
 
-    This is OK because the subquery is an independent computation
-    that computes its own aggregate separately from what is happening
-    in the outer query.
+    这样是可以的，因为子查询是一个独立的计算，
+    它独立于外层查询中发生的事情来计算自己的聚合。
    </para>
 
    <para>
@@ -662,44 +658,35 @@ SELECT city, count(*), max(temp_lo)
    <calloutlist>
     <callout arearefs="co.tutorial-agg-like">
      <para>
-      The <literal>LIKE</literal> operator does pattern matching and
-      is explained in <xref linkend="functions-matching"/>.
+      <literal>LIKE</literal> 运算符进行模式匹配，
+      在 <xref linkend="functions-matching"/> 中有解释。
      </para>
     </callout>
    </calloutlist>
    </para>
 
    <para>
-    It is important to understand the interaction between aggregates and
-    <acronym>SQL</acronym>'s <literal>WHERE</literal> and <literal>HAVING</literal> clauses.
-    The fundamental difference between <literal>WHERE</literal> and
-    <literal>HAVING</literal> is this: <literal>WHERE</literal> selects
-    input rows before groups and aggregates are computed (thus, it controls
-    which rows go into the aggregate computation), whereas
-    <literal>HAVING</literal> selects group rows after groups and
-    aggregates are computed.  Thus, the
-    <literal>WHERE</literal> clause must not contain aggregate functions;
-    it makes no sense to try to use an aggregate to determine which rows
-    will be inputs to the aggregates.  On the other hand, the
-    <literal>HAVING</literal> clause always contains aggregate functions.
-    (Strictly speaking, you are allowed to write a <literal>HAVING</literal>
-    clause that doesn't use aggregates, but it's seldom useful. The same
-    condition could be used more efficiently at the <literal>WHERE</literal>
-    stage.)
+    理解聚合与
+    <acronym>SQL</acronym> 的 <literal>WHERE</literal> 和 <literal>HAVING</literal> 子句之间的相互作用很重要。
+    <literal>WHERE</literal> 和
+    <literal>HAVING</literal> 之间的根本区别在于：<literal>WHERE</literal> 在计算分组和聚合之前选择
+    输入行（因此，它控制哪些行进入聚合计算），而
+    <literal>HAVING</literal> 在计算分组和聚合之后选择分组行。因此，
+    <literal>WHERE</literal> 子句不能包含聚合函数；
+    试图用聚合来确定哪些行将成为聚合的输入是毫无意义的。另一方面，
+    <literal>HAVING</literal> 子句总是包含聚合函数。
+    （严格来说，你可以写一个不使用聚合的 <literal>HAVING</literal>
+    子句，但它很少有用。同样的
+    条件可以在 <literal>WHERE</literal>
+    阶段更高效地使用。）
    </para>
 
    <para>
-    In the previous example, we can apply the city name restriction in
-    <literal>WHERE</literal>, since it needs no aggregate.  This is
-    more efficient than adding the restriction to <literal>HAVING</literal>,
-    because we avoid doing the grouping and aggregate calculations
-    for all rows that fail the <literal>WHERE</literal> check.
+    在前面的示例中，我们可以在 <literal>WHERE</literal> 中应用城市名称限制，因为它不需要聚合。这比把该限制添加到 <literal>HAVING</literal> 中更高效，因为这样可以避免对未通过 <literal>WHERE</literal> 检查的所有行进行分组和聚合计算。
    </para>
 
    <para>
-    Another way to select the rows that go into an aggregate
-    computation is to use <literal>FILTER</literal>, which is a
-    per-aggregate option:
+    另一种选择参与聚合计算的行的方法是使用 <literal>FILTER</literal>，它是一个针对每个聚合的选项：
 
 <programlisting>
 SELECT city, count(*) FILTER (WHERE temp_lo &lt; 45), max(temp_lo)
@@ -715,13 +702,7 @@ SELECT city, count(*) FILTER (WHERE temp_lo &lt; 45), max(temp_lo)
 (2 rows)
 </screen>
 
-    <literal>FILTER</literal> is much like <literal>WHERE</literal>,
-    except that it removes rows only from the input of the particular
-    aggregate function that it is attached to.
-    Here, the <literal>count</literal> aggregate counts only
-    rows with <literal>temp_lo</literal> below 45; but the
-    <literal>max</literal> aggregate is still applied to all rows,
-    so it still finds the reading of 46.
+    <literal>FILTER</literal> 与 <literal>WHERE</literal> 非常相似，区别在于它只从其所附加的特定聚合函数的输入中移除行。这里，<literal>count</literal> 聚合只统计 <literal>temp_lo</literal> 低于 45 的行；但 <literal>max</literal> 聚合仍然应用于所有行，因此它仍然能找到 46 这个读数。
    </para>
   </sect1>
 
