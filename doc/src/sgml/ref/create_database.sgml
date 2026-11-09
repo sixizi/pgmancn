@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE DATABASE</refname>
-  <refpurpose>create a new database</refpurpose>
+  <refpurpose>创建一个新数据库</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -43,44 +43,31 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE DATABASE</command> creates a new
-   <productname>PostgreSQL</productname> database.
+   <command>CREATE DATABASE</command> 创建一个新的 <productname>PostgreSQL</productname> 数据库。
   </para>
 
   <para>
-   To create a database, you must be a superuser or have the special
-   <literal>CREATEDB</literal> privilege.
-   See <xref linkend="sql-createrole"/>.
+   要创建数据库，你必须是超级用户或具有特殊的 <literal>CREATEDB</literal> 权限。参见 <xref linkend="sql-createrole"/>。
   </para>
 
   <para>
-   By default, the new database will be created by cloning the standard
-   system database <literal>template1</literal>.  A different template can be
-   specified by writing <literal>TEMPLATE
-   <replaceable class="parameter">name</replaceable></literal>.  In particular,
-   by writing <literal>TEMPLATE template0</literal>, you can create a pristine
-   database (one where no user-defined objects exist and where the system
-   objects have not been altered)
-   containing only the standard objects predefined by your
-   version of <productname>PostgreSQL</productname>.  This is useful
-   if you wish to avoid copying
-   any installation-local objects that might have been added to
-   <literal>template1</literal>.
+   默认情况下，新数据库将通过克隆标准系统数据库 <literal>template1</literal> 来创建。通过写 <literal>TEMPLATE
+   <replaceable class="parameter">name</replaceable></literal> 可以指定不同的模板。特别地，通过写 <literal>TEMPLATE template0</literal>，你可以创建一个干净的数据库（其中不存在任何用户定义的对象，且系统对象未被修改过），它只包含你的 <productname>PostgreSQL</productname> 版本预定义的标准对象。如果你希望避免复制可能已添加到 <literal>template1</literal> 的任何安装本地对象，这将很有用。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
      <varlistentry id="create-database-name">
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name of a database to create.
+        要创建的数据库的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -88,11 +75,10 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">user_name</replaceable></term>
       <listitem>
        <para>
-        The role name of the user who will own the new database,
-        or <literal>DEFAULT</literal> to use the default (namely, the
-        user executing the command).  To create a database owned by another
-        role, you must be able to <literal>SET ROLE</literal> to that
-        role.
+        将成为新数据库拥有者的用户角色名称，
+        或者使用 <literal>DEFAULT</literal> 表示使用默认值（即执行该命令的用户）。
+        要创建由另一个角色拥有的数据库，你必须能够
+        <literal>SET ROLE</literal> 到该角色。
        </para>
       </listitem>
      </varlistentry>
@@ -100,9 +86,9 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">template</replaceable></term>
       <listitem>
        <para>
-        The name of the template from which to create the new database,
-        or <literal>DEFAULT</literal> to use the default template
-        (<literal>template1</literal>).
+        用于创建新数据库的模板名称，
+        或者使用 <literal>DEFAULT</literal> 表示使用默认模板
+        （<literal>template1</literal>）。
        </para>
       </listitem>
      </varlistentry>
@@ -110,14 +96,13 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">encoding</replaceable></term>
       <listitem>
        <para>
-        Character set encoding to use in the new database.  Specify
-        a string constant (e.g., <literal>'SQL_ASCII'</literal>),
-        or an integer encoding number, or <literal>DEFAULT</literal>
-        to use the default encoding (namely, the encoding of the
-        template database). The character sets supported by the
-        <productname>PostgreSQL</productname> server are described in
-        <xref linkend="multibyte-charset-supported"/>. See below for
-        additional restrictions.
+        新数据库中要使用的字符集编码。请指定
+        一个字符串常量（例如 <literal>'SQL_ASCII'</literal>），
+        或一个整数编码编号，或使用 <literal>DEFAULT</literal>
+        表示使用默认编码（即模板数据库的编码）。
+        <productname>PostgreSQL</productname> 服务器支持的字符集在
+        <xref linkend="multibyte-charset-supported"/> 中描述。有关
+        其他限制，请参见下文。
        </para>
       </listitem>
      </varlistentry>
@@ -125,22 +110,20 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">strategy</replaceable></term>
       <listitem>
        <para>
-        Strategy to be used in creating the new database.  If
-        the <literal>WAL_LOG</literal> strategy is used, the database will be
-        copied block by block and each block will be separately written
-        to the write-ahead log. This is the most efficient strategy in
-        cases where the template database is small, and therefore it is the
-        default. The older <literal>FILE_COPY</literal> strategy is also
-        available. This strategy writes a small record to the write-ahead log
-        for each tablespace used by the target database. Each such record
-        represents copying an entire directory to a new location at the
-        filesystem level. While this does reduce the write-ahead
-        log volume substantially, especially if the template database is large,
-        it also forces the system to perform a checkpoint both before and
-        after the creation of the new database. In some situations, this may
-        have a noticeable negative impact on overall system performance. The
-        <literal>FILE_COPY</literal> strategy is affected by the <xref
-        linkend="guc-file-copy-method"/> setting.
+        创建新数据库时要使用的策略。如果
+        使用 <literal>WAL_LOG</literal> 策略，数据库将被逐块复制，并且每个块都会单独写入
+        预写式日志。在模板数据库较小的情况下，这是最高效的策略，
+        因此它是默认值。较旧的 <literal>FILE_COPY</literal> 策略也
+        可用。该策略会为目标数据库使用的每个表空间向预写式日志
+        写入一条小记录。每条这样的记录
+        都表示在文件系统层面将一个完整目录复制到新位置。
+        虽然这确实大幅减少了预写式
+        日志量，尤其是在模板数据库很大时，
+        但它也会强制系统在新数据库创建之前和
+        之后各执行一次检查点。在某些情况下，这可能
+        对整体系统性能产生明显的负面影响。
+        <literal>FILE_COPY</literal> 策略受 <xref
+        linkend="guc-file-copy-method"/> 设置的影响。
        </para>
       </listitem>
      </varlistentry>
@@ -167,11 +150,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
         linkend="create-database-icu-locale"/> individually.
        </para>
        <para>
-        If <xref linkend="create-database-locale-provider"/> is
-        <literal>builtin</literal>, then <replaceable>locale</replaceable> or
-        <replaceable>builtin_locale</replaceable> must be specified and set to
-        either <literal>C</literal>, <literal>C.UTF-8</literal>, or
-        <literal>PG_UNICODE_FAST</literal>.
+        如果 <xref linkend="create-database-locale-provider"/> 为 <literal>builtin</literal>，则必须指定 <replaceable>locale</replaceable> 或 <replaceable>builtin_locale</replaceable>，并将其设置为 <literal>C</literal>、<literal>C.UTF-8</literal> 或 <literal>PG_UNICODE_FAST</literal> 之一。
        </para>
        <tip>
         <para>
@@ -214,10 +193,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
         restrictions.
        </para>
        <para>
-        If <xref linkend="create-database-locale-provider"/> is
-        <literal>libc</literal>, also sets the default character
-        classification to use in the new database, overriding the setting
-        <xref linkend="create-database-locale"/>.
+        如果 <xref linkend="create-database-locale-provider"/> 为 <literal>libc</literal>，则还会设置新数据库中使用的默认字符分类，覆盖 <xref linkend="create-database-locale"/> 的设置。
        </para>
       </listitem>
      </varlistentry>
@@ -235,9 +211,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
         setting as the template database.
        </para>
        <para>
-        The locales available for the <literal>builtin</literal> provider are
-        <literal>C</literal>, <literal>C.UTF-8</literal> and
-        <literal>PG_UNICODE_FAST</literal>.
+        <literal>builtin</literal> 提供者可用的区域设置为 <literal>C</literal>、<literal>C.UTF-8</literal> 和 <literal>PG_UNICODE_FAST</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -261,9 +235,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">icu_rules</replaceable></term>
       <listitem>
        <para>
-        Specifies additional collation rules to customize the behavior of the
-        default collation of this database.  This is supported for ICU only.
-        See <xref linkend="icu-tailoring-rules"/> for details.
+        指定附加的排序规则，以自定义此数据库默认排序规则的行为。仅 ICU 支持此功能。详情请参见 <xref linkend="icu-tailoring-rules"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -289,17 +261,11 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
 
       <listitem>
        <para>
-        Specifies the collation version string to store with the database.
-        Normally, this should be omitted, which will cause the version to be
-        computed from the actual version of the database collation as provided
-        by the operating system.  This option is intended to be used by
-        <command>pg_upgrade</command> for copying the version from an existing
-        installation.
+        指定要随数据库一起存储的排序规则版本字符串。通常应省略此项，这样版本将根据操作系统提供的数据库排序规则的实际版本计算得出。此选项旨在供 <command>pg_upgrade</command> 用于从现有安装中复制版本。
        </para>
 
        <para>
-        See also <xref linkend="sql-alterdatabase"/> for how to handle
-        database collation version mismatches.
+        有关如何处理数据库排序规则版本不匹配的信息，另请参见 <xref linkend="sql-alterdatabase"/>。
        </para>
      </listitem>
     </varlistentry>
@@ -307,13 +273,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">tablespace_name</replaceable></term>
       <listitem>
        <para>
-        The name of the tablespace that will be associated with the
-        new database, or <literal>DEFAULT</literal> to use the
-        template database's tablespace. This
-        tablespace will be the default tablespace used for objects
-        created in this database. See
-        <xref linkend="sql-createtablespace"/>
-        for more information.
+        要与新数据库关联的表空间的名称，或使用 <literal>DEFAULT</literal> 以使用模板数据库的表空间。此表空间将成为在此数据库中创建对象时使用的默认表空间。更多信息请参见 <xref linkend="sql-createtablespace"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -322,9 +282,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
        <term><replaceable class="parameter">allowconn</replaceable></term>
        <listitem>
         <para>
-         If false then no one can connect to this database.  The default is
-         true, allowing connections (except as restricted by other mechanisms,
-         such as <literal>GRANT</literal>/<literal>REVOKE CONNECT</literal>).
+         如果为 false，则任何人都无法连接到该数据库。默认为 true，允许连接（除非受到其他机制的限制，例如 <literal>GRANT</literal>/<literal>REVOKE CONNECT</literal>）。
         </para>
        </listitem>
       </varlistentry>
@@ -333,8 +291,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">connlimit</replaceable></term>
       <listitem>
        <para>
-        How many concurrent connections can be made
-        to this database.  -1 (the default) means no limit.
+        可以与此数据库建立的并发连接数。-1（默认值）表示没有限制。
        </para>
       </listitem>
      </varlistentry>
@@ -343,9 +300,7 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
        <term><replaceable class="parameter">istemplate</replaceable></term>
        <listitem>
         <para>
-         If true, then this database can be cloned by any user with <literal>CREATEDB</literal>
-         privileges; if false (the default), then only superusers or the owner
-         of the database can clone it.
+         如果为真，则任何具有 <literal>CREATEDB</literal> 权限的用户都可以克隆此数据库；如果为假（默认值），则只有超级用户或数据库的属主才能克隆它。
         </para>
        </listitem>
       </varlistentry>
@@ -354,12 +309,9 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
        <term><replaceable class="parameter">oid</replaceable></term>
        <listitem>
         <para>
-         The object identifier to be used for the new database. If this
-         parameter is not specified, <productname>PostgreSQL</productname>
-         will choose a suitable OID automatically. This parameter is primarily
-         intended for internal use by <application>pg_upgrade</application>,
-         and only <application>pg_upgrade</application> can specify a value
-         less than 16384.
+         用于新数据库的对象标识符。如果未指定此参数，<productname>PostgreSQL</productname>
+        将自动选择合适的 OID。此参数主要供 <application>pg_upgrade</application>
+        内部使用，并且只有 <application>pg_upgrade</application> 才能指定小于 16384 的值。
         </para>
        </listitem>
       </varlistentry>
@@ -367,98 +319,81 @@ CREATE DATABASE <replaceable class="parameter">name</replaceable>
     </variablelist>
 
   <para>
-   Optional parameters can be written in any order, not only the order
-   illustrated above.
+   可选参数可以按任意顺序书写，而不限于上面示例中的顺序。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
    <para>
-    <command>CREATE DATABASE</command> cannot be executed inside a transaction
-    block.
+    <command>CREATE DATABASE</command> 不能在事务块内执行。
    </para>
 
    <para>
-    Errors along the line of <quote>could not initialize database directory</quote>
-    are most likely related to insufficient permissions on the data
-    directory, a full disk, or other file system problems.
+    类似 <quote>could not initialize database directory</quote> 的错误
+    最可能是由于对数据目录的权限不足、磁盘已满或其他文件系统问题导致的。
    </para>
 
    <para>
-    Use <link linkend="sql-dropdatabase"><command>DROP DATABASE</command></link> to remove a database.
+    使用 <link linkend="sql-dropdatabase"><command>DROP DATABASE</command></link> 删除数据库。
    </para>
 
    <para>
-    The program <xref linkend="app-createdb"/> is a
-    wrapper program around this command, provided for convenience.
+    程序 <xref linkend="app-createdb"/> 是此命令的包装程序，为方便起见而提供。
    </para>
 
    <para>
-    Database-level configuration parameters (set via <link
-    linkend="sql-alterdatabase"><command>ALTER DATABASE</command></link>) and database-level permissions (set via
-    <link linkend="sql-grant"><command>GRANT</command></link>) are not copied from the template database.
+    数据库级配置参数（通过 <link
+    linkend="sql-alterdatabase"><command>ALTER DATABASE</command></link> 设置）和数据库级权限（通过
+    <link linkend="sql-grant"><command>GRANT</command></link> 设置）不会从模板数据库复制。
    </para>
 
   <para>
-   Although it is possible to copy a database other than <literal>template1</literal>
-   by specifying its name as the template, this is not (yet) intended as
-   a general-purpose <quote><command>COPY DATABASE</command></quote> facility.
-   The principal limitation is that no other sessions can be connected to
-   the template database while it is being copied.  <command>CREATE
-   DATABASE</command> will fail if any other connection exists when it starts;
-   otherwise, new connections to the template database are locked out
-   until <command>CREATE DATABASE</command> completes.
-   See <xref linkend="manage-ag-templatedbs"/> for more information.
+   尽管可以通过将其他数据库的名称指定为模板来复制 <literal>template1</literal> 之外的数据库，
+   但这（目前）并不打算作为通用的 <quote><command>COPY DATABASE</command></quote> 设施。
+   主要限制是在复制模板数据库期间，不能有其他会话连接到该模板数据库。
+   如果在 <command>CREATE
+   DATABASE</command> 启动时存在任何其他连接，它将失败；
+   否则，在 <command>CREATE DATABASE</command> 完成之前，对模板数据库的新连接将被锁定在外。
+   有关更多信息，请参见 <xref linkend="manage-ag-templatedbs"/>。
   </para>
 
   <para>
-   The character set encoding specified for the new database must be
-   compatible with the chosen locale settings (<literal>LC_COLLATE</literal> and
-   <literal>LC_CTYPE</literal>).  If the locale is <literal>C</literal> (or equivalently
-   <literal>POSIX</literal>), then all encodings are allowed, but for other
-   locale settings there is only one encoding that will work properly.
-   (On Windows, however, UTF-8 encoding can be used with any locale.)
-   <command>CREATE DATABASE</command> will allow superusers to specify
-   <literal>SQL_ASCII</literal> encoding regardless of the locale settings,
-   but this choice is deprecated and may result in misbehavior of
-   character-string functions if data that is not encoding-compatible
-   with the locale is stored in the database.
+   为新数据库指定的字符集编码必须与所选的区域设置（<literal>LC_COLLATE</literal> 和
+   <literal>LC_CTYPE</literal>）兼容。如果区域设置为 <literal>C</literal>（或等效的
+   <literal>POSIX</literal>），则允许所有编码，但对于其他区域设置，只有一种编码能正常工作。
+   （不过在 Windows 上，UTF-8 编码可用于任何区域设置。）
+   <command>CREATE DATABASE</command> 将允许超级用户指定
+   <literal>SQL_ASCII</literal> 编码而不考虑区域设置，
+   但这种选择已被废弃，并且如果数据库中存储了与区域设置编码不兼容的数据，
+   可能会导致字符串函数行为异常。
   </para>
 
   <para>
-   The encoding and locale settings must match those of the template database,
-   except when <literal>template0</literal> is used as template.  This is because
-   other databases might contain data that does not match the specified
-   encoding, or might contain indexes whose sort ordering is affected by
-   <literal>LC_COLLATE</literal> and <literal>LC_CTYPE</literal>.  Copying such data would
-   result in a database that is corrupt according to the new settings.
-   <literal>template0</literal>, however, is known to not contain any data or
-   indexes that would be affected.
+   编码和区域设置必须与模板数据库的设置匹配，
+   除非使用 <literal>template0</literal> 作为模板。这是因为
+   其他数据库可能包含与指定编码不匹配的数据，
+   或者可能包含其排序顺序受 <literal>LC_COLLATE</literal> 和 <literal>LC_CTYPE</literal> 影响的索引。
+   复制此类数据将导致数据库根据新设置被视为损坏。
+   然而，已知 <literal>template0</literal> 不包含任何会受影响的数据或索引。
   </para>
 
   <para>
-   There is currently no option to use a database locale with nondeterministic
-   comparisons (see <link linkend="sql-createcollation"><command>CREATE
-   COLLATION</command></link> for an explanation).  If this is needed, then
-   per-column collations would need to be used.
+   目前还没有选项能让数据库区域设置使用非确定性比较（解释见 <link linkend="sql-createcollation"><command>CREATE
+   COLLATION</command></link>）。如果需要这样做，则必须使用按列的排序规则。
   </para>
 
   <para>
-   The <literal>CONNECTION LIMIT</literal> option is only enforced approximately;
-   if two new sessions start at about the same time when just one
-   connection <quote>slot</quote> remains for the database, it is possible that
-   both will fail.  Also, the limit is not enforced against superusers or
-   background worker processes.
+   <literal>CONNECTION LIMIT</literal> 选项只是近似强制执行；如果在该数据库只剩下一个连接<quote>槽位</quote>时，两个新会话几乎同时启动，那么两者都可能失败。此外，该限制不会针对超级用户或后台工作进程强制执行。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To create a new database:
+   要创建一个新数据库：
 
 <programlisting>
 CREATE DATABASE lusiadas;
@@ -466,8 +401,7 @@ CREATE DATABASE lusiadas;
   </para>
 
   <para>
-   To create a database <literal>sales</literal> owned by user <literal>salesapp</literal>
-   with a default tablespace of <literal>salesspace</literal>:
+   要创建一个由用户 <literal>salesapp</literal> 拥有的数据库 <literal>sales</literal>，其默认表空间为 <literal>salesspace</literal>：
 
 <programlisting>
 CREATE DATABASE sales OWNER salesapp TABLESPACE salesspace;
@@ -475,48 +409,41 @@ CREATE DATABASE sales OWNER salesapp TABLESPACE salesspace;
   </para>
 
   <para>
-   To create a database <literal>music</literal> with a different locale:
+   要创建一个使用不同区域设置的数据库 <literal>music</literal>：
 <programlisting>
 CREATE DATABASE music
     LOCALE 'sv_SE.utf8'
     TEMPLATE template0;
 </programlisting>
-    In this example, the <literal>TEMPLATE template0</literal> clause is required if
-    the specified locale is different from the one in <literal>template1</literal>.
-    (If it is not, then specifying the locale explicitly is redundant.)
+    在此示例中，如果指定的区域设置与 <literal>template1</literal> 中的不同，则 <literal>TEMPLATE template0</literal> 子句是必需的。（如果不是这样，那么显式指定区域设置就是多余的。）
   </para>
 
   <para>
-   To create a database <literal>music2</literal> with a different locale and a
-   different character set encoding:
+   要创建一个使用不同区域设置和不同字符集编码的数据库 <literal>music2</literal>：
 <programlisting>
 CREATE DATABASE music2
     LOCALE 'sv_SE.iso885915'
     ENCODING LATIN9
     TEMPLATE template0;
 </programlisting>
-   The specified locale and encoding settings must match, or an error will be
-   reported.
+   指定的区域设置和编码设置必须匹配，否则将报告错误。
   </para>
 
   <para>
-   Note that locale names are specific to the operating system, so that the
-   above commands might not work in the same way everywhere.
+   请注意，区域设置名称是特定于操作系统的，因此上述命令在不同系统上的工作方式可能不同。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>CREATE DATABASE</command> statement in the SQL
-   standard.  Databases are equivalent to catalogs, whose creation is
-   implementation-defined.
+   SQL 标准中没有 <command>CREATE DATABASE</command> 语句。数据库等价于目录（catalog），其创建方式由具体实现定义。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterdatabase"/></member>
