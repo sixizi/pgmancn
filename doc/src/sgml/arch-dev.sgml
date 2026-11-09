@@ -285,96 +285,52 @@
   </sect1>
 
   <sect1 id="executor">
-   <title>Executor</title>
+   <title>执行器</title>
 
    <para>
-    The <firstterm>executor</firstterm> takes the plan created by the
-    planner/optimizer and recursively processes it to extract the required set
-    of rows.  This is essentially a demand-pull pipeline mechanism.
-    Each time a plan node is called, it must deliver one more row, or
-    report that it is done delivering rows.
+    <firstterm>执行器</firstterm>接收查询规划器/优化器生成的计划，并递归地处理该计划以提取所需的一组行。这本质上是一种需求拉动的流水线机制。每次调用一个计划节点时，它必须再交付一行，或者报告它已经交付完所有行。
    </para>
 
    <para>
-    To provide a concrete example, assume that the top
-    node is a <literal>MergeJoin</literal> node.
-    Before any merge can be done two rows have to be fetched (one from
-    each subplan). So the executor recursively calls itself to
-    process the subplans (it starts with the subplan attached to
-    <literal>lefttree</literal>). The new top node (the top node of the left
-    subplan) is, let's say, a
-    <literal>Sort</literal> node and again recursion is needed to obtain
-    an input row.  The child node of the <literal>Sort</literal> might
-    be a <literal>SeqScan</literal> node, representing actual reading of a table.
-    Execution of this node causes the executor to fetch a row from the
-    table and return it up to the calling node.  The <literal>Sort</literal>
-    node will repeatedly call its child to obtain all the rows to be sorted.
-    When the input is exhausted (as indicated by the child node returning
-    a NULL instead of a row), the <literal>Sort</literal> code performs
-    the sort, and finally is able to return its first output row, namely
-    the first one in sorted order.  It keeps the remaining rows stored so
-    that it can deliver them in sorted order in response to later demands.
+    为了提供一个具体的例子，假设顶层节点是一个 <literal>MergeJoin</literal> 节点。在进行任何合并之前，必须先获取两行（每个子计划各一行）。因此执行器递归地调用自身来处理子计划（它从附加在 <literal>lefttree</literal> 上的子计划开始）。新的顶层节点（左侧子计划的顶层节点）假设是一个 <literal>Sort</literal> 节点，同样需要递归来获取一个输入行。<literal>Sort</literal> 的子节点可能是一个 <literal>SeqScan</literal> 节点，代表对表的实际读取。执行该节点会使执行器从表中获取一行并将其返回给调用节点。<literal>Sort</literal> 节点将反复调用其子节点以获取所有要排序的行。当输入耗尽时（由子节点返回 NULL 而不是一行来表明），<literal>Sort</literal> 代码执行排序，最后能够返回它的第一个输出行，即按排序顺序的第一行。它保留其余的行存储起来，以便在后续请求时按排序顺序交付它们。
    </para>
 
    <para>
-    The <literal>MergeJoin</literal> node similarly demands the first row
-    from its right subplan.  Then it compares the two rows to see if they
-    can be joined; if so, it returns a join row to its caller.  On the next
-    call, or immediately if it cannot join the current pair of inputs,
-    it advances to the next row of one table
-    or the other (depending on how the comparison came out), and again
-    checks for a match.  Eventually, one subplan or the other is exhausted,
-    and the <literal>MergeJoin</literal> node returns NULL to indicate that
-    no more join rows can be formed.
+    <literal>MergeJoin</literal> 节点类似地从其右侧子计划请求第一行。然后它比较这两行，看它们能否连接；如果可以，它就向调用者返回一个连接行。在下一次调用时，或者如果它无法连接当前这对输入则立即，它前进到其中一个表或另一个表（取决于比较结果如何）的下一行，并再次检查是否匹配。最终，其中一个子计划或另一个子计划耗尽，<literal>MergeJoin</literal> 节点返回 NULL 以表明无法再形成连接行。
    </para>
 
    <para>
-    Complex queries can involve many levels of plan nodes, but the general
-    approach is the same: each node computes and returns its next output
-    row each time it is called.  Each node is also responsible for applying
-    any selection or projection expressions that were assigned to it by
-    the planner.
+    复杂查询可能涉及许多层次的计划节点，但总体方法相同：每个节点在每次被调用时计算并返回它的下一个输出行。每个节点还负责应用查询规划器分配给它的任何选择或投影表达式。
    </para>
 
    <para>
-    The executor mechanism is used to evaluate all five basic SQL query
-    types: <command>SELECT</command>, <command>INSERT</command>,
-    <command>UPDATE</command>, <command>DELETE</command>, and
-    <command>MERGE</command>.
-    For <command>SELECT</command>, the top-level executor code
-    only needs to send each row returned by the query plan tree
-    off to the client.  <command>INSERT ... SELECT</command>,
-    <command>UPDATE</command>, <command>DELETE</command>, and
-    <command>MERGE</command>
-    are effectively <command>SELECT</command>s under a special
-    top-level plan node called <literal>ModifyTable</literal>.
+    执行器机制用于计算所有五种基本 SQL 查询类型：<command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 和 <command>MERGE</command>。
+    对于 <command>SELECT</command>，顶层执行器代码只需要把查询计划树返回的每一行发送给客户端。
+    <command>INSERT ... SELECT</command>、<command>UPDATE</command>、<command>DELETE</command> 和 <command>MERGE</command>
+    实际上是位于一个名为 <literal>ModifyTable</literal> 的特殊顶层计划节点之下的 <command>SELECT</command>s。
    </para>
 
    <para>
-    <command>INSERT ... SELECT</command> feeds the rows up
-    to <literal>ModifyTable</literal> for insertion.  For
-    <command>UPDATE</command>, the planner arranges that each
-    computed row includes all the updated column values, plus the
-    <firstterm>TID</firstterm> (tuple ID, or row ID) of the original
-    target row; this data is fed up to the <literal>ModifyTable</literal>
-    node, which uses the information to create a new updated row and
-    mark the old row deleted.  For <command>DELETE</command>, the only
-    column that is actually returned by the plan is the TID, and the
-    <literal>ModifyTable</literal> node simply uses the TID to visit each
-    target row and mark it deleted.  For <command>MERGE</command>, the
-    planner joins the source and target relations, and includes all
-    column values required by any of the <literal>WHEN</literal> clauses,
-    plus the TID of the target row; this data is fed up to the
-    <literal>ModifyTable</literal> node, which uses the information to
-    work out which <literal>WHEN</literal> clause to execute, and then
-    inserts, updates or deletes the target row, as required.
+    <command>INSERT ... SELECT</command> 将行向上馈送给 <literal>ModifyTable</literal> 以进行插入。对于
+    <command>UPDATE</command>，规划器会安排每个计算出的行都包含所有被更新的列值，再加上
+    原始目标行的 <firstterm>TID</firstterm>（元组 ID，即行 ID）；这些数据被向上馈送给
+    <literal>ModifyTable</literal> 节点，该节点利用这些信息创建新的更新行并
+    将旧行标记为已删除。对于 <command>DELETE</command>，计划实际返回的
+    唯一列就是 TID，<literal>ModifyTable</literal> 节点只是利用 TID 访问每个
+    目标行并将其标记为已删除。对于 <command>MERGE</command>，
+    规划器将源关系和目标关系连接起来，并包含
+    任何 <literal>WHEN</literal> 子句所需的所有列值，
+    再加上目标行的 TID；这些数据被向上馈送给
+    <literal>ModifyTable</literal> 节点，该节点利用这些信息
+    确定要执行哪个 <literal>WHEN</literal> 子句，然后
+    根据需要插入、更新或删除目标行。
    </para>
 
    <para>
-    A simple <command>INSERT ... VALUES</command> command creates a
-    trivial plan tree consisting of a single <literal>Result</literal>
-    node, which computes just one result row, feeding that up
-    to <literal>ModifyTable</literal> to perform the insertion.
+    一条简单的 <command>INSERT ... VALUES</command> 命令会创建一个
+    仅由单个 <literal>Result</literal> 节点组成的简单计划树，该节点
+    只计算一行结果，并将其向上馈送给
+    <literal>ModifyTable</literal> 以执行插入。
    </para>
 
   </sect1>
