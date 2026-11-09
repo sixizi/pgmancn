@@ -568,82 +568,55 @@ float4:out:.*-.*-cygwin.*=float4-misrounded-input.out
   </sect1>
 
   <sect1 id="regress-tap">
-   <title>TAP Tests</title>
+   <title>TAP 测试</title>
 
    <para>
-    Various tests, particularly the client program tests
-    under <filename>src/bin</filename>, use the Perl TAP tools and are run
-    using the Perl testing program <command>prove</command>.  You can pass
-    command-line options to <command>prove</command> by setting
-    the <command>make</command> variable <varname>PROVE_FLAGS</varname>, for example:
+    各种测试，特别是 <filename>src/bin</filename> 下的客户端程序测试，使用 Perl TAP 工具，并通过 Perl 测试程序 <command>prove</command> 运行。你可以通过设置 <command>make</command> 变量 <varname>PROVE_FLAGS</varname> 向 <command>prove</command> 传递命令行选项，例如：
 <programlisting>
 make -C src/bin check PROVE_FLAGS='--timer'
 </programlisting>
-    See the manual page of <command>prove</command> for more information.
+    有关更多信息，请参阅 <command>prove</command> 的手册页。
    </para>
 
    <para>
-    The <command>make</command> variable <varname>PROVE_TESTS</varname>
-    can be used to define a whitespace-separated list of paths relative
-    to the <filename>Makefile</filename> invoking <command>prove</command>
-    to run the specified subset of tests instead of the default
-    <filename>t/*.pl</filename>.  For example:
+    <command>make</command> 变量 <varname>PROVE_TESTS</varname> 可用于定义一个以空白分隔的路径列表，这些路径相对于调用 <command>prove</command> 的 <filename>Makefile</filename>，用于运行指定的测试子集，而不是默认的 <filename>t/*.pl</filename>。例如：
 <programlisting>
 make check PROVE_TESTS='t/001_test1.pl t/003_test3.pl'
 </programlisting>
    </para>
 
    <para>
-    The TAP tests require the Perl module <literal>IPC::Run</literal>.
-    This module is available from
+    TAP 测试需要 Perl 模块 <literal>IPC::Run</literal>。该模块可从
     <ulink url="https://metacpan.org/dist/IPC-Run">CPAN</ulink>
-    or an operating system package.
-    They also require <productname>PostgreSQL</productname> to be
-    configured with the option <option>--enable-tap-tests</option>.
+    或操作系统软件包中获得。
+    它们还要求 <productname>PostgreSQL</productname> 使用 <option>--enable-tap-tests</option> 选项进行配置。
    </para>
 
    <para>
-    Generically speaking, the TAP tests will test the executables in a
-    previously-installed installation tree if you say <literal>make
-    installcheck</literal>, or will build a new local installation tree from
-    current sources if you say <literal>make check</literal>.  In either
-    case they will initialize a local instance (data directory) and
-    transiently run a server in it.  Some of these tests run more than one
-    server.  Thus, these tests can be fairly resource-intensive.
+    一般来说，如果你指定 <literal>make
+    installcheck</literal>，TAP 测试将测试先前安装的安装树中的可执行文件；如果你指定 <literal>make check</literal>，则将基于当前源代码构建一个新的本地安装树。无论哪种情况，它们都会初始化一个本地实例（数据目录）并在其中临时运行一个服务器。其中一些测试会运行多个服务器。因此，这些测试可能相当消耗资源。
    </para>
 
    <para>
-    It's important to realize that the TAP tests will start test server(s)
-    even when you say <literal>make installcheck</literal>; this is unlike
-    the traditional non-TAP testing infrastructure, which expects to use an
-    already-running test server in that case.  Some PostgreSQL
-    subdirectories contain both traditional-style and TAP-style tests,
-    meaning that <literal>make installcheck</literal> will produce a mix of
-    results from temporary servers and the already-running test server.
+    重要的是要认识到，即使你指定 <literal>make installcheck</literal>，TAP 测试也会启动测试服务器；这与传统的非 TAP 测试基础设施不同，后者在这种情况下期望使用已经运行的测试服务器。一些 PostgreSQL 子目录同时包含传统风格和 TAP 风格的测试，这意味着 <literal>make installcheck</literal> 将产生来自临时服务器和已运行测试服务器的混合结果。
    </para>
 
   <sect2 id="regress-tap-vars">
-   <title>Environment Variables</title>
+   <title>环境变量</title>
 
    <para>
-    Data directories are named according to the test filename, and will be
-    retained if a test fails.  If the environment variable
-    <varname>PG_TEST_NOCLEAN</varname> is set, data directories will be
-    retained regardless of test status.  For example, retaining the data
-    directory regardless of test results when running the
-    <application>pg_dump</application> tests:
+    数据目录根据测试文件名命名，如果测试失败则会被保留。如果设置了环境变量
+    <varname>PG_TEST_NOCLEAN</varname>，则无论测试状态如何，数据目录都会被保留。例如，在运行
+    <application>pg_dump</application> 测试时无论测试结果如何都保留数据目录：
 <programlisting>
 PG_TEST_NOCLEAN=1 make -C src/bin/pg_dump check
 </programlisting>
-    This environment variable also prevents the test's temporary directories
-    from being removed.
+    该环境变量还会阻止删除测试的临时目录。
    </para>
 
    <para>
-    Many operations in the test suites use a 180-second timeout, which on slow
-    hosts may lead to load-induced timeouts.  Setting the environment variable
-    <varname>PG_TEST_TIMEOUT_DEFAULT</varname> to a higher number will change
-    the default to avoid this.
+    测试套件中的许多操作使用 180 秒的超时时间，在较慢的主机上这可能会因负载导致超时。将环境变量
+    <varname>PG_TEST_TIMEOUT_DEFAULT</varname> 设置为更大的数字将更改默认值以避免此问题。
    </para>
   </sect2>
 
