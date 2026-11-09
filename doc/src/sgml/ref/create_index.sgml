@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE INDEX</refname>
-  <refpurpose>define a new index</refpurpose>
+  <refpurpose>定义一个新索引</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -32,88 +32,55 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE INDEX</command> constructs an index on the specified column(s)
-   of the specified relation, which can be a table or a materialized view.
-   Indexes are primarily used to enhance database performance (though
-   inappropriate use can result in slower performance).
+   <command>CREATE INDEX</command> 在指定关系的指定列上构建一个索引，该关系可以是表或物化视图。
+   索引主要用于增强数据库性能（不过使用不当可能导致性能变慢）。
   </para>
 
   <para>
-   The key field(s) for the index are specified as column names,
-   or alternatively as expressions written in parentheses.
-   Multiple fields can be specified if the index method supports
-   multicolumn indexes.
+   索引的键字段被指定为列名，或者用括号括起来的表达式。
+   如果索引方法支持多列索引，则可以指定多个字段。
   </para>
 
   <para>
-   An index field can be an expression computed from the values of
-   one or more columns of the table row.  This feature can be used
-   to obtain fast access to data based on some transformation of
-   the basic data. For example, an index computed on
-   <literal>upper(col)</literal> would allow the clause
-   <literal>WHERE upper(col) = 'JIM'</literal> to use an index.
+   索引字段可以是由表行中一个或多个列的值计算得出的表达式。此特性可用于基于对基本数据的某种变换来快速访问数据。例如，在 <literal>upper(col)</literal> 上计算的索引将允许子句 <literal>WHERE upper(col) = 'JIM'</literal> 使用索引。
   </para>
 
   <para>
-   <productname>PostgreSQL</productname> provides the index methods
-   B-tree, hash, GiST, SP-GiST, GIN, and BRIN.  Users can also define their own
-   index methods, but that is fairly complicated.
+   <productname>PostgreSQL</productname> 提供索引方法 B-tree、hash、GiST、SP-GiST、GIN 和 BRIN。用户也可以定义自己的索引方法，但那是相当复杂的。
   </para>
 
   <para>
-    When the <literal>WHERE</literal> clause is present, a
-    <firstterm>partial index</firstterm> is created.
-    A partial index is an index that contains entries for only a portion of
-    a table, usually a portion that is more useful for indexing than the
-    rest of the table. For example, if you have a table that contains both
-    billed and unbilled orders where the unbilled orders take up a small
-    fraction of the total table and yet that is an often used section, you
-    can improve performance by creating an index on just that portion.
-    Another possible application is to use <literal>WHERE</literal> with
-    <literal>UNIQUE</literal> to enforce uniqueness over a subset of a
-    table.  See <xref linkend="indexes-partial"/> for more discussion.
+    当存在 <literal>WHERE</literal> 子句时，将创建一个<firstterm>部分索引</firstterm>。
+    部分索引是只包含表中一部分条目的索引，通常这一部分条目比表的其余部分更适合建立索引。例如，如果有一个同时包含已开票和未开票订单的表，其中未开票订单只占整个表的一小部分，但却是经常使用的部分，那么只对这一部分创建索引就可以提高性能。
+    另一种可能的应用是将 <literal>WHERE</literal> 与 <literal>UNIQUE</literal> 一起使用，以在表的某个子集上强制唯一性。更多讨论请参见 <xref linkend="indexes-partial"/>。
   </para>
 
   <para>
-    The expression used in the <literal>WHERE</literal> clause can refer
-    only to columns of the underlying table, but it can use all columns,
-    not just the ones being indexed.  Presently, subqueries and
-    aggregate expressions are also forbidden in <literal>WHERE</literal>.
-    The same restrictions apply to index fields that are expressions.
+    <literal>WHERE</literal> 子句中使用的表达式只能引用底层表的列，但它可以使用所有列，而不仅仅是正在被索引的列。目前，<literal>WHERE</literal> 中也禁止使用子查询和聚合表达式。
+    同样的限制也适用于作为表达式的索引字段。
   </para>
 
   <para>
-   All functions and operators used in an index definition must be
-   <quote>immutable</quote>, that is, their results must depend only on
-   their arguments and never on any outside influence (such as
-   the contents of another table or the current time).  This restriction
-   ensures that the behavior of the index is well-defined.  To use a
-   user-defined function in an index expression or <literal>WHERE</literal>
-   clause, remember to mark the function immutable when you create it.
+   索引定义中使用的所有函数和运算符都必须是<quote>不可变的</quote>，也就是说，它们的结果必须只依赖于其参数，而绝不依赖于任何外部影响（例如另一个表的内容或当前时间）。这一限制确保索引的行为是明确定义的。要在索引表达式或 <literal>WHERE</literal> 子句中使用用户定义的函数，请记住在创建该函数时将其标记为不可变。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
      <varlistentry>
       <term><literal>UNIQUE</literal></term>
       <listitem>
        <para>
-        Causes the system to check for
-        duplicate values in the table when the index is created (if data
-        already exist) and each time data is added. Attempts to
-        insert or update data which would result in duplicate entries
-        will generate an error.
+        使系统在创建索引时（如果数据已经存在）以及每次添加数据时检查表中的重复值。试图插入或更新会导致重复条目的数据将产生错误。
        </para>
 
        <para>
-        Additional restrictions apply when unique indexes are applied to
-        partitioned tables; see <xref linkend="sql-createtable" />.
+        当唯一索引应用于分区表时，还适用额外的限制；请参见 <xref linkend="sql-createtable" />。
        </para>
       </listitem>
      </varlistentry>
@@ -122,17 +89,10 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>CONCURRENTLY</literal></term>
       <listitem>
        <para>
-        When this option is used, <productname>PostgreSQL</productname> will build the
-        index without taking any locks that prevent concurrent inserts,
-        updates, or deletes on the table; whereas a standard index build
-        locks out writes (but not reads) on the table until it's done.
-        There are several caveats to be aware of when using this option
-        &mdash; see <xref linkend="sql-createindex-concurrently"/> below.
+        使用此选项时，<productname>PostgreSQL</productname> 在构建索引时不会获取任何会阻止对表进行并发插入、更新或删除的锁；而标准的索引构建会阻止对表的写入（但不阻止读取），直到完成为止。使用此选项时需要注意若干注意事项 &mdash; 参见下面的 <xref linkend="sql-createindex-concurrently"/>。
        </para>
        <para>
-        For temporary tables, <command>CREATE INDEX</command> is always
-        non-concurrent, as no other session can access them, and
-        non-concurrent index creation is cheaper.
+        对于临时表，<command>CREATE INDEX</command> 始终是非并发的，因为没有其他会话可以访问它们，并且非并发索引创建的开销更小。
        </para>
       </listitem>
      </varlistentry>
@@ -141,10 +101,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>IF NOT EXISTS</literal></term>
       <listitem>
        <para>
-        Do not throw an error if a relation with the same name already exists.
-        A notice is issued in this case. Note that there is no guarantee that
-        the existing index is anything like the one that would have been created.
-        Index name is required when <literal>IF NOT EXISTS</literal> is specified.
+        如果同名关系已经存在，不要抛出错误。这种情况下会发出一个提示。请注意，不能保证现有索引与将要创建的索引有任何相似之处。指定 <literal>IF NOT EXISTS</literal> 时必须提供索引名。
        </para>
       </listitem>
      </varlistentry>
@@ -153,46 +110,23 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>INCLUDE</literal></term>
       <listitem>
        <para>
-        The optional <literal>INCLUDE</literal> clause specifies a
-        list of columns which will be included in the index
-        as <firstterm>non-key</firstterm> columns.  A non-key column cannot
-        be used in an index scan search qualification, and it is disregarded
-        for purposes of any uniqueness or exclusion constraint enforced by
-        the index.  However, an index-only scan can return the contents of
-        non-key columns without having to visit the index's table, since
-        they are available directly from the index entry.  Thus, addition of
-        non-key columns allows index-only scans to be used for queries that
-        otherwise could not use them.
+        可选的 <literal>INCLUDE</literal> 子句指定一个列列表，这些列将作为<firstterm>非键</firstterm>列包含在索引中。非键列不能用于索引扫描的搜索条件，并且在索引所强制执行的任何唯一性约束或排除约束中都会被忽略。但是，仅索引扫描可以返回非键列的内容，而无需访问索引的表，因为这些内容可以直接从索引项中获得。因此，添加非键列使得原本无法使用仅索引扫描的查询可以使用仅索引扫描。
        </para>
 
        <para>
-        It's wise to be conservative about adding non-key columns to an
-        index, especially wide columns.  If an index tuple exceeds the
-        maximum size allowed for the index type, data insertion will fail.
-        In any case, non-key columns duplicate data from the index's table
-        and bloat the size of the index, thus potentially slowing searches.
-        Furthermore, B-tree deduplication is never used with indexes
-        that have a non-key column.
+        在向索引添加非键列时，尤其是宽列，保持保守是明智的。如果索引元组超过索引类型允许的最大大小，数据插入将失败。无论如何，非键列都会重复索引表中的数据并使索引的大小膨胀，从而可能减慢搜索速度。此外，包含非键列的索引从不使用 B-tree 去重。
        </para>
 
        <para>
-        Columns listed in the <literal>INCLUDE</literal> clause don't need
-        appropriate operator classes; the clause can include
-        columns whose data types don't have operator classes defined for
-        a given access method.
+        <literal>INCLUDE</literal> 子句中列出的列不需要合适的运算符类；该子句可以包含其数据类型没有为给定访问方法定义运算符类的列。
        </para>
 
        <para>
-        Expressions are not supported as included columns since they cannot be
-        used in index-only scans.
+        表达式不能作为包含列，因为它们不能用于仅索引扫描。
        </para>
 
        <para>
-        Currently, the B-tree, GiST and SP-GiST index access methods support
-        this feature.  In these indexes, the values of columns listed
-        in the <literal>INCLUDE</literal> clause are included in leaf tuples
-        which correspond to heap tuples, but are not included in upper-level
-        index entries used for tree navigation.
+        目前，B-tree、GiST 和 SP-GiST 索引访问方法支持此特性。在这些索引中，<literal>INCLUDE</literal> 子句中列出的列的值被包含在对应于堆元组的叶子元组中，但不包含在用于树导航的上层索引项中。
        </para>
       </listitem>
      </varlistentry>
@@ -201,14 +135,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name of the index to be created.  No schema name can be included
-        here; the index is always created in the same schema as its parent
-        table.  The name of the index must be distinct from the name of any
-        other relation (table, sequence, index, view, materialized view, or
-        foreign table) in that schema.
-        If the name is omitted, <productname>PostgreSQL</productname> chooses a
-        suitable name based on the parent table's name and the indexed column
-        name(s).
+        要创建的索引的名称。此处不能包含模式名；索引总是与其父表创建在同一模式中。索引名必须与该模式中任何其他关系（表、序列、索引、视图、物化视图或外部表）的名称不同。如果省略名称，<productname>PostgreSQL</productname> 会根据父表的名称和被索引的列名选择合适的名称。
        </para>
       </listitem>
      </varlistentry>
@@ -217,8 +144,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>ONLY</literal></term>
       <listitem>
        <para>
-        Indicates not to recurse creating indexes on partitions, if the
-        table is partitioned.  The default is to recurse.
+        表示如果表是分区表，则不递归地在分区上创建索引。默认是递归。
        </para>
       </listitem>
      </varlistentry>
@@ -227,7 +153,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">table_name</replaceable></term>
       <listitem>
        <para>
-        The name (possibly schema-qualified) of the table to be indexed.
+        要索引的表的名称（可以带模式限定）。
        </para>
       </listitem>
      </varlistentry>
@@ -236,12 +162,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">method</replaceable></term>
       <listitem>
        <para>
-        The name of the index method to be used.  Choices are
-        <literal>btree</literal>, <literal>hash</literal>,
-        <literal>gist</literal>, <literal>spgist</literal>, <literal>gin</literal>,
-        <literal>brin</literal>, or user-installed access methods like
-        <link linkend="bloom">bloom</link>.
-        The default method is <literal>btree</literal>.
+        要使用的索引方法的名称。可选值为 <literal>btree</literal>、<literal>hash</literal>、<literal>gist</literal>、<literal>spgist</literal>、<literal>gin</literal>、<literal>brin</literal>，或用户安装的访问方法，如 <link linkend="bloom">bloom</link>。默认方法是 <literal>btree</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -250,7 +171,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">column_name</replaceable></term>
       <listitem>
        <para>
-        The name of a column of the table.
+        表的列名。
        </para>
       </listitem>
      </varlistentry>
@@ -259,10 +180,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">expression</replaceable></term>
       <listitem>
        <para>
-        An expression based on one or more columns of the table.  The
-        expression usually must be written with surrounding parentheses,
-        as shown in the syntax.  However, the parentheses can be omitted
-        if the expression has the form of a function call.
+        基于表的一个或多个列的表达式。该表达式通常必须用括号括起来书写，如语法所示。不过，如果该表达式具有函数调用的形式，则可以省略括号。
        </para>
       </listitem>
      </varlistentry>
@@ -271,11 +189,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">collation</replaceable></term>
       <listitem>
        <para>
-        The name of the collation to use for the index.  By default,
-        the index uses the collation declared for the column to be
-        indexed or the result collation of the expression to be
-        indexed.  Indexes with non-default collations can be useful for
-        queries that involve expressions using non-default collations.
+        用于索引的排序规则名称。默认情况下，索引使用为要索引的列所声明的排序规则，或要索引的表达式的结果排序规则。具有非默认排序规则的索引对于涉及使用非默认排序规则的表达式的查询可能很有用。
        </para>
       </listitem>
      </varlistentry>
@@ -284,7 +198,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">opclass</replaceable></term>
       <listitem>
        <para>
-        The name of an operator class. See below for details.
+        运算符类的名称。详情见下文。
        </para>
       </listitem>
      </varlistentry>
@@ -293,7 +207,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">opclass_parameter</replaceable></term>
       <listitem>
        <para>
-        The name of an operator class parameter. See below for details.
+        运算符类参数的名称。详情见下文。
        </para>
       </listitem>
      </varlistentry>
@@ -302,7 +216,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>ASC</literal></term>
       <listitem>
        <para>
-        Specifies ascending sort order (which is the default).
+        指定升序排序顺序（这是默认值）。
        </para>
       </listitem>
      </varlistentry>
@@ -311,7 +225,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>DESC</literal></term>
       <listitem>
        <para>
-        Specifies descending sort order.
+        指定降序排序顺序。
        </para>
       </listitem>
      </varlistentry>
@@ -320,8 +234,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>NULLS FIRST</literal></term>
       <listitem>
        <para>
-        Specifies that nulls sort before non-nulls.  This is the default
-        when <literal>DESC</literal> is specified.
+        指定空值排在其他值之前。当指定了 <literal>DESC</literal> 时，这是默认行为。
        </para>
       </listitem>
      </varlistentry>
@@ -330,8 +243,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>NULLS LAST</literal></term>
       <listitem>
        <para>
-        Specifies that nulls sort after non-nulls.  This is the default
-        when <literal>DESC</literal> is not specified.
+        指定空值排在其他值之后。当未指定 <literal>DESC</literal> 时，这是默认行为。
        </para>
       </listitem>
      </varlistentry>
@@ -341,9 +253,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><literal>NULLS NOT DISTINCT</literal></term>
       <listitem>
        <para>
-        Specifies whether for a unique index, null values should be considered
-        distinct (not equal).  The default is that they are distinct, so that
-        a unique index could contain multiple null values in a column.
+        指定对于唯一索引，空值是否应被视为不同（不相等）。默认情况下它们被视为不同，因此唯一索引的一列中可以包含多个空值。
        </para>
       </listitem>
      </varlistentry>
@@ -352,9 +262,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">storage_parameter</replaceable></term>
       <listitem>
        <para>
-        The name of an index-method-specific storage parameter.  See
-        <xref linkend="sql-createindex-storage-parameters"/> below
-        for details.
+        特定于索引方法的存储参数的名称。详情请参见下面的 <xref linkend="sql-createindex-storage-parameters"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -363,10 +271,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">tablespace_name</replaceable></term>
       <listitem>
        <para>
-        The tablespace in which to create the index.  If not specified,
-        <xref linkend="guc-default-tablespace"/> is consulted, or
-        <xref linkend="guc-temp-tablespaces"/> for indexes on temporary
-        tables.
+        要在其中创建索引的表空间。如果未指定，则查询 <xref linkend="guc-default-tablespace"/>，对于临时表上的索引则查询 <xref linkend="guc-temp-tablespaces"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -375,7 +280,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
       <term><replaceable class="parameter">predicate</replaceable></term>
       <listitem>
        <para>
-        The constraint expression for a partial index.
+        部分索引的约束表达式。
        </para>
       </listitem>
      </varlistentry>
@@ -383,96 +288,59 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
     </variablelist>
 
   <refsect2 id="sql-createindex-storage-parameters" xreflabel="Index Storage Parameters">
-   <title>Index Storage Parameters</title>
+   <title>索引存储参数</title>
 
    <para>
-    The optional <literal>WITH</literal> clause specifies <firstterm>storage
-    parameters</firstterm> for the index.  Each index method has its own set
-    of allowed storage parameters.
+    可选的 <literal>WITH</literal> 子句为索引指定<firstterm>存储参数</firstterm>。每种索引方法都有自己的一组允许的存储参数。
    </para>
 
    <para>
-    The B-tree, hash, GiST and SP-GiST index methods all accept this
-    parameter:
+    B-tree、hash、GiST 和 SP-GiST 索引方法都接受此参数：
    </para>
 
    <variablelist>
    <varlistentry id="index-reloption-fillfactor" xreflabel="fillfactor">
     <term><literal>fillfactor</literal> (<type>integer</type>)
      <indexterm>
-      <primary><varname>fillfactor</varname> storage parameter</primary>
+      <primary><varname>fillfactor</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
      <para>
-      Controls how full
-      the index method will try to pack index pages.  For B-trees, leaf pages
-      are filled to this percentage during initial index builds, and also
-      when extending the index at the right (adding new largest key values).
-      If pages
-      subsequently become completely full, they will be split, leading to
-      fragmentation of the on-disk index structure.  B-trees use a default
-      fillfactor of 90, but any integer value from 10 to 100 can be selected.
+      控制索引方法尝试将索引页填充到多满。对于 B-tree，在初始索引构建期间以及向右扩展索引（添加新的最大键值）时，叶子页会被填充到该百分比。如果页随后变得完全填满，它们将被分裂，导致磁盘上索引结构的碎片化。B-tree 使用默认 fillfactor 90，但可以选择 10 到 100 之间的任何整数值。
      </para>
      <para>
-      B-tree indexes on tables where many inserts and/or updates are
-      anticipated can benefit from lower fillfactor settings at
-      <command>CREATE INDEX</command> time (following bulk loading into the
-      table).  Values in the range of 50 - 90 can usefully <quote>smooth
-       out</quote> the <emphasis>rate</emphasis> of page splits during the
-      early life of the B-tree index (lowering fillfactor like this may even
-      lower the absolute number of page splits, though this effect is highly
-      workload dependent).  The B-tree bottom-up index deletion technique
-      described in <xref linkend="btree-deletion"/> is dependent on having
-      some <quote>extra</quote> space on pages to store <quote>extra</quote>
-      tuple versions, and so can be affected by fillfactor (though the effect
-      is usually not significant).
+      对于预期会有大量插入和/或更新的表，其 B-tree 索引可以在 <command>CREATE INDEX</command> 时（在向表中批量加载数据之后）受益于较低的 fillfactor 设置。50 - 90 范围内的值可以有效地<quote>平滑</quote> B-tree 索引早期阶段的页面分裂<emphasis>速率</emphasis>（像这样降低 fillfactor 甚至可能降低页面分裂的绝对数量，不过这种效果高度依赖于工作负载）。<xref linkend="btree-deletion"/> 中描述的 B-tree 自底向上索引删除技术依赖于页面上有一些<quote>额外</quote>空间来存储<quote>额外</quote>的元组版本，因此会受到 fillfactor 的影响（尽管这种影响通常不显著）。
      </para>
      <para>
-      In other specific cases it might be useful to increase fillfactor to
-      100 at <command>CREATE INDEX</command> time as a way of maximizing
-      space utilization.  You should only consider this when you are
-      completely sure that the table is static (i.e. that it will never be
-      affected by either inserts or updates).  A fillfactor setting of 100
-      otherwise risks <emphasis>harming</emphasis> performance: even a few
-      updates or inserts will cause a sudden flood of page splits.
+      在其他特定情况下，在 <command>CREATE INDEX</command> 时将 fillfactor 提高到 100 可能有助于最大化空间利用率。只有在完全确定表是静态的（即它永远不会受到插入或更新的影响）时，才应考虑这样做。否则，将 fillfactor 设置为 100 会有<emphasis>损害</emphasis>性能的风险：即使少量的更新或插入也会导致页面分裂突然大量发生。
      </para>
      <para>
-      The other index methods use fillfactor in different but roughly
-      analogous ways; the default fillfactor varies between methods.
+      其他索引方法以不同但大致类似的方式使用 fillfactor；默认 fillfactor 因方法而异。
      </para>
     </listitem>
    </varlistentry>
    </variablelist>
 
    <para>
-    B-tree indexes additionally accept this parameter:
+    B-tree 索引还接受以下参数：
    </para>
 
    <variablelist>
    <varlistentry id="index-reloption-deduplicate-items" xreflabel="deduplicate_items">
     <term><literal>deduplicate_items</literal> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>deduplicate_items</varname> storage parameter</primary>
+      <primary><varname>deduplicate_items</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
     <para>
-      Controls usage of the B-tree deduplication technique described
-      in <xref linkend="btree-deduplication"/>.  Set to
-      <literal>ON</literal> or <literal>OFF</literal> to enable or
-      disable the optimization.  (Alternative spellings of
-      <literal>ON</literal> and <literal>OFF</literal> are allowed as
-      described in <xref linkend="config-setting"/>.) The default is
-      <literal>ON</literal>.
+      控制 <xref linkend="btree-deduplication"/> 中描述的 B-tree 去重技术的使用。设置为 <literal>ON</literal> 或 <literal>OFF</literal> 以启用或禁用该优化。（如 <xref linkend="config-setting"/> 所述，允许 <literal>ON</literal> 和 <literal>OFF</literal> 的其他拼写形式。）默认值为 <literal>ON</literal>。
     </para>
 
     <note>
      <para>
-      Turning <literal>deduplicate_items</literal> off via
-      <command>ALTER INDEX</command> prevents future insertions from
-      triggering deduplication, but does not in itself make existing
-      posting list tuples use the standard tuple representation.
+      通过 <command>ALTER INDEX</command> 关闭 <literal>deduplicate_items</literal> 可以阻止后续插入触发去重，但其本身不会让已有的 posting list 元组改用标准元组表示形式。
      </para>
     </note>
     </listitem>
@@ -480,59 +348,49 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
    </variablelist>
 
    <para>
-    GiST indexes additionally accept this parameter:
+    GiST 索引还接受以下参数：
    </para>
 
    <variablelist>
    <varlistentry id="index-reloption-buffering" xreflabel="buffering">
     <term><literal>buffering</literal> (<type>enum</type>)
      <indexterm>
-      <primary><varname>buffering</varname> storage parameter</primary>
+      <primary><varname>buffering</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
     <para>
-     Controls whether the buffered build technique described in
-     <xref linkend="gist-buffering-build"/> is used to build the index. With
-     <literal>OFF</literal> buffering is disabled, with <literal>ON</literal>
-     it is enabled, and with <literal>AUTO</literal> it is initially disabled,
-     but is turned on on-the-fly once the index size reaches
-     <xref linkend="guc-effective-cache-size"/>.  The default
-     is <literal>AUTO</literal>.
-     Note that if sorted build is possible, it will be used instead of
-     buffered build unless <literal>buffering=ON</literal> is specified.
+     控制是否使用 <xref linkend="gist-buffering-build"/> 中描述的缓冲构建技术来构建索引。取值为 <literal>OFF</literal> 时禁用缓冲，取值为 <literal>ON</literal> 时启用缓冲，取值为 <literal>AUTO</literal> 时初始为禁用状态，但一旦索引大小达到 <xref linkend="guc-effective-cache-size"/> 就会即时开启。默认值为 <literal>AUTO</literal>。注意，如果可以进行排序构建，则会使用排序构建而不是缓冲构建，除非指定了 <literal>buffering=ON</literal>。
     </para>
     </listitem>
    </varlistentry>
    </variablelist>
 
    <para>
-    GIN indexes accept these parameters:
+    GIN 索引接受以下参数：
    </para>
 
    <variablelist>
    <varlistentry id="index-reloption-fastupdate" xreflabel="fastupdate">
     <term><literal>fastupdate</literal> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>fastupdate</varname> storage parameter</primary>
+      <primary><varname>fastupdate</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
     <para>
-     Controls usage of the fast update technique described in
-     <xref linkend="gin-fast-update"/>.
-     <literal>ON</literal> enables fast update, <literal>OFF</literal> disables it.
-     The default is <literal>ON</literal>.
+     控制 <xref linkend="gin-fast-update"/> 中描述的快速更新技术的使用。
+     <literal>ON</literal> 启用快速更新，<literal>OFF</literal> 禁用它。
+     默认为 <literal>ON</literal>。
     </para>
 
     <note>
      <para>
-      Turning <literal>fastupdate</literal> off via <command>ALTER INDEX</command> prevents
-      future insertions from going into the list of pending index entries,
-      but does not in itself flush existing entries.  You might want to
-      <command>VACUUM</command> the table or call
-      the <function>gin_clean_pending_list</function>
-      function afterward to ensure the pending list is emptied.
+      通过 <command>ALTER INDEX</command> 关闭 <literal>fastupdate</literal> 可防止后续插入进入待处理索引项列表，
+      但其本身不会清空现有条目。你可能希望随后
+      <command>VACUUM</command> 该表或调用
+      <function>gin_clean_pending_list</function>
+      函数，以确保待处理列表被清空。
      </para>
     </note>
     </listitem>
@@ -544,35 +402,33 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
     <term><literal>gin_pending_list_limit</literal> (<type>integer</type>)
      <indexterm>
       <primary><varname>gin_pending_list_limit</varname></primary>
-      <secondary>storage parameter</secondary>
+      <secondary>存储参数</secondary>
      </indexterm>
     </term>
     <listitem>
     <para>
-     Overrides the global setting of
-     <xref linkend="guc-gin-pending-list-limit"/> for this index.
-     This value is specified in kilobytes.
+     覆盖此索引的
+     <xref linkend="guc-gin-pending-list-limit"/> 全局设置。
+     该值以千字节为单位指定。
     </para>
     </listitem>
    </varlistentry>
    </variablelist>
 
    <para>
-    <acronym>BRIN</acronym> indexes accept these parameters:
+    <acronym>BRIN</acronym> 索引接受以下参数：
    </para>
 
    <variablelist>
    <varlistentry id="index-reloption-pages-per-range" xreflabel="pages_per_range">
     <term><literal>pages_per_range</literal> (<type>integer</type>)
      <indexterm>
-      <primary><varname>pages_per_range</varname> storage parameter</primary>
+      <primary><varname>pages_per_range</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
     <para>
-     Defines the number of table blocks that make up one block range for
-     each entry of a <acronym>BRIN</acronym> index (see <xref linkend="brin-intro"/>
-     for more details).  The default is <literal>128</literal>.
+     定义 <acronym>BRIN</acronym> 索引中每个条目所对应的一个块范围由多少个表块组成（更多细节参见 <xref linkend="brin-intro"/>）。默认值为 <literal>128</literal>。
     </para>
     </listitem>
    </varlistentry>
@@ -580,15 +436,12 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
    <varlistentry id="index-reloption-autosummarize" xreflabel="autosummarize">
     <term><literal>autosummarize</literal> (<type>boolean</type>)
      <indexterm>
-      <primary><varname>autosummarize</varname> storage parameter</primary>
+      <primary><varname>autosummarize</varname> 存储参数</primary>
      </indexterm>
     </term>
     <listitem>
     <para>
-     Defines whether a summarization run is queued for the previous page
-     range whenever an insertion is detected on the next one
-     (see <xref linkend="brin-operation"/> for more details).
-     The default is <literal>off</literal>.
+     定义当在下一个页面范围检测到插入时，是否将摘要运行排入前一个页面范围的队列（更多细节参见 <xref linkend="brin-operation"/>）。默认值为 <literal>off</literal>。
     </para>
     </listitem>
    </varlistentry>
@@ -596,7 +449,7 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
   </refsect2>
 
   <refsect2 id="sql-createindex-concurrently" xreflabel="Building Indexes Concurrently">
-   <title>Building Indexes Concurrently</title>
+   <title>并发构建索引</title>
 
    <indexterm zone="sql-createindex-concurrently">
    <primary>index</primary>
@@ -604,57 +457,19 @@ CREATE [ UNIQUE ] INDEX [ CONCURRENTLY ] [ [ IF NOT EXISTS ] <replaceable class=
    </indexterm>
 
    <para>
-    Creating an index can interfere with regular operation of a database.
-    Normally <productname>PostgreSQL</productname> locks the table to be indexed against
-    writes and performs the entire index build with a single scan of the
-    table. Other transactions can still read the table, but if they try to
-    insert, update, or delete rows in the table they will block until the
-    index build is finished. This could have a severe effect if the system is
-    a live production database.  Very large tables can take many hours to be
-    indexed, and even for smaller tables, an index build can lock out writers
-    for periods that are unacceptably long for a production system.
+    创建索引可能会干扰数据库的正常运行。通常，<productname>PostgreSQL</productname> 会对要建立索引的表加锁以阻止写入，并通过一次表扫描完成整个索引构建。其他事务仍然可以读取该表，但如果它们试图插入、更新或删除表中的行，就会被阻塞，直到索引构建完成。如果系统是在线的生产数据库，这可能造成严重影响。非常大的表可能需要数小时才能完成索引，即便是较小的表，一次索引构建也可能将写入者锁在外面，持续时间之长对生产系统而言是不可接受的。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> supports building indexes without locking
-    out writes.  This method is invoked by specifying the
-    <literal>CONCURRENTLY</literal> option of <command>CREATE INDEX</command>.
-    When this option is used,
-    <productname>PostgreSQL</productname> must perform two scans of the table, and in
-    addition it must wait for all existing transactions that could potentially
-    modify or use the index to terminate.  Thus
-    this method requires more total work than a standard index build and takes
-    significantly longer to complete.  However, since it allows normal
-    operations to continue while the index is built, this method is useful for
-    adding new indexes in a production environment.  Of course, the extra CPU
-    and I/O load imposed by the index creation might slow other operations.
+    <productname>PostgreSQL</productname> 支持在不阻塞写入的情况下构建索引。此方法通过指定 <command>CREATE INDEX</command> 的 <literal>CONCURRENTLY</literal> 选项来调用。使用此选项时，<productname>PostgreSQL</productname> 必须对表执行两次扫描，此外还必须等待所有可能修改或使用该索引的现有事务终止。因此，此方法所需的总工作量比标准索引构建更多，完成时间也显著更长。不过，由于它允许在构建索引的同时继续正常操作，此方法对于在生产环境中添加新索引很有用。当然，索引创建带来的额外 CPU 和 I/O 负载可能会拖慢其他操作。
    </para>
 
    <para>
-    In a concurrent index build, the index is actually entered as an
-    <quote>invalid</quote> index into
-    the system catalogs in one transaction, then two table scans occur in
-    two more transactions.  Before each table scan, the index build must
-    wait for existing transactions that have modified the table to terminate.
-    After the second scan, the index build must wait for any transactions
-    that have a snapshot (see <xref linkend="mvcc"/>) predating the second
-    scan to terminate, including transactions used by any phase of concurrent
-    index builds on other tables, if the indexes involved are partial or have
-    columns that are not simple column references.
-    Then finally the index can be marked <quote>valid</quote> and ready for use,
-    and the <command>CREATE INDEX</command> command terminates.
-    Even then, however, the index may not be immediately usable for queries:
-    in the worst case, it cannot be used as long as transactions exist that
-    predate the start of the index build.
+    在并发索引构建中，索引实际上是在一个事务中作为<quote>无效</quote>索引录入系统目录的，然后在另外两个事务中进行两次表扫描。在每次表扫描之前，索引构建必须等待已修改该表的现有事务终止。第二次扫描之后，索引构建必须等待任何拥有早于第二次扫描的快照（参见 <xref linkend="mvcc"/>）的事务终止，包括其他表上并发索引构建的任何阶段所使用的事务，前提是所涉及的索引是部分索引或含有不是简单列引用的列。最后，索引才能被标记为<quote>有效</quote>并可供使用，然后 <command>CREATE INDEX</command> 命令终止。然而，即使到那时，索引也可能无法立即用于查询：在最坏的情况下，只要存在早于索引构建开始的事务，它就不能被使用。
    </para>
 
    <para>
-    If a problem arises while scanning the table, such as a deadlock or a
-    uniqueness violation in a unique index, the <command>CREATE INDEX</command>
-    command will fail but leave behind an <quote>invalid</quote> index. This index
-    will be ignored for querying purposes because it might be incomplete;
-    however it will still consume update overhead. The <application>psql</application>
-    <command>\d</command> command will report such an index as <literal>INVALID</literal>:
+    如果在扫描表时出现问题，例如死锁或唯一索引中的唯一性冲突，<command>CREATE INDEX</command> 命令将失败，但会留下一个<quote>无效</quote>索引。该索引在查询时会被忽略，因为它可能不完整；但是它仍然会消耗更新开销。<application>psql</application> <command>\d</command> 命令会将这样的索引报告为 <literal>INVALID</literal>：
 
 <programlisting>
 postgres=# \d tab
@@ -666,68 +481,37 @@ Indexes:
     "idx" btree (col) INVALID
 </programlisting>
 
-    The recommended recovery
-    method in such cases is to drop the index and try again to perform
-    <command>CREATE INDEX CONCURRENTLY</command>.  (Another possibility is
-    to rebuild the index with <command>REINDEX INDEX CONCURRENTLY</command>).
+在这种情况下，推荐的恢复方法是删除该索引并再次尝试执行 <command>CREATE INDEX CONCURRENTLY</command>。（另一种可能是使用 <command>REINDEX INDEX CONCURRENTLY</command> 重建该索引。）
    </para>
 
    <para>
-    Another caveat when building a unique index concurrently is that the
-    uniqueness constraint is already being enforced against other transactions
-    when the second table scan begins.  This means that constraint violations
-    could be reported in other queries prior to the index becoming available
-    for use, or even in cases where the index build eventually fails.  Also,
-    if a failure does occur in the second scan, the <quote>invalid</quote> index
-    continues to enforce its uniqueness constraint afterwards.
+    并发构建唯一索引时的另一个注意事项是，当第二次表扫描开始时，唯一性约束已经在针对其他事务强制执行。这意味着，在索引可供使用之前，其他查询中就可能报告约束违规，甚至在索引构建最终失败的情况下也会如此。此外，如果第二次扫描中确实发生了失败，该<quote>无效</quote>索引之后仍会继续强制执行其唯一性约束。
    </para>
 
    <para>
-    Concurrent builds of expression indexes and partial indexes are supported.
-    Errors occurring in the evaluation of these expressions could cause
-    behavior similar to that described above for unique constraint violations.
+    支持并发构建表达式索引和部分索引。在求值这些表达式时发生的错误可能导致与上述唯一约束违规类似的行为。
    </para>
 
    <para>
-    Regular index builds permit other regular index builds on the
-    same table to occur simultaneously, but only one concurrent index build
-    can occur on a table at a time.  In either case, schema modification of the
-    table is not allowed while the index is being built.  Another difference is
-    that a regular <command>CREATE INDEX</command> command can be performed
-    within a transaction block, but <command>CREATE INDEX CONCURRENTLY</command>
-    cannot.
+    常规索引构建允许同一张表上的其他常规索引构建同时进行，但一张表在同一时间只能有一个并发索引构建。无论哪种情况，在索引构建期间都不允许对该表进行模式修改。另一个区别是，常规的 <command>CREATE INDEX</command> 命令可以在事务块内执行，而 <command>CREATE INDEX CONCURRENTLY</command> 不能。
    </para>
 
    <para>
-    Concurrent builds for indexes on partitioned tables are currently not
-    supported.  However, you may concurrently build the index on each
-    partition individually and then finally create the partitioned index
-    non-concurrently in order to reduce the time where writes to the
-    partitioned table will be locked out.  In this case, building the
-    partitioned index is a metadata only operation.
+    目前不支持在分区表上并发构建索引。不过，您可以先分别在每个分区上并发构建索引，然后最后以非并发方式创建分区索引，以减少对分区表的写入被锁定的时间。在这种情况下，构建分区索引只是一个仅涉及元数据的操作。
    </para>
 
   </refsect2>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   See <xref linkend="indexes"/> for information about when indexes can
-   be used, when they are not used, and in which particular situations
-   they can be useful.
+   有关索引何时可以使用、何时不使用以及在哪些特定情况下有用的信息，请参见 <xref linkend="indexes"/>。
   </para>
 
   <para>
-   Currently, only the B-tree, GiST, GIN, and BRIN index methods support
-   multiple-key-column indexes.  Whether there can be multiple key
-   columns is independent of whether <literal>INCLUDE</literal> columns
-   can be added to the index.  Indexes can have up to 32 columns,
-   including <literal>INCLUDE</literal> columns.
-   (This limit can be altered when building
-   <productname>PostgreSQL</productname>.)  Only B-tree currently
-   supports unique indexes.
+   目前，只有 B-tree、GiST、GIN 和 BRIN 索引方法支持多键列索引。是否可以有多个键列与是否可以向索引中添加 <literal>INCLUDE</literal> 列无关。索引最多可以有 32 列，其中包括 <literal>INCLUDE</literal> 列。（在构建 <productname>PostgreSQL</productname> 时可以更改此限制。）目前只有 B-tree 支持唯一索引。
   </para>
 
   <para>
@@ -749,93 +533,41 @@ Indexes:
   </para>
 
   <para>
-   When <literal>CREATE INDEX</literal> is invoked on a partitioned
-   table, the default behavior is to recurse to all partitions to ensure
-   they all have matching indexes.
-   Each partition is first checked to determine whether an equivalent
-   index already exists, and if so, that index will become attached as a
-   partition index to the index being created, which will become its
-   parent index.
-   If no matching index exists, a new index will be created and
-   automatically attached; the name of the new index in each partition
-   will be determined as if no index name had been specified in the
-   command.
-   If the <literal>ONLY</literal> option is specified, no recursion
-   is done, and the index is marked invalid.
-   (<command>ALTER INDEX ... ATTACH PARTITION</command> marks the index
-   valid, once all partitions acquire matching indexes.)  Note, however,
-   that any partition that is created in the future using
-   <command>CREATE TABLE ... PARTITION OF</command> will automatically
-   have a matching index, regardless of whether <literal>ONLY</literal> is
-   specified.
+   当在分区表上调用 <literal>CREATE INDEX</literal> 时，默认行为是递归到所有分区，以确保它们都具有匹配的索引。
+   首先检查每个分区，以确定是否已存在等效的索引；如果存在，该索引将作为正在创建的索引的分区索引被附加，而正在创建的索引将成为其父索引。
+   如果不存在匹配的索引，则会创建一个新索引并自动附加；每个分区中新索引的名称将按照命令中未指定索引名的方式确定。
+   如果指定了 <literal>ONLY</literal> 选项，则不进行递归，并且该索引被标记为无效。
+   （一旦所有分区都获得匹配的索引，<command>ALTER INDEX ... ATTACH PARTITION</command> 会将该索引标记为有效。）但请注意，将来使用 <command>CREATE TABLE ... PARTITION OF</command> 创建的任何分区都会自动具有匹配的索引，无论是否指定了 <literal>ONLY</literal>。
   </para>
 
   <para>
-   For index methods that support ordered scans (currently, only B-tree),
-   the optional clauses <literal>ASC</literal>, <literal>DESC</literal>, <literal>NULLS
-   FIRST</literal>, and/or <literal>NULLS LAST</literal> can be specified to modify
-   the sort ordering of the index.  Since an ordered index can be
-   scanned either forward or backward, it is not normally useful to create a
-   single-column <literal>DESC</literal> index &mdash; that sort ordering is already
-   available with a regular index.  The value of these options is that
-   multicolumn indexes can be created that match the sort ordering requested
-   by a mixed-ordering query, such as <literal>SELECT ... ORDER BY x ASC, y
-   DESC</literal>.  The <literal>NULLS</literal> options are useful if you need to support
-   <quote>nulls sort low</quote> behavior, rather than the default <quote>nulls
-   sort high</quote>, in queries that depend on indexes to avoid sorting steps.
+   对于支持有序扫描的索引方法（目前只有 B-tree），可以指定可选子句 <literal>ASC</literal>、<literal>DESC</literal>、<literal>NULLS
+   FIRST</literal> 和/或 <literal>NULLS LAST</literal> 来修改索引的排序顺序。由于有序索引既可以正向扫描也可以反向扫描，因此通常没有必要创建单列 <literal>DESC</literal> 索引 &mdash; 常规索引已经可以提供该排序顺序。这些选项的价值在于，可以创建与混合排序查询（例如 <literal>SELECT ... ORDER BY x ASC, y
+   DESC</literal>）所请求的排序顺序相匹配的多列索引。如果你需要在依赖索引来避免排序步骤的查询中支持<quote>空值排在最前</quote>行为，而不是默认的<quote>空值排在最后</quote>，那么 <literal>NULLS</literal> 选项会很有用。
   </para>
 
   <para>
-   The system regularly collects statistics on all of a table's
-   columns.  Newly-created non-expression indexes can immediately
-   use these statistics to determine an index's usefulness.
-   For new expression indexes, it is necessary to run <link
-   linkend="sql-analyze"><command>ANALYZE</command></link> or wait for
-   the <link linkend="autovacuum">autovacuum daemon</link> to analyze
-   the table to generate statistics for these indexes.
+   系统会定期收集表中所有列的统计信息。新建的非表达式索引可以立即使用这些统计信息来确定索引是否有用。
+   对于新的表达式索引，有必要运行 <link
+   linkend="sql-analyze"><command>ANALYZE</command></link> 或等待 <link linkend="autovacuum">自动清理守护进程</link> 分析该表，以便为这些索引生成统计信息。
   </para>
 
   <para>
-   While <command>CREATE INDEX</command> is running, the <xref
-   linkend="guc-search-path"/> is temporarily changed to <literal>pg_catalog,
-   pg_temp</literal>.
+   在 <command>CREATE INDEX</command> 运行期间，<xref
+   linkend="guc-search-path"/> 会被临时更改为 <literal>pg_catalog,
+   pg_temp</literal>。
   </para>
 
   <para>
-   For most index methods, the speed of creating an index is
-   dependent on the setting of <xref linkend="guc-maintenance-work-mem"/>.
-   Larger values will reduce the time needed for index creation, so long
-   as you don't make it larger than the amount of memory really available,
-   which would drive the machine into swapping.
+   对于大多数索引方法，创建索引的速度取决于 <xref linkend="guc-maintenance-work-mem"/> 的设置。较大的值会减少创建索引所需的时间，只要不把它设置得超过实际可用的内存量，否则会使机器陷入交换。
   </para>
 
   <para>
-   <productname>PostgreSQL</productname> can build indexes while
-   leveraging multiple CPUs in order to process the table rows faster.
-   This feature is known as <firstterm>parallel index
-   build</firstterm>.  For index methods that support building indexes
-   in parallel (currently, B-tree, GIN, and BRIN),
-   <varname>maintenance_work_mem</varname> specifies the maximum
-   amount of memory that can be used by each index build operation as
-   a whole, regardless of how many worker processes were started.
-   Generally, a cost model automatically determines how many worker
-   processes should be requested, if any.
+   <productname>PostgreSQL</productname> 可以在构建索引时利用多个 CPU，以便更快地处理表行。此特性称为<firstterm>并行索引构建</firstterm>。对于支持并行构建索引的索引方法（目前为 B-tree、GIN 和 BRIN），<varname>maintenance_work_mem</varname> 指定了每个索引构建操作整体可使用的最大内存量，无论启动了多少个工作进程。通常，代价模型会自动决定应请求多少个工作进程（如果需要的话）。
   </para>
 
   <para>
-   Parallel index builds may benefit from increasing
-   <varname>maintenance_work_mem</varname> where an equivalent serial
-   index build will see little or no benefit.  Note that
-   <varname>maintenance_work_mem</varname> may influence the number of
-   worker processes requested, since parallel workers must have at
-   least a <literal>32MB</literal> share of the total
-   <varname>maintenance_work_mem</varname> budget.  There must also be
-   a remaining <literal>32MB</literal> share for the leader process.
-   Increasing <xref linkend="guc-max-parallel-maintenance-workers"/>
-   may allow more workers to be used, which will reduce the time
-   needed for index creation, so long as the index build is not
-   already I/O bound.  Of course, there should also be sufficient
-   CPU capacity that would otherwise lie idle.
+   在等效的串行索引构建几乎或完全不会受益的情况下，并行索引构建可能因增大 <varname>maintenance_work_mem</varname> 而受益。请注意，<varname>maintenance_work_mem</varname> 可能影响所请求的工作进程数量，因为并行工作进程必须至少拥有总 <varname>maintenance_work_mem</varname> 预算的 <literal>32MB</literal> 份额。此外还必须为领导者进程保留 <literal>32MB</literal> 的份额。增大 <xref linkend="guc-max-parallel-maintenance-workers"/> 可能允许使用更多工作进程，从而减少创建索引所需的时间，只要索引构建尚未受 I/O 限制。当然，还应当有足够的原本会闲置的 CPU 能力。
   </para>
 
   <para>
@@ -852,126 +584,100 @@ Indexes:
 
   <tip>
    <para>
-    You might want to reset <literal>parallel_workers</literal> after
-    setting it as part of tuning an index build.  This avoids
-    inadvertent changes to query plans, since
-    <literal>parallel_workers</literal> affects
-    <emphasis>all</emphasis> parallel table scans.
+    在作为索引构建调优的一部分设置 <literal>parallel_workers</literal> 之后，你可能希望将其重置。这样可以避免无意中改变查询计划，因为 <literal>parallel_workers</literal> 会影响<emphasis>所有</emphasis>并行表扫描。
    </para>
   </tip>
 
   <para>
-   While <command>CREATE INDEX</command> with the
-   <literal>CONCURRENTLY</literal> option supports parallel builds
-   without special restrictions, only the first table scan is actually
-   performed in parallel.
+   虽然带 <literal>CONCURRENTLY</literal> 选项的 <command>CREATE INDEX</command> 支持无特殊限制的并行构建，但实际只有第一次表扫描是并行执行的。
   </para>
 
   <para>
-   Use <link linkend="sql-dropindex"><command>DROP INDEX</command></link>
-   to remove an index.
+   使用 <link linkend="sql-dropindex"><command>DROP INDEX</command></link> 删除索引。
   </para>
 
   <para>
-   Like any long-running transaction, <command>CREATE INDEX</command> on a
-   table can affect which tuples can be removed by concurrent
-   <command>VACUUM</command> on any other table.
+   与任何长时间运行的事务一样，对表执行 <command>CREATE INDEX</command> 会影响其他表上并发的 <command>VACUUM</command> 能够删除哪些元组。
   </para>
 
   <para>
-   Prior releases of <productname>PostgreSQL</productname> also had an
-   R-tree index method.  This method has been removed because
-   it had no significant advantages over the GiST method.
-   If <literal>USING rtree</literal> is specified, <command>CREATE INDEX</command>
-   will interpret it as <literal>USING gist</literal>, to simplify conversion
-   of old databases to GiST.
+   早期版本的 <productname>PostgreSQL</productname> 也提供过 R-tree 索引方法。该方法已被移除，因为它相对于 GiST 方法没有显著优势。如果指定了 <literal>USING rtree</literal>，<command>CREATE INDEX</command> 会将其解释为 <literal>USING gist</literal>，以便简化旧数据库向 GiST 的转换。
   </para>
 
   <para>
-    Each backend running <command>CREATE INDEX</command> will report its
-    progress in the <structname>pg_stat_progress_create_index</structname>
-    view. See <xref linkend="create-index-progress-reporting"/> for details.
+    每个运行 <command>CREATE INDEX</command> 的后端都会在 <structname>pg_stat_progress_create_index</structname> 视图中报告其进度。详情请参见 <xref linkend="create-index-progress-reporting"/>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To create a unique B-tree index on the column <literal>title</literal> in
-   the table <literal>films</literal>:
+   要在表 <literal>films</literal> 的列 <literal>title</literal> 上创建一个唯一的 B-tree 索引：
 <programlisting>
 CREATE UNIQUE INDEX title_idx ON films (title);
 </programlisting>
   </para>
 
   <para>
-   To create a unique B-tree index on the column <literal>title</literal>
-   with included columns <literal>director</literal>
-   and <literal>rating</literal> in the table <literal>films</literal>:
+   在表 <literal>films</literal> 的列 <literal>title</literal> 上创建一个唯一 B-tree 索引，并包含列 <literal>director</literal> 和 <literal>rating</literal>：
 <programlisting>
 CREATE UNIQUE INDEX title_idx ON films (title) INCLUDE (director, rating);
 </programlisting>
   </para>
 
   <para>
-   To create a B-Tree index with deduplication disabled:
+   创建一个禁用去重的 B-Tree 索引：
 <programlisting>
 CREATE INDEX title_idx ON films (title) WITH (deduplicate_items = off);
 </programlisting>
   </para>
 
   <para>
-   To create an index on the expression <literal>lower(title)</literal>,
-   allowing efficient case-insensitive searches:
+   在表达式 <literal>lower(title)</literal> 上创建一个索引，以支持高效的大小写不敏感搜索：
 <programlisting>
 CREATE INDEX ON films ((lower(title)));
 </programlisting>
-   (In this example we have chosen to omit the index name, so the system
-   will choose a name, typically <literal>films_lower_idx</literal>.)
+   （在本例中我们选择省略索引名，因此系统将选择一个名称，通常是 <literal>films_lower_idx</literal>。）
   </para>
 
   <para>
-   To create an index with non-default collation:
+   创建一个使用非默认排序规则的索引：
 <programlisting>
 CREATE INDEX title_idx_german ON films (title COLLATE "de_DE");
 </programlisting>
   </para>
 
   <para>
-   To create an index with non-default sort ordering of nulls:
+   创建一个使用非默认空值排序顺序的索引：
 <programlisting>
 CREATE INDEX title_idx_nulls_low ON films (title NULLS FIRST);
 </programlisting>
   </para>
 
   <para>
-   To create an index with non-default fill factor:
+   创建一个使用非默认填充因子的索引：
 <programlisting>
 CREATE UNIQUE INDEX title_idx ON films (title) WITH (fillfactor = 70);
 </programlisting>
   </para>
 
   <para>
-   To create a <acronym>GIN</acronym> index with fast updates disabled:
+   创建一个禁用快速更新的 <acronym>GIN</acronym> 索引：
 <programlisting>
 CREATE INDEX gin_idx ON documents_table USING GIN (locations) WITH (fastupdate = off);
 </programlisting>
   </para>
 
   <para>
-   To create an index on the column <literal>code</literal> in the table
-   <literal>films</literal> and have the index reside in the tablespace
-   <literal>indexspace</literal>:
+   在表 <literal>films</literal> 的列 <literal>code</literal> 上创建一个索引，并让该索引位于表空间 <literal>indexspace</literal> 中：
 <programlisting>
 CREATE INDEX code_idx ON films (code) TABLESPACE indexspace;
 </programlisting>
   </para>
 
   <para>
-   To create a GiST index on a point attribute so that we
-   can efficiently use box operators on the result of the
-   conversion function:
+   在一个 point 属性上创建 GiST 索引，以便我们能高效地对转换函数的结果使用 box 运算符：
 <programlisting>
 CREATE INDEX pointloc
     ON points USING gist (box(location,location));
@@ -981,7 +687,7 @@ SELECT * FROM points
   </para>
 
   <para>
-   To create an index without locking out writes to the table:
+   创建索引而不阻塞对表的写入：
 <programlisting>
 CREATE INDEX CONCURRENTLY sales_quantity_index ON sales_table (quantity);
 </programlisting></para>
@@ -989,17 +695,15 @@ CREATE INDEX CONCURRENTLY sales_quantity_index ON sales_table (quantity);
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE INDEX</command> is a
-   <productname>PostgreSQL</productname> language extension.  There
-   are no provisions for indexes in the SQL standard.
+   <command>CREATE INDEX</command> 是一种 <productname>PostgreSQL</productname> 语言扩展。SQL 标准中没有关于索引的规定。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterindex"/></member>
