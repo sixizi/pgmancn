@@ -1380,53 +1380,32 @@ host ... ldap ldapbasedn="dc=example,dc=net"
   </sect1>
 
   <sect1 id="auth-radius">
-   <title>RADIUS Authentication</title>
+   <title>RADIUS 认证</title>
 
    <indexterm zone="auth-radius">
     <primary>RADIUS</primary>
    </indexterm>
 
    <para>
-    This authentication method operates similarly to
-    <literal>password</literal> except that it uses RADIUS
-    as the password verification method. RADIUS is used only to validate
-    the user name/password pairs. Therefore the user must already
-    exist in the database before RADIUS can be used for
-    authentication.
+    此认证方法的操作与 <literal>password</literal> 类似，不同之处在于它使用 RADIUS 作为密码验证方法。RADIUS 仅用于验证用户名/密码对。因此，在将 RADIUS 用于认证之前，用户必须已经存在于数据库中。
    </para>
 
    <para>
-    When using RADIUS authentication, an Access Request message will be sent
-    to the configured RADIUS server. This request will be of type
-    <literal>Authenticate Only</literal>, and include parameters for
-    <literal>user name</literal>, <literal>password</literal> (encrypted) and
-    <literal>NAS Identifier</literal>. The request will be encrypted using
-    a secret shared with the server. The RADIUS server will respond to
-    this request with either <literal>Access Accept</literal> or
-    <literal>Access Reject</literal>. There is no support for RADIUS accounting.
+    使用 RADIUS 认证时，将向配置的 RADIUS 服务器发送 Access Request 消息。该请求的类型为 <literal>Authenticate Only</literal>，并包含 <literal>user name</literal>、<literal>password</literal>（加密）和 <literal>NAS Identifier</literal> 的参数。该请求将使用与服务器共享的密钥进行加密。RADIUS 服务器将以 <literal>Access Accept</literal> 或 <literal>Access Reject</literal> 响应该请求。不支持 RADIUS 计费。
    </para>
 
    <para>
-    Multiple RADIUS servers can be specified, in which case they will
-    be tried sequentially. If a negative response is received from
-    a server, the authentication will fail. If no response is received,
-    the next server in the list will be tried. To specify multiple
-    servers, separate the server names with commas and surround the list
-    with double quotes. If multiple servers are specified, the other
-    RADIUS options can also be given as comma-separated lists, to provide
-    individual values for each server. They can also be specified as
-    a single value, in which case that value will apply to all servers.
+    可以指定多个 RADIUS 服务器，此时将按顺序依次尝试。如果从某个服务器收到否定响应，认证将失败。如果未收到响应，将尝试列表中的下一个服务器。要指定多个服务器，请用逗号分隔服务器名称，并用双引号将列表括起来。如果指定了多个服务器，其他 RADIUS 选项也可以以逗号分隔列表的形式给出，以便为每个服务器提供单独的值。它们也可以指定为单个值，此时该值将应用于所有服务器。
    </para>
 
    <para>
-    The following configuration options are supported for RADIUS:
+    RADIUS 支持以下配置选项：
      <variablelist>
       <varlistentry>
        <term><literal>radiusservers</literal></term>
        <listitem>
         <para>
-         The DNS names or IP addresses of the RADIUS servers to connect to.
-         This parameter is required.
+         要连接的 RADIUS 服务器的 DNS 名称或 IP 地址。此参数为必填项。
         </para>
        </listitem>
       </varlistentry>
@@ -1435,17 +1414,10 @@ host ... ldap ldapbasedn="dc=example,dc=net"
        <term><literal>radiussecrets</literal></term>
        <listitem>
         <para>
-         The shared secrets used when talking securely to the RADIUS
-         servers. This must have exactly the same value on the PostgreSQL
-         and RADIUS servers. It is recommended that this be a string of
-         at least 16 characters. This parameter is required.
+         与 RADIUS 服务器进行安全通信时使用的共享密钥。该值在 PostgreSQL 服务器和 RADIUS 服务器上必须完全相同。建议使用至少 16 个字符的字符串。此参数为必需项。
          <note>
          <para>
-          The encryption vector used will only be cryptographically
-          strong if <productname>PostgreSQL</productname> is built with support for
-          <productname>OpenSSL</productname>. In other cases, the transmission to the
-          RADIUS server should only be considered obfuscated, not secured, and
-          external security measures should be applied if necessary.
+          只有当 <productname>PostgreSQL</productname> 在构建时包含对 <productname>OpenSSL</productname> 的支持，所使用的加密向量才具有密码学强度。在其他情况下，发往 RADIUS 服务器的传输只能视为混淆而非安全，必要时应采取外部安全措施。
          </para>
          </note>
         </para>
@@ -1456,9 +1428,7 @@ host ... ldap ldapbasedn="dc=example,dc=net"
        <term><literal>radiusports</literal></term>
        <listitem>
         <para>
-         The port numbers to connect to on the RADIUS servers. If no port
-         is specified, the default RADIUS port (<literal>1812</literal>)
-         will be used.
+         连接 RADIUS 服务器所使用的端口号。如果未指定端口，将使用默认的 RADIUS 端口（<literal>1812</literal>）。
         </para>
        </listitem>
       </varlistentry>
@@ -1467,12 +1437,7 @@ host ... ldap ldapbasedn="dc=example,dc=net"
        <term><literal>radiusidentifiers</literal></term>
        <listitem>
         <para>
-         The strings to be used as <literal>NAS Identifier</literal> in the
-         RADIUS requests. This parameter can be used, for example, to
-         identify which database cluster the user is attempting to connect
-         to, which can be useful for policy matching on
-         the RADIUS server. If no identifier is specified, the default
-         <literal>postgresql</literal> will be used.
+         在 RADIUS 请求中用作 <literal>NAS Identifier</literal> 的字符串。例如，此参数可用于标识用户正尝试连接哪个数据库集簇，这对于 RADIUS 服务器上的策略匹配很有用。如果未指定标识符，将使用默认的 <literal>postgresql</literal>。
         </para>
        </listitem>
       </varlistentry>
@@ -1481,10 +1446,7 @@ host ... ldap ldapbasedn="dc=example,dc=net"
    </para>
 
    <para>
-    If it is necessary to have a comma or whitespace in a RADIUS parameter
-    value, that can be done by putting double quotes around the value, but
-    it is tedious because two layers of double-quoting are now required.
-    An example of putting whitespace into RADIUS secret strings is:
+    如果 RADIUS 参数值中必须包含逗号或空白字符，可以通过在该值两侧加上双引号来实现，但这很繁琐，因为现在需要两层双引号。向 RADIUS 密钥字符串中放入空白字符的示例如下：
 <programlisting>
 host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""secret two"""
 </programlisting>
