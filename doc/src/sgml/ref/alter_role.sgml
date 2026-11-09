@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>ALTER ROLE</refname>
-  <refpurpose>change a database role</refpurpose>
+  <refpurpose>更改数据库角色</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -53,92 +53,66 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
  </refsynopsisdiv>
 
  <refsect1 id="sql-alterrole-desc">
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>ALTER ROLE</command> changes the attributes of a
-   <productname>PostgreSQL</productname> role.
+   <command>ALTER ROLE</command> 更改 <productname>PostgreSQL</productname> 角色的属性。
   </para>
 
   <para>
-   The first variant of this command listed in the synopsis can change
-   many of the role attributes that can be specified in
-   <link linkend="sql-createrole"><command>CREATE ROLE</command></link>.
-   (All the possible attributes are covered,
-   except that there are no options for adding or removing memberships; use
-   <link linkend="sql-grant"><command>GRANT</command></link> and
-   <link linkend="sql-revoke"><command>REVOKE</command></link> for that.)
-   Attributes not mentioned in the command retain their previous settings.
-   Database superusers can change any of these settings for any role, except
-   for changing the <literal>SUPERUSER</literal> property for the
-   <glossterm linkend="glossary-bootstrap-superuser">bootstrap superuser</glossterm>.
-   Non-superuser roles having <literal>CREATEROLE</literal> privilege can
-   change most of these properties, but only for non-superuser and
-   non-replication roles for which they have been granted
-   <literal>ADMIN OPTION</literal>. Non-superusers cannot change the
-   <literal>SUPERUSER</literal> property and can change the
-   <literal>CREATEDB</literal>, <literal>REPLICATION</literal>, and
-   <literal>BYPASSRLS</literal> properties only if they possess the
-   corresponding property themselves.
-   Ordinary roles can only change their own password.
+   概要中列出的该命令的第一种形式可以更改许多可在
+   <link linkend="sql-createrole"><command>CREATE ROLE</command></link> 中指定的角色属性。
+   （涵盖了所有可能的属性，
+   只是没有用于添加或删除成员关系的选项；为此请使用
+   <link linkend="sql-grant"><command>GRANT</command></link> 和
+   <link linkend="sql-revoke"><command>REVOKE</command></link>。）
+   命令中未提及的属性保留其原有设置。
+   数据库超级用户可以更改任何角色的任何这些设置，但不能更改
+   <literal>SUPERUSER</literal> 属性，对于
+   <glossterm linkend="glossary-bootstrap-superuser">引导超级用户</glossterm>。
+   拥有 <literal>CREATEROLE</literal> 权限的非超级用户角色可以更改其中大部分属性，但只能对
+   已为其授予 <literal>ADMIN OPTION</literal> 的非超级用户且非复制角色执行此操作。非超级用户不能更改
+   <literal>SUPERUSER</literal> 属性，并且只有在自身拥有相应属性时才能更改
+   <literal>CREATEDB</literal>、<literal>REPLICATION</literal> 和
+   <literal>BYPASSRLS</literal> 属性。
+   普通角色只能更改自己的密码。
   </para>
 
   <para>
-   The second variant changes the name of the role.
-   Database superusers can rename any role.
-   Roles having <literal>CREATEROLE</literal> privilege can rename non-superuser
-   roles for which they have been granted <literal>ADMIN OPTION</literal>.
-   The current session user cannot be renamed.
-   (Connect as a different user if you need to do that.)
-   Because <literal>MD5</literal>-encrypted passwords use the role name as
-   cryptographic salt, renaming a role clears its password if the
-   password is <literal>MD5</literal>-encrypted.
+   第二种变体更改角色的名称。
+   数据库超级用户可以重命名任何角色。
+   具有 <literal>CREATEROLE</literal> 权限的角色可以重命名那些已对其授予 <literal>ADMIN OPTION</literal> 的非超级用户角色。
+   当前会话用户不能被重命名。
+   （如果需要这样做，请以其他用户身份连接。）
+   由于 <literal>MD5</literal> 加密的密码使用角色名作为加密盐，如果密码是 <literal>MD5</literal> 加密的，重命名角色会清除其密码。
   </para>
 
   <para>
-   The remaining variants change a role's session default for a configuration
-   variable, either for all databases or, when the <literal>IN
-   DATABASE</literal> clause is specified, only for sessions in the named
-   database.  If <literal>ALL</literal> is specified instead of a role name,
-   this changes the setting for all roles.  Using <literal>ALL</literal>
-   with <literal>IN DATABASE</literal> is effectively the same as using the
-   command <literal>ALTER DATABASE ... SET ...</literal>.
+   其余变体更改角色对某个配置变量的会话默认值，可以针对所有数据库，或者在指定了 <literal>IN
+   DATABASE</literal> 子句时，仅针对指定数据库中的会话。如果指定 <literal>ALL</literal> 而不是角色名，则会更改所有角色的设置。将 <literal>ALL</literal> 与 <literal>IN DATABASE</literal> 一起使用实际上等同于使用命令 <literal>ALTER DATABASE ... SET ...</literal>。
   </para>
 
   <para>
-   Whenever the role subsequently
-   starts a new session, the specified value becomes the session
-   default, overriding whatever setting is present in
-   <filename>postgresql.conf</filename> or has been received from the <command>postgres</command>
-   command line. This only happens at login time; executing
-   <link linkend="sql-set-role"><command>SET ROLE</command></link> or
-   <link linkend="sql-set-session-authorization"><command>SET SESSION AUTHORIZATION</command></link> does not cause new
-   configuration values to be set.
-   Settings set for all databases are overridden by database-specific settings
-   attached to a role.  Settings for specific databases or specific roles override
-   settings for all roles.
+   此后每当该角色启动新会话时，指定的值就成为会话默认值，覆盖 <filename>postgresql.conf</filename> 中存在的任何设置或从 <command>postgres</command> 命令行接收到的设置。这只在登录时发生；执行 <link linkend="sql-set-role"><command>SET ROLE</command></link> 或 <link linkend="sql-set-session-authorization"><command>SET SESSION AUTHORIZATION</command></link> 不会导致设置新的配置值。
+   为所有数据库设置的设置会被附加到角色的特定于数据库的设置覆盖。针对特定数据库或特定角色的设置会覆盖针对所有角色的设置。
   </para>
 
   <para>
-   Superusers can change anyone's session defaults. Roles having
-   <literal>CREATEROLE</literal> privilege can change defaults for non-superuser
-   roles for which they have been granted <literal>ADMIN OPTION</literal>.
-   Ordinary roles can only set defaults for themselves.
-   Certain configuration variables cannot be set this way, or can only be
-   set if a superuser issues the command.  Only superusers can change a setting
-   for all roles in all databases.
+   超级用户可以更改任何人的会话默认值。具有 <literal>CREATEROLE</literal> 权限的角色可以更改那些已对其授予 <literal>ADMIN OPTION</literal> 的非超级用户角色的默认值。
+   普通角色只能为自己设置默认值。
+   某些配置变量不能以这种方式设置，或者只有在超级用户发出该命令时才能设置。只有超级用户可以更改所有数据库中所有角色的设置。
   </para>
  </refsect1>
 
  <refsect1 id="sql-alterrole-params">
-  <title>Parameters</title>
+  <title>参数</title>
 
     <variablelist>
      <varlistentry id="sql-alterrole-params-name">
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        The name of the role whose attributes are to be altered.
+        要更改其属性的角色名称。
        </para>
       </listitem>
      </varlistentry>
@@ -148,7 +122,7 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
       <term><literal>CURRENT_USER</literal></term>
       <listitem>
        <para>
-        Alter the current user instead of an explicitly identified role.
+        修改当前用户，而不是显式指定的角色。
        </para>
       </listitem>
      </varlistentry>
@@ -157,8 +131,7 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
       <term><literal>SESSION_USER</literal></term>
       <listitem>
        <para>
-        Alter the current session user instead of an explicitly identified
-        role.
+        修改当前会话用户，而不是显式指定的角色。
        </para>
       </listitem>
      </varlistentry>
@@ -184,9 +157,9 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
       <term><literal>VALID UNTIL</literal> '<replaceable class="parameter">timestamp</replaceable>'</term>
       <listitem>
        <para>
-        These clauses alter attributes originally set by
-        <link linkend="sql-createrole"><command>CREATE ROLE</command></link>. For more information, see the
-        <command>CREATE ROLE</command> reference page.
+        这些子句修改最初由
+        <link linkend="sql-createrole"><command>CREATE ROLE</command></link> 设置的属性。更多信息请参见
+        <command>CREATE ROLE</command> 参考页。
        </para>
       </listitem>
      </varlistentry>
@@ -195,7 +168,7 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
       <term><replaceable>new_name</replaceable></term>
       <listitem>
        <para>
-        The new name of the role.
+        角色的新名称。
        </para>
       </listitem>
      </varlistentry>
@@ -204,7 +177,7 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
        <term><replaceable>database_name</replaceable></term>
        <listitem>
          <para>
-           The name of the database the configuration variable should be set in.
+           配置变量应设置所在的数据库的名称。
          </para>
        </listitem>
      </varlistentry>
@@ -214,30 +187,25 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
       <term><replaceable>value</replaceable></term>
       <listitem>
        <para>
-        Set this role's session default for the specified configuration
-        parameter to the given value.  If
-        <replaceable>value</replaceable> is <literal>DEFAULT</literal>
-        or, equivalently, <literal>RESET</literal> is used, the
-        role-specific variable setting is removed, so the role will
-        inherit the system-wide default setting in new sessions.  Use
-        <literal>RESET ALL</literal> to clear all role-specific settings.
-        <literal>SET FROM CURRENT</literal> saves the session's current value of
-        the parameter as the role-specific value.
-        If <literal>IN DATABASE</literal> is specified, the configuration
-        parameter is set or removed for the given role and database only.
+        将指定配置参数在本角色会话中的默认值设置为给定值。如果
+        <replaceable>value</replaceable> 为 <literal>DEFAULT</literal>，
+        或者等价地使用了 <literal>RESET</literal>，则删除该角色特定的变量设置，
+        这样该角色将在新会话中继承系统范围的默认设置。使用
+        <literal>RESET ALL</literal> 可清除所有角色特定的设置。
+        <literal>SET FROM CURRENT</literal> 会把该参数的会话当前值保存为角色特定的值。
+        如果指定了 <literal>IN DATABASE</literal>，则仅为给定的角色和数据库设置或删除该配置
+        参数。
        </para>
 
        <para>
-        Role-specific variable settings take effect only at login;
-        <link linkend="sql-set-role"><command>SET ROLE</command></link> and
+        角色特定的变量设置只在登录时生效；<link linkend="sql-set-role"><command>SET ROLE</command></link> 和
         <link linkend="sql-set-session-authorization"><command>SET SESSION AUTHORIZATION</command></link>
-        do not process role-specific variable settings.
+        不处理角色特定的变量设置。
        </para>
 
        <para>
-        See <xref linkend="sql-set"/> and <xref
-        linkend="runtime-config"/> for more information about allowed
-        parameter names and values.
+        有关允许的参数名和值的更多信息，请参见 <xref linkend="sql-set"/> 和 <xref
+        linkend="runtime-config"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -245,44 +213,39 @@ ALTER ROLE { <replaceable class="parameter">role_specification</replaceable> | A
  </refsect1>
 
  <refsect1 id="sql-alterrole-notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   Use <link linkend="sql-createrole"><command>CREATE ROLE</command></link>
-   to add new roles, and <link linkend="sql-droprole"><command>DROP ROLE</command></link> to remove a role.
+   使用 <link linkend="sql-createrole"><command>CREATE ROLE</command></link>
+   添加新角色，使用 <link linkend="sql-droprole"><command>DROP ROLE</command></link> 删除角色。
   </para>
 
   <para>
-   <command>ALTER ROLE</command> cannot change a role's memberships.
-   Use <link linkend="sql-grant"><command>GRANT</command></link> and
+   <command>ALTER ROLE</command> 不能更改角色的成员关系。
+   请使用 <link linkend="sql-grant"><command>GRANT</command></link> 和
    <link linkend="sql-revoke"><command>REVOKE</command></link>
-   to do that.
+   来完成该操作。
   </para>
 
   <para>
-   Caution must be exercised when specifying an unencrypted password
-   with this command.  The password will be transmitted to the server
-   in cleartext, and it might also be logged in the client's command
-   history or the server log.  <xref linkend="app-psql"/>
-   contains a command
-   <command>\password</command> that can be used to change a
-   role's password without exposing the cleartext password.
+   使用此命令指定未加密的密码时必须谨慎。密码将以明文形式传输到服务器，
+   并且还可能被记录在客户端的命令历史或服务器日志中。<xref linkend="app-psql"/>
+   包含一个命令
+   <command>\password</command>，可用于更改角色的密码而不暴露明文密码。
   </para>
 
   <para>
-   It is also possible to tie a
-   session default to a specific database rather than to a role; see
-   <xref linkend="sql-alterdatabase"/>.
-   If there is a conflict, database-role-specific settings override role-specific
-   ones, which in turn override database-specific ones.
+   也可以把会话默认值绑定到特定数据库而不是角色；参见
+   <xref linkend="sql-alterdatabase"/>。
+   如果存在冲突，数据库-角色特定的设置会覆盖角色特定的设置，而后者又会覆盖数据库特定的设置。
   </para>
  </refsect1>
 
  <refsect1 id="sql-alterrole-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Change a role's password:
+   更改角色的密码：
 
 <programlisting>
 ALTER ROLE davide WITH PASSWORD 'hu8jmn3';
@@ -290,7 +253,7 @@ ALTER ROLE davide WITH PASSWORD 'hu8jmn3';
   </para>
 
   <para>
-   Remove a role's password:
+   删除角色的密码：
 
 <programlisting>
 ALTER ROLE davide WITH PASSWORD NULL;
@@ -298,23 +261,22 @@ ALTER ROLE davide WITH PASSWORD NULL;
   </para>
 
   <para>
-   Change a password expiration date, specifying that the password
-   should expire at midday on 4th May 2015 using
-   the time zone which is one hour ahead of <acronym>UTC</acronym>:
+   更改密码过期日期，指定密码应在 2015 年 5 月 4 日中午过期，
+   使用比 <acronym>UTC</acronym> 快一小时的时区：
 <programlisting>
 ALTER ROLE chris VALID UNTIL 'May 4 12:00:00 2015 +1';
 </programlisting>
   </para>
 
   <para>
-   Make a password valid forever:
+   使密码永久有效：
 <programlisting>
 ALTER ROLE fred VALID UNTIL 'infinity';
 </programlisting>
   </para>
 
   <para>
-   Give a role the ability to manage other roles and create new databases:
+   授予角色管理其他角色和创建新数据库的能力：
 
 <programlisting>
 ALTER ROLE miriam CREATEROLE CREATEDB;
@@ -322,8 +284,7 @@ ALTER ROLE miriam CREATEROLE CREATEDB;
   </para>
 
   <para>
-   Give a role a non-default setting of the
-   <xref linkend="guc-maintenance-work-mem"/> parameter:
+   为角色设置 <xref linkend="guc-maintenance-work-mem"/> 参数的非默认值：
 
 <programlisting>
 ALTER ROLE worker_bee SET maintenance_work_mem = 100000;
@@ -331,8 +292,7 @@ ALTER ROLE worker_bee SET maintenance_work_mem = 100000;
   </para>
 
   <para>
-   Give a role a non-default, database-specific setting of the
-   <xref linkend="guc-client-min-messages"/> parameter:
+   为角色设置 <xref linkend="guc-client-min-messages"/> 参数的、针对特定数据库的非默认值：
 
 <programlisting>
 ALTER ROLE fred IN DATABASE devel SET client_min_messages = DEBUG;
@@ -340,16 +300,15 @@ ALTER ROLE fred IN DATABASE devel SET client_min_messages = DEBUG;
  </refsect1>
 
  <refsect1 id="sql-alterrole-compat">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   The <command>ALTER ROLE</command> statement is a
-   <productname>PostgreSQL</productname> extension.
+   <command>ALTER ROLE</command> 语句是 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1 id="sql-alterrole-see">
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createrole"/></member>
