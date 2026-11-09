@@ -556,7 +556,7 @@ CREATE INDEX people_names ON people ((first_name || ' ' || last_name));
 
 
  <sect1 id="indexes-partial">
-  <title>Partial Indexes</title>
+  <title>部分索引</title>
 
   <indexterm zone="indexes-partial">
    <primary>index</primary>
@@ -564,40 +564,25 @@ CREATE INDEX people_names ON people ((first_name || ' ' || last_name));
   </indexterm>
 
   <para>
-   A <firstterm>partial index</firstterm> is an index built over a
-   subset of a table; the subset is defined by a conditional
-   expression (called the <firstterm>predicate</firstterm> of the
-   partial index).  The index contains entries only for those table
-   rows that satisfy the predicate.  Partial indexes are a specialized
-   feature, but there are several situations in which they are useful.
+   <firstterm>部分索引</firstterm>是建立在一个表的一个子集上的索引；该子集由条件表达式定义（称为该部分索引的<firstterm>谓词</firstterm>）。索引中只包含满足该谓词的表行的条目。部分索引是一种专门特性，但在若干情形下它们很有用。
   </para>
 
   <para>
-   One major reason for using a partial index is to avoid indexing common
-   values.  Since a query searching for a common value (one that
-   accounts for more than a few percent of all the table rows) will not
-   use the index anyway, there is no point in keeping those rows in the
-   index at all.  This reduces the size of the index, which will speed
-   up those queries that do use the index.  It will also speed up many table
-   update operations because the index does not need to be
-   updated in all cases.  <xref linkend="indexes-partial-ex1"/> shows a
-   possible application of this idea.
+   使用部分索引的一个主要原因是避免对常见值建立索引。由于查找某个常见值（占所有表行百分之几以上的值）的查询无论如何都不会使用该索引，因此把这些行保留在索引中毫无意义。这会减小索引的大小，从而加快那些确实使用该索引的查询。它还会加快许多表更新操作，因为索引并非在所有情况下都需要更新。<xref linkend="indexes-partial-ex1"/> 展示了这一思路的一种可能应用。
   </para>
 
   <example id="indexes-partial-ex1">
-   <title>Setting up a Partial Index to Exclude Common Values</title>
+   <title>建立部分索引以排除常见值</title>
 
    <para>
-    Suppose you are storing web server access logs in a database.
-    Most accesses originate from the IP address range of your organization but
-    some are from elsewhere (say, employees on dial-up connections).
-    If your searches by IP are primarily for outside accesses,
-    you probably do not need to index the IP range that corresponds to your
-    organization's subnet.
+    假设您正在数据库中存储 Web 服务器访问日志。
+    大多数访问来自您组织的 IP 地址范围，但也有一些来自其他地方（比如，通过拨号连接上网的员工）。
+    如果按 IP 进行的搜索主要针对外部访问，
+    您可能不需要对与您组织子网对应的 IP 范围建立索引。
    </para>
 
    <para>
-    Assume a table like this:
+    假设有一个这样的表：
 <programlisting>
 CREATE TABLE access_log (
     url varchar,
@@ -608,8 +593,7 @@ CREATE TABLE access_log (
    </para>
 
    <para>
-    To create a partial index that suits our example, use a command
-    such as this:
+    要创建一个适合我们示例的部分索引，请使用如下这样的命令：
 <programlisting>
 CREATE INDEX access_log_client_ip_ix ON access_log (client_ip)
 WHERE NOT (client_ip &gt; inet '192.168.100.0' AND
@@ -618,15 +602,13 @@ WHERE NOT (client_ip &gt; inet '192.168.100.0' AND
    </para>
 
    <para>
-    A typical query that can use this index would be:
+    一个能使用该索引的典型查询如下：
 <programlisting>
 SELECT *
 FROM access_log
 WHERE url = '/index.html' AND client_ip = inet '212.78.10.32';
 </programlisting>
-    Here the query's IP address is covered by the partial index.  The
-    following query cannot use the partial index, as it uses an IP address
-    that is excluded from the index:
+    这里查询中的 IP 地址被该部分索引覆盖。下面的查询不能使用该部分索引，因为它使用的 IP 地址被排除在索引之外：
 <programlisting>
 SELECT *
 FROM access_log
@@ -635,35 +617,20 @@ WHERE url = '/index.html' AND client_ip = inet '192.168.100.23';
    </para>
 
    <para>
-    Observe that this kind of partial index requires that the common
-    values be predetermined, so such partial indexes are best used for
-    data distributions that do not change.  Such indexes can be recreated
-    occasionally to adjust for new data distributions, but this adds
-    maintenance effort.
+    请注意，这种部分索引要求这些常见值是预先确定的，因此此类部分索引最适合用于不会变化的数据分布。可以偶尔重建此类索引以针对新的数据分布进行调整，但这会增加维护工作量。
    </para>
   </example>
 
   <para>
-   Another possible use for a partial index is to exclude values from the
-   index that the
-   typical query workload is not interested in; this is shown in <xref
-   linkend="indexes-partial-ex2"/>.  This results in the same
-   advantages as listed above, but it prevents the
-   <quote>uninteresting</quote> values from being accessed via that
-   index, even if an index scan might be profitable in that
-   case.  Obviously, setting up partial indexes for this kind of
-   scenario will require a lot of care and experimentation.
+   部分索引的另一种可能用途是把典型查询工作负载不感兴趣的值排除在索引之外；这将在 <xref
+   linkend="indexes-partial-ex2"/> 中展示。这样做具有与上面列出的相同优点，但它会阻止通过该索引访问那些<quote>不感兴趣</quote>的值，即使在该情况下索引扫描可能是有利的。显然，为这类场景设置部分索引需要非常谨慎并进行大量试验。
   </para>
 
   <example id="indexes-partial-ex2">
-   <title>Setting up a Partial Index to Exclude Uninteresting Values</title>
+   <title>设置部分索引以排除不感兴趣的值</title>
 
    <para>
-    If you have a table that contains both billed and unbilled orders,
-    where the unbilled orders take up a small fraction of the total
-    table and yet those are the most-accessed rows, you can improve
-    performance by creating an index on just the unbilled rows.  The
-    command to create the index would look like this:
+    如果你有一个同时包含已开票和未开票订单的表，其中未开票订单只占整个表的一小部分，但却是访问最频繁的行，那么你可以只对未开票的行创建索引来提高性能。创建该索引的命令如下所示：
 <programlisting>
 CREATE INDEX orders_unbilled_index ON orders (order_nr)
     WHERE billed is not true;
@@ -671,77 +638,40 @@ CREATE INDEX orders_unbilled_index ON orders (order_nr)
    </para>
 
    <para>
-    A possible query to use this index would be:
+    一个可能使用该索引的查询是：
 <programlisting>
 SELECT * FROM orders WHERE billed is not true AND order_nr &lt; 10000;
 </programlisting>
-    However, the index can also be used in queries that do not involve
-    <structfield>order_nr</structfield> at all, e.g.:
+    不过，该索引也可以用于完全不涉及 <structfield>order_nr</structfield> 的查询，例如：
 <programlisting>
 SELECT * FROM orders WHERE billed is not true AND amount &gt; 5000.00;
 </programlisting>
-    This is not as efficient as a partial index on the
-    <structfield>amount</structfield> column would be, since the system has to
-    scan the entire index.  Yet, if there are relatively few unbilled
-    orders, using this partial index just to find the unbilled orders
-    could be a win.
+    这不如在 <structfield>amount</structfield> 列上建立部分索引那样高效，因为系统必须扫描整个索引。不过，如果未开票订单相对较少，那么仅用这个部分索引来查找未开票订单可能是有利的。
    </para>
 
    <para>
-    Note that this query cannot use this index:
+    注意，这个查询不能使用该索引：
 <programlisting>
 SELECT * FROM orders WHERE order_nr = 3501;
 </programlisting>
-    The order 3501 might be among the billed or unbilled
-    orders.
+    订单 3501 可能属于已开票订单，也可能属于未开票订单。
    </para>
   </example>
 
   <para>
-   <xref linkend="indexes-partial-ex2"/> also illustrates that the
-   indexed column and the column used in the predicate do not need to
-   match.  <productname>PostgreSQL</productname> supports partial
-   indexes with arbitrary predicates, so long as only columns of the
-   table being indexed are involved.  However, keep in mind that the
-   predicate must match the conditions used in the queries that
-   are supposed to benefit from the index.  To be precise, a partial
-   index can be used in a query only if the system can recognize that
-   the <literal>WHERE</literal> condition of the query mathematically implies
-   the predicate of the index.
-   <productname>PostgreSQL</productname> does not have a sophisticated
-   theorem prover that can recognize mathematically equivalent
-   expressions that are written in different forms.  (Not
-   only is such a general theorem prover extremely difficult to
-   create, it would probably be too slow to be of any real use.)
-   The system can recognize simple inequality implications, for example
-   <quote>x &lt; 1</quote> implies <quote>x &lt; 2</quote>; otherwise
-   the predicate condition must exactly match part of the query's
-   <literal>WHERE</literal> condition
-   or the index will not be recognized as usable. Matching takes
-   place at query planning time, not at run time. As a result,
-   parameterized query clauses do not work with a partial index. For
-   example a prepared query with a parameter might specify
-   <quote>x &lt; ?</quote> which will never imply
-   <quote>x &lt; 2</quote> for all possible values of the parameter.
+   <xref linkend="indexes-partial-ex2"/> 还说明了被索引的列与谓词中使用的列不必相同。<productname>PostgreSQL</productname> 支持带有任意谓词的部分索引，只要只涉及被索引表的列即可。但是请记住，谓词必须与那些期望从该索引中受益的查询中所使用的条件相匹配。准确地说，只有当系统能够识别出查询的 <literal>WHERE</literal> 条件在数学上蕴含该索引的谓词时，部分索引才能用于该查询。<productname>PostgreSQL</productname> 并没有一个复杂的定理证明器，能够识别以不同形式书写的数学等价表达式。（不仅创建这样一个通用定理证明器极其困难，而且它很可能太慢而没有任何实际用处。）系统能够识别简单的不等式蕴含关系，例如 <quote>x &lt; 1</quote> 蕴含 <quote>x &lt; 2</quote>；否则，谓词条件必须与查询的 <literal>WHERE</literal> 条件的某一部分完全匹配，否则该索引将不会被视为可用。匹配发生在查询规划时，而不是运行时。因此，参数化的查询子句不能与部分索引配合使用。例如，带参数的预备查询可能指定 <quote>x &lt; ?</quote>，而对于该参数的所有可能取值，它都绝不会蕴含 <quote>x &lt; 2</quote>。
   </para>
 
   <para>
-   A third possible use for partial indexes does not require the
-   index to be used in queries at all.  The idea here is to create
-   a unique index over a subset of a table, as in <xref
-   linkend="indexes-partial-ex3"/>.  This enforces uniqueness
-   among the rows that satisfy the index predicate, without constraining
-   those that do not.
+   部分索引的第三种可能用途根本不需要在查询中使用该索引。这里的想法是在表的一个子集上创建一个唯一索引，如 <xref
+   linkend="indexes-partial-ex3"/> 所示。这样就在满足索引谓词的行之间强制了唯一性，而不约束那些不满足谓词的行。
   </para>
 
   <example id="indexes-partial-ex3">
-   <title>Setting up a Partial Unique Index</title>
+   <title>建立部分唯一索引</title>
 
    <para>
-    Suppose that we have a table describing test outcomes.  We wish
-    to ensure that there is only one <quote>successful</quote> entry for
-    a given subject and target combination, but there might be any number of
-    <quote>unsuccessful</quote> entries.  Here is one way to do it:
+    假设我们有一个描述测试结果的表。我们希望确保对于给定的科目和目标组合，只有一个<quote>成功</quote>条目，但可以有任意数量的<quote>不成功</quote>条目。下面是一种实现方式：
 <programlisting>
 CREATE TABLE tests (
     subject text,
@@ -753,25 +683,13 @@ CREATE TABLE tests (
 CREATE UNIQUE INDEX tests_success_constraint ON tests (subject, target)
     WHERE success;
 </programlisting>
-    This is a particularly efficient approach when there are few
-    successful tests and many unsuccessful ones.  It is also possible to
-    allow only one null in a column by creating a unique partial index
-    with an <literal>IS NULL</literal> restriction.
+    当成功的测试很少而不成功的测试很多时，这是一种特别高效的方法。也可以通过创建一个带有 <literal>IS NULL</literal> 限制的唯一部分索引，来允许某一列中只存在一个空值。
    </para>
 
   </example>
 
   <para>
-   Finally, a partial index can also be used to override the system's
-   query plan choices.  Also, data sets with peculiar
-   distributions might cause the system to use an index when it really
-   should not.  In that case the index can be set up so that it is not
-   available for the offending query.  Normally,
-   <productname>PostgreSQL</productname> makes reasonable choices about index
-   usage (e.g., it avoids them when retrieving common values, so the
-   earlier example really only saves index size, it is not required to
-   avoid index usage), and grossly incorrect plan choices are cause
-   for a bug report.
+   最后，部分索引还可以用来覆盖系统的查询计划选择。此外，具有特殊分布的数据集可能会导致系统在实际上不应该使用索引时使用索引。在这种情况下，可以这样设置索引，使它对于有问题的查询不可用。通常，<productname>PostgreSQL</productname> 会对索引的使用做出合理的选择（例如，在检索常见值时它会避免使用索引，因此前面的例子实际上只是节省了索引大小，并不是必须避免使用索引），而严重错误的计划选择则应当作为缺陷报告提交。
   </para>
 
   <para>
@@ -786,11 +704,10 @@ CREATE UNIQUE INDEX tests_success_constraint ON tests (subject, target)
   </para>
 
   <example id="indexes-partial-ex4">
-   <title>Do Not Use Partial Indexes as a Substitute for Partitioning</title>
+   <title>不要用部分索引代替分区</title>
 
    <para>
-    You might be tempted to create a large set of non-overlapping partial
-    indexes, for example
+    你可能会忍不住创建一大组互不重叠的部分索引，例如
 
 <programlisting>
 CREATE INDEX mytable_cat_1 ON mytable (data) WHERE category = 1;
@@ -800,37 +717,25 @@ CREATE INDEX mytable_cat_3 ON mytable (data) WHERE category = 3;
 CREATE INDEX mytable_cat_<replaceable>N</replaceable> ON mytable (data) WHERE category = <replaceable>N</replaceable>;
 </programlisting>
 
-    This is a bad idea!  Almost certainly, you'll be better off with a
-    single non-partial index, declared like
+    这是个坏主意！几乎可以肯定，使用一个声明如下的单一非部分索引会更好
 
 <programlisting>
 CREATE INDEX mytable_cat_data ON mytable (category, data);
 </programlisting>
 
-    (Put the category column first, for the reasons described in
-    <xref linkend="indexes-multicolumn"/>.)  While a search in this larger
-    index might have to descend through a couple more tree levels than a
-    search in a smaller index, that's almost certainly going to be cheaper
-    than the planner effort needed to select the appropriate one of the
-    partial indexes.  The core of the problem is that the system does not
-    understand the relationship among the partial indexes, and will
-    laboriously test each one to see if it's applicable to the current
-    query.
+    （把 category 列放在最前面，原因见 <xref linkend="indexes-multicolumn"/>。）虽然在这个更大的索引中搜索可能比在较小的索引中搜索要多下探两三个树层级，但这几乎肯定比规划器选择合适的部分索引所需的工作量更小。问题的核心在于，系统不理解这些部分索引之间的关系，并且会费力地逐个测试它们，看是否适用于当前查询。
    </para>
 
    <para>
-    If your table is large enough that a single index really is a bad idea,
-    you should look into using partitioning instead (see
-    <xref linkend="ddl-partitioning"/>).  With that mechanism, the system
-    does understand that the tables and indexes are non-overlapping, so
-    far better performance is possible.
+    如果你的表足够大，以至于单个索引确实是个糟糕的主意，那么你应该考虑改用分区（参见
+    <xref linkend="ddl-partitioning"/>）。借助该机制，系统能够理解这些表和索引是互不重叠的，因此可以获得好得多的性能。
    </para>
   </example>
 
   <para>
-   More information about partial indexes can be found in <xref
-   linkend="ston89b"/>, <xref linkend="olson93"/>, and <xref
-   linkend="seshadri95"/>.
+   关于部分索引的更多信息可以在 <xref
+   linkend="ston89b"/>、<xref linkend="olson93"/> 和 <xref
+   linkend="seshadri95"/> 中找到。
   </para>
  </sect1>
 
