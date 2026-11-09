@@ -150,12 +150,10 @@ Node *(*CreateCustomScanState) (CustomScan *cscan);
  </sect1>
 
  <sect1 id="custom-scan-execution">
-  <title>Executing Custom Scans</title>
+  <title>执行自定义扫描</title>
 
   <para>
-   When a <structfield>CustomScan</structfield> is executed, its execution state is
-   represented by a <structfield>CustomScanState</structfield>, which is declared as
-   follows:
+   当执行一个 <structfield>CustomScan</structfield> 时，其执行状态由 <structfield>CustomScanState</structfield> 表示，其声明如下：
 <programlisting>
 typedef struct CustomScanState
 {
@@ -167,20 +165,16 @@ typedef struct CustomScanState
   </para>
 
   <para>
-   <structfield>ss</structfield> is initialized as for any other scan state,
-   except that if the scan is for a join rather than a base relation,
-   <literal>ss.ss_currentRelation</literal> is left NULL.
-   <structfield>flags</structfield> is a bit mask with the same meaning as in
-   <structname>CustomPath</structname> and <structname>CustomScan</structname>.
-   <structfield>methods</structfield> must point to a (usually statically allocated)
-   object implementing the required custom scan state methods, which are
-   further detailed below.  Typically, a <structname>CustomScanState</structname>, which
-   need not support <function>copyObject</function>, will actually be a larger
-   structure embedding the above as its first member.
+   <structfield>ss</structfield> 的初始化与其他扫描状态相同，不同之处在于，如果该扫描针对的是连接而非基础关系，
+   则 <literal>ss.ss_currentRelation</literal> 保持为 NULL。
+   <structfield>flags</structfield> 是一个位掩码，其含义与 <structname>CustomPath</structname> 和 <structname>CustomScan</structname> 中的相同。
+   <structfield>methods</structfield> 必须指向一个（通常是静态分配的）对象，该对象实现所需的
+   自定义扫描状态方法，这些方法将在下文进一步详述。通常，一个 <structname>CustomScanState</structname>
+   （它不必支持 <function>copyObject</function>）实际上是一个更大的结构，将上述内容作为其第一个成员嵌入其中。
   </para>
 
   <sect2 id="custom-scan-execution-callbacks">
-   <title>Custom Scan Execution Callbacks</title>
+   <title>自定义扫描执行回调</title>
 
    <para>
 <programlisting>
@@ -188,56 +182,50 @@ void (*BeginCustomScan) (CustomScanState *node,
                          EState *estate,
                          int eflags);
 </programlisting>
-    Complete initialization of the supplied <structname>CustomScanState</structname>.
-    Standard fields have been initialized by <function>ExecInitCustomScan</function>,
-    but any private fields should be initialized here.
+    完成对所提供 <structname>CustomScanState</structname> 的初始化。
+    标准字段已由 <function>ExecInitCustomScan</function> 初始化，
+    但任何私有字段应在此处初始化。
    </para>
 
    <para>
 <programlisting>
 TupleTableSlot *(*ExecCustomScan) (CustomScanState *node);
 </programlisting>
-    Fetch the next scan tuple.  If any tuples remain, it should fill
-    <literal>ps_ResultTupleSlot</literal> with the next tuple in the current scan
-    direction, and then return the tuple slot.  If not,
-    <literal>NULL</literal> or an empty slot should be returned.
+    获取下一个扫描元组。如果还有元组剩余，它应按照当前扫描方向
+    用下一个元组填充 <literal>ps_ResultTupleSlot</literal>，然后返回该元组槽。如果没有，
+    则应返回 <literal>NULL</literal> 或一个空槽。
    </para>
 
    <para>
 <programlisting>
 void (*EndCustomScan) (CustomScanState *node);
 </programlisting>
-    Clean up any private data associated with the <literal>CustomScanState</literal>.
-    This method is required, but it does not need to do anything if there is
-    no associated data or it will be cleaned up automatically.
+    清理与该 <literal>CustomScanState</literal> 关联的任何私有数据。
+    此方法是必需的，但如果没有关联数据，或者关联数据会被自动清理，
+    则它不需要做任何事情。
    </para>
 
    <para>
 <programlisting>
 void (*ReScanCustomScan) (CustomScanState *node);
 </programlisting>
-    Rewind the current scan to the beginning and prepare to rescan the
-    relation.
+    将当前扫描回退到开头，并准备重新扫描该关系。
    </para>
 
    <para>
 <programlisting>
 void (*MarkPosCustomScan) (CustomScanState *node);
 </programlisting>
-    Save the current scan position so that it can subsequently be restored
-    by the <function>RestrPosCustomScan</function> callback.  This callback is
-    optional, and need only be supplied if the
-    <literal>CUSTOMPATH_SUPPORT_MARK_RESTORE</literal> flag is set.
+    保存当前扫描位置，以便随后可由 <function>RestrPosCustomScan</function> 回调恢复。此回调是可选的，
+    并且仅当设置了 <literal>CUSTOMPATH_SUPPORT_MARK_RESTORE</literal> 标志时才需要提供。
    </para>
 
    <para>
 <programlisting>
 void (*RestrPosCustomScan) (CustomScanState *node);
 </programlisting>
-    Restore the previous scan position as saved by the
-    <function>MarkPosCustomScan</function> callback.  This callback is optional,
-    and need only be supplied if the
-    <literal>CUSTOMPATH_SUPPORT_MARK_RESTORE</literal> flag is set.
+    恢复由 <function>MarkPosCustomScan</function> 回调保存的先前扫描位置。此回调是可选的，
+    并且仅当设置了 <literal>CUSTOMPATH_SUPPORT_MARK_RESTORE</literal> 标志时才需要提供。
    </para>
 
    <para>
@@ -245,11 +233,9 @@ void (*RestrPosCustomScan) (CustomScanState *node);
 Size (*EstimateDSMCustomScan) (CustomScanState *node,
                                ParallelContext *pcxt);
 </programlisting>
-    Estimate the amount of dynamic shared memory that will be required
-    for parallel operation.  This may be higher than the amount that will
-    actually be used, but it must not be lower.  The return value is in bytes.
-    This callback is optional, and need only be supplied if this custom
-    scan provider supports parallel execution.
+    估计并行操作所需的动态共享内存量。这个值可能高于实际使用的量，
+    但绝不能低于实际使用量。返回值以字节为单位。
+    此回调是可选的，并且仅当此自定义扫描提供者支持并行执行时才需要提供。
    </para>
 
    <para>
@@ -258,11 +244,9 @@ void (*InitializeDSMCustomScan) (CustomScanState *node,
                                  ParallelContext *pcxt,
                                  void *coordinate);
 </programlisting>
-    Initialize the dynamic shared memory that will be required for parallel
-    operation.  <literal>coordinate</literal> points to a shared memory area of
-    size equal to the return value of <function>EstimateDSMCustomScan</function>.
-    This callback is optional, and need only be supplied if this custom
-    scan provider supports parallel execution.
+    初始化并行操作所需的动态共享内存。<literal>coordinate</literal> 指向一个共享内存区域，
+    其大小等于 <function>EstimateDSMCustomScan</function> 的返回值。
+    此回调是可选的，并且仅当此自定义扫描提供者支持并行执行时才需要提供。
    </para>
 
    <para>
@@ -271,15 +255,10 @@ void (*ReInitializeDSMCustomScan) (CustomScanState *node,
                                    ParallelContext *pcxt,
                                    void *coordinate);
 </programlisting>
-    Re-initialize the dynamic shared memory required for parallel operation
-    when the custom-scan plan node is about to be re-scanned.
-    This callback is optional, and need only be supplied if this custom
-    scan provider supports parallel execution.
-    Recommended practice is that this callback reset only shared state,
-    while the <function>ReScanCustomScan</function> callback resets only local
-    state.  Currently, this callback will be called
-    before <function>ReScanCustomScan</function>, but it's best not to rely on
-    that ordering.
+    当自定义扫描计划节点即将被重新扫描时，重新初始化并行操作所需的动态共享内存。
+    此回调是可选的，仅当此自定义扫描提供者支持并行执行时才需要提供。
+    推荐的做法是：此回调只重置共享状态，而 <function>ReScanCustomScan</function> 回调只重置本地状态。
+    目前，此回调将在 <function>ReScanCustomScan</function> 之前被调用，但最好不要依赖这一顺序。
    </para>
 
    <para>
@@ -288,23 +267,18 @@ void (*InitializeWorkerCustomScan) (CustomScanState *node,
                                     shm_toc *toc,
                                     void *coordinate);
 </programlisting>
-    Initialize a parallel worker's local state based on the shared state
-    set up by the leader during <function>InitializeDSMCustomScan</function>.
-    This callback is optional, and need only be supplied if this custom
-    scan provider supports parallel execution.
+    根据领导进程在 <function>InitializeDSMCustomScan</function> 期间建立的共享状态，初始化并行工作进程的本地状态。
+    此回调是可选的，仅当此自定义扫描提供者支持并行执行时才需要提供。
    </para>
 
    <para>
 <programlisting>
 void (*ShutdownCustomScan) (CustomScanState *node);
 </programlisting>
-    Release resources when it is anticipated the node will not be executed
-    to completion.  This is not called in all cases; sometimes,
-    <literal>EndCustomScan</literal> may be called without this function having
-    been called first.  Since the DSM segment used by parallel query is
-    destroyed just after this callback is invoked, custom scan providers that
-    wish to take some action before the DSM segment goes away should implement
-    this method.
+    当预计该节点不会执行到完成时释放资源。此函数并非在所有情况下都会被调用；有时，
+    <literal>EndCustomScan</literal> 可能在此函数尚未被调用的情况下就被调用。由于并行查询使用的 DSM 段
+    就在此回调被调用之后销毁，因此希望在 DSM 段消失之前执行某些操作的自定义扫描
+    提供者应实现此方法。
    </para>
 
    <para>
@@ -313,11 +287,9 @@ void (*ExplainCustomScan) (CustomScanState *node,
                            List *ancestors,
                            ExplainState *es);
 </programlisting>
-    Output additional information for <command>EXPLAIN</command> of a custom-scan
-    plan node.  This callback is optional.  Common data stored in the
-    <structname>ScanState</structname>, such as the target list and scan relation, will
-    be shown even without this callback, but the callback allows the display
-    of additional, private state.
+    为自定义扫描计划节点的 <command>EXPLAIN</command> 输出附加信息。此回调是可选的。
+    即使没有此回调，存储在 <structname>ScanState</structname> 中的公共数据（例如目标列表和扫描关系）也会被显示，
+    但此回调允许显示额外的私有状态。
    </para>
   </sect2>
  </sect1>
