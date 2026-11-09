@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/gin.sgml -->
 
 <sect1 id="gin">
-<title>GIN Indexes</title>
+<title>GIN 索引</title>
 
    <indexterm>
     <primary>index</primary>
@@ -9,77 +9,59 @@
    </indexterm>
 
 <sect2 id="gin-intro">
- <title>Introduction</title>
+ <title>简介</title>
 
  <para>
-  <acronym>GIN</acronym> stands for Generalized Inverted Index.
-  <acronym>GIN</acronym> is designed for handling cases where the items
-  to be indexed are composite values, and the queries to be handled by
-  the index need to search for element values that appear within
-  the composite items.  For example, the items could be documents,
-  and the queries could be searches for documents containing specific words.
+  <acronym>GIN</acronym> 代表广义倒排索引（Generalized Inverted Index）。
+  <acronym>GIN</acronym> 设计用于处理待索引项为复合值、且索引需要处理的查询要搜索出现在复合项中的元素值的情况。例如，项可以是文档，查询可以是搜索包含特定词的文档。
  </para>
 
  <para>
-  We use the word <firstterm>item</firstterm> to refer to a composite value that
-  is to be indexed, and the word <firstterm>key</firstterm> to refer to an element
-  value.  <acronym>GIN</acronym> always stores and searches for keys,
-  not item values per se.
+  我们用术语 <firstterm>项</firstterm> 指代待索引的复合值，用术语 <firstterm>键</firstterm> 指代元素值。<acronym>GIN</acronym> 始终存储和搜索键，而非项值本身。
  </para>
 
  <para>
-  A <acronym>GIN</acronym> index stores a set of (key, posting list) pairs,
-  where a <firstterm>posting list</firstterm> is a set of row IDs in which the key
-  occurs.  The same row ID can appear in multiple posting lists, since
-  an item can contain more than one key.  Each key value is stored only
-  once, so a <acronym>GIN</acronym> index is very compact for cases
-  where the same key appears many times.
+  一个 <acronym>GIN</acronym> 索引存储一组（键、倒排列表）对，其中 <firstterm>倒排列表</firstterm> 是键出现的行 ID 的集合。同一个行 ID 可以出现在多个倒排列表中，因为一个项可以包含多个键。每个键值只存储一次，因此对于同一个键出现多次的情况，<acronym>GIN</acronym> 索引非常紧凑。
  </para>
 
  <para>
-  <acronym>GIN</acronym> is generalized in the sense that the
-  <acronym>GIN</acronym> access method code does not need to know the
-  specific operations that it accelerates.
-  Instead, it uses custom strategies defined for particular data types.
-  The strategy defines how keys are extracted from indexed items and
-  query conditions, and how to determine whether a row that contains
-  some of the key values in a query actually satisfies the query.
+  <acronym>GIN</acronym> 之所以称为广义的，是因为 <acronym>GIN</acronym> 访问方法代码不需要知道它所加速的具体操作。相反，它使用为特定数据类型定义的自定义策略。该策略定义了如何从被索引项和查询条件中提取键，以及如何判断包含查询中某些键值的行是否真正满足该查询。
  </para>
 
  <para>
-  One advantage of <acronym>GIN</acronym> is that it allows the development
-  of custom data types with the appropriate access methods, by
-  an expert in the domain of the data type, rather than a database expert.
-  This is much the same advantage as using <acronym>GiST</acronym>.
+  <acronym>GIN</acronym> 的一个优点是，它允许开发
+  具有适当访问方法的自定义数据类型，由数据类型领域的专家
+  而不是数据库专家来完成。
+  这与使用 <acronym>GiST</acronym> 的优势非常相似。
  </para>
 
  <para>
-  The <acronym>GIN</acronym>
-  implementation in <productname>PostgreSQL</productname> is primarily
-  maintained by Teodor Sigaev and Oleg Bartunov. There is more
-  information about <acronym>GIN</acronym> on their
-  <ulink url="http://www.sai.msu.su/~megera/wiki/Gin">website</ulink>.
+  <acronym>GIN</acronym>
+  在 <productname>PostgreSQL</productname> 中的实现主要由 Teodor Sigaev 和 Oleg Bartunov
+  维护。有更多
+  关于 <acronym>GIN</acronym> 的信息在他们的
+  <ulink url="http://www.sai.msu.su/~megera/wiki/Gin">网站</ulink> 上。
  </para>
 </sect2>
 
 <sect2 id="gin-builtin-opclasses">
- <title>Built-in Operator Classes</title>
+ <title>内置运算符类</title>
 
  <para>
-  The core <productname>PostgreSQL</productname> distribution
-  includes the <acronym>GIN</acronym> operator classes shown in
-  <xref linkend="gin-builtin-opclasses-table"/>.
-  (Some of the optional modules described in <xref linkend="contrib"/>
-  provide additional <acronym>GIN</acronym> operator classes.)
+  核心 <productname>PostgreSQL</productname> 发行版
+  包括 <acronym>GIN</acronym> 运算符类，如
+  <xref linkend="gin-builtin-opclasses-table"/> 所示。
+  （<xref linkend="contrib"/> 中描述的一些可选模块
+  提供了额外的 <acronym>GIN</acronym> 运算符类。）
  </para>
 
   <table id="gin-builtin-opclasses-table">
-   <title>Built-in <acronym>GIN</acronym> Operator Classes</title>
+   <title>内置 <acronym>GIN</acronym> 运算符类</title>
    <tgroup cols="2">
     <thead>
      <row>
-      <entry>Name</entry>
-      <entry>Indexable Operators</entry>
+      <entry>名称</entry>
+      <entry>可索引运算符</entry>
      </row>
     </thead>
     <tbody>
@@ -134,35 +116,32 @@
   </table>
 
  <para>
-  Of the two operator classes for type <type>jsonb</type>, <literal>jsonb_ops</literal>
-  is the default.  <literal>jsonb_path_ops</literal> supports fewer operators but
-  offers better performance for those operators.
-  See <xref linkend="json-indexing"/> for details.
+  在类型 <type>jsonb</type> 的两个运算符类中，<literal>jsonb_ops</literal>
+  是默认的。<literal>jsonb_path_ops</literal> 支持的运算符较少，但对这些运算符
+  提供了更好的性能。
+  详见 <xref linkend="json-indexing"/>。
  </para>
 
 </sect2>
 
 <sect2 id="gin-extensibility">
- <title>Extensibility</title>
+ <title>可扩展性</title>
 
  <para>
-   The <acronym>GIN</acronym> interface has a high level of abstraction,
-   requiring the access method implementer only to implement the semantics of
-   the data type being accessed.  The <acronym>GIN</acronym> layer itself
-   takes care of concurrency, logging and searching the tree structure.
+   <acronym>GIN</acronym> 接口具有很高的抽象层次，
+   只要求访问方法实现者实现所访问数据类型的语义。
+   <acronym>GIN</acronym> 层自身负责处理并发、日志记录以及树结构的搜索。
  </para>
 
  <para>
-   All it takes to get a <acronym>GIN</acronym> access method working is to
-   implement a few user-defined methods, which define the behavior of
-   keys in the tree and the relationships between keys, indexed items,
-   and indexable queries. In short, <acronym>GIN</acronym> combines
-   extensibility with generality, code reuse, and a clean interface.
+   要让一个 <acronym>GIN</acronym> 访问方法正常工作，只需
+   实现少量用户定义方法，这些方法定义了树中键的行为，
+   以及键、被索引项和可索引查询之间的关系。简而言之，<acronym>GIN</acronym>
+   将可扩展性与通用性、代码复用和清晰的接口结合在一起。
  </para>
 
  <para>
-   There are two methods that an operator class for
-   <acronym>GIN</acronym> must provide:
+   <acronym>GIN</acronym> 的运算符类必须提供两个方法：
 
   <variablelist>
     <varlistentry>
@@ -170,14 +149,10 @@
         bool **nullFlags)</function></term>
      <listitem>
       <para>
-       Returns a palloc'd array of keys given an item to be indexed.  The
-       number of returned keys must be stored into <literal>*nkeys</literal>.
-       If any of the keys can be null, also palloc an array of
-       <literal>*nkeys</literal> <type>bool</type> fields, store its address at
-       <literal>*nullFlags</literal>, and set these null flags as needed.
-       <literal>*nullFlags</literal> can be left <symbol>NULL</symbol> (its initial value)
-       if all keys are non-null.
-       The return value can be <symbol>NULL</symbol> if the item contains no keys.
+       给定一个要索引的项，返回一个由 palloc 分配的键数组。返回的键数量必须存储到 <literal>*nkeys</literal> 中。
+       如果其中任何一个键可能为 null，还要 palloc 一个包含 <literal>*nkeys</literal> 个 <type>bool</type> 字段的数组，将其地址存储到 <literal>*nullFlags</literal>，并按需设置这些 null 标志。
+       如果所有键都非 null，则 <literal>*nullFlags</literal> 可以保持为 <symbol>NULL</symbol>（其初始值）。
+       如果该项不包含任何键，则返回值可以为 <symbol>NULL</symbol>。
       </para>
      </listitem>
     </varlistentry>
@@ -188,87 +163,36 @@
         bool **nullFlags, int32 *searchMode)</function></term>
      <listitem>
       <para>
-       Returns a palloc'd array of keys given a value to be queried; that is,
-       <literal>query</literal> is the value on the right-hand side of an
-       indexable operator whose left-hand side is the indexed column.
-       <literal>n</literal> is the strategy number of the operator within the
-       operator class (see <xref linkend="xindex-strategies"/>).
-       Often, <function>extractQuery</function> will need
-       to consult <literal>n</literal> to determine the data type of
-       <literal>query</literal> and the method it should use to extract key values.
-       The number of returned keys must be stored into <literal>*nkeys</literal>.
-       If any of the keys can be null, also palloc an array of
-       <literal>*nkeys</literal> <type>bool</type> fields, store its address at
-       <literal>*nullFlags</literal>, and set these null flags as needed.
-       <literal>*nullFlags</literal> can be left <symbol>NULL</symbol> (its initial value)
-       if all keys are non-null.
-       The return value can be <symbol>NULL</symbol> if the <literal>query</literal> contains no keys.
+       给定一个要查询的值，返回一个由 palloc 分配的键数组；也就是说，<literal>query</literal> 是可索引运算符右侧的值，而该运算符的左侧是索引列。
+       <literal>n</literal> 是该运算符在运算符类中的策略编号（参见 <xref linkend="xindex-strategies"/>）。
+       通常，<function>extractQuery</function> 需要查询 <literal>n</literal>，以确定 <literal>query</literal> 的数据类型以及它应使用何种方法来提取键值。
+       返回的键数量必须存储到 <literal>*nkeys</literal> 中。
+       如果其中任何一个键可能为 null，还要 palloc 一个包含 <literal>*nkeys</literal> 个 <type>bool</type> 字段的数组，将其地址存储到 <literal>*nullFlags</literal>，并按需设置这些 null 标志。
+       如果所有键都非 null，则 <literal>*nullFlags</literal> 可以保持为 <symbol>NULL</symbol>（其初始值）。
+       如果 <literal>query</literal> 不包含任何键，则返回值可以为 <symbol>NULL</symbol>。
       </para>
 
       <para>
-       <literal>searchMode</literal> is an output argument that allows
-       <function>extractQuery</function> to specify details about how the search
-       will be done.
-       If <literal>*searchMode</literal> is set to
-       <literal>GIN_SEARCH_MODE_DEFAULT</literal> (which is the value it is
-       initialized to before call), only items that match at least one of
-       the returned keys are considered candidate matches.
-       If <literal>*searchMode</literal> is set to
-       <literal>GIN_SEARCH_MODE_INCLUDE_EMPTY</literal>, then in addition to items
-       containing at least one matching key, items that contain no keys at
-       all are considered candidate matches.  (This mode is useful for
-       implementing is-subset-of operators, for example.)
-       If <literal>*searchMode</literal> is set to <literal>GIN_SEARCH_MODE_ALL</literal>,
-       then all non-null items in the index are considered candidate
-       matches, whether they match any of the returned keys or not.  (This
-       mode is much slower than the other two choices, since it requires
-       scanning essentially the entire index, but it may be necessary to
-       implement corner cases correctly.  An operator that needs this mode
-       in most cases is probably not a good candidate for a GIN operator
-       class.)
-       The symbols to use for setting this mode are defined in
-       <filename>access/gin.h</filename>.
+       <literal>searchMode</literal> 是一个输出参数，允许 <function>extractQuery</function> 指定有关如何执行搜索的细节。
+       如果 <literal>*searchMode</literal> 被设置为 <literal>GIN_SEARCH_MODE_DEFAULT</literal>（这是调用前它被初始化成的值），则只有至少匹配一个返回键的项才被视为候选匹配。
+       如果 <literal>*searchMode</literal> 被设置为 <literal>GIN_SEARCH_MODE_INCLUDE_EMPTY</literal>，那么除了包含至少一个匹配键的项之外，完全不包含任何键的项也被视为候选匹配。（例如，这种模式对于实现 is-subset-of 运算符很有用。）
+       如果 <literal>*searchMode</literal> 被设置为 <literal>GIN_SEARCH_MODE_ALL</literal>，则索引中所有非 null 项都被视为候选匹配，无论它们是否匹配任何返回键。（这种模式比其他两种选择慢得多，因为它本质上需要扫描整个索引，但为了正确实现某些边界情况，它可能是必要的。在大多数情况下都需要这种模式的运算符，大概不适合作为 GIN 运算符类的候选。）
+       用于设置该模式的符号定义在 <filename>access/gin.h</filename> 中。
       </para>
 
       <para>
-       <literal>pmatch</literal> is an output argument for use when partial match
-       is supported.  To use it, <function>extractQuery</function> must allocate
-       an array of <literal>*nkeys</literal> <type>bool</type>s and store its address at
-       <literal>*pmatch</literal>.  Each element of the array should be set to true
-       if the corresponding key requires partial match, false if not.
-       If <literal>*pmatch</literal> is set to <symbol>NULL</symbol> then GIN assumes partial match
-       is not required.  The variable is initialized to <symbol>NULL</symbol> before call,
-       so this argument can simply be ignored by operator classes that do
-       not support partial match.
+       <literal>pmatch</literal> 是一个输出参数，在支持部分匹配时使用。要使用它，<function>extractQuery</function> 必须分配一个包含 <literal>*nkeys</literal> 个 <type>bool</type> 的数组，并将其地址存储在 <literal>*pmatch</literal> 中。如果对应的键需要部分匹配，则数组的每个元素应设置为 true，否则设置为 false。如果 <literal>*pmatch</literal> 被设置为 <symbol>NULL</symbol>，那么 GIN 假定不需要部分匹配。该变量在调用前被初始化为 <symbol>NULL</symbol>，因此不支持部分匹配的运算符类可以简单地忽略此参数。
       </para>
 
       <para>
-       <literal>extra_data</literal> is an output argument that allows
-       <function>extractQuery</function> to pass additional data to the
-       <function>consistent</function> and <function>comparePartial</function> methods.
-       To use it, <function>extractQuery</function> must allocate
-       an array of <literal>*nkeys</literal> pointers and store its address at
-       <literal>*extra_data</literal>, then store whatever it wants to into the
-       individual pointers.  The variable is initialized to <symbol>NULL</symbol> before
-       call, so this argument can simply be ignored by operator classes that
-       do not require extra data.  If <literal>*extra_data</literal> is set, the
-       whole array is passed to the <function>consistent</function> method, and
-       the appropriate element to the <function>comparePartial</function> method.
+       <literal>extra_data</literal> 是一个输出参数，允许 <function>extractQuery</function> 向 <function>consistent</function> 和 <function>comparePartial</function> 方法传递附加数据。要使用它，<function>extractQuery</function> 必须分配一个包含 <literal>*nkeys</literal> 个指针的数组，并将其地址存储在 <literal>*extra_data</literal> 中，然后将其想要的内容存入各个指针中。该变量在调用前被初始化为 <symbol>NULL</symbol>，因此不需要额外数据的运算符类可以简单地忽略此参数。如果设置了 <literal>*extra_data</literal>，则整个数组会传递给 <function>consistent</function> 方法，而相应的元素会传递给 <function>comparePartial</function> 方法。
       </para>
 
      </listitem>
     </varlistentry>
   </variablelist>
 
-  An operator class must also provide a function to check if an indexed item
-  matches the query. It comes in two flavors, a Boolean <function>consistent</function>
-  function, and a ternary <function>triConsistent</function> function.
-  <function>triConsistent</function> covers the functionality of both, so providing
-  <function>triConsistent</function> alone is sufficient. However, if the Boolean
-  variant is significantly cheaper to calculate, it can be advantageous to
-  provide both.  If only the Boolean variant is provided, some optimizations
-  that depend on refuting index items before fetching all the keys are
-  disabled.
+  运算符类还必须提供一个函数来检查索引项是否匹配查询。它有两种形式：一个布尔型 <function>consistent</function> 函数和一个三值 <function>triConsistent</function> 函数。<function>triConsistent</function> 涵盖了两者的功能，因此仅提供 <function>triConsistent</function> 就足够了。但是，如果布尔型变体的计算成本明显更低，则同时提供两者可能是有利的。如果只提供布尔型变体，那么一些依赖于在获取所有键之前排除索引项的优化将被禁用。
 
   <variablelist>
     <varlistentry>
@@ -277,47 +201,16 @@
         Datum queryKeys[], bool nullFlags[])</function></term>
      <listitem>
       <para>
-       Returns true if an indexed item satisfies the query operator with
-       strategy number <literal>n</literal> (or might satisfy it, if the recheck
-       indication is returned).  This function does not have direct access
-       to the indexed item's value, since <acronym>GIN</acronym> does not
-       store items explicitly.  Rather, what is available is knowledge
-       about which key values extracted from the query appear in a given
-       indexed item.  The <literal>check</literal> array has length
-       <literal>nkeys</literal>, which is the same as the number of keys previously
-       returned by <function>extractQuery</function> for this <literal>query</literal> datum.
-       Each element of the
-       <literal>check</literal> array is true if the indexed item contains the
-       corresponding query key, i.e., if (check[i] == true) the i-th key of the
-       <function>extractQuery</function> result array is present in the indexed item.
-       The original <literal>query</literal> datum is
-       passed in case the <function>consistent</function> method needs to consult it,
-       and so are the <literal>queryKeys[]</literal> and <literal>nullFlags[]</literal>
-       arrays previously returned by <function>extractQuery</function>.
-       <literal>extra_data</literal> is the extra-data array returned by
-       <function>extractQuery</function>, or <symbol>NULL</symbol> if none.
+       如果索引项满足策略号为 <literal>n</literal> 的查询运算符，则返回 true（如果返回了重新检查指示，则可能满足）。该函数不能直接访问索引项的值，因为 <acronym>GIN</acronym> 并不显式存储项。相反，可用的是关于从查询中提取的哪些键值出现在给定索引项中的信息。<literal>check</literal> 数组的长度为 <literal>nkeys</literal>，这与先前由 <function>extractQuery</function> 为该 <literal>query</literal> 数据项返回的键的数量相同。<literal>check</literal> 数组的每个元素为 true 表示该索引项包含对应的查询键，即如果 (check[i] == true)，则 <function>extractQuery</function> 结果数组的第 i 个键存在于该索引项中。传入原始 <literal>query</literal> 数据项以备 <function>consistent</function> 方法需要查询它，先前由 <function>extractQuery</function> 返回的 <literal>queryKeys[]</literal> 和 <literal>nullFlags[]</literal> 数组也是如此。<literal>extra_data</literal> 是由 <function>extractQuery</function> 返回的额外数据数组，如果没有则为 <symbol>NULL</symbol>。
       </para>
 
       <para>
-       When <function>extractQuery</function> returns a null key in
-       <literal>queryKeys[]</literal>, the corresponding <literal>check[]</literal> element
-       is true if the indexed item contains a null key; that is, the
-       semantics of <literal>check[]</literal> are like <literal>IS NOT DISTINCT
-       FROM</literal>.  The <function>consistent</function> function can examine the
-       corresponding <literal>nullFlags[]</literal> element if it needs to tell
-       the difference between a regular value match and a null match.
+       当 <function>extractQuery</function> 在 <literal>queryKeys[]</literal> 中返回空键时，如果索引项包含空键，则对应的 <literal>check[]</literal> 元素为 true；也就是说，<literal>check[]</literal> 的语义类似于 <literal>IS NOT DISTINCT
+       FROM</literal>。如果需要区分常规值匹配和空值匹配，<function>consistent</function> 函数可以检查对应的 <literal>nullFlags[]</literal> 元素。
       </para>
 
       <para>
-       On success, <literal>*recheck</literal> should be set to true if the heap
-       tuple needs to be rechecked against the query operator, or false if
-       the index test is exact.  That is, a false return value guarantees
-       that the heap tuple does not match the query; a true return value with
-       <literal>*recheck</literal> set to false guarantees that the heap tuple does
-       match the query; and a true return value with
-       <literal>*recheck</literal> set to true means that the heap tuple might match
-       the query, so it needs to be fetched and rechecked by evaluating the
-       query operator directly against the originally indexed item.
+       成功时，如果堆元组需要针对查询运算符重新检查，则应将 <literal>*recheck</literal> 设置为 true；如果索引测试是精确的，则设置为 false。也就是说，返回 false 保证堆元组不匹配该查询；返回 true 且 <literal>*recheck</literal> 设置为 false 保证堆元组匹配该查询；返回 true 且 <literal>*recheck</literal> 设置为 true 意味着堆元组可能匹配该查询，因此需要取出该元组，并通过直接针对最初索引的项求值查询运算符来重新检查。
       </para>
      </listitem>
     </varlistentry>
@@ -328,27 +221,24 @@
         Datum queryKeys[], bool nullFlags[])</function></term>
      <listitem>
       <para>
-       <function>triConsistent</function> is similar to <function>consistent</function>,
-       but instead of Booleans in the <literal>check</literal> vector, there are
-       three possible values for each
-       key: <literal>GIN_TRUE</literal>, <literal>GIN_FALSE</literal> and
-       <literal>GIN_MAYBE</literal>. <literal>GIN_FALSE</literal> and <literal>GIN_TRUE</literal>
-       have the same meaning as regular Boolean values, while
-       <literal>GIN_MAYBE</literal> means that the presence of that key is not known.
-       When <literal>GIN_MAYBE</literal> values are present, the function should only
-       return <literal>GIN_TRUE</literal> if the item certainly matches whether or
-       not the index item contains the corresponding query keys. Likewise, the
-       function must return <literal>GIN_FALSE</literal> only if the item certainly
-       does not match, whether or not it contains the <literal>GIN_MAYBE</literal>
-       keys. If the result depends on the <literal>GIN_MAYBE</literal> entries, i.e.,
-       the match cannot be confirmed or refuted based on the known query keys,
-       the function must return <literal>GIN_MAYBE</literal>.
+       <function>triConsistent</function> 与 <function>consistent</function> 类似，
+       但 <literal>check</literal> 向量中不是布尔值，而是每个
+       键有三种可能的值：<literal>GIN_TRUE</literal>、<literal>GIN_FALSE</literal> 和
+       <literal>GIN_MAYBE</literal>。<literal>GIN_FALSE</literal> 和 <literal>GIN_TRUE</literal>
+       与常规布尔值含义相同，而
+       <literal>GIN_MAYBE</literal> 表示该键是否存在未知。
+       当存在 <literal>GIN_MAYBE</literal> 值时，函数只有在无论索引项是否包含相应的查询键、
+       该项都确定匹配时才应返回 <literal>GIN_TRUE</literal>。同样，
+       函数只有在无论该项是否包含 <literal>GIN_MAYBE</literal>
+       键、都确定不匹配时才必须返回 <literal>GIN_FALSE</literal>。
+       如果结果取决于 <literal>GIN_MAYBE</literal> 项，即无法根据已知的查询键
+       确认或否定匹配，则函数必须返回 <literal>GIN_MAYBE</literal>。
       </para>
       <para>
-       When there are no <literal>GIN_MAYBE</literal> values in the <literal>check</literal>
-       vector, a <literal>GIN_MAYBE</literal> return value is the equivalent of
-       setting the <literal>recheck</literal> flag in the
-       Boolean <function>consistent</function> function.
+       当 <literal>check</literal>
+       向量中没有 <literal>GIN_MAYBE</literal> 值时，返回 <literal>GIN_MAYBE</literal> 值等价于
+       在布尔 <function>consistent</function> 函数中
+       设置 <literal>recheck</literal> 标志。
       </para>
      </listitem>
     </varlistentry>
@@ -356,37 +246,35 @@
  </para>
 
  <para>
-  In addition, GIN must have a way to sort the key values stored in the index.
-  The operator class can define the sort ordering by specifying a comparison
-  method:
+  此外，GIN 必须有一种方法来对存储在索引中的键值进行排序。
+  运算符类可以通过指定比较方法来定义排序顺序：
 
   <variablelist>
     <varlistentry>
      <term><function>int compare(Datum a, Datum b)</function></term>
      <listitem>
       <para>
-       Compares two keys (not indexed items!) and returns an integer less than
-       zero, zero, or greater than zero, indicating whether the first key is
-       less than, equal to, or greater than the second.  Null keys are never
-       passed to this function.
+       比较两个键（不是索引项！）并返回一个小于
+       零、等于零或大于零的整数，表示第一个键
+       小于、等于还是大于第二个键。空键永远不会
+       传递给此函数。
       </para>
      </listitem>
     </varlistentry>
   </variablelist>
 
-  Alternatively, if the operator class does not provide a <function>compare</function>
-  method, GIN will look up the default btree operator class for the index
-  key data type, and use its comparison function.  It is recommended to
-  specify the comparison function in a GIN operator class that is meant for
-  just one data type, as looking up the btree operator class costs a few
-  cycles.  However, polymorphic GIN operator classes (such
-  as <literal>array_ops</literal>) typically cannot specify a single comparison
-  function.
+  或者，如果运算符类未提供 <function>compare</function>
+  方法，GIN 将查找索引键数据类型的默认 btree 运算符类，
+  并使用其比较函数。建议在仅针对
+  单一数据类型的 GIN 运算符类中指定比较函数，
+  因为查找 btree 运算符类会耗费一些周期。然而，
+  多态 GIN 运算符类（例如 <literal>array_ops</literal>）通常无法指定
+  单个比较函数。
  </para>
 
  <para>
-  An operator class for <acronym>GIN</acronym> can optionally supply the
-  following methods:
+  <acronym>GIN</acronym> 的运算符类可以选择性地提供
+  以下方法：
 
   <variablelist>
     <varlistentry>
@@ -394,17 +282,7 @@
                               Pointer extra_data)</function></term>
      <listitem>
       <para>
-       Compare a partial-match query key to an index key.  Returns an integer
-       whose sign indicates the result: less than zero means the index key
-       does not match the query, but the index scan should continue; zero
-       means that the index key does match the query; greater than zero
-       indicates that the index scan should stop because no more matches
-       are possible.  The strategy number <literal>n</literal> of the operator
-       that generated the partial match query is provided, in case its
-       semantics are needed to determine when to end the scan.  Also,
-       <literal>extra_data</literal> is the corresponding element of the extra-data
-       array made by <function>extractQuery</function>, or <symbol>NULL</symbol> if none.
-       Null keys are never passed to this function.
+       将部分匹配查询键与索引键进行比较。返回一个整数，其符号表示结果：小于零表示该索引键与查询不匹配，但索引扫描应继续；零表示该索引键确实与查询匹配；大于零表示索引扫描应停止，因为不可能再有匹配。同时会提供生成该部分匹配查询的运算符的策略号 <literal>n</literal>，以备在需要其语义来确定何时结束扫描时使用。此外，<literal>extra_data</literal> 是由 <function>extractQuery</function> 生成的额外数据数组中的对应元素，如果没有则为 <symbol>NULL</symbol>。空键永远不会传递给此函数。
       </para>
      </listitem>
     </varlistentry>
@@ -412,23 +290,15 @@
      <term><function>void options(local_relopts *relopts)</function></term>
      <listitem>
       <para>
-       Defines a set of user-visible parameters that control operator class
-       behavior.
+       定义一组用户可见的参数，用于控制运算符类的行为。
       </para>
 
       <para>
-       The <function>options</function> function is passed a pointer to a
-       <structname>local_relopts</structname> struct, which needs to be
-       filled with a set of operator class specific options.  The options
-       can be accessed from other support functions using the
-       <literal>PG_HAS_OPCLASS_OPTIONS()</literal> and
-       <literal>PG_GET_OPCLASS_OPTIONS()</literal> macros.
+       <function>options</function> 函数接收一个指向 <structname>local_relopts</structname> 结构的指针，该结构需要填充一组运算符类特定的选项。其他支持函数可以使用 <literal>PG_HAS_OPCLASS_OPTIONS()</literal> 和 <literal>PG_GET_OPCLASS_OPTIONS()</literal> 宏来访问这些选项。
       </para>
 
       <para>
-       Since both key extraction of indexed values and representation of the
-       key in <acronym>GIN</acronym> are flexible, they may depend on
-       user-specified parameters.
+       由于索引值的键提取以及键在 <acronym>GIN</acronym> 中的表示都是灵活的，它们可能依赖于用户指定的参数。
       </para>
      </listitem>
     </varlistentry>
@@ -436,60 +306,32 @@
  </para>
 
  <para>
-  To support <quote>partial match</quote> queries, an operator class must
-  provide the <function>comparePartial</function> method, and its
-  <function>extractQuery</function> method must set the <literal>pmatch</literal>
-  parameter when a partial-match query is encountered.  See
-  <xref linkend="gin-partial-match"/> for details.
+  为了支持 <quote>部分匹配</quote> 查询，运算符类必须提供 <function>comparePartial</function> 方法，并且当其 <function>extractQuery</function> 方法遇到部分匹配查询时，必须设置 <literal>pmatch</literal> 参数。详情请参见 <xref linkend="gin-partial-match"/>。
  </para>
 
  <para>
-  The actual data types of the various <literal>Datum</literal> values mentioned
-  above vary depending on the operator class.  The item values passed to
-  <function>extractValue</function> are always of the operator class's input type, and
-  all key values must be of the class's <literal>STORAGE</literal> type.  The type of
-  the <literal>query</literal> argument passed to <function>extractQuery</function>,
-  <function>consistent</function> and <function>triConsistent</function> is whatever is the
-  right-hand input type of the class member operator identified by the
-  strategy number.  This need not be the same as the indexed type, so long as
-  key values of the correct type can be extracted from it.  However, it is
-  recommended that the SQL declarations of these three support functions use
-  the opclass's indexed data type for the <literal>query</literal> argument, even
-  though the actual type might be something else depending on the operator.
+  上面提到的各种 <literal>Datum</literal> 值的实际数据类型因运算符类而异。传递给 <function>extractValue</function> 的项值始终是该运算符类的输入类型，而所有键值必须是该类的 <literal>STORAGE</literal> 类型。传递给 <function>extractQuery</function>、<function>consistent</function> 和 <function>triConsistent</function> 的 <literal>query</literal> 参数的类型，是由策略号标识的该类成员运算符的右手输入类型。它不必与索引类型相同，只要能够从中提取出正确类型的键值即可。但是，建议这三个支持函数的 SQL 声明对 <literal>query</literal> 参数使用运算符类的索引数据类型，即使实际类型可能因运算符而异。
  </para>
 
 </sect2>
 
 <sect2 id="gin-implementation">
- <title>Implementation</title>
+ <title>实现</title>
 
  <para>
-  Internally, a <acronym>GIN</acronym> index contains a B-tree index
-  constructed over keys, where each key is an element of one or more indexed
-  items (a member of an array, for example) and where each tuple in a leaf
-  page contains either a pointer to a B-tree of heap pointers (a
-  <quote>posting tree</quote>), or a simple list of heap pointers (a <quote>posting
-  list</quote>) when the list is small enough to fit into a single index tuple along
-  with the key value.  <xref linkend="gin-internals-figure"/> illustrates
-  these components of a GIN index.
+  在内部，一个 <acronym>GIN</acronym> 索引包含一棵构建在键之上的 B-tree，其中每个键是一个或多个被索引项（例如数组的一个成员）中的一个元素，并且叶子页中的每个元组要么包含一个指向堆指针 B-tree 的指针（<quote>posting tree</quote>），要么在堆指针列表小到足以与键值一起放入单个索引元组时，包含一个简单的堆指针列表（<quote>posting list</quote>）。<xref linkend="gin-internals-figure"/> 展示了 GIN 索引的这些组成部分。
  </para>
 
  <para>
-  As of <productname>PostgreSQL</productname> 9.1, null key values can be
-  included in the index.  Also, placeholder nulls are included in the index
-  for indexed items that are null or contain no keys according to
-  <function>extractValue</function>.  This allows searches that should find empty
-  items to do so.
+  从 <productname>PostgreSQL</productname> 9.1 开始，空键值可以包含在索引中。此外，对于根据 <function>extractValue</function> 为 null 或不包含任何键的被索引项，索引中会包含占位的 null。这使得本应找到空项的搜索能够找到它们。
  </para>
 
  <para>
-  Multicolumn <acronym>GIN</acronym> indexes are implemented by building
-  a single B-tree over composite values (column number, key value).  The
-  key values for different columns can be of different types.
+  多列 <acronym>GIN</acronym> 索引是通过在复合值（列号、键值）上构建单棵 B-tree 来实现的。不同列的键值可以具有不同的类型。
  </para>
 
  <figure id="gin-internals-figure">
-  <title>GIN Internals</title>
+  <title>GIN 内部结构</title>
   <mediaobject>
    <imageobject>
     <imagedata fileref="images/gin.svg" format="SVG" width="100%"/>
@@ -498,85 +340,58 @@
  </figure>
 
  <sect3 id="gin-fast-update">
-  <title>GIN Fast Update Technique</title>
+  <title>GIN 快速更新技术</title>
 
   <para>
-   Updating a <acronym>GIN</acronym> index tends to be slow because of the
-   intrinsic nature of inverted indexes: inserting or updating one heap row
-   can cause many inserts into the index (one for each key extracted
-   from the indexed item).
-   <acronym>GIN</acronym> is capable of postponing much of this work by inserting
-   new tuples into a temporary, unsorted list of pending entries.
-   When the table is vacuumed or autoanalyzed, or when
-   <function>gin_clean_pending_list</function> function is called, or if the
-   pending list becomes larger than
-   <xref linkend="guc-gin-pending-list-limit"/>, the entries are moved to the
-   main <acronym>GIN</acronym> data structure using the same bulk insert
-   techniques used during initial index creation.  This greatly improves
-   <acronym>GIN</acronym> index update speed, even counting the additional
-   vacuum overhead.  Moreover the overhead work can be done by a background
-   process instead of in foreground query processing.
+   更新一个 <acronym>GIN</acronym> 索引往往很慢，这是由倒排索引的本质决定的：插入或更新一个堆行可能导致大量插入到索引中（从被索引项中提取的每个键对应一次插入）。
+   <acronym>GIN</acronym> 能够通过将新元组插入到一个临时的、未排序的待处理条目列表中来推迟其中大部分工作。
+   当表被清理或自动分析时，或者当调用 <function>gin_clean_pending_list</function> 函数时，或者如果待处理列表变得大于
+   <xref linkend="guc-gin-pending-list-limit"/>，这些条目会使用与初始索引创建期间相同的批量插入技术被移动到主 <acronym>GIN</acronym> 数据结构中。这极大地提高了
+   <acronym>GIN</acronym> 索引的更新速度，即使把额外的清理开销计算在内也是如此。此外，这些开销工作可以由后台进程完成，而不是在前台查询处理中完成。
   </para>
 
   <para>
-   The main disadvantage of this approach is that searches must scan the list
-   of pending entries in addition to searching the regular index, and so
-   a large list of pending entries will slow searches significantly.
-   Another disadvantage is that, while most updates are fast, an update
-   that causes the pending list to become <quote>too large</quote> will incur an
-   immediate cleanup cycle and thus be much slower than other updates.
-   Proper use of autovacuum can minimize both of these problems.
+   这种方法的主要缺点是，搜索除了要搜索常规索引之外，还必须扫描待处理条目列表，因此一个很大的待处理条目列表会显著拖慢搜索。
+   另一个缺点是，虽然大多数更新很快，但导致待处理列表变得<quote>过大</quote>的更新会立即引发一次清理循环，因而比其他更新慢得多。
+   正确使用自动清理可以将这两个问题都降到最低。
   </para>
 
   <para>
-   If consistent response time is more important than update speed,
-   use of pending entries can be disabled by turning off the
-   <literal>fastupdate</literal> storage parameter for a
-   <acronym>GIN</acronym> index.  See <xref linkend="sql-createindex"/>
-   for details.
+   如果一致的响应时间比更新速度更重要，可以通过关闭
+   <acronym>GIN</acronym> 索引的 <literal>fastupdate</literal> 存储参数来禁用待处理条目。详情请参阅 <xref linkend="sql-createindex"/>。
   </para>
  </sect3>
 
  <sect3 id="gin-partial-match">
-  <title>Partial Match Algorithm</title>
+  <title>部分匹配算法</title>
 
   <para>
-   GIN can support <quote>partial match</quote> queries, in which the query
-   does not determine an exact match for one or more keys, but the possible
-   matches fall within a reasonably narrow range of key values (within the
-   key sorting order determined by the <function>compare</function> support method).
-   The <function>extractQuery</function> method, instead of returning a key value
-   to be matched exactly, returns a key value that is the lower bound of
-   the range to be searched, and sets the <literal>pmatch</literal> flag true.
-   The key range is then scanned using the <function>comparePartial</function>
-   method.  <function>comparePartial</function> must return zero for a matching
-   index key, less than zero for a non-match that is still within the range
-   to be searched, or greater than zero if the index key is past the range
-   that could match.
+   GIN 可以支持<quote>部分匹配</quote>查询，在这类查询中，查询并不确定一个或多个键的精确匹配，但可能的匹配落在相当窄的键值范围内（在由 <function>compare</function> 支持方法确定的键排序顺序内）。
+   <function>extractQuery</function> 方法不返回要精确匹配的键值，而是返回一个作为待搜索范围下界的键值，并将 <literal>pmatch</literal> 标志设置为真。
+   然后使用 <function>comparePartial</function> 方法扫描该键范围。对于匹配的索引键，<function>comparePartial</function> 必须返回零；对于仍在待搜索范围内的不匹配项，返回小于零的值；如果索引键超出了可能匹配的范围，则返回大于零的值。
   </para>
  </sect3>
 
 </sect2>
 
 <sect2 id="gin-tips">
-<title>GIN Tips and Tricks</title>
+<title>GIN 提示与技巧</title>
 
  <variablelist>
   <varlistentry>
-   <term>Create vs. insert</term>
+   <term>创建与插入</term>
    <listitem>
     <para>
-     Insertion into a <acronym>GIN</acronym> index can be slow
-     due to the likelihood of many keys being inserted for each item.
-     So, for bulk insertions into a table it is advisable to drop the GIN
-     index and recreate it after finishing bulk insertion.
+     向 <acronym>GIN</acronym> 索引中插入可能很慢，
+     因为每个项都可能插入很多键。
+     因此，对于向表中进行大批量插入的情况，建议先删除 GIN
+     索引，等批量插入完成后再重新创建它。
     </para>
 
     <para>
-     When <literal>fastupdate</literal> is enabled for <acronym>GIN</acronym>
-     (see <xref linkend="gin-fast-update"/> for details), the penalty is
-     less than when it is not.  But for very large updates it may still be
-     best to drop and recreate the index.
+     当为 <acronym>GIN</acronym> 启用 <literal>fastupdate</literal> 时
+     （详情参见 <xref linkend="gin-fast-update"/>），这种开销会比未启用时小。
+     但对于非常大的更新，最好还是删除并重新创建索引。
     </para>
    </listitem>
   </varlistentry>
@@ -585,9 +400,8 @@
    <term><xref linkend="guc-maintenance-work-mem"/></term>
    <listitem>
     <para>
-     Build time for a <acronym>GIN</acronym> index is very sensitive to
-     the <varname>maintenance_work_mem</varname> setting; it doesn't pay to
-     skimp on work memory during index creation.
+     <acronym>GIN</acronym> 索引的构建时间对
+     <varname>maintenance_work_mem</varname> 设置非常敏感；在创建索引时吝惜工作内存是不划算的。
     </para>
    </listitem>
   </varlistentry>
@@ -596,23 +410,18 @@
    <term><xref linkend="guc-gin-pending-list-limit"/></term>
    <listitem>
     <para>
-     During a series of insertions into an existing <acronym>GIN</acronym>
-     index that has <literal>fastupdate</literal> enabled, the system will clean up
-     the pending-entry list whenever the list grows larger than
-     <varname>gin_pending_list_limit</varname>. To avoid fluctuations in observed
-     response time, it's desirable to have pending-list cleanup occur in the
-     background (i.e., via autovacuum).  Foreground cleanup operations
-     can be avoided by increasing <varname>gin_pending_list_limit</varname>
-     or making autovacuum more aggressive.
-     However, enlarging the threshold of the cleanup operation means that
-     if a foreground cleanup does occur, it will take even longer.
+     在向已启用 <literal>fastupdate</literal> 的现有 <acronym>GIN</acronym>
+     索引进行一系列插入的过程中，只要待处理项列表增长到超过
+     <varname>gin_pending_list_limit</varname>，系统就会清理该列表。为了避免观察到响应时间出现波动，
+     最好让待处理列表的清理在后台进行（即通过自动清理）。可以通过增大 <varname>gin_pending_list_limit</varname>
+     或让自动清理更积极来避免前台清理操作。
+     然而，增大清理操作的阈值意味着，如果确实发生了前台清理，
+     它将花费更长的时间。
     </para>
     <para>
-     <varname>gin_pending_list_limit</varname> can be overridden for individual
-     GIN indexes by changing storage parameters, which allows each
-     GIN index to have its own cleanup threshold.
-     For example, it's possible to increase the threshold only for the GIN
-     index which can be updated heavily, and decrease it otherwise.
+     可以通过更改存储参数来为各个 GIN 索引覆盖 <varname>gin_pending_list_limit</varname>，
+     从而让每个 GIN 索引拥有自己的清理阈值。
+     例如，可以只对可能被大量更新的 GIN 索引增大该阈值，而对其他索引减小该阈值。
     </para>
    </listitem>
   </varlistentry>
@@ -621,33 +430,16 @@
    <term><xref linkend="guc-gin-fuzzy-search-limit"/></term>
    <listitem>
     <para>
-     The primary goal of developing <acronym>GIN</acronym> indexes was
-     to create support for highly scalable full-text search in
-     <productname>PostgreSQL</productname>, and there are often situations when
-     a full-text search returns a very large set of results.  Moreover, this
-     often happens when the query contains very frequent words, so that the
-     large result set is not even useful.  Since reading many
-     tuples from the disk and sorting them could take a lot of time, this is
-     unacceptable for production.  (Note that the index search itself is very
-     fast.)
+     <acronym>GIN</acronym> 索引开发的主要目标是为 <productname>PostgreSQL</productname> 中的高度可扩展全文检索提供支持，而且经常会出现全文检索返回非常大的结果集的情况。此外，这种情况往往发生在查询包含非常频繁出现的词时，以至于庞大的结果集甚至毫无用处。由于从磁盘读取大量元组并对其进行排序可能耗费大量时间，因此这对于生产环境是不可接受的。（请注意，索引搜索本身是非常快的。）
     </para>
     <para>
-     To facilitate controlled execution of such queries,
-     <acronym>GIN</acronym> has a configurable soft upper limit on the
-     number of rows returned: the
-     <varname>gin_fuzzy_search_limit</varname> configuration parameter.
-     It is set to 0 (meaning no limit) by default.
-     If a non-zero limit is set, then the returned set is a subset of
-     the whole result set, chosen at random.
+     为了便于对此类查询进行受控执行，<acronym>GIN</acronym> 对返回的行数有一个可配置的软上限：<varname>gin_fuzzy_search_limit</varname> 配置参数。默认情况下它被设置为 0（表示不限制）。如果设置了非零限制，那么返回的集合是整个结果集的一个子集，是随机选取的。
     </para>
     <para>
-     <quote>Soft</quote> means that the actual number of returned results
-     could differ somewhat from the specified limit, depending on the query
-     and the quality of the system's random number generator.
+     <quote>软</quote>意味着实际返回的结果数可能与指定的限制略有差异，具体取决于查询以及系统随机数生成器的质量。
     </para>
     <para>
-     From experience, values in the thousands (e.g., 5000 &mdash; 20000)
-     work well.
+     根据经验，数千量级的值（例如 5000 &mdash; 20000）效果良好。
     </para>
    </listitem>
   </varlistentry>
@@ -656,55 +448,45 @@
 </sect2>
 
 <sect2 id="gin-limit">
- <title>Limitations</title>
+ <title>限制</title>
 
  <para>
-  <acronym>GIN</acronym> assumes that indexable operators are strict.  This
-  means that <function>extractValue</function> will not be called at all on a null
-  item value (instead, a placeholder index entry is created automatically),
-  and <function>extractQuery</function> will not be called on a null query
-  value either (instead, the query is presumed to be unsatisfiable).  Note
-  however that null key values contained within a non-null composite item
-  or query value are supported.
+  <acronym>GIN</acronym> 假定可索引运算符是严格的。这意味着对于空项值，根本不会调用 <function>extractValue</function>（而是自动创建一个占位索引项），对于空查询值也不会调用 <function>extractQuery</function>（而是假定该查询不可满足）。但请注意，支持包含在非空复合项或查询值中的空键值。
  </para>
 </sect2>
 
 <sect2 id="gin-examples">
- <title>Examples</title>
+ <title>示例</title>
 
  <para>
-  The core <productname>PostgreSQL</productname> distribution
-  includes the <acronym>GIN</acronym> operator classes previously shown in
-  <xref linkend="gin-builtin-opclasses-table"/>.
-  The following <filename>contrib</filename> modules also contain
-  <acronym>GIN</acronym> operator classes:
+  核心 <productname>PostgreSQL</productname> 发行版包含前面 <xref linkend="gin-builtin-opclasses-table"/> 中展示的 <acronym>GIN</acronym> 运算符类。以下 <filename>contrib</filename> 模块也包含 <acronym>GIN</acronym> 运算符类：
 
  <variablelist>
   <varlistentry>
    <term><filename>btree_gin</filename></term>
    <listitem>
-    <para>B-tree equivalent functionality for several data types</para>
+    <para>为多种数据类型提供等效的 B-tree 功能</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>hstore</filename></term>
    <listitem>
-    <para>Module for storing (key, value) pairs</para>
+    <para>用于存储（键、值）对的模块</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>intarray</filename></term>
    <listitem>
-    <para>Enhanced support for <type>int[]</type></para>
+    <para>对 <type>int[]</type> 的增强支持</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>pg_trgm</filename></term>
    <listitem>
-    <para>Text similarity using trigram matching</para>
+    <para>使用三元组匹配的文本相似度</para>
    </listitem>
   </varlistentry>
  </variablelist>
