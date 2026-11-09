@@ -204,150 +204,82 @@
   </sect1>
 
   <sect1 id="planner-optimizer">
-   <title>Planner/Optimizer</title>
+   <title>规划器/优化器</title>
 
    <para>
-    The task of the <firstterm>planner/optimizer</firstterm> is to
-    create an optimal execution plan. A given SQL query (and hence, a
-    query tree) can be actually executed in a wide variety of
-    different ways, each of which will produce the same set of
-    results.  If it is computationally feasible, the query optimizer
-    will examine each of these possible execution plans, ultimately
-    selecting the execution plan that is expected to run the fastest.
+    <firstterm>规划器/优化器</firstterm>的任务是
+    创建一个最优的执行计划。一条给定的 SQL 查询（因而也就是一棵查询树）
+    实际上可以用多种不同的方式执行，而每一种方式都会产生
+    相同的结果集。如果计算上可行，查询优化器
+    会考察所有这些可能的执行计划，最终
+    选择预期运行最快的那个执行计划。
    </para>
 
    <note>
     <para>
-     In some situations, examining each possible way in which a query
-     can be executed would take an excessive amount of time and memory.
-     In particular, this occurs when executing queries
-     involving large numbers of join operations. In order to determine
-     a reasonable (not necessarily optimal) query plan in a reasonable amount
-     of time, <productname>PostgreSQL</productname> uses a <firstterm>Genetic
-     Query Optimizer</firstterm> (see <xref linkend="geqo"/>) when the number of joins
-     exceeds a threshold (see <xref linkend="guc-geqo-threshold"/>).
+     在某些情况下，考察一条查询可以被执行的每一种可能方式
+     会耗费过多的时间和内存。
+     特别是当执行涉及大量连接操作的查询时，就会出现这种情况。
+     为了在合理的时间内确定一个合理的（不一定是最优的）查询计划，
+     当连接的数量超过某个阈值时（见 <xref linkend="guc-geqo-threshold"/>），<productname>PostgreSQL</productname> 会使用
+     <firstterm>遗传查询优化器</firstterm>（见 <xref linkend="geqo"/>）。
     </para>
    </note>
 
    <para>
-    The planner's search procedure actually works with data structures
-    called <firstterm>paths</firstterm>, which are simply cut-down representations of
-    plans containing only as much information as the planner needs to make
-    its decisions. After the cheapest path is determined, a full-fledged
-    <firstterm>plan tree</firstterm> is built to pass to the executor.  This represents
-    the desired execution plan in sufficient detail for the executor to run it.
-    In the rest of this section we'll ignore the distinction between paths
-    and plans.
+    规划器的搜索过程实际上处理的是称为<firstterm>路径</firstterm>的数据结构，
+    它们只是计划的简化表示，仅包含规划器做出决策所需的信息。
+    在确定代价最低的路径之后，就会构建一棵完整的
+    <firstterm>计划树</firstterm>传递给执行器。这棵树以足够的细节
+    表示了期望的执行计划，供执行器运行。
+    在本节的其余部分中，我们将忽略路径与计划之间的区别。
    </para>
 
    <sect2 id="planner-optimizer-generating-possible-plans">
-    <title>Generating Possible Plans</title>
+    <title>生成可能的计划</title>
 
     <para>
-     The planner/optimizer starts by generating plans for scanning each
-     individual relation (table) used in the query.  The possible plans
-     are determined by the available indexes on each relation.
-     There is always the possibility of performing a
-     sequential scan on a relation, so a sequential scan plan is always
-     created. Assume an index is defined on a
-     relation (for example a B-tree index) and a query contains the
-     restriction
-     <literal>relation.attribute OPR constant</literal>. If
-     <literal>relation.attribute</literal> happens to match the key of the B-tree
-     index and <literal>OPR</literal> is one of the operators listed in
-     the index's <firstterm>operator class</firstterm>, another plan is created using
-     the B-tree index to scan the relation. If there are further indexes
-     present and the restrictions in the query happen to match a key of an
-     index, further plans will be considered.  Index scan plans are also
-     generated for indexes that have a sort ordering that can match the
-     query's <literal>ORDER BY</literal> clause (if any), or a sort ordering that
-     might be useful for merge joining (see below).
+     规划器/优化器首先为查询中使用的每个单独关系（表）生成扫描计划。可能的计划由每个关系上可用的索引决定。总是存在对关系执行顺序扫描的可能性，因此总会创建一个顺序扫描计划。假设在一个关系上定义了索引（例如 B-tree 索引），并且查询包含限制 <literal>relation.attribute OPR constant</literal>。如果 <literal>relation.attribute</literal> 恰好匹配 B-tree 索引的键，并且 <literal>OPR</literal> 是索引的 <firstterm>运算符类</firstterm> 中列出的运算符之一，则会创建另一个使用 B-tree 索引扫描该关系的计划。如果还存在更多索引，并且查询中的限制恰好匹配某个索引的键，则会考虑更多计划。对于具有可匹配查询的 <literal>ORDER BY</literal> 子句（如果有）的排序顺序的索引，或者具有可能对合并连接有用的排序顺序的索引，也会生成索引扫描计划（见下文）。
     </para>
 
     <para>
-     If the query requires joining two or more relations,
-     plans for joining relations are considered
-     after all feasible plans have been found for scanning single relations.
-     The three available join strategies are:
+     如果查询需要连接两个或多个关系，则在找到扫描单个关系的所有可行计划之后，会考虑连接关系的计划。三种可用的连接策略是：
 
      <itemizedlist>
       <listitem>
        <para>
-        <firstterm>nested loop join</firstterm>: The right relation is scanned
-        once for every row found in the left relation. This strategy
-        is easy to implement but can be very time consuming.  (However,
-        if the right relation can be scanned with an index scan, this can
-        be a good strategy.  It is possible to use values from the current
-        row of the left relation as keys for the index scan of the right.)
+        <firstterm>嵌套循环连接</firstterm>：对于左侧关系中找到的每一行，右侧关系都会被扫描一次。这种策略易于实现，但可能非常耗时。（不过，如果右侧关系可以通过索引扫描来扫描，这可能是一种好策略。可以使用左侧关系当前行的值作为右侧索引扫描的键。）
        </para>
       </listitem>
 
       <listitem>
        <para>
-        <firstterm>merge join</firstterm>: Each relation is sorted on the join
-        attributes before the join starts. Then the two relations are
-        scanned in parallel, and matching rows are combined to form
-        join rows. This kind of join is
-        attractive because each relation has to be scanned only once.
-        The required sorting might be achieved either by an explicit sort
-        step, or by scanning the relation in the proper order using an
-        index on the join key.
+        <firstterm>合并连接</firstterm>：在连接开始之前，每个关系都按连接属性排序。然后并行扫描这两个关系，并将匹配的行组合成连接行。这种连接很有吸引力，因为每个关系只需扫描一次。所需的排序可以通过显式排序步骤实现，也可以通过使用连接键上的索引按正确顺序扫描关系来实现。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        <firstterm>hash join</firstterm>: the right relation is first scanned
-        and loaded into a hash table, using its join attributes as hash keys.
-        Next the left relation is scanned and the
-        appropriate values of every row found are used as hash keys to
-        locate the matching rows in the table.
+        <firstterm>哈希连接</firstterm>：先扫描右关系并将其载入哈希表，使用其连接属性作为哈希键。接着扫描左关系，并将找到的每一行的相应值用作哈希键，在哈希表中定位匹配的行。
        </para>
       </listitem>
      </itemizedlist>
     </para>
 
     <para>
-     When the query involves more than two relations, the final result
-     must be built up by a tree of join steps, each with two inputs.
-     The planner examines different possible join sequences to find the
-     cheapest one.
+     当查询涉及两个以上的关系时，最终结果必须由一棵连接步骤树构建而成，每个连接步骤有两个输入。规划器会考察不同的可能连接顺序，以找出代价最低的一种。
     </para>
 
     <para>
-     If the query uses fewer than <xref linkend="guc-geqo-threshold"/>
-     relations, a near-exhaustive search is conducted to find the best
-     join sequence.  The planner preferentially considers joins between any
-     two relations for which there exists a corresponding join clause in the
-     <literal>WHERE</literal> qualification (i.e., for
-     which a restriction like <literal>where rel1.attr1=rel2.attr2</literal>
-     exists). Join pairs with no join clause are considered only when there
-     is no other choice, that is, a particular relation has no available
-     join clauses to any other relation. All possible plans are generated for
-     every join pair considered by the planner, and the one that is
-     (estimated to be) the cheapest is chosen.
+     如果查询涉及的关系数少于 <xref linkend="guc-geqo-threshold"/>，则会进行近乎穷举的搜索以找出最佳连接顺序。规划器会优先考虑任意两个关系之间的连接，只要在 <literal>WHERE</literal> 限定条件中存在与之对应的连接子句（即存在形如 <literal>where rel1.attr1=rel2.attr2</literal> 的限制条件）。只有在别无选择时，即某个特定关系没有任何可用的连接子句可用于与其他任何关系连接时，才会考虑没有连接子句的连接对。对于规划器所考虑的每一个连接对，都会生成所有可能的计划，并从中选择（估计）代价最低的一个。
     </para>
 
     <para>
-     When <varname>geqo_threshold</varname> is exceeded, the join
-     sequences considered are determined by heuristics, as described
-     in <xref linkend="geqo"/>.  Otherwise the process is the same.
+     当超过 <varname>geqo_threshold</varname> 时，所考虑的连接顺序由启发式规则决定，如 <xref linkend="geqo"/> 中所述。除此之外，处理过程相同。
     </para>
 
     <para>
-     The finished plan tree consists of sequential or index scans of
-     the base relations, plus nested-loop, merge, or hash join nodes as
-     needed, plus any auxiliary steps needed, such as sort nodes or
-     aggregate-function calculation nodes.  Most of these plan node
-     types have the additional ability to do <firstterm>selection</firstterm>
-     (discarding rows that do not meet a specified Boolean condition)
-     and <firstterm>projection</firstterm> (computation of a derived column set
-     based on given column values, that is, evaluation of scalar
-     expressions where needed).  One of the responsibilities of the
-     planner is to attach selection conditions from the
-     <literal>WHERE</literal> clause and computation of required
-     output expressions to the most appropriate nodes of the plan
-     tree.
+     最终的计划树由对基础关系的顺序扫描或索引扫描、按需的嵌套循环、合并或哈希连接节点，以及任何所需的辅助步骤（如排序节点或聚合函数计算节点）组成。这些计划节点类型大多还具有执行<firstterm>选择</firstterm>（丢弃不满足指定布尔条件的行）和<firstterm>投影</firstterm>（基于给定列值计算派生列集，即在需要时求值标量表达式）的额外能力。规划器的职责之一，就是把来自 <literal>WHERE</literal> 子句的选择条件和所需输出表达式的计算附加到计划树中最合适的节点上。
     </para>
    </sect2>
   </sect1>
