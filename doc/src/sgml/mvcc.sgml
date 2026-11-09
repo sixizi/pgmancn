@@ -1195,44 +1195,18 @@ SELECT pg_advisory_lock(q.id) FROM
   </sect1>
 
   <sect1 id="mvcc-caveats">
-   <title>Caveats</title>
+   <title>注意事项</title>
 
    <para>
-    Some DDL commands, currently only <link linkend="sql-truncate"><command>TRUNCATE</command></link> and the
-    table-rewriting forms of <link linkend="sql-altertable"><command>ALTER TABLE</command></link>, are not
-    MVCC-safe.  This means that after the truncation or rewrite commits, the
-    table will appear empty to concurrent transactions, if they are using a
-    snapshot taken before the DDL command committed.  This will only be an
-    issue for a transaction that did not access the table in question
-    before the DDL command started &mdash; any transaction that has done so
-    would hold at least an <literal>ACCESS SHARE</literal> table lock,
-    which would block the DDL command until that transaction completes.
-    So these commands will not cause any apparent inconsistency in the
-    table contents for successive queries on the target table, but they
-    could cause visible inconsistency between the contents of the target
-    table and other tables in the database.
+    某些 DDL 命令（目前只有 <link linkend="sql-truncate"><command>TRUNCATE</command></link> 以及 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 中重写表的形式）不是 MVCC 安全的。这意味着在截断或重写提交之后，如果并发事务使用的是在该 DDL 命令提交之前取得的快照，那么该表对它们而言将是空的。这只会对那些在该 DDL 命令开始之前没有访问过相关表的事务构成问题 &mdash; 任何访问过该表的事务至少会持有一个 <literal>ACCESS SHARE</literal> 表锁，这会阻塞该 DDL 命令，直到该事务完成。因此，对于针对目标表的后续查询，这些命令不会导致表内容出现明显的不一致，但它们可能导致目标表的内容与数据库中其他表的内容之间出现可见的不一致。
    </para>
 
    <para>
-    Support for the Serializable transaction isolation level has not yet
-    been added to hot standby replication targets (described in
-    <xref linkend="hot-standby"/>).  The strictest isolation level currently
-    supported in hot standby mode is Repeatable Read.  While performing all
-    permanent database writes within Serializable transactions on the
-    primary will ensure that all standbys will eventually reach a consistent
-    state, a Repeatable Read transaction run on the standby can sometimes
-    see a transient state that is inconsistent with any serial execution
-    of the transactions on the primary.
+    热备复制目标（在 <xref linkend="hot-standby"/> 中描述）尚未添加对可串行化事务隔离级别的支持。热备模式目前支持的最严格隔离级别是可重复读。虽然在主库上把所有永久性数据库写入都放在可串行化事务中执行可以确保所有备库最终达到一致状态，但在备库上运行的可重复读事务有时会看到一种临时状态，它与主库上事务的任何串行执行结果都不一致。
    </para>
 
    <para>
-    Internal access to the system catalogs is not done using the isolation
-    level of the current transaction.  This means that newly created database
-    objects such as tables are visible to concurrent Repeatable Read and
-    Serializable transactions, even though the rows they contain are not.  In
-    contrast, queries that explicitly examine the system catalogs don't see
-    rows representing concurrently created database objects, in the higher
-    isolation levels.
+    对系统目录的内部访问不是使用当前事务的隔离级别完成的。这意味着新创建的数据库对象（例如表）对并发的可重复读和可串行化事务是可见的，尽管这些对象中包含的行并不可见。相反，在较高的隔离级别下，显式检查系统目录的查询看不到表示并发创建的数据库对象的行。
    </para>
   </sect1>
 
