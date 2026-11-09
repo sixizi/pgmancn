@@ -741,7 +741,7 @@ CREATE INDEX mytable_cat_data ON mytable (category, data);
 
 
  <sect1 id="indexes-index-only-scans">
-  <title>Index-Only Scans and Covering Indexes</title>
+  <title>仅索引扫描与覆盖索引</title>
 
   <indexterm zone="indexes-index-only-scans">
    <primary>index</primary>
@@ -759,21 +759,7 @@ CREATE INDEX mytable_cat_data ON mytable (category, data);
   </indexterm>
 
   <para>
-   All indexes in <productname>PostgreSQL</productname>
-   are <firstterm>secondary</firstterm> indexes, meaning that each index is
-   stored separately from the table's main data area (which is called the
-   table's <firstterm>heap</firstterm>
-   in <productname>PostgreSQL</productname> terminology).  This means that
-   in an ordinary index scan, each row retrieval requires fetching data from
-   both the index and the heap.  Furthermore, while the index entries that
-   match a given indexable <literal>WHERE</literal> condition are usually
-   close together in the index, the table rows they reference might be
-   anywhere in the heap.  The heap-access portion of an index scan thus
-   involves a lot of random access into the heap, which can be slow,
-   particularly on traditional rotating media.  (As described in
-   <xref linkend="indexes-bitmap-scans"/>, bitmap scans try to alleviate
-   this cost by doing the heap accesses in sorted order, but that only goes
-   so far.)
+   在 <productname>PostgreSQL</productname> 中所有索引都是<firstterm>二级</firstterm>索引，这意味着每个索引都与表的主数据区域分开存储（在 <productname>PostgreSQL</productname> 术语中，该区域称为表的<firstterm>堆</firstterm>）。这意味着在普通的索引扫描中，每次取行都需要同时从索引和堆中获取数据。此外，虽然与给定可索引 <literal>WHERE</literal> 条件匹配的索引项在索引中通常彼此靠近，但它们所引用的表行可能位于堆中的任何位置。因此，索引扫描的堆访问部分涉及大量对堆的随机访问，这可能很慢，特别是在传统的旋转介质上。（如 <xref linkend="indexes-bitmap-scans"/> 所述，位图扫描试图通过按排序顺序进行堆访问来缓解这一开销，但效果有限。）
   </para>
 
   <para>
@@ -787,215 +773,100 @@ CREATE INDEX mytable_cat_data ON mytable (category, data);
    <orderedlist>
     <listitem>
      <para>
-      The index type must support index-only scans.  B-tree indexes always
-      do.  GiST and SP-GiST indexes support index-only scans for some
-      operator classes but not others.  Other index types have no support.
-      The underlying requirement is that the index must physically store, or
-      else be able to reconstruct, the original data value for each index
-      entry.  As a counterexample, GIN indexes cannot support index-only
-      scans because each index entry typically holds only part of the
-      original data value.
+      索引类型必须支持仅索引扫描。B-tree 索引总是支持。GiST 和 SP-GiST 索引对某些运算符类支持仅索引扫描，但对其他运算符类不支持。其他索引类型则不支持。根本要求是索引必须物理存储每个索引项的原始数据值，或者能够重建它。作为一个反例，GIN 索引不能支持仅索引扫描，因为每个索引项通常只保存原始数据值的一部分。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The query must reference only columns stored in the index.  For
-      example, given an index on columns <literal>x</literal>
-      and <literal>y</literal> of a table that also has a
-      column <literal>z</literal>, these queries could use index-only scans:
+      查询必须只引用存储在索引中的列。例如，给定一个表上列 <literal>x</literal> 和 <literal>y</literal> 的索引，该表还有一个列 <literal>z</literal>，这些查询可以使用仅索引扫描：
 <programlisting>
 SELECT x, y FROM tab WHERE x = 'key';
 SELECT x FROM tab WHERE x = 'key' AND y &lt; 42;
 </programlisting>
-      but these queries could not:
+      但这些查询不能：
 <programlisting>
 SELECT x, z FROM tab WHERE x = 'key';
 SELECT x FROM tab WHERE x = 'key' AND z &lt; 42;
 </programlisting>
-      (Expression indexes and partial indexes complicate this rule,
-      as discussed below.)
+      （表达式索引和部分索引会使这条规则复杂化，如下文所述。）
      </para>
     </listitem>
    </orderedlist>
   </para>
 
   <para>
-   If these two fundamental requirements are met, then all the data values
-   required by the query are available from the index, so an index-only scan
-   is physically possible.  But there is an additional requirement for any
-   table scan in <productname>PostgreSQL</productname>: it must verify that
-   each retrieved row be <quote>visible</quote> to the query's MVCC
-   snapshot, as discussed in <xref linkend="mvcc"/>.  Visibility information
-   is not stored in index entries, only in heap entries; so at first glance
-   it would seem that every row retrieval would require a heap access
-   anyway.  And this is indeed the case, if the table row has been modified
-   recently.  However, for seldom-changing data there is a way around this
-   problem.  <productname>PostgreSQL</productname> tracks, for each page in
-   a table's heap, whether all rows stored in that page are old enough to be
-   visible to all current and future transactions.  This information is
-   stored in a bit in the table's <firstterm>visibility map</firstterm>.  An
-   index-only scan, after finding a candidate index entry, checks the
-   visibility map bit for the corresponding heap page.  If it's set, the row
-   is known visible and so the data can be returned with no further work.
-   If it's not set, the heap entry must be visited to find out whether it's
-   visible, so no performance advantage is gained over a standard index
-   scan.  Even in the successful case, this approach trades visibility map
-   accesses for heap accesses; but since the visibility map is four orders
-   of magnitude smaller than the heap it describes, far less physical I/O is
-   needed to access it.  In most situations the visibility map remains
-   cached in memory all the time.
+   如果满足这两个基本要求，那么查询所需的所有数据值都可以从索引中获得，因此索引仅扫描在物理上是可行的。但是对于 <productname>PostgreSQL</productname> 中的任何表扫描还有一个额外要求：它必须验证所检索的每一行对于查询的 MVCC 快照是<quote>可见</quote>的，如 <xref linkend="mvcc"/> 中所述。可见性信息并不存储在索引项中，只存储在堆项中；因此乍看之下，似乎每次检索行无论如何都需要访问堆。而且，如果表行最近被修改过，情况确实如此。不过，对于很少变化的数据，有一种绕开此问题的办法。<productname>PostgreSQL</productname> 会针对表的堆中的每个页面，跟踪该页面中存储的所有行是否都足够旧，从而对所有当前和未来事务可见。此信息存储在表的 <firstterm>可见性映射</firstterm> 中的一个位里。索引仅扫描在找到候选索引项之后，会检查对应堆页面的可见性映射位。如果该位被设置，则该行已知可见，因此无需进一步工作即可返回数据。如果该位未被设置，则必须访问堆项以查明其是否可见，因此相比标准索引扫描不会获得任何性能优势。即使在成功的情况下，这种方法也是用可见性映射访问来换取堆访问；但由于可见性映射比它所描述的堆小四个数量级，访问它所需的物理 I/O 要少得多。在大多数情况下，可见性映射会一直缓存在内存中。
   </para>
 
   <para>
-   In short, while an index-only scan is possible given the two fundamental
-   requirements, it will be a win only if a significant fraction of the
-   table's heap pages have their all-visible map bits set.  But tables in
-   which a large fraction of the rows are unchanging are common enough to
-   make this type of scan very useful in practice.
+   简而言之，虽然给定这两个基本要求后索引仅扫描是可行的，但只有当表的堆页面中有相当大一部分设置了全可见映射位时，它才会有优势。不过，大部分行都不变化的表非常常见，因此这种扫描类型在实践中非常有用。
   </para>
 
   <para>
    <indexterm>
     <primary><literal>INCLUDE</literal></primary>
-    <secondary>in index definitions</secondary>
+    <secondary>在索引定义中</secondary>
    </indexterm>
-   To make effective use of the index-only scan feature, you might choose to
-   create a <firstterm>covering index</firstterm>, which is an index
-   specifically designed to include the columns needed by a particular
-   type of query that you run frequently.  Since queries typically need to
-   retrieve more columns than just the ones they search
-   on, <productname>PostgreSQL</productname> allows you to create an index
-   in which some columns are just <quote>payload</quote> and are not part
-   of the search key.  This is done by adding an <literal>INCLUDE</literal>
-   clause listing the extra columns.  For example, if you commonly run
-   queries like
+   为了有效利用仅索引扫描特性，你可以选择创建一个<firstterm>覆盖索引</firstterm>，即专门设计为包含你频繁运行的某类查询所需列的索引。由于查询通常需要检索的列多于它们仅用于搜索的列，<productname>PostgreSQL</productname> 允许你创建一个索引，其中某些列只是<quote>负载</quote>，并不属于搜索键的一部分。这可以通过添加一个 <literal>INCLUDE</literal> 子句并列出额外的列来实现。例如，如果你经常运行如下查询
 <programlisting>
 SELECT y FROM tab WHERE x = 'key';
 </programlisting>
-   the traditional approach to speeding up such queries would be to create
-   an index on <literal>x</literal> only.  However, an index defined as
+   加速此类查询的传统做法是只在 <literal>x</literal> 上创建一个索引。然而，定义为
 <programlisting>
 CREATE INDEX tab_x_y ON tab(x) INCLUDE (y);
 </programlisting>
-   could handle these queries as index-only scans,
-   because <literal>y</literal> can be obtained from the index without
-   visiting the heap.
+   的索引可以将这些查询作为仅索引扫描来处理，因为 <literal>y</literal> 可以从索引中获得，而无需访问堆。
   </para>
 
   <para>
-   Because column <literal>y</literal> is not part of the index's search
-   key, it does not have to be of a data type that the index can handle;
-   it's merely stored in the index and is not interpreted by the index
-   machinery.  Also, if the index is a unique index, that is
+   由于列 <literal>y</literal> 不属于索引的搜索键，它不必是索引能够处理的数据类型；它只是存储在索引中，不会被索引机制解释。另外，如果该索引是唯一索引，也就是说
 <programlisting>
 CREATE UNIQUE INDEX tab_x_y ON tab(x) INCLUDE (y);
 </programlisting>
-   the uniqueness condition applies to just column <literal>x</literal>,
-   not to the combination of <literal>x</literal> and <literal>y</literal>.
-   (An <literal>INCLUDE</literal> clause can also be written
-   in <literal>UNIQUE</literal> and <literal>PRIMARY KEY</literal>
-   constraints, providing alternative syntax for setting up an index like
-   this.)
+   唯一性条件仅适用于列 <literal>x</literal>，而不适用于 <literal>x</literal> 与 <literal>y</literal> 的组合。（<literal>INCLUDE</literal> 子句也可以写在 <literal>UNIQUE</literal> 和 <literal>PRIMARY KEY</literal> 约束中，为建立这样的索引提供了另一种语法。）
   </para>
 
   <para>
-   It's wise to be conservative about adding non-key payload columns to an
-   index, especially wide columns.  If an index tuple exceeds the
-   maximum size allowed for the index type, data insertion will fail.
-   In any case, non-key columns duplicate data from the index's table
-   and bloat the size of the index, thus potentially slowing searches.
-   And remember that there is little point in including payload columns in an
-   index unless the table changes slowly enough that an index-only scan is
-   likely to not need to access the heap.  If the heap tuple must be visited
-   anyway, it costs nothing more to get the column's value from there.
-   Other restrictions are that expressions are not currently supported as
-   included columns, and that only B-tree, GiST and SP-GiST indexes currently
-   support included columns.
+   在向索引中添加非键负载列时，尤其是宽列，保持保守是明智的。如果索引元组超过该索引类型允许的最大尺寸，数据插入将会失败。无论如何，非键列都会重复索引所属表中的数据，并使索引的大小膨胀，从而可能拖慢搜索。还要记住，除非表的变化足够缓慢，使得仅索引扫描很可能不需要访问堆，否则在索引中包含负载列没有太大意义。如果无论如何都必须访问堆元组，那么从那里获取该列的值并不会带来额外开销。其他限制是：目前不支持将表达式作为包含列，并且目前只有 B-tree、GiST 和 SP-GiST 索引支持包含列。
   </para>
 
   <para>
-   Before <productname>PostgreSQL</productname> had
-   the <literal>INCLUDE</literal> feature, people sometimes made covering
-   indexes by writing the payload columns as ordinary index columns,
-   that is writing
+   在 <productname>PostgreSQL</productname> 具备 <literal>INCLUDE</literal> 特性之前，人们有时通过把有效载荷列写成普通索引列来构造覆盖索引，也就是写成
 <programlisting>
 CREATE INDEX tab_x_y ON tab(x, y);
 </programlisting>
-   even though they had no intention of ever using <literal>y</literal> as
-   part of a <literal>WHERE</literal> clause.  This works fine as long as
-   the extra columns are trailing columns; making them be leading columns is
-   unwise for the reasons explained in <xref linkend="indexes-multicolumn"/>.
-   However, this method doesn't support the case where you want the index to
-   enforce uniqueness on the key column(s).
+   即使他们从未打算将 <literal>y</literal> 用作 <literal>WHERE</literal> 子句的一部分。只要额外的列是尾随列，这种做法就没有问题；把它们变成前导列则是不明智的，原因在 <xref linkend="indexes-multicolumn"/> 中已有解释。然而，这种方法不支持你希望索引强制键列唯一性的情况。
   </para>
 
   <para>
-   <firstterm>Suffix truncation</firstterm> always removes non-key
-   columns from upper B-Tree levels.  As payload columns, they are
-   never used to guide index scans.  The truncation process also
-   removes one or more trailing key column(s) when the remaining
-   prefix of key column(s) happens to be sufficient to describe tuples
-   on the lowest B-Tree level.  In practice, covering indexes without
-   an <literal>INCLUDE</literal> clause often avoid storing columns
-   that are effectively payload in the upper levels.  However,
-   explicitly defining payload columns as non-key columns
-   <emphasis>reliably</emphasis> keeps the tuples in upper levels
-   small.
+   <firstterm>后缀截断</firstterm>总是从上层 B-Tree 层级中移除非键列。作为有效载荷列，它们从不用于引导索引扫描。当剩余的键列前缀恰好足以描述最低 B-Tree 层级上的元组时，截断过程还会移除一个或多个尾随键列。在实践中，不带 <literal>INCLUDE</literal> 子句的覆盖索引通常避免在上层存储实际上是有效载荷的列。然而，显式地将有效载荷列定义为非键列可以<emphasis>可靠地</emphasis>保持上层元组很小。
   </para>
 
   <para>
-   In principle, index-only scans can be used with expression indexes.
-   For example, given an index on <literal>f(x)</literal>
-   where <literal>x</literal> is a table column, it should be possible to
-   execute
+   原则上，仅索引扫描可以用于表达式索引。例如，给定一个在 <literal>f(x)</literal> 上的索引，其中 <literal>x</literal> 是表列，应该可以将
 <programlisting>
 SELECT f(x) FROM tab WHERE f(x) &lt; 1;
 </programlisting>
-   as an index-only scan; and this is very attractive
-   if <literal>f()</literal> is an expensive-to-compute function.
-   However, <productname>PostgreSQL</productname>'s planner is currently not
-   very smart about such cases.  It considers a query to be potentially
-   executable by index-only scan only when all <emphasis>columns</emphasis>
-   needed by the query are available from the index.  In this
-   example, <literal>x</literal> is not needed except in the
-   context <literal>f(x)</literal>, but the planner does not notice that and
-   concludes that an index-only scan is not possible.  If an index-only scan
-   seems sufficiently worthwhile, this can be worked around by
-   adding <literal>x</literal> as an included column, for example
+   作为仅索引扫描执行；如果 <literal>f()</literal> 是计算代价高昂的函数，这将非常有吸引力。然而，<productname>PostgreSQL</productname> 的规划器目前对此类情况并不十分智能。只有当查询所需的所有<emphasis>列</emphasis>都可以从索引中获得时，它才认为查询可能可以通过仅索引扫描执行。在此示例中，除了在 <literal>f(x)</literal> 上下文中之外不需要 <literal>x</literal>，但规划器没有注意到这一点，并得出结论认为不可能进行仅索引扫描。如果仅索引扫描看起来足够值得，可以通过将 <literal>x</literal> 添加为包含列来绕过此问题，例如
 <programlisting>
 CREATE INDEX tab_f_x ON tab (f(x)) INCLUDE (x);
 </programlisting>
-   An additional caveat, if the goal is to avoid
-   recalculating <literal>f(x)</literal>, is that the planner won't
-   necessarily match uses of <literal>f(x)</literal> that aren't in
-   indexable <literal>WHERE</literal> clauses to the index column.  It will
-   usually get this right in simple queries such as shown above, but not in
-   queries that involve joins.  These deficiencies may be remedied in future
-   versions of <productname>PostgreSQL</productname>.
+   另一个注意事项是，如果目标是避免重新计算 <literal>f(x)</literal>，那么规划器不一定会把不在可索引 <literal>WHERE</literal> 子句中的 <literal>f(x)</literal> 的使用匹配到索引列。在如上所示的简单查询中，它通常会正确处理，但在涉及连接的查询中则不会。这些缺陷可能会在 <productname>PostgreSQL</productname> 的未来版本中得到补救。
   </para>
 
   <para>
-   Partial indexes also have interesting interactions with index-only scans.
-   Consider the partial index shown in <xref linkend="indexes-partial-ex3"/>:
+   部分索引与仅索引扫描之间也有有趣的交互。
+   考虑 <xref linkend="indexes-partial-ex3"/> 中所示的部分索引：
 <programlisting>
 CREATE UNIQUE INDEX tests_success_constraint ON tests (subject, target)
     WHERE success;
 </programlisting>
-   In principle, we could do an index-only scan on this index to satisfy a
-   query like
+   原则上，我们可以对这个索引执行仅索引扫描，以满足如下查询
 <programlisting>
 SELECT target FROM tests WHERE subject = 'some-subject' AND success;
 </programlisting>
-   But there's a problem: the <literal>WHERE</literal> clause refers
-   to <literal>success</literal> which is not available as a result column
-   of the index.  Nonetheless, an index-only scan is possible because the
-   plan does not need to recheck that part of the <literal>WHERE</literal>
-   clause at run time: all entries found in the index necessarily
-   have <literal>success = true</literal> so this need not be explicitly
-   checked in the plan.  <productname>PostgreSQL</productname> versions 9.6
-   and later will recognize such cases and allow index-only scans to be
-   generated, but older versions will not.
+   但有一个问题：<literal>WHERE</literal> 子句引用了 <literal>success</literal>，而它不是该索引的结果列。尽管如此，仅索引扫描仍然是可能的，因为计划在运行时不需要重新检查 <literal>WHERE</literal> 子句的那一部分：在索引中找到的所有条目必然具有 <literal>success = true</literal>，因此在计划中无需显式检查这一点。<productname>PostgreSQL</productname> 9.6 及更高版本会识别这类情况并允许生成仅索引扫描，但更早的版本不会。
   </para>
  </sect1>
 
