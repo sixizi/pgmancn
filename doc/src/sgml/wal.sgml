@@ -271,306 +271,127 @@
  </sect1>
 
  <sect1 id="wal-configuration">
-  <title><acronym>WAL</acronym> Configuration</title>
+  <title><acronym>WAL</acronym> 配置</title>
 
   <para>
-   There are several <acronym>WAL</acronym>-related configuration parameters that
-   affect database performance. This section explains their use.
-   Consult <xref linkend="runtime-config"/> for general information about
-   setting server configuration parameters.
+   有几个与 <acronym>WAL</acronym> 相关的配置参数会影响数据库性能。本节解释它们的用法。
+   有关设置服务器配置参数的一般信息，请参阅 <xref linkend="runtime-config"/>。
   </para>
 
   <para>
-   <firstterm>Checkpoints</firstterm><indexterm><primary>checkpoint</primary></indexterm>
-   are points in the sequence of transactions at which it is guaranteed
-   that the heap and index data files have been updated with all
-   information written before that checkpoint.  At checkpoint time, all
-   dirty data pages are flushed to disk and a special checkpoint record is
-   written to the WAL file.  (The change records were previously flushed
-   to the <acronym>WAL</acronym> files.)
-   In the event of a crash, the crash recovery procedure looks at the latest
-   checkpoint record to determine the point in the WAL (known as the redo
-   record) from which it should start the REDO operation.  Any changes made to
-   data files before that point are guaranteed to be already on disk.
-   Hence, after a checkpoint, WAL segments preceding the one containing
-   the redo record are no longer needed and can be recycled or removed. (When
-   <acronym>WAL</acronym> archiving is being done, the WAL segments must be
-   archived before being recycled or removed.)
+   <firstterm>检查点</firstterm><indexterm><primary>检查点</primary></indexterm>
+   是事务序列中的一些点，在这些点上可以保证堆和索引数据文件已经
+   更新了在该检查点之前写入的所有信息。在检查点时刻，所有
+   脏数据页都会被刷写到磁盘，并且一条特殊的检查点记录会被
+   写入 WAL 文件。（更改记录此前已被刷写到 <acronym>WAL</acronym> 文件中。）
+   在发生崩溃时，崩溃恢复过程会查看最新的
+   检查点记录，以确定 WAL 中应从哪个点（称为 redo
+   记录）开始执行 REDO 操作。在该点之前对
+   数据文件所做的任何更改都保证已经在磁盘上。
+   因此，在检查点之后，位于包含 redo 记录的那个 WAL 段之前的
+   WAL 段就不再需要了，可以被回收或删除。（当
+   正在进行 <acronym>WAL</acronym> 归档时，WAL 段必须在被回收或删除之前
+   先归档。）
   </para>
 
   <para>
-   The checkpoint requirement of flushing all dirty data pages to disk
-   can cause a significant I/O load.  For this reason, checkpoint
-   activity is throttled so that I/O begins at checkpoint start and completes
-   before the next checkpoint is due to start; this minimizes performance
-   degradation during checkpoints.
+   检查点要求将所有脏数据页刷写到磁盘，
+   这可能会造成相当大的 I/O 负载。为此，检查点
+   活动会受到限流，使 I/O 在检查点开始时启动，并在下一个检查点
+   预定开始之前完成；从而将检查点期间的性能下降降到最低。
   </para>
 
   <para>
-   The server's checkpointer process automatically performs
-   a checkpoint every so often.  A checkpoint is begun every <xref
-   linkend="guc-checkpoint-timeout"/> seconds, or if
-   <xref linkend="guc-max-wal-size"/> is about to be exceeded,
-   whichever comes first.
-   The default settings are 5 minutes and 1 GB, respectively.
-   If no WAL has been written since the previous checkpoint, new checkpoints
-   will be skipped even if <varname>checkpoint_timeout</varname> has passed.
-   (If WAL archiving is being used and you want to put a lower limit on how
-   often files are archived in order to bound potential data loss, you should
-   adjust the <xref linkend="guc-archive-timeout"/> parameter rather than the
-   checkpoint parameters.)
-   It is also possible to force a checkpoint by using the SQL
-   command <command>CHECKPOINT</command>.
+   服务器的 checkpointer 进程会不时自动执行
+   检查点。每隔 <xref
+   linkend="guc-checkpoint-timeout"/> 秒就会开始一个检查点，或者当
+   <xref linkend="guc-max-wal-size"/> 即将被超过时开始，
+   以先发生者为准。
+   默认设置分别为 5 分钟和 1 GB。
+   如果自上一个检查点以来没有写入任何 WAL，那么即使 <varname>checkpoint_timeout</varname> 已经过去，
+   新的检查点也会被跳过。
+   （如果正在使用 WAL 归档，并且你希望为文件归档的频率设定一个下限，
+   以限制潜在的数据丢失，那么你应该调整 <xref linkend="guc-archive-timeout"/> 参数，
+   而不是检查点参数。）
+   也可以通过使用 SQL 命令 <command>CHECKPOINT</command> 来强制进行
+   检查点。
   </para>
 
   <para>
-   Reducing <varname>checkpoint_timeout</varname> and/or
-   <varname>max_wal_size</varname> causes checkpoints to occur
-   more often. This allows faster after-crash recovery, since less work
-   will need to be redone. However, one must balance this against the
-   increased cost of flushing dirty data pages more often. If
-   <xref linkend="guc-full-page-writes"/> is set (as is the default), there is
-   another factor to consider. To ensure data page consistency,
-   the first modification of a data page after each checkpoint results in
-   logging the entire page content. In that case,
-   a smaller checkpoint interval increases the volume of output to the WAL,
-   partially negating the goal of using a smaller interval,
-   and in any case causing more disk I/O.
+   减小 <varname>checkpoint_timeout</varname> 和/或 <varname>max_wal_size</varname> 会使检查点更频繁地发生。这可以加快崩溃后的恢复速度，因为需要重做的工作更少。不过，必须权衡这一点与更频繁地刷写脏数据页所带来的成本增加。如果设置了 <xref linkend="guc-full-page-writes"/>（这也是默认情况），还有另一个因素需要考虑。为确保数据页的一致性，在每个检查点之后对数据页的第一次修改会导致记录整个页面的内容。在这种情况下，较小的检查点间隔会增加写入 WAL 的输出量，部分抵消了使用较小间隔的目标，并且无论如何都会导致更多的磁盘 I/O。
   </para>
 
   <para>
-   Checkpoints are fairly expensive, first because they require writing
-   out all currently dirty buffers, and second because they result in
-   extra subsequent WAL traffic as discussed above.  It is therefore
-   wise to set the checkpointing parameters high enough so that checkpoints
-   don't happen too often.  As a simple sanity check on your checkpointing
-   parameters, you can set the <xref linkend="guc-checkpoint-warning"/>
-   parameter.  If checkpoints happen closer together than
-   <varname>checkpoint_warning</varname> seconds,
-   a message will be output to the server log recommending increasing
-   <varname>max_wal_size</varname>.  Occasional appearance of such
-   a message is not cause for alarm, but if it appears often then the
-   checkpoint control parameters should be increased. Bulk operations such
-   as large <command>COPY</command> transfers might cause a number of such warnings
-   to appear if you have not set <varname>max_wal_size</varname> high
-   enough.
+   检查点的开销相当大，首先是因为它们需要写出当前所有脏缓冲区，其次是因为如上所述它们会导致后续额外的 WAL 流量。因此，明智的做法是将检查点参数设置得足够高，以免检查点过于频繁地发生。作为对检查点参数的简单合理性检查，你可以设置 <xref linkend="guc-checkpoint-warning"/> 参数。如果检查点之间的间隔小于 <varname>checkpoint_warning</varname> 秒，就会向服务器日志输出一条消息，建议增大 <varname>max_wal_size</varname>。偶尔出现这样的消息不必惊慌，但如果它经常出现，则应增大检查点控制参数。如果你没有将 <varname>max_wal_size</varname> 设置得足够高，诸如大型 <command>COPY</command> 传输之类的批量操作可能会导致出现若干此类警告。
   </para>
 
   <para>
-   To avoid flooding the I/O system with a burst of page writes,
-   writing dirty buffers during a checkpoint is spread over a period of time.
-   That period is controlled by
-   <xref linkend="guc-checkpoint-completion-target"/>, which is
-   given as a fraction of the checkpoint interval (configured by using
-   <varname>checkpoint_timeout</varname>).
-   The I/O rate is adjusted so that the checkpoint finishes when the
-   given fraction of
-   <varname>checkpoint_timeout</varname> seconds have elapsed, or before
-   <varname>max_wal_size</varname> is exceeded, whichever is sooner.
-   With the default value of 0.9,
-   <productname>PostgreSQL</productname> can be expected to complete each checkpoint
-   a bit before the next scheduled checkpoint (at around 90% of the last checkpoint's
-   duration).  This spreads out the I/O as much as possible so that the checkpoint
-   I/O load is consistent throughout the checkpoint interval.  The disadvantage of
-   this is that prolonging checkpoints affects recovery time, because more WAL
-   segments will need to be kept around for possible use in recovery.  A user
-   concerned about the amount of time required to recover might wish to reduce
-   <varname>checkpoint_timeout</varname> so that checkpoints occur more frequently
-   but still spread the I/O across the checkpoint interval.  Alternatively,
-   <varname>checkpoint_completion_target</varname> could be reduced, but this would
-   result in times of more intense I/O (during the checkpoint) and times of less I/O
-   (after the checkpoint completed but before the next scheduled checkpoint) and
-   therefore is not recommended.
-   Although <varname>checkpoint_completion_target</varname> could be set as high as
-   1.0, it is typically recommended to set it to no higher than 0.9 (the default)
-   since checkpoints include some other activities besides writing dirty buffers.
-   A setting of 1.0 is quite likely to result in checkpoints not being
-   completed on time, which would result in performance loss due to
-   unexpected variation in the number of WAL segments needed.
+   为避免大量页面写入瞬间涌入 I/O 系统，检查点期间脏缓冲区的写出被分散到一段时间内。该时间段由 <xref linkend="guc-checkpoint-completion-target"/> 控制，它以检查点间隔（通过 <varname>checkpoint_timeout</varname> 配置）的分数形式给出。I/O 速率会被调整，使得检查点在经过给定的 <varname>checkpoint_timeout</varname> 秒的该分数比例时完成，或在超过 <varname>max_wal_size</varname> 之前完成，以较早者为准。在默认值 0.9 下，可以预期 <productname>PostgreSQL</productname> 会在下一个计划检查点之前一点完成每个检查点（大约在上一个检查点持续时间的 90% 处）。这尽可能分散了 I/O，使得检查点 I/O 负载在整个检查点间隔内保持一致。其缺点是，延长检查点会影响恢复时间，因为需要保留更多 WAL 段以备恢复时使用。关心恢复所需时间的用户可能希望降低 <varname>checkpoint_timeout</varname>，以便检查点更频繁地发生，但仍将 I/O 分散到整个检查点间隔内。或者，可以降低 <varname>checkpoint_completion_target</varname>，但这会导致 I/O 更密集的时段（检查点期间）和 I/O 较少的时段（检查点完成后但下一个计划检查点之前），因此不推荐。尽管 <varname>checkpoint_completion_target</varname> 可以设置为高达 1.0，但通常建议将其设置为不高于 0.9（默认值），因为检查点除了写出脏缓冲区外还包含一些其他活动。设置为 1.0 很可能导致检查点无法按时完成，这会因所需 WAL 段数量的意外变化而导致性能损失。
   </para>
 
   <para>
-   On Linux and POSIX platforms <xref linkend="guc-checkpoint-flush-after"/>
-   allows you to force OS pages written by the checkpoint to be
-   flushed to disk after a configurable number of bytes.  Otherwise, these
-   pages may be kept in the OS's page cache, inducing a stall when
-   <literal>fsync</literal> is issued at the end of a checkpoint.  This setting will
-   often help to reduce transaction latency, but it also can have an adverse
-   effect on performance; particularly for workloads that are bigger than
-   <xref linkend="guc-shared-buffers"/>, but smaller than the OS's page cache.
+   在 Linux 和 POSIX 平台上，<xref linkend="guc-checkpoint-flush-after"/> 允许你强制将由检查点写入的操作系统页面在达到可配置的字节数后刷写到磁盘。否则，这些页面可能保留在操作系统的页面缓存中，在检查点结束时发出 <literal>fsync</literal> 时引起停顿。此设置通常有助于降低事务延迟，但也可能对性能产生不利影响；特别是对于大于 <xref linkend="guc-shared-buffers"/> 但小于操作系统页面缓存的工作负载。
   </para>
 
   <para>
-   The number of WAL segment files in <filename>pg_wal</filename> directory depends on
-   <varname>min_wal_size</varname>, <varname>max_wal_size</varname> and
-   the amount of WAL generated in previous checkpoint cycles. When old WAL
-   segment files are no longer needed, they are removed or recycled (that is,
-   renamed to become future segments in the numbered sequence). If, due to a
-   short-term peak of WAL output rate, <varname>max_wal_size</varname> is
-   exceeded, the unneeded segment files will be removed until the system
-   gets back under this limit. Below that limit, the system recycles enough
-   WAL files to cover the estimated need until the next checkpoint, and
-   removes the rest. The estimate is based on a moving average of the number
-   of WAL files used in previous checkpoint cycles. The moving average
-   is increased immediately if the actual usage exceeds the estimate, so it
-   accommodates peak usage rather than average usage to some extent.
-   <varname>min_wal_size</varname> puts a minimum on the amount of WAL files
-   recycled for future usage; that much WAL is always recycled for future use,
-   even if the system is idle and the WAL usage estimate suggests that little
-   WAL is needed.
+   <filename>pg_wal</filename> 目录中 WAL 段文件的数量取决于 <varname>min_wal_size</varname>、<varname>max_wal_size</varname> 以及之前的检查点周期中生成的 WAL 量。当旧的 WAL 段文件不再需要时，它们会被删除或回收（即重命名，成为编号序列中未来的段）。如果由于 WAL 输出速率的短期峰值而超过了 <varname>max_wal_size</varname>，则会删除不需要的段文件，直到系统回到该限制以下。低于该限制时，系统会回收足够多的 WAL 文件，以满足直到下一个检查点的估计需求，并删除其余文件。该估计基于之前检查点周期中所用 WAL 文件数量的移动平均值。如果实际使用量超过估计值，移动平均值会立即增大，因此它在一定程度上适应峰值使用量而非平均使用量。<varname>min_wal_size</varname> 为将来使用而回收的 WAL 文件数量设定了一个下限；即使系统空闲且 WAL 使用量估计表明只需要很少的 WAL，也总会回收这么多 WAL 以供将来使用。
   </para>
 
   <para>
-   Independently of <varname>max_wal_size</varname>,
-   the most recent <xref linkend="guc-wal-keep-size"/> megabytes of
-   WAL files plus one additional WAL file are
-   kept at all times. Also, if WAL archiving is used, old segments cannot be
-   removed or recycled until they are archived. If WAL archiving cannot keep up
-   with the pace that WAL is generated, or if <varname>archive_command</varname>
-   or <varname>archive_library</varname>
-   fails repeatedly, old WAL files will accumulate in <filename>pg_wal</filename>
-   until the situation is resolved. A slow or failed standby server that
-   uses a replication slot will have the same effect (see
-   <xref linkend="streaming-replication-slots"/>).
-   Similarly, if <link linkend="runtime-config-wal-summarization">
-   WAL summarization</link> is enabled, old segments are kept
-   until they are summarized.
+   独立于 <varname>max_wal_size</varname>，最近的 <xref linkend="guc-wal-keep-size"/> 兆字节的 WAL 文件外加一个额外的 WAL 文件始终会被保留。此外，如果使用了 WAL 归档，则旧段在被归档之前不能被删除或回收。如果 WAL 归档跟不上 WAL 生成的节奏，或者如果 <varname>archive_command</varname> 或 <varname>archive_library</varname> 反复失败，旧 WAL 文件将在 <filename>pg_wal</filename> 中累积，直到情况得到解决。使用复制槽的缓慢或失败的备服务器会产生同样的效果（参见 <xref linkend="streaming-replication-slots"/>）。同样，如果启用了 <link linkend="runtime-config-wal-summarization">WAL 汇总</link>，旧段会被保留，直到它们被汇总。
   </para>
 
   <para>
-   In archive recovery or standby mode, the server periodically performs
-   <firstterm>restartpoints</firstterm>,<indexterm><primary>restartpoint</primary></indexterm>
-   which are similar to checkpoints in normal operation: the server forces
-   all its state to disk, updates the <filename>pg_control</filename> file to
-   indicate that the already-processed WAL data need not be scanned again,
-   and then recycles any old WAL segment files in the <filename>pg_wal</filename>
-   directory.
-   Restartpoints can't be performed more frequently than checkpoints on the
-   primary because restartpoints can only be performed at checkpoint records.
-   A restartpoint can be demanded by a schedule or by an external request.
-   The <structfield>restartpoints_timed</structfield> counter in the
+   在归档恢复或后备模式中，服务器会定期执行<firstterm>重启点</firstterm>，<indexterm><primary>restartpoint</primary></indexterm>
+   它类似于正常运行中的检查点：服务器将其所有状态强制写入磁盘，更新 <filename>pg_control</filename> 文件以
+   表明已处理的 WAL 数据无需再次扫描，然后回收 <filename>pg_wal</filename>
+   目录中所有旧的 WAL 段文件。
+   重启点的执行频率不能高于主库上的检查点，因为重启点只能在检查点记录处执行。
+   重启点可以由调度或外部请求来要求执行。
    <link linkend="monitoring-pg-stat-checkpointer-view"><structname>pg_stat_checkpointer</structname></link>
-   view counts the first ones while the <structfield>restartpoints_req</structfield>
-   the second.
-   A restartpoint is triggered by schedule when a checkpoint record is reached
-   if at least <xref linkend="guc-checkpoint-timeout"/> seconds have passed since
-   the last performed restartpoint or when the previous attempt to perform
-   the restartpoint has failed. In the last case, the next restartpoint
-   will be scheduled in 15 seconds.
-   A restartpoint is triggered by request due to similar reasons like checkpoint
-   but mostly if WAL size is about to exceed <xref linkend="guc-max-wal-size"/>
-   However, because of limitations on when a restartpoint can be performed,
-   <varname>max_wal_size</varname> is often exceeded during recovery,
-   by up to one checkpoint cycle's worth of WAL.
-   (<varname>max_wal_size</varname> is never a hard limit anyway, so you should
-   always leave plenty of headroom to avoid running out of disk space.)
-   The <structfield>restartpoints_done</structfield> counter in the
+   视图中的 <structfield>restartpoints_timed</structfield> 计数器统计前者，而 <structfield>restartpoints_req</structfield>
+   统计后者。
+   当到达检查点记录时，如果距离上次执行重启点已过去至少 <xref linkend="guc-checkpoint-timeout"/> 秒，
+   或者上一次执行重启点的尝试已经失败，则会按调度触发重启点。在后一种情况下，
+   下一次重启点将在 15 秒后被调度。
+   由于与检查点类似的原因，重启点也会因请求而触发，但主要是在 WAL 大小即将超过
+   <xref linkend="guc-max-wal-size"/> 时。
+   然而，由于对重启点执行时机的限制，在恢复期间经常会超出 <varname>max_wal_size</varname>，
+   最多可超出相当于一个检查点周期的 WAL 量。
+   （无论如何，<varname>max_wal_size</varname> 从来都不是硬性限制，因此你应始终留出充足的余量，以免磁盘空间耗尽。）
    <link linkend="monitoring-pg-stat-checkpointer-view"><structname>pg_stat_checkpointer</structname></link>
-   view counts the restartpoints that have really been performed.
+   视图中的 <structfield>restartpoints_done</structfield> 计数器统计实际已执行的重启点数量。
   </para>
 
   <para>
-   In some cases, when the WAL size on the primary increases quickly,
-   for instance during massive <command>INSERT</command>,
-   the <structfield>restartpoints_req</structfield> counter on the standby
-   may demonstrate a peak growth.
-   This occurs because requests to create a new restartpoint due to increased
-   WAL consumption cannot be performed because the safe checkpoint record
-   since the last restartpoint has not yet been replayed on the standby.
-   This behavior is normal and does not lead to an increase in system resource
-   consumption.
-   Only the <structfield>restartpoints_done</structfield>
-   counter among the restartpoint-related ones indicates that noticeable system
-   resources have been spent.
+   在某些情况下，当主库上的 WAL 大小快速增加时，
+   例如在进行大量 <command>INSERT</command> 期间，
+   后备上的 <structfield>restartpoints_req</structfield> 计数器可能会呈现出峰值增长。
+   出现这种情况是因为，由于 WAL 消耗增加而创建新重启点的请求
+   无法执行，原因是自上次重启点以来的安全检查点记录
+   尚未在后备上重放。
+   此行为是正常的，不会导致系统资源消耗增加。
+   在重启点相关的计数器中，只有 <structfield>restartpoints_done</structfield>
+   计数器表明已消耗了可观的系统资源。
   </para>
 
   <para>
-   There are two commonly used internal <acronym>WAL</acronym> functions:
-   <function>XLogInsertRecord</function> and <function>XLogFlush</function>.
-   <function>XLogInsertRecord</function> is used to place a new record into
-   the <acronym>WAL</acronym> buffers in shared memory. If there is no
-   space for the new record, <function>XLogInsertRecord</function> will have
-   to write (move to kernel cache) a few filled <acronym>WAL</acronym>
-   buffers. This is undesirable because <function>XLogInsertRecord</function>
-   is used on every database low level modification (for example, row
-   insertion) at a time when an exclusive lock is held on affected
-   data pages, so the operation needs to be as fast as possible.  What
-   is worse, writing <acronym>WAL</acronym> buffers might also force the
-   creation of a new WAL segment, which takes even more
-   time. Normally, <acronym>WAL</acronym> buffers should be written
-   and flushed by an <function>XLogFlush</function> request, which is
-   made, for the most part, at transaction commit time to ensure that
-   transaction records are flushed to permanent storage. On systems
-   with high WAL output, <function>XLogFlush</function> requests might
-   not occur often enough to prevent <function>XLogInsertRecord</function>
-   from having to do writes.  On such systems
-   one should increase the number of <acronym>WAL</acronym> buffers by
-   modifying the <xref linkend="guc-wal-buffers"/> parameter.  When
-   <xref linkend="guc-full-page-writes"/> is set and the system is very busy,
-   setting <varname>wal_buffers</varname> higher will help smooth response times
-   during the period immediately following each checkpoint.
+   有两个常用的内部 <acronym>WAL</acronym> 函数：
+   <function>XLogInsertRecord</function> 和 <function>XLogFlush</function>。
+   <function>XLogInsertRecord</function> 用于把新记录放入共享内存中的 <acronym>WAL</acronym> 缓冲区。如果没有空间容纳新记录，<function>XLogInsertRecord</function> 就不得不写出（移动到内核缓存）几个已填满的 <acronym>WAL</acronym> 缓冲区。这是不可取的，因为每次数据库底层修改（例如插入行）时都会用到 <function>XLogInsertRecord</function>，而此时受影响的数据页上持有排他锁，所以该操作需要尽可能快。更糟的是，写出 <acronym>WAL</acronym> 缓冲区还可能强制创建新的 WAL 段，这会花费更多时间。正常情况下，<acronym>WAL</acronym> 缓冲区应该由 <function>XLogFlush</function> 请求写出并刷盘，该请求大部分在事务提交时发出，以确保事务记录被刷到永久存储。在 WAL 输出量很大的系统上，<function>XLogFlush</function> 请求可能不够频繁，无法避免 <function>XLogInsertRecord</function> 不得不执行写出。在此类系统上，应通过修改 <xref linkend="guc-wal-buffers"/> 参数来增加 <acronym>WAL</acronym> 缓冲区的数量。当设置了 <xref linkend="guc-full-page-writes"/> 且系统非常繁忙时，将 <varname>wal_buffers</varname> 设得更高有助于在每次检查点之后紧接着的那段时间内平滑响应时间。
   </para>
 
   <para>
-   The <xref linkend="guc-commit-delay"/> parameter defines for how many
-   microseconds a group commit leader process will sleep after acquiring a
-   lock within <function>XLogFlush</function>, while group commit
-   followers queue up behind the leader.  This delay allows other server
-   processes to add their commit records to the WAL buffers so that all of
-   them will be flushed by the leader's eventual sync operation.  No sleep
-   will occur if <xref linkend="guc-fsync"/> is not enabled, or if fewer
-   than <xref linkend="guc-commit-siblings"/> other sessions are currently
-   in active transactions; this avoids sleeping when it's unlikely that
-   any other session will commit soon.  Note that on some platforms, the
-   resolution of a sleep request is ten milliseconds, so that any nonzero
-   <varname>commit_delay</varname> setting between 1 and 10000
-   microseconds would have the same effect.  Note also that on some
-   platforms, sleep operations may take slightly longer than requested by
-   the parameter.
+   <xref linkend="guc-commit-delay"/> 参数定义了组提交领导者进程在获得 <function>XLogFlush</function> 中的锁之后将睡眠多少微秒，在此期间组提交跟随者在领导者后面排队。这段延迟允许其他服务器进程把它们的提交记录加入 WAL 缓冲区，以便它们全部由领导者最终的同步操作刷出。如果未启用 <xref linkend="guc-fsync"/>，或者当前处于活动事务中的其他会话少于 <xref linkend="guc-commit-siblings"/> 个，则不会发生睡眠；这样可避免在其他会话不太可能很快提交时进行睡眠。请注意，在某些平台上，睡眠请求的分辨率为十毫秒，因此 1 到 10000 微秒之间任何非零的 <varname>commit_delay</varname> 设置都会产生相同的效果。另请注意，在某些平台上，睡眠操作可能比参数请求的时间稍长。
   </para>
 
   <para>
-   Since the purpose of <varname>commit_delay</varname> is to allow the
-   cost of each flush operation to be amortized across concurrently
-   committing transactions (potentially at the expense of transaction
-   latency), it is necessary to quantify that cost before the setting can
-   be chosen intelligently.  The higher that cost is, the more effective
-   <varname>commit_delay</varname> is expected to be in increasing
-   transaction throughput, up to a point.  The <xref
-   linkend="pgtestfsync"/> program can be used to measure the average time
-   in microseconds that a single WAL flush operation takes.  A value of
-   half of the average time the program reports it takes to flush after a
-   single 8kB write operation is often the most effective setting for
-   <varname>commit_delay</varname>, so this value is recommended as the
-   starting point to use when optimizing for a particular workload.  While
-   tuning <varname>commit_delay</varname> is particularly useful when the
-   WAL is stored on high-latency rotating disks, benefits can be
-   significant even on storage media with very fast sync times, such as
-   solid-state drives or RAID arrays with a battery-backed write cache;
-   but this should definitely be tested against a representative workload.
-   Higher values of <varname>commit_siblings</varname> should be used in
-   such cases, whereas smaller <varname>commit_siblings</varname> values
-   are often helpful on higher latency media.  Note that it is quite
-   possible that a setting of <varname>commit_delay</varname> that is too
-   high can increase transaction latency by so much that total transaction
-   throughput suffers.
+   由于 <varname>commit_delay</varname> 的目的是让每次刷写操作的成本分摊到并发提交的事务上（可能以事务延迟为代价），因此在明智地选择该设置之前，有必要量化该成本。该成本越高，<varname>commit_delay</varname> 在提高事务吞吐量方面预期就越有效，直至某个限度。<xref
+   linkend="pgtestfsync"/> 程序可用于测量单次 WAL 刷写操作所花费的平均时间（以微秒计）。程序报告的、在单次 8kB 写操作之后执行刷写所需平均时间的一半，通常是对 <varname>commit_delay</varname> 最有效的设置，因此建议将此值作为针对特定工作负载进行优化时的起点。虽然当 WAL 存储在高延迟的旋转磁盘上时，调整 <varname>commit_delay</varname> 特别有用，但即使在同步时间非常快的存储介质上（例如固态驱动器或带电池后备写缓存的 RAID 阵列），收益也可能很显著；不过这一定要针对有代表性的工作负载进行测试。在这些情况下应使用较大的 <varname>commit_siblings</varname> 值，而较小的 <varname>commit_siblings</varname> 值在高延迟介质上通常有帮助。请注意，<varname>commit_delay</varname> 设置过高很可能会使事务延迟增加过多，以致总事务吞吐量受损。
   </para>
 
   <para>
-   When <varname>commit_delay</varname> is set to zero (the default), it
-   is still possible for a form of group commit to occur, but each group
-   will consist only of sessions that reach the point where they need to
-   flush their commit records during the window in which the previous
-   flush operation (if any) is occurring.  At higher client counts a
-   <quote>gangway effect</quote> tends to occur, so that the effects of group
-   commit become significant even when <varname>commit_delay</varname> is
-   zero, and thus explicitly setting <varname>commit_delay</varname> tends
-   to help less.  Setting <varname>commit_delay</varname> can only help
-   when (1) there are some concurrently committing transactions, and (2)
-   throughput is limited to some degree by commit rate; but with high
-   rotational latency this setting can be effective in increasing
-   transaction throughput with as few as two clients (that is, a single
-   committing client with one sibling transaction).
+   当 <varname>commit_delay</varname> 设置为零（默认值）时，仍然可能出现某种形式的组提交，但每个组只包含那些在前一次刷写操作（如果有）发生的时间窗口内到达需要刷写其提交记录这一点的会话。在客户端数量较多时，往往会出现<quote>舷梯效应</quote>，因此即使 <varname>commit_delay</varname> 为零，组提交的效果也会变得显著，于是显式设置 <varname>commit_delay</varname> 往往帮助较小。设置 <varname>commit_delay</varname> 只有在以下情况下才有帮助：(1) 存在一些并发提交的事务，并且 (2) 吞吐量在某种程度上受提交速率限制；但在高旋转延迟的情况下，即使只有两个客户端（即一个提交客户端和一个同级事务），该设置也能有效提高事务吞吐量。
   </para>
 
   <para>
@@ -588,55 +409,15 @@
   </para>
 
   <para>
-   Enabling the <xref linkend="guc-wal-debug"/> configuration parameter
-   (provided that <productname>PostgreSQL</productname> has been
-   compiled with support for it) will result in each
-   <function>XLogInsertRecord</function> and <function>XLogFlush</function>
-   <acronym>WAL</acronym> call being logged to the server log. This
-   option might be replaced by a more general mechanism in the future.
+   启用 <xref linkend="guc-wal-debug"/> 配置参数（前提是 <productname>PostgreSQL</productname> 在编译时包含了对其的支持）将导致每次 <function>XLogInsertRecord</function> 和 <function>XLogFlush</function> <acronym>WAL</acronym> 调用都被记录到服务器日志中。此选项将来可能会被更通用的机制所取代。
   </para>
 
   <para>
-   There are two internal functions to write WAL data to disk:
-   <function>XLogWrite</function> and <function>issue_xlog_fsync</function>.
-   When <xref linkend="guc-track-wal-io-timing"/> is enabled, the total
-   amounts of time <function>XLogWrite</function> writes and
-   <function>issue_xlog_fsync</function> syncs WAL data to disk are counted as
-   <varname>write_time</varname> and <varname>fsync_time</varname> in
-   <xref linkend="pg-stat-io-view"/> for the <varname>object</varname>
-   <literal>wal</literal>, respectively.
-   <function>XLogWrite</function> is normally called by
-   <function>XLogInsertRecord</function> (when there is no space for the new
-   record in WAL buffers), <function>XLogFlush</function> and the WAL writer,
-   to write WAL buffers to disk and call <function>issue_xlog_fsync</function>.
-   <function>issue_xlog_fsync</function> is normally called by
-   <function>XLogWrite</function> to sync WAL files to disk.
-   If <varname>wal_sync_method</varname> is either
-   <literal>open_datasync</literal> or <literal>open_sync</literal>,
-   a write operation in <function>XLogWrite</function> guarantees to sync written
-   WAL data to disk and <function>issue_xlog_fsync</function> does nothing.
-   If <varname>wal_sync_method</varname> is either <literal>fdatasync</literal>,
-   <literal>fsync</literal>, or <literal>fsync_writethrough</literal>,
-   the write operation moves WAL buffers to kernel cache and
-   <function>issue_xlog_fsync</function> syncs them to disk. Regardless
-   of the setting of <varname>track_wal_io_timing</varname>, the number
-   of times <function>XLogWrite</function> writes and
-   <function>issue_xlog_fsync</function> syncs WAL data to disk are also
-   counted as <varname>writes</varname> and <varname>fsyncs</varname>
-   in <structname>pg_stat_io</structname> for the <varname>object</varname>
-   <literal>wal</literal>, respectively.
+   有两个内部函数用于将 WAL 数据写入磁盘：<function>XLogWrite</function> 和 <function>issue_xlog_fsync</function>。当启用 <xref linkend="guc-track-wal-io-timing"/> 时，<function>XLogWrite</function> 写入和 <function>issue_xlog_fsync</function> 将 WAL 数据同步到磁盘的总时间分别被计为 <xref linkend="pg-stat-io-view"/> 中 <varname>object</varname> <literal>wal</literal> 的 <varname>write_time</varname> 和 <varname>fsync_time</varname>。<function>XLogWrite</function> 通常由 <function>XLogInsertRecord</function>（当 WAL 缓冲区中没有空间容纳新记录时）、<function>XLogFlush</function> 和 WAL writer 调用，以将 WAL 缓冲区写入磁盘并调用 <function>issue_xlog_fsync</function>。<function>issue_xlog_fsync</function> 通常由 <function>XLogWrite</function> 调用，以将 WAL 文件同步到磁盘。如果 <varname>wal_sync_method</varname> 是 <literal>open_datasync</literal> 或 <literal>open_sync</literal>，则 <function>XLogWrite</function> 中的写操作保证将已写入的 WAL 数据同步到磁盘，而 <function>issue_xlog_fsync</function> 不做任何事。如果 <varname>wal_sync_method</varname> 是 <literal>fdatasync</literal>、<literal>fsync</literal> 或 <literal>fsync_writethrough</literal>，则写操作将 WAL 缓冲区移动到内核缓存，然后 <function>issue_xlog_fsync</function> 将它们同步到磁盘。无论 <varname>track_wal_io_timing</varname> 的设置如何，<function>XLogWrite</function> 写入和 <function>issue_xlog_fsync</function> 将 WAL 数据同步到磁盘的次数也分别被计为 <structname>pg_stat_io</structname> 中 <varname>object</varname> <literal>wal</literal> 的 <varname>writes</varname> 和 <varname>fsyncs</varname>。
   </para>
 
   <para>
-   The <xref linkend="guc-recovery-prefetch"/> parameter can be used to reduce
-   I/O wait times during recovery by instructing the kernel to initiate reads
-   of disk blocks that will soon be needed but are not currently in
-   <productname>PostgreSQL</productname>'s buffer pool.
-   The <xref linkend="guc-maintenance-io-concurrency"/> and
-   <xref linkend="guc-wal-decode-buffer-size"/> settings limit prefetching
-   concurrency and distance, respectively.  By default, it is set to
-   <literal>try</literal>, which enables the feature on systems that support
-   issuing read-ahead advice.
+   <xref linkend="guc-recovery-prefetch"/> 参数可用于减少恢复期间的 I/O 等待时间，方法是指示内核启动对即将需要但当前不在 <productname>PostgreSQL</productname> 缓冲区池中的磁盘块的读取。<xref linkend="guc-maintenance-io-concurrency"/> 和 <xref linkend="guc-wal-decode-buffer-size"/> 设置分别限制预取的并发度和距离。默认情况下，它被设置为 <literal>try</literal>，这在支持发出预读建议的系统上启用该特性。
   </para>
  </sect1>
 
