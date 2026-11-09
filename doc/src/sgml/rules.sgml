@@ -28,229 +28,159 @@
 </para>
 
 <sect1 id="querytree">
-<title>The Query Tree</title>
+<title>查询树</title>
 
 <indexterm zone="querytree">
  <primary>query tree</primary>
 </indexterm>
 
 <para>
-    To understand how the rule system works it is necessary to know
-    when it is invoked and what its input and results are.
+    要理解规则系统如何工作，必须知道它何时被调用，以及它的输入和结果是什么。
 </para>
 
 <para>
-    The rule system is located between the parser and the planner.
-    It takes the output of the parser, one query tree, and the user-defined
-    rewrite rules, which are also
-    query trees with some extra information, and creates zero or more
-    query trees as result. So its input and output are always things
-    the parser itself could have produced and thus, anything it sees
-    is basically representable as an <acronym>SQL</acronym> statement.
+    规则系统位于解析器和规划器之间。它接收解析器的输出（一棵查询树）以及用户定义的重写规则（这些规则也是带有一些额外信息的查询树），并生成零棵或多棵查询树作为结果。因此它的输入和输出始终是解析器本身能够产生的东西，所以它看到的任何内容基本上都可以表示为一条 <acronym>SQL</acronym> 语句。
 </para>
 
 <para>
-    Now what is a query tree? It is an internal representation of an
-    <acronym>SQL</acronym> statement where the single parts that it is
-    built from are stored separately. These query trees can be shown
-    in the server log if you set the configuration parameters
-    <varname>debug_print_parse</varname>,
-    <varname>debug_print_rewritten</varname>, or
-    <varname>debug_print_plan</varname>.  The rule actions are also
-    stored as query trees, in the system catalog
-    <structname>pg_rewrite</structname>.  They are not formatted like
-    the log output, but they contain exactly the same information.
+    那么什么是查询树？它是 <acronym>SQL</acronym> 语句的一种内部表示，其中构成该语句的各个部分被分别存储。如果设置配置参数 <varname>debug_print_parse</varname>、<varname>debug_print_rewritten</varname> 或 <varname>debug_print_plan</varname>，就可以在服务器日志中显示这些查询树。规则动作也以查询树的形式存储在系统目录 <structname>pg_rewrite</structname> 中。它们的格式与日志输出不同，但包含的信息完全相同。
 </para>
 
 <para>
-    Reading a raw query tree requires some experience.  But since
-    <acronym>SQL</acronym> representations of query trees are
-    sufficient to understand the rule system, this chapter will not
-    teach how to read them.
+    阅读原始查询树需要一些经验。但由于查询树的 <acronym>SQL</acronym> 表示足以理解规则系统，本章不会教授如何阅读它们。
 </para>
 
 <para>
-    When reading the <acronym>SQL</acronym> representations of the
-    query trees in this chapter it is necessary to be able to identify
-    the parts the statement is broken into when it is in the query tree
-    structure. The parts of a query tree are
+    在阅读本章中查询树的 <acronym>SQL</acronym> 表示时，必须能够识别出语句在查询树结构中分解成的各个部分。查询树的各个部分是
 
 <variablelist>
     <varlistentry>
     <term>
-        the command type
+        命令类型
     </term>
     <listitem>
     <para>
-        This is a simple value telling which command
-        (<command>SELECT</command>, <command>INSERT</command>,
-        <command>UPDATE</command>, <command>DELETE</command>) produced
-        the query tree.
+        这是一个简单的值，说明是哪个命令
+        （<command>SELECT</command>、<command>INSERT</command>、
+        <command>UPDATE</command>、<command>DELETE</command>）产生了该查询树。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the range table
+        范围表
       <indexterm><primary>range table</primary></indexterm>
     </term>
     <listitem>
     <para>
-        The range table is a list of relations that are used in the query.
-        In a <command>SELECT</command> statement these are the relations given after
-        the <literal>FROM</literal> key word.
+        范围表是查询中所使用的关系的列表。
+        在 <command>SELECT</command> 语句中，这些就是 <literal>FROM</literal> 关键字之后给出的关系。
     </para>
 
     <para>
-        Every range table entry identifies a table or view and tells
-        by which name it is called in the other parts of the query.
-        In the query tree, the range table entries are referenced by
-        number rather than by name, so here it doesn't matter if there
-        are duplicate names as it would in an <acronym>SQL</acronym>
-        statement. This can happen after the range tables of rules
-        have been merged in. The examples in this chapter will not have
-        this situation.
+        每个范围表项标识一个表或视图，并说明在查询的其他部分中
+        它用哪个名称来称呼。
+        在查询树中，范围表项是通过编号而不是名称来引用的，因此这里
+        是否存在重复名称并不重要，而在 <acronym>SQL</acronym>
+        语句中则会有影响。这种情况可能在规则的
+        范围表被合并进来之后发生。本章中的示例不会出现
+        这种情况。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the result relation
+        结果关系
     </term>
     <listitem>
     <para>
-        This is an index into the range table that identifies the
-        relation where the results of the query go.
+        这是范围表中的一个索引，用于标识查询结果所去向的关系。
     </para>
 
     <para>
-        <command>SELECT</command> queries don't have a result
-        relation. (The special case of <command>SELECT INTO</command> is
-        mostly identical to <command>CREATE TABLE</command> followed by
-        <literal>INSERT ... SELECT</literal>, and is not discussed
-        separately here.)
+        <command>SELECT</command> 查询没有结果关系。（<command>SELECT INTO</command> 这种特殊情况与先执行 <command>CREATE TABLE</command> 再执行 <literal>INSERT ... SELECT</literal> 大体相同，这里不再单独讨论。）
     </para>
 
     <para>
-        For <command>INSERT</command>, <command>UPDATE</command>, and
-        <command>DELETE</command> commands, the result relation is the table
-        (or view!) where the changes are to take effect.
+        对于 <command>INSERT</command>、<command>UPDATE</command> 和 <command>DELETE</command> 命令，结果关系是更改将要生效的表（或视图！）。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the target list
+        目标列表
     <indexterm><primary>target list</primary></indexterm>
     </term>
     <listitem>
     <para>
-        The target list is a list of expressions that define the
-        result of the query.  In the case of a
-        <command>SELECT</command>, these expressions are the ones that
-        build the final output of the query.  They correspond to the
-        expressions between the key words <command>SELECT</command>
-        and <command>FROM</command>.  (<literal>*</literal> is just an
-        abbreviation for all the column names of a relation.  It is
-        expanded by the parser into the individual columns, so the
-        rule system never sees it.)
+        目标列表是一组定义查询结果的表达式。对于 <command>SELECT</command>，这些表达式就是构建查询最终输出的表达式。它们对应于关键字 <command>SELECT</command> 和 <command>FROM</command> 之间的表达式。（<literal>*</literal> 只是某个关系所有列名的简写。解析器会把它展开为各个单独的列，因此规则系统从不会看到它。）
     </para>
 
     <para>
-        <command>DELETE</command> commands don't need a normal target list
-        because they don't produce any result.  Instead, the planner
-        adds a special <acronym>CTID</acronym> entry to the empty target list,
-        to allow the executor to find the row to be deleted.
-        (<acronym>CTID</acronym> is added when the result relation is an ordinary
-        table.  If it is a view, a whole-row variable is added instead, by
-        the rule system, as described in <xref linkend="rules-views-update"/>.)
+        <command>DELETE</command> 命令不需要普通的目标列表，因为它们不产生任何结果。取而代之的是，规划器会向空的目标列表中添加一个特殊的 <acronym>CTID</acronym> 项，以便执行器能够找到要删除的行。（当结果关系是普通表时会添加 <acronym>CTID</acronym>。如果结果关系是视图，则改由规则系统添加一个整行变量，如 <xref linkend="rules-views-update"/> 所述。）
     </para>
 
     <para>
-        For <command>INSERT</command> commands, the target list describes
-        the new rows that should go into the result relation. It consists of the
-        expressions in the <literal>VALUES</literal> clause or the ones from the
-        <command>SELECT</command> clause in <literal>INSERT
-        ... SELECT</literal>.  The first step of the rewrite process adds
-        target list entries for any columns that were not assigned to by
-        the original command but have defaults.  Any remaining columns (with
-        neither a given value nor a default) will be filled in by the
-        planner with a constant null expression.
+        对于 <command>INSERT</command> 命令，目标列表描述应进入结果关系的新行。它由 <literal>VALUES</literal> 子句中的表达式或 <literal>INSERT
+        ... SELECT</literal> 中 <command>SELECT</command> 子句的表达式组成。重写过程的第一步是为那些未被原始命令赋值但具有默认值的列添加目标列表项。任何剩余的列（既没有给定值也没有默认值）将由规划器用常量 null 表达式填充。
     </para>
 
     <para>
-        For <command>UPDATE</command> commands, the target list
-        describes the new rows that should replace the old ones. In the
-        rule system, it contains just the expressions from the <literal>SET
-        column = expression</literal> part of the command.  The planner will
-        handle missing columns by inserting expressions that copy the values
-        from the old row into the new one.  Just as for <command>DELETE</command>,
-        a <acronym>CTID</acronym> or whole-row variable is added so that
-        the executor can identify the old row to be updated.
+        对于 <command>UPDATE</command> 命令，目标列表描述应替换旧行的新行。在规则系统中，它只包含命令中 <literal>SET
+        column = expression</literal> 部分的表达式。规划器将通过插入把旧行中的值复制到新行中的表达式来处理缺失的列。正如 <command>DELETE</command> 一样，会添加一个 <acronym>CTID</acronym> 或整行变量，以便执行器能够识别要更新的旧行。
     </para>
 
     <para>
-        Every entry in the target list contains an expression that can
-        be a constant value, a variable pointing to a column of one
-        of the relations in the range table, a parameter, or an expression
-        tree made of function calls, constants, variables, operators, etc.
+        目标列表中的每一项都包含一个表达式，它可以是常量值、指向范围表中某个关系的列的变量、参数，或由函数调用、常量、变量、运算符等构成的表达式树。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the qualification
+        限定条件
     </term>
     <listitem>
     <para>
-        The query's qualification is an expression much like one of
-        those contained in the target list entries. The result value of
-        this expression is a Boolean that tells whether the operation
-        (<command>INSERT</command>, <command>UPDATE</command>,
-        <command>DELETE</command>, or <command>SELECT</command>) for the
-        final result row should be executed or not. It corresponds to the <literal>WHERE</literal> clause
-        of an <acronym>SQL</acronym> statement.
+        查询的限定条件是一个表达式，与目标列表项中包含的表达式非常相似。该表达式的结果值是一个布尔值，用于说明是否应执行针对最终结果行的操作（<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>SELECT</command>）。它对应于 <acronym>SQL</acronym> 语句的 <literal>WHERE</literal> 子句。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the join tree
+        连接树
     </term>
     <listitem>
     <para>
-        The query's join tree shows the structure of the <literal>FROM</literal> clause.
-        For a simple query like <literal>SELECT ... FROM a, b, c</literal>, the join tree is just
-        a list of the <literal>FROM</literal> items, because we are allowed to join them in
-        any order.  But when <literal>JOIN</literal> expressions, particularly outer joins,
-        are used, we have to join in the order shown by the joins.
-        In that case, the join tree shows the structure of the <literal>JOIN</literal> expressions.  The
-        restrictions associated with particular <literal>JOIN</literal> clauses (from <literal>ON</literal> or
-        <literal>USING</literal> expressions) are stored as qualification expressions attached
-        to those join-tree nodes.  It turns out to be convenient to store
-        the top-level <literal>WHERE</literal> expression as a qualification attached to the
-        top-level join-tree item, too.  So really the join tree represents
-        both the <literal>FROM</literal> and <literal>WHERE</literal> clauses of a <command>SELECT</command>.
+        查询的连接树显示了 <literal>FROM</literal> 子句的结构。
+        对于像 <literal>SELECT ... FROM a, b, c</literal> 这样的简单查询，连接树只是
+        <literal>FROM</literal> 项的列表，因为我们可以按任意顺序连接它们。
+        但是当使用 <literal>JOIN</literal> 表达式时，特别是外连接，
+        我们必须按照连接所显示的顺序进行连接。
+        在这种情况下，连接树显示了 <literal>JOIN</literal> 表达式的结构。与
+        特定 <literal>JOIN</literal> 子句相关联的限制（来自 <literal>ON</literal> 或
+        <literal>USING</literal> 表达式）被存储为附加到那些连接树节点上的限定表达式。
+        事实证明，将顶层 <literal>WHERE</literal> 表达式也存储为附加到
+        顶层连接树项上的限定条件是很方便的。因此，实际上连接树同时
+        表示了 <command>SELECT</command> 的 <literal>FROM</literal> 和 <literal>WHERE</literal> 子句。
     </para>
     </listitem>
     </varlistentry>
 
     <varlistentry>
     <term>
-        the others
+        其他项
     </term>
     <listitem>
     <para>
-        The other parts of the query tree like the <literal>ORDER BY</literal>
-        clause aren't of interest here. The rule system
-        substitutes some entries there while applying rules, but that
-        doesn't have much to do with the fundamentals of the rule
-        system.
+        查询树的其他部分（如 <literal>ORDER BY</literal>
+        子句）在这里并不令人感兴趣。规则系统
+        在应用规则时会在那里替换一些条目，但这
+        与规则系统的基本原理没有太大关系。
     </para>
     </listitem>
     </varlistentry>
