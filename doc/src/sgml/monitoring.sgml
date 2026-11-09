@@ -6577,46 +6577,29 @@ if (TRACE_POSTGRESQL_TRANSACTION_START_ENABLED())
  </sect1>
 
  <sect1 id="diskusage">
-  <title>Monitoring Disk Usage</title>
+  <title>监控磁盘使用情况</title>
 
   <para>
-   This section discusses how to monitor the disk usage of a
-   <productname>PostgreSQL</productname> database system.
+   本节讨论如何监控一个 <productname>PostgreSQL</productname> 数据库系统的磁盘使用情况。
   </para>
 
   <sect2 id="disk-usage">
-   <title>Determining Disk Usage</title>
+   <title>确定磁盘使用情况</title>
 
    <indexterm zone="disk-usage">
     <primary>disk usage</primary>
    </indexterm>
 
    <para>
-    Each table has a primary heap disk file where most of the data is
-    stored. If the table has any columns with potentially-wide values,
-    there also might be a <acronym>TOAST</acronym> file associated with the table,
-    which is used to store values too wide to fit comfortably in the main
-    table (see <xref linkend="storage-toast"/>).  There will be one valid index
-    on the <acronym>TOAST</acronym> table, if present. There also might be indexes
-    associated with the base table.  Each table and index is stored in a
-    separate disk file &mdash; possibly more than one file, if the file would
-    exceed one gigabyte.  Naming conventions for these files are described
-    in <xref linkend="storage-file-layout"/>.
+    每个表都有一个主堆磁盘文件，其中存储了大部分数据。如果表中有任何可能很宽的列，那么还可能有一个与该表关联的 <acronym>TOAST</acronym> 文件，用于存储过宽而无法舒适地放入主表的值（参见 <xref linkend="storage-toast"/>）。如果存在 <acronym>TOAST</acronym> 表，则其上会有一个有效索引。基础表上也可能有关联的索引。每个表和索引都存储在一个单独的磁盘文件 &mdash; 中，如果文件超过 1 GB，则可能不止一个文件。这些文件的命名约定在 <xref linkend="storage-file-layout"/> 中描述。
    </para>
 
    <para>
-    You can monitor disk space in three ways:
-    using the SQL functions listed in <xref linkend="functions-admin-dbsize"/>,
-    using the <xref linkend="oid2name"/> module, or
-    using manual inspection of the system catalogs.
-    The SQL functions are the easiest to use and are generally recommended.
-    The remainder of this section shows how to do it by inspection of the
-    system catalogs.
+    你可以通过三种方式监控磁盘空间：使用 <xref linkend="functions-admin-dbsize"/> 中列出的 SQL 函数，使用 <xref linkend="oid2name"/> 模块，或者手动检查系统目录。SQL 函数最易于使用，通常也是推荐的方式。本节其余部分展示如何通过检查系统目录来实现。
    </para>
 
    <para>
-    Using <application>psql</application> on a recently vacuumed or analyzed
-    database, you can issue queries to see the disk usage of any table:
+    在最近执行过 VACUUM 或 ANALYZE 的数据库上使用 <application>psql</application>，你可以发出查询来查看任何表的磁盘使用情况：
 <programlisting>
 SELECT pg_relation_filepath(oid), relpages FROM pg_class WHERE relname = 'customer';
 
@@ -6625,15 +6608,11 @@ SELECT pg_relation_filepath(oid), relpages FROM pg_class WHERE relname = 'custom
  base/16384/16806     |       60
 (1 row)
 </programlisting>
-    Each page is typically 8 kilobytes. (Remember, <structfield>relpages</structfield>
-    is only updated by <command>VACUUM</command>, <command>ANALYZE</command>, and
-    a few DDL commands such as <command>CREATE INDEX</command>.)  The file path name
-    is of interest if you want to examine the table's disk file directly.
+    每个页面通常为 8 KB。（请记住，<structfield>relpages</structfield> 仅由 <command>VACUUM</command>、<command>ANALYZE</command> 以及少数 DDL 命令（例如 <command>CREATE INDEX</command>）更新。）如果你想直接检查表的磁盘文件，文件路径名会很有用。
    </para>
 
    <para>
-    To show the space used by <acronym>TOAST</acronym> tables, use a query
-    like the following:
+    要显示 <acronym>TOAST</acronym> 表占用的空间，请使用类似下面的查询：
 <programlisting>
 SELECT relname, relpages
 FROM pg_class,
@@ -6654,7 +6633,7 @@ ORDER BY relname;
    </para>
 
    <para>
-    You can easily display index sizes, too:
+    你也可以轻松地显示索引大小：
 <programlisting>
 SELECT c2.relname, c2.relpages
 FROM pg_class c, pg_class c2, pg_index i
@@ -6670,8 +6649,7 @@ ORDER BY c2.relname;
    </para>
 
    <para>
-    It is easy to find your largest tables and indexes using this
-    information:
+    使用这些信息，很容易找到你最大的表和索引：
 <programlisting>
 SELECT relname, relpages
 FROM pg_class
@@ -6686,35 +6664,25 @@ ORDER BY relpages DESC;
   </sect2>
 
   <sect2 id="disk-full">
-   <title>Disk Full Failure</title>
+   <title>磁盘满故障</title>
 
    <para>
-    The most important disk monitoring task of a database administrator
-    is to make sure the disk doesn't become full.  A filled data disk will
-    not result in data corruption, but it might prevent useful activity
-    from occurring. If the disk holding the WAL files grows full, database
-    server panic and consequent shutdown might occur.
+    数据库管理员最重要的磁盘监控任务是确保磁盘不会变满。数据磁盘被填满不会导致数据损坏，但可能会阻止有用的活动发生。如果存放 WAL 文件的磁盘变满，可能会导致数据库服务器 panic 并随之关闭。
    </para>
 
    <para>
-    If you cannot free up additional space on the disk by deleting
-    other things, you can move some of the database files to other file
-    systems by making use of tablespaces. See <xref
-    linkend="manage-ag-tablespaces"/> for more information about that.
+    如果你无法通过删除其他内容来释放磁盘上的额外空间，可以利用表空间将部分数据库文件移动到其他文件系统。有关这方面的更多信息，请参见 <xref
+    linkend="manage-ag-tablespaces"/>。
    </para>
 
    <tip>
     <para>
-     Some file systems perform badly when they are almost full, so do
-     not wait until the disk is completely full to take action.
+     有些文件系统在几乎写满时性能会很差，所以不要等到磁盘完全写满才采取行动。
     </para>
    </tip>
 
    <para>
-    If your system supports per-user disk quotas, then the database
-    will naturally be subject to whatever quota is placed on the user
-    the server runs as.  Exceeding the quota will have the same bad
-    effects as running out of disk space entirely.
+    如果你的系统支持按用户磁盘配额，那么数据库自然会受到施加于服务器所运行用户上的任何配额的限制。超出配额与磁盘空间完全耗尽具有同样不良的影响。
    </para>
   </sect2>
  </sect1>
