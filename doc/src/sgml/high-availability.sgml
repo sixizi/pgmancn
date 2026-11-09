@@ -366,66 +366,31 @@ protocol to make nodes agree on a serializable transactional order.
 
 
  <sect1 id="warm-standby">
- <title>Log-Shipping Standby Servers</title>
+ <title>日志传送备用服务器</title>
 
 
   <para>
-   Continuous archiving can be used to create a <firstterm>high
-   availability</firstterm> (HA) cluster configuration with one or more
-   <firstterm>standby servers</firstterm> ready to take over operations if the
-   primary server fails. This capability is widely referred to as
-   <firstterm>warm standby</firstterm> or <firstterm>log shipping</firstterm>.
+   持续归档可用于创建具有一台或多台<firstterm>备用服务器</firstterm>的<firstterm>高可用性</firstterm>（HA）数据库集簇配置，这些备用服务器已准备好，一旦主服务器发生故障即可接管操作。这种能力通常被称为<firstterm>温备用</firstterm>或<firstterm>日志传送</firstterm>。
   </para>
 
   <para>
-   The primary and standby server work together to provide this capability,
-   though the servers are only loosely coupled. The primary server operates
-   in continuous archiving mode, while each standby server operates in
-   continuous recovery mode, reading the WAL files from the primary. No
-   changes to the database tables are required to enable this capability,
-   so it offers low administration overhead compared to some other
-   replication solutions. This configuration also has relatively low
-   performance impact on the primary server.
+   主服务器和备用服务器协同工作以提供这种能力，尽管这些服务器之间只是松散耦合的。主服务器以持续归档模式运行，而每台备用服务器则以持续恢复模式运行，从主服务器读取 WAL 文件。启用这种能力不需要更改数据库表，因此与某些其他复制方案相比，它的管理开销较低。这种配置对主服务器的性能影响也相对较小。
   </para>
 
   <para>
-   Directly moving WAL records from one database server to another
-   is typically described as log shipping. <productname>PostgreSQL</productname>
-   implements file-based log shipping by transferring WAL records
-   one file (WAL segment) at a time. WAL files (16MB) can be
-   shipped easily and cheaply over any distance, whether it be to an
-   adjacent system, another system at the same site, or another system on
-   the far side of the globe. The bandwidth required for this technique
-   varies according to the transaction rate of the primary server.
-   Record-based log shipping is more granular and streams WAL changes
-   incrementally over a network connection (see <xref
-   linkend="streaming-replication"/>).
+   直接将 WAL 记录从一台数据库服务器移动到另一台数据库服务器通常被称为日志传送。<productname>PostgreSQL</productname>
+   通过一次传输一个文件（WAL 段）的 WAL 记录来实现基于文件的日志传送。WAL 文件（16MB）可以轻松且廉价地传送到任何距离，无论是传送到相邻系统、同一站点上的另一系统，还是地球另一端的另一系统。此技术所需的带宽随主服务器的事务速率而变化。
+   基于记录的日志传送粒度更细，它通过网络连接以增量方式流式传输 WAL 变更（参见 <xref
+   linkend="streaming-replication"/>）。
   </para>
 
   <para>
-   It should be noted that log shipping is asynchronous, i.e., the WAL
-   records are shipped after transaction commit. As a result, there is a
-   window for data loss should the primary server suffer a catastrophic
-   failure; transactions not yet shipped will be lost.  The size of the
-   data loss window in file-based log shipping can be limited by use of the
-   <varname>archive_timeout</varname> parameter, which can be set as low
-   as a few seconds.  However such a low setting will
-   substantially increase the bandwidth required for file shipping.
-   Streaming replication (see <xref linkend="streaming-replication"/>)
-   allows a much smaller window of data loss.
+   应当注意，日志传送是异步的，即 WAL 记录在事务提交之后才被传送。因此，如果主服务器遭遇灾难性故障，就会存在一个数据丢失窗口；尚未传送的事务将会丢失。在基于文件的日志传送中，可以通过使用 <varname>archive_timeout</varname> 参数来限制数据丢失窗口的大小，该参数可以设置为低至几秒。然而，如此低的设置会大幅增加文件传送所需的带宽。
+   流复制（参见 <xref linkend="streaming-replication"/>）允许更小的数据丢失窗口。
   </para>
 
   <para>
-   Recovery performance is sufficiently good that the standby will
-   typically be only moments away from full
-   availability once it has been activated. As a result, this is called
-   a warm standby configuration which offers high
-   availability. Restoring a server from an archived base backup and
-   rollforward will take considerably longer, so that technique only
-   offers a solution for disaster recovery, not high availability.
-   A standby server can also be used for read-only queries, in which case
-   it is called a <firstterm>hot standby</firstterm> server. See
-   <xref linkend="hot-standby"/> for more information.
+   恢复性能足够好，备用服务器一旦被激活，通常只需片刻即可达到完全可用状态。因此，这被称为提供高可用性的温备配置。从归档的基础备份恢复服务器并前滚将需要长得多的时间，因此该技术仅提供灾难恢复的解决方案，而不是高可用性。备用服务器也可用于只读查询，在这种情况下它被称为<firstterm>热备</firstterm>服务器。更多信息请参见<xref linkend="hot-standby"/>。
   </para>
 
   <indexterm zone="high-availability">
@@ -453,172 +418,88 @@ protocol to make nodes agree on a serializable transactional order.
   </indexterm>
 
   <sect2 id="standby-planning">
-   <title>Planning</title>
+   <title>规划</title>
 
    <para>
-    It is usually wise to create the primary and standby servers
-    so that they are as similar as possible, at least from the
-    perspective of the database server.  In particular, the path names
-    associated with tablespaces will be passed across unmodified, so both
-    primary and standby servers must have the same mount paths for
-    tablespaces if that feature is used.  Keep in mind that if
-    <xref linkend="sql-createtablespace"/>
-    is executed on the primary, any new mount point needed for it must
-    be created on the primary and all standby servers before the command
-    is executed. Hardware need not be exactly the same, but experience shows
-    that maintaining two identical systems is easier than maintaining two
-    dissimilar ones over the lifetime of the application and system.
-    In any case the hardware architecture must be the same &mdash; shipping
-    from, say, a 32-bit to a 64-bit system will not work.
+    通常明智的做法是让主服务器和备用服务器尽可能相似，至少从数据库服务器的角度来看是如此。特别是，与表空间关联的路径名会未经修改地传递过去，因此如果使用了该特性，主服务器和备用服务器必须具有相同的表空间挂载路径。请记住，如果在主服务器上执行了<xref linkend="sql-createtablespace"/>，则必须在执行该命令之前，在主服务器和所有备用服务器上创建它所需的任何新挂载点。硬件不必完全相同，但经验表明，在应用程序和系统的整个生命周期内，维护两个相同的系统比维护两个不同的系统更容易。无论如何，硬件架构必须相同&mdash;例如，从 32 位系统迁移到 64 位系统将无法工作。
    </para>
 
    <para>
-    In general, log shipping between servers running different major
-    <productname>PostgreSQL</productname> release
-    levels is not possible. It is the policy of the PostgreSQL Global
-    Development Group not to make changes to disk formats during minor release
-    upgrades, so it is likely that running different minor release levels
-    on primary and standby servers will work successfully. However, no
-    formal support for that is offered and you are advised to keep primary
-    and standby servers at the same release level as much as possible.
-    When updating to a new minor release, the safest policy is to update
-    the standby servers first &mdash; a new minor release is more likely
-    to be able to read WAL files from a previous minor release than vice
-    versa.
+    一般而言，在不同主<productname>PostgreSQL</productname>版本级别的服务器之间进行日志传送是不可能的。PostgreSQL 全球开发组的政策是不在次要版本升级期间更改磁盘格式，因此在主服务器和备用服务器上运行不同的次要版本级别很可能可以成功工作。但是，对此不提供正式支持，建议您尽可能让主服务器和备用服务器保持相同的版本级别。在更新到新的次要版本时，最安全的策略是先更新备用服务器&mdash;新的次要版本比旧版本更有可能读取前一次要版本的 WAL 文件，反之则不然。
    </para>
 
   </sect2>
 
   <sect2 id="standby-server-operation" xreflabel="Standby Server Operation">
-   <title>Standby Server Operation</title>
+   <title>备用服务器运行</title>
 
    <para>
-    A server enters standby mode if a
+    服务器在启动时，如果数据目录中存在
     <anchor id="file-standby-signal" xreflabel="standby.signal"/>
     <filename>standby.signal</filename>
     <indexterm><primary><filename>standby.signal</filename></primary></indexterm>
-    file exists in the data directory when the server is started.
+    文件，则进入后备模式。
    </para>
 
    <para>
-    In standby mode, the server continuously applies WAL received from the
-    primary server. The standby server can read WAL from a WAL archive
-    (see <xref linkend="guc-restore-command"/>) or directly from the primary
-    over a TCP connection (streaming replication). The standby server will
-    also attempt to restore any WAL found in the standby cluster's
-    <filename>pg_wal</filename> directory. That typically happens after a server
-    restart, when the standby replays again WAL that was streamed from the
-    primary before the restart, but you can also manually copy files to
-    <filename>pg_wal</filename> at any time to have them replayed.
+    在后备模式下，服务器持续应用从主服务器接收到的 WAL。后备服务器可以从 WAL 归档读取 WAL（参见 <xref linkend="guc-restore-command"/>），也可以通过 TCP 连接直接从主服务器读取（流复制）。后备服务器还会尝试恢复在后备集簇的 <filename>pg_wal</filename> 目录中找到的任何 WAL。这通常发生在服务器重启之后，此时后备服务器会重新重放重启前从主服务器流式传输的 WAL，但你也可以随时手动将文件复制到 <filename>pg_wal</filename> 以便重放它们。
    </para>
 
    <para>
-    At startup, the standby begins by restoring all WAL available in the
-    archive location, calling <varname>restore_command</varname>. Once it
-    reaches the end of WAL available there and <varname>restore_command</varname>
-    fails, it tries to restore any WAL available in the <filename>pg_wal</filename> directory.
-    If that fails, and streaming replication has been configured, the
-    standby tries to connect to the primary server and start streaming WAL
-    from the last valid record found in archive or <filename>pg_wal</filename>. If that fails
-    or streaming replication is not configured, or if the connection is
-    later disconnected, the standby goes back to step 1 and tries to
-    restore the file from the archive again. This loop of retries from the
-    archive, <filename>pg_wal</filename>, and via streaming replication goes on until the server
-    is stopped or is promoted.
+    在启动时，后备服务器首先恢复归档位置中所有可用的 WAL，并调用 <varname>restore_command</varname>。一旦到达那里可用 WAL 的末尾且 <varname>restore_command</varname> 失败，它就会尝试恢复 <filename>pg_wal</filename> 目录中任何可用的 WAL。如果这也失败，并且已配置了流复制，后备服务器会尝试连接到主服务器，并从归档或 <filename>pg_wal</filename> 中找到的最后一条有效记录开始流式传输 WAL。如果这失败，或者未配置流复制，或者连接随后断开，后备服务器会回到第 1 步，再次尝试从归档恢复文件。这个从归档、<filename>pg_wal</filename> 以及通过流复制重试的循环会一直持续，直到服务器停止或被提升。
    </para>
 
    <para>
-    Standby mode is exited and the server switches to normal operation
-    when <command>pg_ctl promote</command> is run, or
-    <function>pg_promote()</function> is called. Before failover,
-    any WAL immediately available in the archive or in <filename>pg_wal</filename>
-    will be restored, but no attempt is made to connect to the primary.
+    当运行 <command>pg_ctl promote</command> 或调用 <function>pg_promote()</function> 时，将退出后备模式，服务器切换到正常运行。在故障转移之前，归档中或 <filename>pg_wal</filename> 中任何立即可用的 WAL 都会被恢复，但不会尝试连接到主服务器。
    </para>
   </sect2>
 
   <sect2 id="preparing-primary-for-standby">
-   <title>Preparing the Primary for Standby Servers</title>
+   <title>为后备服务器准备主服务器</title>
 
    <para>
-    Set up continuous archiving on the primary to an archive directory
-    accessible from the standby, as described
-    in <xref linkend="continuous-archiving"/>. The archive location should be
-    accessible from the standby even when the primary is down, i.e., it should
-    reside on the standby server itself or another trusted server, not on
-    the primary server.
+    在主服务器上设置连续归档到后备服务器可访问的归档目录，如 <xref linkend="continuous-archiving"/> 中所述。即使主服务器停机，归档位置也应当可以从后备服务器访问，也就是说，它应当位于后备服务器本身或另一台可信服务器上，而不是位于主服务器上。
    </para>
 
    <para>
-    If you want to use streaming replication, set up authentication on the
-    primary server to allow replication connections from the standby
-    server(s); that is, create a role and provide a suitable entry or
-    entries in <filename>pg_hba.conf</filename> with the database field set to
-    <literal>replication</literal>.  Also ensure <varname>max_wal_senders</varname> is set
-    to a sufficiently large value in the configuration file of the primary
-    server. If replication slots will be used,
-    ensure that <varname>max_replication_slots</varname> is set sufficiently
-    high as well.
+    如果你想使用流复制，请在主服务器上设置认证，以允许来自备服务器的复制连接；也就是说，创建一个角色，并在 <filename>pg_hba.conf</filename> 中提供一个或多个合适的条目，将 database 字段设置为 <literal>replication</literal>。还要确保在主服务器的配置文件中将 <varname>max_wal_senders</varname> 设置为足够大的值。如果将要使用复制槽，也要确保 <varname>max_replication_slots</varname> 设置得足够高。
    </para>
 
    <para>
-    Take a base backup as described in <xref linkend="backup-base-backup"/>
-    to bootstrap the standby server.
+    按照 <xref linkend="backup-base-backup"/> 中所述执行一次基础备份，以引导备服务器。
    </para>
   </sect2>
 
   <sect2 id="standby-server-setup">
-   <title>Setting Up a Standby Server</title>
+   <title>设置备服务器</title>
 
    <para>
-    To set up the standby server, restore the base backup taken from primary
-    server (see <xref linkend="backup-pitr-recovery"/>). Create a file
-    <link linkend="file-standby-signal"><filename>standby.signal</filename></link><indexterm><primary>standby.signal</primary></indexterm>
-    in the standby's cluster data
-    directory. Set <xref linkend="guc-restore-command"/> to a simple command to copy files from
-    the WAL archive. If you plan to have multiple standby servers for high
-    availability purposes, make sure that <varname>recovery_target_timeline</varname> is set to
-    <literal>latest</literal> (the default), to make the standby server follow the timeline change
-    that occurs at failover to another standby.
+    要设置备服务器，请恢复从主服务器取得的基础备份（参见 <xref linkend="backup-pitr-recovery"/>）。在备服务器的数据库集簇数据目录中创建文件 <link linkend="file-standby-signal"><filename>standby.signal</filename></link><indexterm><primary>standby.signal</primary></indexterm>。将 <xref linkend="guc-restore-command"/> 设置为一条简单的命令，用于从 WAL 归档中复制文件。如果你计划出于高可用目的配置多个备服务器，请确保将 <varname>recovery_target_timeline</varname> 设置为 <literal>latest</literal>（默认值），以使备服务器跟随在故障转移到另一个备服务器时发生的时间线变更。
    </para>
 
    <note>
      <para>
-     <xref linkend="guc-restore-command"/> should return immediately
-     if the file does not exist; the server will retry the command again if
-     necessary.
+     <xref linkend="guc-restore-command"/> 在文件不存在时应该立即返回；服务器会在必要时重试该命令。
     </para>
    </note>
 
    <para>
-     If you want to use streaming replication, fill in
-     <xref linkend="guc-primary-conninfo"/> with a libpq connection string, including
-     the host name (or IP address) and any additional details needed to
-     connect to the primary server. If the primary needs a password for
-     authentication, the password needs to be specified in
-     <xref linkend="guc-primary-conninfo"/> as well.
+     如果你想使用流复制，请在 <xref linkend="guc-primary-conninfo"/> 中填入 libpq 连接字符串，其中包括主机名（或 IP 地址）以及连接到主服务器所需的任何其他细节。如果主服务器需要密码进行认证，则还需要在 <xref linkend="guc-primary-conninfo"/> 中指定密码。
    </para>
 
    <para>
-    If you're setting up the standby server for high availability purposes,
-    set up WAL archiving, connections and authentication like the primary
-    server, because the standby server will work as a primary server after
-    failover.
+    如果为了高可用性目的而设置后备服务器，请像主服务器一样设置 WAL 归档、连接和认证，因为故障转移后后备服务器将作为主服务器工作。
    </para>
 
    <para>
-    If you're using a WAL archive, its size can be minimized using the <xref
-    linkend="guc-archive-cleanup-command"/> parameter to remove files that are no
-    longer required by the standby server.
-    The <application>pg_archivecleanup</application> utility is designed specifically to
-    be used with <varname>archive_cleanup_command</varname> in typical single-standby
-    configurations, see <xref linkend="pgarchivecleanup"/>.
-    Note however, that if you're using the archive for backup purposes, you
-    need to retain files needed to recover from at least the latest base
-    backup, even if they're no longer needed by the standby.
+    如果使用 WAL 归档，可以使用 <xref
+    linkend="guc-archive-cleanup-command"/> 参数来删除后备服务器不再需要的文件，从而将其大小降到最低。
+    <application>pg_archivecleanup</application> 工具专门设计用于典型单后备服务器配置中的 <varname>archive_cleanup_command</varname>，参见 <xref linkend="pgarchivecleanup"/>。
+    但请注意，如果出于备份目的使用归档，则需要保留至少从最近一次基础备份恢复所需的文件，即使后备服务器不再需要它们。
    </para>
 
    <para>
-    A simple example of configuration is:
+    一个简单的配置示例如下：
 <programlisting>
 primary_conninfo = 'host=192.168.1.50 port=5432 user=foo password=foopass options=''-c wal_sender_timeout=5000'''
 restore_command = 'cp /path/to/archive/%f %p'
@@ -627,106 +508,54 @@ archive_cleanup_command = 'pg_archivecleanup /path/to/archive %r'
    </para>
 
    <para>
-    You can have any number of standby servers, but if you use streaming
-    replication, make sure you set <varname>max_wal_senders</varname> high enough in
-    the primary to allow them to be connected simultaneously.
+    可以有任意数量的后备服务器，但如果使用流复制，请确保在主服务器上将 <varname>max_wal_senders</varname> 设置得足够高，以允许它们同时连接。
    </para>
 
   </sect2>
 
   <sect2 id="streaming-replication">
-   <title>Streaming Replication</title>
+   <title>流复制</title>
 
    <indexterm zone="high-availability">
     <primary>Streaming Replication</primary>
    </indexterm>
 
    <para>
-    Streaming replication allows a standby server to stay more up-to-date
-    than is possible with file-based log shipping. The standby connects
-    to the primary, which streams WAL records to the standby as they're
-    generated, without waiting for the WAL file to be filled.
+    流复制允许后备服务器保持比基于文件的日志传送所能达到的更新程度更高的状态。后备服务器连接到主服务器，主服务器在生成 WAL 记录时将其流式传输到后备服务器，而不必等待 WAL 文件被填满。
    </para>
 
    <para>
-    Streaming replication is asynchronous by default
-    (see <xref linkend="synchronous-replication"/>), in which case there is
-    a small delay between committing a transaction in the primary and the
-    changes becoming visible in the standby. This delay is however much
-    smaller than with file-based log shipping, typically under one second
-    assuming the standby is powerful enough to keep up with the load. With
-    streaming replication, <varname>archive_timeout</varname> is not required to
-    reduce the data loss window.
+    流复制默认是异步的（见 <xref linkend="synchronous-replication"/>），在这种情况下，在主服务器上提交事务与更改在后备服务器上变得可见之间会有很小的延迟。不过，这个延迟比基于文件的日志传送要小得多，通常不到一秒，前提是后备服务器足够强大以跟上负载。使用流复制时，不需要 <varname>archive_timeout</varname> 来缩小数据丢失窗口。
    </para>
 
    <para>
-    If you use streaming replication without file-based continuous
-    archiving, the server might recycle old WAL segments before the standby
-    has received them.  If this occurs, the standby will need to be
-    reinitialized from a new base backup.  You can avoid this by setting
-    <varname>wal_keep_size</varname> to a value large enough to ensure that
-    WAL segments are not recycled too early, or by configuring a replication
-    slot for the standby.  If you set up a WAL archive that's accessible from
-    the standby, these solutions are not required, since the standby can
-    always use the archive to catch up provided it retains enough segments.
+    如果你使用流复制而不使用基于文件的连续归档，服务器可能会在后备服务器收到旧 WAL 段之前就回收它们。如果发生这种情况，后备服务器将需要从新的基础备份重新初始化。你可以通过将 <varname>wal_keep_size</varname> 设置为足够大的值以确保 WAL 段不会被过早回收，或者为后备服务器配置复制槽来避免这种情况。如果你设置了可从后备服务器访问的 WAL 归档，则不需要这些解决方案，因为只要后备服务器保留了足够的段，它就总是可以使用归档来追赶。
    </para>
 
    <para>
-    To use streaming replication, set up a file-based log-shipping standby
-    server as described in <xref linkend="warm-standby"/>. The step that
-    turns a file-based log-shipping standby into streaming replication
-    standby is setting the <varname>primary_conninfo</varname> setting
-    to point to the primary server. Set
-    <xref linkend="guc-listen-addresses"/> and authentication options
-    (see <filename>pg_hba.conf</filename>) on the primary so that the standby server
-    can connect to the <literal>replication</literal> pseudo-database on the primary
-    server (see <xref linkend="streaming-replication-authentication"/>).
+    要使用流复制，请按照 <xref linkend="warm-standby"/> 中所述设置基于文件的日志传送后备服务器。将基于文件的日志传送后备服务器转变为流复制后备服务器的步骤是设置 <varname>primary_conninfo</varname> 设置以指向主服务器。在主服务器上设置 <xref linkend="guc-listen-addresses"/> 和认证选项（见 <filename>pg_hba.conf</filename>），以便后备服务器可以连接到主服务器上的 <literal>replication</literal> 伪数据库（见 <xref linkend="streaming-replication-authentication"/>）。
    </para>
 
    <para>
-    On systems that support the keepalive socket option, setting
-    <xref linkend="guc-tcp-keepalives-idle"/>,
-    <xref linkend="guc-tcp-keepalives-interval"/> and
-    <xref linkend="guc-tcp-keepalives-count"/> helps the primary promptly
-    notice a broken connection.
+    在支持 keepalive 套接字选项的系统上，设置 <xref linkend="guc-tcp-keepalives-idle"/>、<xref linkend="guc-tcp-keepalives-interval"/> 和 <xref linkend="guc-tcp-keepalives-count"/> 有助于主服务器及时察觉断开的连接。
    </para>
 
    <para>
-    Set the maximum number of concurrent connections from the standby servers
-    (see <xref linkend="guc-max-wal-senders"/> for details).
+    设置来自后备服务器的最大并发连接数（详情见 <xref linkend="guc-max-wal-senders"/>）。
    </para>
 
    <para>
-    When the standby is started and <varname>primary_conninfo</varname> is set
-    correctly, the standby will connect to the primary after replaying all
-    WAL files available in the archive. If the connection is established
-    successfully, you will see a <literal>walreceiver</literal> in the standby, and
-    a corresponding <literal>walsender</literal> process in the primary.
+    当后备服务器启动且 <varname>primary_conninfo</varname> 设置正确时，后备服务器将在重放归档中所有可用的 WAL 文件后连接到主服务器。如果连接成功建立，你将在后备服务器中看到 <literal>walreceiver</literal>，并在主服务器中看到相应的 <literal>walsender</literal> 进程。
    </para>
 
    <sect3 id="streaming-replication-authentication">
-    <title>Authentication</title>
+    <title>认证</title>
     <para>
-     It is very important that the access privileges for replication be set up
-     so that only trusted users can read the WAL stream, because it is
-     easy to extract privileged information from it.  Standby servers must
-     authenticate to the primary as an account that has the
-     <literal>REPLICATION</literal> privilege or a superuser. It is
-     recommended to create a dedicated user account with
-     <literal>REPLICATION</literal> and <literal>LOGIN</literal>
-     privileges for replication. While <literal>REPLICATION</literal>
-     privilege gives very high permissions, it does not allow the user to
-     modify any data on the primary system, which the
-     <literal>SUPERUSER</literal> privilege does.
+     设置复制访问权限非常重要，必须确保只有可信用户才能读取 WAL 流，因为从中很容易提取出特权信息。后备服务器必须以具有 <literal>REPLICATION</literal> 权限的账户或超级用户身份向主服务器进行认证。建议为复制创建一个专用的用户账户，并赋予其 <literal>REPLICATION</literal> 和 <literal>LOGIN</literal> 权限。虽然 <literal>REPLICATION</literal> 权限赋予非常高的权限，但它不允许用户修改主系统上的任何数据，而 <literal>SUPERUSER</literal> 权限则允许这样做。
     </para>
 
     <para>
-     Client authentication for replication is controlled by a
-     <filename>pg_hba.conf</filename> record specifying <literal>replication</literal> in the
-     <replaceable>database</replaceable> field. For example, if the standby is running on
-     host IP <literal>192.168.1.100</literal> and the account name for replication
-     is <literal>foo</literal>, the administrator can add the following line to the
-     <filename>pg_hba.conf</filename> file on the primary:
+     复制的客户端认证由一条 <filename>pg_hba.conf</filename> 记录控制，该记录在 <replaceable>database</replaceable> 字段中指定 <literal>replication</literal>。例如，如果后备服务器运行在主机 IP <literal>192.168.1.100</literal> 上，且用于复制的账户名为 <literal>foo</literal>，则管理员可以在主服务器的 <filename>pg_hba.conf</filename> 文件中添加以下行：
 
 <programlisting>
 # Allow the user "foo" from host 192.168.1.100 to connect to the primary
@@ -737,16 +566,7 @@ host    replication     foo             192.168.1.100/32        scram-sha-256
 </programlisting>
     </para>
     <para>
-     The host name and port number of the primary, connection user name,
-     and password are specified in the <xref linkend="guc-primary-conninfo"/>.
-     The password can also be set in the <filename>~/.pgpass</filename> file on the
-     standby (specify <literal>replication</literal> in the <replaceable>database</replaceable>
-     field).
-     For example, if the primary is running on host IP <literal>192.168.1.50</literal>,
-     port <literal>5432</literal>, the account name for replication is
-     <literal>foo</literal>, and the password is <literal>foopass</literal>, the administrator
-     can add the following line to the <filename>postgresql.conf</filename> file on the
-     standby:
+     主服务器的主机名和端口号、连接用户名以及密码在 <xref linkend="guc-primary-conninfo"/> 中指定。密码也可以在后备服务器的 <filename>~/.pgpass</filename> 文件中设置（在 <replaceable>database</replaceable> 字段中指定 <literal>replication</literal>）。例如，如果主服务器运行在主机 IP <literal>192.168.1.50</literal>、端口 <literal>5432</literal> 上，用于复制的账户名为 <literal>foo</literal>，密码为 <literal>foopass</literal>，则管理员可以在后备服务器的 <filename>postgresql.conf</filename> 文件中添加以下行：
 
 <programlisting>
 # The standby connects to the primary that is running on host 192.168.1.50
@@ -757,104 +577,63 @@ primary_conninfo = 'host=192.168.1.50 port=5432 user=foo password=foopass'
    </sect3>
 
    <sect3 id="streaming-replication-monitoring">
-    <title>Monitoring</title>
+    <title>监控</title>
     <para>
-     An important health indicator of streaming replication is the amount
-     of WAL records generated in the primary, but not yet applied in the
-     standby. You can calculate this lag by comparing the current WAL write
-     location on the primary with the last WAL location received by the
-     standby. These locations can be retrieved using
-     <function>pg_current_wal_lsn</function> on the primary and
-     <function>pg_last_wal_receive_lsn</function> on the standby,
-     respectively (see <xref linkend="functions-admin-backup-table"/> and
-     <xref linkend="functions-recovery-info-table"/> for details).
-     The last WAL receive location in the standby is also displayed in the
-     process status of the WAL receiver process, displayed using the
-     <command>ps</command> command (see <xref linkend="monitoring-ps"/> for details).
+     流复制的一个重要健康指标是主服务器中已生成但尚未在后备服务器中应用的 WAL 记录数量。你可以通过比较主服务器上当前的 WAL 写入位置与后备服务器接收到的最后一个 WAL 位置来计算这一延迟。这两个位置可以分别使用主服务器上的 <function>pg_current_wal_lsn</function> 和后备服务器上的 <function>pg_last_wal_receive_lsn</function> 获取（详情请参见 <xref linkend="functions-admin-backup-table"/> 和 <xref linkend="functions-recovery-info-table"/>）。后备服务器中最后一个 WAL 接收位置也会显示在 WAL 接收进程的进程状态中，可使用 <command>ps</command> 命令显示（详情请参见 <xref linkend="monitoring-ps"/>）。
     </para>
     <para>
-     You can retrieve a list of WAL sender processes via the
-     <link linkend="monitoring-pg-stat-replication-view"><structname>
-     pg_stat_replication</structname></link> view. Large differences between
-     <function>pg_current_wal_lsn</function> and the view's <literal>sent_lsn</literal> field
-     might indicate that the primary server is under heavy load, while
-     differences between <literal>sent_lsn</literal> and
-     <function>pg_last_wal_receive_lsn</function> on the standby might indicate
-     network delay, or that the standby is under heavy load.
+     你可以通过 <link linkend="monitoring-pg-stat-replication-view"><structname>
+     pg_stat_replication</structname></link> 视图获取 WAL 发送进程的列表。<function>pg_current_wal_lsn</function> 与该视图的 <literal>sent_lsn</literal> 字段之间差异很大，可能说明主服务器负载过重；而备机上 <literal>sent_lsn</literal> 与 <function>pg_last_wal_receive_lsn</function> 之间的差异则可能说明网络延迟，或者备机负载过重。
     </para>
     <para>
-     On a hot standby, the status of the WAL receiver process can be retrieved
-     via the <link linkend="monitoring-pg-stat-wal-receiver-view">
-     <structname>pg_stat_wal_receiver</structname></link> view.  A large
-     difference between <function>pg_last_wal_replay_lsn</function> and the
-     view's <literal>flushed_lsn</literal> indicates that WAL is being
-     received faster than it can be replayed.
+     在热备机上，可以通过 <link linkend="monitoring-pg-stat-wal-receiver-view">
+     <structname>pg_stat_wal_receiver</structname></link> 视图获取 WAL 接收进程的状态。<function>pg_last_wal_replay_lsn</function> 与该视图的 <literal>flushed_lsn</literal> 之间差异很大，说明 WAL 的接收速度快于其重放速度。
     </para>
    </sect3>
   </sect2>
 
   <sect2 id="streaming-replication-slots">
-   <title>Replication Slots</title>
+   <title>复制槽</title>
    <indexterm>
     <primary>replication slot</primary>
     <secondary>streaming replication</secondary>
    </indexterm>
    <para>
-    Replication slots provide an automated way to ensure that the
-    primary server does
-    not remove WAL segments until they have been received by all standbys,
-    and that the primary does not remove rows which could cause a
-    <link linkend="hot-standby-conflict">recovery conflict</link> even when the
-    standby is disconnected.
+    复制槽提供了一种自动化的方式来确保主服务器不会删除 WAL 段，直到它们已被所有备机接收；并且确保即使备机断开连接，主服务器也不会删除那些可能导致<link linkend="hot-standby-conflict">恢复冲突</link>的行。
    </para>
    <para>
-    In lieu of using replication slots, it is possible to prevent the removal
-    of old WAL segments using <xref linkend="guc-wal-keep-size"/>, or by
-    storing the segments in an archive using
-    <xref linkend="guc-archive-command"/> or <xref linkend="guc-archive-library"/>.
-    A disadvantage of these methods is that they
-    often result in retaining more WAL segments than
-    required, whereas replication slots retain only the number of segments
-    known to be needed.
+    除了使用复制槽之外，还可以使用 <xref linkend="guc-wal-keep-size"/> 来防止删除旧的 WAL 段，或者使用 <xref linkend="guc-archive-command"/> 或 <xref linkend="guc-archive-library"/> 将这些段存储在归档中。这些方法的缺点是它们通常会导致保留比所需更多的 WAL 段，而复制槽只保留已知需要的段数。
    </para>
    <para>
-    Similarly, <xref linkend="guc-hot-standby-feedback"/> on its own, without
-    also using a replication slot, provides protection against relevant rows
-    being removed by vacuum, but provides no protection during any time period
-    when the standby is not connected.
+    类似地，<xref linkend="guc-hot-standby-feedback"/> 本身（不同时使用复制槽）可以防止相关行被 vacuum 删除，但在备机未连接的任何时间段内不提供任何保护。
    </para>
 
    <caution>
     <para>
-     Beware that replication slots can cause the server to retain so
-     many WAL segments that they fill up the space allocated for
-     <literal>pg_wal</literal>.
-     <xref linkend="guc-max-slot-wal-keep-size"/> can be used to limit the size
-     of WAL files retained by replication slots.
+     注意，复制槽可能导致服务器保留过多的 WAL 段，以至于填满为 <literal>pg_wal</literal> 分配的空间。
+    <xref linkend="guc-max-slot-wal-keep-size"/> 可用于限制复制槽所保留的 WAL 文件的大小。
     </para>
    </caution>
 
    <sect3 id="streaming-replication-slots-manipulation">
-    <title>Querying and Manipulating Replication Slots</title>
+    <title>查询和操作复制槽</title>
     <para>
-     Each replication slot has a name, which can contain lower-case letters,
-     numbers, and the underscore character.
+     每个复制槽都有一个名称，名称可以包含小写字母、数字和下划线字符。
     </para>
     <para>
-     Existing replication slots and their state can be seen in the
-     <link linkend="view-pg-replication-slots"><structname>pg_replication_slots</structname></link>
-     view.
+     现有的复制槽及其状态可以在
+    <link linkend="view-pg-replication-slots"><structname>pg_replication_slots</structname></link>
+    视图中看到。
     </para>
     <para>
-     Slots can be created and dropped either via the streaming replication
-     protocol (see <xref linkend="protocol-replication"/>) or via SQL
-     functions (see <xref linkend="functions-replication"/>).
+     可以通过流复制协议（参见 <xref linkend="protocol-replication"/>）或 SQL
+    函数（参见 <xref linkend="functions-replication"/>）创建和删除槽。
     </para>
    </sect3>
    <sect3 id="streaming-replication-slots-config">
-    <title>Configuration Example</title>
+    <title>配置示例</title>
     <para>
-     You can create a replication slot like this:
+     你可以这样创建一个复制槽：
 <programlisting>
 postgres=# SELECT * FROM pg_create_physical_replication_slot('node_a_slot');
   slot_name  | lsn
@@ -867,8 +646,8 @@ postgres=# SELECT slot_name, slot_type, active FROM pg_replication_slots;
  node_a_slot | physical  | f
 (1 row)
 </programlisting>
-     To configure the standby to use this slot, <varname>primary_slot_name</varname>
-     should be configured on the standby. Here is a simple example:
+     要配置后备服务器使用这个槽，<varname>primary_slot_name</varname>
+     应该在后备服务器上配置。下面是一个简单的例子：
 <programlisting>
 primary_conninfo = 'host=192.168.1.50 port=5432 user=foo password=foopass'
 primary_slot_name = 'node_a_slot'
@@ -878,382 +657,212 @@ primary_slot_name = 'node_a_slot'
   </sect2>
 
   <sect2 id="cascading-replication">
-   <title>Cascading Replication</title>
+   <title>级联复制</title>
 
    <indexterm zone="high-availability">
     <primary>Cascading Replication</primary>
    </indexterm>
 
    <para>
-    The cascading replication feature allows a standby server to accept replication
-    connections and stream WAL records to other standbys, acting as a relay.
-    This can be used to reduce the number of direct connections to the primary
-    and also to minimize inter-site bandwidth overheads.
+    级联复制功能允许后备服务器接受复制连接并将 WAL 记录流式传输到其他后备服务器，充当一个中继。这可以用来减少到主服务器的直接连接数量，也可以最小化站点间的带宽开销。
    </para>
 
    <para>
-    A standby acting as both a receiver and a sender is known as a cascading
-    standby.  Standbys that are more directly connected to the primary are known
-    as upstream servers, while those standby servers further away are downstream
-    servers.  Cascading replication does not place limits on the number or
-    arrangement of downstream servers, though each standby connects to only
-    one upstream server which eventually links to a single primary server.
+    同时充当接收者和发送者的后备服务器被称为级联后备服务器。与主服务器连接更直接的后备服务器被称为上游服务器，而那些距离更远的后备服务器被称为下游服务器。级联复制不限制下游服务器的数量或排列方式，不过每个后备服务器只连接到一个上游服务器，而该上游服务器最终连接到一个主服务器。
    </para>
 
    <para>
-    A cascading standby sends not only WAL records received from the
-    primary but also those restored from the archive. So even if the replication
-    connection in some upstream connection is terminated, streaming replication
-    continues downstream for as long as new WAL records are available.
+    级联后备服务器不仅发送从主服务器接收到的 WAL 记录，还发送从归档中恢复的 WAL 记录。因此，即使某个上游连接中的复制连接被终止，只要新的 WAL 记录可用，流式复制就会在下游继续。
    </para>
 
    <para>
-    Cascading replication is currently asynchronous. Synchronous replication
-    (see <xref linkend="synchronous-replication"/>) settings have no effect on
-    cascading replication at present.
+    级联复制目前是异步的。同步复制（见 <xref linkend="synchronous-replication"/>）设置目前对级联复制没有影响。
    </para>
 
    <para>
-    Hot standby feedback propagates upstream, whatever the cascaded arrangement.
+    热备反馈会向上游传播，无论采用何种级联布局。
    </para>
 
    <para>
-    If an upstream standby server is promoted to become the new primary, downstream
-    servers will continue to stream from the new primary if
-    <varname>recovery_target_timeline</varname> is set to <literal>'latest'</literal> (the default).
+    如果上游备用服务器被提升为新的主服务器，那么只要
+    <varname>recovery_target_timeline</varname> 被设置为 <literal>'latest'</literal>（默认值），下游服务器将继续从新的主服务器
+    流式传输。
    </para>
 
    <para>
-    To use cascading replication, set up the cascading standby so that it can
-    accept replication connections (that is, set
-    <xref linkend="guc-max-wal-senders"/> and <xref linkend="guc-hot-standby"/>,
-    and configure
-    <link linkend="auth-pg-hba-conf">host-based authentication</link>).
-    You will also need to set <varname>primary_conninfo</varname> in the downstream
-    standby to point to the cascading standby.
+    要使用级联复制，请设置级联备用服务器，使其能够
+    接受复制连接（即设置
+    <xref linkend="guc-max-wal-senders"/> 和 <xref linkend="guc-hot-standby"/>，
+    并配置
+    <link linkend="auth-pg-hba-conf">基于主机的认证</link>）。
+    你还需要在下游备用服务器中设置 <varname>primary_conninfo</varname>，
+    使其指向级联备用服务器。
    </para>
   </sect2>
 
   <sect2 id="synchronous-replication">
-   <title>Synchronous Replication</title>
+   <title>同步复制</title>
 
    <indexterm zone="high-availability">
     <primary>Synchronous Replication</primary>
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> streaming replication is asynchronous by
-    default. If the primary server
-    crashes then some transactions that were committed may not have been
-    replicated to the standby server, causing data loss. The amount
-    of data loss is proportional to the replication delay at the time of
-    failover.
+    默认情况下，<productname>PostgreSQL</productname> 流式复制是异步的。如果主服务器
+    崩溃，那么某些已提交的事务可能尚未
+    复制到备用服务器，从而导致数据丢失。数据丢失的
+    数量与故障转移时的复制延迟成正比。
    </para>
 
    <para>
-    Synchronous replication offers the ability to confirm that all changes
-    made by a transaction have been transferred to one or more synchronous
-    standby servers. This extends that standard level of durability
-    offered by a transaction commit. This level of protection is referred
-    to as 2-safe replication in computer science theory, and group-1-safe
-    (group-safe and 1-safe) when <varname>synchronous_commit</varname> is set to
-    <literal>remote_write</literal>.
+    同步复制提供了确认事务所做的所有更改
+    都已传输到一个或多个同步备用服务器的能力。这扩展了
+    事务提交所提供的标准持久性级别。在计算机科学理论中，这种级别的保护
+    被称为 2-safe 复制；当 <varname>synchronous_commit</varname> 被设置为
+    <literal>remote_write</literal> 时，则称为 group-1-safe
+    （group-safe 且 1-safe）。
    </para>
 
    <para>
-    When requesting synchronous replication, each commit of a
-    write transaction will wait until confirmation is
-    received that the commit has been written to the write-ahead log on disk
-    of both the primary and standby server. The only possibility that data
-    can be lost is if both the primary and the standby suffer crashes at the
-    same time. This can provide a much higher level of durability, though only
-    if the sysadmin is cautious about the placement and management of the two
-    servers.  Waiting for confirmation increases the user's confidence that the
-    changes will not be lost in the event of server crashes but it also
-    necessarily increases the response time for the requesting transaction.
-    The minimum wait time is the round-trip time between primary and standby.
+    在请求同步复制时，写事务的每次提交都会等待收到确认，即该提交已被写入主服务器和后备服务器磁盘上的预写式日志。唯一可能丢失数据的情况是主服务器和后备服务器同时崩溃。这可以提供高得多的持久性，但前提是系统管理员对两台服务器的放置和管理保持谨慎。等待确认增加了用户对服务器崩溃时更改不会丢失的信心，但也必然增加了请求事务的响应时间。最短等待时间是主服务器与后备服务器之间的往返时间。
    </para>
 
    <para>
-    Read-only transactions and transaction rollbacks need not wait for
-    replies from standby servers. Subtransaction commits do not wait for
-    responses from standby servers, only top-level commits. Long
-    running actions such as data loading or index building do not wait
-    until the very final commit message. All two-phase commit actions
-    require commit waits, including both prepare and commit.
+    只读事务和事务回滚无需等待后备服务器的回复。子事务提交不等待后备服务器的响应，只有顶层提交才等待。长时间运行的操作（如数据加载或索引构建）不会等到最后一条提交消息才等待。所有两阶段提交操作都需要提交等待，包括准备和提交两个阶段。
    </para>
 
    <para>
-    A synchronous standby can be a physical replication standby or a logical
-    replication subscriber.  It can also be any other physical or logical WAL
-    replication stream consumer that knows how to send the appropriate
-    feedback messages.  Besides the built-in physical and logical replication
-    systems, this includes special programs such
-    as <command>pg_receivewal</command> and <command>pg_recvlogical</command>
-    as well as some third-party replication systems and custom programs.
-    Check the respective documentation for details on synchronous replication
-    support.
+    同步后备服务器可以是物理复制后备服务器，也可以是逻辑复制订阅者。它还可以是任何其他物理或逻辑 WAL 复制流消费者，只要它知道如何发送相应的反馈消息。除了内置的物理复制和逻辑复制系统之外，这还包括诸如 <command>pg_receivewal</command> 和 <command>pg_recvlogical</command> 之类的特殊程序，以及一些第三方复制系统和自定义程序。有关同步复制支持的详细信息，请查阅各自的文档。
    </para>
 
    <sect3 id="synchronous-replication-config">
-    <title>Basic Configuration</title>
+    <title>基本配置</title>
 
    <para>
-    Once streaming replication has been configured, configuring synchronous
-    replication requires only one additional configuration step:
-    <xref linkend="guc-synchronous-standby-names"/> must be set to
-    a non-empty value.  <varname>synchronous_commit</varname> must also be set to
-    <literal>on</literal>, but since this is the default value, typically no change is
-    required.  (See <xref linkend="runtime-config-wal-settings"/> and
-    <xref linkend="runtime-config-replication-primary"/>.)
-    This configuration will cause each commit to wait for
-    confirmation that the standby has written the commit record to durable
-    storage.
-    <varname>synchronous_commit</varname> can be set by individual
-    users, so it can be configured in the configuration file, for particular
-    users or databases, or dynamically by applications, in order to control
-    the durability guarantee on a per-transaction basis.
+    一旦配置了流复制，配置同步复制只需要一个额外的配置步骤：必须把 <xref linkend="guc-synchronous-standby-names"/> 设置为非空值。还必须把 <varname>synchronous_commit</varname> 设置为 <literal>on</literal>，但由于这是默认值，通常不需要更改。（参见 <xref linkend="runtime-config-wal-settings"/> 和 <xref linkend="runtime-config-replication-primary"/>。）此配置将导致每次提交都等待备用服务器已将提交记录写入持久存储的确认。<varname>synchronous_commit</varname> 可以由单个用户设置，因此可以在配置文件中为特定用户或数据库设置，也可以由应用程序动态设置，以便按事务控制持久性保证。
    </para>
 
    <para>
-    After a commit record has been written to disk on the primary, the
-    WAL record is then sent to the standby. The standby sends reply
-    messages each time a new batch of WAL data is written to disk, unless
-    <varname>wal_receiver_status_interval</varname> is set to zero on the standby.
-    In the case that <varname>synchronous_commit</varname> is set to
-    <literal>remote_apply</literal>, the standby sends reply messages when the commit
-    record is replayed, making the transaction visible.
-    If the standby is chosen as a synchronous standby, according to the setting
-    of <varname>synchronous_standby_names</varname> on the primary, the reply
-    messages from that standby will be considered along with those from other
-    synchronous standbys to decide when to release transactions waiting for
-    confirmation that the commit record has been received. These parameters
-    allow the administrator to specify which standby servers should be
-    synchronous standbys. Note that the configuration of synchronous
-    replication is mainly on the primary. Named standbys must be directly
-    connected to the primary; the primary knows nothing about downstream
-    standby servers using cascaded replication.
+    在主服务器上将提交记录写入磁盘后，WAL 记录随后会被发送到备用服务器。除非在备用服务器上将 <varname>wal_receiver_status_interval</varname> 设置为零，否则备用服务器每次将新一批 WAL 数据写入磁盘时都会发送回复消息。如果 <varname>synchronous_commit</varname> 被设置为 <literal>remote_apply</literal>，则备用服务器在重放提交记录、使事务可见时发送回复消息。如果根据主服务器上 <varname>synchronous_standby_names</varname> 的设置将某个备用服务器选为同步备用服务器，那么该备用服务器的回复消息将与其他同步备用服务器的回复消息一起被考虑，以决定何时释放那些正在等待提交记录已收到的确认的事务。这些参数允许管理员指定哪些备用服务器应作为同步备用服务器。请注意，同步复制的配置主要在主机上进行。命名备用服务器必须直接连接到主服务器；主服务器对使用级联复制的下游备用服务器一无所知。
    </para>
 
    <para>
-    Setting <varname>synchronous_commit</varname> to <literal>remote_write</literal> will
-    cause each commit to wait for confirmation that the standby has received
-    the commit record and written it out to its own operating system, but not
-    for the data to be flushed to disk on the standby.  This
-    setting provides a weaker guarantee of durability than <literal>on</literal>
-    does: the standby could lose the data in the event of an operating system
-    crash, though not a <productname>PostgreSQL</productname> crash.
-    However, it's a useful setting in practice
-    because it can decrease the response time for the transaction.
-    Data loss could only occur if both the primary and the standby crash and
-    the database of the primary gets corrupted at the same time.
+    将 <varname>synchronous_commit</varname> 设置为 <literal>remote_write</literal> 会使每个提交都等待后备服务器已收到提交记录并将其写出到自己的操作系统这一确认，但不等待数据在后备服务器上刷写到磁盘。此设置提供的持久性保证比 <literal>on</literal> 更弱：在操作系统崩溃的情况下，后备服务器可能会丢失数据，但不会在 <productname>PostgreSQL</productname> 崩溃时丢失数据。不过，它在实践中是一个有用的设置，因为它可以缩短事务的响应时间。只有在主服务器和后备服务器同时崩溃且主服务器的数据库同时损坏时，才可能发生数据丢失。
    </para>
 
    <para>
-    Setting <varname>synchronous_commit</varname> to <literal>remote_apply</literal> will
-    cause each commit to wait until the current synchronous standbys report
-    that they have replayed the transaction, making it visible to user
-    queries.  In simple cases, this allows for load balancing with causal
-    consistency.
+    将 <varname>synchronous_commit</varname> 设置为 <literal>remote_apply</literal> 会使每个提交都等待，直到当前的同步后备服务器报告它们已经重放了该事务，使其对用户查询可见。在简单的情况下，这允许在具有因果一致性的前提下进行负载均衡。
    </para>
 
    <para>
-    Users will stop waiting if a fast shutdown is requested.  However, as
-    when using asynchronous replication, the server will not fully
-    shutdown until all outstanding WAL records are transferred to the currently
-    connected standby servers.
+    如果请求快速关闭，用户将停止等待。但是，与使用异步复制时一样，服务器不会完全关闭，直到所有未完成的 WAL 记录都被传输到当前连接的后备服务器。
    </para>
 
    </sect3>
 
    <sect3 id="synchronous-replication-multiple-standbys">
-    <title>Multiple Synchronous Standbys</title>
+    <title>多个同步后备服务器</title>
 
    <para>
-    Synchronous replication supports one or more synchronous standby servers;
-    transactions will wait until all the standby servers which are considered
-    as synchronous confirm receipt of their data. The number of synchronous
-    standbys that transactions must wait for replies from is specified in
-    <varname>synchronous_standby_names</varname>. This parameter also specifies
-    a list of standby names and the method (<literal>FIRST</literal> and
-    <literal>ANY</literal>) to choose synchronous standbys from the listed ones.
+    同步复制支持一个或多个同步后备服务器；事务将等待所有被视为同步的后备服务器确认收到其数据。事务必须等待其回复的同步后备服务器数量在 <varname>synchronous_standby_names</varname> 中指定。该参数还指定了一个后备服务器名称列表，以及从所列出的后备服务器中选择同步后备服务器的方法（<literal>FIRST</literal> 和 <literal>ANY</literal>）。
    </para>
    <para>
-    The method <literal>FIRST</literal> specifies a priority-based synchronous
-    replication and makes transaction commits wait until their WAL records are
-    replicated to the requested number of synchronous standbys chosen based on
-    their priorities. The standbys whose names appear earlier in the list are
-    given higher priority and will be considered as synchronous. Other standby
-    servers appearing later in this list represent potential synchronous
-    standbys. If any of the current synchronous standbys disconnects for
-    whatever reason, it will be replaced immediately with the
-    next-highest-priority standby.
+    方法 <literal>FIRST</literal> 指定基于优先级的同步复制，并使事务提交等待，直到它们的 WAL 记录被复制到所请求数量的、根据优先级选出的同步后备服务器。名称在列表中靠前出现的后备服务器被赋予更高的优先级，并被视为同步后备服务器。在此列表中靠后出现的其他后备服务器代表潜在的同步后备服务器。如果当前任一同步后备服务器因任何原因断开连接，它将立即被下一个优先级最高的后备服务器替换。
    </para>
    <para>
-    An example of <varname>synchronous_standby_names</varname> for
-    a priority-based multiple synchronous standbys is:
+    基于优先级的多个同步后备的一个 <varname>synchronous_standby_names</varname> 示例如下：
 <programlisting>
 synchronous_standby_names = 'FIRST 2 (s1, s2, s3)'
 </programlisting>
-    In this example, if four standby servers <literal>s1</literal>, <literal>s2</literal>,
-    <literal>s3</literal> and <literal>s4</literal> are running, the two standbys
-    <literal>s1</literal> and <literal>s2</literal> will be chosen as synchronous standbys
-    because their names appear early in the list of standby names.
-    <literal>s3</literal> is a potential synchronous standby and will take over
-    the role of synchronous standby when either of <literal>s1</literal> or
-    <literal>s2</literal> fails. <literal>s4</literal> is an asynchronous standby since
-    its name is not in the list.
+    在此示例中，如果有四台后备服务器 <literal>s1</literal>、<literal>s2</literal>、<literal>s3</literal> 和 <literal>s4</literal> 正在运行，则两台后备服务器 <literal>s1</literal> 和 <literal>s2</literal> 将被选为同步后备，因为它们的名称在后备服务器名称列表中出现得较早。<literal>s3</literal> 是一个潜在的同步后备，当 <literal>s1</literal> 或 <literal>s2</literal> 中的任意一个失效时，它将接替同步后备的角色。<literal>s4</literal> 是异步后备，因为它的名称不在列表中。
    </para>
    <para>
-    The method <literal>ANY</literal> specifies a quorum-based synchronous
-    replication and makes transaction commits wait until their WAL records
-    are replicated to <emphasis>at least</emphasis> the requested number of
-    synchronous standbys in the list.
+    方法 <literal>ANY</literal> 指定基于法定人数的同步复制，并使事务提交等待，直到它们的 WAL 记录被复制到列表中<emphasis>至少</emphasis>所要求数量的同步后备上。
    </para>
    <para>
-    An example of <varname>synchronous_standby_names</varname> for
-    a quorum-based multiple synchronous standbys is:
+    基于法定人数的多个同步后备的 <varname>synchronous_standby_names</varname> 示例如下：
 <programlisting>
 synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
 </programlisting>
-    In this example, if four standby servers <literal>s1</literal>, <literal>s2</literal>,
-    <literal>s3</literal> and <literal>s4</literal> are running, transaction commits will
-    wait for replies from at least any two standbys of <literal>s1</literal>,
-    <literal>s2</literal> and <literal>s3</literal>. <literal>s4</literal> is an asynchronous
-    standby since its name is not in the list.
+    在此示例中，如果有四台后备服务器 <literal>s1</literal>、<literal>s2</literal>、<literal>s3</literal> 和 <literal>s4</literal> 正在运行，事务提交将等待来自 <literal>s1</literal>、<literal>s2</literal> 和 <literal>s3</literal> 中至少任意两台后备的回复。<literal>s4</literal> 是异步后备，因为它的名称不在列表中。
    </para>
    <para>
-    The synchronous states of standby servers can be viewed using
-    the <structname>pg_stat_replication</structname> view.
+    可以使用 <structname>pg_stat_replication</structname> 视图查看后备服务器的同步状态。
    </para>
    </sect3>
 
    <sect3 id="synchronous-replication-performance">
-    <title>Planning for Performance</title>
+    <title>性能规划</title>
 
    <para>
-    Synchronous replication usually requires carefully planned and placed
-    standby servers to ensure applications perform acceptably. Waiting
-    doesn't utilize system resources, but transaction locks continue to be
-    held until the transfer is confirmed. As a result, incautious use of
-    synchronous replication will reduce performance for database
-    applications because of increased response times and higher contention.
+    同步复制通常需要精心规划和布置后备服务器，以确保应用程序具有可接受的性能。等待不会占用系统资源，但事务锁会一直保持到传输得到确认为止。因此，不谨慎地使用同步复制会增加响应时间并加剧争用，从而降低数据库应用程序的性能。
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> allows the application developer
-    to specify the durability level required via replication. This can be
-    specified for the system overall, though it can also be specified for
-    specific users or connections, or even individual transactions.
+    <productname>PostgreSQL</productname> 允许应用程序开发者通过复制来指定所需的持久性级别。这可以针对整个系统进行指定，不过也可以针对特定用户或连接，甚至单个事务进行指定。
    </para>
 
    <para>
-    For example, an application workload might consist of:
-    10% of changes are important customer details, while
-    90% of changes are less important data that the business can more
-    easily survive if it is lost, such as chat messages between users.
+    例如，一个应用工作负载可能由以下部分组成：
+    10% 的更改是重要的客户详细信息，而
+    90% 的更改是较不重要的数据，即使丢失，业务也更容易承受，例如用户之间的聊天消息。
    </para>
 
    <para>
-    With synchronous replication options specified at the application level
-    (on the primary) we can offer synchronous replication for the most
-    important changes, without slowing down the bulk of the total workload.
-    Application level options are an important and practical tool for allowing
-    the benefits of synchronous replication for high performance applications.
+    通过在应用层（在主库上）指定同步复制选项，我们可以为最重要的更改提供同步复制，而不会拖慢整体工作负载的大部分。应用层选项是一个重要且实用的工具，可让高性能应用享受到同步复制的好处。
    </para>
 
    <para>
-    You should consider that the network bandwidth must be higher than
-    the rate of generation of WAL data.
+    您应该考虑到，网络带宽必须高于 WAL 数据的生成速率。
    </para>
 
    </sect3>
 
    <sect3 id="synchronous-replication-ha">
-    <title>Planning for High Availability</title>
+    <title>高可用性规划</title>
 
    <para>
-    <varname>synchronous_standby_names</varname> specifies the number and
-    names of synchronous standbys that transaction commits made when
-    <varname>synchronous_commit</varname> is set to <literal>on</literal>,
-    <literal>remote_apply</literal> or <literal>remote_write</literal> will wait for
-    responses from. Such transaction commits may never be completed
-    if any one of the synchronous standbys should crash.
+    <varname>synchronous_standby_names</varname> 指定了当 <varname>synchronous_commit</varname> 设置为 <literal>on</literal>、
+    <literal>remote_apply</literal> 或 <literal>remote_write</literal> 时，事务提交将等待其响应的同步后备服务器的数量和名称。如果其中任何一个同步后备服务器崩溃，此类事务提交可能永远无法完成。
    </para>
 
    <para>
-    The best solution for high availability is to ensure you keep as many
-    synchronous standbys as requested. This can be achieved by naming multiple
-    potential synchronous standbys using <varname>synchronous_standby_names</varname>.
+    高可用性的最佳解决方案是确保保留所要求数量的同步后备。这可以通过使用 <varname>synchronous_standby_names</varname> 命名多个潜在的同步后备来实现。
    </para>
 
    <para>
-    In a priority-based synchronous replication, the standbys whose names
-    appear earlier in the list will be used as synchronous standbys.
-    Standbys listed after these will take over the role of synchronous standby
-    if one of current ones should fail.
+    在基于优先级的同步复制中，列表中名称出现较早的后备将被用作同步后备。如果当前同步后备中的某一个发生故障，列在这些后备之后的后备将接替同步后备的角色。
    </para>
 
    <para>
-    In a quorum-based synchronous replication, all the standbys appearing
-    in the list will be used as candidates for synchronous standbys.
-    Even if one of them should fail, the other standbys will keep performing
-    the role of candidates of synchronous standby.
+    在基于法定人数的同步复制中，列表中出现的所有后备都将被用作同步后备的候选者。即使其中某一个发生故障，其他后备仍将继续履行同步后备候选者的角色。
    </para>
 
    <para>
-    When a standby first attaches to the primary, it will not yet be properly
-    synchronized. This is described as <literal>catchup</literal> mode. Once
-    the lag between standby and primary reaches zero for the first time
-    we move to real-time <literal>streaming</literal> state.
-    The catch-up duration may be long immediately after the standby has
-    been created. If the standby is shut down, then the catch-up period
-    will increase according to the length of time the standby has been down.
-    The standby is only able to become a synchronous standby
-    once it has reached <literal>streaming</literal> state.
-    This state can be viewed using
-    the <structname>pg_stat_replication</structname> view.
+    当后备首次连接到主库时，它尚未正确同步。这被描述为 <literal>catchup</literal> 模式。一旦后备与主库之间的延迟首次达到零，我们就进入实时的 <literal>streaming</literal> 状态。在后备刚创建之后，追赶持续时间可能很长。如果后备被关闭，那么追赶时间将根据后备停机时间的长短而增加。后备只有在达到 <literal>streaming</literal> 状态之后才能成为同步后备。此状态可以通过 <structname>pg_stat_replication</structname> 视图查看。
    </para>
 
    <para>
-    If primary restarts while commits are waiting for acknowledgment, those
-    waiting transactions will be marked fully committed once the primary
-    database recovers.
-    There is no way to be certain that all standbys have received all
-    outstanding WAL data at time of the crash of the primary. Some
-    transactions may not show as committed on the standby, even though
-    they show as committed on the primary. The guarantee we offer is that
-    the application will not receive explicit acknowledgment of the
-    successful commit of a transaction until the WAL data is known to be
-    safely received by all the synchronous standbys.
+    如果主库在提交等待确认期间重启，那么一旦主数据库恢复，这些等待中的事务将被标记为完全提交。无法确定所有后备在主库崩溃时都已收到所有未完成的 WAL 数据。某些事务在后备上可能不显示为已提交，即使它们在主库上显示为已提交。我们提供的保证是：在得知所有同步后备都已安全收到 WAL 数据之前，应用程序不会收到事务成功提交的显式确认。
    </para>
 
    <para>
-    If you really cannot keep as many synchronous standbys as requested
-    then you should decrease the number of synchronous standbys that
-    transaction commits must wait for responses from
-    in <varname>synchronous_standby_names</varname> (or disable it) and
-    reload the configuration file on the primary server.
+    如果您确实无法保留所要求数量的同步后备，那么您应该减少在 <varname>synchronous_standby_names</varname> 中事务提交必须等待其响应的同步后备数量（或禁用它），并重新加载主服务器上的配置文件。
    </para>
 
    <para>
-    If the primary is isolated from remaining standby servers you should
-    fail over to the best candidate of those other remaining standby servers.
+    如果主服务器与其余后备服务器隔离开来，你应该故障转移到那些其他剩余后备服务器中的最佳候选者。
    </para>
 
    <para>
-    If you need to re-create a standby server while transactions are
-    waiting, make sure that the functions <function>pg_backup_start()</function>
-    and <function>pg_backup_stop()</function> are run in a session with
-    <varname>synchronous_commit</varname> = <literal>off</literal>, otherwise those
-    requests will wait forever for the standby to appear.
+    如果你需要在事务等待时重新创建后备服务器，请确保在 <varname>synchronous_commit</varname> = <literal>off</literal> 的会话中运行函数 <function>pg_backup_start()</function> 和 <function>pg_backup_stop()</function>，否则那些请求将永远等待后备服务器出现。
    </para>
 
    </sect3>
   </sect2>
 
   <sect2 id="continuous-archiving-in-standby">
-   <title>Continuous Archiving in Standby</title>
+   <title>后备服务器中的连续归档</title>
 
    <indexterm>
      <primary>continuous archiving</primary>
@@ -1261,35 +870,11 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </indexterm>
 
    <para>
-     When continuous WAL archiving is used in a standby, there are two
-     different scenarios: the WAL archive can be shared between the primary
-     and the standby, or the standby can have its own WAL archive. When
-     the standby has its own WAL archive, set <varname>archive_mode</varname>
-     to <literal>always</literal>, and the standby will call the archive
-     command for every WAL segment it receives, whether it's by restoring
-     from the archive or by streaming replication. The shared archive can
-     be handled similarly, but the <varname>archive_command</varname> or <varname>archive_library</varname> must
-     test if the file being archived exists already, and if the existing file
-     has identical contents. This requires more care in the
-     <varname>archive_command</varname> or <varname>archive_library</varname>, as it must
-     be careful to not overwrite an existing file with different contents,
-     but return success if the exactly same file is archived twice. And
-     all that must be done free of race conditions, if two servers attempt
-     to archive the same file at the same time.
+     当在后备服务器中使用连续 WAL 归档时，有两种不同的场景：WAL 归档可以在主服务器和后服务器之间共享，或者后备服务器可以有自己的 WAL 归档。当后备服务器有自己的 WAL 归档时，将 <varname>archive_mode</varname> 设置为 <literal>always</literal>，后备服务器将为其接收到的每个 WAL 段调用归档命令，无论它是通过从归档中恢复还是通过流复制接收的。共享归档可以类似地处理，但 <varname>archive_command</varname> 或 <varname>archive_library</varname> 必须测试正在归档的文件是否已经存在，以及现有文件是否具有相同的内容。这需要在 <varname>archive_command</varname> 或 <varname>archive_library</varname> 中更加小心，因为它必须小心不要用不同的内容覆盖现有文件，但如果完全相同的文件被归档两次则返回成功。而且如果两台服务器试图同时归档同一个文件，所有这些都必须在没有竞态条件的情况下完成。
    </para>
 
    <para>
-     If <varname>archive_mode</varname> is set to <literal>on</literal>, the
-     archiver is not enabled during recovery or standby mode. If the standby
-     server is promoted, it will start archiving after the promotion, but
-     will not archive any WAL or timeline history files that
-     it did not generate itself. To get a complete
-     series of WAL files in the archive, you must ensure that all WAL is
-     archived, before it reaches the standby. This is inherently true with
-     file-based log shipping, as the standby can only restore files that
-     are found in the archive, but not if streaming replication is enabled.
-     When a server is not in recovery mode, there is no difference between
-     <literal>on</literal> and <literal>always</literal> modes.
+     如果 <varname>archive_mode</varname> 设置为 <literal>on</literal>，则在恢复或后备模式期间不会启用归档器。如果后备服务器被提升，它将在提升后开始归档，但不会归档任何它自己未生成的 WAL 或时间线历史文件。要在归档中获得完整的 WAL 文件系列，你必须确保所有 WAL 在到达后备服务器之前都已归档。对于基于文件的日志传送，这本来就是正确的，因为后备服务器只能恢复在归档中找到的文件，但如果启用了流复制则不然。当服务器不处于恢复模式时，<literal>on</literal> 和 <literal>always</literal> 模式之间没有区别。
    </para>
   </sect2>
   </sect1>
