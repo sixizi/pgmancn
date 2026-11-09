@@ -7194,34 +7194,34 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
    </sect1>
 
    <sect1 id="runtime-config-client">
-    <title>Client Connection Defaults</title>
+    <title>客户端连接默认值</title>
 
     <sect2 id="runtime-config-client-statement">
-     <title>Statement Behavior</title>
+     <title>语句行为</title>
      <variablelist>
 
      <varlistentry id="guc-client-min-messages" xreflabel="client_min_messages">
       <term><varname>client_min_messages</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>client_min_messages</varname> configuration parameter</primary>
+       <primary><varname>client_min_messages</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls which
-        <link linkend="runtime-config-severity-levels">message levels</link>
-        are sent to the client.
-        Valid values are <literal>DEBUG5</literal>,
-        <literal>DEBUG4</literal>, <literal>DEBUG3</literal>, <literal>DEBUG2</literal>,
-        <literal>DEBUG1</literal>, <literal>LOG</literal>, <literal>NOTICE</literal>,
-        <literal>WARNING</literal>, and <literal>ERROR</literal>.
-        Each level includes all the levels that follow it.  The later the level,
-        the fewer messages are sent.  The default is
-        <literal>NOTICE</literal>.  Note that <literal>LOG</literal> has a different
-        rank here than in <xref linkend="guc-log-min-messages"/>.
+        控制哪些
+        <link linkend="runtime-config-severity-levels">消息级别</link>
+        被发送到客户端。
+        有效值为 <literal>DEBUG5</literal>、
+        <literal>DEBUG4</literal>、<literal>DEBUG3</literal>、<literal>DEBUG2</literal>、
+        <literal>DEBUG1</literal>、<literal>LOG</literal>、<literal>NOTICE</literal>、
+        <literal>WARNING</literal> 和 <literal>ERROR</literal>。
+        每个级别都包含其后的所有级别。级别越靠后，
+        发送的消息越少。默认为
+        <literal>NOTICE</literal>。注意 <literal>LOG</literal> 在这里的
+        级别排序与 <xref linkend="guc-log-min-messages"/> 中不同。
        </para>
        <para>
-        <literal>INFO</literal> level messages are always sent to the client.
+        <literal>INFO</literal> 级别的消息总是发送给客户端。
        </para>
       </listitem>
      </varlistentry>
@@ -7229,42 +7229,25 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-search-path" xreflabel="search_path">
       <term><varname>search_path</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>search_path</varname> configuration parameter</primary>
+       <primary><varname>search_path</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>path</primary><secondary>for schemas</secondary></indexterm>
+      <indexterm><primary>路径</primary><secondary>用于模式</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        This variable specifies the order in which schemas are searched
-        when an object (table, data type, function, etc.) is referenced by a
-        simple name with no schema specified.  When there are objects of
-        identical names in different schemas, the one found first
-        in the search path is used.  An object that is not in any of the
-        schemas in the search path can only be referenced by specifying
-        its containing schema with a qualified (dotted) name.
+        此变量指定当用一个简单名称（未指定模式）引用一个对象（表、数据类型、函数等）时，搜索模式的顺序。当不同模式中存在同名对象时，将使用在搜索路径中最先找到的那个对象。不在搜索路径中任何模式里的对象，只能通过用限定（带点）名称指定其所属模式来引用。
        </para>
 
        <para>
-        The value for <varname>search_path</varname> must be a comma-separated
-        list of schema names.  Any name that is not an existing schema, or is
-        a schema for which the user does not have <literal>USAGE</literal>
-        permission, is silently ignored.
+        <varname>search_path</varname> 的值必须是一个以逗号分隔的模式名列表。任何不存在的模式名，或者用户没有 <literal>USAGE</literal> 权限的模式，都会被静默忽略。
        </para>
 
        <para>
-        If one of the list items is the special name
-        <literal>$user</literal>, then the schema having the name returned by
-        <function>CURRENT_USER</function> is substituted, if there is such a schema
-        and the user has <literal>USAGE</literal> permission for it.
-        (If not, <literal>$user</literal> is ignored.)
+        如果列表项之一是特殊名称 <literal>$user</literal>，那么将替换为 <function>CURRENT_USER</function> 所返回名称对应的模式（如果存在这样的模式并且用户对其具有 <literal>USAGE</literal> 权限）。（如果没有，则忽略 <literal>$user</literal>。）
        </para>
 
        <para>
-        The system catalog schema, <literal>pg_catalog</literal>, is always
-        searched, whether it is mentioned in the path or not.  If it is
-        mentioned in the path then it will be searched in the specified
-        order.  If <literal>pg_catalog</literal> is not in the path then it will
-        be searched <emphasis>before</emphasis> searching any of the path items.
+        系统目录模式 <literal>pg_catalog</literal> 始终会被搜索，无论它是否在路径中被提及。如果它在路径中被提及，那么将按指定的顺序搜索它。如果 <literal>pg_catalog</literal> 不在路径中，那么它将在搜索任何路径项<emphasis>之前</emphasis>被搜索。
        </para>
 
        <!-- To further split hairs, funcname('foo') does not use the temporary
@@ -7272,49 +7255,23 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
             refers to function names in a loose sense, "pg_proc.proname or
             func_name grammar production". -->
        <para>
-        Likewise, the current session's temporary-table schema,
-        <literal>pg_temp_<replaceable>nnn</replaceable></literal>, is always searched if it
-        exists.  It can be explicitly listed in the path by using the
-        alias <literal>pg_temp</literal><indexterm><primary>pg_temp</primary></indexterm>.  If it is not listed in the path then
-        it is searched first (even before <literal>pg_catalog</literal>).  However,
-        the temporary schema is only searched for relation (table, view,
-        sequence, etc.) and data type names.  It is never searched for
-        function or operator names.
+        同样，当前会话的临时表模式 <literal>pg_temp_<replaceable>nnn</replaceable></literal> 如果存在，也始终会被搜索。可以通过使用别名 <literal>pg_temp</literal><indexterm><primary>pg_temp</primary></indexterm> 在路径中显式列出它。如果它未在路径中列出，那么它会首先被搜索（甚至在 <literal>pg_catalog</literal> 之前）。不过，临时模式只用于搜索关系（表、视图、序列等）和数据类型名称。它从不用于搜索函数或运算符名称。
        </para>
 
        <para>
-        When objects are created without specifying a particular target
-        schema, they will be placed in the first valid schema named in
-        <varname>search_path</varname>.  An error is reported if the search
-        path is empty.
+        当创建对象时未指定特定的目标模式，它们将被放置在 <varname>search_path</varname> 中命名的第一个有效模式中。如果搜索路径为空，则会报告一个错误。
        </para>
 
        <para>
-        The default value for this parameter is
-        <literal>"$user", public</literal>.
-        This setting supports shared use of a database (where no users
-        have private schemas, and all share use of <literal>public</literal>),
-        private per-user schemas, and combinations of these.  Other
-        effects can be obtained by altering the default search path
-        setting, either globally or per-user.
+        该参数的默认值为 <literal>"$user", public</literal>。此设置支持数据库的共享使用（其中没有用户拥有私有模式，所有用户共享使用 <literal>public</literal>）、每个用户私有的模式，以及这些方式的组合。通过修改默认的搜索路径设置（全局或按用户），可以获得其他效果。
        </para>
 
        <para>
-        For more information on schema handling, see
-        <xref linkend="ddl-schemas"/>.  In particular, the default
-        configuration is suitable only when the database has a single user or
-        a few mutually-trusting users.
+        有关模式处理的更多信息，请参见 <xref linkend="ddl-schemas"/>。特别是，默认配置仅适用于数据库只有一个用户或少数相互信任的用户的情况。
        </para>
 
        <para>
-        The current effective value of the search path can be examined
-        via the <acronym>SQL</acronym> function
-        <function>current_schemas</function>
-        (see <xref linkend="functions-info"/>).
-        This is not quite the same as
-        examining the value of <varname>search_path</varname>, since
-        <function>current_schemas</function> shows how the items
-        appearing in <varname>search_path</varname> were resolved.
+        搜索路径的当前有效值可以通过 <acronym>SQL</acronym> 函数 <function>current_schemas</function> 来检查（参见 <xref linkend="functions-info"/>）。这与检查 <varname>search_path</varname> 的值并不完全相同，因为 <function>current_schemas</function> 显示了 <varname>search_path</varname> 中出现的项是如何被解析的。
        </para>
 
       </listitem>
@@ -7323,25 +7280,16 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-row-security" xreflabel="row_security">
       <term><varname>row_security</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>row_security</varname> configuration parameter</primary>
+       <primary><varname>row_security</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This variable controls whether to raise an error in lieu of applying a
-        row security policy.  When set to <literal>on</literal>, policies apply
-        normally.  When set to <literal>off</literal>, queries fail which would
-        otherwise apply at least one policy.  The default is <literal>on</literal>.
-        Change to <literal>off</literal> where limited row visibility could cause
-        incorrect results; for example, <application>pg_dump</application> makes that
-        change by default.  This variable has no effect on roles which bypass
-        every row security policy, to wit, superusers and roles with
-        the <literal>BYPASSRLS</literal> attribute.
+        此变量控制是否在应用行安全策略时改为抛出错误。当设置为 <literal>on</literal> 时，策略正常应用。当设置为 <literal>off</literal> 时，原本会应用至少一个策略的查询将失败。默认值为 <literal>on</literal>。在行可见性受限可能导致错误结果的情况下，应改为 <literal>off</literal>；例如，<application>pg_dump</application> 默认就会做出该更改。此变量对绕过所有行安全策略的角色（即超级用户和具有 <literal>BYPASSRLS</literal> 属性的角色）没有影响。
        </para>
 
        <para>
-        For more information on row security policies,
-        see <xref linkend="sql-createpolicy"/>.
+        有关行安全策略的更多信息，请参见 <xref linkend="sql-createpolicy"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7349,16 +7297,14 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-table-access-method" xreflabel="default_table_access_method">
       <term><varname>default_table_access_method</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>default_table_access_method</varname> configuration parameter</primary>
+       <primary><varname>default_table_access_method</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter specifies the default table access method to use when
-        creating tables or materialized views if the <command>CREATE</command>
-        command does not explicitly specify an access method, or when
-        <command>SELECT ... INTO</command> is used, which does not allow
-        specifying a table access method. The default is <literal>heap</literal>.
+        此参数指定在 <command>CREATE</command> 命令未显式指定访问方法时，或在使用
+        不允许指定表访问方法的 <command>SELECT ... INTO</command> 时，创建表或物化视图
+        所使用的默认表访问方法。默认值为 <literal>heap</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -7366,49 +7312,45 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-tablespace" xreflabel="default_tablespace">
       <term><varname>default_tablespace</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>default_tablespace</varname> configuration parameter</primary>
+       <primary><varname>default_tablespace</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>tablespace</primary><secondary>default</secondary></indexterm>
+      <indexterm><primary>表空间</primary><secondary>默认</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        This variable specifies the default tablespace in which to create
-        objects (tables and indexes) when a <command>CREATE</command> command does
-        not explicitly specify a tablespace.
+        此变量指定当 <command>CREATE</command> 命令未显式指定表空间时，
+        用于创建对象（表和索引）的默认表空间。
        </para>
 
        <para>
-        The value is either the name of a tablespace, or an empty string
-        to specify using the default tablespace of the current database.
-        If the value does not match the name of any existing tablespace,
-        <productname>PostgreSQL</productname> will automatically use the default
-        tablespace of the current database.  If a nondefault tablespace
-        is specified, the user must have <literal>CREATE</literal> privilege
-        for it, or creation attempts will fail.
+        该值要么是表空间的名称，要么是空字符串，
+        表示使用当前数据库的默认表空间。
+        如果该值与任何现有表空间的名称都不匹配，
+        <productname>PostgreSQL</productname> 将自动使用当前数据库的默认表空间。如果指定了
+        非默认表空间，用户必须对其具有 <literal>CREATE</literal> 权限，
+        否则创建尝试将失败。
        </para>
 
        <para>
-        This variable is not used for temporary tables; for them,
-        <xref linkend="guc-temp-tablespaces"/> is consulted instead.
+        此变量不用于临时表；对于临时表，
+        改为查询 <xref linkend="guc-temp-tablespaces"/>。
        </para>
 
        <para>
-        This variable is also not used when creating databases.
-        By default, a new database inherits its tablespace setting from
-        the template database it is copied from.
+        创建数据库时也不使用这个变量。
+        默认情况下，新数据库会从它复制自的模板数据库继承其表空间设置。
        </para>
 
        <para>
-        If this parameter is set to a value other than the empty string
-        when a partitioned table is created, the partitioned table's
-        tablespace will be set to that value, which will be used as
-        the default tablespace for partitions created in the future,
-        even if <varname>default_tablespace</varname> has changed since then.
+        如果在创建分区表时该参数被设置为非空字符串，
+        则该分区表的表空间将被设置为该值，它将被用作
+        将来创建的分区的默认表空间，
+        即使此后 <varname>default_tablespace</varname> 已经改变也是如此。
        </para>
 
        <para>
-        For more information on tablespaces,
-        see <xref linkend="manage-ag-tablespaces"/>.
+        有关表空间的更多信息，
+        请参见 <xref linkend="manage-ag-tablespaces"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7416,22 +7358,22 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-toast-compression" xreflabel="default_toast_compression">
       <term><varname>default_toast_compression</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>default_toast_compression</varname> configuration parameter</primary>
+       <primary><varname>default_toast_compression</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This variable sets the default
+        这个变量设置可压缩列的值默认使用的
         <link linkend="storage-toast">TOAST</link>
-        compression method for values of compressible columns.
-        (This can be overridden for individual columns by setting
-        the <literal>COMPRESSION</literal> column option in
-        <command>CREATE TABLE</command> or
-        <command>ALTER TABLE</command>.)
-        The supported compression methods are <literal>pglz</literal> and
-        (if <productname>PostgreSQL</productname> was compiled with
-        <option>--with-lz4</option>) <literal>lz4</literal>.
-        The default is <literal>pglz</literal>.
+        压缩方法。
+        （可以通过在
+        <command>CREATE TABLE</command> 或
+        <command>ALTER TABLE</command> 中设置
+        <literal>COMPRESSION</literal> 列选项来为单个列覆盖此设置。）
+        支持的压缩方法有 <literal>pglz</literal> 以及
+        （如果 <productname>PostgreSQL</productname> 在编译时包含了
+        <option>--with-lz4</option>）<literal>lz4</literal>。
+        默认为 <literal>pglz</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -7439,48 +7381,29 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-temp-tablespaces" xreflabel="temp_tablespaces">
       <term><varname>temp_tablespaces</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>temp_tablespaces</varname> configuration parameter</primary>
+       <primary><varname>temp_tablespaces</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>tablespace</primary><secondary>temporary</secondary></indexterm>
+      <indexterm><primary>表空间</primary><secondary>临时</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        This variable specifies tablespaces in which to create temporary
-        objects (temp tables and indexes on temp tables) when a
-        <command>CREATE</command> command does not explicitly specify a tablespace.
-        Temporary files for purposes such as sorting large data sets
-        are also created in these tablespaces.
+        这个变量指定当 <command>CREATE</command> 命令没有显式指定表空间时，在哪些表空间中创建临时对象（临时表以及临时表上的索引）。用于排序大型数据集等目的的临时文件也会在这些表空间中创建。
        </para>
 
        <para>
-        The value is a list of names of tablespaces.  When there is more than
-        one name in the list, <productname>PostgreSQL</productname> chooses a random
-        member of the list each time a temporary object is to be created;
-        except that within a transaction, successively created temporary
-        objects are placed in successive tablespaces from the list.
-        If the selected element of the list is an empty string,
-        <productname>PostgreSQL</productname> will automatically use the default
-        tablespace of the current database instead.
+        该值是一个表空间名称列表。当列表中有多个名称时，<productname>PostgreSQL</productname> 每次要创建临时对象时会从列表中随机选择一个成员；但在一个事务内，连续创建的临时对象会被依次放入列表中的后续表空间。如果列表中选中的元素是空字符串，<productname>PostgreSQL</productname> 将自动改用当前数据库的默认表空间。
        </para>
 
        <para>
-        When <varname>temp_tablespaces</varname> is set interactively, specifying a
-        nonexistent tablespace is an error, as is specifying a tablespace for
-        which the user does not have <literal>CREATE</literal> privilege.  However,
-        when using a previously set value, nonexistent tablespaces are
-        ignored, as are tablespaces for which the user lacks
-        <literal>CREATE</literal> privilege.  In particular, this rule applies when
-        using a value set in <filename>postgresql.conf</filename>.
+        当以交互方式设置 <varname>temp_tablespaces</varname> 时，指定不存在的表空间会报错，指定用户没有 <literal>CREATE</literal> 权限的表空间同样会报错。但是，当使用先前设置的值时，不存在的表空间会被忽略，用户缺少 <literal>CREATE</literal> 权限的表空间也会被忽略。特别是，当使用在 <filename>postgresql.conf</filename> 中设置的值时，此规则适用。
        </para>
 
        <para>
-        The default value is an empty string, which results in all temporary
-        objects being created in the default tablespace of the current
-        database.
+        默认值为空字符串，这会导致所有临时对象都创建在当前数据库的默认表空间中。
        </para>
 
        <para>
-        See also <xref linkend="guc-default-tablespace"/>.
+        另请参阅 <xref linkend="guc-default-tablespace"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7488,20 +7411,15 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-check-function-bodies" xreflabel="check_function_bodies">
       <term><varname>check_function_bodies</varname> (<type>boolean</type>)
       <indexterm>
-       <primary><varname>check_function_bodies</varname> configuration parameter</primary>
+       <primary><varname>check_function_bodies</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter is normally on. When set to <literal>off</literal>, it
-        disables validation of the routine body string during <xref
-        linkend="sql-createfunction"/> and <xref
-        linkend="sql-createprocedure"/>.  Disabling validation avoids side
-        effects of the validation process, in particular preventing false
-        positives due to problems such as forward references.
-        Set this parameter
-        to <literal>off</literal> before loading functions on behalf of other
-        users; <application>pg_dump</application> does so automatically.
+        此参数通常为开。当设置为 <literal>off</literal> 时，它会在 <xref
+        linkend="sql-createfunction"/> 和 <xref
+        linkend="sql-createprocedure"/> 期间禁用对例程主体字符串的验证。禁用验证可避免验证过程带来的副作用，特别是防止因前向引用之类的问题而导致的误报。
+        在代表其他用户装载函数之前，请将此参数设置为 <literal>off</literal>；<application>pg_dump</application> 会自动这样做。
        </para>
       </listitem>
      </varlistentry>
@@ -7509,26 +7427,21 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-transaction-isolation" xreflabel="default_transaction_isolation">
       <term><varname>default_transaction_isolation</varname> (<type>enum</type>)
       <indexterm>
-       <primary>transaction isolation level</primary>
-       <secondary>setting default</secondary>
+       <primary>事务隔离级别</primary>
+       <secondary>设置默认值</secondary>
       </indexterm>
       <indexterm>
-       <primary><varname>default_transaction_isolation</varname> configuration parameter</primary>
+       <primary><varname>default_transaction_isolation</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Each SQL transaction has an isolation level, which can be
-        either <quote>read uncommitted</quote>, <quote>read
-        committed</quote>, <quote>repeatable read</quote>, or
-        <quote>serializable</quote>.  This parameter controls the
-        default isolation level of each new transaction. The default
-        is <quote>read committed</quote>.
+        每个 SQL 事务都有一个隔离级别，可以是 <quote>读未提交</quote>、<quote>读已提交</quote>、<quote>可重复读</quote>或<quote>可序列化</quote>。此参数控制每个新事务的默认隔离级别。默认是 <quote>读已提交</quote>。
        </para>
 
        <para>
-        Consult <xref linkend="mvcc"/> and <xref
-        linkend="sql-set-transaction"/> for more information.
+        更多信息请参考 <xref linkend="mvcc"/> 和 <xref
+        linkend="sql-set-transaction"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7536,22 +7449,20 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-transaction-read-only" xreflabel="default_transaction_read_only">
       <term><varname>default_transaction_read_only</varname> (<type>boolean</type>)
       <indexterm>
-       <primary>read-only transaction</primary>
-       <secondary>setting default</secondary>
+       <primary>只读事务</primary>
+       <secondary>设置默认值</secondary>
       </indexterm>
       <indexterm>
-       <primary><varname>default_transaction_read_only</varname> configuration parameter</primary>
+       <primary><varname>default_transaction_read_only</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        A read-only SQL transaction cannot alter non-temporary tables.
-        This parameter controls the default read-only status of each new
-        transaction. The default is <literal>off</literal> (read/write).
+        只读 SQL 事务不能更改非临时表。此参数控制每个新事务的默认只读状态。默认是 <literal>off</literal>（读/写）。
        </para>
 
        <para>
-        Consult <xref linkend="sql-set-transaction"/> for more information.
+        更多信息请参阅 <xref linkend="sql-set-transaction"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7559,33 +7470,24 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-default-transaction-deferrable" xreflabel="default_transaction_deferrable">
       <term><varname>default_transaction_deferrable</varname> (<type>boolean</type>)
       <indexterm>
-       <primary>deferrable transaction</primary>
-       <secondary>setting default</secondary>
+       <primary>可延迟事务</primary>
+       <secondary>设置默认值</secondary>
       </indexterm>
       <indexterm>
-       <primary><varname>default_transaction_deferrable</varname> configuration parameter</primary>
+       <primary><varname>default_transaction_deferrable</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When running at the <literal>serializable</literal> isolation level,
-        a deferrable read-only SQL transaction may be delayed before
-        it is allowed to proceed.  However, once it begins executing
-        it does not incur any of the overhead required to ensure
-        serializability; so serialization code will have no reason to
-        force it to abort because of concurrent updates, making this
-        option suitable for long-running read-only transactions.
+        在 <literal>serializable</literal> 隔离级别下运行时，可延迟的只读 SQL 事务在被允许继续执行之前可能会被延迟。不过，一旦它开始执行，就不会产生任何确保可串行化所需开销；因此序列化代码没有理由因为并发更新而强制中止它，这使得该选项适合长时间运行的只读事务。
         </para>
 
         <para>
-        This parameter controls the default deferrable status of each
-        new transaction.  It currently has no effect on read-write
-        transactions or those operating at isolation levels lower
-        than <literal>serializable</literal>. The default is <literal>off</literal>.
+        此参数控制每个新事务的默认可延迟状态。它目前对读写事务或运行在低于 <literal>serializable</literal> 的隔离级别下的事务没有影响。默认值为 <literal>off</literal>。
        </para>
 
        <para>
-        Consult <xref linkend="sql-set-transaction"/> for more information.
+        更多信息请参阅 <xref linkend="sql-set-transaction"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7593,10 +7495,10 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-transaction-isolation" xreflabel="transaction_isolation">
       <term><varname>transaction_isolation</varname> (<type>enum</type>)
       <indexterm>
-       <primary>transaction isolation level</primary>
+       <primary>事务隔离级别</primary>
       </indexterm>
       <indexterm>
-       <primary><varname>transaction_isolation</varname> configuration parameter</primary>
+       <primary><varname>transaction_isolation</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
@@ -7613,10 +7515,10 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-transaction-read-only" xreflabel="transaction_read_only">
       <term><varname>transaction_read_only</varname> (<type>boolean</type>)
       <indexterm>
-       <primary>read-only transaction</primary>
+       <primary>只读事务</primary>
       </indexterm>
       <indexterm>
-       <primary><varname>transaction_read_only</varname> configuration parameter</primary>
+       <primary><varname>transaction_read_only</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
@@ -7633,10 +7535,10 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-transaction-deferrable" xreflabel="transaction_deferrable">
       <term><varname>transaction_deferrable</varname> (<type>boolean</type>)
       <indexterm>
-       <primary>deferrable transaction</primary>
+       <primary>可延迟事务</primary>
       </indexterm>
       <indexterm>
-       <primary><varname>transaction_deferrable</varname> configuration parameter</primary>
+       <primary><varname>transaction_deferrable</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
@@ -7654,79 +7556,67 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-session-replication-role" xreflabel="session_replication_role">
       <term><varname>session_replication_role</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>session_replication_role</varname> configuration parameter</primary>
+       <primary><varname>session_replication_role</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Controls firing of replication-related triggers and rules for the
-        current session.
-        Possible values are <literal>origin</literal> (the default),
-        <literal>replica</literal> and <literal>local</literal>.
-        Setting this parameter results in discarding any previously cached
-        query plans.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        控制当前会话中复制相关触发器和规则的触发。
+        可能的值为 <literal>origin</literal>（默认值）、
+        <literal>replica</literal> 和 <literal>local</literal>。
+        设置此参数会丢弃任何先前缓存的查询计划。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <para>
-        The intended use of this setting is that logical replication systems
-        set it to <literal>replica</literal> when they are applying replicated
-        changes.  The effect of that will be that triggers and rules (that
-        have not been altered from their default configuration) will not fire
-        on the replica.  See the <link linkend="sql-altertable"><command>ALTER TABLE</command></link> clauses
-        <literal>ENABLE TRIGGER</literal> and <literal>ENABLE RULE</literal>
-        for more information.
+        此设置的预期用途是，逻辑复制系统在应用复制的更改时
+        将其设置为 <literal>replica</literal>。这样做的效果是，
+        触发器与规则（未从其默认配置更改的）将不会
+        在副本上触发。有关更多信息，请参见
+        <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 的
+        <literal>ENABLE TRIGGER</literal> 和 <literal>ENABLE RULE</literal> 子句。
        </para>
 
        <para>
-        PostgreSQL treats the settings <literal>origin</literal> and
-        <literal>local</literal> the same internally.  Third-party replication
-        systems may use these two values for their internal purposes, for
-        example using <literal>local</literal> to designate a session whose
-        changes should not be replicated.
+        PostgreSQL 在内部将设置 <literal>origin</literal> 和
+        <literal>local</literal> 视为相同。第三方复制
+        系统可以将这两个值用于其内部目的，例如
+        使用 <literal>local</literal> 来指定其更改不应被复制的
+        会话。
        </para>
 
        <para>
-        Since foreign keys are implemented as triggers, setting this parameter
-        to <literal>replica</literal> also disables all foreign key checks,
-        which can leave data in an inconsistent state if improperly used.
+        由于外键是以触发器实现的，将此参数
+        设置为 <literal>replica</literal> 也会禁用所有外键检查，
+        如果使用不当，可能会使数据处于不一致状态。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry id="guc-statement-timeout" xreflabel="statement_timeout">
-      <term><varname>statement_timeout</varname> (<type>integer</type>)
+      <term><varname>statement_timeout</varname>（<type>integer</type>）
       <indexterm>
-       <primary><varname>statement_timeout</varname> configuration parameter</primary>
+       <primary><varname>statement_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Abort any statement that takes more than the specified amount of time.
-        If <varname>log_min_error_statement</varname> is set
-        to <literal>ERROR</literal> or lower, the statement that timed out
-        will also be logged.
-        If this value is specified without units, it is taken as milliseconds.
-        A value of zero (the default) disables the timeout.
+        中止任何耗时超过指定时间的语句。
+        如果 <varname>log_min_error_statement</varname> 设置为 <literal>ERROR</literal>
+        或更低，超时的语句也会被记录到日志。
+        如果指定此值时不带单位，则按毫秒处理。
+        值为零（默认值）将禁用超时。
        </para>
 
        <para>
-        The timeout is measured from the time a command arrives at the
-        server until it is completed by the server.  If multiple SQL
-        statements appear in a single simple-query message, the timeout
-        is applied to each statement separately.
-        (<productname>PostgreSQL</productname> versions before 13 usually
-        treated the timeout as applying to the whole query string.)
-        In extended query protocol, the timeout starts running when any
-        query-related message (Parse, Bind, Execute, Describe) arrives, and
-        it is canceled by completion of an Execute or Sync message.
+        超时时间的计量从命令到达服务器开始，直到服务器完成该命令为止。如果一条简单查询消息中包含多条 SQL 语句，则超时时间分别应用于每条语句。
+        （<productname>PostgreSQL</productname> 13 之前的版本通常将该超时视为应用于整个查询字符串。）
+        在扩展查询协议中，超时从任何与查询相关的消息（Parse、Bind、Execute、Describe）到达时开始计时，并在 Execute 或 Sync 消息完成时被取消。
        </para>
 
        <para>
-        Setting <varname>statement_timeout</varname> in
-        <filename>postgresql.conf</filename> is not recommended because it would
-        affect all sessions.
+        不建议在 <filename>postgresql.conf</filename> 中设置 <varname>statement_timeout</varname>，因为这样会影响所有会话。
        </para>
       </listitem>
      </varlistentry>
@@ -7734,34 +7624,27 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-transaction-timeout" xreflabel="transaction_timeout">
       <term><varname>transaction_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>transaction_timeout</varname> configuration parameter</primary>
+       <primary><varname>transaction_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Terminate any session that spans longer than the specified amount of
-        time in a transaction. The limit applies both to explicit transactions
-        (started with <command>BEGIN</command>) and to an implicitly started
-        transaction corresponding to a single statement.
-        If this value is specified without units, it is taken as milliseconds.
-        A value of zero (the default) disables the timeout.
+        终止任何在事务中持续时间超过指定时长的会话。该限制既适用于显式事务（以 <command>BEGIN</command> 启动），也适用于与单条语句对应的隐式启动的事务。
+        如果指定该值时不带单位，则按毫秒处理。
+        值为零（默认值）会禁用该超时。
        </para>
 
        <para>
-        If <varname>transaction_timeout</varname> is shorter or equal to
-        <varname>idle_in_transaction_session_timeout</varname> or <varname>statement_timeout</varname>
-        then the longer timeout is ignored.
+        如果 <varname>transaction_timeout</varname> 小于或等于 <varname>idle_in_transaction_session_timeout</varname> 或 <varname>statement_timeout</varname>，则较长的超时会被忽略。
        </para>
 
        <para>
-        Setting <varname>transaction_timeout</varname> in
-        <filename>postgresql.conf</filename> is not recommended because it would
-        affect all sessions.
+        不建议在 <filename>postgresql.conf</filename> 中设置 <varname>transaction_timeout</varname>，因为这样会影响所有会话。
        </para>
 
        <note>
         <para>
-         Prepared transactions are not subject to this timeout.
+         预备事务不受此超时限制。
         </para>
        </note>
       </listitem>
@@ -7770,36 +7653,23 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-lock-timeout" xreflabel="lock_timeout">
       <term><varname>lock_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>lock_timeout</varname> configuration parameter</primary>
+       <primary><varname>lock_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Abort any statement that waits longer than the specified amount of
-        time while attempting to acquire a lock on a table, index,
-        row, or other database object.  The time limit applies separately to
-        each lock acquisition attempt.  The limit applies both to explicit
-        locking requests (such as <command>LOCK TABLE</command>, or <command>SELECT
-        FOR UPDATE</command> without <literal>NOWAIT</literal>) and to implicitly-acquired
-        locks.
-        If this value is specified without units, it is taken as milliseconds.
-        A value of zero (the default) disables the timeout.
+        中止任何在尝试获取表、索引、行或其他数据库对象上的锁时等待时间超过指定时长的语句。该时间限制分别适用于每一次获取锁的尝试。该限制既适用于显式锁请求（例如 <command>LOCK TABLE</command>，或不带 <literal>NOWAIT</literal> 的 <command>SELECT
+        FOR UPDATE</command>），也适用于隐式获取的锁。
+        如果指定该值时不带单位，则按毫秒处理。
+        值为零（默认值）会禁用该超时。
        </para>
 
        <para>
-        Unlike <varname>statement_timeout</varname>, this timeout can only occur
-        while waiting for locks.  Note that if <varname>statement_timeout</varname>
-        is nonzero, it is rather pointless to set <varname>lock_timeout</varname> to
-        the same or larger value, since the statement timeout would always
-        trigger first.  If <varname>log_min_error_statement</varname> is set to
-        <literal>ERROR</literal> or lower, the statement that timed out will be
-        logged.
+        与 <varname>statement_timeout</varname> 不同，此超时只可能在等待锁时发生。请注意，如果 <varname>statement_timeout</varname> 非零，那么将 <varname>lock_timeout</varname> 设置为相同或更大的值就毫无意义，因为语句超时总是会先触发。如果 <varname>log_min_error_statement</varname> 设置为 <literal>ERROR</literal> 或更低，则超时的语句将被记入日志。
        </para>
 
        <para>
-        Setting <varname>lock_timeout</varname> in
-        <filename>postgresql.conf</filename> is not recommended because it would
-        affect all sessions.
+        不建议在 <filename>postgresql.conf</filename> 中设置 <varname>lock_timeout</varname>，因为这样会影响所有会话。
        </para>
       </listitem>
      </varlistentry>
@@ -7807,25 +7677,18 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-idle-in-transaction-session-timeout" xreflabel="idle_in_transaction_session_timeout">
       <term><varname>idle_in_transaction_session_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>idle_in_transaction_session_timeout</varname> configuration parameter</primary>
+       <primary><varname>idle_in_transaction_session_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Terminate any session that has been idle (that is, waiting for a
-        client query) within an open transaction for longer than the
-        specified amount of time.
-        If this value is specified without units, it is taken as milliseconds.
-        A value of zero (the default) disables the timeout.
+        终止任何在打开的事务中处于空闲状态（即等待客户端查询）超过指定时长的会话。
+        如果此值指定时未带单位，则按毫秒处理。
+        值为零（默认值）会禁用该超时。
        </para>
 
        <para>
-        This option can be used to ensure that idle sessions do not hold
-        locks for an unreasonable amount of time.  Even when no significant
-        locks are held, an open transaction prevents vacuuming away
-        recently-dead tuples that may be visible only to this transaction;
-        so remaining idle for a long time can contribute to table bloat.
-        See <xref linkend="routine-vacuuming"/> for more details.
+        此选项可用于确保空闲会话不会在过长的时间内持有锁。即使没有持有重要的锁，打开的事务也会阻止清理掉可能仅对该事务可见的最近死亡元组；因此长时间保持空闲可能导致表膨胀。更多细节请参见 <xref linkend="routine-vacuuming"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7833,31 +7696,22 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-idle-session-timeout" xreflabel="idle_session_timeout">
       <term><varname>idle_session_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>idle_session_timeout</varname> configuration parameter</primary>
+       <primary><varname>idle_session_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Terminate any session that has been idle (that is, waiting for a
-        client query), but not within an open transaction, for longer than
-        the specified amount of time.
-        If this value is specified without units, it is taken as milliseconds.
-        A value of zero (the default) disables the timeout.
+        终止任何处于空闲状态（即等待客户端查询）、但不在打开的事务中超过指定时长的会话。
+        如果此值指定时未带单位，则按毫秒处理。
+        值为零（默认值）会禁用该超时。
        </para>
 
        <para>
-        Unlike the case with an open transaction, an idle session without a
-        transaction imposes no large costs on the server, so there is less
-        need to enable this timeout
-        than <varname>idle_in_transaction_session_timeout</varname>.
+        与打开事务的情况不同，没有事务的空闲会话不会给服务器带来很大的开销，因此相比 <varname>idle_in_transaction_session_timeout</varname>，启用此超时的必要性较小。
        </para>
 
        <para>
-        Be wary of enforcing this timeout on connections made through
-        connection-pooling software or other middleware, as such a layer
-        may not react well to unexpected connection closure.  It may be
-        helpful to enable this timeout only for interactive sessions,
-        perhaps by applying it only to particular users.
+        对于通过连接池软件或其他中间件建立的连接，要谨慎实施此超时，因为这样的中间层可能无法很好地应对意外的连接关闭。仅在交互式会话中启用此超时可能会有帮助，或许可以只对特定用户应用它。
        </para>
       </listitem>
      </varlistentry>
@@ -7865,17 +7719,16 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-bytea-output" xreflabel="bytea_output">
       <term><varname>bytea_output</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>bytea_output</varname> configuration parameter</primary>
+       <primary><varname>bytea_output</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the output format for values of type <type>bytea</type>.
-        Valid values are <literal>hex</literal> (the default)
-        and <literal>escape</literal> (the traditional PostgreSQL
-        format).  See <xref linkend="datatype-binary"/> for more
-        information.  The <type>bytea</type> type always
-        accepts both formats on input, regardless of this setting.
+        设置 <type>bytea</type> 类型值的输出格式。
+        有效值为 <literal>hex</literal>（默认值）
+        和 <literal>escape</literal>（PostgreSQL 的传统格式）。有关
+        更多信息，请参见 <xref linkend="datatype-binary"/>。无论此设置如何，
+        <type>bytea</type> 类型在输入时始终接受这两种格式。
        </para>
       </listitem>
      </varlistentry>
@@ -7883,27 +7736,23 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-xmlbinary" xreflabel="xmlbinary">
       <term><varname>xmlbinary</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>xmlbinary</varname> configuration parameter</primary>
+       <primary><varname>xmlbinary</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets how binary values are to be encoded in XML.  This applies
-        for example when <type>bytea</type> values are converted to
-        XML by the functions <function>xmlelement</function> or
-        <function>xmlforest</function>.  Possible values are
-        <literal>base64</literal> and <literal>hex</literal>, which
-        are both defined in the XML Schema standard.  The default is
-        <literal>base64</literal>.  For further information about
-        XML-related functions, see <xref linkend="functions-xml"/>.
+        设置二进制值在 XML 中的编码方式。例如，当通过函数 <function>xmlelement</function> 或
+        <function>xmlforest</function> 将 <type>bytea</type> 值转换为
+        XML 时，就会应用此设置。可能的取值为
+        <literal>base64</literal> 和 <literal>hex</literal>，二者均在 XML Schema 标准中定义。
+        默认为 <literal>base64</literal>。有关
+        XML 相关函数的更多信息，请参见 <xref linkend="functions-xml"/>。
        </para>
 
        <para>
-        The actual choice here is mostly a matter of taste,
-        constrained only by possible restrictions in client
-        applications.  Both methods support all possible values,
-        although the hex encoding will be somewhat larger than the
-        base64 encoding.
+        这里实际作何选择主要取决于个人偏好，
+        仅受客户端应用程序中可能存在的限制约束。两种方法都支持所有可能的值，
+        不过十六进制编码会比 base64 编码略大一些。
        </para>
       </listitem>
      </varlistentry>
@@ -7911,32 +7760,30 @@ COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;
      <varlistentry id="guc-xmloption" xreflabel="xmloption">
       <term><varname>xmloption</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>xmloption</varname> configuration parameter</primary>
+       <primary><varname>xmloption</varname> 配置参数</primary>
       </indexterm>
       <indexterm>
        <primary><varname>SET XML OPTION</varname></primary>
       </indexterm>
       <indexterm>
-       <primary>XML option</primary>
+       <primary>XML 选项</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets whether <literal>DOCUMENT</literal> or
-        <literal>CONTENT</literal> is implicit when converting between
-        XML and character string values.  See <xref
-        linkend="datatype-xml"/> for a description of this.  Valid
-        values are <literal>DOCUMENT</literal> and
-        <literal>CONTENT</literal>.  The default is
-        <literal>CONTENT</literal>.
+        设置当在 XML 与字符串值之间转换时，隐式使用 <literal>DOCUMENT</literal> 还是
+        <literal>CONTENT</literal>。有关说明请参见 <xref
+        linkend="datatype-xml"/>。有效值为 <literal>DOCUMENT</literal> 和
+        <literal>CONTENT</literal>。默认值为
+        <literal>CONTENT</literal>。
        </para>
 
        <para>
-        According to the SQL standard, the command to set this option is
+        根据 SQL 标准，设置该选项的命令是
 <synopsis>
 SET XML OPTION { DOCUMENT | CONTENT };
 </synopsis>
-        This syntax is also available in PostgreSQL.
+        该语法在 PostgreSQL 中也可用。
        </para>
       </listitem>
      </varlistentry>
@@ -7945,21 +7792,18 @@ SET XML OPTION { DOCUMENT | CONTENT };
       <term><varname>gin_pending_list_limit</varname> (<type>integer</type>)
       <indexterm>
        <primary><varname>gin_pending_list_limit</varname></primary>
-       <secondary>configuration parameter</secondary>
+       <secondary>配置参数</secondary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the maximum size of a GIN index's pending list, which is used
-        when <literal>fastupdate</literal> is enabled. If the list grows
-        larger than this maximum size, it is cleaned up by moving
-        the entries in it to the index's main GIN data structure in bulk.
-        If this value is specified without units, it is taken as kilobytes.
-        The default is four megabytes (<literal>4MB</literal>). This setting
-        can be overridden for individual GIN indexes by changing
-        index storage parameters.
-         See <xref linkend="gin-fast-update"/> and <xref linkend="gin-tips"/>
-         for more information.
+        设置 GIN 索引的待处理列表的最大大小，该列表在启用
+        <literal>fastupdate</literal> 时使用。如果该列表增长到超过此最大大小，则通过将其中的
+        条目批量移动到索引的主 GIN 数据结构中来清理它。
+        如果指定该值时未带单位，则按千字节计。
+        默认值为四兆字节（<literal>4MB</literal>）。可以通过更改索引存储参数
+        为单个 GIN 索引覆盖此设置。
+         更多信息请参见 <xref linkend="gin-fast-update"/> 和 <xref linkend="gin-tips"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -7968,32 +7812,25 @@ SET XML OPTION { DOCUMENT | CONTENT };
       <term><varname>createrole_self_grant</varname> (<type>string</type>)
       <indexterm>
        <primary><varname>createrole_self_grant</varname></primary>
-       <secondary>configuration parameter</secondary>
+       <secondary>配置参数</secondary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        If a user who has <literal>CREATEROLE</literal> but not
-        <literal>SUPERUSER</literal> creates a role, and if this
-        is set to a non-empty value, the newly-created role will be granted
-        to the creating user with the options specified. The value must be
-        <literal>set</literal>, <literal>inherit</literal>, or a
-        comma-separated list of these. The default value is an empty string,
-        which disables the feature.
+        如果拥有 <literal>CREATEROLE</literal> 但不拥有
+        <literal>SUPERUSER</literal> 的用户创建了角色，并且此项被设置为非空值，
+        则新创建的角色将使用指定的选项授予创建该角色的用户。该值必须是
+        <literal>set</literal>、<literal>inherit</literal>，或它们的
+        逗号分隔列表。默认值为空字符串，
+        这会禁用该功能。
        </para>
        <para>
-        The purpose of this option is to allow a <literal>CREATEROLE</literal>
-        user who is not a superuser to automatically inherit, or automatically
-        gain the ability to <literal>SET ROLE</literal> to, any created users.
-        Since a <literal>CREATEROLE</literal> user is always implicitly granted
-        <literal>ADMIN OPTION</literal> on created roles, that user could
-        always execute a <literal>GRANT</literal> statement that would achieve
-        the same effect as this setting. However, it can be convenient for
-        usability reasons if the grant happens automatically. A superuser
-        automatically inherits the privileges of every role and can always
-        <literal>SET ROLE</literal> to any role, and this setting can be used
-        to produce a similar behavior for <literal>CREATEROLE</literal> users
-        for users which they create.
+        此选项的目的是允许不是超级用户的 <literal>CREATEROLE</literal>
+        用户自动继承所创建用户的权限，或自动获得 <literal>SET ROLE</literal> 到所创建用户的能力。
+        由于 <literal>CREATEROLE</literal> 用户总是被隐式授予对所创建角色的
+        <literal>ADMIN OPTION</literal>，该用户始终可以执行一条 <literal>GRANT</literal> 语句来达到与此设置相同的效果。
+        不过，出于易用性考虑，如果授权自动发生会更方便。超级用户会自动继承每个角色的特权，并且始终可以
+        <literal>SET ROLE</literal> 到任何角色，而此设置可用于为 <literal>CREATEROLE</literal> 用户所创建的用户产生类似的行为。
        </para>
       </listitem>
      </varlistentry>
@@ -8007,12 +7844,8 @@ SET XML OPTION { DOCUMENT | CONTENT };
      </term>
      <listitem>
       <para>
-       Allow temporarily disabling execution of event triggers in order to
-       troubleshoot and repair faulty event triggers. All event triggers will
-       be disabled by setting it to <literal>false</literal>. Setting the value
-       to <literal>true</literal> allows all event triggers to fire, this
-       is the default value. Only superusers and users with the appropriate
-       <literal>SET</literal> privilege can change this setting.
+       允许临时禁用事件触发器的执行，以便排查和修复有故障的事件触发器。将其设置为 <literal>false</literal> 将禁用所有事件触发器。将该值设置为 <literal>true</literal> 则允许所有事件触发器触发，这是默认值。只有超级用户和具有相应
+       <literal>SET</literal> 权限的用户才能更改此设置。
       </para>
      </listitem>
      </varlistentry>
@@ -8026,10 +7859,8 @@ SET XML OPTION { DOCUMENT | CONTENT };
      </term>
      <listitem>
       <para>
-       Set relation kinds for which access to non-system relations is prohibited.
-       The value takes the form of a comma-separated list of relation kinds.
-       Currently, the supported relation kinds are <literal>view</literal> and
-       <literal>foreign-table</literal>.
+       设置禁止访问非系统关系的关系种类。该值采用以逗号分隔的关系种类列表的形式。目前支持的关系种类是 <literal>view</literal> 和
+       <literal>foreign-table</literal>。
       </para>
      </listitem>
      </varlistentry>
@@ -8037,34 +7868,19 @@ SET XML OPTION { DOCUMENT | CONTENT };
      </variablelist>
     </sect2>
      <sect2 id="runtime-config-client-format">
-     <title>Locale and Formatting</title>
+     <title>区域设置与格式化</title>
 
      <variablelist>
 
      <varlistentry id="guc-datestyle" xreflabel="DateStyle">
       <term><varname>DateStyle</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>DateStyle</varname> configuration parameter</primary>
+       <primary><varname>DateStyle</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the display format for date and time values, as well as the
-        rules for interpreting ambiguous date input values. For
-        historical reasons, this variable contains two independent
-        components: the output format specification (<literal>ISO</literal>,
-        <literal>Postgres</literal>, <literal>SQL</literal>, or <literal>German</literal>)
-        and the input/output specification for year/month/day ordering
-        (<literal>DMY</literal>, <literal>MDY</literal>, or <literal>YMD</literal>). These
-        can be set separately or together. The keywords <literal>Euro</literal>
-        and <literal>European</literal> are synonyms for <literal>DMY</literal>; the
-        keywords <literal>US</literal>, <literal>NonEuro</literal>, and
-        <literal>NonEuropean</literal> are synonyms for <literal>MDY</literal>. See
-        <xref linkend="datatype-datetime"/> for more information. The
-        built-in default is <literal>ISO, MDY</literal>, but
-        <application>initdb</application> will initialize the
-        configuration file with a setting that corresponds to the
-        behavior of the chosen <varname>lc_time</varname> locale.
+        设置日期和时间值的显示格式，以及解释有歧义的日期输入值的规则。由于历史原因，此变量包含两个独立的组成部分：输出格式规范（<literal>ISO</literal>、<literal>Postgres</literal>、<literal>SQL</literal> 或 <literal>German</literal>）以及年/月/日顺序的输入/输出规范（<literal>DMY</literal>、<literal>MDY</literal> 或 <literal>YMD</literal>）。它们可以分别设置，也可以一起设置。关键字 <literal>Euro</literal> 和 <literal>European</literal> 是 <literal>DMY</literal> 的同义词；关键字 <literal>US</literal>、<literal>NonEuro</literal> 和 <literal>NonEuropean</literal> 是 <literal>MDY</literal> 的同义词。更多信息请参见 <xref linkend="datatype-datetime"/>。内置默认值是 <literal>ISO, MDY</literal>，但 <application>initdb</application> 会用与所选 <varname>lc_time</varname> 区域设置的行为相对应的设置来初始化配置文件。
        </para>
       </listitem>
      </varlistentry>
@@ -8072,30 +7888,15 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-intervalstyle" xreflabel="IntervalStyle">
       <term><varname>IntervalStyle</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>IntervalStyle</varname> configuration parameter</primary>
+       <primary><varname>IntervalStyle</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the display format for interval values.
-        The value <literal>sql_standard</literal> will produce
-        output matching <acronym>SQL</acronym> standard interval literals.
-        The value <literal>postgres</literal> (which is the default) will produce
-        output matching <productname>PostgreSQL</productname> releases prior to 8.4
-        when the <xref linkend="guc-datestyle"/>
-        parameter was set to <literal>ISO</literal>.
-        The value <literal>postgres_verbose</literal> will produce output
-        matching <productname>PostgreSQL</productname> releases prior to 8.4
-        when the <varname>DateStyle</varname>
-        parameter was set to non-<literal>ISO</literal> output.
-        The value <literal>iso_8601</literal> will produce output matching the time
-        interval <quote>format with designators</quote> defined in section
-        4.4.3.2 of ISO 8601.
+        设置 interval 值的显示格式。值 <literal>sql_standard</literal> 将产生与 <acronym>SQL</acronym> 标准 interval 字面量相匹配的输出。值 <literal>postgres</literal>（这是默认值）将产生与 8.4 之前的 <productname>PostgreSQL</productname> 发行版在 <xref linkend="guc-datestyle"/> 参数设置为 <literal>ISO</literal> 时相匹配的输出。值 <literal>postgres_verbose</literal> 将产生与 8.4 之前的 <productname>PostgreSQL</productname> 发行版在 <varname>DateStyle</varname> 参数设置为非 <literal>ISO</literal> 输出时相匹配的输出。值 <literal>iso_8601</literal> 将产生与 ISO 8601 第 4.4.3.2 节定义的时间间隔 <quote>带指示符的格式</quote> 相匹配的输出。
        </para>
        <para>
-        The <varname>IntervalStyle</varname> parameter also affects the
-        interpretation of ambiguous interval input.  See
-        <xref linkend="datatype-interval-input"/> for more information.
+        <varname>IntervalStyle</varname> 参数还会影响对有歧义的 interval 输入的解释。更多信息请参见 <xref linkend="datatype-interval-input"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -8103,17 +7904,16 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-timezone" xreflabel="TimeZone">
       <term><varname>TimeZone</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>TimeZone</varname> configuration parameter</primary>
+       <primary><varname>TimeZone</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>time zone</primary></indexterm>
+      <indexterm><primary>时区</primary></indexterm>
       </term>
       <listitem>
        <para>
-        Sets the time zone for displaying and interpreting time stamps.
-        The built-in default is <literal>GMT</literal>, but that is typically
-        overridden in <filename>postgresql.conf</filename>; <application>initdb</application>
-        will install a setting there corresponding to its system environment.
-        See <xref linkend="datatype-timezones"/> for more information.
+        设置用于显示和解释时间戳的时区。
+        内置默认值为 <literal>GMT</literal>，但通常会在 <filename>postgresql.conf</filename> 中被覆盖；<application>initdb</application>
+        会在其中安装一个与其系统环境对应的设置。
+        更多信息请参见 <xref linkend="datatype-timezones"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -8121,20 +7921,19 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-timezone-abbreviations" xreflabel="timezone_abbreviations">
       <term><varname>timezone_abbreviations</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>timezone_abbreviations</varname> configuration parameter</primary>
+       <primary><varname>timezone_abbreviations</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>time zone names</primary></indexterm>
+      <indexterm><primary>时区名称</primary></indexterm>
       </term>
       <listitem>
        <para>
-        Sets the collection of additional time zone abbreviations that
-        will be accepted by the server for datetime input (beyond any
-        abbreviations defined by the current <varname>TimeZone</varname>
-        setting).  The default is <literal>'Default'</literal>,
-        which is a collection that works in most of the world; there are
-        also <literal>'Australia'</literal> and <literal>'India'</literal>,
-        and other collections can be defined for a particular installation.
-        See <xref linkend="datetime-config-files"/> for more information.
+        设置服务器在日期时间输入时接受的额外时区缩写集合
+        （超出当前 <varname>TimeZone</varname>
+        设置所定义的任何缩写之外）。默认值为 <literal>'Default'</literal>，
+        这是一个适用于世界大部分地区的集合；此外还有
+        <literal>'Australia'</literal> 和 <literal>'India'</literal>，
+        并且可以为特定安装定义其他集合。
+        更多信息请参见 <xref linkend="datetime-config-files"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -8142,48 +7941,40 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-extra-float-digits" xreflabel="extra_float_digits">
       <term><varname>extra_float_digits</varname> (<type>integer</type>)
       <indexterm>
-       <primary>significant digits</primary>
+       <primary>有效数字</primary>
       </indexterm>
       <indexterm>
-       <primary>floating-point</primary>
-       <secondary>display</secondary>
+       <primary>浮点</primary>
+       <secondary>显示</secondary>
       </indexterm>
       <indexterm>
-       <primary><varname>extra_float_digits</varname> configuration parameter</primary>
+       <primary><varname>extra_float_digits</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This parameter adjusts the number of digits used for textual output of
-        floating-point values, including <type>float4</type>, <type>float8</type>,
-        and geometric data types.
+        此参数调整用于浮点值文本输出的位数，包括 <type>float4</type>、<type>float8</type>
+        和几何数据类型。
        </para>
        <para>
-        If the value is 1 (the default) or above, float values are output in
-        shortest-precise format; see <xref linkend="datatype-float"/>. The
-        actual number of digits generated depends only on the value being
-        output, not on the value of this parameter. At most 17 digits are
-        required for <type>float8</type> values, and 9 for <type>float4</type>
-        values. This format is both fast and precise, preserving the original
-        binary float value exactly when correctly read. For historical
-        compatibility, values up to 3 are permitted.
+        如果值为 1（默认值）或更大，浮点值以最短精确格式输出；
+        参见 <xref linkend="datatype-float"/>。生成的实际位数
+        仅取决于所输出的值，而不取决于此参数的值。<type>float8</type>
+        值最多需要 17 位数字，<type>float4</type>
+        值最多需要 9 位。此格式既快速又精确，在正确读取时可精确保留
+        原始二进制浮点值。为了历史兼容性，允许取值最大到 3。
        </para>
        <para>
-        If the value is zero or negative, then the output is rounded to a
-        given decimal precision. The precision used is the standard number of
-        digits for the type (<literal>FLT_DIG</literal>
-        or <literal>DBL_DIG</literal> as appropriate) reduced according to the
-        value of this parameter. (For example, specifying -1 will cause
-        <type>float4</type> values to be output rounded to 5 significant
-        digits, and <type>float8</type> values
-        rounded to 14 digits.) This format is slower and does not preserve all
-        the bits of the binary float value, but may be more human-readable.
+        如果该值为零或负数，则输出会舍入到给定的小数精度。所使用的精度是该类型的标准位数（视情况为 <literal>FLT_DIG</literal>
+        或 <literal>DBL_DIG</literal>）根据此参数的值缩减后的结果。（例如，指定 -1 会使
+        <type>float4</type> 值输出时舍入到 5 位有效数字，而 <type>float8</type> 值
+        舍入到 14 位数字。）这种格式较慢，并且不能保留二进制浮点值的所有
+        位，但可能更易于人类阅读。
        </para>
        <note>
         <para>
-         The meaning of this parameter, and its default value, changed
-         in <productname>PostgreSQL</productname> 12;
-         see <xref linkend="datatype-float"/> for further discussion.
+         此参数的含义及其默认值在 <productname>PostgreSQL</productname> 12 中发生了变化；
+         更多讨论请参见 <xref linkend="datatype-float"/>。
         </para>
        </note>
       </listitem>
@@ -8192,16 +7983,15 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-client-encoding" xreflabel="client_encoding">
       <term><varname>client_encoding</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>client_encoding</varname> configuration parameter</primary>
+       <primary><varname>client_encoding</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>character set</primary></indexterm>
+      <indexterm><primary>字符集</primary></indexterm>
       </term>
       <listitem>
        <para>
-        Sets the client-side encoding (character set).
-        The default is to use the database encoding.
-        The character sets supported by the <productname>PostgreSQL</productname>
-        server are described in <xref linkend="multibyte-charset-supported"/>.
+        设置客户端编码（字符集）。
+        默认使用数据库编码。
+        <productname>PostgreSQL</productname> 服务器支持的字符集在 <xref linkend="multibyte-charset-supported"/> 中描述。
        </para>
       </listitem>
      </varlistentry>
@@ -8209,29 +7999,23 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-lc-messages" xreflabel="lc_messages">
       <term><varname>lc_messages</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>lc_messages</varname> configuration parameter</primary>
+       <primary><varname>lc_messages</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the language in which messages are displayed.  Acceptable
-        values are system-dependent; see <xref linkend="locale"/> for
-        more information.  If this variable is set to the empty string
-        (which is the default) then the value is inherited from the
-        execution environment of the server in a system-dependent way.
+        设置显示消息所用的语言。可接受的值取决于系统；更多信息请参见
+        <xref linkend="locale"/>。如果此变量设置为空字符串
+        （这是默认值），则该值将以依赖于系统的方式从服务器的
+        执行环境中继承。
        </para>
 
        <para>
-        On some systems, this locale category does not exist.  Setting
-        this variable will still work, but there will be no effect.
-        Also, there is a chance that no translated messages for the
-        desired language exist.  In that case you will continue to see
-        the English messages.
+        在某些系统上，此区域类别不存在。设置此变量仍然可以工作，但不会产生任何效果。此外，也可能不存在所需语言的已翻译消息。在这种情况下，您将继续看到英文消息。
        </para>
 
        <para>
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
       </listitem>
      </varlistentry>
@@ -8239,18 +8023,13 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-lc-monetary" xreflabel="lc_monetary">
       <term><varname>lc_monetary</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>lc_monetary</varname> configuration parameter</primary>
+       <primary><varname>lc_monetary</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the locale to use for formatting monetary amounts, for
-        example with the <function>to_char</function> family of
-        functions.  Acceptable values are system-dependent; see <xref
-        linkend="locale"/> for more information.  If this variable is
-        set to the empty string (which is the default) then the value
-        is inherited from the execution environment of the server in a
-        system-dependent way.
+        设置用于格式化货币金额的区域，例如用于 <function>to_char</function> 系列函数。可接受的值取决于系统；更多信息请参见 <xref
+        linkend="locale"/>。如果此变量设置为空字符串（这是默认值），则该值将以系统相关的方式从服务器的执行环境中继承。
        </para>
       </listitem>
      </varlistentry>
@@ -8258,18 +8037,13 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-lc-numeric" xreflabel="lc_numeric">
       <term><varname>lc_numeric</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>lc_numeric</varname> configuration parameter</primary>
+       <primary><varname>lc_numeric</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the locale to use for formatting numbers, for example
-        with the <function>to_char</function> family of
-        functions. Acceptable values are system-dependent; see <xref
-        linkend="locale"/> for more information.  If this variable is
-        set to the empty string (which is the default) then the value
-        is inherited from the execution environment of the server in a
-        system-dependent way.
+        设置用于格式化数字的区域，例如用于 <function>to_char</function> 系列函数。可接受的值取决于系统；更多信息请参见 <xref
+        linkend="locale"/>。如果此变量设置为空字符串（这是默认值），则该值将以系统相关的方式从服务器的执行环境中继承。
        </para>
       </listitem>
      </varlistentry>
@@ -8277,18 +8051,13 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-lc-time" xreflabel="lc_time">
       <term><varname>lc_time</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>lc_time</varname> configuration parameter</primary>
+       <primary><varname>lc_time</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Sets the locale to use for formatting dates and times, for example
-        with the <function>to_char</function> family of
-        functions. Acceptable values are system-dependent; see <xref
-        linkend="locale"/> for more information.  If this variable is
-        set to the empty string (which is the default) then the value
-        is inherited from the execution environment of the server in a
-        system-dependent way.
+        设置用于格式化日期和时间的区域设置，例如配合 <function>to_char</function> 系列函数使用。可接受的值取决于系统；更多信息请参见 <xref
+        linkend="locale"/>。如果此变量设置为空字符串（这是默认值），则该值将以系统相关的方式从服务器的执行环境继承。
        </para>
       </listitem>
      </varlistentry>
@@ -8296,25 +8065,24 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-icu-validation-level" xreflabel="icu_validation_level">
       <term><varname>icu_validation_level</varname> (<type>enum</type>)
       <indexterm>
-       <primary><varname>icu_validation_level</varname> configuration parameter</primary>
+       <primary><varname>icu_validation_level</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        When ICU locale validation problems are encountered, controls which
-        <link linkend="runtime-config-severity-levels">message level</link> is
-        used to report the problem. Valid values are
-        <literal>DISABLED</literal>, <literal>DEBUG5</literal>,
-        <literal>DEBUG4</literal>, <literal>DEBUG3</literal>,
-        <literal>DEBUG2</literal>, <literal>DEBUG1</literal>,
-        <literal>INFO</literal>, <literal>NOTICE</literal>,
-        <literal>WARNING</literal>, <literal>ERROR</literal>, and
-        <literal>LOG</literal>.
+        当遇到 ICU 区域设置验证问题时，控制使用哪个
+        <link linkend="runtime-config-severity-levels">消息级别</link>
+        来报告该问题。有效值为
+        <literal>DISABLED</literal>、<literal>DEBUG5</literal>、
+        <literal>DEBUG4</literal>、<literal>DEBUG3</literal>、
+        <literal>DEBUG2</literal>、<literal>DEBUG1</literal>、
+        <literal>INFO</literal>、<literal>NOTICE</literal>、
+        <literal>WARNING</literal>、<literal>ERROR</literal> 和
+        <literal>LOG</literal>。
        </para>
        <para>
-        If set to <literal>DISABLED</literal>, does not report validation
-        problems at all. Otherwise reports problems at the given message
-        level. The default is <literal>WARNING</literal>.
+        如果设置为 <literal>DISABLED</literal>，则完全不报告验证
+        问题。否则以给定的消息级别报告问题。默认值为 <literal>WARNING</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -8322,20 +8090,15 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-default-text-search-config" xreflabel="default_text_search_config">
       <term><varname>default_text_search_config</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>default_text_search_config</varname> configuration parameter</primary>
+       <primary><varname>default_text_search_config</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Selects the text search configuration that is used by those variants
-        of the text search functions that do not have an explicit argument
-        specifying the configuration.
-        See <xref linkend="textsearch"/> for further information.
-        The built-in default is <literal>pg_catalog.simple</literal>, but
-        <application>initdb</application> will initialize the
-        configuration file with a setting that corresponds to the
-        chosen <varname>lc_ctype</varname> locale, if a configuration
-        matching that locale can be identified.
+        选择那些没有显式指定配置参数的文本检索函数变体所使用的文本检索配置。
+        更多信息请参见 <xref linkend="textsearch"/>。
+        内置默认值为 <literal>pg_catalog.simple</literal>，但如果能够识别出与所选 <varname>lc_ctype</varname> 区域设置相匹配的配置，
+        <application>initdb</application> 会用与该区域设置相对应的设置初始化配置文件。
        </para>
       </listitem>
      </varlistentry>
@@ -8345,46 +8108,35 @@ SET XML OPTION { DOCUMENT | CONTENT };
     </sect2>
 
     <sect2 id="runtime-config-client-preload">
-     <title>Shared Library Preloading</title>
+     <title>共享库预加载</title>
 
      <para>
-      Several settings are available for preloading shared libraries into the
-      server, in order to load additional functionality or achieve performance
-      benefits.  For example, a setting of
-      <literal>'$libdir/mylib'</literal> would cause
-      <literal>mylib.so</literal> (or on some platforms,
-      <literal>mylib.sl</literal>) to be preloaded from the installation's standard
-      library directory.  The differences between the settings are when they
-      take effect and what privileges are required to change them.
+      有若干设置可用于将共享库预加载到服务器中，以便加载额外的功能或获得性能收益。
+      例如，将该项设置为 <literal>'$libdir/mylib'</literal> 会使 <literal>mylib.so</literal>（在某些平台上为 <literal>mylib.sl</literal>）
+      从安装的标准库目录中被预加载。这些设置之间的差异在于它们何时生效以及修改它们需要什么权限。
      </para>
 
      <para>
-      <productname>PostgreSQL</productname> procedural language libraries can
-      be preloaded in this way, typically by using the
-      syntax <literal>'$libdir/plXXX'</literal> where
-      <literal>XXX</literal> is <literal>pgsql</literal>, <literal>perl</literal>,
-      <literal>tcl</literal>, or <literal>python</literal>.
+      <productname>PostgreSQL</productname> 过程语言库可以通过这种方式预加载，通常使用语法
+      <literal>'$libdir/plXXX'</literal>，其中 <literal>XXX</literal> 为 <literal>pgsql</literal>、<literal>perl</literal>、
+      <literal>tcl</literal> 或 <literal>python</literal>。
      </para>
 
      <para>
-      Only shared libraries specifically intended to be used with PostgreSQL
-      can be loaded this way.  Every PostgreSQL-supported library has
-      a <quote>magic block</quote> that is checked to guarantee compatibility.  For
-      this reason, non-PostgreSQL libraries cannot be loaded in this way.  You
-      might be able to use operating-system facilities such
-      as <envar>LD_PRELOAD</envar> for that.
+      只有专门打算供 PostgreSQL 使用的共享库才能以这种方式加载。每个 PostgreSQL 支持的库都有一个
+      <quote>魔术块</quote>，系统会检查它以保证兼容性。因此，非 PostgreSQL 的库不能以这种方式加载。
+      你也许可以使用诸如 <envar>LD_PRELOAD</envar> 这样的操作系统设施来达到目的。
      </para>
 
      <para>
-      In general, refer to the documentation of a specific module for the
-      recommended way to load that module.
+      一般来说，请参阅特定模块的文档，了解加载该模块的推荐方式。
      </para>
 
      <variablelist>
      <varlistentry id="guc-local-preload-libraries" xreflabel="local_preload_libraries">
       <term><varname>local_preload_libraries</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>local_preload_libraries</varname> configuration parameter</primary>
+       <primary><varname>local_preload_libraries</varname> 配置参数</primary>
       </indexterm>
       <indexterm>
        <primary><filename>$libdir/plugins</filename></primary>
@@ -8392,44 +8144,37 @@ SET XML OPTION { DOCUMENT | CONTENT };
       </term>
       <listitem>
        <para>
-        This variable specifies one or more shared libraries that are to be
-        preloaded at connection start.
-        It contains a comma-separated list of library names, where each name
-        is interpreted as for the <link linkend="sql-load"><command>LOAD</command></link> command.
-        Whitespace between entries is ignored; surround a library name with
-        double quotes if you need to include whitespace or commas in the name.
-        The parameter value only takes effect at the start of the connection.
-        Subsequent changes have no effect.  If a specified library is not
-        found, the connection attempt will fail.
+        此变量指定一个或多个要在连接启动时预加载的共享库。
+        它包含一个以逗号分隔的库名列表，其中每个名称都按照
+        <link linkend="sql-load"><command>LOAD</command></link> 命令的规则来解释。
+        条目之间的空白会被忽略；如果库名中需要包含空白或逗号，
+        请用双引号将库名括起来。
+        该参数值仅在连接启动时生效。
+        后续的更改不会产生任何效果。如果找不到指定的库，
+        连接尝试将失败。
        </para>
 
        <para>
-        This option can be set by any user.  Because of that, the libraries
-        that can be loaded are restricted to those appearing in the
-        <filename>plugins</filename> subdirectory of the installation's
-        standard library directory.  (It is the database administrator's
-        responsibility to ensure that only <quote>safe</quote> libraries
-        are installed there.)  Entries in <varname>local_preload_libraries</varname>
-        can specify this directory explicitly, for example
-        <literal>$libdir/plugins/mylib</literal>, or just specify
-        the library name &mdash; <literal>mylib</literal> would have
-        the same effect as <literal>$libdir/plugins/mylib</literal>.
+        任何用户都可以设置此选项。因此，可加载的库被限制为
+        出现在安装的标准库目录下的 <filename>plugins</filename> 子目录中的那些库。
+        （数据库管理员有责任确保那里只安装<quote>安全</quote>的库。）
+        <varname>local_preload_libraries</varname> 中的条目可以显式指定该目录，例如
+        <literal>$libdir/plugins/mylib</literal>，或者只指定库名 &mdash;，<literal>mylib</literal> 的效果
+        与 <literal>$libdir/plugins/mylib</literal> 相同。
        </para>
 
        <para>
-        The intent of this feature is to allow unprivileged users to load
-        debugging or performance-measurement libraries into specific sessions
-        without requiring an explicit <command>LOAD</command> command.  To that end,
-        it would be typical to set this parameter using
-        the <envar>PGOPTIONS</envar> environment variable on the client or by
-        using
-        <command>ALTER ROLE SET</command>.
+        此功能的意图是允许非特权用户将调试或性能测量库加载到
+        特定会话中，而无需显式执行 <command>LOAD</command> 命令。为此，
+        通常的做法是在客户端使用 <envar>PGOPTIONS</envar> 环境变量，
+        或者使用
+        <command>ALTER ROLE SET</command> 来设置此参数。
        </para>
 
        <para>
-        However, unless a module is specifically designed to be used in this way by
-        non-superusers, this is usually not the right setting to use.  Look
-        at <xref linkend="guc-session-preload-libraries"/> instead.
+        不过，除非某个模块是专门设计为由非超级用户以这种方式使用的，
+        否则这通常不是合适的设置。请改为查看
+        <xref linkend="guc-session-preload-libraries"/>。
        </para>
       </listitem>
      </varlistentry>
@@ -8438,42 +8183,37 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-session-preload-libraries" xreflabel="session_preload_libraries">
       <term><varname>session_preload_libraries</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>session_preload_libraries</varname> configuration parameter</primary>
+       <primary><varname>session_preload_libraries</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This variable specifies one or more shared libraries that are to be
-        preloaded at connection start.
-        It contains a comma-separated list of library names, where each name
-        is interpreted as for the <link linkend="sql-load"><command>LOAD</command></link> command.
-        Whitespace between entries is ignored; surround a library name with
-        double quotes if you need to include whitespace or commas in the name.
-        The parameter value only takes effect at the start of the connection.
-        Subsequent changes have no effect.  If a specified library is not
-        found, the connection attempt will fail.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        此变量指定在连接启动时要预加载的一个或多个共享库。
+        它包含一个以逗号分隔的库名列表，其中每个名称的解释方式与
+        <link linkend="sql-load"><command>LOAD</command></link> 命令相同。
+        条目之间的空白会被忽略；如果库名中需要包含空白或逗号，
+        请用双引号将库名括起来。
+        该参数值仅在连接启动时生效。
+        后续更改不会产生任何效果。如果找不到指定的库，
+        连接尝试将失败。
+        只有超级用户和具有相应 <literal>SET</literal>
+        权限的用户才能更改此设置。
        </para>
 
        <para>
-        The intent of this feature is to allow debugging or
-        performance-measurement libraries to be loaded into specific sessions
-        without an explicit
-        <command>LOAD</command> command being given.  For
-        example, <xref linkend="auto-explain"/> could be enabled for all
-        sessions under a given user name by setting this parameter
-        with <command>ALTER ROLE SET</command>.  Also, this parameter can be changed
-        without restarting the server (but changes only take effect when a new
-        session is started), so it is easier to add new modules this way, even
-        if they should apply to all sessions.
+        此功能的目的是允许将调试或性能测量库加载到特定会话中，
+        而无需显式给出
+        <command>LOAD</command> 命令。例如，通过使用 <command>ALTER ROLE SET</command>
+        设置此参数，可以为给定用户名下的所有会话启用
+        <xref linkend="auto-explain"/>。此外，此参数可以在不重启服务器的情况下更改
+        （但更改仅在启动新会话时生效），因此以这种方式添加新模块更容易，
+        即使它们应适用于所有会话。
        </para>
 
        <para>
-        Unlike <xref linkend="guc-shared-preload-libraries"/>, there is no large
-        performance advantage to loading a library at session start rather than
-        when it is first used.  There is some advantage, however, when
-        connection pooling is used.
+        与 <xref linkend="guc-shared-preload-libraries"/> 不同，在会话启动时加载库
+        而不是在首次使用时加载并没有很大的性能优势。
+        不过，在使用连接池时会有一些优势。
        </para>
       </listitem>
      </varlistentry>
@@ -8481,48 +8221,32 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-shared-preload-libraries" xreflabel="shared_preload_libraries">
       <term><varname>shared_preload_libraries</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>shared_preload_libraries</varname> configuration parameter</primary>
+       <primary><varname>shared_preload_libraries</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This variable specifies one or more shared libraries to be preloaded at
-        server start.
-        It contains a comma-separated list of library names, where each name
-        is interpreted as for the <link linkend="sql-load"><command>LOAD</command></link> command.
-        Whitespace between entries is ignored; surround a library name with
-        double quotes if you need to include whitespace or commas in the name.
-        This parameter can only be set at server start.  If a specified
-        library is not found, the server will fail to start.
+        此变量指定在服务器启动时要预加载的一个或多个共享库。
+        它包含一个以逗号分隔的库名列表，其中每个名称的解释方式与
+        <link linkend="sql-load"><command>LOAD</command></link> 命令相同。
+        条目之间的空白会被忽略；如果库名中需要包含空白或逗号，
+        请用双引号将库名括起来。
+        此参数只能在服务器启动时设置。如果找不到指定的库，
+        服务器将无法启动。
        </para>
 
        <para>
-        Some libraries need to perform certain operations that can only take
-        place at postmaster start, such as allocating shared memory, reserving
-        light-weight locks, or starting background workers.  Those libraries
-        must be loaded at server start through this parameter.  See the
-        documentation of each library for details.
+        有些库需要执行某些只能在 postmaster 启动时进行的操作，例如分配共享内存、预留轻量级锁或启动后台工作进程。这些库必须通过此参数在服务器启动时加载。详情请参阅每个库的文档。
        </para>
 
        <para>
-        Other libraries can also be preloaded.  By preloading a shared library,
-        the library startup time is avoided when the library is first used.
-        However, the time to start each new server process might increase
-        slightly, even if that process never uses the library.  So this
-        parameter is recommended only for libraries that will be used in most
-        sessions.  Also, changing this parameter requires a server restart, so
-        this is not the right setting to use for short-term debugging tasks,
-        say.  Use <xref linkend="guc-session-preload-libraries"/> for that
-        instead.
+        其他库也可以被预加载。通过预加载一个共享库，可以避免该库首次使用时花费的库启动时间。不过，启动每个新的服务器进程的时间可能会略微增加，即使该进程从不使用该库。因此，建议仅对大多数会话中都会用到的库使用此参数。此外，更改此参数需要重启服务器，所以它不适合用于短期的调试任务之类。那种情况请改用 <xref linkend="guc-session-preload-libraries"/>。
        </para>
 
       <note>
        <para>
-        On Windows hosts, preloading a library at server start will not reduce
-        the time required to start each new server process; each server process
-        will re-load all preload libraries.  However, <varname>shared_preload_libraries
-        </varname> is still useful on Windows hosts for libraries that need to
-        perform operations at postmaster start time.
+        在 Windows 主机上，在服务器启动时预加载库不会减少启动每个新服务器进程所需的时间；每个服务器进程都会重新加载所有预加载库。不过，对于需要在 postmaster 启动时执行操作的库，<varname>shared_preload_libraries
+        </varname> 在 Windows 主机上仍然有用。
        </para>
       </note>
       </listitem>
@@ -8531,22 +8255,16 @@ SET XML OPTION { DOCUMENT | CONTENT };
      <varlistentry id="guc-jit-provider" xreflabel="jit_provider">
       <term><varname>jit_provider</varname> (<type>string</type>)
        <indexterm>
-        <primary><varname>jit_provider</varname> configuration parameter</primary>
+        <primary><varname>jit_provider</varname> 配置参数</primary>
        </indexterm>
       </term>
       <listitem>
        <para>
-        This variable is the name of the JIT provider library to be used
-        (see <xref linkend="jit-pluggable"/>).
-        The default is <literal>llvmjit</literal>.
-        This parameter can only be set at server start.
+        此变量是要使用的 JIT 提供者库的名称（参见 <xref linkend="jit-pluggable"/>）。默认值为 <literal>llvmjit</literal>。此参数只能在服务器启动时设置。
        </para>
 
        <para>
-        If set to a non-existent library, <acronym>JIT</acronym> will not be
-        available, but no error will be raised. This allows JIT support to be
-        installed separately from the main
-        <productname>PostgreSQL</productname> package.
+        如果设置为一个不存在的库，<acronym>JIT</acronym> 将不可用，但不会引发错误。这允许将 JIT 支持与主 <productname>PostgreSQL</productname> 包分开安装。
        </para>
       </listitem>
      </varlistentry>
@@ -8555,61 +8273,50 @@ SET XML OPTION { DOCUMENT | CONTENT };
    </sect2>
 
      <sect2 id="runtime-config-client-other">
-     <title>Other Defaults</title>
+     <title>其他默认值</title>
 
      <variablelist>
 
      <varlistentry id="guc-dynamic-library-path" xreflabel="dynamic_library_path">
       <term><varname>dynamic_library_path</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>dynamic_library_path</varname> configuration parameter</primary>
+       <primary><varname>dynamic_library_path</varname> 配置参数</primary>
       </indexterm>
-      <indexterm><primary>dynamic loading</primary></indexterm>
+      <indexterm><primary>动态加载</primary></indexterm>
       </term>
       <listitem>
        <para>
-        If a dynamically loadable module needs to be opened and the
-        file name specified in the <command>CREATE FUNCTION</command> or
-        <command>LOAD</command> command
-        does not have a directory component (i.e., the
-        name does not contain a slash), the system will search this
-        path for the required file.
+        如果某个动态可加载模块需要被打开，而 <command>CREATE FUNCTION</command> 或
+        <command>LOAD</command> 命令中指定的文件名不包含目录部分（即
+        名称中不含斜杠），系统将在此路径中搜索所需文件。
        </para>
 
        <para>
-        The value for <varname>dynamic_library_path</varname> must be a
-        list of absolute directory paths separated by colons (or semi-colons
-        on Windows).  If a list element starts
-        with the special string <literal>$libdir</literal>, the
-        compiled-in <productname>PostgreSQL</productname> package
-        library directory is substituted for <literal>$libdir</literal>; this
-        is where the modules provided by the standard
-        <productname>PostgreSQL</productname> distribution are installed.
-        (Use <literal>pg_config --pkglibdir</literal> to find out the name of
-        this directory.) For example:
+        <varname>dynamic_library_path</varname> 的值必须是以冒号（在 Windows 上为分号）
+        分隔的绝对目录路径列表。如果列表元素以特殊字符串
+        <literal>$libdir</literal> 开头，则用编译时内置的 <productname>PostgreSQL</productname> 包
+        库目录替换 <literal>$libdir</literal>；标准
+        <productname>PostgreSQL</productname> 发行版提供的模块就安装在该目录中。
+        （可使用 <literal>pg_config --pkglibdir</literal> 查出该目录的名称。）例如：
 <programlisting>
 dynamic_library_path = '/usr/local/lib/postgresql:/home/my_project/lib:$libdir'
 </programlisting>
-        or, in a Windows environment:
+        或者在 Windows 环境中：
 <programlisting>
 dynamic_library_path = 'C:\tools\postgresql;H:\my_project\lib;$libdir'
 </programlisting>
        </para>
 
        <para>
-        The default value for this parameter is
-        <literal>'$libdir'</literal>. If the value is set to an empty
-        string, the automatic path search is turned off.
+        该参数的默认值为
+        <literal>'$libdir'</literal>。如果该值被设置为空字符串，则自动路径搜索将被关闭。
        </para>
 
        <para>
-        This parameter can be changed at run time by superusers and users
-        with the appropriate <literal>SET</literal> privilege, but a
-        setting done that way will only persist until the end of the
-        client connection, so this method should be reserved for
-        development purposes. The recommended way to set this parameter
-        is in the <filename>postgresql.conf</filename> configuration
-        file.
+        超级用户以及具有相应 <literal>SET</literal> 权限的用户可以在运行时更改此参数，
+        但以这种方式所做的设置只持续到客户端连接结束，因此这种方法
+        应仅用于开发目的。设置此参数的推荐方式是在
+        <filename>postgresql.conf</filename> 配置文件中进行。
        </para>
       </listitem>
      </varlistentry>
@@ -8617,70 +8324,56 @@ dynamic_library_path = 'C:\tools\postgresql;H:\my_project\lib;$libdir'
      <varlistentry id="guc-extension-control-path" xreflabel="extension_control_path">
       <term><varname>extension_control_path</varname> (<type>string</type>)
       <indexterm>
-       <primary><varname>extension_control_path</varname> configuration parameter</primary>
+       <primary><varname>extension_control_path</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        A path to search for extensions, specifically extension control files
-        (<filename><replaceable>name</replaceable>.control</filename>).  The
-        remaining extension script and secondary control files are then loaded
-        from the same directory where the primary control file was found.
-        See <xref linkend="extend-extensions-files"/> for details.
+        用于搜索扩展的路径，具体来说是扩展控制文件
+        （<filename><replaceable>name</replaceable>.control</filename>）。其余的扩展脚本和二级控制文件随后从找到主控制文件的同一目录加载。
+        详见 <xref linkend="extend-extensions-files"/>。
        </para>
 
        <para>
-        The value for <varname>extension_control_path</varname> must be a
-        list of absolute directory paths separated by colons (or semi-colons
-        on Windows).  If a list element starts
-        with the special string <literal>$system</literal>, the
-        compiled-in <productname>PostgreSQL</productname> extension
-        directory is substituted for <literal>$system</literal>; this
-        is where the extensions provided by the standard
-        <productname>PostgreSQL</productname> distribution are installed.
-        (Use <literal>pg_config --sharedir</literal> to find out the name of
-        this directory.) For example:
+        <varname>extension_control_path</varname> 的值必须是以冒号（在 Windows 上为分号）
+        分隔的绝对目录路径列表。如果某个列表元素以特殊字符串
+        <literal>$system</literal> 开头，则用编译时内置的 <productname>PostgreSQL</productname> 扩展
+        目录替换 <literal>$system</literal>；标准
+        <productname>PostgreSQL</productname> 发行版提供的扩展就安装在该目录中。
+        （使用 <literal>pg_config --sharedir</literal> 可查明该目录的名称。）例如：
 <programlisting>
 extension_control_path = '/usr/local/share/postgresql:/home/my_project/share:$system'
 </programlisting>
-        or, in a Windows environment:
+        或者在 Windows 环境中：
 <programlisting>
 extension_control_path = 'C:\tools\postgresql;H:\my_project\share;$system'
 </programlisting>
-        Note that the specified paths elements are expected to have a
-        subdirectory <filename>extension</filename> which will contain the
-        <filename>.control</filename> and <filename>.sql</filename> files; the
-        <filename>extension</filename> suffix is automatically appended to
-        each path element.
+        请注意，指定的路径元素应包含一个子目录 <filename>extension</filename>，
+        其中将包含 <filename>.control</filename> 和 <filename>.sql</filename> 文件；
+        <filename>extension</filename> 后缀会自动追加到每个路径元素之后。
        </para>
 
        <para>
-        The default value for this parameter is
-        <literal>'$system'</literal>. If the value is set to an empty
-        string, the default <literal>'$system'</literal> is also assumed.
+        该参数的默认值为
+        <literal>'$system'</literal>。如果该值被设置为空字符串，
+        则同样假定使用默认的 <literal>'$system'</literal>。
        </para>
 
        <para>
-        If extensions with equal names are present in multiple directories in
-        the configured path, only the instance found first in the path will be
-        used.
+        如果在所配置路径的多个目录中都存在同名的扩展，
+        则只会使用在该路径中首先找到的那个实例。
        </para>
 
        <para>
-        This parameter can be changed at run time by superusers and users
-        with the appropriate <literal>SET</literal> privilege, but a
-        setting done that way will only persist until the end of the
-        client connection, so this method should be reserved for
-        development purposes. The recommended way to set this parameter
-        is in the <filename>postgresql.conf</filename> configuration
-        file.
+        超级用户以及具有相应 <literal>SET</literal> 权限的用户可以在运行时
+        更改该参数，但以这种方式所做的设置只会持续到
+        客户端连接结束，因此这种方法应仅用于开发目的。
+        设置该参数的推荐方式是在 <filename>postgresql.conf</filename> 配置文件中进行。
        </para>
 
        <para>
-        Note that if you set this parameter to be able to load extensions from
-        nonstandard locations, you will most likely also need to set <xref
-        linkend="guc-dynamic-library-path"/> to a correspondent location, for
-        example,
+        请注意，如果你将此参数设置为能够从非标准位置加载扩展，你很可能还需要将 <xref
+        linkend="guc-dynamic-library-path"/> 设置为相应的位置，例如：
 <programlisting>
 extension_control_path = '/usr/local/share/postgresql:$system'
 dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
@@ -8692,13 +8385,12 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-gin-fuzzy-search-limit" xreflabel="gin_fuzzy_search_limit">
       <term><varname>gin_fuzzy_search_limit</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>gin_fuzzy_search_limit</varname> configuration parameter</primary>
+       <primary><varname>gin_fuzzy_search_limit</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        Soft upper limit of the size of the set returned by GIN index scans. For more
-        information see <xref linkend="gin-tips"/>.
+        GIN 索引扫描所返回集合大小的软上限。更多信息请参见 <xref linkend="gin-tips"/>。
        </para>
       </listitem>
      </varlistentry>
