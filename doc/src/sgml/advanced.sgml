@@ -214,26 +214,22 @@ COMMIT;
 
 
   <sect1 id="tutorial-window">
-   <title>Window Functions</title>
+   <title>窗口函数</title>
 
    <indexterm zone="tutorial-window">
     <primary>window function</primary>
    </indexterm>
 
    <para>
-    A <firstterm>window function</firstterm> performs a calculation across a set of
-    table rows that are somehow related to the current row.  This is comparable
-    to the type of calculation that can be done with an aggregate function.
-    However, window functions do not cause rows to become grouped into a single
-    output row like non-window aggregate calls would.  Instead, the
-    rows retain their separate identities.  Behind the scenes, the window
-    function is able to access more than just the current row of the query
-    result.
+    一个 <firstterm>窗口函数</firstterm> 会在一组与当前行存在某种关联的表行上执行计算。这类似于可以用聚合函数完成的
+    那类计算。
+    但是，窗口函数不会像非窗口聚合调用那样把行分组为单个输出行。
+    相反，这些行保留各自的独立身份。在幕后，窗口函数能够访问查询结果中
+    不仅仅是当前行的内容。
    </para>
 
    <para>
-    Here is an example that shows how to compare each employee's salary
-    with the average salary in his or her department:
+    下面是一个示例，展示如何将每个员工的工资与他或她所在部门的平均工资进行比较：
 
 <programlisting>
 SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM empsalary;
@@ -255,33 +251,24 @@ SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM emps
 (10 rows)
 </screen>
 
-    The first three output columns come directly from the table
-    <structname>empsalary</structname>, and there is one output row for each row in the
-    table.  The fourth column represents an average taken across all the table
-    rows that have the same <structfield>depname</structfield> value as the current row.
-    (This actually is the same function as the non-window <function>avg</function>
-    aggregate, but the <literal>OVER</literal> clause causes it to be
-    treated as a window function and computed across the window frame.)
+    前三个输出列直接来自表 <structname>empsalary</structname>，并且表中的每一行都对应一个输出行。
+    第四列表示在当前行具有相同 <structfield>depname</structfield> 值的所有表行上计算出的平均值。
+    （这实际上与非窗口的 <function>avg</function> 聚合是同一个函数，但 <literal>OVER</literal> 子句
+    使其被视为窗口函数，并在窗口帧上计算。）
    </para>
 
    <para>
-    A window function call always contains an <literal>OVER</literal> clause
-    directly following the window function's name and argument(s).  This is what
-    syntactically distinguishes it from a normal function or non-window
-    aggregate.  The <literal>OVER</literal> clause determines exactly how the
-    rows of the query are split up for processing by the window function.
-    The <literal>PARTITION BY</literal> clause within <literal>OVER</literal>
-    divides the rows into groups, or partitions, that share the same
-    values of the <literal>PARTITION BY</literal> expression(s).  For each row,
-    the window function is computed across the rows that fall into the
-    same partition as the current row.
+    窗口函数调用总是在窗口函数名称和参数之后直接包含一个 <literal>OVER</literal> 子句。
+    这正是它在语法上区别于普通函数或非窗口聚合的地方。<literal>OVER</literal> 子句
+    确切地决定了查询的行如何被拆分以供窗口函数处理。
+    <literal>OVER</literal> 中的 <literal>PARTITION BY</literal> 子句将行划分为共享相同
+    <literal>PARTITION BY</literal> 表达式值的组（或分区）。对于每一行，
+    窗口函数在与当前行属于同一分区的行上进行计算。
    </para>
 
    <para>
-    You can also control the order in which rows are processed by
-    window functions using <literal>ORDER BY</literal> within <literal>OVER</literal>.
-    (The window <literal>ORDER BY</literal> does not even have to match the
-    order in which the rows are output.)  Here is an example:
+    你还可以使用 <literal>OVER</literal> 中的 <literal>ORDER BY</literal> 来控制窗口函数处理行的顺序。
+    （窗口的 <literal>ORDER BY</literal> 甚至不必与行的输出顺序一致。）下面是一个示例：
 
 <programlisting>
 SELECT depname, empno, salary,
@@ -305,30 +292,20 @@ FROM empsalary;
 (10 rows)
 </screen>
 
-    As shown here, the <function>row_number</function> window function
-    assigns sequential numbers to the rows within each partition,
-    in the order defined by the <literal>ORDER BY</literal> clause
-    (with tied rows numbered in an unspecified order).
-    <function>row_number</function> needs no explicit parameter,
-    because its behavior
-    is entirely determined by the <literal>OVER</literal> clause.
+    如此处所示，<function>row_number</function> 窗口函数会按照 <literal>ORDER BY</literal> 子句定义的顺序，
+    为每个分区内的行分配连续编号
+    （并列的行以未指定的顺序编号）。
+    <function>row_number</function> 不需要显式参数，
+    因为它的行为完全由 <literal>OVER</literal> 子句决定。
    </para>
 
    <para>
-    The rows considered by a window function are those of the <quote>virtual
-    table</quote> produced by the query's <literal>FROM</literal> clause as filtered by its
-    <literal>WHERE</literal>, <literal>GROUP BY</literal>, and <literal>HAVING</literal> clauses
-    if any.  For example, a row removed because it does not meet the
-    <literal>WHERE</literal> condition is not seen by any window function.
-    A query can contain multiple window functions that slice up the data
-    in different ways using different <literal>OVER</literal> clauses, but
-    they all act on the same collection of rows defined by this virtual table.
+    窗口函数所考虑的行是由查询的 <literal>FROM</literal> 子句产生的<quote>虚拟表</quote>中的行，并经过其 <literal>WHERE</literal>、<literal>GROUP BY</literal> 和 <literal>HAVING</literal> 子句（如果有）过滤。例如，因不满足 <literal>WHERE</literal> 条件而被移除的行不会被任何窗口函数看到。一个查询可以包含多个窗口函数，它们使用不同的 <literal>OVER</literal> 子句以不同方式切分数据，但它们都作用于这个虚拟表所定义的同一组行。
    </para>
 
    <para>
-    We already saw that <literal>ORDER BY</literal> can be omitted if the ordering
-    of rows is not important.  It is also possible to omit <literal>PARTITION
-    BY</literal>, in which case there is a single partition containing all rows.
+    我们已经看到，如果行的顺序不重要，可以省略 <literal>ORDER BY</literal>。也可以省略 <literal>PARTITION
+    BY</literal>，此时只有一个包含所有行的分区。
    </para>
 
    <para>
@@ -343,9 +320,7 @@ FROM empsalary;
     default frame consists of all rows in the partition.
      <footnote>
       <para>
-       There are options to define the window frame in other ways, but
-       this tutorial does not cover them.  See
-       <xref linkend="syntax-window-functions"/> for details.
+       还有一些选项可以用其他方式定义窗口框架，但本教程不涉及这些内容。详情请参见 <xref linkend="syntax-window-functions"/>。
       </para>
      </footnote>
     Here is an example using <function>sum</function>:
@@ -372,12 +347,7 @@ SELECT salary, sum(salary) OVER () FROM empsalary;
 </screen>
 
    <para>
-    Above, since there is no <literal>ORDER BY</literal> in the <literal>OVER</literal>
-    clause, the window frame is the same as the partition, which for lack of
-    <literal>PARTITION BY</literal> is the whole table; in other words each sum is
-    taken over the whole table and so we get the same result for each output
-    row.  But if we add an <literal>ORDER BY</literal> clause, we get very different
-    results:
+    在上面的例子中，由于 <literal>OVER</literal> 子句中没有 <literal>ORDER BY</literal>，窗口框架与分区相同，而由于缺少 <literal>PARTITION BY</literal>，分区就是整张表；换句话说，每个求和都是对整张表进行的，因此每个输出行得到相同的结果。但如果添加 <literal>ORDER BY</literal> 子句，就会得到非常不同的结果：
    </para>
 
 <programlisting>
@@ -401,25 +371,15 @@ SELECT salary, sum(salary) OVER (ORDER BY salary) FROM empsalary;
 </screen>
 
    <para>
-    Here the sum is taken from the first (lowest) salary up through the
-    current one, including any duplicates of the current one (notice the
-    results for the duplicated salaries).
+    这里的求和是从第一个（最低的）工资一直加到当前工资，包括当前工资的所有重复项（请注意重复工资的结果）。
    </para>
 
    <para>
-    Window functions are permitted only in the <literal>SELECT</literal> list
-    and the <literal>ORDER BY</literal> clause of the query. They are forbidden
-    elsewhere, such as in <literal>GROUP BY</literal>, <literal>HAVING</literal>
-    and <literal>WHERE</literal> clauses.  This is because they logically
-    execute after the processing of those clauses.  Also, window functions
-    execute after non-window aggregate functions.  This means it is valid to
-    include an aggregate function call in the arguments of a window function,
-    but not vice versa.
+    窗口函数只允许出现在查询的 <literal>SELECT</literal> 列表和 <literal>ORDER BY</literal> 子句中。它们在其他地方被禁止，例如 <literal>GROUP BY</literal>、<literal>HAVING</literal> 和 <literal>WHERE</literal> 子句中。这是因为它们在逻辑上是在处理这些子句之后执行的。此外，窗口函数在执行非窗口聚合函数之后执行。这意味着在窗口函数的参数中包含聚合函数调用是合法的，但反过来则不行。
    </para>
 
    <para>
-    If there is a need to filter or group rows after the window calculations
-    are performed, you can use a sub-select.  For example:
+    如果在窗口计算之后需要过滤或分组行，可以使用子查询。例如：
 
 <programlisting>
 SELECT depname, empno, salary, enroll_date
@@ -431,18 +391,11 @@ FROM
 WHERE pos &lt; 3;
 </programlisting>
 
-    The above query only shows the rows from the inner query having
-    <literal>row_number</literal> less than 3 (that is, the first
-    two rows for each department).
+    上述查询只显示内层查询中 <literal>row_number</literal> 小于 3 的行（即每个部门的前两行）。
    </para>
 
    <para>
-    When a query involves multiple window functions, it is possible to write
-    out each one with a separate <literal>OVER</literal> clause, but this is
-    duplicative and error-prone if the same windowing behavior is wanted
-    for several functions.  Instead, each windowing behavior can be named
-    in a <literal>WINDOW</literal> clause and then referenced in <literal>OVER</literal>.
-    For example:
+    当一个查询涉及多个窗口函数时，可以为每个函数分别写出一个 <literal>OVER</literal> 子句，但如果多个函数需要相同的窗口行为，这样做既重复又容易出错。取而代之的是，可以在 <literal>WINDOW</literal> 子句中为每种窗口行为命名，然后在 <literal>OVER</literal> 中引用它。例如：
 
 <programlisting>
 SELECT sum(salary) OVER w, avg(salary) OVER w
@@ -452,11 +405,7 @@ SELECT sum(salary) OVER w, avg(salary) OVER w
    </para>
 
    <para>
-    More details about window functions can be found in
-    <xref linkend="syntax-window-functions"/>,
-    <xref linkend="functions-window"/>,
-    <xref linkend="queries-window"/>, and the
-    <xref linkend="sql-select"/> reference page.
+    关于窗口函数的更多细节可以在 <xref linkend="syntax-window-functions"/>、<xref linkend="functions-window"/>、<xref linkend="queries-window"/> 以及 <xref linkend="sql-select"/> 参考页中找到。
    </para>
   </sect1>
 
