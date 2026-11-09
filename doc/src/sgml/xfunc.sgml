@@ -1392,7 +1392,7 @@ CREATE FUNCTION square_root(double precision) RETURNS double precision
   </sect1>
 
   <sect1 id="xfunc-c">
-   <title>C-Language Functions</title>
+   <title>C 语言函数</title>
 
    <indexterm zone="xfunc-c">
     <primary>function</primary>
@@ -1401,119 +1401,81 @@ CREATE FUNCTION square_root(double precision) RETURNS double precision
    </indexterm>
 
    <para>
-    User-defined functions can be written in C (or a language that can
-    be made compatible with C, such as C++).  Such functions are
-    compiled into dynamically loadable objects (also called shared
-    libraries) and are loaded by the server on demand.  The dynamic
-    loading feature is what distinguishes <quote>C language</quote> functions
-    from <quote>internal</quote> functions &mdash; the actual coding conventions
-    are essentially the same for both.  (Hence, the standard internal
-    function library is a rich source of coding examples for user-defined
-    C functions.)
+    用户定义的函数可以用 C 编写（也可以用能够与 C 兼容的语言，例如 C++）。这类函数被编译成可动态加载的对象（也称为共享库），并由服务器按需加载。动态加载特性正是 <quote>C 语言</quote>函数区别于<quote>内部</quote>函数之处 &mdash; 两者的实际编码约定本质上相同。（因此，标准内部函数库是用户定义 C 函数的丰富编码示例来源。）
    </para>
 
    <para>
-    Currently only one calling convention is used for C functions
-    (<quote>version 1</quote>). Support for that calling convention is
-    indicated by writing a <literal>PG_FUNCTION_INFO_V1()</literal> macro
-    call for the function, as illustrated below.
+    目前 C 函数只使用一种调用约定（<quote>版本 1</quote>）。对该调用约定的支持通过在函数中编写 <literal>PG_FUNCTION_INFO_V1()</literal> 宏调用来表示，如下所示。
    </para>
 
   <sect2 id="xfunc-c-dynload">
-   <title>Dynamic Loading</title>
+   <title>动态加载</title>
 
    <indexterm zone="xfunc-c-dynload">
     <primary>dynamic loading</primary>
    </indexterm>
 
    <para>
-    The first time a user-defined function in a particular
-    loadable object file is called in a session,
-    the dynamic loader loads that object file into memory so that the
-    function can be called.  The <command>CREATE FUNCTION</command>
-    for a user-defined C function must therefore specify two pieces of
-    information for the function: the name of the loadable
-    object file, and the C name (link symbol) of the specific function to call
-    within that object file.  If the C name is not explicitly specified then
-    it is assumed to be the same as the SQL function name.
+    在某个会话中第一次调用特定可加载对象文件中的用户定义函数时，动态加载器会把该对象文件加载到内存中，以便能够调用该函数。因此，用户定义 C 函数的 <command>CREATE FUNCTION</command> 必须为该函数指定两项信息：可加载对象文件的名称，以及该对象文件中要调用的特定函数的 C 名称（链接符号）。如果没有显式指定 C 名称，则假定它与 SQL 函数名相同。
    </para>
 
    <para>
-    The following algorithm is used to locate the shared object file
-    based on the name given in the <command>CREATE FUNCTION</command>
-    command:
+    下面的算法用于根据 <command>CREATE FUNCTION</command> 命令中给出的名称定位共享对象文件：
 
     <orderedlist>
      <listitem>
       <para>
-       If the name is an absolute path, the given file is loaded.
+       如果名称是一个绝对路径，则加载给定的文件。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If the name starts with the string <literal>$libdir</literal>,
-       that part is replaced by the <productname>PostgreSQL</productname> package
-        library directory
-       name, which is determined at build time.<indexterm><primary>$libdir</primary></indexterm>
+       如果名称以字符串 <literal>$libdir</literal> 开头，则该部分会被替换为 <productname>PostgreSQL</productname> 包库目录名，该目录名在构建时确定。<indexterm><primary>$libdir</primary></indexterm>
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If the name does not contain a directory part, the file is
-       searched for in the path specified by the configuration variable
-       <xref linkend="guc-dynamic-library-path"/>.<indexterm><primary>dynamic_library_path</primary></indexterm>
+       如果名称不包含目录部分，则在配置变量 <xref linkend="guc-dynamic-library-path"/> 指定的路径中搜索该文件。<indexterm><primary>dynamic_library_path</primary></indexterm>
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Otherwise (the file was not found in the path, or it contains a
-       non-absolute directory part), the dynamic loader will try to
-       take the name as given, which will most likely fail.  (It is
-       unreliable to depend on the current working directory.)
+       否则（在路径中未找到该文件，或者它包含非绝对的目录部分），动态加载器将尝试按给定的名称加载，这很可能会失败。（依赖当前工作目录是不可靠的。）
       </para>
      </listitem>
     </orderedlist>
 
-    If this sequence does not work, the platform-specific shared
-    library file name extension (often <filename>.so</filename>) is
-    appended to the given name and this sequence is tried again.  If
-    that fails as well, the load will fail.
+    如果这一序列不奏效，则把平台相关的共享库文件名扩展名（通常是 <filename>.so</filename>）追加到给定名称之后，并再次尝试这一序列。如果仍然失败，则加载失败。
    </para>
 
    <para>
-    It is recommended to locate shared libraries either relative to
-    <literal>$libdir</literal> or through the dynamic library path.
-    This simplifies version upgrades if the new installation is at a
-    different location.  The actual directory that
-    <literal>$libdir</literal> stands for can be found out with the
-    command <literal>pg_config --pkglibdir</literal>.
+    建议将共享库定位在相对于 <literal>$libdir</literal> 的位置，或者通过动态库路径来定位。
+    这样，如果新安装位于不同位置，可以简化版本升级。
+    <literal>$libdir</literal> 所代表的实际目录可以通过命令 <literal>pg_config --pkglibdir</literal> 查明。
    </para>
 
    <para>
-    The user ID the <productname>PostgreSQL</productname> server runs
-    as must be able to traverse the path to the file you intend to
-    load.  Making the file or a higher-level directory not readable
-    and/or not executable by the <systemitem>postgres</systemitem>
-    user is a common mistake.
+    <productname>PostgreSQL</productname> 服务器运行所使用的用户 ID
+    必须能够遍历到你要加载的文件的路径。让文件或上层目录
+    对 <systemitem>postgres</systemitem> 用户不可读和/或不可执行，
+    是一个常见错误。
    </para>
 
    <para>
-    In any case, the file name that is given in the
-    <command>CREATE FUNCTION</command> command is recorded literally
-    in the system catalogs, so if the file needs to be loaded again
-    the same procedure is applied.
+    无论如何，<command>CREATE FUNCTION</command> 命令中给出的文件名
+    会按字面记录在系统目录中，因此如果需要再次加载该文件，
+    就要应用相同的过程。
    </para>
 
    <note>
     <para>
-     <productname>PostgreSQL</productname> will not compile a C function
-     automatically.  The object file must be compiled before it is referenced
-     in a <command>CREATE
-     FUNCTION</command> command.  See <xref linkend="dfunc"/> for additional
-     information.
+     <productname>PostgreSQL</productname> 不会自动编译 C 函数。
+     目标文件必须在 <command>CREATE
+     FUNCTION</command> 命令中引用之前编译好。
+     更多信息请参见 <xref linkend="dfunc"/>。
     </para>
    </note>
 
@@ -1525,29 +1487,28 @@ CREATE FUNCTION square_root(double precision) RETURNS double precision
    </indexterm>
 
    <para>
-    To ensure that a dynamically loaded object file is not loaded into an
-    incompatible server, <productname>PostgreSQL</productname> checks that the
-    file contains a <quote>magic block</quote> with the appropriate contents.
-    This allows the server to detect obvious incompatibilities, such as code
-    compiled for a different major version of
-    <productname>PostgreSQL</productname>. To include a magic block,
-    write this in one (and only one) of the module source files, after having
-    included the header <filename>fmgr.h</filename>:
+    为确保动态加载的目标文件不会被加载到不兼容的服务器中，
+    <productname>PostgreSQL</productname> 会检查该文件是否包含内容适当的
+    <quote>魔法块</quote>。
+    这使服务器能够检测出明显的不兼容性，例如为
+    <productname>PostgreSQL</productname> 的不同主版本编译的代码。要包含魔法块，
+    请在包含头文件 <filename>fmgr.h</filename> 之后，在模块源文件之一（且仅一个）中
+    写入以下内容：
 
 <programlisting>
 PG_MODULE_MAGIC;
 </programlisting>
-or
+或
 <programlisting>
 PG_MODULE_MAGIC_EXT(<replaceable>parameters</replaceable>);
 </programlisting>
    </para>
 
    <para>
-    The <literal>PG_MODULE_MAGIC_EXT</literal> variant allows the specification
-    of additional information about the module; currently, a name and/or a
-    version string can be added.  (More fields might be allowed in future.)
-    Write something like this:
+    <literal>PG_MODULE_MAGIC_EXT</literal> 变体允许指定
+    关于该模块的附加信息；目前可以添加名称和/或
+    版本字符串。（将来可能会允许更多字段。）
+    写入类似以下内容：
 
 <programlisting>
 PG_MODULE_MAGIC_EXT(
@@ -1556,19 +1517,18 @@ PG_MODULE_MAGIC_EXT(
 );
 </programlisting>
 
-    Subsequently the name and version can be examined via
-    the <function>pg_get_loaded_modules()</function> function.
-    The meaning of the version string is not restricted
-    by <productname>PostgreSQL</productname>, but use of semantic versioning
-    rules is recommended.
+    随后可以通过
+    <function>pg_get_loaded_modules()</function> 函数查看名称和版本。
+    版本字符串的含义不受 <productname>PostgreSQL</productname> 限制，
+    但建议使用语义化版本控制规则。
    </para>
 
    <para>
-    After it is used for the first time, a dynamically loaded object
-    file is retained in memory.  Future calls in the same session to
-    the function(s) in that file will only incur the small overhead of
-    a symbol table lookup.  If you need to force a reload of an object
-    file, for example after recompiling it, begin a fresh session.
+    动态加载的目标文件在首次使用之后
+    会保留在内存中。同一会话中以后对该文件中
+    函数的调用只会产生符号表查找的
+    少量开销。如果你需要强制重新加载某个目标
+    文件，例如在重新编译它之后，请开始一个新会话。
    </para>
 
    <indexterm zone="xfunc-c-dynload">
@@ -1579,17 +1539,13 @@ PG_MODULE_MAGIC_EXT(
    </indexterm>
 
    <para>
-    Optionally, a dynamically loaded file can contain an initialization
-    function.  If the file includes a function named
-    <function>_PG_init</function>, that function will be called immediately after
-    loading the file.  The function receives no parameters and should
-    return void.  There is presently no way to unload a dynamically loaded file.
+    可选地，一个动态加载的文件可以包含一个初始化函数。如果该文件中包含名为 <function>_PG_init</function> 的函数，那么该函数将在文件加载后立即被调用。该函数不接收参数，并且应返回 void。目前还没有办法卸载一个动态加载的文件。
    </para>
 
   </sect2>
 
    <sect2 id="xfunc-c-basetype">
-    <title>Base Types in C-Language Functions</title>
+    <title>C 语言函数中的基本类型</title>
 
     <indexterm zone="xfunc-c-basetype">
      <primary>data type</primary>
@@ -1597,67 +1553,44 @@ PG_MODULE_MAGIC_EXT(
     </indexterm>
 
     <para>
-     To know how to write C-language functions, you need to know how
-     <productname>PostgreSQL</productname> internally represents base
-     data types and how they can be passed to and from functions.
-     Internally, <productname>PostgreSQL</productname> regards a base
-     type as a <quote>blob of memory</quote>.  The user-defined
-     functions that you define over a type in turn define the way that
-     <productname>PostgreSQL</productname> can operate on it.  That
-     is, <productname>PostgreSQL</productname> will only store and
-     retrieve the data from disk and use your user-defined functions
-     to input, process, and output the data.
+     要了解如何编写 C 语言函数，你需要了解 <productname>PostgreSQL</productname> 在内部如何表示基本数据类型，以及它们如何传入和传出函数。在内部，<productname>PostgreSQL</productname> 将基本类型视为<quote>一块内存</quote>。你针对某个类型定义的用户定义函数反过来定义了 <productname>PostgreSQL</productname> 可以操作该类型的方式。也就是说，<productname>PostgreSQL</productname> 只负责在磁盘上存储和检索数据，并使用你的用户定义函数来输入、处理和输出数据。
     </para>
 
     <para>
-     Base types can have one of three internal formats:
+     基本类型可以具有三种内部格式之一：
 
      <itemizedlist>
       <listitem>
        <para>
-        pass by value, fixed-length
+        按值传递，固定长度
        </para>
       </listitem>
       <listitem>
        <para>
-        pass by reference, fixed-length
+        按引用传递，固定长度
        </para>
       </listitem>
       <listitem>
        <para>
-        pass by reference, variable-length
+        按引用传递，可变长度
        </para>
       </listitem>
      </itemizedlist>
     </para>
 
     <para>
-     By-value  types  can  only be 1, 2, or 4 bytes in length
-     (also 8 bytes, if <literal>sizeof(Datum)</literal> is 8 on your machine).
-     You should be careful to define your types such that they will be the
-     same size (in bytes) on all architectures.  For example, the
-     <literal>long</literal> type is dangerous because it is 4 bytes on some
-     machines and 8 bytes on others, whereas <type>int</type> type is 4 bytes
-     on most Unix machines.  A reasonable implementation of the
-     <type>int4</type> type on Unix machines might be:
+     按值传递的类型长度只能是 1、2 或 4 字节（如果您的机器上 <literal>sizeof(Datum)</literal> 是 8，也可以是 8 字节）。您应当小心地定义类型，使它们在所有架构上具有相同的大小（以字节计）。例如，<literal>long</literal> 类型是危险的，因为它在某些机器上是 4 字节而在另一些机器上是 8 字节，而 <type>int</type> 类型在大多数 Unix 机器上是 4 字节。在 Unix 机器上，<type>int4</type> 类型的一个合理实现可能是：
 
 <programlisting>
 /* 4-byte integer, passed by value */
 typedef int int4;
 </programlisting>
 
-     (The actual PostgreSQL C code calls this type <type>int32</type>, because
-     it is a convention in C that <type>int<replaceable>XX</replaceable></type>
-     means <replaceable>XX</replaceable> <emphasis>bits</emphasis>.  Note
-     therefore also that the C type <type>int8</type> is 1 byte in size.  The
-     SQL type <type>int8</type> is called <type>int64</type> in C.  See also
-     <xref linkend="xfunc-c-type-table"/>.)
+（实际的 PostgreSQL C 代码把这种类型称为 <type>int32</type>，因为在 C 中有一个约定：<type>int<replaceable>XX</replaceable></type> 表示 <replaceable>XX</replaceable> <emphasis>位</emphasis>。因此还要注意，C 类型 <type>int8</type> 的大小是 1 字节。SQL 类型 <type>int8</type> 在 C 中称为 <type>int64</type>。另请参阅 <xref linkend="xfunc-c-type-table"/>。）
     </para>
 
     <para>
-     On  the  other hand, fixed-length types of any size can
-     be passed by-reference.  For example, here is a  sample
-     implementation of a <productname>PostgreSQL</productname> type:
+     另一方面，任意大小的固定长度类型都可以按引用传递。例如，下面是一个 <productname>PostgreSQL</productname> 类型的示例实现：
 
 <programlisting>
 /* 16-byte structure, passed by reference */
@@ -1667,50 +1600,28 @@ typedef struct
 } Point;
 </programlisting>
 
-     Only  pointers  to  such types can be used when passing
-     them in and out of <productname>PostgreSQL</productname> functions.
-     To return a value of such a type, allocate the right amount of
-     memory with <literal>palloc</literal>, fill in the allocated memory,
-     and return a pointer to it.  (Also, if you just want to return the
-     same value as one of your input arguments that's of the same data type,
-     you can skip the extra <literal>palloc</literal> and just return the
-     pointer to the input value.)
+在把这类类型传入和传出 <productname>PostgreSQL</productname> 函数时，只能使用指向它们的指针。要返回这种类型的值，请用 <literal>palloc</literal> 分配适量的内存，填充所分配的内存，然后返回指向它的指针。（另外，如果您只想返回与某个相同数据类型的输入参数相同的值，可以跳过额外的 <literal>palloc</literal>，直接返回指向该输入值的指针。）
     </para>
 
     <para>
-     Finally, all variable-length types must also be  passed
-     by  reference.   All  variable-length  types must begin
-     with an opaque length field of exactly 4 bytes, which will be set
-     by <symbol>SET_VARSIZE</symbol>; never set this field directly! All data to
-     be  stored within that type must be located in the memory
-     immediately  following  that  length  field.   The
-     length field contains the total length of the structure,
-     that is,  it  includes  the  size  of  the  length  field
-     itself.
+     最后，所有可变长度类型也必须按引用传递。所有可变长度类型都必须以一个不透明的、恰好 4 字节的长度字段开头，该字段将由 <symbol>SET_VARSIZE</symbol> 设置；绝不要直接设置该字段！要存储在该类型中的所有数据都必须位于紧跟在长度字段之后的内存中。长度字段包含该结构的总长度，也就是说，它包含长度字段自身的大小。
     </para>
 
     <para>
-     Another important point is to avoid leaving any uninitialized bits
-     within data type values; for example, take care to zero out any
-     alignment padding bytes that might be present in structs.  Without
-     this, logically-equivalent constants of your data type might be
-     seen as unequal by the planner, leading to inefficient (though not
-     incorrect) plans.
+     另一点重要的是，要避免在数据类型值中留下任何未初始化的位；例如，注意把结构体中可能存在的任何对齐填充字节清零。否则，您的数据类型的逻辑上等价的常量可能会被规划器视为不相等，从而导致低效（尽管并非不正确）的计划。
     </para>
 
     <warning>
      <para>
-      <emphasis>Never</emphasis> modify the contents of a pass-by-reference input
-      value.  If you do so you are likely to corrupt on-disk data, since
-      the pointer you are given might point directly into a disk buffer.
-      The sole exception to this rule is explained in
-      <xref linkend="xaggr"/>.
+      <emphasis>绝不</emphasis>要修改按引用传递的输入值的内容。
+      如果这样做，你很可能会破坏磁盘上的数据，因为你得到的指针
+      可能直接指向磁盘缓冲区。此规则唯一的例外在
+      <xref linkend="xaggr"/> 中说明。
      </para>
     </warning>
 
     <para>
-     As an example, we can define the type <type>text</type> as
-     follows:
+     作为一个例子，我们可以按如下方式定义类型 <type>text</type>：
 
 <programlisting>
 typedef struct {
@@ -1719,16 +1630,14 @@ typedef struct {
 } text;
 </programlisting>
 
-     The <literal>[FLEXIBLE_ARRAY_MEMBER]</literal> notation means that the actual
-     length of the data part is not specified by this declaration.
+     <literal>[FLEXIBLE_ARRAY_MEMBER]</literal> 记法表示数据部分的实际长度
+     不由该声明指定。
     </para>
 
     <para>
-     When manipulating
-     variable-length types, we must  be  careful  to  allocate
-     the  correct amount  of memory and set the length field correctly.
-     For example, if we wanted to  store  40  bytes  in  a <structname>text</structname>
-     structure, we might use a code fragment like this:
+     在操作变长类型时，我们必须小心地分配正确数量的内存，
+     并正确地设置长度字段。例如，如果我们想在一个 <structname>text</structname>
+     结构中存储 40 字节，我们可能会使用类似这样的代码片段：
 
 <programlisting><![CDATA[
 #include "postgres.h"
@@ -1742,30 +1651,24 @@ memcpy(destination->data, buffer, 40);
 ]]>
 </programlisting>
 
-     <literal>VARHDRSZ</literal> is the same as <literal>sizeof(int32)</literal>, but
-     it's considered good style to use the macro <literal>VARHDRSZ</literal>
-     to refer to the size of the overhead for a variable-length type.
-     Also, the length field <emphasis>must</emphasis> be set using the
-     <literal>SET_VARSIZE</literal> macro, not by simple assignment.
+     <literal>VARHDRSZ</literal> 与 <literal>sizeof(int32)</literal> 相同，但使用宏 <literal>VARHDRSZ</literal>
+     来引用变长类型的开销大小被认为是一种良好的风格。
+     此外，长度字段<emphasis>必须</emphasis>使用
+     <literal>SET_VARSIZE</literal> 宏来设置，而不是通过简单赋值。
     </para>
 
     <para>
-     <xref linkend="xfunc-c-type-table"/> shows the C types
-     corresponding to many of the built-in SQL data types
-     of <productname>PostgreSQL</productname>.
-     The <quote>Defined In</quote> column gives the header file that
-     needs to be included to get the type definition.  (The actual
-     definition might be in a different file that is included by the
-     listed file.  It is recommended that users stick to the defined
-     interface.)  Note that you should always include
-     <filename>postgres.h</filename> first in any source file of server
-     code, because it declares a number of things that you will need
-     anyway, and because including other headers first can cause
-     portability issues.
+     <xref linkend="xfunc-c-type-table"/> 显示了与 <productname>PostgreSQL</productname> 的许多
+     内建 SQL 数据类型相对应的 C 类型。
+     <quote>Defined In</quote> 列给出了为获得该类型定义而需要
+     包含的头文件。（实际定义可能位于所列文件所包含的另一个文件中。
+     建议用户坚持使用已定义的接口。）注意，在任何服务器代码的源文件中，
+     你都应该始终首先包含 <filename>postgres.h</filename>，因为它声明了许多你无论如何都会
+     需要的东西，而且先包含其他头文件可能会导致可移植性问题。
     </para>
 
      <table tocentry="1" id="xfunc-c-type-table">
-      <title>Equivalent C Types for Built-in SQL Types</title>
+      <title>内建 SQL 类型的等价 C 类型</title>
       <tgroup cols="3">
        <colspec colname="col1" colwidth="1*"/>
        <colspec colname="col2" colwidth="1*"/>
@@ -1773,13 +1676,13 @@ memcpy(destination->data, buffer, 40);
        <thead>
         <row>
          <entry>
-          SQL Type
+          SQL 类型
          </entry>
          <entry>
-          C Type
+          C 类型
          </entry>
          <entry>
-          Defined In
+          定义于
          </entry>
         </row>
        </thead>
@@ -1787,7 +1690,7 @@ memcpy(destination->data, buffer, 40);
         <row>
          <entry><type>boolean</type></entry>
          <entry><type>bool</type></entry>
-         <entry><filename>postgres.h</filename> (maybe compiler built-in)</entry>
+         <entry><filename>postgres.h</filename>（可能是编译器内建）</entry>
         </row>
         <row>
          <entry><type>box</type></entry>
@@ -1802,7 +1705,7 @@ memcpy(destination->data, buffer, 40);
         <row>
          <entry><type>"char"</type></entry>
          <entry><type>char</type></entry>
-         <entry>(compiler built-in)</entry>
+         <entry>（编译器内建）</entry>
         </row>
         <row>
          <entry><type>character</type></entry>
@@ -1934,101 +1837,49 @@ memcpy(destination->data, buffer, 40);
      </table>
 
     <para>
-     Now that we've gone over all of the possible structures
-     for base types, we can show some examples of real functions.
+     现在我们已经介绍了基本类型所有可能的结构，可以展示一些真实函数的示例了。
     </para>
    </sect2>
 
    <sect2 id="xfunc-c-v1-call-conv">
-    <title>Version 1 Calling Conventions</title>
+    <title>版本 1 调用约定</title>
 
     <para>
-     The version-1 calling convention relies on macros to suppress most
-     of the complexity of passing arguments and results.  The C declaration
-     of a version-1 function is always:
+     版本 1 调用约定依靠宏来屏蔽传递参数和结果的大部分复杂性。版本 1 函数的 C 声明总是：
 <programlisting>
 Datum funcname(PG_FUNCTION_ARGS)
 </programlisting>
-     In addition, the macro call:
+此外，宏调用：
 <programlisting>
 PG_FUNCTION_INFO_V1(funcname);
 </programlisting>
-     must appear in the same source file.  (Conventionally, it's
-     written just before the function itself.)  This macro call is not
-     needed for <literal>internal</literal>-language functions, since
-     <productname>PostgreSQL</productname> assumes that all internal functions
-     use the version-1 convention.  It is, however, required for
-     dynamically-loaded functions.
+必须出现在同一个源文件中。（按照惯例，它写在函数本身之前。）对于 <literal>internal</literal> 语言函数不需要这个宏调用，因为 <productname>PostgreSQL</productname> 假定所有内部函数都使用版本 1 约定。但是，对于动态加载的函数则是必需的。
     </para>
 
     <para>
-     In a version-1 function, each actual argument is fetched using a
-     <function>PG_GETARG_<replaceable>xxx</replaceable>()</function>
-     macro that corresponds to the argument's data type.  (In non-strict
-     functions there needs to be a previous check about argument null-ness
-     using <function>PG_ARGISNULL()</function>; see below.)
-     The result is returned using a
-     <function>PG_RETURN_<replaceable>xxx</replaceable>()</function>
-     macro for the return type.
-     <function>PG_GETARG_<replaceable>xxx</replaceable>()</function>
-     takes as its argument the number of the function argument to
-     fetch, where the count starts at 0.
-     <function>PG_RETURN_<replaceable>xxx</replaceable>()</function>
-     takes as its argument the actual value to return.
+     在版本 1 函数中，每个实际参数都使用与该参数数据类型相对应的 <function>PG_GETARG_<replaceable>xxx</replaceable>()</function> 宏来获取。（在非严格函数中，需要事先使用 <function>PG_ARGISNULL()</function> 检查参数是否为 NULL；见下文。）结果使用返回类型对应的 <function>PG_RETURN_<replaceable>xxx</replaceable>()</function> 宏返回。<function>PG_GETARG_<replaceable>xxx</replaceable>()</function> 以其要获取的函数参数编号作为参数，编号从 0 开始。<function>PG_RETURN_<replaceable>xxx</replaceable>()</function> 以要返回的实际值作为参数。
     </para>
 
     <para>
-     To call another version-1 function, you can use
-     <function>DirectFunctionCall<replaceable>n</replaceable>(func,
-     arg1, ..., argn)</function>.  This is particularly useful when you want
-     to call functions defined in the standard internal library, by using an
-     interface similar to their SQL signature.
+     要调用另一个版本 1 函数，可以使用 <function>DirectFunctionCall<replaceable>n</replaceable>(func,
+     arg1, ..., argn)</function>。当你想要通过类似于其 SQL 签名的接口调用标准内部库中定义的函数时，这特别有用。
     </para>
 
     <para>
-     These convenience functions and similar ones can be found
-     in <filename>fmgr.h</filename>.
-     The <function>DirectFunctionCall<replaceable>n</replaceable></function>
-     family expect a C function name as their first argument.  There are also
-     <function>OidFunctionCall<replaceable>n</replaceable></function> which
-     take the OID of the target function, and some other variants.  All of
-     these expect the function's arguments to be supplied
-     as <type>Datum</type>s, and likewise they return <type>Datum</type>.
-     Note that neither arguments nor result are allowed to be NULL when
-     using these convenience functions.
+     这些便利函数以及类似的函数可以在 <filename>fmgr.h</filename> 中找到。<function>DirectFunctionCall<replaceable>n</replaceable></function> 系列函数期望以 C 函数名作为其第一个参数。还有 <function>OidFunctionCall<replaceable>n</replaceable></function>，它们接受目标函数的 OID，以及一些其他变体。所有这些函数都期望以 <type>Datum</type> 的形式提供函数参数，同样它们返回 <type>Datum</type>。注意，使用这些便利函数时，参数和结果都不允许为 NULL。
     </para>
 
     <para>
-     For example, to call the <function>starts_with(text, text)</function>
-     function from C, you can search through the catalog and find out that
-     its C implementation is the
-     <function>Datum text_starts_with(PG_FUNCTION_ARGS)</function>
-     function.  Typically you would
-     use <literal>DirectFunctionCall2(text_starts_with, ...)</literal> to
-     call such a function.  However, <function>starts_with(text,
-     text)</function> requires collation information, so it will fail
-     with <quote>could not determine which collation to use for string
-     comparison</quote> if called that way.  Instead you must
-     use <literal>DirectFunctionCall2Coll(text_starts_with, ...)</literal>
-     and provide the desired collation, which typically is just passed
-     through from <function>PG_GET_COLLATION()</function>, as shown in the
-     example below.
+     例如，要从 C 调用 <function>starts_with(text, text)</function> 函数，你可以搜索系统目录并发现其 C 实现是 <function>Datum text_starts_with(PG_FUNCTION_ARGS)</function> 函数。通常你会使用 <literal>DirectFunctionCall2(text_starts_with, ...)</literal> 来调用这样的函数。然而，<function>starts_with(text,
+     text)</function> 需要排序规则信息，因此如果以这种方式调用，它会失败并报出 <quote>could not determine which collation to use for string comparison</quote>。相反，你必须使用 <literal>DirectFunctionCall2Coll(text_starts_with, ...)</literal> 并提供所需的排序规则，通常它只是从 <function>PG_GET_COLLATION()</function> 传递过来，如下面的示例所示。
     </para>
 
     <para>
-     <filename>fmgr.h</filename> also supplies macros that facilitate
-     conversions between C types and <type>Datum</type>.  For example to
-     turn <type>Datum</type> into <type>text*</type>, you can
-     use <function>DatumGetTextPP(X)</function>.  While some types have macros
-     named like <function>TypeGetDatum(X)</function> for the reverse
-     conversion, <type>text*</type> does not; it's sufficient to use the
-     generic macro <function>PointerGetDatum(X)</function> for that.
-     If your extension defines additional types, it is usually convenient to
-     define similar macros for your types too.
+     <filename>fmgr.h</filename> 还提供了一些宏，便于在 C 类型与 <type>Datum</type> 之间进行转换。例如，要把 <type>Datum</type> 转换为 <type>text*</type>，可以使用 <function>DatumGetTextPP(X)</function>。虽然某些类型有名为 <function>TypeGetDatum(X)</function> 的宏用于反向转换，但 <type>text*</type> 没有；对此使用通用宏 <function>PointerGetDatum(X)</function> 就足够了。如果你的扩展定义了额外的类型，通常也方便为你的类型定义类似的宏。
     </para>
 
     <para>
-     Here are some examples using the version-1 calling convention:
+     下面是一些使用版本 1 调用约定的示例：
     </para>
 
 <programlisting><![CDATA[
@@ -2148,10 +1999,7 @@ t_starts_with(PG_FUNCTION_ARGS)
 </programlisting>
 
     <para>
-     Supposing that the above code has been prepared in file
-     <filename>funcs.c</filename> and compiled into a shared object,
-     we could define the functions to <productname>PostgreSQL</productname>
-     with commands like this:
+     假设上面的代码已放在文件 <filename>funcs.c</filename> 中并编译成共享对象，我们可以用如下命令定义到 <productname>PostgreSQL</productname> 的函数：
     </para>
 
 <programlisting>
@@ -2182,74 +2030,25 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
 </programlisting>
 
     <para>
-     Here, <replaceable>DIRECTORY</replaceable> stands for the
-     directory of the shared library file (for instance the
-     <productname>PostgreSQL</productname> tutorial directory, which
-     contains the code for the examples used in this section).
-     (Better style would be to use just <literal>'funcs'</literal> in the
-     <literal>AS</literal> clause, after having added
-     <replaceable>DIRECTORY</replaceable> to the search path.  In any
-     case, we can omit the system-specific extension for a shared
-     library, commonly <literal>.so</literal>.)
+     这里，<replaceable>DIRECTORY</replaceable> 表示共享库文件所在的目录（例如 <productname>PostgreSQL</productname> 教程目录，其中包含本节所用示例的代码）。（更好的做法是在把 <replaceable>DIRECTORY</replaceable> 加入搜索路径之后，在 <literal>AS</literal> 子句中只使用 <literal>'funcs'</literal>。无论如何，我们都可以省略共享库的系统相关扩展名，通常是 <literal>.so</literal>。）
     </para>
 
     <para>
-     Notice that we have specified the functions as <quote>strict</quote>,
-     meaning that
-     the system should automatically assume a null result if any input
-     value is null.  By doing this, we avoid having to check for null inputs
-     in the function code.  Without this, we'd have to check for null values
-     explicitly, using <function>PG_ARGISNULL()</function>.
+     请注意，我们把函数指定为 <quote>strict</quote>，这意味着如果任一输入值为空值，系统应自动假定结果为空值。这样做，我们就避免了在函数代码中检查空输入。否则，我们就必须使用 <function>PG_ARGISNULL()</function> 显式检查空值。
     </para>
 
     <para>
-     The macro <function>PG_ARGISNULL(<replaceable>n</replaceable>)</function>
-     allows a function to test whether each input is null.  (Of course, doing
-     this is only necessary in functions not declared <quote>strict</quote>.)
-     As with the
-     <function>PG_GETARG_<replaceable>xxx</replaceable>()</function> macros,
-     the input arguments are counted beginning at zero.  Note that one
-     should refrain from executing
-     <function>PG_GETARG_<replaceable>xxx</replaceable>()</function> until
-     one has verified that the argument isn't null.
-     To return a null result, execute <function>PG_RETURN_NULL()</function>;
-     this works in both strict and nonstrict functions.
+     宏 <function>PG_ARGISNULL(<replaceable>n</replaceable>)</function> 允许函数测试每个输入是否为空值。（当然，只有在未声明为 <quote>strict</quote> 的函数中才有必要这样做。）与 <function>PG_GETARG_<replaceable>xxx</replaceable>()</function> 宏一样，输入参数从零开始计数。注意，在确认参数不为空值之前，应避免执行 <function>PG_GETARG_<replaceable>xxx</replaceable>()</function>。要返回空值结果，请执行 <function>PG_RETURN_NULL()</function>；这在 strict 和非 strict 函数中均有效。
     </para>
 
     <para>
-     At first glance, the version-1 coding conventions might appear
-     to be just pointless obscurantism, compared to using
-     plain <literal>C</literal> calling conventions.  They do however allow
-     us to deal with <literal>NULL</literal>able arguments/return values,
-     and <quote>toasted</quote> (compressed or out-of-line) values.
+     乍看之下，与使用普通的 <literal>C</literal> 调用约定相比，版本 1 的编码约定似乎只是毫无意义的故弄玄虚。然而，它们确实让我们能够处理可为空的（<literal>NULL</literal>able）参数/返回值，以及<quote>被 TOAST 过</quote>（压缩或行外存储）的值。
     </para>
 
     <para>
-     Other options provided by the version-1 interface are two
-     variants of the
-     <function>PG_GETARG_<replaceable>xxx</replaceable>()</function>
-     macros. The first of these,
-     <function>PG_GETARG_<replaceable>xxx</replaceable>_COPY()</function>,
-     guarantees to return a copy of the specified argument that is
-     safe for writing into. (The normal macros will sometimes return a
-     pointer to a value that is physically stored in a table, which
-     must not be written to. Using the
-     <function>PG_GETARG_<replaceable>xxx</replaceable>_COPY()</function>
-     macros guarantees a writable result.)
-    The second variant consists of the
-    <function>PG_GETARG_<replaceable>xxx</replaceable>_SLICE()</function>
-    macros which take three arguments. The first is the number of the
-    function argument (as above). The second and third are the offset and
-    length of the segment to be returned. Offsets are counted from
-    zero, and a negative length requests that the remainder of the
-    value be returned. These macros provide more efficient access to
-    parts of large values in the case where they have storage type
-    <quote>external</quote>. (The storage type of a column can be specified using
-    <literal>ALTER TABLE <replaceable>tablename</replaceable> ALTER
+     版本 1 接口提供的其他选项是 <function>PG_GETARG_<replaceable>xxx</replaceable>()</function> 宏的两种变体。第一种是 <function>PG_GETARG_<replaceable>xxx</replaceable>_COPY()</function>，它保证返回指定参数的一个可安全写入的副本。（普通宏有时会返回指向物理存储在表中的值的指针，该值不可写入。使用 <function>PG_GETARG_<replaceable>xxx</replaceable>_COPY()</function> 宏可保证结果是可写的。）第二种变体由接受三个参数的 <function>PG_GETARG_<replaceable>xxx</replaceable>_SLICE()</function> 宏组成。第一个参数是函数参数的编号（如上所述）。第二个和第三个参数是要返回的段的偏移量和长度。偏移量从零开始计数，负的长度表示返回该值的剩余部分。在大型值的存储类型为 <quote>external</quote> 的情况下，这些宏可以更高效地访问其中的部分内容。（列的存储类型可以用 <literal>ALTER TABLE <replaceable>tablename</replaceable> ALTER
     COLUMN <replaceable>colname</replaceable> SET STORAGE
-    <replaceable>storagetype</replaceable></literal>. <replaceable>storagetype</replaceable> is one of
-    <literal>plain</literal>, <literal>external</literal>, <literal>extended</literal>,
-     or <literal>main</literal>.)
+    <replaceable>storagetype</replaceable></literal> 指定。<replaceable>storagetype</replaceable> 是 <literal>plain</literal>、<literal>external</literal>、<literal>extended</literal> 或 <literal>main</literal> 之一。）
     </para>
 
     <para>
@@ -2264,104 +2063,69 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
    </sect2>
 
    <sect2 id="xfunc-c-code">
-    <title>Writing Code</title>
+    <title>编写代码</title>
 
     <para>
-     Before we turn to the more advanced topics, we should discuss
-     some coding rules for <productname>PostgreSQL</productname>
-     C-language functions.  While it might be possible to load functions
-     written in languages other than C into
-     <productname>PostgreSQL</productname>, this is usually difficult
-     (when it is possible at all) because other languages, such as
-     C++, FORTRAN, or Pascal often do not follow the same calling
-     convention as C.  That is, other languages do not pass argument
-     and return values between functions in the same way.  For this
-     reason, we will assume that your C-language functions are
-     actually written in C.
+     在我们转向更高级的主题之前，应该先讨论一些关于 <productname>PostgreSQL</productname> C 语言函数的编码规则。虽然把用 C 以外的语言编写的函数载入 <productname>PostgreSQL</productname> 也许是可能的，但这通常很困难（如果可能的话），因为其他语言（如 C++、FORTRAN 或 Pascal）往往不遵循与 C 相同的调用约定。也就是说，其他语言在函数之间传递参数和返回值的方式并不相同。出于这个原因，我们假定你的 C 语言函数实际上是用 C 编写的。
     </para>
 
     <para>
-     The basic rules for writing and building C functions are as follows:
+     编写和构建 C 函数的基本规则如下：
 
      <itemizedlist>
       <listitem>
        <para>
-        Use <literal>pg_config
+        使用 <literal>pg_config
         --includedir-server</literal><indexterm><primary>pg_config</primary><secondary>with user-defined C functions</secondary></indexterm>
-        to find out where the <productname>PostgreSQL</productname> server header
-        files are installed on your system (or the system that your
-        users will be running on).
+        来找出 <productname>PostgreSQL</productname> 服务器头文件在你的系统上（或你的用户将要运行的系统上）安装的位置。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Compiling and linking your code so that it can be dynamically
-        loaded into <productname>PostgreSQL</productname> always
-        requires special flags.  See <xref linkend="dfunc"/> for a
-        detailed explanation of how to do it for your particular
-        operating system.
+        编译和链接你的代码使其能够被动态加载到 <productname>PostgreSQL</productname> 中，总是需要特殊的标志。有关如何针对你特定的操作系统完成此操作的详细说明，请参见 <xref linkend="dfunc"/>。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Remember to define a <quote>magic block</quote> for your shared library,
-        as described in <xref linkend="xfunc-c-dynload"/>.
+        记得为你的共享库定义一个<quote>魔法块</quote>，如 <xref linkend="xfunc-c-dynload"/> 中所述。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        When allocating memory, use the
-        <productname>PostgreSQL</productname> functions
-        <function>palloc</function><indexterm><primary>palloc</primary></indexterm> and <function>pfree</function><indexterm><primary>pfree</primary></indexterm>
-        instead of the corresponding C library functions
-        <function>malloc</function> and <function>free</function>.
-        The memory allocated by <function>palloc</function> will be
-        freed automatically at the end of each transaction, preventing
-        memory leaks.
+        分配内存时，请使用 <productname>PostgreSQL</productname> 函数
+        <function>palloc</function><indexterm><primary>palloc</primary></indexterm> 和 <function>pfree</function><indexterm><primary>pfree</primary></indexterm>
+        而不是相应的 C 库函数
+        <function>malloc</function> 和 <function>free</function>。
+        由 <function>palloc</function> 分配的内存在每个事务结束时会被自动释放，从而防止内存泄漏。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Always zero the bytes of your structures using <function>memset</function>
-        (or allocate them with <function>palloc0</function> in the first place).
-        Even if you assign to each field of your structure, there might be
-        alignment padding (holes in the structure) that contain
-        garbage values.  Without this, it's difficult to
-        support hash indexes or hash joins, as you must pick out only
-        the significant bits of your data structure to compute a hash.
-        The planner also sometimes relies on comparing constants via
-        bitwise equality, so you can get undesirable planning results if
-        logically-equivalent values aren't bitwise equal.
+        始终使用 <function>memset</function> 将你的结构体的字节清零
+        （或者一开始就用 <function>palloc0</function> 分配它们）。
+        即使你为结构体的每个字段都赋了值，也可能存在包含垃圾值的对齐填充（结构体中的空洞）。如果不这样做，就很难支持哈希索引或哈希连接，因为你必须只挑出数据结构中有意义的位来计算哈希值。查询规划器有时也依赖通过按位相等来比较常量，因此如果逻辑上相等的值按位不相等，你可能会得到不理想的规划结果。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Most of the internal <productname>PostgreSQL</productname>
-        types are declared in <filename>postgres.h</filename>, while
-        the function manager interfaces
-        (<symbol>PG_FUNCTION_ARGS</symbol>, etc.)  are in
-        <filename>fmgr.h</filename>, so you will need to include at
-        least these two files.  For portability reasons it's best to
-        include <filename>postgres.h</filename> <emphasis>first</emphasis>,
-        before any other system or user header files.  Including
-        <filename>postgres.h</filename> will also include
-        <filename>elog.h</filename> and <filename>palloc.h</filename>
-        for you.
+        大多数内部 <productname>PostgreSQL</productname>
+        类型声明在 <filename>postgres.h</filename> 中，而
+        函数管理器接口
+        （<symbol>PG_FUNCTION_ARGS</symbol> 等）位于
+        <filename>fmgr.h</filename> 中，因此你至少需要包含这两个文件。出于可移植性考虑，最好将 <filename>postgres.h</filename> <emphasis>首先</emphasis>包含，放在任何其他系统或用户头文件之前。包含
+        <filename>postgres.h</filename> 也会为你包含
+        <filename>elog.h</filename> 和 <filename>palloc.h</filename>。
        </para>
       </listitem>
 
       <listitem>
        <para>
-        Symbol names defined within object files must not conflict
-        with each other or with symbols defined in the
-        <productname>PostgreSQL</productname> server executable.  You
-        will have to rename your functions or variables if you get
-        error messages to this effect.
+        在对象文件中定义的符号名不得彼此冲突，也不得与 <productname>PostgreSQL</productname> 服务器可执行文件中定义的符号冲突。如果收到此类错误消息，你必须重命名函数或变量。
        </para>
       </listitem>
      </itemizedlist>
@@ -2371,67 +2135,41 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
 &dfunc;
 
    <sect2 id="xfunc-api-abi-stability-guidance">
-    <title>Server API and ABI Stability Guidance</title>
+    <title>服务器 API 与 ABI 稳定性指南</title>
 
     <para>
-     This section contains guidance to authors of extensions and other server
-     plugins about API and ABI stability in the
-     <productname>PostgreSQL</productname> server.
+     本节为扩展及其他服务器插件的作者提供关于 <productname>PostgreSQL</productname> 服务器中 API 与 ABI 稳定性的指南。
     </para>
 
     <sect3 id="xfunc-guidance-general">
-     <title>General</title>
+     <title>概述</title>
 
      <para>
-      The <productname>PostgreSQL</productname> server contains several
-      well-demarcated APIs for server plugins, such as the function manager
-      (<acronym>fmgr</acronym>, described in this chapter),
-      <acronym>SPI</acronym> (<xref linkend="spi"/>), and various hooks
-      specifically designed for extensions. These interfaces are carefully
-      managed for long-term stability and compatibility. However, the entire
-      set of global functions and variables in the server effectively
-      constitutes the publicly usable API, and most of it was not designed
-      with extensibility and long-term stability in mind.
+      <productname>PostgreSQL</productname> 服务器包含若干为服务器插件明确划分的 API，例如函数管理器（<acronym>fmgr</acronym>，本章将介绍）、<acronym>SPI</acronym>（<xref linkend="spi"/>），以及专门为扩展设计的各种钩子。这些接口经过精心管理，以保证长期稳定性和兼容性。然而，服务器中全部全局函数和变量实际上构成了可公开使用的 API，而其中大部分在设计时并未考虑可扩展性和长期稳定性。
      </para>
 
      <para>
-      Therefore, while taking advantage of these interfaces is valid, the
-      further one strays from the well-trodden path, the likelier it will be
-      that one might encounter API or ABI compatibility issues at some point.
-      Extension authors are encouraged to provide feedback about their
-      requirements, so that over time, as new use patterns arise, certain
-      interfaces can be considered more stabilized or new, better-designed
-      interfaces can be added.
+      因此，利用这些接口是合理的，但偏离成熟路径越远，就越有可能在某个时候遇到 API 或 ABI 兼容性问题。鼓励扩展作者反馈其需求，以便随着时间的推移，随着新的使用模式出现，某些接口可以被认为更加稳定，或者可以添加新的、设计更好的接口。
      </para>
     </sect3>
 
     <sect3 id="xfunc-guidance-api-compatibility">
-     <title>API Compatibility</title>
+     <title>API 兼容性</title>
      <para>
-      The <acronym>API</acronym>, or application programming interface, is the
-      interface used at compile time.
+      <acronym>API</acronym>，即应用程序编程接口，是编译时使用的接口。
      </para>
 
      <sect4 id="xfunc-guidance-api-major-versions">
-      <title>Major Versions</title>
+      <title>主版本</title>
       <para>
-       There is <emphasis>no</emphasis> promise of API compatibility between
-       <productname>PostgreSQL</productname> major versions. Extension code
-       therefore might require source code changes to work with multiple major
-       versions. These can usually be managed with preprocessor conditions
-       such as <literal>#if PG_VERSION_NUM &gt;= 160000</literal>.
-       Sophisticated extensions that use interfaces beyond the well-demarcated
-       ones usually require a few such changes for each major server version.
+       在 <productname>PostgreSQL</productname> 主版本之间<emphasis>不</emphasis>承诺 API 兼容性。因此，扩展代码可能需要进行源代码修改才能在多个主版本上工作。这些通常可以通过诸如 <literal>#if PG_VERSION_NUM &gt;= 160000</literal> 之类的预处理器条件来管理。使用超出明确划定范围的接口的复杂扩展，通常需要针对每个主服务器版本做少量此类修改。
       </para>
      </sect4>
 
      <sect4 id="xfunc-guidance-api-mninor-versions">
-      <title>Minor Versions</title>
+      <title>次版本</title>
       <para>
-       <productname>PostgreSQL</productname> makes an effort to avoid server
-       API breaks in minor releases. In general, extension code that compiles
-       and works with a minor release should also compile and work with any
-       other minor release of the same major version, past or future.
+       <productname>PostgreSQL</productname> 努力避免在次版本中破坏服务器 API。一般来说，能在某个次版本上编译并正常工作的扩展代码，也应该能在同一主版本的其他任何次版本（无论是过去的还是未来的）上编译并正常工作。
       </para>
 
       <para>
@@ -2444,30 +2182,23 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
     </sect3>
 
     <sect3 id="xfunc-guidance-abi-compatibility">
-     <title>ABI Compatibility</title>
+     <title>ABI 兼容性</title>
       <para>
-       The <acronym>ABI</acronym>, or application binary interface, is the
-       interface used at run time.
+       <acronym>ABI</acronym>（即应用程序二进制接口）是运行时使用的接口。
       </para>
 
      <sect4 id="xfunc-guidance-abi-major-versions">
-      <title>Major Versions</title>
+      <title>主版本</title>
       <para>
-       Servers of different major versions have intentionally incompatible
-       ABIs. Extensions that use server APIs must therefore be re-compiled for
-       each major release. The inclusion of <literal>PG_MODULE_MAGIC</literal>
-       (see <xref linkend="xfunc-c-dynload"/>) ensures that code compiled for
-       one major version will be rejected by other major versions.
+       不同主版本的服务器的 ABI 有意设计为不兼容。因此，使用服务器 API 的扩展必须针对每个主版本重新编译。包含 <literal>PG_MODULE_MAGIC</literal>（参见 <xref linkend="xfunc-c-dynload"/>）可确保为一个主版本编译的代码会被其他主版本拒绝。
       </para>
      </sect4>
 
      <sect4 id="xfunc-guidance-abi-mninor-versions">
-      <title>Minor Versions</title>
+      <title>次版本</title>
       <para>
-       <productname>PostgreSQL</productname> makes an effort to avoid server
-       ABI breaks in minor releases. In general, an extension compiled against
-       any minor release should work with any other minor release of the same
-       major version, past or future.
+       <productname>PostgreSQL</productname> 会尽力避免在次要版本中破坏服务器
+       ABI。一般来说，针对任意次要版本编译的扩展应当能与同一主版本的其他任意次要版本（无论是过去的还是未来的）配合工作。
       </para>
 
       <para>
@@ -2480,26 +2211,17 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
       </para>
 
       <para>
-       In rare cases, however, even such non-invasive changes may be
-       impractical or impossible. In such an event, the change will be
-       carefully managed, taking the requirements of extensions into account.
-       Such changes will also be documented in the release notes (<xref
-       linkend="release"/>).
+       然而在少数情况下，即便是这类非侵入性的更改也可能不切实际或无法实现。在这种情况下，更改会被谨慎管理，并会考虑扩展的需求。
+       此类更改也会记录在发布说明中（<xref
+       linkend="release"/>）。
       </para>
 
       <para>
-       Note, however, that many parts of the server are not designed or
-       maintained as publicly-consumable APIs (and that, in most cases, the
-       actual boundary is also not well-defined). If urgent needs arise,
-       changes in those parts will naturally be made with less consideration
-       for extension code than changes in well-defined and widely used
-       interfaces.
+       但请注意，服务器的许多部分并非作为可供公共使用的 API 来设计或维护的（而且在大多数情况下，实际的边界也并未明确定义）。如果出现紧急需求，这些部分的更改自然会比定义明确且广泛使用的接口的更改更少考虑扩展代码。
       </para>
 
       <para>
-       Also, in the absence of automated detection of such changes, this is
-       not a guarantee, but historically such breaking changes have been
-       extremely rare.
+       此外，由于缺乏对此类更改的自动检测，这并非一项保证，但从历史上看，这类破坏性更改极其罕见。
       </para>
 
      </sect4>
@@ -2507,20 +2229,14 @@ CREATE FUNCTION t_starts_with(text, text) RETURNS boolean
   </sect2>
 
    <sect2 id="xfunc-c-composite-type-args">
-    <title>Composite-Type Arguments</title>
+    <title>复合类型参数</title>
 
     <para>
-     Composite types do not have a fixed layout like C structures.
-     Instances of a composite type can contain null fields.  In
-     addition, composite types that are part of an inheritance
-     hierarchy can have different fields than other members of the
-     same inheritance hierarchy.  Therefore,
-     <productname>PostgreSQL</productname> provides a function
-     interface for accessing fields of composite types from C.
+     复合类型不像 C 结构体那样具有固定的布局。复合类型的实例可以包含空字段。此外，属于继承层次结构的复合类型，其字段可能与该继承层次结构中其他成员不同。因此，<productname>PostgreSQL</productname> 提供了一个函数接口，用于从 C 中访问复合类型的字段。
     </para>
 
     <para>
-     Suppose we want to write a function to answer the query:
+     假设我们想编写一个函数来回答以下查询：
 
 <programlisting>
 SELECT name, c_overpaid(emp, 1500) AS overpaid
@@ -2528,8 +2244,7 @@ SELECT name, c_overpaid(emp, 1500) AS overpaid
     WHERE name = 'Bill' OR name = 'Sam';
 </programlisting>
 
-     Using the version-1 calling conventions, we can define
-     <function>c_overpaid</function> as:
+使用版本 1 的调用约定，我们可以将 <function>c_overpaid</function> 定义为：
 
 <programlisting><![CDATA[
 #include "postgres.h"
@@ -2559,29 +2274,15 @@ c_overpaid(PG_FUNCTION_ARGS)
     </para>
 
     <para>
-     <function>GetAttributeByName</function> is the
-     <productname>PostgreSQL</productname> system function that
-     returns attributes out of the specified row.  It has
-     three arguments: the argument of type <type>HeapTupleHeader</type> passed
-     into
-     the  function, the name of the desired attribute, and a
-     return parameter that tells whether  the  attribute
-     is  null.   <function>GetAttributeByName</function> returns a <type>Datum</type>
-     value that you can convert to the proper data type by using the
-     appropriate <function>DatumGet<replaceable>XXX</replaceable>()</function>
-     function.  Note that the return value is meaningless if the null flag is
-     set; always check the null flag before trying to do anything with the
-     result.
+     <function>GetAttributeByName</function> 是 <productname>PostgreSQL</productname> 系统函数，它从指定的行中返回属性。它有三个参数：传入函数的 <type>HeapTupleHeader</type> 类型参数、所需属性的名称，以及一个用于说明该属性是否为空的返回参数。<function>GetAttributeByName</function> 返回一个 <type>Datum</type> 值，你可以使用相应的 <function>DatumGet<replaceable>XXX</replaceable>()</function> 函数将其转换为恰当的数据类型。注意，如果空标志被设置，则返回值没有意义；在对结果做任何操作之前，一定要先检查空标志。
     </para>
 
     <para>
-     There is also <function>GetAttributeByNum</function>, which selects
-     the target attribute by column number instead of name.
+     还有 <function>GetAttributeByNum</function>，它按列号而不是按名称选择目标属性。
     </para>
 
     <para>
-     The following command declares the function
-     <function>c_overpaid</function> in SQL:
+     以下命令在 SQL 中声明函数 <function>c_overpaid</function>：
 
 <programlisting>
 CREATE FUNCTION c_overpaid(emp, integer) RETURNS boolean
@@ -2589,210 +2290,144 @@ CREATE FUNCTION c_overpaid(emp, integer) RETURNS boolean
     LANGUAGE C STRICT;
 </programlisting>
 
-     Notice we have used <literal>STRICT</literal> so that we did not have to
-     check whether the input arguments were NULL.
+注意我们使用了 <literal>STRICT</literal>，这样就不必检查输入参数是否为 NULL。
     </para>
    </sect2>
 
    <sect2 id="xfunc-c-returning-rows">
-    <title>Returning Rows (Composite Types)</title>
+    <title>返回行（复合类型）</title>
 
     <para>
-     To return a row or composite-type value from a C-language
-     function, you can use a special API that provides macros and
-     functions to hide most of the complexity of building composite
-     data types.  To use this API, the source file must include:
+     要从 C 语言函数返回一行或复合类型的值，可以使用一个特殊的 API，它提供了宏和函数来隐藏构建复合数据类型的大部分复杂性。要使用此 API，源文件必须包含：
 <programlisting>
 #include "funcapi.h"
 </programlisting>
     </para>
 
     <para>
-     There are two ways you can build a composite data value (henceforth
-     a <quote>tuple</quote>): you can build it from an array of Datum values,
-     or from an array of C strings that can be passed to the input
-     conversion functions of the tuple's column data types.  In either
-     case, you first need to obtain or construct a <structname>TupleDesc</structname>
-     descriptor for the tuple structure.  When working with Datums, you
-     pass the <structname>TupleDesc</structname> to <function>BlessTupleDesc</function>,
-     and then call <function>heap_form_tuple</function> for each row.  When working
-     with C strings, you pass the <structname>TupleDesc</structname> to
-     <function>TupleDescGetAttInMetadata</function>, and then call
-     <function>BuildTupleFromCStrings</function> for each row.  In the case of a
-     function returning a set of tuples, the setup steps can all be done
-     once during the first call of the function.
+     构建复合数据值（以下称为<quote>元组</quote>）有两种方法：可以从 Datum 值数组构建，也可以从可传递给元组列数据类型的输入转换函数的 C 字符串数组构建。无论哪种情况，首先需要获取或构造元组结构的 <structname>TupleDesc</structname> 描述符。使用 Datum 时，将 <structname>TupleDesc</structname> 传递给 <function>BlessTupleDesc</function>，然后为每一行调用 <function>heap_form_tuple</function>。使用 C 字符串时，将 <structname>TupleDesc</structname> 传递给 <function>TupleDescGetAttInMetadata</function>，然后为每一行调用 <function>BuildTupleFromCStrings</function>。对于返回元组集合的函数，所有设置步骤都可以在函数的第一次调用期间一次性完成。
     </para>
 
     <para>
-     Several helper functions are available for setting up the needed
-     <structname>TupleDesc</structname>.  The recommended way to do this in most
-     functions returning composite values is to call:
+     有几个辅助函数可用于设置所需的 <structname>TupleDesc</structname>。在大多数返回复合值的函数中，推荐的做法是调用：
 <programlisting>
 TypeFuncClass get_call_result_type(FunctionCallInfo fcinfo,
                                    Oid *resultTypeId,
                                    TupleDesc *resultTupleDesc)
 </programlisting>
-     passing the same <literal>fcinfo</literal> struct passed to the calling function
-     itself.  (This of course requires that you use the version-1
-     calling conventions.)  <varname>resultTypeId</varname> can be specified
-     as <literal>NULL</literal> or as the address of a local variable to receive the
-     function's result type OID.  <varname>resultTupleDesc</varname> should be the
-     address of a local <structname>TupleDesc</structname> variable.  Check that the
-     result is <literal>TYPEFUNC_COMPOSITE</literal>; if so,
-     <varname>resultTupleDesc</varname> has been filled with the needed
-     <structname>TupleDesc</structname>.  (If it is not, you can report an error along
-     the lines of <quote>function returning record called in context that
-     cannot accept type record</quote>.)
+     传入传递给调用函数本身的同一个 <literal>fcinfo</literal> 结构体。（这当然要求你使用版本 1 的调用约定。）<varname>resultTypeId</varname> 可以指定为 <literal>NULL</literal>，也可以指定为用于接收函数结果类型 OID 的局部变量的地址。<varname>resultTupleDesc</varname> 应该是局部 <structname>TupleDesc</structname> 变量的地址。检查结果是否为 <literal>TYPEFUNC_COMPOSITE</literal>；如果是，则 <varname>resultTupleDesc</varname> 已填充了所需的 <structname>TupleDesc</structname>。（如果不是，可以报告类似 <quote>function returning record called in context that cannot accept type record</quote> 的错误。）
     </para>
 
     <tip>
      <para>
-      <function>get_call_result_type</function> can resolve the actual type of a
-      polymorphic function result; so it is useful in functions that return
-      scalar polymorphic results, not only functions that return composites.
-      The <varname>resultTypeId</varname> output is primarily useful for functions
-      returning polymorphic scalars.
+      <function>get_call_result_type</function> 可以解析多态函数结果的实际类型；因此它不仅对返回复合类型的函数有用，对返回标量多态结果的函数也有用。<varname>resultTypeId</varname> 输出主要对返回多态标量的函数有用。
      </para>
     </tip>
 
     <note>
      <para>
-      <function>get_call_result_type</function> has a sibling
-      <function>get_expr_result_type</function>, which can be used to resolve the
-      expected output type for a function call represented by an expression
-      tree.  This can be used when trying to determine the result type from
-      outside the function itself.  There is also
-      <function>get_func_result_type</function>, which can be used when only the
-      function's OID is available.  However these functions are not able
-      to deal with functions declared to return <structname>record</structname>, and
-      <function>get_func_result_type</function> cannot resolve polymorphic types,
-      so you should preferentially use <function>get_call_result_type</function>.
+      <function>get_call_result_type</function> 有一个同级函数
+      <function>get_expr_result_type</function>，可用于解析由表达式树表示的函数调用的
+      预期输出类型。当试图从函数本身之外确定结果类型时，
+      可以使用它。还有
+      <function>get_func_result_type</function>，可在只有函数的 OID 可用时使用。
+      但是这些函数无法处理声明返回 <structname>record</structname> 的函数，并且
+      <function>get_func_result_type</function> 无法解析多态类型，
+      因此应优先使用 <function>get_call_result_type</function>。
      </para>
     </note>
 
     <para>
-     Older, now-deprecated functions for obtaining
-     <structname>TupleDesc</structname>s are:
+     用于获取
+     <structname>TupleDesc</structname>s 的较旧且现已弃用的函数有：
 <programlisting>
 TupleDesc RelationNameGetTupleDesc(const char *relname)
 </programlisting>
-     to get a <structname>TupleDesc</structname> for the row type of a named relation,
-     and:
+     用于获取命名关系的行类型的 <structname>TupleDesc</structname>，
+     以及：
 <programlisting>
 TupleDesc TypeGetTupleDesc(Oid typeoid, List *colaliases)
 </programlisting>
-     to get a <structname>TupleDesc</structname> based on a type OID. This can
-     be used to get a <structname>TupleDesc</structname> for a base or
-     composite type.  It will not work for a function that returns
-     <structname>record</structname>, however, and it cannot resolve polymorphic
-     types.
+     用于基于类型 OID 获取 <structname>TupleDesc</structname>。这可用于
+     获取基础类型或复合类型的 <structname>TupleDesc</structname>。
+     但是，它不能用于返回 <structname>record</structname> 的函数，
+     并且无法解析多态类型。
     </para>
 
     <para>
-     Once you have a <structname>TupleDesc</structname>, call:
+     一旦你有了 <structname>TupleDesc</structname>，请调用：
 <programlisting>
 TupleDesc BlessTupleDesc(TupleDesc tupdesc)
 </programlisting>
-     if you plan to work with Datums, or:
+     如果你打算处理 Datum，或者：
 <programlisting>
 AttInMetadata *TupleDescGetAttInMetadata(TupleDesc tupdesc)
 </programlisting>
-     if you plan to work with C strings.  If you are writing a function
-     returning set, you can save the results of these functions in the
-     <structname>FuncCallContext</structname> structure &mdash; use the
-     <structfield>tuple_desc</structfield> or <structfield>attinmeta</structfield> field
-     respectively.
+     如果你打算处理 C 字符串。如果你正在编写返回集合的函数，
+     可以将这些函数的结果保存在
+     <structname>FuncCallContext</structname> 结构 &mdash; 中，使用
+     <structfield>tuple_desc</structfield> 或 <structfield>attinmeta</structfield> 字段，
+     分别使用。
     </para>
 
     <para>
-     When working with Datums, use:
+     处理 Datum 时，使用：
 <programlisting>
 HeapTuple heap_form_tuple(TupleDesc tupdesc, Datum *values, bool *isnull)
 </programlisting>
-     to build a <structname>HeapTuple</structname> given user data in Datum form.
+     根据 Datum 形式的用户数据构建 <structname>HeapTuple</structname>。
     </para>
 
     <para>
-     When working with C strings, use:
+     处理 C 字符串时，使用：
 <programlisting>
 HeapTuple BuildTupleFromCStrings(AttInMetadata *attinmeta, char **values)
 </programlisting>
-     to build a <structname>HeapTuple</structname> given user data
-     in C string form.  <parameter>values</parameter> is an array of C strings,
-     one for each attribute of the return row. Each C string should be in
-     the form expected by the input function of the attribute data
-     type. In order to return a null value for one of the attributes,
-     the corresponding pointer in the <parameter>values</parameter> array
-     should be set to <symbol>NULL</symbol>.  This function will need to
-     be called again for each row you return.
+     根据 C 字符串形式的用户数据构建 <structname>HeapTuple</structname>。
+     <parameter>values</parameter> 是一个 C 字符串数组，
+     返回行的每个属性对应一个 C 字符串。每个 C 字符串应采用
+     属性数据类型的输入函数所期望的
+     形式。为了为其中一个属性返回空值，
+     应将 <parameter>values</parameter> 数组中对应的指针
+     设置为 <symbol>NULL</symbol>。每返回一行，
+     都需要再次调用此函数。
     </para>
 
     <para>
-     Once you have built a tuple to return from your function, it
-     must be converted into a <type>Datum</type>. Use:
+     一旦构建了要从函数返回的元组，就
+     必须将其转换为 <type>Datum</type>。使用：
 <programlisting>
 HeapTupleGetDatum(HeapTuple tuple)
 </programlisting>
-     to convert a <structname>HeapTuple</structname> into a valid Datum.  This
-     <type>Datum</type> can be returned directly if you intend to return
-     just a single row, or it can be used as the current return value
-     in a set-returning function.
+     将 <structname>HeapTuple</structname> 转换为有效的 Datum。此
+     <type>Datum</type> 可以直接返回，如果你打算只返回
+     一行；或者可以将其用作返回集合的函数中的
+     当前返回值。
     </para>
 
     <para>
-     An example appears in the next section.
+     下一节中给出了一个示例。
     </para>
 
    </sect2>
 
    <sect2 id="xfunc-c-return-set">
-    <title>Returning Sets</title>
+    <title>返回集合</title>
 
     <para>
-     C-language functions have two options for returning sets (multiple
-     rows).  In one method, called <firstterm>ValuePerCall</firstterm>
-     mode, a set-returning function is called repeatedly (passing the same
-     arguments each time) and it returns one new row on each call, until
-     it has no more rows to return and signals that by returning NULL.
-     The set-returning function (<acronym>SRF</acronym>) must therefore
-     save enough state across calls to remember what it was doing and
-     return the correct next item on each call.
-     In the other method, called <firstterm>Materialize</firstterm> mode,
-     an SRF fills and returns a tuplestore object containing its
-     entire result; then only one call occurs for the whole result, and
-     no inter-call state is needed.
+     C 语言函数有两种返回集合（多行）的方式。一种方法称为 <firstterm>ValuePerCall</firstterm> 模式，即反复调用一个集合返回函数（每次传入相同的参数），每次调用返回一个新行，直到没有更多行可返回，并通过返回 NULL 来表明这一点。因此，集合返回函数（<acronym>SRF</acronym>）必须在多次调用之间保存足够的状态，以记住它正在做什么，并在每次调用时返回正确的下一项。另一种方法称为 <firstterm>Materialize</firstterm> 模式，SRF 填充并返回一个包含其全部结果的 tuplestore 对象；这样整个结果只发生一次调用，不需要调用间的状态。
     </para>
 
     <para>
-     When using ValuePerCall mode, it is important to remember that the
-     query is not guaranteed to be run to completion; that is, due to
-     options such as <literal>LIMIT</literal>, the executor might stop
-     making calls to the set-returning function before all rows have been
-     fetched.  This means it is not safe to perform cleanup activities in
-     the last call, because that might not ever happen.  It's recommended
-     to use Materialize mode for functions that need access to external
-     resources, such as file descriptors.
+     使用 ValuePerCall 模式时，务必记住查询不保证会运行到完成；也就是说，由于 <literal>LIMIT</literal> 之类的选项，执行器可能在取完所有行之前就停止调用集合返回函数。这意味着在最后一次调用中执行清理活动是不安全的，因为那可能永远不会发生。对于需要访问外部资源（例如文件描述符）的函数，建议使用 Materialize 模式。
     </para>
 
     <para>
-     The remainder of this section documents a set of helper macros that
-     are commonly used (though not required to be used) for SRFs using
-     ValuePerCall mode.  Additional details about Materialize mode can be
-     found in <filename>src/backend/utils/fmgr/README</filename>.  Also,
-     the <filename>contrib</filename> modules in
-     the <productname>PostgreSQL</productname> source distribution contain
-     many examples of SRFs using both ValuePerCall and Materialize mode.
+     本节剩余部分介绍一组辅助宏，它们通常（尽管不是必须）用于使用 ValuePerCall 模式的 SRF。有关 Materialize 模式的更多细节可以在 <filename>src/backend/utils/fmgr/README</filename> 中找到。此外，<productname>PostgreSQL</productname> 源代码发行版中的 <filename>contrib</filename> 模块包含许多使用 ValuePerCall 和 Materialize 两种模式的 SRF 示例。
     </para>
 
     <para>
-     To use the ValuePerCall support macros described here,
-     include <filename>funcapi.h</filename>.  These macros work with a
-     structure <structname>FuncCallContext</structname> that contains the
-     state that needs to be saved across calls.  Within the calling
-     SRF, <literal>fcinfo-&gt;flinfo-&gt;fn_extra</literal> is used to
-     hold a pointer to <structname>FuncCallContext</structname> across
-     calls.  The macros automatically fill that field on first use,
-     and expect to find the same pointer there on subsequent uses.
+     要使用这里描述的 ValuePerCall 支持宏，请包含 <filename>funcapi.h</filename>。这些宏与一个结构 <structname>FuncCallContext</structname> 配合使用，该结构包含需要在多次调用之间保存的状态。在调用方 SRF 中，使用 <literal>fcinfo-&gt;flinfo-&gt;fn_extra</literal> 在多次调用之间保存指向 <structname>FuncCallContext</structname> 的指针。这些宏在首次使用时自动填充该字段，并期望在后续使用时在该字段中找到相同的指针。
 <programlisting>
 typedef struct FuncCallContext
 {
@@ -2857,75 +2492,45 @@ typedef struct FuncCallContext
     </para>
 
     <para>
-     The macros to be used by an <acronym>SRF</acronym> using this
-     infrastructure are:
+     使用此基础设施的 <acronym>SRF</acronym> 需要使用的宏如下：
 <programlisting>
 SRF_IS_FIRSTCALL()
 </programlisting>
-     Use this to determine if your function is being called for the first or a
-     subsequent time. On the first call (only), call:
+     用它来判断你的函数是第一次被调用还是后续调用。在第一次调用时（仅这一次），调用：
 <programlisting>
 SRF_FIRSTCALL_INIT()
 </programlisting>
-     to initialize the <structname>FuncCallContext</structname>. On every function call,
-     including the first, call:
+     来初始化 <structname>FuncCallContext</structname>。在每次函数调用时（包括第一次），调用：
 <programlisting>
 SRF_PERCALL_SETUP()
 </programlisting>
-     to set up for using the <structname>FuncCallContext</structname>.
+     来为使用 <structname>FuncCallContext</structname> 做好准备。
     </para>
 
     <para>
-     If your function has data to return in the current call, use:
+     如果你的函数在当前调用中有数据要返回，使用：
 <programlisting>
 SRF_RETURN_NEXT(funcctx, result)
 </programlisting>
-     to return it to the caller.  (<literal>result</literal> must be of type
-     <type>Datum</type>, either a single value or a tuple prepared as
-     described above.)  Finally, when your function is finished
-     returning data, use:
+     将其返回给调用者。（<literal>result</literal> 必须是 <type>Datum</type> 类型，可以是单个值，也可以是按上文所述方式准备好的元组。）最后，当你的函数完成数据返回时，使用：
 <programlisting>
 SRF_RETURN_DONE(funcctx)
 </programlisting>
-     to clean up and end the <acronym>SRF</acronym>.
+     进行清理并结束 <acronym>SRF</acronym>。
     </para>
 
     <para>
-     The memory context that is current when the <acronym>SRF</acronym> is called is
-     a transient context that will be cleared between calls.  This means
-     that you do not need to call <function>pfree</function> on everything
-     you allocated using <function>palloc</function>; it will go away anyway.  However, if you want to allocate
-     any data structures to live across calls, you need to put them somewhere
-     else.  The memory context referenced by
-     <structfield>multi_call_memory_ctx</structfield> is a suitable location for any
-     data that needs to survive until the <acronym>SRF</acronym> is finished running.  In most
-     cases, this means that you should switch into
-     <structfield>multi_call_memory_ctx</structfield> while doing the
-     first-call setup.
-     Use <literal>funcctx-&gt;user_fctx</literal> to hold a pointer to
-     any such cross-call data structures.
-     (Data you allocate
-     in <structfield>multi_call_memory_ctx</structfield> will go away
-     automatically when the query ends, so it is not necessary to free
-     that data manually, either.)
+     调用 <acronym>SRF</acronym> 时当前的内存上下文是一个临时上下文，它会在每次调用之间被清除。这意味着你不需要对使用 <function>palloc</function> 分配的每一样东西都调用 <function>pfree</function>；它无论如何都会消失。不过，如果你希望分配的任何数据结构能够跨调用存活，就需要把它们放到别处。<structfield>multi_call_memory_ctx</structfield> 所引用的内存上下文是存放任何需要一直存活到 <acronym>SRF</acronym> 运行结束的数据的合适位置。在大多数情况下，这意味着你应该在首次调用设置期间切换到 <structfield>multi_call_memory_ctx</structfield>。使用 <literal>funcctx-&gt;user_fctx</literal> 来保存指向任何此类跨调用数据结构的指针。（你在 <structfield>multi_call_memory_ctx</structfield> 中分配的数据会在查询结束时自动消失，因此也不需要手动释放这些数据。）
     </para>
 
     <warning>
      <para>
-      While the actual arguments to the function remain unchanged between
-      calls, if you detoast the argument values (which is normally done
-      transparently by the
-      <function>PG_GETARG_<replaceable>xxx</replaceable></function> macro)
-      in the transient context then the detoasted copies will be freed on
-      each cycle. Accordingly, if you keep references to such values in
-      your <structfield>user_fctx</structfield>, you must either copy them into the
-      <structfield>multi_call_memory_ctx</structfield> after detoasting, or ensure
-      that you detoast the values only in that context.
+      虽然函数的实际参数在调用之间保持不变，但如果你在临时上下文中对参数值进行解 TOAST 处理（这通常由 <function>PG_GETARG_<replaceable>xxx</replaceable></function> 宏透明地完成），那么解 TOAST 后的副本会在每个周期被释放。因此，如果你在 <structfield>user_fctx</structfield> 中保留了对这类值的引用，就必须在解 TOAST 之后将它们复制到 <structfield>multi_call_memory_ctx</structfield> 中，或者确保只在该上下文中对值进行解 TOAST 处理。
      </para>
     </warning>
 
     <para>
-     A complete pseudo-code example looks like the following:
+     一个完整的伪代码示例如下：
 <programlisting>
 Datum
 my_set_returning_function(PG_FUNCTION_ARGS)
@@ -2973,8 +2578,7 @@ my_set_returning_function(PG_FUNCTION_ARGS)
     </para>
 
     <para>
-     A complete example of a simple <acronym>SRF</acronym> returning a composite type
-     looks like:
+     一个返回复合类型的简单 <acronym>SRF</acronym> 的完整示例如下：
 <programlisting><![CDATA[
 PG_FUNCTION_INFO_V1(retcomposite);
 
@@ -3067,7 +2671,7 @@ retcomposite(PG_FUNCTION_ARGS)
 ]]>
 </programlisting>
 
-     One way to declare this function in SQL is:
+     在 SQL 中声明该函数的一种方式是：
 <programlisting>
 CREATE TYPE __retcomposite AS (f1 integer, f2 integer, f3 integer);
 
@@ -3076,7 +2680,7 @@ CREATE OR REPLACE FUNCTION retcomposite(integer, integer)
     AS '<replaceable>filename</replaceable>', 'retcomposite'
     LANGUAGE C IMMUTABLE STRICT;
 </programlisting>
-     A different way is to use OUT parameters:
+     另一种方式是使用 OUT 参数：
 <programlisting>
 CREATE OR REPLACE FUNCTION retcomposite(IN integer, IN integer,
     OUT f1 integer, OUT f2 integer, OUT f3 integer)
@@ -3084,13 +2688,12 @@ CREATE OR REPLACE FUNCTION retcomposite(IN integer, IN integer,
     AS '<replaceable>filename</replaceable>', 'retcomposite'
     LANGUAGE C IMMUTABLE STRICT;
 </programlisting>
-     Notice that in this method the output type of the function is formally
-     an anonymous <structname>record</structname> type.
+     请注意，在这种方式中，函数的输出类型在形式上是一个匿名的 <structname>record</structname> 类型。
     </para>
    </sect2>
 
    <sect2 id="xfunc-c-polymorphic">
-    <title>Polymorphic Arguments and Return Types</title>
+    <title>多态参数与返回类型</title>
 
     <para>
      C-language functions can be declared to accept and
@@ -3118,8 +2721,8 @@ CREATE OR REPLACE FUNCTION retcomposite(IN integer, IN integer,
     </para>
 
     <para>
-     For example, suppose we want to write a function to accept a single
-     element of any type, and return a one-dimensional array of that type:
+     例如，假设我们想编写一个函数，接受任意类型的单个
+     元素，并返回该类型的一维数组：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(make_array);
@@ -3167,8 +2770,8 @@ make_array(PG_FUNCTION_ARGS)
     </para>
 
     <para>
-     The following command declares the function
-     <function>make_array</function> in SQL:
+     以下命令在 SQL 中声明函数
+     <function>make_array</function>：
 
 <programlisting>
 CREATE FUNCTION make_array(anyelement) RETURNS anyarray
@@ -3178,63 +2781,56 @@ CREATE FUNCTION make_array(anyelement) RETURNS anyarray
     </para>
 
     <para>
-     There is a variant of polymorphism that is only available to C-language
-     functions: they can be declared to take parameters of type
-     <literal>"any"</literal>.  (Note that this type name must be double-quoted,
-     since it's also an SQL reserved word.)  This works like
-     <type>anyelement</type> except that it does not constrain different
-     <literal>"any"</literal> arguments to be the same type, nor do they help
-     determine the function's result type.  A C-language function can also
-     declare its final parameter to be <literal>VARIADIC "any"</literal>.  This will
-     match one or more actual arguments of any type (not necessarily the same
-     type).  These arguments will <emphasis>not</emphasis> be gathered into an array
-     as happens with normal variadic functions; they will just be passed to
-     the function separately.  The <function>PG_NARGS()</function> macro and the
-     methods described above must be used to determine the number of actual
-     arguments and their types when using this feature.  Also, users of such
-     a function might wish to use the <literal>VARIADIC</literal> keyword in their
-     function call, with the expectation that the function would treat the
-     array elements as separate arguments.  The function itself must implement
-     that behavior if wanted, after using <function>get_fn_expr_variadic</function> to
-     detect that the actual argument was marked with <literal>VARIADIC</literal>.
+     ���有一种多态变体仅对 C 语言函数可用：可以声明它们接受
+    <literal>"any"</literal> 类型的参数。（注意该类型名必须用双引号括起，
+    因为它同时也是 SQL 保留字。）其工作方式与
+    <type>anyelement</type> 类似，区别在于它不约束不同的
+    <literal>"any"</literal> 参数为同一类型，也无助于
+    确定函数的结果类型。C 语言函数还可以
+    把它的最后一个参数声明为 <literal>VARIADIC "any"</literal>。这将
+    匹配任意类型（不必是同一类型）的一个或多个实际参数。这些参数
+    <emphasis>不会</emphasis>像普通可变参数函数那样被收集到一个数组中；
+    它们只是被分别传递给函数。使用此特性时，
+    必须使用 <function>PG_NARGS()</function> 宏以及上文描述的方法
+    来确定实际参数的数量及其类型。此外，这类函数的用户
+    可能希望在函数调用中使用 <literal>VARIADIC</literal> 关键字，
+    期望函数会把数组元素当作独立的参数处理。
+    如果需要，函数自身必须在用 <function>get_fn_expr_variadic</function>
+    检测到实际参数被标记为 <literal>VARIADIC</literal> 之后实现该行为。
     </para>
    </sect2>
 
    <sect2 id="xfunc-shared-addin">
-    <title>Shared Memory</title>
+    <title>共享内存</title>
 
     <sect3 id="xfunc-shared-addin-at-startup">
-     <title>Requesting Shared Memory at Startup</title>
+     <title>在启动时请求共享内存</title>
 
      <para>
-      Add-ins can reserve shared memory on server startup.  To do so, the
-      add-in's shared library must be preloaded by specifying it in
-      <xref linkend="guc-shared-preload-libraries"/><indexterm><primary>shared_preload_libraries</primary></indexterm>.
-      The shared library should also register a
-      <literal>shmem_request_hook</literal> in its
-      <function>_PG_init</function> function.  This
-      <literal>shmem_request_hook</literal> can reserve shared memory by
-      calling:
+      插件可以在服务器启动时预留共享内存。为此，
+      必须通过在
+      <xref linkend="guc-shared-preload-libraries"/><indexterm><primary>shared_preload_libraries</primary></indexterm> 中指定该插件的共享库来预加载它。
+      该共享库还应在其
+      <function>_PG_init</function> 函数中注册一个
+      <literal>shmem_request_hook</literal>。这个
+      <literal>shmem_request_hook</literal> 可以通过调用以下函数来预留共享内存：
 <programlisting>
 void RequestAddinShmemSpace(Size size)
 </programlisting>
-      Each backend should obtain a pointer to the reserved shared memory by
-      calling:
+      每个后端应通过调用以下函数来获得指向所预留共享内存的
+      指针：
 <programlisting>
 void *ShmemInitStruct(const char *name, Size size, bool *foundPtr)
 </programlisting>
-      If this function sets <literal>foundPtr</literal> to
-      <literal>false</literal>, the caller should proceed to initialize the
-      contents of the reserved shared memory.  If <literal>foundPtr</literal>
-      is set to <literal>true</literal>, the shared memory was already
-      initialized by another backend, and the caller need not initialize
-      further.
+      如果该函数把 <literal>foundPtr</literal> 设置为
+      <literal>false</literal>，调用者应继续初始化所预留共享内存的
+      内容。如果 <literal>foundPtr</literal>
+      被设置为 <literal>true</literal>，则说明共享内存已由另一个后端
+      初始化，调用者无需再初始化。
      </para>
 
      <para>
-      To avoid race conditions, each backend should use the LWLock
-      <function>AddinShmemInitLock</function> when initializing its allocation
-      of shared memory, as shown here:
+      为了避免竞态条件，每个后端在初始化其共享内存分配时都应使用 LWLock <function>AddinShmemInitLock</function>，如下所示：
 <programlisting>
 static mystruct *ptr = NULL;
 bool        found;
@@ -3248,87 +2844,54 @@ if (!found)
 }
 LWLockRelease(AddinShmemInitLock);
 </programlisting>
-      <literal>shmem_startup_hook</literal> provides a convenient place for the
-      initialization code, but it is not strictly required that all such code
-      be placed in this hook.  On Windows (and anywhere else where
-      <literal>EXEC_BACKEND</literal> is defined), each backend executes the
-      registered <literal>shmem_startup_hook</literal> shortly after it
-      attaches to shared memory, so add-ins should still acquire
-      <function>AddinShmemInitLock</function> within this hook, as shown in the
-      example above.  On other platforms, only the postmaster process executes
-      the <literal>shmem_startup_hook</literal>, and each backend automatically
-      inherits the pointers to shared memory.
+      <literal>shmem_startup_hook</literal> 为初始化代码提供了一个便利的位置，但并非严格要求所有此类代码都放在这个钩子中。在 Windows 上（以及任何定义了 <literal>EXEC_BACKEND</literal> 的地方），每个后端在连接到共享内存后不久就会执行已注册的 <literal>shmem_startup_hook</literal>，因此插件仍然应该在这个钩子内获取 <function>AddinShmemInitLock</function>，如上例所示。在其他平台上，只有 postmaster 进程会执行 <literal>shmem_startup_hook</literal>，而每个后端会自动继承指向共享内存的指针。
      </para>
 
      <para>
-      An example of a <literal>shmem_request_hook</literal> and
-      <literal>shmem_startup_hook</literal> can be found in
-      <filename>contrib/pg_stat_statements/pg_stat_statements.c</filename> in
-      the <productname>PostgreSQL</productname> source tree.
+      关于 <literal>shmem_request_hook</literal> 和 <literal>shmem_startup_hook</literal> 的示例可以在 <productname>PostgreSQL</productname> 源代码树的 <filename>contrib/pg_stat_statements/pg_stat_statements.c</filename> 中找到。
      </para>
     </sect3>
 
     <sect3 id="xfunc-shared-addin-after-startup">
-     <title>Requesting Shared Memory After Startup</title>
+     <title>在启动后请求共享内存</title>
 
      <para>
-      There is another, more flexible method of reserving shared memory that
-      can be done after server startup and outside a
-      <literal>shmem_request_hook</literal>.  To do so, each backend that will
-      use the shared memory should obtain a pointer to it by calling:
+      还有另一种更灵活的预留共享内存的方法，可以在服务器启动之后、<literal>shmem_request_hook</literal> 之外进行。为此，每个将要使用该共享内存的后端都应通过调用以下函数来获得指向它的指针：
 <programlisting>
 void *GetNamedDSMSegment(const char *name, size_t size,
                          void (*init_callback) (void *ptr),
                          bool *found)
 </programlisting>
-      If a dynamic shared memory segment with the given name does not yet
-      exist, this function will allocate it and initialize it with the provided
-      <function>init_callback</function> callback function.  If the segment has
-      already been allocated and initialized by another backend, this function
-      simply attaches the existing dynamic shared memory segment to the current
-      backend.
+      如果具有给定名称的动态共享内存段尚不存在，该函数将分配它，并使用提供的 <function>init_callback</function> 回调函数对其进行初始化。如果该段已由另一个后端分配并初始化，则该函数只是将现有的动态共享内存段附加到当前后端。
      </para>
 
      <para>
-      Unlike shared memory reserved at server startup, there is no need to
-      acquire <function>AddinShmemInitLock</function> or otherwise take action
-      to avoid race conditions when reserving shared memory with
-      <function>GetNamedDSMSegment</function>.  This function ensures that only
-      one backend allocates and initializes the segment and that all other
-      backends receive a pointer to the fully allocated and initialized
-      segment.
+      与在服务器启动时预留的共享内存不同，使用 <function>GetNamedDSMSegment</function> 预留共享内存时无需获取 <function>AddinShmemInitLock</function> 或采取其他措施来避免竞态条件。该函数确保只有一个后端分配并初始化该段，并且所有其他后端都会收到指向已完全分配并初始化的段的指针。
      </para>
 
      <para>
-      A complete usage example of <function>GetNamedDSMSegment</function> can
-      be found in
-      <filename>src/test/modules/test_dsm_registry/test_dsm_registry.c</filename>
-      in the <productname>PostgreSQL</productname> source tree.
+      关于 <function>GetNamedDSMSegment</function> 的完整用法示例可以在 <productname>PostgreSQL</productname> 源代码树的 <filename>src/test/modules/test_dsm_registry/test_dsm_registry.c</filename> 中找到。
      </para>
     </sect3>
    </sect2>
 
    <sect2 id="xfunc-addin-lwlocks">
-    <title>LWLocks</title>
+    <title>LWLock</title>
 
     <sect3 id="xfunc-addin-lwlocks-at-startup">
-     <title>Requesting LWLocks at Startup</title>
+     <title>在启动时请求 LWLock</title>
 
      <para>
-      Add-ins can reserve LWLocks on server startup.  As with shared memory
-      reserved at server startup, the add-in's shared library must be preloaded
-      by specifying it in
-      <xref linkend="guc-shared-preload-libraries"/><indexterm><primary>shared_preload_libraries</primary></indexterm>,
-      and the shared library should register a
-      <literal>shmem_request_hook</literal> in its
-      <function>_PG_init</function> function.  This
-      <literal>shmem_request_hook</literal> can reserve LWLocks by calling:
+      插件可以在服务器启动时预留 LWLock。与在服务器启动时预留的共享内存一样，插件的共享库必须通过在
+      <xref linkend="guc-shared-preload-libraries"/><indexterm><primary>shared_preload_libraries</primary></indexterm>
+      中指定它来预加载，并且该共享库应在其
+      <function>_PG_init</function> 函数中注册一个 <literal>shmem_request_hook</literal>。这个
+      <literal>shmem_request_hook</literal> 可以通过调用以下函数来预留 LWLock：
 <programlisting>
 void RequestNamedLWLockTranche(const char *tranche_name, int num_lwlocks)
 </programlisting>
-      This ensures that an array of <literal>num_lwlocks</literal> LWLocks is
-      available under the name <literal>tranche_name</literal>.  A pointer to
-      this array can be obtained by calling:
+      这确保在名称 <literal>tranche_name</literal> 下可以使用一个包含 <literal>num_lwlocks</literal> 个
+      LWLock 的数组。指向该数组的指针可以通过调用以下函数获得：
 <programlisting>
 LWLockPadded *GetNamedLWLockTranche(const char *tranche_name)
 </programlisting>
@@ -3336,65 +2899,59 @@ LWLockPadded *GetNamedLWLockTranche(const char *tranche_name)
     </sect3>
 
     <sect3 id="xfunc-addin-lwlocks-after-startup">
-     <title>Requesting LWLocks After Startup</title>
+     <title>在启动后请求 LWLock</title>
 
      <para>
-      There is another, more flexible method of obtaining LWLocks that can be
-      done after server startup and outside a
-      <literal>shmem_request_hook</literal>.  To do so, first allocate a
-      <literal>tranche_id</literal> by calling:
+      还有另一种更灵活的方法来获取 LWLock，可以在服务器启动之后、在
+      <literal>shmem_request_hook</literal> 之外进行。为此，首先通过调用以下函数分配一个
+      <literal>tranche_id</literal>：
 <programlisting>
 int LWLockNewTrancheId(void)
 </programlisting>
-      Next, initialize each LWLock, passing the new
-      <literal>tranche_id</literal> as an argument:
+      接下来，初始化每个 LWLock，将新的
+      <literal>tranche_id</literal> 作为参数传入：
 <programlisting>
 void LWLockInitialize(LWLock *lock, int tranche_id)
 </programlisting>
-      Similar to shared memory, each backend should ensure that only one
-      process allocates a new <literal>tranche_id</literal> and initializes
-      each new LWLock.  One way to do this is to only call these functions in
-      your shared memory initialization code with the
-      <function>AddinShmemInitLock</function> held exclusively.  If using
-      <function>GetNamedDSMSegment</function>, calling these functions in the
-      <function>init_callback</function> callback function is sufficient to
-      avoid race conditions.
+      与共享内存类似，每个后端都应确保只有一个进程分配新的 <literal>tranche_id</literal>
+      并初始化每个新的 LWLock。一种方法是在以排他方式持有
+      <function>AddinShmemInitLock</function> 的情况下，仅在共享内存初始化代码中调用这些函数。如果使用
+      <function>GetNamedDSMSegment</function>，在 <function>init_callback</function> 回调函数中调用这些函数就足以
+      避免竞态条件。
      </para>
 
      <para>
-      Finally, each backend using the <literal>tranche_id</literal> should
-      associate it with a <literal>tranche_name</literal> by calling:
+      最后，每个使用 <literal>tranche_id</literal> 的后端都应通过调用以下函数将其与
+      <literal>tranche_name</literal> 关联：
 <programlisting>
 void LWLockRegisterTranche(int tranche_id, const char *tranche_name)
 </programlisting>
      </para>
 
      <para>
-      A complete usage example of <function>LWLockNewTrancheId</function>,
-      <function>LWLockInitialize</function>, and
-      <function>LWLockRegisterTranche</function> can be found in
-      <filename>contrib/pg_prewarm/autoprewarm.c</filename> in the
-      <productname>PostgreSQL</productname> source tree.
+      <function>LWLockNewTrancheId</function>、<function>LWLockInitialize</function> 和 <function>LWLockRegisterTranche</function> 的完整用法示例可以在
+      <productname>PostgreSQL</productname> 源码树的
+      <filename>contrib/pg_prewarm/autoprewarm.c</filename> 中找到。
      </para>
     </sect3>
    </sect2>
 
    <sect2 id="xfunc-addin-wait-events">
-    <title>Custom Wait Events</title>
+    <title>自定义等待事件</title>
 
     <para>
-     Add-ins can define custom wait events under the wait event type
-     <literal>Extension</literal> by calling:
+     附加模块可以通过调用以下函数，在等待事件类型
+     <literal>Extension</literal> 下定义自定义等待事件：
 <programlisting>
 uint32 WaitEventExtensionNew(const char *wait_event_name)
 </programlisting>
-     The wait event is associated to a user-facing custom string.
-     An example can be found in <filename>src/test/modules/worker_spi</filename>
-     in the PostgreSQL source tree.
+     该等待事件与一个面向用户的自定义字符串相关联。
+     示例可以在 PostgreSQL 源码树的 <filename>src/test/modules/worker_spi</filename>
+     中找到。
     </para>
     <para>
-     Custom wait events can be viewed in
-     <link linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link>:
+     自定义等待事件可以在
+     <link linkend="monitoring-pg-stat-activity-view"><structname>pg_stat_activity</structname></link> 中查看：
 <screen>
 =# SELECT wait_event_type, wait_event FROM pg_stat_activity
      WHERE backend_type ~ 'worker_spi';
@@ -3407,45 +2964,33 @@ uint32 WaitEventExtensionNew(const char *wait_event_name)
    </sect2>
 
    <sect2 id="xfunc-addin-injection-points">
-    <title>Injection Points</title>
+    <title>注入点</title>
 
     <para>
-     An injection point with a given <literal>name</literal> is declared using
-     macro:
+     具有给定 <literal>name</literal> 的注入点使用以下宏声明：
 <programlisting>
 INJECTION_POINT(name, arg);
 </programlisting>
 
-     There are a few injection points already declared at strategic points
-     within the server code. After adding a new injection point the code needs
-     to be compiled in order for that injection point to be available in the
-     binary. Add-ins written in C-language can declare injection points in
-     their own code using the same macro. The injection point names should use
-     lower-case characters, with terms separated by
-     dashes. <literal>arg</literal> is an optional argument value given to the
-     callback at run-time.
+     服务器代码中的一些关键位置已经声明了几个注入点。添加新的注入点后，
+     需要编译代码，该注入点才能在二进制文件中可用。用 C 语言编写的
+     附加模块可以使用相同的宏在自己的代码中声明注入点。注入点名称应使用
+     小写字符，各词之间用短横线分隔。<literal>arg</literal> 是在运行时传递给
+     回调的可选参数值。
     </para>
 
     <para>
-     Executing an injection point can require allocating a small amount of
-     memory, which can fail. If you need to have an injection point in a
-     critical section where dynamic allocations are not allowed, you can use
-     a two-step approach with the following macros:
+     执行注入点可能需要分配少量内存，而分配可能会失败。如果你需要在不允许动态分配内存的临界区中放置注入点，可以使用以下宏采用两步法：
 <programlisting>
 INJECTION_POINT_LOAD(name);
 INJECTION_POINT_CACHED(name, arg);
 </programlisting>
 
-     Before entering the critical section,
-     call <function>INJECTION_POINT_LOAD</function>. It checks the shared
-     memory state, and loads the callback into backend-private memory if it is
-     active. Inside the critical section, use
-     <function>INJECTION_POINT_CACHED</function> to execute the callback.
+     在进入临界区之前，调用 <function>INJECTION_POINT_LOAD</function>。它会检查共享内存状态，如果回调处于活动状态，则将其加载到后端私有内存中。在临界区内，使用 <function>INJECTION_POINT_CACHED</function> 执行该回调。
     </para>
 
     <para>
-     Add-ins can attach callbacks to an already-declared injection point by
-     calling:
+     插件可以通过调用以下函数将回调附加到已声明的注入点：
 <programlisting>
 extern void InjectionPointAttach(const char *name,
                                  const char *library,
@@ -3454,16 +2999,11 @@ extern void InjectionPointAttach(const char *name,
                                  int private_data_size);
 </programlisting>
 
-     <literal>name</literal> is the name of the injection point, which when
-     reached during execution will execute the <literal>function</literal>
-     loaded from <literal>library</literal>. <literal>private_data</literal>
-     is a private area of data of size <literal>private_data_size</literal>
-     given as argument to the callback when executed.
+     <literal>name</literal> 是注入点的名称，当执行过程中到达该注入点时，将执行从 <literal>library</literal> 加载的 <literal>function</literal>。<literal>private_data</literal> 是一块大小为 <literal>private_data_size</literal> 的私有数据区，在执行时作为参数传递给回调。
     </para>
 
     <para>
-     Here is an example of callback for
-     <literal>InjectionPointCallback</literal>:
+     以下是 <literal>InjectionPointCallback</literal> 的回调示例：
 <programlisting>
 static void
 custom_injection_callback(const char *name,
@@ -3477,18 +3017,11 @@ custom_injection_callback(const char *name,
     pgstat_report_wait_end();
 }
 </programlisting>
-     This callback prints a message to server error log with severity
-     <literal>NOTICE</literal>, but callbacks may implement more complex
-     logic.
+     该回调向服务器错误日志打印一条严重级别为 <literal>NOTICE</literal> 的消息，但回调可以实现更复杂的逻辑。
     </para>
 
     <para>
-     An alternative way to define the action to take when an injection point
-     is reached is to add the testing code alongside the normal source
-     code. This can be useful if the action e.g. depends on local variables
-     that are not accessible to loaded modules. The
-     <function>IS_INJECTION_POINT_ATTACHED</function> macro can then be used
-     to check if an injection point is attached, for example:
+     定义到达注入点时所要执行操作的另一种方式，是将测试代码与常规源代码放在一起。如果该操作例如依赖于已加载模块无法访问的局部变量，这种方式会很有用。随后可以使用 <function>IS_INJECTION_POINT_ATTACHED</function> 宏来检查注入点是否已附加，例如：
 <programlisting>
 #ifdef USE_INJECTION_POINTS
 if (IS_INJECTION_POINT_ATTACHED("before-foobar"))
@@ -3501,55 +3034,40 @@ if (IS_INJECTION_POINT_ATTACHED("before-foobar"))
 }
 #endif
 </programlisting>
-     Note that the callback attached to the injection point will not be
-     executed by the <function>IS_INJECTION_POINT_ATTACHED</function>
-     macro. If you want to execute the callback, you must also call
-     <function>INJECTION_POINT_CACHED</function> like in the above example.
+     请注意，附加到注入点的回调不会由 <function>IS_INJECTION_POINT_ATTACHED</function> 宏执行。如果你想执行该回调，还必须像上面的示例那样调用 <function>INJECTION_POINT_CACHED</function>。
     </para>
 
     <para>
-     Optionally, it is possible to detach an injection point by calling:
+     可选地，可以通过调用以下函数来分离注入点：
 <programlisting>
 extern bool InjectionPointDetach(const char *name);
 </programlisting>
-     On success, <literal>true</literal> is returned, <literal>false</literal>
-     otherwise.
+     成功时返回 <literal>true</literal>，否则返回 <literal>false</literal>。
     </para>
 
     <para>
-     A callback attached to an injection point is available across all the
-     backends including the backends started after
-     <literal>InjectionPointAttach</literal> is called. It remains attached
-     while the server is running or until the injection point is detached
-     using <literal>InjectionPointDetach</literal>.
+     附加到注入点的回调在所有后端中都可用，包括在调用 <literal>InjectionPointAttach</literal> 之后启动的后端。它在服务器运行期间保持附加状态，直到使用 <literal>InjectionPointDetach</literal> 分离该注入点为止。
     </para>
 
     <para>
-     An example can be found in
-     <filename>src/test/modules/injection_points</filename> in the PostgreSQL
-     source tree.
+     在 PostgreSQL 源码树的 <filename>src/test/modules/injection_points</filename> 中可以找到一个示例。
     </para>
 
     <para>
-     Enabling injections points requires
-     <option>--enable-injection-points</option> with
-     <command>configure</command> or <option>-Dinjection_points=true</option>
-     with <application>Meson</application>.
+     启用注入点需要使用带 <command>configure</command> 的 <option>--enable-injection-points</option>，或使用带 <application>Meson</application> 的 <option>-Dinjection_points=true</option>。
     </para>
    </sect2>
 
    <sect2 id="xfunc-addin-custom-cumulative-statistics">
-    <title>Custom Cumulative Statistics</title>
+    <title>自定义累积统计信息</title>
 
     <para>
-     It is possible for add-ins written in C-language to use custom types
-     of cumulative statistics registered in the
-     <link linkend="monitoring-stats-setup">Cumulative Statistics System</link>.
+     用 C 语言编写的附加组件可以使用在
+     <link linkend="monitoring-stats-setup">累积统计信息系统</link>中注册的自定义类型的累积统计信息。
     </para>
 
     <para>
-     First, define a <literal>PgStat_KindInfo</literal> that includes all
-     the information related to the custom type registered. For example:
+     首先，定义一个 <literal>PgStat_KindInfo</literal>，其中包含与所注册的自定义类型相关的所有信息。例如：
 <programlisting>
 static const PgStat_KindInfo custom_stats = {
     .name = "custom_stats",
@@ -3561,105 +3079,69 @@ static const PgStat_KindInfo custom_stats = {
 }
 </programlisting>
 
-     Then, each backend that needs to use this custom type needs to register
-     it with <literal>pgstat_register_kind</literal> and a unique ID used to
-     store the entries related to this type of statistics:
+     然后，每个需要使用此自定义类型的后端都需要用 <literal>pgstat_register_kind</literal> 注册它，并提供一个唯一 ID，用于存储与此类统计信息相关的条目：
 <programlisting>
 extern PgStat_Kind pgstat_register_kind(PgStat_Kind kind,
                                         const PgStat_KindInfo *kind_info);
 </programlisting>
-     While developing a new extension, use
-     <literal>PGSTAT_KIND_EXPERIMENTAL</literal> for
-     <parameter>kind</parameter>. When you are ready to release the extension
-     to users, reserve a kind ID at the
+     在开发新扩展时，请为 <parameter>kind</parameter> 使用 <literal>PGSTAT_KIND_EXPERIMENTAL</literal>。当你准备好向用户发布该扩展时，请在
      <ulink url="https://wiki.postgresql.org/wiki/CustomCumulativeStats">
-     Custom Cumulative Statistics</ulink> page.
+     Custom Cumulative Statistics</ulink> 页面上预留一个种类 ID。
     </para>
 
     <para>
-     The details of the API for <literal>PgStat_KindInfo</literal> can
-     be found in <filename>src/include/utils/pgstat_internal.h</filename>.
+     有关 <literal>PgStat_KindInfo</literal> 的 API 的详细信息可以在 <filename>src/include/utils/pgstat_internal.h</filename> 中找到。
     </para>
 
     <para>
-     The type of statistics registered is associated with a name and a unique
-     ID shared across the server in shared memory. Each backend using a
-     custom type of statistics maintains a local cache storing the information
-     of each custom <literal>PgStat_KindInfo</literal>.
+     注册的统计类型与一个名称以及一个在服务器范围内通过共享内存共享的唯一 ID 相关联。每个使用自定义统计类型的后端都会维护一个本地缓存，用于存储每个自定义 <literal>PgStat_KindInfo</literal> 的信息。
     </para>
 
     <para>
-     Place the extension module implementing the custom cumulative statistics
-     type in <xref linkend="guc-shared-preload-libraries"/> so that it will
-     be loaded early during <productname>PostgreSQL</productname> startup.
+     将实现自定义累积统计类型的扩展模块放入 <xref linkend="guc-shared-preload-libraries"/>，以便它在 <productname>PostgreSQL</productname> 启动期间尽早被加载。
     </para>
 
     <para>
-     An example describing how to register and use custom statistics can be
-     found in <filename>src/test/modules/injection_points</filename>.
+     有关如何注册和使用自定义统计的示例可以在 <filename>src/test/modules/injection_points</filename> 中找到。
     </para>
    </sect2>
 
    <sect2 id="extend-cpp">
-    <title>Using C++ for Extensibility</title>
+    <title>使用 C++ 实现可扩展性</title>
 
     <indexterm zone="extend-cpp">
      <primary>C++</primary>
     </indexterm>
 
     <para>
-     Although the <productname>PostgreSQL</productname> backend is written in
-     C, it is possible to write extensions in C++ if these guidelines are
-     followed:
+     尽管 <productname>PostgreSQL</productname> 后端是用 C 编写的，但如果遵循以下准则，也可以用 C++ 编写扩展：
 
      <itemizedlist>
       <listitem>
        <para>
-         All functions accessed by the backend must present a C interface
-         to the backend;  these C functions can then call C++ functions.
-         For example, <literal>extern C</literal> linkage is required for
-         backend-accessed functions.  This is also necessary for any
-         functions that are passed as pointers between the backend and
-         C++ code.
+         后端访问的所有函数都必须向后端提供 C 接口；这些 C 函数随后可以调用 C++ 函数。例如，后端访问的函数需要 <literal>extern C</literal> 链接。对于任何在后端与 C++ 代码之间作为指针传递的函数，这也是必需的。
        </para>
       </listitem>
       <listitem>
        <para>
-        Free memory using the appropriate deallocation method.  For example,
-        most backend memory is allocated using <function>palloc()</function>, so use
-        <function>pfree()</function> to free it.  Using C++
-        <function>delete</function> in such cases will fail.
+        使用适当的释放方法释放内存。例如，大多数后端内存是使用 <function>palloc()</function> 分配的，因此使用 <function>pfree()</function> 来释放它。在这种情况下使用 C++ 的 <function>delete</function> 将会失败。
        </para>
       </listitem>
       <listitem>
        <para>
-        Prevent exceptions from propagating into the C code (use a catch-all
-        block at the top level of all <literal>extern C</literal> functions).  This
-        is necessary even if the C++ code does not explicitly throw any
-        exceptions, because events like out-of-memory can still throw
-        exceptions.  Any exceptions must be caught and appropriate errors
-        passed back to the C interface.  If possible, compile C++ with
-        <option>-fno-exceptions</option> to eliminate exceptions entirely; in such
-        cases, you must check for failures in your C++ code, e.g.,  check for
-        NULL returned by <function>new()</function>.
+        防止异常传播到 C 代码中（在所有 <literal>extern C</literal> 函数的顶层使用捕获所有异常的块）。即使 C++ 代码没有显式抛出任何异常，这也是必要的，因为诸如内存不足之类的事件仍然可能抛出异常。任何异常都必须被捕获，并将适当的错误传递回 C 接口。如果可能，使用 <option>-fno-exceptions</option> 编译 C++ 以完全消除异常；在这种情况下，你必须检查 C++ 代码中的失败，例如检查 <function>new()</function> 返回的 NULL。
        </para>
       </listitem>
       <listitem>
        <para>
-        If calling backend functions from C++ code, be sure that the
-        C++ call stack contains only plain old data structures
-        (<acronym>POD</acronym>).  This is necessary because backend errors
-        generate a distant <function>longjmp()</function> that does not properly
-        unroll a C++ call stack with non-POD objects.
+        如果从 C++ 代码调用后端函数，请确保 C++ 调用栈只包含纯旧式数据结构（<acronym>POD</acronym>）。这是必要的，因为后端错误会产生一个远距离的 <function>longjmp()</function>，它无法正确地展开包含非 POD 对象的 C++ 调用栈。
        </para>
       </listitem>
      </itemizedlist>
     </para>
 
     <para>
-     In summary, it is best to place C++ code behind a wall of
-     <literal>extern C</literal> functions that interface to the backend,
-     and avoid exception, memory, and call stack leakage.
+     总之，最好把 C++ 代码放在一堵由与后端接口的 <literal>extern C</literal> 函数构成的墙后面，并避免异常、内存和调用栈泄漏。
     </para>
    </sect2>
 
