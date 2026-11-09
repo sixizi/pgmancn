@@ -1559,106 +1559,83 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
   </sect1>
 
   <sect1 id="auth-oauth">
-   <title>OAuth Authorization/Authentication</title>
+   <title>OAuth 授权/认证</title>
 
    <indexterm zone="auth-oauth">
     <primary>OAuth Authorization/Authentication</primary>
    </indexterm>
 
    <para>
-    OAuth 2.0 is an industry-standard framework, defined in
-    <ulink url="https://datatracker.ietf.org/doc/html/rfc6749">RFC 6749</ulink>,
-    to enable third-party applications to obtain limited access to a protected
-    resource.
+    OAuth 2.0 是一个行业标准框架，定义于
+    <ulink url="https://datatracker.ietf.org/doc/html/rfc6749">RFC 6749</ulink>，
+    用于使第三方应用程序能够获得对受保护资源的有限访问权限。
 
-    OAuth client support has to be enabled when <productname>PostgreSQL</productname>
-    is built, see <xref linkend="installation"/> for more information.
+    在构建 <productname>PostgreSQL</productname> 时必须启用 OAuth 客户端支持，
+    更多信息请参见 <xref linkend="installation"/>。
    </para>
 
    <para>
-    This documentation uses the following terminology when discussing the OAuth
-    ecosystem:
+    本文档在讨论 OAuth 生态系统时使用以下术语：
 
     <variablelist>
 
      <varlistentry>
-      <term>Resource Owner (or End User)</term>
+      <term>资源所有者（或最终用户）</term>
       <listitem>
        <para>
-        The user or system who owns protected resources and can grant access to
-        them. This documentation also uses the term <emphasis>end user</emphasis>
-        when the resource owner is a person. When you use
-        <application>psql</application> to connect to the database using OAuth,
-        you are the resource owner/end user.
+        拥有受保护资源并可以授予对这些资源的访问权限的用户或系统。
+        当资源所有者是个人时，本文档也使用<emphasis>最终用户</emphasis>这一术语。
+        当你使用 <application>psql</application> 通过 OAuth 连接到数据库时，
+        你就是资源所有者/最终用户。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>Client</term>
+      <term>客户端</term>
       <listitem>
        <para>
-        The system which accesses the protected resources using access
-        tokens. Applications using libpq, such as <application>psql</application>,
-        are the OAuth clients when connecting to a
-        <productname>PostgreSQL</productname> cluster.
+        使用访问令牌访问受保护资源的系统。使用 libpq 的应用程序（例如 <application>psql</application>）在连接到 <productname>PostgreSQL</productname> 数据库集簇时即为 OAuth 客户端。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>Resource Server</term>
+      <term>资源服务器</term>
       <listitem>
        <para>
-        The system hosting the protected resources which are
-        accessed by the client. The <productname>PostgreSQL</productname>
-        cluster being connected to is the resource server.
+        托管受保护资源的系统，客户端访问的正是这些资源。所连接的 <productname>PostgreSQL</productname> 数据库集簇即为资源服务器。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>Provider</term>
+      <term>提供方</term>
       <listitem>
        <para>
-        The organization, product vendor, or other entity which develops and/or
-        administers the OAuth authorization servers and clients for a given application.
-        Different providers typically choose different implementation details
-        for their OAuth systems; a client of one provider is not generally
-        guaranteed to have access to the servers of another.
+        为给定应用程序开发和/或管理 OAuth 授权服务器与客户端的组织、产品供应商或其他实体。不同的提供方通常会为其 OAuth 系统选择不同的实现细节；某个提供方的客户端通常不保证能够访问另一个提供方的服务器。
        </para>
        <para>
-        This use of the term "provider" is not standard, but it seems to be in
-        wide use colloquially. (It should not be confused with OpenID's similar
-        term "Identity Provider". While the implementation of OAuth in
-        <productname>PostgreSQL</productname> is intended to be interoperable
-        and compatible with OpenID Connect/OIDC, it is not itself an OIDC client
-        and does not require its use.)
+        此处对“提供方”一词的使用并非标准用法，但似乎在口语中被广泛使用。（不应将其与 OpenID 中类似的术语“身份提供方”混淆。尽管 <productname>PostgreSQL</productname> 中 OAuth 的实现旨在与 OpenID Connect/OIDC 互操作并兼容，但它本身并不是 OIDC 客户端，也不要求使用 OIDC。）
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>Authorization Server</term>
+      <term>授权服务器</term>
       <listitem>
        <para>
-        The system which receives requests from, and issues access tokens to,
-        the client after the authenticated resource owner has given approval.
-        <productname>PostgreSQL</productname> does not provide an authorization
-        server; it is the responsibility of the OAuth provider.
+        在已通过身份验证的资源所有者给予批准后，从客户端接收请求并向客户端颁发访问令牌的系统。
+        <productname>PostgreSQL</productname> 不提供授权服务器；这是 OAuth 提供方的责任。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term id="auth-oauth-issuer">Issuer</term>
+      <term id="auth-oauth-issuer">签发者</term>
       <listitem>
        <para>
-        An identifier for an authorization server, printed as an
-        <literal>https://</literal> URL, which provides a trusted "namespace"
-        for OAuth clients and applications. The issuer identifier allows a
-        single authorization server to talk to the clients of mutually
-        untrusting entities, as long as they maintain separate issuers.
+        授权服务器的标识符，以 <literal>https://</literal> URL 的形式表示，它为 OAuth 客户端和应用程序提供了一个受信任的“命名空间”。签发者标识符允许单个授权服务器与互不信任的实体的客户端通信，只要它们维护各自独立的签发者即可。
        </para>
       </listitem>
      </varlistentry>
@@ -1667,53 +1644,38 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
 
     <note>
      <para>
-      For small deployments, there may not be a meaningful distinction between
-      the "provider", "authorization server", and "issuer". However, for more
-      complicated setups, there may be a one-to-many (or many-to-many)
-      relationship: a provider may rent out multiple issuer identifiers to
-      separate tenants, then provide multiple authorization servers, possibly
-      with different supported feature sets, to interact with their clients.
+      对于小型部署而言，“提供方”、“授权服务器”和“签发者”之间可能没有有意义的区分。然而，对于更复杂的设置，可能存在一对多（或多对多）的关系：一个提供方可以向不同的租户出租多个签发者标识符，然后提供多个授权服务器（可能支持不同的功能集）来与其客户端交互。
      </para>
     </note>
    </para>
 
    <para>
-    <productname>PostgreSQL</productname> supports bearer tokens, defined in
-    <ulink url="https://datatracker.ietf.org/doc/html/rfc6750">RFC 6750</ulink>,
-    which are a type of access token used with OAuth 2.0 where the token is an
-    opaque string.  The format of the access token is implementation specific
-    and is chosen by each authorization server.
+    <productname>PostgreSQL</productname> 支持 <ulink url="https://datatracker.ietf.org/doc/html/rfc6750">RFC 6750</ulink> 中定义的持有者令牌（bearer token），它是用于 OAuth 2.0 的一种访问令牌，其中令牌是不透明字符串。访问令牌的格式因实现而异，由每个授权服务器自行选择。
    </para>
 
    <para>
-    The following configuration options are supported for OAuth:
+    以下配置选项支持 OAuth：
     <variablelist>
      <varlistentry>
       <term><literal>issuer</literal></term>
       <listitem>
        <para>
-        An HTTPS URL which is either the exact
-        <link linkend="auth-oauth-issuer">issuer identifier</link> of the
-        authorization server, as defined by its discovery document, or a
-        well-known URI that points directly to that discovery document. This
-        parameter is required.
+        一个 HTTPS URL，它要么是授权服务器的确切
+        <link linkend="auth-oauth-issuer">颁发者标识符</link>（由其发现文档定义），
+        要么是指向该发现文档的知名 URI。此参数为必填项。
        </para>
        <para>
-        When an OAuth client connects to the server, a URL for the discovery
-        document will be constructed using the issuer identifier. By default,
-        this URL uses the conventions of OpenID Connect Discovery: the path
-        <literal>/.well-known/openid-configuration</literal> will be appended
-        to the end of the issuer identifier. Alternatively, if the
-        <literal>issuer</literal> contains a <literal>/.well-known/</literal>
-        path segment, that URL will be provided to the client as-is.
+        当 OAuth 客户端连接到服务器时，将使用颁发者标识符构造发现文档的 URL。
+        默认情况下，此 URL 使用 OpenID Connect Discovery 的约定：
+        将路径 <literal>/.well-known/openid-configuration</literal> 追加到颁发者标识符的末尾。
+        或者，如果 <literal>issuer</literal> 包含 <literal>/.well-known/</literal>
+        路径段，则该 URL 将按原样提供给客户端。
        </para>
        <warning>
         <para>
-         The OAuth client in libpq requires the server's issuer setting to
-         exactly match the issuer identifier which is provided in the discovery
-         document, which must in turn match the client's
-         <xref linkend="libpq-connect-oauth-issuer"/> setting. No variations in
-         case or formatting are permitted.
+         libpq 中的 OAuth 客户端要求服务器的颁发者设置与发现文档中提供的
+         颁发者标识符完全匹配，而后者又必须与客户端的
+         <xref linkend="libpq-connect-oauth-issuer"/> 设置匹配。不允许大小写或格式上的任何差异。
         </para>
        </warning>
       </listitem>
@@ -1723,11 +1685,10 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
       <term><literal>scope</literal></term>
       <listitem>
        <para>
-        A space-separated list of the OAuth scopes needed for the server to
-        both authorize the client and authenticate the user.  Appropriate values
-        are determined by the authorization server and the OAuth validation
-        module used (see <xref linkend="oauth-validators" /> for more
-        information on validators).  This parameter is required.
+        一个以空格分隔的 OAuth 范围列表，服务器需要这些范围来同时授权客户端
+        并对用户进行认证。适当的值由授权服务器和所使用的 OAuth 验证模块确定
+        （有关验证器的更多信息，请参见 <xref linkend="oauth-validators" />）。
+        此参数为必填项。
        </para>
       </listitem>
      </varlistentry>
@@ -1736,11 +1697,10 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
       <term><literal>validator</literal></term>
       <listitem>
        <para>
-        The library to use for validating bearer tokens. If given, the name must
-        exactly match one of the libraries listed in
-        <xref linkend="guc-oauth-validator-libraries" />.  This parameter is
-        optional unless <literal>oauth_validator_libraries</literal> contains
-        more than one library, in which case it is required.
+        用于验证持有者令牌的库。如果指定，名称必须与
+        <xref linkend="guc-oauth-validator-libraries" /> 中列出的某个库完全匹配。
+        此参数为可选项，除非 <literal>oauth_validator_libraries</literal> 包含
+        多个库，在这种情况下则为必填项。
        </para>
       </listitem>
      </varlistentry>
@@ -1749,11 +1709,7 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
       <term><literal>map</literal></term>
       <listitem>
        <para>
-        Allows for mapping between OAuth identity provider and database user
-        names.  See <xref linkend="auth-username-maps"/> for details.  If a
-        map is not specified, the user name associated with the token (as
-        determined by the OAuth validator) must exactly match the role name
-        being requested.  This parameter is optional.
+        允许在 OAuth 身份提供者与数据库用户名之间进行映射。详见 <xref linkend="auth-username-maps"/>。如果未指定映射，则与令牌关联的用户名（由 OAuth 验证器确定）必须与所请求的角色名完全匹配。此参数是可选的。
        </para>
       </listitem>
      </varlistentry>
@@ -1764,28 +1720,17 @@ host ... radius radiusservers="server1,server2" radiussecrets="""secret one"",""
       </term>
       <listitem>
        <para>
-        An advanced option which is not intended for common use.
+        一个高级选项，不适用于常规使用。
        </para>
        <para>
-        When set to <literal>1</literal>, standard user mapping with
-        <filename>pg_ident.conf</filename> is skipped, and the OAuth validator
-        takes full responsibility for mapping end user identities to database
-        roles.  If the validator authorizes the token, the server trusts that
-        the user is allowed to connect under the requested role, and the
-        connection is allowed to proceed regardless of the authentication
-        status of the user.
+        当设置为 <literal>1</literal> 时，将跳过使用 <filename>pg_ident.conf</filename> 的标准用户映射，由 OAuth 验证器全权负责将最终用户身份映射到数据库角色。如果验证器授权了该令牌，服务器就信任该用户被允许以所请求的角色连接，并且无论该用户的认证状态如何，连接都会被允许继续。
        </para>
        <para>
-        This parameter is incompatible with <literal>map</literal>.
+        此参数与 <literal>map</literal> 不兼容。
        </para>
        <warning>
         <para>
-         <literal>delegate_ident_mapping</literal> provides additional
-         flexibility in the design of the authentication system, but it also
-         requires careful implementation of the OAuth validator, which must
-         determine whether the provided token carries sufficient end-user
-         privileges in addition to the <link linkend="oauth-validators">standard
-         checks</link> required of all validators.  Use with caution.
+         <literal>delegate_ident_mapping</literal> 在认证系统的设计中提供了额外的灵活性，但它也要求谨慎地实现 OAuth 验证器，除了所有验证器都要求的 <link linkend="oauth-validators">标准检查</link> 之外，验证器还必须确定所提供的令牌是否携带足够的最终用户权限。请谨慎使用。
         </para>
        </warning>
       </listitem>
