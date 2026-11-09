@@ -901,23 +901,17 @@ $$ LANGUAGE plpython3u;
  </sect1>
 
  <sect1 id="plpython-subtransaction">
-  <title>Explicit Subtransactions</title>
+  <title>显式子事务</title>
 
   <para>
-   Recovering from errors caused by database access as described in
-   <xref linkend="plpython-trapping"/> can lead to an undesirable
-   situation where some operations succeed before one of them fails,
-   and after recovering from that error the data is left in an
-   inconsistent state.  PL/Python offers a solution to this problem in
-   the form of explicit subtransactions.
+   如 <xref linkend="plpython-trapping"/> 所述，从数据库访问导致的错误中恢复，可能会导致一种不理想的情况：某些操作在其中一个操作失败之前已经成功，而在从该错误恢复之后，数据处于不一致的状态。PL/Python 以显式子事务的形式为这个问题提供了解决方案。
   </para>
 
   <sect2 id="plpython-subtransaction-context-managers">
-   <title>Subtransaction Context Managers</title>
+   <title>子事务上下文管理器</title>
 
    <para>
-    Consider a function that implements a transfer between two
-    accounts:
+    考虑一个实现两个账户之间转账的函数：
 <programlisting>
 CREATE FUNCTION transfer_funds() RETURNS void AS $$
 try:
@@ -931,24 +925,13 @@ plan = plpy.prepare("INSERT INTO operations (result) VALUES ($1)", ["text"])
 plpy.execute(plan, [result])
 $$ LANGUAGE plpython3u;
 </programlisting>
-    If the second <literal>UPDATE</literal> statement results in an
-    exception being raised, this function will report the error, but
-    the result of the first <literal>UPDATE</literal> will
-    nevertheless be committed.  In other words, the funds will be
-    withdrawn from Joe's account, but will not be transferred to
-    Mary's account.
+    如果第二条 <literal>UPDATE</literal> 语句引发异常，该函数将报告错误，但第一条 <literal>UPDATE</literal> 的结果仍会被提交。换句话说，资金将从 Joe 的账户中取出，但不会转移到 Mary 的账户。
    </para>
 
    <para>
-    To avoid such issues, you can wrap your
-    <literal>plpy.execute</literal> calls in an explicit
-    subtransaction.  The <literal>plpy</literal> module provides a
-    helper object to manage explicit subtransactions that gets created
-    with the <literal>plpy.subtransaction()</literal> function.
-    Objects created by this function implement the
+    为避免此类问题，你可以将 <literal>plpy.execute</literal> 调用包装在一个显式子事务中。<literal>plpy</literal> 模块提供了一个辅助对象来管理显式子事务，该对象通过 <literal>plpy.subtransaction()</literal> 函数创建。此函数创建的对象实现了
     <ulink url="https://docs.python.org/library/stdtypes.html#context-manager-types">
-    context manager interface</ulink>.  Using explicit subtransactions
-    we can rewrite our function as:
+    上下文管理器接口</ulink>。使用显式子事务，我们可以将函数改写为：
 <programlisting>
 CREATE FUNCTION transfer_funds2() RETURNS void AS $$
 try:
@@ -963,19 +946,7 @@ plan = plpy.prepare("INSERT INTO operations (result) VALUES ($1)", ["text"])
 plpy.execute(plan, [result])
 $$ LANGUAGE plpython3u;
 </programlisting>
-    Note that the use of <literal>try</literal>/<literal>except</literal> is still
-    required.  Otherwise the exception would propagate to the top of
-    the Python stack and would cause the whole function to abort with
-    a <productname>PostgreSQL</productname> error, so that the
-    <literal>operations</literal> table would not have any row
-    inserted into it.  The subtransaction context manager does not
-    trap errors, it only assures that all database operations executed
-    inside its scope will be atomically committed or rolled back.  A
-    rollback of the subtransaction block occurs on any kind of
-    exception exit, not only ones caused by errors originating from
-    database access.  A regular Python exception raised inside an
-    explicit subtransaction block would also cause the subtransaction
-    to be rolled back.
+    请注意，仍然需要使用 <literal>try</literal>/<literal>except</literal>。否则异常会传播到 Python 栈的顶层，并导致整个函数因 <productname>PostgreSQL</productname> 错误而中止，这样 <literal>operations</literal> 表中就不会插入任何行。子事务上下文管理器不会捕获错误，它只保证在其作用域内执行的所有数据库操作会原子地提交或回滚。子事务块的回滚会在任何类型的异常退出时发生，而不仅限于源自数据库访问的错误。在显式子事务块内部引发的普通 Python 异常也会导致子事务回滚。
    </para>
   </sect2>
  </sect1>
