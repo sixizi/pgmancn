@@ -1,69 +1,61 @@
 <!-- doc/src/sgml/dict-xsyn.sgml -->
 
 <sect1 id="dict-xsyn" xreflabel="dict_xsyn">
- <title>dict_xsyn &mdash; example synonym full-text search dictionary</title>
+ <title>dict_xsyn &mdash; 示例同义词全文检索词典</title>
 
  <indexterm zone="dict-xsyn">
   <primary>dict_xsyn</primary>
  </indexterm>
 
  <para>
-  <filename>dict_xsyn</filename> (Extended Synonym Dictionary) is an example of an
-  add-on dictionary template for full-text search.  This dictionary type
-  replaces words with groups of their synonyms, and so makes it possible to
-  search for a word using any of its synonyms.
+  <filename>dict_xsyn</filename>（扩展同义词词典）是全文检索的一个附加词典模板示例。这种词典类型用同义词组替换词，从而可以用任意一个同义词来搜索某个词。
  </para>
 
  <sect2 id="dict-xsyn-config">
-  <title>Configuration</title>
+  <title>配置</title>
 
   <para>
-   A <literal>dict_xsyn</literal> dictionary accepts the following options:
+   <literal>dict_xsyn</literal> 词典接受以下选项：
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     <literal>matchorig</literal> controls whether the original word is accepted by
-     the dictionary. Default is <literal>true</literal>.
+     <literal>matchorig</literal> 控制词典是否接受原始词。默认为 <literal>true</literal>。
     </para>
    </listitem>
    <listitem>
     <para>
-     <literal>matchsynonyms</literal> controls whether the synonyms are
-     accepted by the dictionary. Default is <literal>false</literal>.
+     <literal>matchsynonyms</literal> 控制词典是否接受同义词。默认为 <literal>false</literal>。
     </para>
    </listitem>
    <listitem>
     <para>
-     <literal>keeporig</literal> controls whether the original word is included in
-     the dictionary's output. Default is <literal>true</literal>.
+     <literal>keeporig</literal> 控制原始词是否包含在词典的输出中。默认值为 <literal>true</literal>。
     </para>
    </listitem>
    <listitem>
     <para>
-     <literal>keepsynonyms</literal> controls whether the synonyms are included in
-     the dictionary's output. Default is <literal>true</literal>.
+     <literal>keepsynonyms</literal> 控制同义词是否包含在词典的输出中。默认值为 <literal>true</literal>。
     </para>
    </listitem>
    <listitem>
     <para>
-     <literal>rules</literal> is the base name of the file containing the list of
-     synonyms.  This file must be stored in
-     <filename>$SHAREDIR/tsearch_data/</filename> (where <literal>$SHAREDIR</literal> means
-     the <productname>PostgreSQL</productname> installation's shared-data directory).
-     Its name must end in <literal>.rules</literal> (which is not to be included in
-     the <literal>rules</literal> parameter).
+     <literal>rules</literal> 是包含同义词列表的文件的基本名。该文件必须存储在
+     <filename>$SHAREDIR/tsearch_data/</filename> 中（其中 <literal>$SHAREDIR</literal> 表示
+     <productname>PostgreSQL</productname> 安装的共享数据目录）。
+     其名称必须以 <literal>.rules</literal> 结尾（该后缀不应包含在
+     <literal>rules</literal> 参数中）。
     </para>
    </listitem>
   </itemizedlist>
   <para>
-   The rules file has the following format:
+   规则文件具有以下格式：
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     Each line represents a group of synonyms for a single word, which is
-     given first on the line. Synonyms are separated by whitespace, thus:
+     每一行代表单个词的一组同义词，该词首先给出在该行上。
+     同义词之间用空白分隔，如下所示：
 <programlisting>
 word syn1 syn2 syn3
 </programlisting>
@@ -71,37 +63,33 @@ word syn1 syn2 syn3
    </listitem>
    <listitem>
     <para>
-     The sharp (<literal>#</literal>) sign is a comment delimiter. It may appear at
-     any position in a line.  The rest of the line will be skipped.
+     井号（<literal>#</literal>）是注释定界符。它可以出现在
+     一行中的任何位置。该行的其余部分将被跳过。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   Look at <filename>xsyn_sample.rules</filename>, which is installed in
-   <filename>$SHAREDIR/tsearch_data/</filename>, for an example.
+   请参考安装在 <filename>$SHAREDIR/tsearch_data/</filename> 中的 <filename>xsyn_sample.rules</filename> 作为示例。
   </para>
  </sect2>
 
  <sect2 id="dict-xsyn-usage">
-  <title>Usage</title>
+  <title>用法</title>
 
   <para>
-   Installing the <literal>dict_xsyn</literal> extension creates a text search
-   template <literal>xsyn_template</literal> and a dictionary <literal>xsyn</literal>
-   based on it, with default parameters.  You can alter the
-   parameters, for example
+   安装 <literal>dict_xsyn</literal> 扩展会创建一个文本搜索模板 <literal>xsyn_template</literal> 以及一个基于该模板、使用默认参数的词典 <literal>xsyn</literal>。您可以修改这些参数，例如
 
 <programlisting>
 mydb# ALTER TEXT SEARCH DICTIONARY xsyn (RULES='my_rules', KEEPORIG=false);
 ALTER TEXT SEARCH DICTIONARY
 </programlisting>
 
-   or create new dictionaries based on the template.
+   或者基于该模板创建新的词典。
   </para>
 
   <para>
-   To test the dictionary, you can try
+   要测试该词典，您可以尝试
 
 <programlisting>
 mydb=# SELECT ts_lexize('xsyn', 'word');
@@ -134,9 +122,7 @@ mydb=# SELECT ts_lexize('xsyn', 'syn1');
  {word}
 </programlisting>
 
-   Real-world usage will involve including it in a text search
-   configuration as described in <xref linkend="textsearch"/>.
-   That might look like this:
+   实际使用中会涉及将它包含在文本搜索配置中，如 <xref linkend="textsearch"/> 所述。这可能看起来像这样：
 
 <programlisting>
 ALTER TEXT SEARCH CONFIGURATION english
