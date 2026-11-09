@@ -1131,126 +1131,84 @@ Publications:
  </sect1>
 
  <sect1 id="logical-replication-col-lists">
-  <title>Column Lists</title>
+  <title>列列表</title>
 
   <para>
-   Each publication can optionally specify which columns of each table are
-   replicated to subscribers. The table on the subscriber side must have at
-   least all the columns that are published. If no column list is specified,
-   then all columns on the publisher are replicated.
-   See <xref linkend="sql-createpublication"/> for details on the syntax.
+   每个发布可以选择性地指定每个表的哪些列被复制到订阅者。订阅者端的表必须至少包含所有已发布的列。如果未指定列列表，则发布者上的所有列都会被复制。
+   有关语法的详细信息，请参见 <xref linkend="sql-createpublication"/>。
   </para>
 
   <para>
-   The choice of columns can be based on behavioral or performance reasons.
-   However, do not rely on this feature for security: a malicious subscriber
-   is able to obtain data from columns that are not specifically
-   published.  If security is a consideration, protections can be applied
-   at the publisher side.
+   列的选择可以基于行为或性能方面的原因。
+   但是，不要依赖此特性来保障安全：恶意订阅者能够从并非专门发布的列中获取数据。如果安全是一个考虑因素，可以在发布者端施加保护。
   </para>
 
   <para>
-   If no column list is specified, any columns added to the table later are
-   automatically replicated. This means that having a column list which names
-   all columns is not the same as having no column list at all.
+   如果未指定列列表，则之后添加到表中的任何列都会被自动复制。这意味着，列出一个包含所有列的列列表与完全不指定列列表并不相同。
   </para>
 
   <para>
-   A column list can contain only simple column references.  The order
-   of columns in the list is not preserved.
+   列列表只能包含简单的列引用。列表中列的顺序不会被保留。
   </para>
 
   <para>
-   Generated columns can also be specified in a column list. This allows
-   generated columns to be published, regardless of the publication parameter
+   生成列也可以在列列表中指定。这允许发布生成列，而不受发布参数
    <link linkend="sql-createpublication-params-with-publish-generated-columns">
-   <literal>publish_generated_columns</literal></link>. See
-   <xref linkend="logical-replication-gencols"/> for details.
+   <literal>publish_generated_columns</literal></link> 的影响。有关详细信息，请参见
+   <xref linkend="logical-replication-gencols"/>。
   </para>
 
   <para>
-   Specifying a column list when the publication also publishes
-   <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link>
-   is not supported.
+   当发布同时还发布 <link linkend="sql-createpublication-params-for-tables-in-schema"><literal>FOR TABLES IN SCHEMA</literal></link> 时，不支持指定列列表。
   </para>
 
   <para>
-   For partitioned tables, the publication parameter
-   <link linkend="sql-createpublication-params-with-publish-via-partition-root"><literal>publish_via_partition_root</literal></link>
-   determines which column list is used. If <literal>publish_via_partition_root</literal>
-   is <literal>true</literal>, the root partitioned table's column list is
-   used. Otherwise, if <literal>publish_via_partition_root</literal> is
-   <literal>false</literal> (the default), each partition's column list is used.
+   对于分区表，发布参数 <link linkend="sql-createpublication-params-with-publish-via-partition-root"><literal>publish_via_partition_root</literal></link> 决定使用哪个列列表。如果 <literal>publish_via_partition_root</literal> 为 <literal>true</literal>，则使用根分区表的列列表。否则，如果 <literal>publish_via_partition_root</literal> 为 <literal>false</literal>（默认值），则使用每个分区的列列表。
   </para>
 
   <para>
-   If a publication publishes <command>UPDATE</command> or
-   <command>DELETE</command> operations, any column list must include the
-   table's replica identity columns (see
-   <xref linkend="sql-altertable-replica-identity"/>).
-   If a publication publishes only <command>INSERT</command> operations, then
-   the column list may omit replica identity columns.
+   如果发布发布 <command>UPDATE</command> 或 <command>DELETE</command> 操作，则任何列列表都必须包含表的复制标识列（见 <xref linkend="sql-altertable-replica-identity"/>）。如果发布仅发布 <command>INSERT</command> 操作，则列列表可以省略复制标识列。
   </para>
 
   <para>
-   Column lists have no effect for the <literal>TRUNCATE</literal> command.
+   列列表对 <literal>TRUNCATE</literal> 命令没有影响。
   </para>
 
   <para>
-   During initial data synchronization, only the published columns are
-   copied.  However, if the subscriber is from a release prior to 15, then
-   all the columns in the table are copied during initial data synchronization,
-   ignoring any column lists. If the subscriber is from a release prior to 18,
-   then initial table synchronization won't copy generated columns even if they
-   are defined in the publisher.
+   在初始数据同步期间，只复制已发布的列。但是，如果订阅者来自 15 之前的版本，则在初始数据同步期间会复制表中的所有列，而忽略任何列列表。如果订阅者来自 18 之前的版本，则初始表同步不会复制生成列，即使这些列已在发布者中定义。
   </para>
 
    <warning id="logical-replication-col-list-combining">
-    <title>Warning: Combining Column Lists from Multiple Publications</title>
+    <title>警告：合并来自多个发布的列列表</title>
     <para>
-     There's currently no support for subscriptions comprising several
-     publications where the same table has been published with different
-     column lists.  <xref linkend="sql-createsubscription"/> disallows
-     creating such subscriptions, but it is still possible to get into
-     that situation by adding or altering column lists on the publication
-     side after a subscription has been created.
+     目前不支持包含多个发布的订阅，其中同一个表以不同的列列表发布。<xref linkend="sql-createsubscription"/> 不允许创建这样的订阅，但在创建订阅之后，通过在发布端添加或修改列列表，仍然有可能进入这种情况。
     </para>
     <para>
-     This means changing the column lists of tables on publications that are
-     already subscribed could lead to errors being thrown on the subscriber
-     side.
+     这意味着，对于已被订阅的发布，更改其中表的列列表可能会导致在订阅端抛出错误。
     </para>
     <para>
-     If a subscription is affected by this problem, the only way to resume
-     replication is to adjust one of the column lists on the publication
-     side so that they all match; and then either recreate the subscription,
-     or use <link linkend="sql-altersubscription-params-setadddrop-publication">
-     <literal>ALTER SUBSCRIPTION ... DROP PUBLICATION</literal></link> to
-     remove one of the offending publications and add it again.
+     如果某个订阅受此问题影响，恢复复制的唯一方法是调整发布端的其中一个列列表，使它们全部匹配；然后要么重新创建该订阅，要么使用 <link linkend="sql-altersubscription-params-setadddrop-publication">
+     <literal>ALTER SUBSCRIPTION ... DROP PUBLICATION</literal></link> 移除其中一个有问题的发布并重新添加它。
     </para>
    </warning>
 
   <sect2 id="logical-replication-col-list-examples">
-   <title>Examples</title>
+   <title>示例</title>
 
    <para>
-    Create a table <literal>t1</literal> to be used in the following example.
+    创建要在以下示例中使用的表 <literal>t1</literal>。
 <programlisting>
 /* pub # */ CREATE TABLE t1(id int, a text, b text, c text, d text, e text, PRIMARY KEY(id));
 </programlisting></para>
 
    <para>
-    Create a publication <literal>p1</literal>. A column list is defined for
-    table <literal>t1</literal> to reduce the number of columns that will be
-    replicated. Notice that the order of column names in the column list does
-    not matter.
+    创建发布 <literal>p1</literal>。为表 <literal>t1</literal> 定义了列列表，以减少将被复制的列数。请注意，列列表中列名的顺序无关紧要。
 <programlisting>
 /* pub # */ CREATE PUBLICATION p1 FOR TABLE t1 (id, b, a, d);
 </programlisting></para>
 
     <para>
-     <literal>psql</literal> can be used to show the column lists (if defined)
-     for each publication.
+     <literal>psql</literal> 可用于显示每个发布的列列表（如果已定义）。
 <programlisting>
 /* pub # */ \dRp+
                                          Publication p1
@@ -1262,8 +1220,7 @@ Tables:
 </programlisting></para>
 
     <para>
-     <literal>psql</literal> can be used to show the column lists (if defined)
-     for each table.
+     <literal>psql</literal> 可用于显示每个表的列列表（如果已定义）。
 <programlisting>
 /* pub # */ \d t1
                  Table "public.t1"
@@ -1282,11 +1239,7 @@ Publications:
 </programlisting></para>
 
     <para>
-     On the subscriber node, create a table <literal>t1</literal> which now
-     only needs a subset of the columns that were on the publisher table
-     <literal>t1</literal>, and also create the subscription
-     <literal>s1</literal> that subscribes to the publication
-     <literal>p1</literal>.
+     在订阅端节点上，创建一个表 <literal>t1</literal>，它现在只需要发布端表 <literal>t1</literal> 上列的子集，同时创建订阅 <literal>s1</literal>，用于订阅发布 <literal>p1</literal>。
 <programlisting>
 /* sub # */ CREATE TABLE t1(id int, b text, a text, d text, PRIMARY KEY(id));
 /* sub # */ CREATE SUBSCRIPTION s1
@@ -1295,7 +1248,7 @@ Publications:
 </programlisting></para>
 
     <para>
-     On the publisher node, insert some rows to table <literal>t1</literal>.
+     在发布端节点上，向表 <literal>t1</literal> 插入一些行。
 <programlisting>
 /* pub # */ INSERT INTO t1 VALUES(1, 'a-1', 'b-1', 'c-1', 'd-1', 'e-1');
 /* pub # */ INSERT INTO t1 VALUES(2, 'a-2', 'b-2', 'c-2', 'd-2', 'e-2');
@@ -1310,8 +1263,7 @@ Publications:
 </programlisting></para>
 
     <para>
-     Only data from the column list of publication <literal>p1</literal> is
-     replicated.
+     只有来自发布 <literal>p1</literal> 的列列表中的数据会被复制。
 <programlisting>
 /* sub # */ SELECT * FROM t1 ORDER BY id;
  id |  b  |  a  |  d
