@@ -2,56 +2,49 @@
 <!-- See header comment in release.sgml about typical markup -->
 
  <sect1 id="release-18-6">
-  <title>Release 18.6</title>
+  <title>版本 18.6</title>
 
   <formalpara>
-  <title>Release date:</title>
+  <title>发布日期：</title>
   <para>2026-08-13</para>
   </formalpara>
 
   <para>
-   This release contains a variety of fixes from 18.4.
-   For information about new features in major release 18, see
-   <xref linkend="release-18"/>.
+   本版本包含 18.4 以来的各种修复。
+   有关主版本 18 中新功能的信息，请参阅
+   <xref linkend="release-18"/>。
   </para>
 
   <para>
-   Note: 18.5 was never released, due to a regression discovered
-   post-wrap.
+   注意：由于在打包收尾后发现了一个回归问题，18.5 从未发布。
   </para>
 
   <sect2 id="release-18-6-migration">
-   <title>Migration to Version 18.6</title>
+   <title>迁移到版本 18.6</title>
 
    <para>
-    A dump/restore is not required for those running 18.X.
+    运行 18.X 的用户不需要转储/恢复。
    </para>
 
    <para>
-    However, the first three security entries below describe configuration
-    adjustments and data cleanups that you may need to make after updating.
+    不过，下面前三个安全性条目描述了您在更新之后可能需要进行的配置调整和数据清理。
    </para>
 
    <para>
-    Also, if you have any GIN indexes, see the changelog entry below
-    about possibly-corrupt <structfield>reltuples</structfield> values for
-    their tables.
+    另外，如果您有任何 GIN 索引，请参阅下面关于其表中可能损坏的 <structfield>reltuples</structfield> 值的变更日志条目。
    </para>
 
    <para>
-    Also, if you use <filename>contrib/btree_gist</filename>
-    or <filename>contrib/ltree</filename>, you may need to reindex indexes
-    made with those extensions; see the relevant entries below.
+    另外，如果您使用了 <filename>contrib/btree_gist</filename> 或 <filename>contrib/ltree</filename>，您可能需要重新索引用这些扩展创建的索引；请参阅下面相关条目。
    </para>
 
    <para>
-    Also, if you are upgrading from a version earlier than 18.2,
-    see <xref linkend="release-18-2"/>.
+    另外，如果您要从早于 18.2 的版本升级，请参阅 <xref linkend="release-18-2"/>。
    </para>
   </sect2>
 
   <sect2 id="release-18-6-changes">
-   <title>Changes</title>
+   <title>变更</title>
 
    <itemizedlist>
 
@@ -72,46 +65,29 @@ Branch: REL_18_STABLE [82fd68801] 2026-08-10 06:38:12 -0700
 Branch: REL_17_STABLE [4fcccea97] 2026-08-10 06:38:18 -0700
 -->
      <para>
-      Restrict logical decoding output plugins to the set specified by a
-      new server parameter <varname>output_plugin_libraries</varname>
-      (Jacob Champion)
+      将逻辑解码输出插件限制为新的服务器参数 <varname>output_plugin_libraries</varname> 所指定的集合
+      （Jacob Champion）
       <ulink url="&commit_baseurl;2a29b607d">&sect;</ulink>
       <ulink url="&commit_baseurl;82fd68801">&sect;</ulink>
      </para>
 
      <para>
-      Previously, a replication user could select any loadable library for
-      logical decoding, allowing exploits of various sorts.  To allow
-      locking this down without breaking setups that worked before,
-      introduce a whitelist of allowed output plugins.
+      此前，复制用户可以为逻辑解码选择任意可加载库，从而可能引发各种形式的利用。为了在不破坏以前可用配置的前提下限制这一点，引入了允许的输出插件白名单。
      </para>
 
      <para>
-      By default, only the output plugins shipped as part
-      of <productname>PostgreSQL</productname>
-      (<literal>pgoutput</literal> and <literal>test_decoding</literal>)
-      are included in <varname>output_plugin_libraries</varname>.
-      Installations that rely on other output plugins must add them
-      after updating the server, for example
+      默认情况下，只有作为 <productname>PostgreSQL</productname> 一部分提供的输出插件（<literal>pgoutput</literal> 和 <literal>test_decoding</literal>）才会包含在 <varname>output_plugin_libraries</varname> 中。依赖其他输出插件的安装必须在更新服务器之后添加它们，例如
 <programlisting>
 output_plugin_libraries = 'pgoutput, test_decoding, my_trusted_decoder'
 </programlisting>
      </para>
 
      <para>
-      Additionally, <command>pg_upgrade --check</command> will fail if the
-      <varname>output_plugin_libraries</varname> parameter on the new
-      cluster does not permit the plugins of logical replication slots
-      on the old cluster, when migrating from versions 17 and later.
-      Make necessary additions to the new cluster's setting before
-      performing <application>pg_upgrade</application>.
+      此外，当从 17 及更高版本迁移时，如果新集簇上的 <varname>output_plugin_libraries</varname> 参数不允许旧集簇上逻辑复制槽所使用的插件，<command>pg_upgrade --check</command> 将失败。在执行 <application>pg_upgrade</application> 之前，请对新集簇的设置进行必要的添加。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Vladimir Tokarev and Yu Kunpeng
-      for reporting this problem.
-      (CVE-2026-6471)
+      <productname>PostgreSQL</productname> 项目感谢 Vladimir Tokarev 和 Yu Kunpeng 报告此问题。（CVE-2026-6471）
      </para>
     </listitem>
 
@@ -135,49 +111,25 @@ Branch: REL_15_STABLE [953be116c] 2026-08-10 06:38:31 -0700
 Branch: REL_14_STABLE [e2c48c81f] 2026-08-10 06:38:37 -0700
 -->
      <para>
-      Fix <filename>contrib/pgcrypto</filename>'s PGP encryption to detect
-      unsupported ciphers (Daniel Gustafsson)
-      <ulink url="&commit_baseurl;fe32b10fc">&sect;</ulink>
-      <ulink url="&commit_baseurl;4c5128ca0">&sect;</ulink>
+      修复 <filename>contrib/pgcrypto</filename> 的 PGP 加密以检测不支持的密码算法（Daniel Gustafsson）
+<ulink url="&commit_baseurl;fe32b10fc">&sect;</ulink>
+<ulink url="&commit_baseurl;4c5128ca0">&sect;</ulink>
      </para>
 
      <para>
-      Previously, if OpenSSL rejected the requested cipher (for example,
-      because it is running in FIPS mode, or the legacy provider hasn't
-      been loaded), <application>pgcrypto</application> failed to notice
-      the failure and simply XOR'd the non-encrypted block with the
-      plaintext, rendering the <quote>encryption</quote> trivially
-      breakable.  This will typically occur with deprecated or non-FIPS
-      cipher algorithms (cipher-algo=blowfish/bf, twofish, cast5, or
-      3des).
+      此前，如果 OpenSSL 拒绝了请求的密码算法（例如，因为它运行在 FIPS 模式下，或者尚未加载 legacy provider），<application>pgcrypto</application> 未能察觉到该失败，只是将未加密的数据块与明文进行 XOR 运算，使得<quote>加密</quote>变得轻而易举即可破解。这通常会在使用已废弃或非 FIPS 密码算法时发生（cipher-algo=blowfish/bf、twofish、cast5 或 3des）。
      </para>
 
      <para>
-      By default, <application>pgcrypto</application> will now fail to
-      decrypt any messages that were affected in this way.  To allow
-      retrieval of such data, a new
-      option <literal>ignore-cipher-failure</literal> has been added
-      to <function>pgp_pub_decrypt()</function>
-      and <function>pgp_sym_decrypt()</function>.
-      Setting <literal>ignore-cipher-failure=1</literal> will restore
-      their previous behavior, allowing the faulty encryption wrapper to
-      be stripped off:
+      默认情况下，<application>pgcrypto</application> 现在将无法解密任何以这种方式受到影响的报文。为了允许取回此类数据，已向 <function>pgp_pub_decrypt()</function> 和 <function>pgp_sym_decrypt()</function> 添加了一个新选项 <literal>ignore-cipher-failure</literal>。设置 <literal>ignore-cipher-failure=1</literal> 将恢复其先前的行为，从而允许剥离掉有缺陷的加密包装：
 <programlisting>
 pgp_sym_decrypt(encrypted_column, <replaceable>any key</replaceable>, 'ignore-cipher-failure=1')
 </programlisting>
-      Once the affected messages are identified and stripped of their
-      wrappers, they can then be re-encrypted with a modern algorithm. It
-      is important however that the behavior of OpenSSL be the same as it
-      was when the faulty messages were created: if the set of unsupported
-      algorithms is not the same, this approach will not work. See the
-      documentation for <literal>ignore-cipher-failure</literal>.
+      一旦识别出受影响的报文并剥离其包装，就可以用现代算法重新加密它们。但重要的是，OpenSSL 的行为必须与创建有缺陷报文时相同：如果不支持的算法集合不同，这种方法将不起作用。参见 <literal>ignore-cipher-failure</literal> 的文档。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Shishir Sharma
-      for reporting this problem.
-      (CVE-2026-14663)
+      <productname>PostgreSQL</productname> 项目感谢 Shishir Sharma 报告此问题。（CVE-2026-14663）
      </para>
     </listitem>
 
@@ -200,39 +152,22 @@ Branch: REL_15_STABLE [8cdbabea7] 2026-08-10 06:38:31 -0700
 Branch: REL_14_STABLE [7215c7e96] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Fix <application>psql</application> to skip in-line data following a
-      scripted <command>COPY ... FROM STDIN</command> command, even if
-      the <command>COPY</command> fails before
-      sending <literal>PGRES_COPY_IN</literal> (Tom Lane)
+      修复 <application>psql</application>，使其跳过脚本化 <command>COPY ... FROM STDIN</command> 命令之后的内联数据，即使 <command>COPY</command> 在发送 <literal>PGRES_COPY_IN</literal> 之前就失败也是如此（Tom Lane）
       <ulink url="&commit_baseurl;29921259e">&sect;</ulink>
       <ulink url="&commit_baseurl;900894d35">&sect;</ulink>
      </para>
 
      <para>
-      Previously, if a <literal>COPY</literal> command failed at startup
-      (for instance, because the target table doesn't exist)
-      <application>psql</application> would not realize that and would
-      proceed to read the following in-line data as SQL commands.  In the
-      best case that's wrong and in the worst case it's a SQL-injection
-      hazard.  Teach <application>psql</application> to recognize
-      syntactically-valid <command>COPY ... FROM STDIN</command> commands
-      and to skip data on its own authority if the server doesn't respond
-      with <literal>PGRES_COPY_IN</literal>.
+      此前，如果 <literal>COPY</literal> 命令在启动时失败（例如，因为目标表不存在），<application>psql</application> 不会意识到这一点，并会继续把后面的内联数据当作 SQL 命令读取。最好的情况下这是错误的，最坏的情况下这是 SQL 注入风险。教会 <application>psql</application> 识别语法有效的 <command>COPY ... FROM STDIN</command> 命令，并在服务器未以 <literal>PGRES_COPY_IN</literal> 响应时自行跳过数据。
      </para>
 
      <para>
-      While this fix is unlikely to affect any production SQL scripts,
-      test scripts might intentionally exercise failing <command>COPY
-      ... FROM STDIN</command> commands.  Those will need to gain
-      a <literal>\.</literal> data terminator line after each such
-      command.
+      虽然此修复不太可能影响任何生产 SQL 脚本，但测试脚本可能会故意执行失败的 <command>COPY
+      ... FROM STDIN</command> 命令。这些脚本需要在每个此类命令之后增加一行 <literal>\.</literal> 数据终止符。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Alexander Lakhin
-      for reporting this problem.
-      (CVE-2026-6464)
+      <productname>PostgreSQL</productname> 项目感谢 Alexander Lakhin 报告此问题。（CVE-2026-6464）
      </para>
     </listitem>
 
@@ -248,26 +183,25 @@ Branch: REL_15_STABLE [fc933ce00] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [1f49beef2] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Cross-check the output row type of a portal
-      running <command>EXECUTE</command> or <command>FETCH</command>
-      (Robert Haas)
+      交叉检查运行 <command>EXECUTE</command> 或 <command>FETCH</command> 的 portal 的输出行类型
+      （Robert Haas）
       <ulink url="&commit_baseurl;37b8f3b0e">&sect;</ulink>
      </para>
 
      <para>
-      <command>EXECUTE</command> and <command>FETCH</command> use two
-      portals: an outer one for the statement itself, and an inner one
-      running the query being executed on its behalf.  It was previously
-      possible to make the declared row types of the two portals diverge,
-      leading to server memory disclosure and arbitrary code execution.
+      <command>EXECUTE</command> 和 <command>FETCH</command> 使用两个
+      portal：外层 portal 用于语句本身，内层 portal
+      运行代表该语句执行的查询。此前可能使这两个 portal
+      声明的行类型出现分歧，
+      从而导致服务器内存泄露和任意代码执行。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Ben Morris (in collaboration with Claude and Anthropic Research)
-      and Peter Geoghegan
-      for reporting this problem.
-      (CVE-2026-16239)
+      <productname>PostgreSQL</productname> 项目感谢
+      Ben Morris（与 Claude 和 Anthropic Research 合作）
+      以及 Peter Geoghegan
+      报告此问题。
+      （CVE-2026-16239）
      </para>
     </listitem>
 
@@ -284,23 +218,23 @@ Branch: REL_15_STABLE [8f64cc83f] 2026-07-29 17:15:45 +0200
 Branch: REL_14_STABLE [5fb3c6389] 2026-07-29 17:15:45 +0200
 -->
      <para>
-      Fix buffer overrun with long time zone abbreviation in
-      <function>to_char()</function> (Tom Lane)
+      修复 <function>to_char()</function> 中长时区缩写导致的
+      缓冲区溢出（Tom Lane）
       <ulink url="&commit_baseurl;4fafe2380">&sect;</ulink>
      </para>
 
      <para>
-      This can easily crash the server, and exploits leading to arbitrary
-      code execution have been reported.
+      这很容易导致服务器崩溃，并且已有导致任意
+      代码执行的漏洞利用被报告。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Hcamael, Amjad Shahzad, Tan Zhen of AntAISecurityLab, Tomer Fichman,
-      Zheng Yu, Amy Burnett (OpenAI Codex Security), Rick de Jager, Heewon
-      Song, Sylvie Mayer, Aleksander Alekseev, and Hillai Ben Sasson
-      for reporting this problem.
-      (CVE-2026-14669)
+      <productname>PostgreSQL</productname> 项目感谢
+      Hcamael、Amjad Shahzad、AntAISecurityLab 的 Tan Zhen、Tomer Fichman、
+      Zheng Yu、Amy Burnett（OpenAI Codex Security）、Rick de Jager、Heewon
+      Song、Sylvie Mayer、Aleksander Alekseev 和 Hillai Ben Sasson
+      报告此问题。
+      （CVE-2026-14669）
      </para>
     </listitem>
 
@@ -316,19 +250,18 @@ Branch: REL_15_STABLE [127a0673f] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [890327639] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Fix buffer overrun in regexp match/split functions (Masahiko Sawada)
+      修复 regexp match/split 函数中的缓冲区溢出（Masahiko Sawada）
       <ulink url="&commit_baseurl;b7e5c3f63">&sect;</ulink>
      </para>
 
      <para>
-      If passed invalidly-encoded data, these functions could write past
-      the end of their conversion buffer.
+      如果传入编码无效的数据，这些函数可能会写到其转换缓冲区末尾之外。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Francesco Verardi
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-14664)
      </para>
     </listitem>
@@ -345,21 +278,18 @@ Branch: REL_15_STABLE [3b925133b] 2026-08-10 06:38:31 -0700
 Branch: REL_14_STABLE [42d333a78] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Harden the <function>ascii()</function> function against invalid
-      input (Michael Paquier)
+      加固 <function>ascii()</function> 函数以抵御无效输入（Michael Paquier）
       <ulink url="&commit_baseurl;08e812c02">&sect;</ulink>
      </para>
 
      <para>
-      By supplying invalidly-encoded input, this function could be coaxed
-      to read and return a few bytes of data that it shouldn't.  In
-      assert-enabled builds, its assertions could be triggered too.
+      通过提供编码无效的输入，可以诱使该函数读取并返回一些本不该返回的字节数据。在启用断言的构建中，其断言也可能被触发。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Hcamael
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-18024)
      </para>
     </listitem>
@@ -373,25 +303,23 @@ Branch: REL_18_STABLE [08454e8b2] 2026-08-10 06:38:12 -0700
 Branch: REL_18_STABLE [8d428c6e6] 2026-08-10 06:38:12 -0700
 -->
      <para>
-      Fix multirange type handling
-      in <function>pg_restore_attribute_stats()</function>
-      (OpenAI Security Research Team)
+      修复 <function>pg_restore_attribute_stats()</function> 中的多范围类型处理
+      （OpenAI 安全研究团队）
       <ulink url="&commit_baseurl;08454e8b2">&sect;</ulink>
       <ulink url="&commit_baseurl;8d428c6e6">&sect;</ulink>
      </para>
 
      <para>
-      <function>pg_restore_attribute_stats()</function> treated multirange
-      types just like their underlying range type.  This works correctly
-      for the bounds histogram, but it was wrong for all the other
-      statistics kinds.
+      <function>pg_restore_attribute_stats()</function> 将多范围类型
+      当作其底层范围类型来处理。对于边界直方图而言这是正确的，
+      但对于所有其他统计信息种类则是错误的。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Amy Burnett (OpenAI Codex Security)
-      for reporting this problem.
-      (CVE-2026-16238)
+      <productname>PostgreSQL</productname> 项目感谢
+      Amy Burnett（OpenAI Codex Security）
+      报告此问题。
+      （CVE-2026-16238）
      </para>
     </listitem>
 
@@ -407,22 +335,21 @@ Branch: REL_15_STABLE [005ffaa7f] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [59205c7e9] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Make <function>scalarineqsel()</function> check that a constant it
-      expects to be of type <type>tid</type> actually is (Tom Lane)
+      让 <function>scalarineqsel()</function> 检查它期望为 <type>tid</type> 类型的常量
+      确实属于该类型（Tom Lane）
       <ulink url="&commit_baseurl;a2cb5a1cf">&sect;</ulink>
      </para>
 
      <para>
-      This expectation will hold for all the built-in operators that use
-      this estimator, but a maliciously-constructed operator could violate
-      it, leading to a crash or server memory disclosure.
+      对于所有使用该估算器的内置运算符，这一预期都成立，
+      但恶意构造的运算符可能违反该预期，从而导致崩溃或服务器内存泄露。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Hcamael
-      for reporting this problem.
-      (CVE-2026-14668)
+      报告此问题。
+      （CVE-2026-14668）
      </para>
     </listitem>
 
@@ -445,22 +372,20 @@ Branch: REL_15_STABLE [4f8b37b6b] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [1e3014f37] 2026-08-10 06:38:34 -0700
 -->
      <para>
-      Harden <type>tsvector</type> and <type>tsquery</type> code against
-      overly long values (both individual lexemes and total vector/query
-      length) (Tom Lane)
+      加固 <type>tsvector</type> 和 <type>tsquery</type> 代码以防范过长的值（包括单个词素以及向量/查询总长度）（Tom Lane）
       <ulink url="&commit_baseurl;e25135057">&sect;</ulink>
       <ulink url="&commit_baseurl;dddc8a69f">&sect;</ulink>
      </para>
 
      <para>
-      The documented limits were not enforced in all code paths.
+      文档中记录的限值并未在所有代码路径中强制执行。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Yuhang Wu, Zhenpeng Lin, Zheng Yu, and Hcamael
-      for reporting these problems.
-      (CVE-2026-14662)
+      <productname>PostgreSQL</productname> 项目感谢
+      Yuhang Wu、Zhenpeng Lin、Zheng Yu 和 Hcamael
+      报告这些问题。
+      （CVE-2026-14662）
      </para>
     </listitem>
 
@@ -483,24 +408,20 @@ Branch: REL_15_STABLE [eb2fa2704] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [c7f462838] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Fix various places that mistakenly assumed they would not have to
-      deal with more than <literal>FUNC_MAX_ARGS</literal> function
-      arguments (Tom Lane)
+      修复多处错误地假定不必处理超过 <literal>FUNC_MAX_ARGS</literal> 个函数参数的地方（Tom Lane）
       <ulink url="&commit_baseurl;7f0e1aac7">&sect;</ulink>
       <ulink url="&commit_baseurl;2a03f21da">&sect;</ulink>
      </para>
 
      <para>
-      Notably, the server's actual limit on the number of arguments to an
-      aggregate function is <literal>FUNC_MAX_ARGS - 1</literal>, but the
-      parser failed to enforce that, creating hazards downstream.
+      值得注意的是，服务器对聚合函数参数数量的实际限制是 <literal>FUNC_MAX_ARGS - 1</literal>，但解析器未能强制执行该限制，从而在下游造成隐患。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Zheng Yu, ylwangtju, and Masahiko Sawada
-      for reporting these problems.
-      (CVE-2026-14679)
+      <productname>PostgreSQL</productname> 项目感谢
+      Zheng Yu、ylwangtju 和 Masahiko Sawada
+      报告这些问题。
+      （CVE-2026-14679）
      </para>
     </listitem>
 
@@ -523,22 +444,20 @@ Branch: REL_15_STABLE [d6e861e19] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [913fe0c31] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Reject calls from SQL to functions that take or return
-      type <type>internal</type> (Tom Lane)
+      拒绝从 SQL 调用接受或返回类型 <type>internal</type> 的函数（Tom Lane）
       <ulink url="&commit_baseurl;54649de65">&sect;</ulink>
       <ulink url="&commit_baseurl;722695db1">&sect;</ulink>
      </para>
 
      <para>
-      The existing defenses against doing this have been shown to be
-      insufficient, so add more explicit checks.
+      现有的针对此类行为的防护已被证明不足，因此增加更明确的检查。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Amy Burnett (OpenAI Codex Security)
-      for reporting this problem.
-      (CVE-2026-14680)
+      <productname>PostgreSQL</productname> 项目感谢
+      Amy Burnett（OpenAI Codex Security）
+      报告此问题。
+      （CVE-2026-14680）
      </para>
     </listitem>
 
@@ -554,21 +473,19 @@ Branch: REL_15_STABLE [fb6d1ca8d] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [70a3b4e18] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Preserve the ownership of extended statistics objects when they are
-      rebuilt by <command>ALTER TABLE</command> (Masahiko Sawada)
+      当扩展统计对象被 <command>ALTER TABLE</command> 重建时，保留其所有权（Masahiko Sawada）
       <ulink url="&commit_baseurl;a1fa24127">&sect;</ulink>
      </para>
 
      <para>
-      Previously, the role running <command>ALTER TABLE</command> gained
-      ownership of such objects, but that seems inappropriate.
+      此前，运行 <command>ALTER TABLE</command> 的角色会获得此类对象的所有权，但这似乎并不合适。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Noah Misch
-      for reporting this problem.
-      (CVE-2026-6469)
+      报告此问题。
+      （CVE-2026-6469）
      </para>
     </listitem>
 
@@ -584,24 +501,16 @@ Branch: REL_15_STABLE [44ea6764b] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [967acab87] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      When deparsing an <function>EXTRACT()</function> function call,
-      quote the field name if needed (Nathan Bossart)
+      在反解析 <function>EXTRACT()</function> 函数调用时，如有需要，为字段名加上引号（Nathan Bossart）
       <ulink url="&commit_baseurl;0ddd9098a">&sect;</ulink>
      </para>
 
      <para>
-      The parser accepts any string literal as a field name
-      in <function>EXTRACT()</function>, deferring validation to
-      execution.  If the call is stored and deparsed (for example
-      during <application>pg_dump</application>), the string body was
-      regurgitated verbatim, allowing SQL injection.
+      解析器在 <function>EXTRACT()</function> 中接受任意字符串字面量作为字段名，而将验证推迟到执行阶段。如果该调用被存储并反解析（例如在 <application>pg_dump</application> 期间），字符串内容会被原样吐出，从而导致 SQL 注入。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Ben Morris (in collaboration with Claude and Anthropic Research)
-      for reporting this problem.
-      (CVE-2026-15741)
+      <productname>PostgreSQL</productname> 项目感谢 Ben Morris（与 Claude 和 Anthropic Research 合作）报告此问题。（CVE-2026-15741）
      </para>
     </listitem>
 
@@ -631,27 +540,18 @@ Branch: REL_15_STABLE [6dbedd48b] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [1a358b8f2] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Check for <literal>USAGE</literal> privilege on data types in places
-      that formerly failed to check that (Nathan Bossart)
+      在以前未能执行检查的地方，检查数据类型的 <literal>USAGE</literal> 权限（Nathan Bossart）
       <ulink url="&commit_baseurl;2e91f8548">&sect;</ulink>
       <ulink url="&commit_baseurl;57f59ca1d">&sect;</ulink>
       <ulink url="&commit_baseurl;278053843">&sect;</ulink>
      </para>
 
      <para>
-      <command>CREATE TYPE AS RANGE</command> did not check, nor
-      did <command>ALTER TABLE OF</command>, nor did commands that create
-      stored expressions.  These omissions allowed roles
-      without <literal>USAGE</literal> privilege to nonetheless create
-      objects depending on the type, possibly blocking the type's owner
-      from changing the type later.
+      <command>CREATE TYPE AS RANGE</command> 没有检查，<command>ALTER TABLE OF</command> 也没有检查，创建存储表达式的命令同样没有检查。这些遗漏使得没有 <literal>USAGE</literal> 权限的角色仍然能够创建依赖于该类型的对象，从而可能阻止该类型的所有者日后更改该类型。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Jingzhou Fu
-      for reporting this problem.
-      (CVE-2026-6470)
+      <productname>PostgreSQL</productname> 项目感谢 Jingzhou Fu 报告此问题。（CVE-2026-6470）
      </para>
     </listitem>
 
@@ -667,22 +567,19 @@ Branch: REL_15_STABLE [17b6083db] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [f4174aa84] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Invalidate role-dependent cached plans after role changes
+      在角色变更后使依赖于角色的缓存计划失效
       (Ilya Staroverov, Shinya Kato, Nathan Bossart)
       <ulink url="&commit_baseurl;0b12f56bf">&sect;</ulink>
      </para>
 
      <para>
-      Role membership, role attribute, and database ownership changes may
-      impact the expected behavior of row-level security policies, but
-      previously we'd continue to use cached plans that were made
-      according to the old state of affairs.
+      角色成员关系、角色属性和数据库属主的变更可能会影响行级安全策略的预期行为，但此前我们会继续使用按照旧状态生成的缓存计划。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Ilya Staroverov and Shinya Kato
-      for reporting this problem.
+      <productname>PostgreSQL</productname> 项目感谢
+      Ilya Staroverov 和 Shinya Kato
+      报告此问题。
       (CVE-2026-14666)
      </para>
     </listitem>
@@ -696,23 +593,18 @@ Branch: REL_18_STABLE [203a48209] 2026-08-10 06:38:11 -0700
 Branch: REL_17_STABLE [067a64d40] 2026-08-10 06:38:18 -0700
 -->
      <para>
-      Reject GSSEncRequest after direct SSL connection (Michael Paquier)
+      在直接 SSL 连接后拒绝 GSSEncRequest (Michael Paquier)
       <ulink url="&commit_baseurl;203a48209">&sect;</ulink>
      </para>
 
      <para>
-      After establishing a TLS-encrypted connection, the server would
-      still accept a request for GSSAPI encryption.  If that succeeded,
-      the connection would proceed using TLS encryption, but it would look
-      like a GSS connection to the <filename>pg_hba</filename> rules.
-      Thus, a <filename>pg_hba</filename> policy intending to disallow TLS
-      would not be enforced correctly.
+      在建立 TLS 加密连接后，服务器仍会接受 GSSAPI 加密请求。如果该请求成功，连接将继续使用 TLS 加密，但对 <filename>pg_hba</filename> 规则而言它看起来像是一个 GSS 连接。因此，意图禁止 TLS 的 <filename>pg_hba</filename> 策略将无法被正确执行。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       p4p3r
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-14681)
      </para>
     </listitem>
@@ -727,26 +619,16 @@ Branch: REL_17_STABLE [dec60e8ad] 2026-08-10 06:38:18 -0700
 Branch: REL_16_STABLE [fadbe882d] 2026-08-10 06:38:24 -0700
 -->
      <para>
-      Make mock SCRAM authentication secrets more plausible (Nathan Bossart)
+      让模拟 SCRAM 认证密钥更加可信（Nathan Bossart）
       <ulink url="&commit_baseurl;822143c4d">&sect;</ulink>
      </para>
 
      <para>
-      If a SCRAM login is attempted against a role that doesn't exist or
-      doesn't have a SCRAM secret, we generate a mock secret and carry out
-      the authentication handshake anyway, to avoid revealing these facts
-      to an attacker.  But the mock secret was made with a fixed iteration
-      count, which in itself can be an observable response discrepancy.
-      Use the configuration setting <varname>scram_iterations</varname>
-      instead, to make the mock secret look more like the installation's
-      real secrets.
+      如果针对一个不存在或没有 SCRAM 密钥的角色尝试 SCRAM 登录，我们仍会生成一个模拟密钥并照常执行认证握手，以避免向攻击者泄露这些事实。但模拟密钥是使用固定迭代次数生成的，这本身就可能成为可观察到的响应差异。请改用配置项 <varname>scram_iterations</varname>，使模拟密钥看起来更接近该安装中的真实密钥。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Radim Marek
-      for reporting this problem.
-      (CVE-2026-14672)
+      <productname>PostgreSQL</productname> 项目感谢 Radim Marek 报告此问题。（CVE-2026-14672）
      </para>
     </listitem>
 
@@ -762,24 +644,16 @@ Branch: REL_15_STABLE [5737110b6] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [74c59d062] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Fix out-of-bounds writes in <application>ecpg</application>
-      applications caused by invalid <type>bytea</type> data received from
-      the server (Michael Paquier)
+      修复 <application>ecpg</application> 应用程序中因从服务器收到无效的 <type>bytea</type> 数据而导致的越界写入（Michael Paquier）
       <ulink url="&commit_baseurl;a14ba29b1">&sect;</ulink>
      </para>
 
      <para>
-      <application>ecpg</application> assumed without checking that
-      any <type>bytea</type> value must begin with <literal>\x</literal>.
-      A broken or malicious server might send a string shorter than 2
-      bytes, resulting in memory clobber in the application.
+      <application>ecpg</application> 未经检查就假定任何 <type>bytea</type> 值都必须以 <literal>\x</literal> 开头。有缺陷或恶意的服务器可能发送短于 2 字节的字符串，从而导致应用程序中的内存破坏。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      ylwangtju
-      for reporting this problem.
-      (CVE-2026-16241)
+      <productname>PostgreSQL</productname> 项目感谢 ylwangtju 报告此问题。（CVE-2026-16241）
      </para>
     </listitem>
 
@@ -795,24 +669,23 @@ Branch: REL_15_STABLE [df245c374] 2026-08-10 06:38:31 -0700
 Branch: REL_14_STABLE [2006fca40] 2026-08-10 06:38:37 -0700
 -->
      <para>
-      Do not do backquote expansion on the argument
-      of <application>psql</application>'s <command>\unrestrict</command>
-      command (Nathan Bossart)
+      不要对 <application>psql</application> 的 <command>\unrestrict</command>
+      命令的参数进行反引号展开
+      (Nathan Bossart)
       <ulink url="&commit_baseurl;71ca694c7">&sect;</ulink>
      </para>
 
      <para>
-      This oversight in the fix for CVE-2025-8714 allows a malicious
-      server to inject shell commands into plain-text dump output that
-      will be run at restore time on the machine
-      running <application>psql</application>, the exact scenario that
-      CVE-2025-8714 intended to prevent.
+      针对 CVE-2025-8714 的修复中的这一疏漏，使得恶意服务器
+      可以把 shell 命令注入纯文本转储输出，而这些命令
+      会在恢复时于运行 <application>psql</application> 的机器上执行，
+      这正是 CVE-2025-8714 想要防止的场景。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Lucas Velgus, Filip Janus, and Daniel Bakker
-      for reporting this problem.
+      <productname>PostgreSQL</productname> 项目感谢
+      Lucas Velgus、Filip Janus 和 Daniel Bakker
+      报告此问题。
       (CVE-2026-18408)
      </para>
     </listitem>
@@ -829,28 +702,26 @@ Branch: REL_15_STABLE [71ba5705d] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [57aa21f69] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Remove <application>pg_dump</application>'s assumption that
+      移除 <application>pg_dump</application> 关于
       <structname>pg_proc</structname>.<structfield>protrftypes</structfield>
-      cannot have more than <literal>FUNC_MAX_ARGS</literal> entries
+      的条目数不能超过 <literal>FUNC_MAX_ARGS</literal> 的假设
       (Tom Lane)
       <ulink url="&commit_baseurl;3392cce5c">&sect;</ulink>
      </para>
 
      <para>
-      Since there could be entries for both input and output arguments,
-      it's feasible for this array's length to exceed
-      <literal>FUNC_MAX_ARGS</literal> (which constrains only input
-      arguments).  Even if that were not so,
-      <application>pg_dump</application> cannot assume that the server was
-      built with the same value of <literal>FUNC_MAX_ARGS</literal> that
-      it has.  An overrun would lead to a memory clobber
-      inside <application>pg_dump</application>.
+      由于输入参数和输出参数都可能有条目，
+      该数组的长度完全可能超过
+      <literal>FUNC_MAX_ARGS</literal>（它只约束输入参数）。即使并非如此，
+      <application>pg_dump</application> 也不能假定服务器在编译时使用的
+      <literal>FUNC_MAX_ARGS</literal> 值与其自身的值相同。越界会破坏
+      <application>pg_dump</application> 内部的内存。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Masahiko Sawada
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-19385)
      </para>
     </listitem>
@@ -867,22 +738,21 @@ Branch: REL_15_STABLE [cf4ae7c3b] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [d7fcfead3] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Harden <application>PL/Perl</application>
-      against <quote>tied</quote> Perl arrays and hashes (Tom Lane)
+      加固 <application>PL/Perl</application>
+      以防范<quote>绑定</quote>的 Perl 数组和哈希（Tom Lane）
       <ulink url="&commit_baseurl;87c4b8219">&sect;</ulink>
      </para>
 
      <para>
-      A tied object that doesn't behave like a regular one could lead to
-      memory overwrite, or to constructing a corrupt result array (which
-      would likely cause problems later).
+      行为与常规对象不一致的绑定对象可能导致内存覆盖，
+      或者构造出损坏的结果数组（这很可能在后续引发问题）。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Hcamael
-      for reporting this problem.
-      (CVE-2026-14670)
+      报告此问题。
+      （CVE-2026-14670）
      </para>
     </listitem>
 
@@ -898,22 +768,21 @@ Branch: REL_15_STABLE [1eb0d5380] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [aff9dac1c] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Fix integer overflows in memory-allocation calculations
-      in <application>PL/Perl</application>
-      and <application>PL/Tcl</application> (Heikki Linnakangas)
+      修复 <application>PL/Perl</application>
+      和 <application>PL/Tcl</application> 中内存分配计算中的整数溢出（Heikki Linnakangas）
       <ulink url="&commit_baseurl;028ee716a">&sect;</ulink>
      </para>
 
      <para>
-      This is the same type of problem as CVE-2026-6473, just in a
-      different part of the code, and is fixed in the same way.
+      这与 CVE-2026-6473 属于同一类问题，只是位于
+      代码的不同部分，并且以相同的方式修复。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      the Tulya Project (Team Dhiutsa, Bitecope Technologies Private Ltd)
-      for reporting this problem.
-      (CVE-2026-14677)
+      <productname>PostgreSQL</productname> 项目感谢
+      Tulya Project（Team Dhiutsa，Bitecope Technologies Private Ltd）
+      报告此问题。
+      （CVE-2026-14677）
      </para>
     </listitem>
 
@@ -929,27 +798,19 @@ Branch: REL_15_STABLE [e43e74756] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [39d792040] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Ensure that <filename>contrib/amcheck</filename> functions
-      restrict <varname>search_path</varname> before executing index
-      expressions (Noah Misch)
+      确保 <filename>contrib/amcheck</filename> 函数在执行索引表达式之前限制 <varname>search_path</varname>（Noah Misch）
       <ulink url="&commit_baseurl;0a61fcde0">&sect;</ulink>
      </para>
 
      <para>
-      Because amcheck will run such index expressions as the owner of
-      their tables, a caller could potentially
-      hijack <varname>search_path</varname>-dependent functions to run
-      arbitrary code as the table owner.  By default this is not a
-      vulnerability because only superusers are allowed to call amcheck
-      functions; but if that privilege was granted out, it created a
-      larger hazard than the documentation suggests.
+      由于 amcheck 会以表的所有者身份运行这类索引表达式，调用者有可能劫持依赖于 <varname>search_path</varname> 的函数，从而以表所有者的身份运行任意代码。默认情况下这不算漏洞，因为只有超级用户才被允许调用 amcheck 函数；但如果该权限被授予出去，就会造成比文档所述更大的危险。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Yuelin Wang and Jacob Brazeal
-      for reporting this problem.
-      (CVE-2026-14673)
+      <productname>PostgreSQL</productname> 项目感谢
+      Yuelin Wang 和 Jacob Brazeal
+      报告此问题。
+      （CVE-2026-14673）
      </para>
     </listitem>
 
@@ -965,24 +826,22 @@ Branch: REL_15_STABLE [74916136f] 2026-08-10 06:38:30 -0700
 Branch: REL_14_STABLE [9505175f2] 2026-08-10 06:38:36 -0700
 -->
      <para>
-      Fix integer overflows in <filename>contrib/fuzzystrmatch</filename>'s
+      修复 <filename>contrib/fuzzystrmatch</filename> 的
       <function>levenshtein()</function>
-      and <function>levenshtein_less_equal()</function> functions
-      (Nathan Bossart)
+      和 <function>levenshtein_less_equal()</function> 函数中的整数溢出
+      （Nathan Bossart）
       <ulink url="&commit_baseurl;e88eb4e76">&sect;</ulink>
      </para>
 
      <para>
-      Passing large cost values to these functions could cause integer
-      overflows, thereby producing nonsensical results, and even causing
-      out-of-bounds writes in some cases.
+      向这些函数传入较大的代价数值可能导致整数溢出，从而产生无意义的结果，在某些情况下甚至会造成越界写入。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Ben Morris (in collaboration with Claude and Anthropic Research)
-      for reporting this problem.
-      (CVE-2026-15742)
+      <productname>PostgreSQL</productname> 项目感谢
+      Ben Morris（与 Claude 和 Anthropic Research 合作）
+      报告此问题。
+      （CVE-2026-15742）
      </para>
     </listitem>
 
@@ -994,20 +853,20 @@ Branch: REL_19_STABLE [bb02eba53] 2026-08-10 06:38:04 -0700
 Branch: REL_18_STABLE [8a31ffc2d] 2026-08-10 06:38:11 -0700
 -->
      <para>
-      Fix buffer overrun
-      in <filename>contrib/pg_stat_statements</filename> (Álvaro Herrera)
+      修复 <filename>contrib/pg_stat_statements</filename> 中的缓冲区溢出
+      (Álvaro Herrera)
       <ulink url="&commit_baseurl;8a31ffc2d">&sect;</ulink>
      </para>
 
      <para>
-      Query normalization didn't accurately account for the amount of
-      space the normalized string would require.
+      查询规范化未能准确计算规范化后的字符串
+      所需的空间量。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
-      Sajeeb Lohani (with TrendAI Zero Day Initiative) and Yuelin Wang
-      for reporting this problem.
+      <productname>PostgreSQL</productname> 项目感谢
+      Sajeeb Lohani（来自 TrendAI Zero Day Initiative）和 Yuelin Wang
+      报告此问题。
       (CVE-2026-14676)
      </para>
     </listitem>
@@ -1024,21 +883,21 @@ Branch: REL_15_STABLE [c7c82a88c] 2026-08-10 06:38:29 -0700
 Branch: REL_14_STABLE [a74aa0854] 2026-08-10 06:38:35 -0700
 -->
      <para>
-      Fix datatype error in <filename>contrib/pg_trgm</filename>'s GiST
-      picksplit function (Heikki Linnakangas)
+      修复 <filename>contrib/pg_trgm</filename> 的 GiST
+      picksplit 函数中的数据类型错误 (Heikki Linnakangas)
       <ulink url="&commit_baseurl;849019a50">&sect;</ulink>
      </para>
 
      <para>
-      This mistake resulted in reading past the end of the buffer,
-      typically causing bad split decisions; but a crash could ensue
-      if you're very unlucky.
+      该错误导致读取超出缓冲区末尾，
+      通常会造成错误的分裂决策；但如果运气极差，
+      也可能导致崩溃。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Mehmet D. Ince
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-14678)
      </para>
     </listitem>
@@ -1054,23 +913,19 @@ Branch: REL_15_STABLE [b7b513d9a] 2026-06-05 12:08:05 -0500
 Branch: REL_14_STABLE [5b72d0279] 2026-06-05 12:08:05 -0500
 -->
      <para>
-      Remove the plan cache in <filename>contrib/refint</filename>
+      移除 <filename>contrib/refint</filename> 中的计划缓存
       (Ayush Tiwari)
       <ulink url="&commit_baseurl;79a506228">&sect;</ulink>
      </para>
 
      <para>
-      This caching behavior has several serious bugs, notably that
-      <function>check_foreign_key()</function> embeds the new key values
-      in its cascade-UPDATE queries, so a cached plan reuses the
-      originally-needed values rather than the key values that should be
-      used.  The simplest solution is to remove it.
+      这种缓存行为存在若干严重缺陷，尤其是 <function>check_foreign_key()</function> 会把新的键值嵌入其级联 UPDATE 查询中，因此缓存的计划会重用最初需要的值，而不是本应使用的键值。最简单的解决方案就是移除它。
      </para>
 
      <para>
-      The <productname>PostgreSQL</productname> Project thanks
+      <productname>PostgreSQL</productname> 项目感谢
       Hcamael
-      for reporting this problem.
+      报告此问题。
       (CVE-2026-14671)
      </para>
     </listitem>
@@ -1083,25 +938,22 @@ Branch: REL_19_STABLE [5707d7517] 2026-07-30 14:59:30 +0200
 Branch: REL_18_STABLE [d4420a972] 2026-07-30 14:59:39 +0200
 -->
      <para>
-      Ensure that parallel GIN index builds update the table's
+      确保并行 GIN 索引构建能正确更新表的
       <structname>pg_class</structname>.<structfield>reltuples</structfield>
-      value correctly (Jan Nidzwetzki, Tomas Vondra)
+      值 (Jan Nidzwetzki, Tomas Vondra)
       <ulink url="&commit_baseurl;d4420a972">&sect;</ulink>
      </para>
 
      <para>
-      A parallel worker could report an uninitialized value for the
-      number of rows it processed, leading to a bogus value
-      for <structfield>reltuples</structfield>, even Infinity or NaN.
-      Such values could lead to subsequent autovacuum and autoanalyze
-      operations never deciding that the table needs to be processed.
-      If so, the situation will not self-heal.  A manual
-      <command>ANALYZE</command> command, or creation of another index,
-      will be needed to reset <structfield>reltuples</structfield> to
-      the correct value.  If you have any tables with GIN indexes, it's
-      recommended to check to see if
-      their <structfield>reltuples</structfield> entries look sane.
-      A query such as this may be helpful:
+      并行工作者可能报告其处理行数为未初始化的值，从而导致
+      <structfield>reltuples</structfield> 出现虚假的值，甚至是 Infinity 或 NaN。
+      这样的值可能导致后续的自动清理和自动分析操作永远无法判定该表需要被处理。
+      若如此，该状况不会自行恢复。需要手动执行
+      <command>ANALYZE</command> 命令，或创建另一个索引，
+      才能将 <structfield>reltuples</structfield> 重置为
+      正确的值。如果你有任何带 GIN 索引的表，建议检查
+      其 <structfield>reltuples</structfield> 条目看起来是否正常。
+      类似下面这样的查询可能会有帮助：
 <programlisting>
 SELECT DISTINCT t.oid::regclass, t.reltuples
 FROM pg_class t
@@ -1124,20 +976,14 @@ Branch: REL_15_STABLE [7213cbfa0] 2026-08-07 17:30:05 +0900
 Branch: REL_14_STABLE [cec48686a] 2026-08-07 17:30:06 +0900
 -->
      <para>
-      Fix mis-handling of asynchronous reads when rescanning an
-      asynchronous Append plan node (Alexander Korotkov, Gleb Kashkin,
+      修复在重新扫描异步 Append 计划节点时对异步读取的错误处理
+      (Alexander Korotkov, Gleb Kashkin,
       Etsuro Fujita)
       <ulink url="&commit_baseurl;4ea497a92">&sect;</ulink>
      </para>
 
      <para>
-      When an upper plan node rescans an Append before having read the
-      entire Append output, we need to discard any in-flight requests sent
-      to external servers (by <filename>postgres_fdw</filename> for
-      example).  This was not done correctly in cases where a subplan has
-      parameter changes or is discarded by partition pruning in the next
-      scan.  The outcome could be incorrect query results, an infinite
-      loop, or an assertion failure.
+      当上层计划节点在尚未读取完整个 Append 输出之前重新扫描 Append 时，我们需要丢弃已发送到外部服务器的所有在途请求（例如由 <filename>postgres_fdw</filename> 发出的请求）。在子计划存在参数变化、或在下次扫描中被分区裁剪丢弃的情况下，这一处理并未正确完成。其后果可能是查询结果不正确、无限循环或断言失败。
      </para>
     </listitem>
 
@@ -1153,14 +999,12 @@ Branch: REL_15_STABLE [5190732c9] 2026-07-31 15:39:01 +1200
 Branch: REL_14_STABLE [6098f35f4] 2026-07-31 15:39:21 +1200
 -->
      <para>
-      Fix error in partition pruning for RANGE-partitioned tables
-      (David Rowley)
-      <ulink url="&commit_baseurl;02e69be47">&sect;</ulink>
+      修复 RANGE 分区表的分区裁剪中的错误（David Rowley）
+<ulink url="&commit_baseurl;02e69be47">&sect;</ulink>
      </para>
 
      <para>
-      In some cases the DEFAULT partition would be skipped when it should
-      not be, which could lead to rows missing from query results.
+      在某些情况下，本不应被跳过的 DEFAULT 分区被跳过了，这可能导致查询结果中缺少行。
      </para>
     </listitem>
 
@@ -1172,17 +1016,13 @@ Branch: REL_18_STABLE [1ef917e3a] 2026-06-23 21:08:50 +0900
 Branch: REL_18_STABLE [bba4e095d] 2026-06-25 12:15:02 +0900
 -->
      <para>
-      Correctly update foreign-data-wrapper state in a ModifyTable plan
-      node after pruning result relations (Ayush Tiwari, Rafia Sabih)
-      <ulink url="&commit_baseurl;1ef917e3a">&sect;</ulink>
-      <ulink url="&commit_baseurl;bba4e095d">&sect;</ulink>
+      在裁剪结果关系后，正确更新 ModifyTable 计划节点中的外部数据包装器状态（Ayush Tiwari, Rafia Sabih）
+<ulink url="&commit_baseurl;1ef917e3a">&sect;</ulink>
+<ulink url="&commit_baseurl;bba4e095d">&sect;</ulink>
      </para>
 
      <para>
-      Previously, if run-time partition pruning determined that some
-      partitions of a partitioned target table need not be scanned
-      and the table had any foreign-table partitions, a crash
-      or erroneous behavior was likely.
+      此前，如果运行时分区裁剪判定分区目标表的某些分区无需扫描，而该表又含有任何外部表分区，则很可能发生崩溃或错误行为。
      </para>
     </listitem>
 
@@ -1194,19 +1034,12 @@ Branch: REL_19_STABLE [7048e50f8] 2026-07-08 20:46:25 +0100
 Branch: REL_18_STABLE [4908225be] 2026-07-08 20:46:26 +0100
 -->
      <para>
-      Fix missed concurrent update in <command>UPDATE</command>
-      with <literal>RETURNING OLD</literal> on a table that has
-      a <literal>BEFORE UPDATE</literal> trigger (Dean Rasheed)
-      <ulink url="&commit_baseurl;4908225be">&sect;</ulink>
+      修复在具有 <literal>BEFORE UPDATE</literal> 触发器的表上使用 <literal>RETURNING OLD</literal> 执行 <command>UPDATE</command> 时遗漏并发更新的问题（Dean Rasheed）
+<ulink url="&commit_baseurl;4908225be">&sect;</ulink>
      </para>
 
      <para>
-      If the target row was concurrently updated, then at isolation
-      level <literal>READ COMMITTED</literal> any <literal>OLD</literal>
-      values in <literal>RETURNING</literal> should reflect the updated
-      row.  But stale values were returned if there was a trigger
-      (although the trigger itself, and the final output row, saw the
-      correct values).
+      如果目标行被并发更新，那么在隔离级别 <literal>READ COMMITTED</literal> 下，<literal>RETURNING</literal> 中的任何 <literal>OLD</literal> 值都应反映更新后的行。但如果存在触发器，则返回了过期的值（尽管触发器本身以及最终输出行看到的是正确的值）。
      </para>
     </listitem>
 
@@ -1218,16 +1051,12 @@ Branch: REL_19_STABLE [a71a348ed] 2026-07-31 23:24:23 +1200
 Branch: REL_18_STABLE [f70acc8a2] 2026-07-31 23:24:46 +1200
 -->
      <para>
-      Fix hash join performance issue when there are multiple join keys
-      and many NULL values (David Rowley)
+      修复当存在多个连接键和大量 NULL 值时哈希连接的性能问题（David Rowley）
       <ulink url="&commit_baseurl;f70acc8a2">&sect;</ulink>
      </para>
 
      <para>
-      Null-keyed tuples should not get inserted into the hash table, since
-      they will never match any other tuples.  The code got this wrong if
-      the null was in a non-last join column, bloating the hash table
-      quite a lot if many inputs contain nulls.
+      空键元组不应被插入哈希表，因为它们永远不会与任何其他元组匹配。如果空值位于非最后一个连接列中，代码对此处理有误，当许多输入包含空值时会使哈希表膨胀相当多。
      </para>
     </listitem>
 
@@ -1238,16 +1067,12 @@ Branch: master Release: REL_19_BR [79c65b9d9] 2026-06-11 12:08:47 +0100
 Branch: REL_18_STABLE [9108fed3e] 2026-06-11 12:08:48 +0100
 -->
      <para>
-      Fix parsing of
-      parenthesized <literal>OLD</literal>/<literal>NEW</literal>
-      in <literal>RETURNING</literal> expressions (Marko Grujic)
+      修复 <literal>RETURNING</literal> 表达式中带括号的 <literal>OLD</literal>/<literal>NEW</literal> 的解析（Marko Grujic）
       <ulink url="&commit_baseurl;9108fed3e">&sect;</ulink>
      </para>
 
      <para>
-      Expressions such as <literal>(old).colname</literal>
-      and <literal>(old).*</literal> were mis-handled, effectively
-      converting them to <literal>NEW</literal> references.
+      诸如 <literal>(old).colname</literal> 和 <literal>(old).*</literal> 之类的表达式被错误处理，实际上被转换成了 <literal>NEW</literal> 引用。
      </para>
     </listitem>
 
@@ -1263,18 +1088,13 @@ Branch: REL_15_STABLE [53470ffba] 2026-07-28 16:09:04 -0400
 Branch: REL_14_STABLE [13b627a3e] 2026-07-28 16:09:04 -0400
 -->
      <para>
-      Fix planner's nullability and strictness checks
-      for <literal><replaceable>value</replaceable> IN
-      (<replaceable>array</replaceable>)</literal> expressions
-      (Ayush Tiwari)
+      修复查询规划器对 <literal><replaceable>value</replaceable> IN
+      (<replaceable>array</replaceable>)</literal> 表达式的可空性和严格性检查（Ayush Tiwari）
       <ulink url="&commit_baseurl;277122036">&sect;</ulink>
      </para>
 
      <para>
-      These checks should only succeed if the array operand is known to be
-      non-empty, but that consideration was missed, allowing optimizations
-      to be applied that should not be.  This could result in wrong query
-      answers if the array actually was empty.
+      只有当已知数组操作数非空时，这些检查才应成功，但这一考虑被遗漏了，导致本不应应用优化的场景应用了优化。如果数组实际上为空，这可能导致错误的查询结果。
      </para>
     </listitem>
 
@@ -1294,15 +1114,13 @@ Branch: REL_17_STABLE [b308eb366] 2026-07-20 12:16:58 +0900
 Branch: REL_16_STABLE [d610d8e8b] 2026-07-20 12:17:40 +0900
 -->
      <para>
-      Fix incorrect join removal logic (Matheus Alcantara, Richard Guo)
+      修复不正确的连接消除逻辑（Matheus Alcantara、Richard Guo）
       <ulink url="&commit_baseurl;21f5e659e">&sect;</ulink>
       <ulink url="&commit_baseurl;9e40d07e1">&sect;</ulink>
      </para>
 
      <para>
-      In edge cases, it was possible for a constant output value coming
-      from within the nullable side of an outer join to not be replaced by
-      NULL when it should be.
+      在边缘情况下，来自外连接可空侧的常量输出值在本应被替换为 NULL 时，可能未被替换。
      </para>
     </listitem>
 
@@ -1316,15 +1134,13 @@ Branch: REL_19_STABLE [aae47813a] 2026-07-15 09:21:44 +0900
 Branch: REL_18_STABLE [18105e6db] 2026-07-15 09:22:58 +0900
 -->
      <para>
-      Clean up PlaceHolderVars more thoroughly during join removal
-      (Richard Guo, Arne Roland)
+      在连接消除期间更彻底地清理 PlaceHolderVars（Richard Guo、Arne Roland）
       <ulink url="&commit_baseurl;e02526795">&sect;</ulink>
       <ulink url="&commit_baseurl;18105e6db">&sect;</ulink>
      </para>
 
      <para>
-      This fix corrects various edge cases that could trip assertions or
-      result in incorrect plans.
+      此修复纠正了各种可能触发断言或导致错误计划的边缘情况。
      </para>
     </listitem>
 
@@ -1339,17 +1155,12 @@ Branch: REL_15_STABLE [caebac5f1] 2026-06-08 11:48:18 -0400
 Branch: REL_14_STABLE [64778fac7] 2026-06-08 11:48:18 -0400
 -->
      <para>
-      Add missed checks for hashability of equality comparisons on
-      container datatypes (arrays, composites, ranges) (Andrei Lepikhov,
-      Tom Lane)
+      为容器数据类型（数组、复合类型、范围）上的等值比较补充遗漏的可哈希性检查（Andrei Lepikhov、Tom Lane）
       <ulink url="&commit_baseurl;11aed8d19">&sect;</ulink>
      </para>
 
      <para>
-      The planner must verify hashability of the container's component
-      type(s) before deciding it can use a hash-based plan type.  This
-      step was missed in some places, leading to <quote>could not identify
-      a hash function</quote> failures at execution.
+      规划器在决定可以使用基于哈希的计划类型之前，必须验证容器的组件类型是否可哈希。某些地方遗漏了这一步骤，导致执行时出现 <quote>could not identify a hash function</quote> 失败。
      </para>
     </listitem>
 
@@ -1361,16 +1172,12 @@ Branch: REL_19_STABLE [98d5d7ee6] 2026-07-06 16:14:13 +0900
 Branch: REL_18_STABLE [fe5d62951] 2026-07-06 16:15:45 +0900
 -->
      <para>
-      Avoid pushing <literal>WHERE</literal> clauses down past a grouping
-      step that has a different equivalence rule (Richard Guo)
+      避免将 <literal>WHERE</literal> 子句下推越过具有不同等价规则的分组步骤（Richard Guo）
       <ulink url="&commit_baseurl;fe5d62951">&sect;</ulink>
      </para>
 
      <para>
-      A test on a grouping column that is grouped by a nondeterministic
-      collation is safe to push down only if it is a comparison using that
-      same collation.  Otherwise it might filter some rows the grouping
-      would have merged.
+      对于按非确定性排序规则分组的分组列，只有当测试是使用同一排序规则的比较时，下推才是安全的。否则它可能会过滤掉分组本应合并的某些行。
      </para>
     </listitem>
 
@@ -1385,15 +1192,12 @@ Branch: REL_16_STABLE [a85732162] 2026-07-08 00:00:03 +1200
 Branch: REL_15_STABLE [842e34efa] 2026-07-08 00:00:34 +1200
 -->
      <para>
-      Fix mis-optimization of <function>COUNT</function> window functions
-      that have an <literal>EXCLUDE</literal> clause or
-      lack <literal>ORDER BY</literal> (Chengpeng Yan, David Rowley)
+      修复对带有 <literal>EXCLUDE</literal> 子句或缺少 <literal>ORDER BY</literal> 的 <function>COUNT</function> 窗口函数的错误优化（Chengpeng Yan, David Rowley）
       <ulink url="&commit_baseurl;cf184ec77">&sect;</ulink>
      </para>
 
      <para>
-      These window functions were treated as monotonic when they should
-      not be, allowing wrong answers to be computed.
+      这些窗口函数本不应被视为单调的，却被当作单调处理，从而导致计算出错误的结果。
      </para>
     </listitem>
 
@@ -1404,9 +1208,7 @@ Branch: master Release: REL_19_BR [b574fec00] 2026-06-28 12:31:29 -0400
 Branch: REL_18_STABLE [5fd1c3f28] 2026-06-28 12:31:29 -0400
 -->
      <para>
-      Avoid <quote>cache lookup failed for collation 0</quote> error when
-      planner looks up statistics for a column of type <type>"char"</type>
-      (Feng Wu)
+      避免规划器在为 <type>"char"</type> 类型的列查找统计信息时出现 <quote>cache lookup failed for collation 0</quote> 错误（Feng Wu）
       <ulink url="&commit_baseurl;5fd1c3f28">&sect;</ulink>
      </para>
     </listitem>
@@ -1423,8 +1225,7 @@ Branch: REL_15_STABLE [785289de0] 2026-08-04 09:06:46 +0200
 Branch: REL_14_STABLE [cad17745e] 2026-08-04 09:06:46 +0200
 -->
      <para>
-      Fix <command>ALTER COLUMN ... DROP EXPRESSION</command> to work when
-      there are multiple levels of partitions (Alberto Piai)
+      修复 <command>ALTER COLUMN ... DROP EXPRESSION</command>，使其在多级分区的情况下也能正常工作（Alberto Piai）
       <ulink url="&commit_baseurl;c374f2807">&sect;</ulink>
      </para>
     </listitem>
@@ -1438,14 +1239,12 @@ Branch: REL_18_STABLE [19e3aa704] 2026-07-20 17:21:20 +0200
 Branch: REL_17_STABLE [1d6c654c8] 2026-07-20 17:21:20 +0200
 -->
      <para>
-      Fix attaching partitions of indexes that are exclusion constraints
-      (Japin Li)
+      修复为属于排他约束的索引附加分区的问题（Japin Li）
       <ulink url="&commit_baseurl;19e3aa704">&sect;</ulink>
      </para>
 
      <para>
-      Notably, this oversight broke dump/restore of partitioned exclusion
-      constraints.
+      值得注意的是，这一疏漏破坏了分区排他约束的转储/恢复。
      </para>
     </listitem>
 
@@ -1456,18 +1255,13 @@ Branch: master Release: REL_19_BR [d8b5d87e5] 2026-05-22 23:59:04 +0900
 Branch: REL_18_STABLE [41247cdf6] 2026-05-23 00:01:24 +0900
 -->
      <para>
-      Prevent setting <literal>NO INHERIT</literal> on
-      partitioned <literal>NOT NULL</literal> constraints
-      via <command>ALTER CONSTRAINT</command> (Andreas Karlsson)
+      防止通过 <command>ALTER CONSTRAINT</command> 在分区 <literal>NOT NULL</literal> 约束上设置 <literal>NO INHERIT</literal>（Andreas Karlsson）
       <ulink url="&commit_baseurl;41247cdf6">&sect;</ulink>
      </para>
 
      <para>
-      <literal>NOT NULL</literal> constraints on partitioned tables are
-      supposed to be inherited by all partitions, and therefore must not
-      be marked <literal>NO INHERIT</literal>.  This rule was correctly
-      enforced by constraint creation, but not by <command>ALTER TABLE
-      ... ALTER CONSTRAINT</command>.
+      分区表上的 <literal>NOT NULL</literal> 约束本应由所有分区继承，因此不得标记为 <literal>NO INHERIT</literal>。该规则在创建约束时得到了正确执行，但 <command>ALTER TABLE
+      ... ALTER CONSTRAINT</command> 没有执行。
      </para>
     </listitem>
 
@@ -1483,14 +1277,13 @@ Branch: REL_15_STABLE [eada45dd8] 2026-07-04 11:34:26 -0400
 Branch: REL_14_STABLE [1b17a6e3c] 2026-07-04 11:34:26 -0400
 -->
      <para>
-      Disallow renaming a rule to <literal>_RETURN</literal> (Tom Lane)
+      禁止将规则重命名为 <literal>_RETURN</literal>（Tom Lane）
       <ulink url="&commit_baseurl;a7f7958ab">&sect;</ulink>
      </para>
 
      <para>
-      That name is reserved for a view's <literal>ON SELECT</literal>
-      rule, but <command>ALTER RULE</command> allowed renaming other rules
-      to <literal>_RETURN</literal>, causing trouble later.
+      该名称保留给视图的 <literal>ON SELECT</literal>
+      规则，但 <command>ALTER RULE</command> 允许把其他规则重命名为 <literal>_RETURN</literal>，从而导致后续出现问题。
      </para>
     </listitem>
 
@@ -1504,14 +1297,13 @@ Branch: REL_17_STABLE [25e54cec7] 2026-08-03 12:25:41 -0700
 Branch: REL_16_STABLE [e61d44fde] 2026-08-03 12:25:49 -0700
 -->
      <para>
-      Fix missing lock release for role membership grants in <command>DROP
-      OWNED BY</command> (Jeff Davis)
+      修复在 <command>DROP
+      OWNED BY</command> 中授予角色成员资格时未释放锁的问题（Jeff Davis）
       <ulink url="&commit_baseurl;a0daa0b41">&sect;</ulink>
      </para>
 
      <para>
-      This oversight resulted in a warning message, followed by retaining
-      a lock on the membership grant until the end of the transaction.
+      这一疏忽会产生一条警告消息，随后对成员资格授予的锁会一直保留到事务结束。
      </para>
     </listitem>
 
@@ -1525,14 +1317,13 @@ Branch: REL_17_STABLE [dcda1f07d] 2026-07-08 08:50:14 +0900
 Branch: REL_16_STABLE [485527190] 2026-07-08 08:51:09 +0900
 -->
      <para>
-      Fix failure of <command>EXPLAIN</command> when
-      deparsing <literal>SQL/JSON</literal> aggregates (Richard Guo)
+      修复在反解析 <literal>SQL/JSON</literal> 聚合时 <command>EXPLAIN</command> 失败的问题（Richard Guo）
       <ulink url="&commit_baseurl;45364e496">&sect;</ulink>
      </para>
 
      <para>
-      Some plan structures resulted in <quote>invalid
-      JsonConstructorExpr underlying node type</quote> errors.
+      某些计划结构会导致 <quote>invalid
+      JsonConstructorExpr underlying node type</quote> 错误。
      </para>
     </listitem>
 
@@ -1548,15 +1339,13 @@ Branch: REL_15_STABLE [5b3712e31] 2026-07-28 08:35:19 +0900
 Branch: REL_14_STABLE [55adef7ab] 2026-07-28 08:35:21 +0900
 -->
      <para>
-      Fix use of <command>REINDEX CONCURRENTLY</command> with
-      a deferred uniqueness constraint (Nitin Motiani)
+      修复 <command>REINDEX CONCURRENTLY</command> 与延迟唯一性约束一起使用的问题（Nitin Motiani）
       <ulink url="&commit_baseurl;e4527519b">&sect;</ulink>
      </para>
 
      <para>
-      The transient index copy created during <command>REINDEX
-      CONCURRENTLY</command> was incorrectly marked as enforcing immediate
-      uniqueness, causing spurious reports of constraint violation.
+      在 <command>REINDEX
+      CONCURRENTLY</command> 期间创建的临时索引副本被错误地标记为强制立即唯一性，从而导致虚假的约束违规报告。
      </para>
     </listitem>
 
@@ -1571,20 +1360,13 @@ Branch: REL_19_STABLE [54d5947ef] 2026-07-06 14:47:58 -0400
 Branch: REL_18_STABLE [51652c42d] 2026-07-06 14:47:58 -0400
 -->
      <para>
-      Fix <literal>LIKE</literal> matching with nondeterministic
-      collations and backslashes (Nitin Motiani, Tom Lane)
+      修复 <literal>LIKE</literal> 在使用非确定性排序规则和反斜杠时的匹配问题（Nitin Motiani、Tom Lane）
       <ulink url="&commit_baseurl;a99bd8d58">&sect;</ulink>
       <ulink url="&commit_baseurl;51652c42d">&sect;</ulink>
      </para>
 
      <para>
-      When using a nondeterministic collation,  <literal>LIKE</literal>
-      mishandled an escaped backslash (<literal>\\</literal>), treating it
-      as effectively not there.  It also did the wrong thing with a
-      leading backslash preceding an ordinary character; in that case the
-      backslash should be effectively ignored, but it caused the ordinary
-      character to be matched exactly rather than allowing the
-      nondeterministic collation to decide if there's a match.
+      使用非确定性排序规则时，<literal>LIKE</literal> 对转义反斜杠（<literal>\\</literal>）处理不当，实际上将其视为不存在。对于位于普通字符之前的开头反斜杠，它同样处理有误；在这种情况下，反斜杠实际上应被忽略，但它却导致该普通字符被精确匹配，而不是让非确定性排序规则来决定是否存在匹配。
      </para>
     </listitem>
 
@@ -1596,20 +1378,12 @@ Branch: REL_19_STABLE [67cf73ddb] 2026-07-06 13:06:25 -0400
 Branch: REL_18_STABLE [d0bb49e61] 2026-07-06 13:06:25 -0400
 -->
      <para>
-      Fix <literal>LIKE</literal>/regex optimization for indexscan with
-      exact-match pattern (Jelte Fennema-Nio)
+      修复 <literal>LIKE</literal>/正则表达式在精确匹配模式的索引扫描中的优化（Jelte Fennema-Nio）
       <ulink url="&commit_baseurl;d0bb49e61">&sect;</ulink>
      </para>
 
      <para>
-      Refactoring for <literal>LIKE</literal> with non-deterministic
-      collations accidentally broke the optimization for converting
-      a <literal>LIKE</literal> or regex exact-match pattern to an
-      equality index condition when the index collation doesn't match
-      the expression collation.  Among other things, that
-      made <application>psql</application>'s
-      <literal>\d <replaceable>tablename</replaceable></literal>
-      command much slower.
+      针对使用非确定性排序规则的 <literal>LIKE</literal> 所做的重构意外破坏了这样一项优化：当索引排序规则与表达式排序规则不匹配时，将 <literal>LIKE</literal> 或正则表达式精确匹配模式转换为等值索引条件。除其他影响外，这使得 <application>psql</application> 的 <literal>\d <replaceable>tablename</replaceable></literal> 命令慢了很多。
      </para>
     </listitem>
 
@@ -1627,15 +1401,13 @@ Author: Heikki Linnakangas <heikki.linnakangas@iki.fi>
 Branch: REL_18_STABLE [5f003855e] 2026-08-11 21:24:28 +0300
 -->
      <para>
-      Fix matching of localized month/day names
-      in <function>to_date()</function> (Heikki Linnakangas)
+      修复 <function>to_date()</function> 中本地化月份/日期名称的匹配（Heikki Linnakangas）
       <ulink url="&commit_baseurl;011384ba4">&sect;</ulink>
       <ulink url="&commit_baseurl;5f003855e">&sect;</ulink>
      </para>
 
      <para>
-      The matching logic misbehaved in cases where case-folding changes
-      the byte length of the string.
+      在大小写折叠会改变字符串字节长度的情况下，匹配逻辑出现了异常。
      </para>
     </listitem>
 
@@ -1647,14 +1419,12 @@ Branch: REL_19_STABLE [28d498e28] 2026-07-07 14:29:21 -0700
 Branch: REL_18_STABLE [66ec24276] 2026-07-07 15:04:31 -0700
 -->
      <para>
-      Correct case-folding rules for Greek final sigma (Jeff Davis)
+      修正希腊语词尾 sigma 的大小写折叠规则（Jeff Davis）
       <ulink url="&commit_baseurl;66ec24276">&sect;</ulink>
      </para>
 
      <para>
-      If the string is preceded only by Case Ignorable characters, don't
-      consider it to be a final sigma.  This only affects the
-      built-in <literal>pg_unicode_fast</literal> locale.
+      如果字符串前面仅有 Case Ignorable 字符，则不要将其视为词尾 sigma。这仅影响内置的 <literal>pg_unicode_fast</literal> 区域设置。
      </para>
     </listitem>
 
@@ -1669,14 +1439,12 @@ Branch: REL_15_STABLE [c391375ba] 2026-06-05 07:50:16 +0900
 Branch: REL_14_STABLE [8bb935d61] 2026-06-05 07:50:18 +0900
 -->
      <para>
-      Fix incorrect NFC recomposition for Hangul U+11A7 (TBASE)
-      (Diego Frias, Michael Paquier)
+      修复 Hangul U+11A7 的 NFC 重组错误（TBASE）（Diego Frias, Michael Paquier）
       <ulink url="&commit_baseurl;273fe9485">&sect;</ulink>
      </para>
 
      <para>
-      This character was treated as a valid T syllable, which it is not,
-      and hence silently swallowed during normalization.
+      该字符曾被当作有效的 T 音节处理，但它并非如此，因此在规范化过程中被静默吞掉。
      </para>
     </listitem>
 
@@ -1691,14 +1459,12 @@ Branch: REL_15_STABLE [a7e0e42a2] 2026-06-08 11:49:11 -0700
 Branch: REL_14_STABLE [1e0458172] 2026-06-08 11:49:27 -0700
 -->
      <para>
-      Avoid possible truncation of output lexemes in case-insensitive
-      <literal>synonym</literal> dictionaries (Jeff Davis)
+      避免在不区分大小写的 <literal>synonym</literal> 词典中输出词素被截断（Jeff Davis）
       <ulink url="&commit_baseurl;89e648498">&sect;</ulink>
      </para>
 
      <para>
-      If folding to lower case increased the byte length of a lexeme, it
-      was incorrectly truncated to its original byte length when emitted.
+      如果折叠为小写增加了词素的字节长度，那么在输出时它会被错误地截断为原始字节长度。
      </para>
     </listitem>
 
@@ -1711,9 +1477,8 @@ Branch: REL_18_STABLE [9021c8f3c] 2026-07-07 13:35:15 -0700
 Branch: REL_17_STABLE [5e78ebca5] 2026-07-07 13:35:23 -0700
 -->
      <para>
-      Defend against truncated UTF-8 characters in case-conversion logic
-      (Jeff Davis)
-      <ulink url="&commit_baseurl;9021c8f3c">&sect;</ulink>
+      在大小写转换逻辑中防范被截断的 UTF-8 字符（Jeff Davis）
+<ulink url="&commit_baseurl;9021c8f3c">&sect;</ulink>
      </para>
     </listitem>
 
@@ -1728,16 +1493,12 @@ Branch: REL_15_STABLE [259b627d5] 2026-06-03 12:47:32 +0900
 Branch: REL_14_STABLE [74d3482f4] 2026-06-03 12:47:34 +0900
 -->
      <para>
-      Fix typo in <function>hash_record_extended()</function> (Man Zeng)
-      <ulink url="&commit_baseurl;b3f13c032">&sect;</ulink>
+      修复 <function>hash_record_extended()</function> 中的拼写错误（Man Zeng）
+<ulink url="&commit_baseurl;b3f13c032">&sect;</ulink>
      </para>
 
      <para>
-      The code failed to initialize the second isnull argument passed to
-      FunctionCallInvoke().  This is harmless for existing in-core
-      extended hash support functions, which will not examine that value.
-      However, extension-provided hash functions could be affected if they
-      inspect <literal>PG_ARGISNULL(1)</literal>.
+      该代码未能初始化传递给 FunctionCallInvoke() 的第二个 isnull 参数。对于现有的核心内置扩展哈希支持函数来说这是无害的，因为它们不会检查该值。但是，如果扩展提供的哈希函数检查 <literal>PG_ARGISNULL(1)</literal>，则可能受到影响。
      </para>
     </listitem>
 
@@ -1751,9 +1512,8 @@ Branch: REL_17_STABLE [dcbc96685] 2026-07-28 10:39:47 -0700
 Branch: REL_16_STABLE [6c760f6b6] 2026-07-28 10:39:50 -0700
 -->
      <para>
-      Fix <function>pg_get_publication_tables()</function> to not fail if
-      a publishable table is dropped concurrently (Bharath Rupireddy)
-      <ulink url="&commit_baseurl;73d63d1c1">&sect;</ulink>
+      修复 <function>pg_get_publication_tables()</function>，使其在可发布的表被并发删除时不会失败（Bharath Rupireddy）
+<ulink url="&commit_baseurl;73d63d1c1">&sect;</ulink>
      </para>
     </listitem>
 
@@ -1769,9 +1529,8 @@ Branch: REL_15_STABLE [d39b9eed0] 2026-07-06 12:24:23 -0400
 Branch: REL_14_STABLE [0115650de] 2026-07-06 12:24:28 -0400
 -->
      <para>
-      Prevent <function>satisfies_hash_partition()</function> from
-      crashing with <literal>VARIADIC NULL</literal> (Robert Haas)
-      <ulink url="&commit_baseurl;0c06ebf12">&sect;</ulink>
+      防止 <function>satisfies_hash_partition()</function> 在使用 <literal>VARIADIC NULL</literal> 时崩溃（Robert Haas）
+<ulink url="&commit_baseurl;0c06ebf12">&sect;</ulink>
      </para>
     </listitem>
 
@@ -1786,17 +1545,15 @@ Branch: REL_15_STABLE [b3a86eb6d] 2026-06-04 12:24:51 -0400
 Branch: REL_14_STABLE [262cc4df2] 2026-06-04 12:24:51 -0400
 -->
      <para>
-      Report invalid-weight errors more cleanly and consistently
-      in <function>tsvector_filter()</function> and allied functions
-      (Ewan Young)
+      更清晰、更一致地在 <function>tsvector_filter()</function> 及相关函数中报告无效权重错误
+      （Ewan Young）
       <ulink url="&commit_baseurl;c5194139c">&sect;</ulink>
      </para>
 
      <para>
-      In particular, report weight characters that are not printable ASCII
-      in octal form (<literal>\<replaceable>nnn</replaceable></literal>),
-      as <function>charout()</function> would render them.  This avoids
-      possibly producing an invalidly-encoded error message.
+      特别是，对于不是可打印 ASCII 的权重字符，以八进制形式（<literal>\<replaceable>nnn</replaceable></literal>）报告，
+      就像 <function>charout()</function> 会呈现它们那样。这避免了
+      可能产生编码无效的错误消息。
      </para>
     </listitem>
 
@@ -1808,15 +1565,14 @@ Branch: REL_19_STABLE [2a933deaa] 2026-07-16 11:50:16 -0700
 Branch: REL_18_STABLE [c31b0fca0] 2026-07-16 11:50:13 -0700
 -->
      <para>
-      Reject out-of-range timestamp shift values
-      in <function>uuidv7()</function> (Baji Shaik)
+      在 <function>uuidv7()</function> 中拒绝超出范围的时间戳偏移值
+      （Baji Shaik）
       <ulink url="&commit_baseurl;c31b0fca0">&sect;</ulink>
      </para>
 
      <para>
-      The shift value must not be so large as to produce a timestamp out
-      of the range that a v7 UUID can represent.  Previously, a garbage
-      UUID value was produced.
+      偏移值不能大到产生超出 v7 UUID 可表示范围的时间戳。
+      此前会生成垃圾 UUID 值。
      </para>
     </listitem>
 
@@ -1837,15 +1593,15 @@ Branch: REL_15_STABLE [9618e790c] 2026-06-12 12:39:34 +0900
 Branch: REL_14_STABLE [a17f39aa2] 2026-06-12 12:39:40 +0900
 -->
      <para>
-      Fix mishandling of namespace nodes in <function>xpath()</function>
-      (Michael Paquier)
+      修复 <function>xpath()</function> 中对命名空间节点的错误处理
+      （Michael Paquier）
       <ulink url="&commit_baseurl;4c777d6dd">&sect;</ulink>
       <ulink url="&commit_baseurl;0d145be2c">&sect;</ulink>
      </para>
 
      <para>
-      This fix avoids an unexpected <quote>could not copy node</quote>
-      error.
+      此修复避免了意外的 <quote>could not copy node</quote>
+      错误。
      </para>
     </listitem>
 
@@ -1860,14 +1616,13 @@ Branch: REL_18_STABLE [90789900b] 2026-07-02 15:06:05 +0900
 Branch: REL_17_STABLE [c768637d6] 2026-07-02 15:06:12 +0900
 -->
      <para>
-      Fix <type>jsonpath</type>'s <function>.decimal</function> method to
-      not throw a hard error for incorrect precision or scale (Ewan Young)
+      修复 <type>jsonpath</type> 的 <function>.decimal</function> 方法，使其在精度或标度不正确时不再抛出硬错误（Ewan Young）
       <ulink url="&commit_baseurl;84001a04d">&sect;</ulink>
       <ulink url="&commit_baseurl;90789900b">&sect;</ulink>
      </para>
 
      <para>
-      Silent mode should suppress these errors, but failed to.
+      静默模式本应抑制这些错误，但未能做到。
      </para>
     </listitem>
 
@@ -1880,16 +1635,12 @@ Branch: REL_17_STABLE [d0acd2535] 2026-06-11 16:17:58 +0200
 Branch: REL_16_STABLE [60abb3c73] 2026-06-11 16:17:58 +0200
 -->
      <para>
-      Fix NULL-pointer crash when <literal>IS JSON</literal> or similar
-      constructs have an argument that is of string category but lacks a
-      cast to type <type>text</type> (Ayush Tiwari)
+      修复当 <literal>IS JSON</literal> 或类似构造的参数属于字符串类别但缺少到类型 <type>text</type> 的转换时发生的空指针崩溃（Ayush Tiwari）
       <ulink url="&commit_baseurl;35d9a6263">&sect;</ulink>
      </para>
 
      <para>
-      There are no such data types in
-      core <productname>PostgreSQL</productname>, but the problem is
-      reachable with some extension types.
+      核心 <productname>PostgreSQL</productname> 中没有这样的数据类型，但某些扩展类型可以触发该问题。
      </para>
     </listitem>
 
@@ -1902,15 +1653,13 @@ Branch: REL_18_STABLE [441e4c8d6] 2026-07-07 08:27:05 +0900
 Branch: REL_17_STABLE [71cd10cd2] 2026-07-07 08:26:50 +0900
 -->
      <para>
-      Ensure that <literal>SQL/JSON</literal> <literal>ON EMPTY / ON ERROR
-      DEFAULT</literal> values are coerced to the correct typmod (Ewan Young)
+      确保 <literal>SQL/JSON</literal> <literal>ON EMPTY / ON ERROR
+      DEFAULT</literal> 值被强制转换为正确的 typmod（Ewan Young）
       <ulink url="&commit_baseurl;441e4c8d6">&sect;</ulink>
      </para>
 
      <para>
-      For example, the declared precision and scale of
-      a <type>numeric</type> target column were not applied to the default
-      value.
+      例如，<type>numeric</type> 目标列声明的精度和标度未应用于默认值。
      </para>
     </listitem>
 
@@ -1926,8 +1675,7 @@ Branch: REL_15_STABLE [d782c97e1] 2026-08-04 18:01:31 +1200
 Branch: REL_14_STABLE [fec40878c] 2026-08-04 18:01:55 +1200
 -->
      <para>
-      Avoid machine-dependent behavior when dividing the smallest
-      possible <type>money</type> value by -1 (Andrey Rachitskiy)
+      避免在将最小可能的 <type>money</type> 值除以 -1 时出现依赖于机器的行为（Andrey Rachitskiy）
       <ulink url="&commit_baseurl;6298a41b4">&sect;</ulink>
      </para>
     </listitem>
@@ -1944,8 +1692,7 @@ Branch: REL_15_STABLE [025228104] 2026-08-02 16:49:18 -0400
 Branch: REL_14_STABLE [dda622edc] 2026-08-02 16:49:18 -0400
 -->
      <para>
-      Fix crash after out-of-memory failure partway through creation of a
-      cache entry for a text search dictionary (Tom Lane)
+      修复在创建文本搜索字典的缓存条目过程中因内存不足失败后发生的崩溃（Tom Lane）
       <ulink url="&commit_baseurl;81b1e7916">&sect;</ulink>
      </para>
     </listitem>
@@ -1962,8 +1709,7 @@ Branch: REL_15_STABLE [0fb88979b] 2026-08-02 13:22:39 -0400
 Branch: REL_14_STABLE [cfc720ef4] 2026-08-02 13:22:39 -0400
 -->
      <para>
-      Fix memory-safety bugs in processing of incorrect ispell/hunspell
-      dictionary files (Andrey Rachitskiy)
+      修复处理不正确的 ispell/hunspell 字典文件时的内存安全缺陷（Andrey Rachitskiy）
       <ulink url="&commit_baseurl;4689ea9ce">&sect;</ulink>
      </para>
     </listitem>
@@ -1981,15 +1727,13 @@ Branch: REL_17_STABLE [4e49f68b7] 2026-07-03 18:01:03 +0300
 Branch: REL_16_STABLE [cc3fe7e2a] 2026-07-03 18:01:00 +0300
 -->
      <para>
-      Prevent access to other sessions' temporary tables (Jim Jones,
-      Daniil Davydov, Alexander Korotkov)
+      阻止访问其他会话的临时表（Jim Jones、Daniil Davydov、Alexander Korotkov）
       <ulink url="&commit_baseurl;1b0dd0815">&sect;</ulink>
       <ulink url="&commit_baseurl;3aaefe892">&sect;</ulink>
      </para>
 
      <para>
-      Some code paths failed to prevent this, leading to silently wrong
-      (inconsistent) results.
+      某些代码路径未能阻止此行为，导致出现静默错误（不一致）的结果。
      </para>
     </listitem>
 
@@ -2000,16 +1744,12 @@ Branch: master Release: REL_19_BR [da6874635] 2026-04-21 11:03:05 -0400
 Branch: REL_18_STABLE [ed8050370] 2026-08-05 11:44:01 -0400
 -->
      <para>
-      Prevent <quote>no empty local buffer available</quote> errors during
-      temporary table access (Melanie Plageman)
+      防止在访问临时表期间出现 <quote>no empty local buffer available</quote> 错误（Melanie Plageman）
       <ulink url="&commit_baseurl;ed8050370">&sect;</ulink>
      </para>
 
      <para>
-      Limit the number of local buffers that the read streaming mechanism
-      is allowed to use.  Previously, a large value
-      of <varname>effective_io_concurrency</varname> could allow a single
-      stream to use all the buffers, resulting in failure.
+      限制读取流机制允许使用的本地缓冲区数量。此前，较大的 <varname>effective_io_concurrency</varname> 值可能让单个流用尽所有缓冲区，从而导致失败。
      </para>
     </listitem>
 
@@ -2022,14 +1762,12 @@ Branch: REL_18_STABLE [4cc49cb70] 2026-07-31 10:34:40 -0500
 Branch: REL_17_STABLE [288d4e83f] 2026-07-31 10:34:40 -0500
 -->
      <para>
-      Fix the order in which autovacuum processes databases
-      (Rustam Khamidullin)
+      修复 autovacuum 处理数据库的顺序（Rustam Khamidullin）
       <ulink url="&commit_baseurl;4cc49cb70">&sect;</ulink>
      </para>
 
      <para>
-      It was unintentionally processing databases from lowest to highest
-      score, when it should be doing the reverse.
+      它之前会无意中按分数从低到高处理数据库，而实际上应该反过来。
      </para>
     </listitem>
 
@@ -2044,20 +1782,13 @@ Branch: REL_19_STABLE [55d01a10f] 2026-08-07 10:05:23 -0400
 Branch: REL_18_STABLE [7c25cdb1e] 2026-08-07 10:06:41 -0400
 -->
      <para>
-      Restore full use of shared buffer pool
-      in <command>VACUUM</command>'s wraparound failsafe mode
-      (Melanie Plageman)
+      恢复 <command>VACUUM</command> 的回卷故障安全模式中对共享缓冲池的完整使用（Melanie Plageman）
       <ulink url="&commit_baseurl;585181e07">&sect;</ulink>
       <ulink url="&commit_baseurl;7c25cdb1e">&sect;</ulink>
      </para>
 
      <para>
-      An ordinary <command>VACUUM</command> is limited to use just a few
-      shared buffers, so as not to impinge too much on other processing.
-      However, in failsafe mode we want to reclaim transaction IDs as
-      quickly as possible, so that limit is supposed to be abandoned
-      to allow vacuuming to proceed as fast as possible.  This behavior
-      was accidentally broken during refactoring in v18; restore it.
+      普通的 <command>VACUUM</command> 被限制只能使用少量共享缓冲区，以免对其他处理造成过大影响。然而，在故障安全模式下，我们希望尽可能快地回收事务 ID，因此应当放弃该限制，以便 vacuum 尽可能快地进行。这一行为在 v18 的重构过程中被意外破坏；现将其恢复。
      </para>
     </listitem>
 
@@ -2069,13 +1800,12 @@ Branch: REL_18_STABLE [4154a1482] 2026-06-08 15:29:19 +0900
 Branch: REL_17_STABLE [8ad414831] 2026-06-08 15:29:21 +0900
 -->
      <para>
-      Fix memory leak in parallel vacuum worker processes (Baji Shaik)
+      修复并行 vacuum 工作进程中的内存泄漏（Baji Shaik）
       <ulink url="&commit_baseurl;4154a1482">&sect;</ulink>
      </para>
 
      <para>
-      Progress reports from a parallel worker leaked about 1kB per report,
-      with the waste accumulating for the life of the worker process.
+      并行工作进程的进度报告每次泄漏约 1kB，浪费会随着工作进程的生命周期不断累积。
      </para>
     </listitem>
 
@@ -2091,15 +1821,12 @@ Branch: REL_15_STABLE [7123abab7] 2026-07-28 10:56:38 +0200
 Branch: REL_14_STABLE [15fd7a3e2] 2026-07-28 10:56:39 +0200
 -->
      <para>
-      Honor query cancel and vacuum delay during GIN index posting-tree
-      cleanup (Paul Kim, Alexander Korotkov)
-      <ulink url="&commit_baseurl;7becb647d">&sect;</ulink>
+      在 GIN 索引 posting tree 清理期间遵守查询取消和 vacuum 延迟（Paul Kim, Alexander Korotkov）
+<ulink url="&commit_baseurl;7becb647d">&sect;</ulink>
      </para>
 
      <para>
-      The posting tree for a common value can be large, so that this
-      missed check could allow vacuum to run for a long time before
-      noticing an interrupt.
+      常见值的 posting tree 可能很大，因此遗漏这项检查会导致 vacuum 在察觉中断之前运行很长时间。
      </para>
     </listitem>
 
@@ -2115,16 +1842,12 @@ Branch: REL_15_STABLE [126141425] 2026-07-17 15:52:58 -0400
 Branch: REL_14_STABLE [e4ad22eb0] 2026-07-17 15:52:56 -0400
 -->
      <para>
-      Fix possible mis-decoding of index tuples during GiST and SP-GiST
-      index-only scans (Peter Geoghegan)
-      <ulink url="&commit_baseurl;959b7fa2c">&sect;</ulink>
+      修复 GiST 和 SP-GiST 仅索引扫描期间可能出现的索引元组解码错误（Peter Geoghegan）
+<ulink url="&commit_baseurl;959b7fa2c">&sect;</ulink>
      </para>
 
      <para>
-      This error could lead to emitting corrupted data from an index-only
-      scan plan.  The only affected core opclass is GiST's range_ops, and
-      it could only fail if the range column were not the first index
-      column.
+      该错误可能导致仅索引扫描计划输出损坏的数据。受影响的核心操作符类只有 GiST 的 range_ops，并且只有当范围列不是索引的第一列时才会出错。
      </para>
     </listitem>
 
@@ -2138,16 +1861,12 @@ Branch: REL_17_STABLE [768ae083e] 2026-07-15 15:56:06 -0400
 Branch: REL_16_STABLE [0fd5595aa] 2026-07-15 15:58:15 -0400
 -->
      <para>
-      Ensure that the new last block of a bulk-extended table is added to
-      its free space map promptly (Jingtang Zhang)
-      <ulink url="&commit_baseurl;eabc9a9dd">&sect;</ulink>
+      确保批量扩展的表的新最后一块及时加入其空闲空间映射（Jingtang Zhang）
+<ulink url="&commit_baseurl;eabc9a9dd">&sect;</ulink>
      </para>
 
      <para>
-      An off-by-one error caused the last block of a multi-block table
-      extension to not be marked as free in the map.  This would
-      eventually get corrected by vacuum, but meanwhile the space wouldn't
-      be used.
+      一个差一错误导致多块表扩展的最后一个块没有在映射中被标记为空闲。这最终会被 vacuum 纠正，但在此期间该空间不会被使用。
      </para>
     </listitem>
 
@@ -2159,8 +1878,7 @@ Branch: REL_18_STABLE [ac6a58a70] 2026-06-22 18:03:23 -0400
 Branch: REL_17_STABLE [011eedcdc] 2026-06-22 18:03:23 -0400
 -->
      <para>
-      Avoid possible double-free or infinite error recovery loop in
-      resource cleanup during transaction abort (Tom Lane)
+      避免事务中止期间资源清理中可能出现的双重释放或无限错误恢复循环 (Tom Lane)
       <ulink url="&commit_baseurl;ac6a58a70">&sect;</ulink>
      </para>
     </listitem>
@@ -2176,8 +1894,7 @@ Branch: REL_15_STABLE [4647ac142] 2026-06-19 12:52:00 -0400
 Branch: REL_14_STABLE [4b3bc6b71] 2026-06-19 12:52:00 -0400
 -->
      <para>
-      When creating directories, tolerate concurrent creation of the same
-      directory (Andrew Dunstan, Tom Lane)
+      创建目录时，容忍并发创建同一目录 (Andrew Dunstan, Tom Lane)
       <ulink url="&commit_baseurl;aa80c34c8">&sect;</ulink>
      </para>
     </listitem>
@@ -2189,8 +1906,7 @@ Branch: master Release: REL_19_BR [dc5116780] 2026-06-19 15:26:18 +1200
 Branch: REL_18_STABLE [e9692de1d] 2026-06-19 15:26:51 +1200
 -->
      <para>
-      Fix JIT-compiled tuple deconstruction code to account correctly for
-      virtual generated columns (David Rowley)
+      修复 JIT 编译的元组解构代码，以正确处理虚拟生成列 (David Rowley)
       <ulink url="&commit_baseurl;e9692de1d">&sect;</ulink>
      </para>
     </listitem>
@@ -2212,20 +1928,13 @@ Branch: REL_15_STABLE [ef3d7b15e] 2026-05-27 18:37:27 +0300
 Branch: REL_14_STABLE [36b6ed260] 2026-05-27 18:37:48 +0300
 -->
      <para>
-      Prevent creation of dangling object dependencies by acquiring a
-      shared lock on any object being depended on (Bertrand Drouvot)
+      通过对任何被依赖的对象获取共享锁，防止创建悬空的对象依赖 (Bertrand Drouvot)
       <ulink url="&commit_baseurl;c8cd3d697">&sect;</ulink>
       <ulink url="&commit_baseurl;f9d5a52da">&sect;</ulink>
      </para>
 
      <para>
-      The shared lock will conflict with any attempt to drop the
-      depended-on object, eliminating the race condition that formerly
-      existed.  For example, if one session drops a schema (that appears
-      empty to it) concurrently with some other session creating a
-      function in that schema, previously both transactions could commit,
-      leaving an invalid function definition behind.  Now, one transaction
-      or the other will fail.
+      该共享锁会与任何尝试删除被依赖对象的操作冲突，从而消除以前存在的竞态条件。例如，如果一个会话删除一个模式（在它看来该模式是空的），同时另一个会话在该模式中创建函数，以前两个事务都可能提交，留下无效的函数定义。现在，其中一个事务将失败。
      </para>
     </listitem>
 
@@ -2241,16 +1950,13 @@ Branch: REL_15_STABLE [5d18105ca] 2026-07-25 12:01:26 -0400
 Branch: REL_14_STABLE [2fc3e1b44] 2026-07-25 12:01:24 -0400
 -->
      <para>
-      Fix race condition in conflict detection
-      for <literal>SERIALIZABLE</literal> isolation mode
+      修复 <literal>SERIALIZABLE</literal> 隔离模式下冲突检测中的竞态条件
       (Peter Geoghegan)
       <ulink url="&commit_baseurl;d560e730e">&sect;</ulink>
      </para>
 
      <para>
-      A conflict could be missed when examining an initially-empty btree
-      index, allowing failure of serializability due to improperly
-      allowing conflicting transactions to commit.
+      在检查一个初始为空的 btree 索引时可能会漏掉冲突，从而由于错误地允许冲突事务提交而导致可串行化失败。
      </para>
     </listitem>
 
@@ -2264,15 +1970,14 @@ Branch: REL_16_STABLE [cdb9b2830] 2026-05-27 16:26:05 -0700
 Branch: REL_15_STABLE [159324a73] 2026-05-27 16:26:08 -0700
 -->
      <para>
-      Fix race condition in ProcSignalBarrier code (Masahiko Sawada)
+      修复 ProcSignalBarrier 代码中的竞态条件 (Masahiko Sawada)
       <ulink url="&commit_baseurl;1a9b1cc18">&sect;</ulink>
      </para>
 
      <para>
-      This error could result in processes getting stuck, typically after
-      reporting <quote>still waiting for backend with
+      该错误可能导致进程卡住，通常是在报告 <quote>still waiting for backend with
       PID <replaceable>nnnn</replaceable> to accept
-      ProcSignalBarrier</quote>.
+      ProcSignalBarrier</quote> 之后。
      </para>
     </listitem>
 
@@ -2293,17 +1998,13 @@ Branch: REL_15_STABLE [e786fb5aa] 2026-05-27 17:19:58 +0900
 Branch: REL_14_STABLE [db4d12fc9] 2026-05-27 17:20:00 +0900
 -->
      <para>
-      Fix race conditions when a set of processes that belong to the same
-      lock group exit at the same time (Vlad Lesin)
+      修复属于同一锁组的一组进程同时退出时的竞态条件 (Vlad Lesin)
       <ulink url="&commit_baseurl;ae08eb168">&sect;</ulink>
       <ulink url="&commit_baseurl;12c9b8b42">&sect;</ulink>
      </para>
 
      <para>
-      These errors could lead to PANIC aborts, with messages such
-      as <quote>latch already owned</quote>.  The issue does not normally
-      arise in regular parallel query, since the leader won't exit before
-      seeing its workers finish; but some extensions reach the problem.
+      这些错误可能导致 PANIC 中止，并伴随诸如 <quote>latch already owned</quote> 之类的消息。该问题通常不会在常规并行查询中出现，因为主进程在看到其工作进程结束之前不会退出；但某些扩展会遇到此问题。
      </para>
     </listitem>
 
@@ -2324,19 +2025,14 @@ Branch: REL_18_STABLE [4d7feebfb] 2026-07-15 17:37:34 -0400
 Branch: REL_17_STABLE [067213430] 2026-07-15 17:43:38 -0400
 -->
      <para>
-      Fix WAL logging of operations that clear bits in tables' visibility
-      maps (Melanie Plageman, Andres Freund)
+      修复清除表可见性映射中位的操作的 WAL 记录问题（Melanie Plageman、Andres Freund）
       <ulink url="&commit_baseurl;d0fb1da21">&sect;</ulink>
       <ulink url="&commit_baseurl;f581fa729">&sect;</ulink>
       <ulink url="&commit_baseurl;4d7feebfb">&sect;</ulink>
      </para>
 
      <para>
-      Such VM changes were missed by the WAL summarizer, potentially
-      leading to incorrect incremental backups.  We also failed to log
-      full-page images of such VM pages when needed, potentially allowing
-      torn page writes to go uncorrected.  This could lead to misbehavior
-      later, such as wrong results from index-only scans.
+      此类 VM 变更被 WAL summarizer 遗漏，可能导致增量备份不正确。我们还未能按需记录此类 VM 页面的全页镜像，可能使页面撕裂写入得不到纠正。这可能在之后引发异常行为，例如仅索引扫描返回错误结果。
      </para>
     </listitem>
 
@@ -2353,8 +2049,7 @@ Branch: REL_18_STABLE [1d299d6ab] 2026-07-22 08:49:30 -0400
 Branch: REL_17_STABLE [d28cdf46e] 2026-07-22 08:49:00 -0400
 -->
      <para>
-      Prevent WAL summarizer process from getting stuck at a timeline
-      switch (Robert Haas)
+      防止 WAL summarizer 进程在时间线切换时卡住（Robert Haas）
       <ulink url="&commit_baseurl;18f0de6b8">&sect;</ulink>
       <ulink url="&commit_baseurl;1d299d6ab">&sect;</ulink>
      </para>
@@ -2374,17 +2069,13 @@ Branch: REL_17_STABLE [ab5334d8b] 2026-06-12 11:44:16 +0900
 Branch: REL_16_STABLE [d9b49e5b4] 2026-06-12 11:44:19 +0900
 -->
      <para>
-      Fix race with timeline selection in logical decoding during standby
-      promotion (Bertrand Drouvot)
+      修复备库提升期间逻辑解码中与时间线选择相关的竞争条件（Bertrand Drouvot）
       <ulink url="&commit_baseurl;b4bd13850">&sect;</ulink>
       <ulink url="&commit_baseurl;4bff3aa51">&sect;</ulink>
      </para>
 
      <para>
-      Logical decoding being performed on the standby could fail with
-      a <quote>requested WAL segment has already been removed</quote>
-      error.  A repeat attempt would succeed, so there was no permanent
-      problem but there was an availability hazard.
+      在备库上执行逻辑解码时可能失败，并报出 <quote>requested WAL segment has already been removed</quote> 错误。重复尝试会成功，因此不存在永久性问题，但存在可用性风险。
      </para>
     </listitem>
 
@@ -2399,16 +2090,12 @@ Branch: REL_15_STABLE [065cbfb88] 2026-05-23 08:10:17 +0900
 Branch: REL_14_STABLE [e18b77153] 2026-05-23 08:10:18 +0900
 -->
      <para>
-      Avoid exposing a WAL receiver's full connection string during timeline
-      jumps (Chao Li)
+      避免在时间线跳转期间暴露 WAL 接收方的完整连接串（Chao Li）
       <ulink url="&commit_baseurl;b903d1792">&sect;</ulink>
      </para>
 
      <para>
-      The <structname>pg_stat_wal_receiver</structname> view should show a
-      sanitized version of the connection string, without sensitive data.
-      But it transiently showed the full string when we re-use an existing
-      WAL receiver.
+      <structname>pg_stat_wal_receiver</structname> 视图应显示连接字符串的脱敏版本，不包含敏感数据。但当我们复用一个已有的 WAL 接收器时，它曾短暂地显示完整字符串。
      </para>
     </listitem>
 
@@ -2423,16 +2110,12 @@ Branch: REL_15_STABLE [871d4f5b6] 2026-05-16 18:01:40 -0700
 Branch: REL_14_STABLE [510a05f07] 2026-05-16 18:01:46 -0700
 -->
      <para>
-      Use run-time checks, not just Asserts, to verify the correct number
-      of columns in tuples received during logical replication (Varik
-      Matevosyan)
-      <ulink url="&commit_baseurl;dc3db3a83">&sect;</ulink>
+      使用运行时检查（而不仅仅是断言）来验证逻辑复制期间接收的元组中列数是否正确（Varik Matevosyan）
+<ulink url="&commit_baseurl;dc3db3a83">&sect;</ulink>
      </para>
 
      <para>
-      A malicious or buggy publisher could send inconsistent numbers of
-      columns.  While we could not find a scenario in which this would
-      have serious ill effects, extra caution seems warranted.
+      恶意或有缺陷的发布端可能发送列数不一致的数据。虽然我们未能找到会导致严重后果的场景，但多加谨慎似乎是值得的。
      </para>
     </listitem>
 
@@ -2447,21 +2130,12 @@ Branch: REL_15_STABLE [819e5b964] 2026-06-15 15:35:37 -0400
 Branch: REL_14_STABLE [2a00840e8] 2026-06-15 15:35:37 -0400
 -->
      <para>
-      Clean up quoting of string parameters within constructed replication
-      commands (Tom Lane)
-      <ulink url="&commit_baseurl;abb582555">&sect;</ulink>
+      清理构造复制命令时字符串参数的引号处理（Tom Lane）
+<ulink url="&commit_baseurl;abb582555">&sect;</ulink>
      </para>
 
      <para>
-      Various places that generate replication commands were not being
-      adequately careful about quoting replication slot names and other
-      parameters that need to be inserted into those commands.  This could
-      result in unexpected syntax errors in those commands.  In principle,
-      a crafted replication slot name could result in SQL injection; but
-      such a scenario seems very unlikely to occur in practice, since
-      replication operations can only be invoked by highly-privileged
-      users and there is no reason for them to use a slot name coming from
-      an untrustworthy source.
+      生成复制命令的多个地方在为复制槽名称以及其他需要插入这些命令的参数加引号时不够谨慎。这可能导致这些命令中出现意外的语法错误。原则上，精心构造的复制槽名称可能导致 SQL 注入；但这种情况在实践中似乎极不可能发生，因为复制操作只能由高权限用户调用，而且他们没有理由使用来自不可信来源的槽名称。
      </para>
     </listitem>
 
@@ -2477,16 +2151,12 @@ Branch: REL_15_STABLE [0dbfb8520] 2026-07-28 12:33:47 -0700
 Branch: REL_14_STABLE [c2d34db0a] 2026-07-28 12:33:50 -0700
 -->
      <para>
-      Fix logical decoding of empty prepared transactions (Masahiko Sawada)
-      <ulink url="&commit_baseurl;b563fc6bd">&sect;</ulink>
+      修复空预备事务的逻辑解码（Masahiko Sawada）
+<ulink url="&commit_baseurl;b563fc6bd">&sect;</ulink>
      </para>
 
      <para>
-      A prepared transaction that did not cause any decodable updates could
-      result in sending <command>COMMIT/ROLLBACK PREPARED</command> to the
-      output plugin with no preceding <command>PREPARE</command>.  For the
-      built-in subscriber this breaks replication, and other plugins will
-      probably not like it either.
+      一个没有导致任何可解码更新的预备事务，可能会导致在没有任何前置 <command>PREPARE</command> 的情况下向输出插件发送 <command>COMMIT/ROLLBACK PREPARED</command>。对于内置订阅者，这会破坏复制，其他插件可能也不会喜欢这种情况。
      </para>
     </listitem>
 
@@ -2501,16 +2171,13 @@ Branch: REL_16_STABLE [913d3b610] 2026-06-30 08:51:51 +0900
 Branch: REL_15_STABLE [d2980067b] 2026-06-30 08:52:50 +0900
 -->
      <para>
-      Fix corruption of unlogged sequences after standby promotion
+      修复备库提升后未日志记录序列的损坏问题
       (Fujii Masao)
       <ulink url="&commit_baseurl;627605713">&sect;</ulink>
      </para>
 
      <para>
-      Previously, if an unlogged sequence was created on the primary and
-      replicated to a standby, accessing the sequence after promoting the
-      standby could fail with <quote>bad magic number in sequence</quote>
-      or related errors.
+      此前，如果在主库上创建了一个未日志记录序列并将其复制到备库，那么在提升备库后访问该序列可能会失败，并报出 <quote>bad magic number in sequence</quote> 或相关错误。
      </para>
     </listitem>
 
@@ -2526,15 +2193,13 @@ Branch: REL_15_STABLE [8f64cc83f] 2026-07-29 17:15:45 +0200
 Branch: REL_14_STABLE [5fb3c6389] 2026-07-29 17:15:45 +0200
 -->
      <para>
-      Fix cascading standby reconnect failure after archive fallback
+      修复归档回退后级联备库重连失败的问题
       (Marco Nenciarini)
       <ulink url="&commit_baseurl;331016322">&sect;</ulink>
      </para>
 
      <para>
-      A cascading standby could fail to reconnect to its upstream standby
-      with <quote>requested starting point ... is ahead of the WAL flush
-      position</quote> after falling back to archive recovery.
+      在回退到归档恢复后，级联备库可能会无法重新连接到其上游备库，并报出 <quote>requested starting point ... is ahead of the WAL flush position</quote>。
      </para>
     </listitem>
 
@@ -2546,8 +2211,7 @@ Branch: REL_19_STABLE [7673dfe77] 2026-08-08 00:10:00 +0900
 Branch: REL_18_STABLE [311e66df9] 2026-08-08 00:10:06 +0900
 -->
      <para>
-      Prevent accepting hot-standby connections before WAL replay has
-      reached a consistent database state (Nikhil Sontakke)
+      防止在 WAL 重放达到一致的数据库状态之前接受热备连接 (Nikhil Sontakke)
       <ulink url="&commit_baseurl;311e66df9">&sect;</ulink>
      </para>
     </listitem>
@@ -2560,17 +2224,12 @@ Branch: REL_18_STABLE [97b5c5aaa] 2026-05-27 02:28:39 +0300
 Branch: REL_17_STABLE [4a375527a] 2026-05-27 02:28:49 +0300
 -->
      <para>
-      Do not try to clear
-      <structname>pg_database</structname>.<structfield>dathasloginevt</structfield>
-      locally on a standby server (Ayush Tiwari)
+      不要尝试在备用服务器上本地清除 <structname>pg_database</structname>.<structfield>dathasloginevt</structfield>（Ayush Tiwari）
       <ulink url="&commit_baseurl;97b5c5aaa">&sect;</ulink>
      </para>
 
      <para>
-      Event trigger cleanup tried to perform that action on standby
-      servers as well as the primary.  That can't work on a standby,
-      and there's no need anyway since replay of the primary's database
-      change will soon fix it.
+      事件触发器清理试图在备用服务器以及主服务器上执行该操作。这在备用服务器上无法工作，而且也没有必要，因为重放主服务器的数据库更改很快就会修复它。
      </para>
     </listitem>
 
@@ -2582,14 +2241,12 @@ Branch: REL_18_STABLE [08458bcae] 2026-06-18 09:42:56 +0530
 Branch: REL_17_STABLE [ea834d747] 2026-06-18 09:35:53 +0530
 -->
      <para>
-      Avoid race condition while dropping obsolete replication slots
-      (Xuneng Zhou)
+      避免在删除过时的复制槽时出现竞态条件（Xuneng Zhou）
       <ulink url="&commit_baseurl;08458bcae">&sect;</ulink>
      </para>
 
      <para>
-      An incorrect unlock and log message could occur if another session
-      immediately re-used the dropped slot's shared-memory entry.
+      如果另一个会话立即重用了被删除槽的共享内存项，则可能出现不正确的解锁和日志消息。
      </para>
     </listitem>
 
@@ -2604,17 +2261,12 @@ Branch: REL_15_STABLE [a4eb59d40] 2026-06-03 18:47:46 +0900
 Branch: REL_14_STABLE [968c50845] 2026-06-03 18:47:52 +0900
 -->
      <para>
-      Avoid race condition while dropping ephemeral replication slots
-      (Zhijie Hou)
+      避免在删除临时复制槽时出现竞态条件（Zhijie Hou）
       <ulink url="&commit_baseurl;f833c9207">&sect;</ulink>
      </para>
 
      <para>
-      The slot-releasing code performed some additional updates to the
-      replication slot's shared-memory entry after releasing the slot.
-      This is unsafe since another session could immediately re-use the
-      dropped slot's shared-memory entry.  Skip those updates in the case
-      of an ephemeral slot.
+      释放槽的代码在释放槽之后对复制槽的共享内存项执行了一些额外的更新。这是不安全的，因为另一个会话可能立即重用被删除槽的共享内存项。对于临时槽，跳过这些更新。
      </para>
     </listitem>
 
@@ -2629,17 +2281,12 @@ Branch: REL_15_STABLE [b5f7e7569] 2026-05-13 11:46:21 +0900
 Branch: REL_14_STABLE [e3c4e3746] 2026-05-13 11:46:26 +0900
 -->
      <para>
-      Fix stale progress reports during logical replication table
-      synchronization (Shinya Kato)
+      修复逻辑复制表同步期间过期的进度报告（Shinya Kato）
       <ulink url="&commit_baseurl;d9cd9b4d7">&sect;</ulink>
      </para>
 
      <para>
-      Previously, the <structname>pg_stat_progress_copy</structname> view
-      in the subscriber would continue to show the
-      initial <command>COPY</command> operation as active even after the
-      data copy had finished.  The stale entry remained visible until
-      synchronization caught up with the publisher.
+      此前，订阅端中的 <structname>pg_stat_progress_copy</structname> 视图会继续将初始的 <command>COPY</command> 操作显示为活动状态，即使数据复制已经完成。该过期条目会一直可见，直到同步赶上发布端。
      </para>
     </listitem>
 
@@ -2658,17 +2305,13 @@ Branch: REL_16_STABLE [fffa4d870] 2026-07-06 09:48:01 +0900
 Branch: REL_15_STABLE [a8fb98b7b] 2026-07-06 09:48:06 +0900
 -->
      <para>
-      Clear base backup progress on backup failure (Chao Li)
+      在备份失败时清除基础备份进度（Chao Li）
       <ulink url="&commit_baseurl;e7564ee8c">&sect;</ulink>
       <ulink url="&commit_baseurl;e2ad214dd">&sect;</ulink>
      </para>
 
      <para>
-      Previously the <structname>pg_stat_progress_basebackup</structname>
-      view would continue to show a stale progress entry after a failure,
-      until the replication client
-      disconnected.  <application>pg_basebackup</application> normally
-      disconnects immediately, but other clients might not.
+      此前，失败后 <structname>pg_stat_progress_basebackup</structname> 视图会继续显示过期的进度条目，直到复制客户端断开连接。<application>pg_basebackup</application> 通常会立即断开连接，但其他客户端可能不会。
      </para>
     </listitem>
 
@@ -2690,9 +2333,7 @@ Branch: REL_16_STABLE [e34b1ff5d] 2026-06-23 07:59:02 +0900
 Branch: REL_15_STABLE [9e4771825] 2026-06-23 07:59:03 +0900
 -->
      <para>
-      Fix possible PANIC due to concurrent drop of pgstats entries
-      when <varname>track_functions</varname> is enabled (Sami Imseih,
-      Michael Paquier)
+      修复在启用 <varname>track_functions</varname> 时因并发删除 pgstats 条目而可能导致的 PANIC（Sami Imseih、Michael Paquier）
       <ulink url="&commit_baseurl;5cc59834b">&sect;</ulink>
       <ulink url="&commit_baseurl;8a4f389dd">&sect;</ulink>
       <ulink url="&commit_baseurl;fe464e9e6">&sect;</ulink>
@@ -2710,14 +2351,12 @@ Branch: REL_16_STABLE [636bcd6a5] 2026-08-07 14:23:38 +0900
 Branch: REL_15_STABLE [10e20e59e] 2026-08-07 14:23:39 +0900
 -->
      <para>
-      Clean up broken local pgstats entry after failing to obtain space for
-      the corresponding shared hashtable entry (Niall Newman)
+      在为相应的共享哈希表条目获取空间失败后清理损坏的本地 pgstats 条目（Niall Newman）
       <ulink url="&commit_baseurl;2fd8d45ec">&sect;</ulink>
      </para>
 
      <para>
-      Failure to do this led to a null-pointer dereference the next time
-      the local entry was used.
+      未能这样做会导致下次使用该本地项时出现空指针解引用。
      </para>
     </listitem>
 
@@ -2728,8 +2367,7 @@ Branch: master Release: REL_19_BR [3048e8130] 2026-06-17 16:05:11 +0900
 Branch: REL_18_STABLE [13f940b4b] 2026-06-17 16:05:37 +0900
 -->
      <para>
-      Avoid recording incorrect I/O operation statistics after a failed
-      read or write (Bertrand Drouvot)
+      避免在读取或写入失败后记录不正确的 I/O 操作统计信息（Bertrand Drouvot）
       <ulink url="&commit_baseurl;13f940b4b">&sect;</ulink>
      </para>
     </listitem>
@@ -2745,9 +2383,7 @@ Branch: REL_15_STABLE [9b2a6ccc4] 2026-06-24 09:16:24 +0900
 Branch: REL_14_STABLE [e520ad34b] 2026-06-24 09:17:36 +0900
 -->
      <para>
-      In <application>PL/Perl</application>, avoid NULL pointer
-      dereference crash when working with an
-      invalid <type>PostgreSQL::InServer::ARRAY</type> object (Xing Guo)
+      在 <application>PL/Perl</application> 中，避免在处理无效的 <type>PostgreSQL::InServer::ARRAY</type> 对象时发生空指针解引用崩溃（Xing Guo）
       <ulink url="&commit_baseurl;e430ecc59">&sect;</ulink>
      </para>
     </listitem>
@@ -2764,14 +2400,12 @@ Branch: REL_14_STABLE [0b7719f74] 2026-06-29 11:44:35 +0900
 Branch: REL_14_STABLE [309dc4526] 2026-06-29 14:21:15 +0900
 -->
      <para>
-      In <application>PL/Python</application>, properly check for errors
-      when working with sequence and mapping objects (Richard Guo)
+      在 <application>PL/Python</application> 中，在处理序列和映射对象时正确检查错误（Richard Guo）
       <ulink url="&commit_baseurl;53482fcb9">&sect;</ulink>
      </para>
 
      <para>
-      Previously, a broken object or an unhandled exception could result
-      in a NULL pointer dereference crash.
+      以前，损坏的对象或未处理的异常可能导致空指针解引用崩溃。
      </para>
     </listitem>
 
@@ -2808,9 +2442,7 @@ Branch: REL_15_STABLE [5ba13f8c0] 2026-07-09 18:36:18 +0300
 Branch: REL_14_STABLE [7532f2117] 2026-07-09 18:36:41 +0300
 -->
      <para>
-      In <application>libpq</application>, always drain all pending bytes
-      from the SSL or GSS decryption buffer
-      during <function>pqReadData()</function> (Jacob Champion)
+      在 <application>libpq</application> 中，在 <function>pqReadData()</function> 期间始终排空 SSL 或 GSS 解密缓冲区中所有待处理的字节（Jacob Champion）
       <ulink url="&commit_baseurl;2167302b7">&sect;</ulink>
       <ulink url="&commit_baseurl;bb0a54518">&sect;</ulink>
       <ulink url="&commit_baseurl;27761c015">&sect;</ulink>
@@ -2818,9 +2450,7 @@ Branch: REL_14_STABLE [7532f2117] 2026-07-09 18:36:41 +0300
      </para>
 
      <para>
-      This avoids edge cases where <application>libpq</application> or its
-      calling application waits for more data to arrive on the socket, but
-      actually all the data has already arrived.
+      这避免了如下边界情况：<application>libpq</application> 或其调用应用等待套接字上有更多数据到达，而实际上所有数据都已经到达。
      </para>
     </listitem>
 
@@ -2832,8 +2462,7 @@ Branch: REL_19_STABLE [8380013cd] 2026-08-04 17:05:37 +0900
 Branch: REL_18_STABLE [6b46a5d1b] 2026-08-04 17:05:44 +0900
 -->
      <para>
-      Improve <application>libpq</application>'s handling of out-of-memory
-      conditions (Anthonin Bonnefoy)
+      改进 <application>libpq</application> 对内存耗尽情况的处理（Anthonin Bonnefoy）
       <ulink url="&commit_baseurl;6b46a5d1b">&sect;</ulink>
      </para>
     </listitem>
@@ -2846,9 +2475,7 @@ Branch: REL_19_STABLE [0766bc57e] 2026-07-03 14:59:56 +0300
 Branch: REL_18_STABLE [dd5eca055] 2026-07-03 15:00:00 +0300
 -->
      <para>
-      Fix <application>libpq</application>'s trace facility to print
-      new-style BackendKeyData and CancelRequest messages correctly
-      (Anthonin Bonnefoy)
+      修复 <application>libpq</application> 的跟踪设施，使其能正确打印新式 BackendKeyData 和 CancelRequest 消息（Anthonin Bonnefoy）
       <ulink url="&commit_baseurl;dd5eca055">&sect;</ulink>
      </para>
     </listitem>
@@ -2864,16 +2491,12 @@ Branch: REL_15_STABLE [0f63b74a4] 2026-06-15 11:38:30 +0300
 Branch: REL_14_STABLE [1b79c8d1a] 2026-06-15 11:38:40 +0300
 -->
      <para>
-      Allow <application>libpq</application> to accept
-      ParameterDescription messages exceeding 30000 bytes (Ning Sun)
+      允许 <application>libpq</application> 接受超过 30000 字节的 ParameterDescription 消息（Ning Sun）
       <ulink url="&commit_baseurl;b1ab4bc52">&sect;</ulink>
      </para>
 
      <para>
-      Previously, this message type was not among those
-      that <application>libpq</application>'s validity heuristics believed
-      could be long.  The limit resulted in failure for prepared queries
-      having more than 7498 parameters, which is unlikely but supported.
+      此前，该消息类型不在 <application>libpq</application> 的有效性启发式判断所认为可能很长的消息类型之列。该限制导致具有超过 7498 个参数的预备查询失败，这种情况虽不常见但确实受支持。
      </para>
     </listitem>
 
@@ -2884,15 +2507,13 @@ Branch: master Release: REL_19_BR [7f5e0b22e] 2026-06-25 16:58:29 -0400
 Branch: REL_18_STABLE [917fdbc63] 2026-06-25 16:58:29 -0400
 -->
      <para>
-      Fix null-pointer crash in <application>ecpg</application> compiler
-      (Jehan-Guillaume de Rorthais)
+      修复 <application>ecpg</application> 编译器中的空指针崩溃（Jehan-Guillaume de Rorthais）
       <ulink url="&commit_baseurl;917fdbc63">&sect;</ulink>
      </para>
 
      <para>
-      <application>ecpg</application> failed on
-      a <literal>DECLARE</literal> section containing a union nested
-      inside a struct.
+      <application>ecpg</application> 在处理包含嵌套于结构体内的联合的
+      <literal>DECLARE</literal> 部分时失败。
      </para>
     </listitem>
 
@@ -2907,16 +2528,15 @@ Branch: REL_15_STABLE [bfeddcf09] 2026-06-08 17:14:15 +0900
 Branch: REL_14_STABLE [9e8fd9f7a] 2026-06-08 17:14:20 +0900
 -->
      <para>
-      Reject multiple descriptor header items
-      in <application>ecpg</application>'s <literal>GET/SET
-      DESCRIPTOR</literal> statements (Masashi Kamura)
+      拒绝 <application>ecpg</application> 的 <literal>GET/SET
+      DESCRIPTOR</literal> 语句中的多个描述符头部项
+      （Masashi Kamura）
       <ulink url="&commit_baseurl;081434b0f">&sect;</ulink>
      </para>
 
      <para>
-      Previously the grammar allowed this syntax, but broken C code was
-      generated.  Adjust the grammar and the documentation to allow only
-      one header item.
+      此前语法允许这种写法，但会生成有问题的 C 代码。
+      调整语法和文档，只允许一个头部项。
      </para>
     </listitem>
 
@@ -2927,16 +2547,14 @@ Branch: master Release: REL_19_BR [d21604e17] 2026-06-03 08:58:26 +0900
 Branch: REL_18_STABLE [1e9bc4074] 2026-06-03 08:58:29 +0900
 -->
      <para>
-      Fix issues with deferred errors in pipeline mode
-      in <application>psql</application> (Michael Paquier)
+      修复 <application>psql</application> 中管道模式下延迟错误的问题
+      （Michael Paquier）
       <ulink url="&commit_baseurl;1e9bc4074">&sect;</ulink>
      </para>
 
      <para>
-      <application>psql</application> could get stuck or suffer an
-      assertion failure in some scenarios where the server reports an
-      error in response to a Sync message, such as a deferred constraint
-      violation.
+      在某些场景下，例如服务器针对 Sync 消息报告错误（如延迟约束违规）时，
+      <application>psql</application> 可能会卡住或遭遇断言失败。
      </para>
     </listitem>
 
@@ -2951,14 +2569,13 @@ Branch: REL_15_STABLE [022ba5c61] 2026-06-08 14:38:00 +0900
 Branch: REL_14_STABLE [a4ca91ea1] 2026-06-08 14:38:01 +0900
 -->
      <para>
-      Make line widths match in <application>psql</application>'s expanded
-      aligned output format (Pavel Stehule)
+      使 <application>psql</application> 的扩展对齐输出格式中的行宽保持一致
+      （Pavel Stehule）
       <ulink url="&commit_baseurl;07a6c262b">&sect;</ulink>
      </para>
 
      <para>
-      When the table's data rows are narrower than the record header lines,
-      widen the data rows to match the headers, avoiding unsightly output.
+      当表的数据行比记录头行更窄时，将数据行加宽以与表头匹配，避免输出不美观。
      </para>
     </listitem>
 
@@ -2969,16 +2586,14 @@ Branch: master Release: REL_19_BR [e04910a9a] 2026-05-18 08:33:36 -0700
 Branch: REL_18_STABLE [e0c641ebb] 2026-05-18 08:33:36 -0700
 -->
      <para>
-      Enforce the intended upper limit
-      for <application>psql</application>'s special
-      variable <varname>WATCH_INTERVAL</varname>
-      (Sven Klemm, Daniel Gustafsson)
+      强制实施 <application>psql</application> 的特殊变量 <varname>WATCH_INTERVAL</varname> 的预期上限
+      （Sven Klemm、Daniel Gustafsson）
       <ulink url="&commit_baseurl;e0c641ebb">&sect;</ulink>
      </para>
 
      <para>
-      If a too-large value was given, <application>psql</application>
-      reported an error but applied the setting anyway.
+      如果给定了过大的值，<application>psql</application>
+      会报告错误，但仍然应用该设置。
      </para>
     </listitem>
 
@@ -2994,18 +2609,16 @@ Branch: REL_15_STABLE [e6e8a3078] 2026-07-25 19:10:49 +0900
 Branch: REL_14_STABLE [4e19081da] 2026-07-25 19:11:34 +0900
 -->
      <para>
-      Fix <application>psql</application>'s privilege check for showing
-      database size in <command>\l+</command> (Christoph Berg)
+      修复 <application>psql</application> 在 <command>\l+</command> 中显示数据库大小时的权限检查
+      （Christoph Berg）
       <ulink url="&commit_baseurl;f2d6cf880">&sect;</ulink>
      </para>
 
      <para>
-      The underlying server function permits users who
-      have <literal>pg_read_all_stats</literal> privileges to see the
-      sizes of all databases, even if they lack <literal>CONNECT</literal>
-      privilege.  But <application>psql</application> was unaware of that
-      provision and would not call the function unless the user
-      has <literal>CONNECT</literal> privilege.
+      底层的服务器函数允许拥有 <literal>pg_read_all_stats</literal> 权限的用户
+      查看所有数据库的大小，即使他们缺少 <literal>CONNECT</literal>
+      权限。但 <application>psql</application> 并不知道这一规定，
+      除非用户拥有 <literal>CONNECT</literal> 权限，否则不会调用该函数。
      </para>
     </listitem>
 
@@ -3021,9 +2634,9 @@ Branch: REL_15_STABLE [c25737c89] 2026-07-03 13:50:26 +0900
 Branch: REL_14_STABLE [2d44bb900] 2026-07-03 13:50:51 +0900
 -->
      <para>
-      Fix <application>psql</application>'s tab completion
-      for <command>\df</command> to consider procedures too
-      (Erik Wienhold)
+      修复 <application>psql</application> 对 <command>\df</command> 的制表符补全，
+      使其也考虑过程
+      （Erik Wienhold）
       <ulink url="&commit_baseurl;598af79b1">&sect;</ulink>
      </para>
     </listitem>
@@ -3038,16 +2651,15 @@ Branch: REL_16_STABLE [6432a4cd6] 2026-05-14 12:31:25 +0900
 Branch: REL_15_STABLE [f18fcd9a4] 2026-05-14 12:31:43 +0900
 -->
      <para>
-      Fix thread-safety bug in <application>pgbench</application>
+      修复 <application>pgbench</application> 中的线程安全缺陷
       (Fujii Masao)
       <ulink url="&commit_baseurl;98dd6c204">&sect;</ulink>
      </para>
 
      <para>
-      When <application>pgbench</application> runs with multiple threads
-      and the <option>--verbose-errors</option> option, different threads
-      could attempt to use the same buffer to construct error messages,
-      leading to corrupted log output.
+      当 <application>pgbench</application> 以多线程方式运行并启用 <option>--verbose-errors</option> 选项时，
+      不同线程可能会尝试使用同一个缓冲区来构造错误消息，
+      从而导致日志输出损坏。
      </para>
     </listitem>
 
@@ -3059,8 +2671,8 @@ Branch: REL_18_STABLE [d36b72894] 2026-06-29 13:01:57 +0200
 Branch: REL_17_STABLE [090ce6934] 2026-06-29 13:02:07 +0200
 -->
      <para>
-      In <application>pg_combinebackup</application>, prevent infinite
-      loop if the source file is shorter than expected (Peter Eisentraut)
+      在 <application>pg_combinebackup</application> 中，如果源文件比预期短，则防止出现无限
+      循环 (Peter Eisentraut)
       <ulink url="&commit_baseurl;d36b72894">&sect;</ulink>
      </para>
     </listitem>
@@ -3073,16 +2685,15 @@ Branch: REL_18_STABLE [196b4b5ae] 2026-05-27 10:35:18 +0900
 Branch: REL_17_STABLE [c03784a21] 2026-05-27 10:35:49 +0900
 -->
      <para>
-      Fix cleanup of publisher-side objects after errors
-      in <application>pg_createsubscriber</application> (Nisha Moond)
+      修复 <application>pg_createsubscriber</application> 中出错后对发布端对象的清理
+      (Nisha Moond)
       <ulink url="&commit_baseurl;196b4b5ae">&sect;</ulink>
      </para>
 
      <para>
-      When <application>pg_createsubscriber</application> fails after
-      creating logical replication objects, it should remove the
-      publication and replication slot that it created on the publisher.
-      Some error cases failed to do so.
+      当 <application>pg_createsubscriber</application> 在创建逻辑复制对象后失败时，它应删除其在发布端
+      创建的发布和复制槽。
+      某些错误情形未能做到这一点。
      </para>
     </listitem>
 
@@ -3097,15 +2708,13 @@ Branch: REL_15_STABLE [ba9833a75] 2026-05-20 15:57:14 +0900
 Branch: REL_14_STABLE [5552a15a3] 2026-05-20 15:57:19 +0900
 -->
      <para>
-      Use the source cluster's group-read file permissions
-      for <application>pg_recvlogical</application> output files
+      对 <application>pg_recvlogical</application> 输出文件使用源数据库集簇的组读文件权限
       (Fujii Masao)
       <ulink url="&commit_baseurl;89b4b3ae3">&sect;</ulink>
      </para>
 
      <para>
-      <application>pg_recvlogical</application> was documented to behave
-      this way, but it never actually enabled group-read.
+      <application>pg_recvlogical</application> 的文档说明其行为如此，但它实际上从未启用 group-read。
      </para>
     </listitem>
 
@@ -3118,19 +2727,16 @@ Branch: master Release: REL_19_BR [ae39bd23c] 2026-06-16 15:58:12 +0900
 Branch: REL_18_STABLE [477efef08] 2026-06-16 15:58:17 +0900
 -->
      <para>
-      Fix inconsistent behavior of <application>pg_restore</application>
-      with <option>--statistics</option>
-      or <option>--statistics-only</option>
-      (Chao Li, Michael Paquier)
+      修复 <application>pg_restore</application> 与 <option>--statistics</option>
+      或 <option>--statistics-only</option>
+      一起使用时行为不一致的问题
+      （Chao Li, Michael Paquier）
       <ulink url="&commit_baseurl;42ffdedcf">&sect;</ulink>
       <ulink url="&commit_baseurl;477efef08">&sect;</ulink>
      </para>
 
      <para>
-      When combined with other selective-restore options such
-      as <option>--schema</option>, these options failed to restore the
-      expected items, unlike <application>pg_dump</application> with
-      similar options.
+      当与其他选择性恢复选项（例如 <option>--schema</option>）组合使用时，这些选项无法恢复预期的条目，这与带类似选项的 <application>pg_dump</application> 不同。
      </para>
     </listitem>
 
@@ -3141,16 +2747,15 @@ Branch: master Release: REL_19_BR [d2cea6306] 2026-06-17 09:18:39 -0500
 Branch: REL_18_STABLE [7e085aabd] 2026-06-17 09:18:39 -0500
 -->
      <para>
-      Fix <command>vacuumdb --missing-stats-only</command> to ignore
-      partitioned expression indexes (Baji Shaik)
+      修复 <command>vacuumdb --missing-stats-only</command> 使其忽略
+      分区表达式索引（Baji Shaik）
       <ulink url="&commit_baseurl;7e085aabd">&sect;</ulink>
      </para>
 
      <para>
-      Previously, <application>vacuumdb</application> would always attempt
-      to <command>ANALYZE</command> the partitioned table, accomplishing
-      nothing since statistics are never created for partitioned indexes,
-      only for their leaf indexes.
+      此前，<application>vacuumdb</application> 总是会尝试对分区表执行
+      <command>ANALYZE</command>，但由于从不为分区索引创建统计信息，
+      只为其叶子索引创建，因此这样做毫无效果。
      </para>
     </listitem>
 
@@ -3161,9 +2766,9 @@ Branch: master Release: REL_19_BR [389bd4c5b] 2026-06-12 09:37:37 +0900
 Branch: REL_18_STABLE [12c32bbc8] 2026-06-12 09:39:19 +0900
 -->
      <para>
-      In <filename>contrib/amcheck</filename>, fix failure to report
-      corruption of a btree metapage's <literal>allequalimage</literal>
-      flag (Chao Li)
+      在 <filename>contrib/amcheck</filename> 中，修复无法报告
+      btree 元页的 <literal>allequalimage</literal>
+      标志损坏的问题（Chao Li）
       <ulink url="&commit_baseurl;12c32bbc8">&sect;</ulink>
      </para>
     </listitem>
@@ -3176,8 +2781,7 @@ Branch: REL_19_STABLE [80cfd8aef] 2026-07-06 09:32:28 +0900
 Branch: REL_18_STABLE [1f8ab91c1] 2026-07-06 09:32:30 +0900
 -->
      <para>
-      In <filename>contrib/amcheck</filename>, fix query-lifespan memory
-      leak while verifying a GIN index (Kirill Reshke)
+      在 <filename>contrib/amcheck</filename> 中，修复验证 GIN 索引时查询生命周期内的内存泄漏 (Kirill Reshke)
       <ulink url="&commit_baseurl;1f8ab91c1">&sect;</ulink>
      </para>
     </listitem>
@@ -3193,14 +2797,12 @@ Branch: REL_15_STABLE [4284476c0] 2026-06-14 04:08:00 +0300
 Branch: REL_14_STABLE [af09b18cb] 2026-06-14 04:06:43 +0300
 -->
      <para>
-      In <filename>contrib/amcheck</filename>, handle short-header varlena
-      datums correctly (Andrey Borodin)
+      在 <filename>contrib/amcheck</filename> 中，正确处理短头部 varlena 数据项 (Andrey Borodin)
       <ulink url="&commit_baseurl;897e79486">&sect;</ulink>
      </para>
 
      <para>
-      This error could result in doing excess work while verifying a btree
-      index, but seems not to have had any worse consequences.
+      此错误可能导致在验证 btree 索引时做多余的工作，但似乎没有造成更严重的后果。
      </para>
     </listitem>
 
@@ -3216,19 +2818,12 @@ Branch: REL_15_STABLE [98dd4406f] 2026-07-01 13:27:22 -0400
 Branch: REL_14_STABLE [255bce448] 2026-07-01 13:27:22 -0400
 -->
      <para>
-      In <filename>contrib/btree_gist</filename>,
-      fix <literal>NaN</literal> handling in the <type>float4</type>
-      and <type>float8</type> opclasses (Bill Kim, Tom Lane)
+      在 <filename>contrib/btree_gist</filename> 中，修复 <type>float4</type> 和 <type>float8</type> 运算符类中对 <literal>NaN</literal> 的处理 (Bill Kim, Tom Lane)
       <ulink url="&commit_baseurl;1e1d07792">&sect;</ulink>
      </para>
 
      <para>
-      Comparisons, as well as the GiST penalty and distance functions, did
-      not account for <literal>NaN</literal> and would give the wrong
-      answer when handed one.  It is recommended to
-      reindex <filename>btree_gist</filename> indexes on float columns
-      after installing this update, if there is any possibility that there
-      are <literal>NaN</literal> entries in those columns.
+      比较操作以及 GiST 惩罚函数和距离函数没有考虑 <literal>NaN</literal>，当遇到这种值时会给出错误的答案。建议在安装此更新后，如果这些列中可能存在 <literal>NaN</literal> 条目，则对 float 列上的 <filename>btree_gist</filename> 索引执行 reindex。
      </para>
     </listitem>
 
@@ -3240,19 +2835,12 @@ Branch: REL_19_STABLE [11cb9c431] 2026-07-03 13:11:14 -0400
 Branch: REL_18_STABLE [558c4ea9a] 2026-07-03 13:11:14 -0400
 -->
      <para>
-      In <filename>contrib/btree_gist</filename>, fix sorting
-      of <type>bit</type>/<type>varbit</type> entries during GiST index
-      construction (Tom Lane)
+      在 <filename>contrib/btree_gist</filename> 中，修复构建 GiST 索引期间对 <type>bit</type>/<type>varbit</type> 条目的排序 (Tom Lane)
       <ulink url="&commit_baseurl;558c4ea9a">&sect;</ulink>
      </para>
 
      <para>
-      Values of bit types were sorted as though they
-      were <type>bytea</type>s, which did not cause any obvious failure
-      but would result in an inefficient index, since the types'
-      representations are different.  It is recommended to
-      reindex <filename>btree_gist</filename> indexes on bit columns
-      after installing this update.
+      位类型的值被当作 <type>bytea</type> 来排序，这不会造成任何明显的失败，但由于这两种类型的表示形式不同，会导致索引效率低下。建议在安装此更新后对位列上的 <filename>btree_gist</filename> 索引执行 reindex。
      </para>
     </listitem>
 
@@ -3268,15 +2856,12 @@ Branch: REL_15_STABLE [8f2a1b3d3] 2026-07-03 13:50:14 -0400
 Branch: REL_14_STABLE [286f9a3ce] 2026-07-03 13:50:14 -0400
 -->
      <para>
-      In <filename>contrib/btree_gist</filename>, fix searches using a
-      not-equal operator (Ayush Tiwari)
+      在 <filename>contrib/btree_gist</filename> 中，修复使用不等于运算符的搜索（Ayush Tiwari）
       <ulink url="&commit_baseurl;12c519207">&sect;</ulink>
      </para>
 
      <para>
-      For variable-length data types, the code for scanning non-leaf index
-      pages applied the wrong comparison function, leading to wrong
-      results and potentially crashes.
+      对于变长数据类型，扫描非叶索引页的代码应用了错误的比较函数，导致结果错误并可能崩溃。
      </para>
     </listitem>
 
@@ -3289,17 +2874,14 @@ Branch: master Release: REL_19_BR [5f5165e2f] 2026-05-26 00:51:18 +0900
 Branch: REL_18_STABLE [130396e6c] 2026-05-26 00:52:38 +0900
 -->
      <para>
-      In <filename>contrib/dblink</filename>
-      and <filename>contrib/postgres_fdw</filename>, ensure that a user-mapping
-      setting for <varname>use_scram_passthrough</varname> overrides one
-      for a foreign server (Matheus Alcantara)
+      在 <filename>contrib/dblink</filename>
+      和 <filename>contrib/postgres_fdw</filename> 中，确保针对 <varname>use_scram_passthrough</varname> 的用户映射设置覆盖针对外部服务器的设置（Matheus Alcantara）
       <ulink url="&commit_baseurl;88d7748d2">&sect;</ulink>
       <ulink url="&commit_baseurl;130396e6c">&sect;</ulink>
      </para>
 
      <para>
-      Previously the precedence went the other way, but that is
-      inconsistent with the behavior of other foreign-table options.
+      以前优先级的顺序正好相反，但这与其他外部表选项的行为不一致。
      </para>
     </listitem>
 
@@ -3310,16 +2892,13 @@ Branch: master Release: REL_19_BR [e2b881340] 2026-05-26 01:07:24 +0900
 Branch: REL_18_STABLE [cd777e27e] 2026-05-26 01:08:47 +0900
 -->
      <para>
-      Reject setting <varname>use_scram_passthrough</varname>
-      on <filename>contrib/dblink</filename> foreign-data wrappers
-      (Matheus Alcantara)
+      拒绝在 <filename>contrib/dblink</filename> 外部数据包装器上设置 <varname>use_scram_passthrough</varname>
+      （Matheus Alcantara）
       <ulink url="&commit_baseurl;cd777e27e">&sect;</ulink>
      </para>
 
      <para>
-      This option is only meaningful on foreign servers and user
-      mappings, but dblink incorrectly allowed it at the FDW level as
-      well (and then ignored it).
+      这个选项只对外部服务器和用户映射有意义，但 dblink 错误地允许在 FDW 层级也使用它（随后又忽略了它）。
      </para>
     </listitem>
 
@@ -3340,20 +2919,14 @@ Branch: REL_15_STABLE [4fbbabb0a] 2026-06-18 12:22:55 -0400
 Branch: REL_14_STABLE [1f6b2295f] 2026-06-18 12:22:55 -0400
 -->
      <para>
-      Fix unguarded recursion and loops in
-      <filename>contrib/hstore_plperl</filename>,
-      <filename>contrib/jsonb_plperl</filename>, and
-      <filename>contrib/jsonb_plpython</filename>
-      (Aleksander Alekseev)
+      修复 <filename>contrib/hstore_plperl</filename>、<filename>contrib/jsonb_plperl</filename> 和 <filename>contrib/jsonb_plpython</filename> 中未加防护的递归和循环
+      （Aleksander Alekseev）
       <ulink url="&commit_baseurl;e3b7a43fa">&sect;</ulink>
       <ulink url="&commit_baseurl;d65cf6f80">&sect;</ulink>
      </para>
 
      <para>
-      Prevent stack overflow when dealing with deeply
-      nested <type>jsonb</type> values, and allow interruption of the infinite
-      loop caused when attempting to dereference circular chains of Perl
-      object references.
+      防止在处理深度嵌套的 <type>jsonb</type> 值时发生栈溢出，并允许中断在尝试解引用 Perl 对象引用的循环链时导致的无限循环。
      </para>
     </listitem>
 
@@ -3368,14 +2941,14 @@ Branch: REL_15_STABLE [702a6d5f6] 2026-05-25 18:15:49 -0400
 Branch: REL_14_STABLE [a96b051a9] 2026-05-25 18:15:49 -0400
 -->
      <para>
-      Fix missed release of statistics catcache entry
-      in <filename>contrib/intarray</filename> (Man Zeng)
+      修复 <filename>contrib/intarray</filename> 中遗漏释放统计信息 catcache 条目
+      （Man Zeng）
       <ulink url="&commit_baseurl;e7544c518">&sect;</ulink>
      </para>
 
      <para>
-      This oversight led to warnings like <quote>resource was not closed:
-      cache pg_statistic</quote>.
+      这一疏忽导致了诸如 <quote>resource was not closed:
+      cache pg_statistic</quote> 之类的警告。
      </para>
     </listitem>
 
@@ -3390,16 +2963,13 @@ Branch: REL_15_STABLE [1bec6b1c1] 2026-06-16 09:31:20 +0300
 Branch: REL_14_STABLE [f528a5606] 2026-06-16 09:31:23 +0300
 -->
      <para>
-      In <filename>contrib/ltree</filename>, fix integer overflow in
-      comparisons (Ayush Tiwari)
+      在 <filename>contrib/ltree</filename> 中，修复比较运算中的整数溢出
+      （Ayush Tiwari）
       <ulink url="&commit_baseurl;c3e36a9a5">&sect;</ulink>
      </para>
 
      <para>
-      <type>ltree</type> values containing more than about 14,653 labels
-      resulted in wrong comparison answers due to overflow.  If a btree
-      index contains such values, it is probably corrupt and should be
-      reindexed after installing this update.
+      包含超过约 14,653 个标签的 <type>ltree</type> 值会因溢出而导致比较结果错误。如果 btree 索引包含此类值，则该索引很可能已损坏，应在安装此更新后重新索引。
      </para>
     </listitem>
 
@@ -3411,9 +2981,8 @@ Branch: REL_18_STABLE [020426268] 2026-06-22 12:59:16 -0400
 Branch: REL_17_STABLE [2aa6be6e6] 2026-06-22 12:59:16 -0400
 -->
      <para>
-      In <filename>contrib/pgcrypto</filename>, avoid double-free crash
-      after encountering an error while using an OSSLCipher object
-      (Yuelin Wang)
+      在 <filename>contrib/pgcrypto</filename> 中，避免在使用 OSSLCipher 对象时遇到错误后发生双重释放崩溃
+      （Yuelin Wang）
       <ulink url="&commit_baseurl;020426268">&sect;</ulink>
      </para>
     </listitem>
@@ -3425,15 +2994,13 @@ Branch: master Release: REL_19_BR [dac36601f] 2026-06-26 19:47:36 +0200
 Branch: REL_18_STABLE [3bf2cb225] 2026-06-26 19:48:20 +0200
 -->
      <para>
-      Fix out-of-bounds access
-      in <filename>contrib/pg_prewarm</filename>'s autoprewarm worker
-      (Matheus Alcantara)
+      修复 <filename>contrib/pg_prewarm</filename> 的 autoprewarm 工作进程中越界访问的问题
+      （Matheus Alcantara）
       <ulink url="&commit_baseurl;3bf2cb225">&sect;</ulink>
      </para>
 
      <para>
-      The code tried to fetch a value from one past the end of an array,
-      risking a segfault.
+      该代码试图从数组末尾之后的位置获取值，存在发生段错误的风险。
      </para>
     </listitem>
 
@@ -3448,16 +3015,15 @@ Branch: REL_15_STABLE [51f63ba2b] 2026-06-06 08:16:44 +0900
 Branch: REL_14_STABLE [1eda3eb07] 2026-06-06 08:16:46 +0900
 -->
      <para>
-      Fix array overrun in <filename>contrib/pg_surgery</filename>'s
-      <function>heap_force_kill</function> and
-      <function>heap_force_freeze</function> functions (Michael Paquier)
+      修复 <filename>contrib/pg_surgery</filename> 的
+      <function>heap_force_kill</function> 和
+      <function>heap_force_freeze</function> 函数中的数组越界问题（Michael Paquier）
       <ulink url="&commit_baseurl;2b09f8a91">&sect;</ulink>
      </para>
 
      <para>
-      Attempting to change a TID whose offset number equals
-      MaxHeapTuplesPerPage wrote one byte past the end of the allocated
-      array, potentially crashing the server.
+      尝试修改偏移编号等于
+      MaxHeapTuplesPerPage 的 TID 时，会写入超出所分配数组末尾一个字节的位置，可能导致服务器崩溃。
      </para>
     </listitem>
 
@@ -3473,8 +3039,7 @@ Branch: REL_15_STABLE [395700f48] 2026-08-04 11:44:11 +0200
 Branch: REL_14_STABLE [e9d53cf45] 2026-08-04 11:44:11 +0200
 -->
      <para>
-      In <filename>contrib/pg_surgery</filename>, avoid infinite loop with
-      TID arrays having more than 64K elements (Andrey Rachitskiy)
+      在 <filename>contrib/pg_surgery</filename> 中，避免在 TID 数组元素超过 64K 时出现无限循环（Andrey Rachitskiy）
       <ulink url="&commit_baseurl;19f0391df">&sect;</ulink>
      </para>
     </listitem>
@@ -3490,16 +3055,12 @@ Branch: REL_15_STABLE [77b2d18e9] 2026-05-14 13:11:49 -0500
 Branch: REL_14_STABLE [1de0a711d] 2026-05-14 13:11:49 -0500
 -->
      <para>
-      Avoid NULL-pointer dereference
-      in <filename>contrib/refint</filename>'s
-      <function>check_foreign_key()</function> (Ayush Tiwari)
+      避免在 <filename>contrib/refint</filename> 的 <function>check_foreign_key()</function> 中出现空指针解引用（Ayush Tiwari）
       <ulink url="&commit_baseurl;ed0c4d5af">&sect;</ulink>
      </para>
 
      <para>
-      In the on-update-cascade case, a null value of a referenced column
-      led to a crash.  This is an oversight in the fix for CVE-2026-6637,
-      but the code that was there before that wasn't really right either.
+      在 on-update-cascade 情况下，被引用列的 NULL 值会导致崩溃。这是 CVE-2026-6637 修复中的一处疏漏，但在此之前存在的代码其实也并不正确。
      </para>
     </listitem>
 
@@ -3514,19 +3075,12 @@ Branch: REL_15_STABLE [b3aa2083a] 2026-06-11 12:34:42 +0300
 Branch: REL_14_STABLE [58b91fc73] 2026-06-11 12:34:45 +0300
 -->
      <para>
-      Fix <filename>contrib/seg</filename> to print segments
-      with <literal>~</literal> certainty indicators correctly
-      (Ewan Young)
+      修复 <filename>contrib/seg</filename>，使其正确打印带有 <literal>~</literal> 确定性指示符的段（Ewan Young）
       <ulink url="&commit_baseurl;0004cab4d">&sect;</ulink>
      </para>
 
      <para>
-      Due to a typo, <function>seg_out()</function> did not print
-      a <literal>~</literal> certainty indicator attached to a segment's
-      upper boundary.  Worse, if the lower boundary
-      had <literal>~</literal> while the upper boundary had no indicator,
-      the upper boundary was not printed at all, incorrectly converting
-      the value into an open interval.
+      由于一处笔误，<function>seg_out()</function> 没有打印附加在段上边界的 <literal>~</literal> 确定性指示符。更糟的是，如果下边界带有 <literal>~</literal> 而上边界没有指示符，则上边界根本不会被打印，从而错误地将该值转换为开区间。
      </para>
     </listitem>
 
@@ -3541,9 +3095,7 @@ Branch: REL_15_STABLE [bc5775149] 2026-06-11 14:29:28 +0900
 Branch: REL_14_STABLE [f3f901a53] 2026-06-11 14:29:29 +0900
 -->
      <para>
-      Fix crash with namespace nodes in <filename>contrib/xml2</filename>'s
-      <function>xpath_nodeset()</function> function (Andrey Chernyy,
-      Michael Paquier)
+      修复 <filename>contrib/xml2</filename> 的 <function>xpath_nodeset()</function> 函数中命名空间节点导致的崩溃（Andrey Chernyy、Michael Paquier）
       <ulink url="&commit_baseurl;91b57eade">&sect;</ulink>
      </para>
     </listitem>
@@ -3559,8 +3111,7 @@ Branch: REL_15_STABLE [c7f70fa1b] 2026-06-12 13:57:22 +0200
 Branch: REL_14_STABLE [086652c02] 2026-06-12 13:57:22 +0200
 -->
      <para>
-      Support building <productname>PostgreSQL</productname> with
-      OpenSSL 4 (Daniel Gustafsson)
+      支持使用 OpenSSL 4 构建 <productname>PostgreSQL</productname>（Daniel Gustafsson）
       <ulink url="&commit_baseurl;27cf3b5af">&sect;</ulink>
      </para>
     </listitem>
@@ -3577,22 +3128,16 @@ Branch: REL_15_STABLE [af7be5672] 2026-08-02 11:26:30 -0400
 Branch: REL_14_STABLE [812cc1a73] 2026-08-02 11:26:30 -0400
 -->
      <para>
-      Update time zone data files to <application>tzdata</application>
-      release 2026c (Tom Lane)
+      将时区数据文件更新到 <application>tzdata</application> 2026c 版本（Tom Lane）
       <ulink url="&commit_baseurl;5f67124fa">&sect;</ulink>
      </para>
 
      <para>
-      Alberta (America/Edmonton) will be on year-round UTC-06
-      (effectively, permanent DST) beginning in November 2026.  This
-      release assumes that their TZ abbreviation will
-      be <literal>CST</literal> from that time forward.  That seems likely
-      to change, but it's unclear what new abbreviation will be used.
+      艾伯塔省（America/Edmonton）将从 2026 年 11 月起全年采用 UTC-06（实际上即永久夏令时）。本版本假定从那时起其 TZ 缩写为 <literal>CST</literal>。这一点很可能会改变，但目前尚不清楚将采用什么新缩写。
      </para>
 
      <para>
-      Morocco (Africa/Casablanca) will move to permanent UTC+00,
-      without daylight saving time transitions, on 2026-09-20.
+      摩洛哥（Africa/Casablanca）将于 2026-09-20 转为永久 UTC+00，不再进行夏令时转换。
      </para>
     </listitem>
 
