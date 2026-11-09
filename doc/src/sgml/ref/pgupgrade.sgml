@@ -428,14 +428,12 @@ NET STOP postgresql-&majorversion;
     <title>为备用服务器升级做准备</title>
 
     <para>
-     If you are upgrading standby servers using methods outlined in section <xref
-     linkend="pgupgrade-step-replicas"/>, verify that the old standby
-     servers are caught up by running <application>pg_controldata</application>
-     against the old primary and standby clusters.  Verify that the
-     <quote>Latest checkpoint location</quote> values match in all clusters.
-     Also, make sure <varname>wal_level</varname> is not set to
-     <literal>minimal</literal> in the <filename>postgresql.conf</filename> file on the
-     new primary cluster.
+     如果按照 <xref
+     linkend="pgupgrade-step-replicas"/> 中概述的方法升级后备服务器，请通过在旧的主服务器和后备集簇上运行
+     <application>pg_controldata</application> 来验证旧后备服务器已追平。
+     验证所有集簇中的 <quote>Latest checkpoint location</quote> 值是否一致。
+     此外，确保新主集簇上的 <filename>postgresql.conf</filename> 文件中没有将
+     <varname>wal_level</varname> 设置为 <literal>minimal</literal>。
     </para>
    </step>
 
@@ -858,22 +856,13 @@ psql --username=postgres --file=script.sql postgres
   </para>
 
   <para>
-   If you want to use link mode and you do not want your old cluster
-   to be modified when the new cluster is started, consider using the clone mode.
-   If that is not available, make a copy of the
-   old cluster and upgrade that in link mode. To make a valid copy
-   of the old cluster, use <command>rsync</command> to create a dirty
-   copy of the old cluster while the server is running, then shut down
-   the old server and run <command>rsync --checksum</command> again to update the
-   copy with any changes to make it consistent.  (<option>--checksum</option>
-   is necessary because <command>rsync</command> only has file modification-time
-   granularity of one second.)  You might want to exclude some
-   files, e.g., <filename>postmaster.pid</filename>, as documented in <xref
-   linkend="backup-lowlevel-base-backup"/>.  If your file system supports
-   file system snapshots or copy-on-write file copies, you can use that
-   to make a backup of the old cluster and tablespaces, though the snapshot
-   and copies must be created simultaneously or while the database server
-   is down.
+   如果你想使用链接模式，又不希望旧集簇在新集簇启动时被修改，可以考虑使用克隆模式。
+   如果该模式不可用，可复制旧集簇并以链接模式升级该副本。要创建旧集簇的有效副本，可在服务器运行时使用
+   <command>rsync</command> 创建旧集簇的脏副本，然后关闭旧服务器并再次运行
+   <command>rsync --checksum</command>，用期间的变更更新副本，使其保持一致。之所以需要
+   <option>--checksum</option>，是因为 <command>rsync</command> 的文件修改时间粒度只有一秒。你可能希望排除某些文件，例如
+   <filename>postmaster.pid</filename>，相关说明见
+   <xref linkend="backup-lowlevel-base-backup"/>。如果文件系统支持文件系统快照或写时复制文件副本，也可以用它们备份旧集簇和表空间；但快照和副本必须同时创建，或在数据库服务器停机时创建。
   </para>
 
  </refsect1>
