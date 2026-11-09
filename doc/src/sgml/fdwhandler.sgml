@@ -23,40 +23,22 @@
    </note>
 
    <sect1 id="fdw-functions">
-    <title>Foreign Data Wrapper Functions</title>
+    <title>外部数据包装器函数</title>
 
     <para>
-     The FDW author needs to implement a handler function, and optionally
-     a validator function. Both functions must be written in a compiled
-     language such as C, using the version-1 interface.
-     For details on C language calling conventions and dynamic loading,
-     see <xref linkend="xfunc-c"/>.
+     FDW 作者需要实现一个处理函数，以及可选的验证函数。这两个函数都必须用编译型语言（例如 C）编写，并使用版本 1 接口。
+     关于 C 语言调用约定和动态加载的详细信息，请参见 <xref linkend="xfunc-c"/>。
     </para>
 
     <para>
-     The handler function simply returns a struct of function pointers to
-     callback functions that will be called by the planner, executor, and
-     various maintenance commands.
-     Most of the effort in writing an FDW is in implementing these callback
-     functions.
-     The handler function must be registered with
-     <productname>PostgreSQL</productname> as taking no arguments and
-     returning the special pseudo-type <type>fdw_handler</type>.  The
-     callback functions are plain C functions and are not visible or
-     callable at the SQL level.  The callback functions are described in
-     <xref linkend="fdw-callbacks"/>.
+     处理函数只是返回一个函数指针结构体，其中的指针指向将由查询规划器、执行器以及各种维护命令调用的回调函数。
+     编写 FDW 的大部分工作都在于实现这些回调函数。
+     处理函数必须注册到 <productname>PostgreSQL</productname> 中，且不接受参数并返回特殊的伪类型 <type>fdw_handler</type>。回调函数是普通的 C 函数，在 SQL 层面不可见也不可调用。回调函数在 <xref linkend="fdw-callbacks"/> 中描述。
     </para>
 
     <para>
-     The validator function is responsible for validating options given in
-     <command>CREATE</command> and <command>ALTER</command> commands for its
-     foreign data wrapper, as well as foreign servers, user mappings, and
-     foreign tables using the wrapper.
-     The validator function must be registered as taking two arguments, a
-     text array containing the options to be validated, and an OID
-     representing the type of object the options are associated with. The
-     latter corresponds to the OID of the system catalog the object
-     would be stored in, one of:
+     验证函数负责验证在其外部数据包装器以及使用该包装器的外部服务器、用户映射和外部表的 <command>CREATE</command> 和 <command>ALTER</command> 命令中给出的选项。
+     验证函数必须注册为接受两个参数：一个包含待验证选项的 text 数组，以及一个表示这些选项所关联对象类型的 OID。后者对应于该对象将存储在其中的系统目录的 OID，为以下之一：
      <itemizedlist spacing="compact">
       <listitem><para><literal>AttributeRelationId</literal></para></listitem>
       <listitem><para><literal>ForeignDataWrapperRelationId</literal></para></listitem>
@@ -64,8 +46,7 @@
       <listitem><para><literal>ForeignTableRelationId</literal></para></listitem>
       <listitem><para><literal>UserMappingRelationId</literal></para></listitem>
      </itemizedlist>
-     If no validator function is supplied, options are not checked at object
-     creation time or object alteration time.
+     如果未提供验证函数，则在创建对象或修改对象时不会检查选项。
     </para>
 
    </sect1>
