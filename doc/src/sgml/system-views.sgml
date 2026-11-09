@@ -701,24 +701,22 @@
   </indexterm>
 
   <para>
-   The view <structname>pg_backend_memory_contexts</structname> displays all
-   the memory contexts of the server process attached to the current session.
+   视图 <structname>pg_backend_memory_contexts</structname> 显示附加到当前会话的服务器进程的所有内存上下文。
   </para>
   <para>
-   <structname>pg_backend_memory_contexts</structname> contains one row
-   for each memory context.
+   <structname>pg_backend_memory_contexts</structname> 为每个内存上下文包含一行。
   </para>
 
   <table>
-   <title><structname>pg_backend_memory_contexts</structname> Columns</title>
+   <title><structname>pg_backend_memory_contexts</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -729,7 +727,7 @@
        <structfield>name</structfield> <type>text</type>
       </para>
       <para>
-       Name of the memory context
+       内存上下文的名称
       </para></entry>
      </row>
 
@@ -738,7 +736,7 @@
        <structfield>ident</structfield> <type>text</type>
       </para>
       <para>
-       Identification information of the memory context. This field is truncated at 1024 bytes
+       内存上下文的标识信息。此字段截断至 1024 字节
       </para></entry>
      </row>
 
@@ -747,7 +745,7 @@
        <structfield>type</structfield> <type>text</type>
       </para>
       <para>
-       Type of the memory context
+       内存上下文的类型
       </para></entry>
      </row>
 
@@ -756,9 +754,7 @@
        <structfield>level</structfield> <type>int4</type>
       </para>
       <para>
-       The 1-based level of the context in the memory context hierarchy. The
-       level of a context also shows the position of that context in the
-       <structfield>path</structfield> column.
+       该上下文在内存上下文层次结构中的层级（从 1 开始）。上下文的层级还显示了该上下文在 <structfield>path</structfield> 列中的位置。
       </para></entry>
      </row>
 
@@ -767,11 +763,7 @@
        <structfield>path</structfield> <type>int4[]</type>
       </para>
       <para>
-       Array of transient numerical identifiers to describe the memory
-       context hierarchy. The first element is for
-       <literal>TopMemoryContext</literal>, subsequent elements contain
-       intermediate parents and the final element contains the identifier for
-       the current context.
+       用于描述内存上下文层次结构的临时数字标识符数组。第一个元素对应 <literal>TopMemoryContext</literal>，后续元素包含中间父级，最后一个元素包含当前上下文的标识符。
       </para></entry>
      </row>
 
@@ -780,7 +772,7 @@
        <structfield>total_bytes</structfield> <type>int8</type>
       </para>
       <para>
-       Total bytes allocated for this memory context
+       为此内存上下文分配的总字节数
       </para></entry>
      </row>
 
@@ -789,7 +781,7 @@
        <structfield>total_nblocks</structfield> <type>int8</type>
       </para>
       <para>
-       Total number of blocks allocated for this memory context
+       为此内存上下文分配的总块数
       </para></entry>
      </row>
 
@@ -798,7 +790,7 @@
        <structfield>free_bytes</structfield> <type>int8</type>
       </para>
       <para>
-       Free space in bytes
+       空闲空间（字节）
       </para></entry>
      </row>
 
@@ -807,7 +799,7 @@
        <structfield>free_chunks</structfield> <type>int8</type>
       </para>
       <para>
-       Total number of free chunks
+       空闲块总数
       </para></entry>
      </row>
 
@@ -816,7 +808,7 @@
        <structfield>used_bytes</structfield> <type>int8</type>
       </para>
       <para>
-       Used space in bytes
+       已用空间（字节）
       </para></entry>
      </row>
     </tbody>
@@ -824,18 +816,11 @@
   </table>
 
   <para>
-   By default, the <structname>pg_backend_memory_contexts</structname> view can be
-   read only by superusers or roles with the privileges of the
-   <literal>pg_read_all_stats</literal> role.
+   默认情况下，只有超级用户或具有 <literal>pg_read_all_stats</literal> 角色权限的角色才能读取 <structname>pg_backend_memory_contexts</structname> 视图。
   </para>
 
   <para>
-   Since memory contexts are created and destroyed during the running of a
-   query, the identifiers stored in the <structfield>path</structfield> column
-   can be unstable between multiple invocations of the view in the same query.
-   The example below demonstrates an effective usage of this column and
-   calculates the total number of bytes used by
-   <literal>CacheMemoryContext</literal> and all of its children:
+   由于内存上下文是在查询运行期间创建和销毁的，因此 <structfield>path</structfield> 列中存储的标识符在同一查询中多次调用该视图之间可能不稳定。下面的示例演示了该列的有效用法，并计算 <literal>CacheMemoryContext</literal> 及其所有子上下文所使用的总字节数：
 
 <programlisting>
 WITH memory_contexts AS (
@@ -847,9 +832,7 @@ WHERE c2.name = 'CacheMemoryContext'
 AND c1.path[c2.level] = c2.path[c2.level];
 </programlisting>
 
-   The <link linkend="queries-with">Common Table Expression</link> is used
-   to ensure the context IDs in the <structfield>path</structfield> column
-   match between both evaluations of the view.
+   这里使用<link linkend="queries-with">公共表表达式</link>来确保 <structfield>path</structfield> 列中的上下文 ID 在该视图的两次求值之间保持一致。
   </para>
  </sect1>
 
