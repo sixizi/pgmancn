@@ -2021,7 +2021,7 @@ Portal SPI_cursor_open(const char * <parameter>name</parameter>, SPIPlanPtr <par
 
  <refnamediv>
   <refname>SPI_cursor_open_with_args</refname>
-  <refpurpose>set up a cursor using a query and parameters</refpurpose>
+  <refpurpose>使用查询和参数设置一个游标</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -2035,47 +2035,35 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <function>SPI_cursor_open_with_args</function> sets up a cursor
-   (internally, a portal) that will execute the specified query.
-   Most of the parameters have the same meanings as the corresponding
-   parameters to <function>SPI_prepare_cursor</function>
-   and <function>SPI_cursor_open</function>.
+   <function>SPI_cursor_open_with_args</function> 设置一个游标（内部是一个 portal），该游标将执行指定的查询。大多数参数的含义与 <function>SPI_prepare_cursor</function> 和 <function>SPI_cursor_open</function> 的对应参数相同。
   </para>
 
   <para>
-   For one-time query execution, this function should be preferred
-   over <function>SPI_prepare_cursor</function> followed by
-   <function>SPI_cursor_open</function>.
-   If the same command is to be executed with many different parameters,
-   either method might be faster, depending on the cost of re-planning
-   versus the benefit of custom plans.
+   对于一次性查询执行，应优先使用此函数，而不是先调用 <function>SPI_prepare_cursor</function> 再调用 <function>SPI_cursor_open</function>。如果要用许多不同的参数执行同一条命令，两种方法都可能更快，这取决于重新规划的成本与定制计划带来的收益之间的权衡。
   </para>
 
   <para>
-   The passed-in parameter data will be copied into the cursor's portal, so it
-   can be freed while the cursor still exists.
+   传入的参数数据将被复制到游标的 portal 中，因此可以在游标仍然存在时将其释放。
   </para>
 
   <para>
-   This function is now deprecated in favor
-   of <function>SPI_cursor_parse_open</function>, which provides equivalent
-   functionality using a more modern API for handling query parameters.
+   此函数现已废弃，建议改用 <function>SPI_cursor_parse_open</function>，它使用更现代的查询参数处理 API 提供等效功能。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Arguments</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><literal>const char * <parameter>name</parameter></literal></term>
     <listitem>
      <para>
-      name for portal, or <symbol>NULL</symbol> to let the system
-      select a name
+      门户的名称，或者 <symbol>NULL</symbol> 表示让系统
+      选择一个名称
      </para>
     </listitem>
    </varlistentry>
@@ -2084,7 +2072,7 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>const char * <parameter>command</parameter></literal></term>
     <listitem>
      <para>
-      command string
+      命令字符串
      </para>
     </listitem>
    </varlistentry>
@@ -2093,7 +2081,7 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>int <parameter>nargs</parameter></literal></term>
     <listitem>
      <para>
-      number of input parameters (<literal>$1</literal>, <literal>$2</literal>, etc.)
+      输入参数的数量（<literal>$1</literal>、<literal>$2</literal> 等）
      </para>
     </listitem>
    </varlistentry>
@@ -2102,8 +2090,8 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>Oid * <parameter>argtypes</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, containing the
-      <acronym>OID</acronym>s of the data types of the parameters
+      一个长度为 <parameter>nargs</parameter> 的数组，其中包含
+      各参数数据类型的 <acronym>OID</acronym>
      </para>
     </listitem>
    </varlistentry>
@@ -2112,8 +2100,8 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>Datum * <parameter>values</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, containing the actual
-      parameter values
+      一个长度为 <parameter>nargs</parameter> 的数组，其中包含实际的
+      参数值
      </para>
     </listitem>
    </varlistentry>
@@ -2122,20 +2110,11 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>const char * <parameter>nulls</parameter></literal></term>
     <listitem>
      <para>
-      an array of length <parameter>nargs</parameter>, describing which
-      parameters are null
+      长度为 <parameter>nargs</parameter> 的数组，描述哪些参数为空
      </para>
 
      <para>
-      If <parameter>nulls</parameter> is <symbol>NULL</symbol> then
-      <function>SPI_cursor_open_with_args</function> assumes that no parameters
-      are null.  Otherwise, each entry of the <parameter>nulls</parameter>
-      array should be <literal>'&nbsp;'</literal> if the corresponding parameter
-      value is non-null, or <literal>'n'</literal> if the corresponding parameter
-      value is null.  (In the latter case, the actual value in the
-      corresponding <parameter>values</parameter> entry doesn't matter.)  Note
-      that <parameter>nulls</parameter> is not a text string, just an array:
-      it does not need a <literal>'\0'</literal> terminator.
+      如果 <parameter>nulls</parameter> 为 <symbol>NULL</symbol>，则 <function>SPI_cursor_open_with_args</function> 假定没有参数为空。否则，<parameter>nulls</parameter> 数组的每个条目在对应参数值非空时应为 <literal>'&nbsp;'</literal>，在对应参数值为空时应为 <literal>'n'</literal>。（在后一种情况下，对应 <parameter>values</parameter> 条目中的实际值无关紧要。）注意 <parameter>nulls</parameter> 不是文本字符串，只是一个数组：它不需要 <literal>'\0'</literal> 终止符。
      </para>
     </listitem>
    </varlistentry>
@@ -2143,7 +2122,7 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
    <varlistentry>
     <term><literal>bool <parameter>read_only</parameter></literal></term>
     <listitem>
-     <para><literal>true</literal> for read-only execution</para>
+     <para><literal>true</literal> 用于只读执行</para>
     </listitem>
    </varlistentry>
 
@@ -2151,7 +2130,7 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
     <term><literal>int <parameter>cursorOptions</parameter></literal></term>
     <listitem>
      <para>
-      integer bit mask of cursor options; zero produces default behavior
+      游标选项的整数位掩码；零产生默认行为
      </para>
     </listitem>
    </varlistentry>
@@ -2159,11 +2138,10 @@ Portal SPI_cursor_open_with_args(const char *<parameter>name</parameter>,
  </refsect1>
 
  <refsect1>
-  <title>Return Value</title>
+  <title>返回值</title>
 
   <para>
-   Pointer to portal containing the cursor.  Note there is no error
-   return convention; any error will be reported via <function>elog</function>.
+   指向包含该游标的门户的指针。注意没有错误返回约定；任何错误都将通过 <function>elog</function> 报告。
   </para>
  </refsect1>
 </refentry>
