@@ -624,19 +624,7 @@ SELCT 1/0;<!-- this typo is intentional -->
    </para>
 
    <para>
-    At completion of each series of extended-query messages, the frontend
-    should issue a Sync message.  This parameterless message causes the
-    backend to close the current transaction if it's not inside a
-    <command>BEGIN</command>/<command>COMMIT</command> transaction block (<quote>close</quote>
-    meaning to commit if no error, or roll back if error).  Then a
-    ReadyForQuery response is issued.  The purpose of Sync is to provide
-    a resynchronization point for error recovery.  When an error is detected
-    while processing any extended-query message, the backend issues
-    ErrorResponse, then reads and discards messages until a Sync is reached,
-    then issues ReadyForQuery and returns to normal message processing.
-    (But note that no skipping occurs if an error is detected
-    <emphasis>while</emphasis> processing Sync &mdash; this ensures that there is one
-    and only one ReadyForQuery sent for each Sync.)
+    在每一系列扩展查询消息完成时，前端应发出一个 Sync 消息。这个无参数消息会使后端关闭当前事务，前提是它不在 <command>BEGIN</command>/<command>COMMIT</command> 事务块内（<quote>关闭</quote> 意味着如果没有错误则提交，如果有错误则回滚）。然后发出 ReadyForQuery 响应。Sync 的目的是为错误恢复提供一个重新同步点。当在处理任何扩展查询消息时检测到错误，后端会发出 ErrorResponse，然后读取并丢弃消息直到到达 Sync，接着发出 ReadyForQuery 并返回正常的消息处理。（但请注意，如果在处理 Sync &mdash; <emphasis>时</emphasis>检测到错误，则不会发生跳过——这确保每个 Sync 只发送一个且仅一个 ReadyForQuery。）
    </para>
 
    <note>
@@ -1880,17 +1868,14 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
      <term><literal>START_REPLICATION</literal> <literal>SLOT</literal> <replaceable class="parameter">slot_name</replaceable> <literal>LOGICAL</literal> <replaceable class="parameter">XXX/XXX</replaceable> [ ( <replaceable>option_name</replaceable> [ <replaceable>option_value</replaceable> ] [, ...] ) ]</term>
      <listitem>
       <para>
-       Instructs server to start streaming WAL for logical replication,
-       starting at either WAL location <replaceable
-       class="parameter">XXX/XXX</replaceable> or the slot's
-       <literal>confirmed_flush_lsn</literal> (see <xref
-       linkend="view-pg-replication-slots"/>), whichever is greater. This
-       behavior makes it easier for clients to avoid updating their local LSN
-       status when there is no data to process. However, starting at a
-       different LSN than requested might not catch certain kinds of client
-       errors; so the client may wish to check that
-       <literal>confirmed_flush_lsn</literal> matches its expectations before
-       issuing <literal>START_REPLICATION</literal>.
+       指示服务器开始为逻辑复制流式传输 WAL，起点为 WAL 位置
+       <replaceable class="parameter">XXX/XXX</replaceable> 或槽的
+       <literal>confirmed_flush_lsn</literal>（参见
+       <xref linkend="view-pg-replication-slots"/>）中较大的那个。
+       这种行为让客户端在没有数据要处理时更容易避免更新其本地 LSN 状态。
+       不过，从与请求不同的 LSN 开始可能无法捕获某些客户端错误；
+       因此，客户端可能希望在发出 <literal>START_REPLICATION</literal>
+       前检查 <literal>confirmed_flush_lsn</literal> 是否符合预期。
       </para>
 
       <para>
@@ -3020,25 +3005,16 @@ psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"
        <term>Byte<replaceable>n</replaceable></term>
        <listitem>
         <para>
-         The secret key of this backend. This field extends to the end of the
-         message, indicated by the length field.
+         此后端的密钥。此字段一直延伸到消息末尾，由长度字段指示。
         </para>
         <para>
-          The minimum and maximum key length are 4 and 256 bytes, respectively. The
-          <productname>PostgreSQL</productname> server only sends keys up to
-          32 bytes, but the larger maximum size allows for future server
-          versions, as well as connection poolers and other middleware, to use
-          longer keys. One possible use case is augmenting the server's key
-          with extra information. Middleware is therefore also encouraged to
-          not use up all of the bytes, in case multiple middleware
-          applications are layered on top of each other, each of which may
-          wrap the key with extra data.
+          密钥的最小和最大长度分别为 4 字节和 256 字节。<productname>PostgreSQL</productname> 服务器最多只发送 32 字节的密钥，但更大的最大长度允许未来的服务器版本以及连接池和其他中间件使用更长的密钥。一种可能的用例是用额外信息扩充服务器的密钥。因此也鼓励中间件不要用尽所有字节，以防多个中间件应用层层叠加，其中每个都可能用额外数据包装密钥。
         </para>
        </listitem>
       </varlistentry>
      </variablelist>
      <para>
-      Before protocol version 3.2, the secret key was always 4 bytes long.
+      在协议版本 3.2 之前，密钥始终为 4 字节长。
      </para>
     </listitem>
    </varlistentry>
