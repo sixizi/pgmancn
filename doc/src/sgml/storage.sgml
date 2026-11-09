@@ -237,8 +237,7 @@ with the suffix <literal>_init</literal> (see <xref linkend="storage-init"/>).
     <indexterm><primary>sliced bread</primary><see>TOAST</see></indexterm>
 
 <para>
-This section provides an overview of <acronym>TOAST</acronym> (The
-Oversized-Attribute Storage Technique).
+本节概述 <acronym>TOAST</acronym>（超大属性存储技术，The Oversized-Attribute Storage Technique）。
 </para>
 
 <para>
@@ -254,262 +253,97 @@ large data values in-memory.
 </para>
 
 <para>
-Only certain data types support <acronym>TOAST</acronym> &mdash; there is no need to
-impose the overhead on data types that cannot produce large field values.
-To support <acronym>TOAST</acronym>, a data type must have a variable-length
-(<firstterm>varlena</firstterm>) representation, in which, ordinarily, the first
-four-byte word of any stored value contains the total length of the value in
-bytes (including itself).  <acronym>TOAST</acronym> does not constrain the rest
-of the data type's representation.  The special representations collectively
-called <firstterm><acronym>TOAST</acronym>ed values</firstterm> work by modifying or
-reinterpreting this initial length word.  Therefore, the C-level functions
-supporting a <acronym>TOAST</acronym>-able data type must be careful about how they
-handle potentially <acronym>TOAST</acronym>ed input values: an input might not
-actually consist of a four-byte length word and contents until after it's
-been <firstterm>detoasted</firstterm>.  (This is normally done by invoking
-<function>PG_DETOAST_DATUM</function> before doing anything with an input value,
-but in some cases more efficient approaches are possible.
-See <xref linkend="xtypes-toast"/> for more detail.)
+只有某些数据类型支持 <acronym>TOAST</acronym> &mdash; 没有必要对无法产生大字段值的数据类型施加这种开销。要支持 <acronym>TOAST</acronym>，数据类型必须具有可变长度（<firstterm>varlena</firstterm>）表示，其中通常任何存储值的前四字节字包含该值的总长度（以字节为单位，包括其自身）。<acronym>TOAST</acronym> 不限制数据类型表示的其余部分。统称为<firstterm><acronym>TOAST</acronym>ed values</firstterm>的特殊表示通过修改或重新解释这个初始长度字来工作。因此，支持可 <acronym>TOAST</acronym> 的数据类型的 C 级函数必须小心处理可能已被 <acronym>TOAST</acronym> 的输入值：在它被<firstterm>detoasted</firstterm>之前，输入实际上可能并不包含四字节长度字和内容。（这通常通过在对输入值做任何处理之前调用 <function>PG_DETOAST_DATUM</function> 来完成，但在某些情况下可以采用更高效的方法。详见 <xref linkend="xtypes-toast"/>。）
 </para>
 
 <para>
-<acronym>TOAST</acronym> usurps two bits of the varlena length word (the high-order
-bits on big-endian machines, the low-order bits on little-endian machines),
-thereby limiting the logical size of any value of a <acronym>TOAST</acronym>-able
-data type to 1 GB (2<superscript>30</superscript> - 1 bytes).  When both bits are zero,
-the value is an ordinary un-<acronym>TOAST</acronym>ed value of the data type, and
-the remaining bits of the length word give the total datum size (including
-length word) in bytes.  When the highest-order or lowest-order bit is set,
-the value has only a single-byte header instead of the normal four-byte
-header, and the remaining bits of that byte give the total datum size
-(including length byte) in bytes.  This alternative supports space-efficient
-storage of values shorter than 127 bytes, while still allowing the data type
-to grow to 1 GB at need.  Values with single-byte headers aren't aligned on
-any particular boundary, whereas values with four-byte headers are aligned on
-at least a four-byte boundary; this omission of alignment padding provides
-additional space savings that is significant compared to short values.
-As a special case, if the remaining bits of a single-byte header are all
-zero (which would be impossible for a self-inclusive length), the value is
-a pointer to out-of-line data, with several possible alternatives as
-described below.  The type and size of such a <firstterm>TOAST pointer</firstterm>
-are determined by a code stored in the second byte of the datum.
-Lastly, when the highest-order or lowest-order bit is clear but the adjacent
-bit is set, the content of the datum has been compressed and must be
-decompressed before use.  In this case the remaining bits of the four-byte
-length word give the total size of the compressed datum, not the
-original data.  Note that compression is also possible for out-of-line data
-but the varlena header does not tell whether it has occurred &mdash;
-the content of the <acronym>TOAST</acronym> pointer tells that, instead.
+<acronym>TOAST</acronym> 占用了 varlena 长度字的两个位（在大端机器上是高位，在小端机器上是低位），从而将任何可 <acronym>TOAST</acronym> 的数据类型的值的逻辑大小限制为 1 GB（2<superscript>30</superscript> - 1 字节）。当这两个位都为零时，该值是数据类型的普通未 <acronym>TOAST</acronym> 值，长度字的其余位给出数据项的总大小（包括长度字），以字节为单位。当最高位或最低位被置位时，该值只有单字节头部，而不是通常的四字节头部，该字节的其余位给出数据项的总大小（包括长度字节），以字节为单位。这种替代形式支持对短于 127 字节的值进行节省空间的存储，同时在需要时仍允许数据类型增长到 1 GB。带有单字节头部的值不按任何特定边界对齐，而带有四字节头部的值至少按四字节边界对齐；省略对齐填充可提供额外的空间节省，与短值相比这非常显著。作为一种特殊情况，如果单字节头部的其余位全为零（对于包含自身的长度来说这是不可能的），则该值是指向行外数据的指针，有几种可能的替代形式，如下所述。这种 <firstterm>TOAST 指针</firstterm> 的类型和大小由存储在数据项第二个字节中的代码决定。最后，当最高位或最低位为清零但相邻位被置位时，数据项的内容已被压缩，使用前必须解压缩。在这种情况下，四字节长度字的其余位给出压缩数据项的总大小，而不是原始数据的大小。注意，行外数据也可能被压缩，但 varlena 头部并不说明是否发生了压缩 &mdash; 相反，<acronym>TOAST</acronym> 指针的内容会说明这一点。
 </para>
 
 <para>
-The compression technique used for either in-line or out-of-line compressed
-data can be selected for each column by setting
-the <literal>COMPRESSION</literal> column option in <command>CREATE
-TABLE</command> or <command>ALTER TABLE</command>.  The default for columns
-with no explicit setting is to consult the
-<xref linkend="guc-default-toast-compression"/> parameter at the time data is
-inserted.
+通过在建表语句 <command>CREATE
+TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSION</literal> 列选项，可以为每一列选择用于行内或行外压缩数据的压缩技术。对于没有显式设置的列，默认是在插入数据时参考 <xref linkend="guc-default-toast-compression"/> 参数。
 </para>
 
 <para>
-As mentioned, there are multiple types of <acronym>TOAST</acronym> pointer datums.
-The oldest and most common type is a pointer to out-of-line data stored in
-a <firstterm><acronym>TOAST</acronym> table</firstterm> that is separate from, but
-associated with, the table containing the <acronym>TOAST</acronym> pointer datum
-itself.  These <firstterm>on-disk</firstterm> pointer datums are created by the
-<acronym>TOAST</acronym> management code (in <filename>access/common/toast_internals.c</filename>)
-when a tuple to be stored on disk is too large to be stored as-is.
-Further details appear in <xref linkend="storage-toast-ondisk"/>.
-Alternatively, a <acronym>TOAST</acronym> pointer datum can contain a pointer to
-out-of-line data that appears elsewhere in memory.  Such datums are
-necessarily short-lived, and will never appear on-disk, but they are very
-useful for avoiding copying and redundant processing of large data values.
-Further details appear in <xref linkend="storage-toast-inmemory"/>.
+如前所述，<acronym>TOAST</acronym> 指针数据项有多种类型。最古老也最常见的类型是指向存储在 <firstterm><acronym>TOAST</acronym> 表</firstterm>中的行外数据的指针，该表与包含 <acronym>TOAST</acronym> 指针数据项本身的表相互独立但相互关联。这些<firstterm>磁盘上</firstterm>的指针数据项由 <acronym>TOAST</acronym> 管理代码（位于 <filename>access/common/toast_internals.c</filename> 中）创建，当要存储到磁盘上的元组太大而无法按原样存储时。更多细节见 <xref linkend="storage-toast-ondisk"/>。或者，<acronym>TOAST</acronym> 指针数据项可以包含指向内存中其他位置出现的行外数据的指针。此类数据项必然是短命的，永远不会出现在磁盘上，但它们对于避免大型数据值的复制和冗余处理非常有用。更多细节见 <xref linkend="storage-toast-inmemory"/>。
 </para>
 
 <sect2 id="storage-toast-ondisk">
- <title>Out-of-Line, On-Disk TOAST Storage</title>
+ <title>行外、磁盘上的 TOAST 存储</title>
 
 <para>
-If any of the columns of a table are <acronym>TOAST</acronym>-able, the table will
-have an associated <acronym>TOAST</acronym> table, whose OID is stored in the table's
-<structname>pg_class</structname>.<structfield>reltoastrelid</structfield> entry.  On-disk
-<acronym>TOAST</acronym>ed values are kept in the <acronym>TOAST</acronym> table, as
-described in more detail below.
+如果表的任何列可以 <acronym>TOAST</acronym>，该表将有一个关联的 <acronym>TOAST</acronym> 表，其 OID 存储在该表的 <structname>pg_class</structname>.<structfield>reltoastrelid</structfield> 项中。磁盘上经过 <acronym>TOAST</acronym> 的值保存在 <acronym>TOAST</acronym> 表中，下面将更详细地描述。
 </para>
 
 <para>
-Out-of-line values are divided (after compression if used) into chunks of at
-most <symbol>TOAST_MAX_CHUNK_SIZE</symbol> bytes (by default this value is chosen
-so that four chunk rows will fit on a page, making it about 2000 bytes).
-Each chunk is stored as a separate row in the <acronym>TOAST</acronym> table
-belonging to the owning table.  Every
-<acronym>TOAST</acronym> table has the columns <structfield>chunk_id</structfield> (an OID
-identifying the particular <acronym>TOAST</acronym>ed value),
-<structfield>chunk_seq</structfield> (a sequence number for the chunk within its value),
-and <structfield>chunk_data</structfield> (the actual data of the chunk).  A unique index
-on <structfield>chunk_id</structfield> and <structfield>chunk_seq</structfield> provides fast
-retrieval of the values.  A pointer datum representing an out-of-line on-disk
-<acronym>TOAST</acronym>ed value therefore needs to store the OID of the
-<acronym>TOAST</acronym> table in which to look and the OID of the specific value
-(its <structfield>chunk_id</structfield>).  For convenience, pointer datums also store the
-logical datum size (original uncompressed data length), physical stored size
-(different if compression was applied), and the compression method used, if
-any.  Allowing for the varlena header bytes,
-the total size of an on-disk <acronym>TOAST</acronym> pointer datum is therefore 18
-bytes regardless of the actual size of the represented value.
+行外值被划分（如果使用了压缩，则在压缩之后）为最多 <symbol>TOAST_MAX_CHUNK_SIZE</symbol> 字节的块（默认情况下选择该值使得四个块行能放在一个页面上，约为 2000 字节）。每个块作为单独的行存储在属于所属表的 <acronym>TOAST</acronym> 表中。每个 <acronym>TOAST</acronym> 表都有列 <structfield>chunk_id</structfield>（标识特定 <acronym>TOAST</acronym> 值的 OID）、<structfield>chunk_seq</structfield>（块在其值中的序号）和 <structfield>chunk_data</structfield>（块的实际数据）。<structfield>chunk_id</structfield> 和 <structfield>chunk_seq</structfield> 上的唯一索引提供值的快速检索。因此，表示行外磁盘上 <acronym>TOAST</acronym> 值的指针数据项需要存储要查找的 <acronym>TOAST</acronym> 表的 OID 以及特定值的 OID（其 <structfield>chunk_id</structfield>）。为方便起见，指针数据项还存储逻辑数据项大小（原始未压缩数据长度）、物理存储大小（如果应用了压缩则不同）以及所使用的压缩方法（如果有）。考虑到 varlena 头部字节，磁盘上 <acronym>TOAST</acronym> 指针数据项的总大小因此为 18 字节，无论所表示值的实际大小如何。
 </para>
 
 <para>
-The <acronym>TOAST</acronym> management code is triggered only
-when a row value to be stored in a table is wider than
-<symbol>TOAST_TUPLE_THRESHOLD</symbol> bytes (normally 2 kB).
-The <acronym>TOAST</acronym> code will compress and/or move
-field values out-of-line until the row value is shorter than
-<symbol>TOAST_TUPLE_TARGET</symbol> bytes (also normally 2 kB, adjustable)
-or no more gains can be had.  During an UPDATE
-operation, values of unchanged fields are normally preserved as-is; so an
-UPDATE of a row with out-of-line values incurs no <acronym>TOAST</acronym> costs if
-none of the out-of-line values change.
+<acronym>TOAST</acronym> 管理代码仅当要存入表中的行值宽于 <symbol>TOAST_TUPLE_THRESHOLD</symbol> 字节（通常为 2 kB）时才会被触发。<acronym>TOAST</acronym> 代码会压缩和/或将字段值移出行外，直到行值短于 <symbol>TOAST_TUPLE_TARGET</symbol> 字节（通常也是 2 kB，可调整），或者无法再获得更多收益为止。在 UPDATE 操作期间，未更改字段的值通常按原样保留；因此，如果没有任何行外值发生变化，对含有行外值的行执行 UPDATE 不会产生 <acronym>TOAST</acronym> 开销。
 </para>
 
 <para>
-The <acronym>TOAST</acronym> management code recognizes four different strategies
-for storing <acronym>TOAST</acronym>-able columns on disk:
+<acronym>TOAST</acronym> 管理代码识别四种将可 <acronym>TOAST</acronym> 的列存储在磁盘上的不同策略：
 
    <itemizedlist>
     <listitem>
      <para>
-      <literal>PLAIN</literal> prevents either compression or
-      out-of-line storage.  This is the only possible strategy for
-      columns of non-<acronym>TOAST</acronym>-able data types.
+      <literal>PLAIN</literal> 既禁止压缩，也禁止行外存储。对于不可 <acronym>TOAST</acronym> 数据类型的列，这是唯一可能的策略。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>EXTENDED</literal> allows both compression and out-of-line
-      storage.  This is the default for most <acronym>TOAST</acronym>-able data types.
-      Compression will be attempted first, then out-of-line storage if
-      the row is still too big.
+      <literal>EXTENDED</literal> 允许压缩和行外存储。对于大多数可 <acronym>TOAST</acronym> 的数据类型，这是默认值。会先尝试压缩，如果行仍然太大，再尝试行外存储。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>EXTERNAL</literal> allows out-of-line storage but not
-      compression.  Use of <literal>EXTERNAL</literal> will
-      make substring operations on wide <type>text</type> and
-      <type>bytea</type> columns faster (at the penalty of increased storage
-      space) because these operations are optimized to fetch only the
-      required parts of the out-of-line value when it is not compressed.
+      <literal>EXTERNAL</literal> 允许行外存储，但不允许压缩。使用 <literal>EXTERNAL</literal> 会使对宽 <type>text</type> 和 <type>bytea</type> 列的子串操作更快（代价是增加存储空间），因为当行外值未被压缩时，这些操作经过优化，只获取行外值中所需的部分。
      </para>
     </listitem>
     <listitem>
      <para>
-      <literal>MAIN</literal> allows compression but not out-of-line
-      storage.  (Actually, out-of-line storage will still be performed
-      for such columns, but only as a last resort when there is no other
-      way to make the row small enough to fit on a page.)
+      <literal>MAIN</literal> 允许压缩，但不允许行外存储。（实际上，对于此类列仍会执行行外存储，但仅作为最后手段，即在没有其他办法使行小到足以放入一个页面时才会这样做。）
      </para>
     </listitem>
    </itemizedlist>
 
-Each <acronym>TOAST</acronym>-able data type specifies a default strategy for columns
-of that data type, but the strategy for a given table column can be altered
-with <link linkend="sql-altertable"><command>ALTER TABLE ... SET STORAGE</command></link>.
+每种可 <acronym>TOAST</acronym> 的数据类型都为该数据类型的列指定了一种默认策略，但可以通过 <link linkend="sql-altertable"><command>ALTER TABLE ... SET STORAGE</command></link> 修改给定表列的存储策略。
 </para>
 
 <para>
-<symbol>TOAST_TUPLE_TARGET</symbol> can be adjusted for each table using
-<link linkend="sql-altertable"><command>ALTER TABLE ... SET (toast_tuple_target = N)</command></link>
+可以使用 <link linkend="sql-altertable"><command>ALTER TABLE ... SET (toast_tuple_target = N)</command></link> 为每个表调整 <symbol>TOAST_TUPLE_TARGET</symbol>。
 </para>
 
 <para>
-This scheme has a number of advantages compared to a more straightforward
-approach such as allowing row values to span pages.  Assuming that queries are
-usually qualified by comparisons against relatively small key values, most of
-the work of the executor will be done using the main row entry. The big values
-of <acronym>TOAST</acronym>ed attributes will only be pulled out (if selected at all)
-at the time the result set is sent to the client. Thus, the main table is much
-smaller and more of its rows fit in the shared buffer cache than would be the
-case without any out-of-line storage. Sort sets shrink also, and sorts will
-more often be done entirely in memory. A little test showed that a table
-containing typical HTML pages and their URLs was stored in about half of the
-raw data size including the <acronym>TOAST</acronym> table, and that the main table
-contained only about 10% of the entire data (the URLs and some small HTML
-pages). There was no run time difference compared to an un-<acronym>TOAST</acronym>ed
-comparison table, in which all the HTML pages were cut down to 7 kB to fit.
+与更直接的做法（例如允许行值跨页）相比，这种方案有许多优点。假设查询通常通过针对相对较小的键值进行比较来限定，那么执行器的大部分工作都将使用主行条目完成。<acronym>TOAST</acronym> 属性的大值只有在结果集发送给客户端时才会被取出（如果确实被选中）。因此，主表要小得多，与没有任何行外存储的情况相比，其更多的行能放入共享缓冲区缓存中。排序集也会缩小，排序更经常完全在内存中完成。一个小测试表明，包含典型 HTML 页面及其 URL 的表存储后约为原始数据大小的一半（包括 <acronym>TOAST</acronym> 表），而主表只包含全部数据的约 10%（URL 和一些小的 HTML 页面）。与未进行 <acronym>TOAST</acronym> 的对照表相比没有运行时差异，在该对照表中所有 HTML 页面都被裁剪到 7 kB 以适应。
 </para>
 
 </sect2>
 
 <sect2 id="storage-toast-inmemory">
- <title>Out-of-Line, In-Memory TOAST Storage</title>
+ <title>行外、内存中的 TOAST 存储</title>
 
 <para>
-<acronym>TOAST</acronym> pointers can point to data that is not on disk, but is
-elsewhere in the memory of the current server process.  Such pointers
-obviously cannot be long-lived, but they are nonetheless useful.  There
-are currently two sub-cases:
-pointers to <firstterm>indirect</firstterm> data and
-pointers to <firstterm>expanded</firstterm> data.
+<acronym>TOAST</acronym> 指针可以指向不在磁盘上、而是位于当前服务器进程内存中其他位置的数据。这类指针显然不能长期存在，但它们仍然有用。目前有两种子情况：指向<firstterm>间接</firstterm>数据的指针和指向<firstterm>扩展</firstterm>数据的指针。
 </para>
 
 <para>
-Indirect <acronym>TOAST</acronym> pointers simply point at a non-indirect varlena
-value stored somewhere in memory.  This case was originally created merely
-as a proof of concept, but it is currently used during logical decoding to
-avoid possibly having to create physical tuples exceeding 1 GB (as pulling
-all out-of-line field values into the tuple might do).  The case is of
-limited use since the creator of the pointer datum is entirely responsible
-that the referenced data survives for as long as the pointer could exist,
-and there is no infrastructure to help with this.
+间接 <acronym>TOAST</acronym> 指针只是指向存储在内存某处的非间接 varlena 值。这种情况最初只是作为概念验证而创建的，但目前它在逻辑解码期间被使用，以避免可能需要创建超过 1 GB 的物理元组（把所有行外字段值拉入元组就可能导致这种情况）。这种用法的用途有限，因为指针数据项的创建者完全负责确保被引用的数据在指针可能存在的整个期间内保持存活，而且没有任何基础设施来帮助做到这一点。
 </para>
 
 <para>
-Expanded <acronym>TOAST</acronym> pointers are useful for complex data types
-whose on-disk representation is not especially suited for computational
-purposes.  As an example, the standard varlena representation of a
-<productname>PostgreSQL</productname> array includes dimensionality information, a
-nulls bitmap if there are any null elements, then the values of all the
-elements in order.  When the element type itself is variable-length, the
-only way to find the <replaceable>N</replaceable>'th element is to scan through all the
-preceding elements.  This representation is appropriate for on-disk storage
-because of its compactness, but for computations with the array it's much
-nicer to have an <quote>expanded</quote> or <quote>deconstructed</quote>
-representation in which all the element starting locations have been
-identified.  The <acronym>TOAST</acronym> pointer mechanism supports this need by
-allowing a pass-by-reference Datum to point to either a standard varlena
-value (the on-disk representation) or a <acronym>TOAST</acronym> pointer that
-points to an expanded representation somewhere in memory.  The details of
-this expanded representation are up to the data type, though it must have
-a standard header and meet the other API requirements given
-in <filename>src/include/utils/expandeddatum.h</filename>.  C-level functions
-working with the data type can choose to handle either representation.
-Functions that do not know about the expanded representation, but simply
-apply <function>PG_DETOAST_DATUM</function> to their inputs, will automatically
-receive the traditional varlena representation; so support for an expanded
-representation can be introduced incrementally, one function at a time.
+扩展的 <acronym>TOAST</acronym> 指针对于复杂数据类型很有用，这类数据类型的磁盘表示并不特别适合计算用途。举例来说，<productname>PostgreSQL</productname> 数组的标准 varlena 表示包括维度信息、如果有任何空元素则包括一个空值位图，然后按顺序包括所有元素的值。当元素类型本身是变长的时候，找到第 <replaceable>N</replaceable> 个元素的唯一方法是扫描所有前面的元素。这种表示由于其紧凑性而适合磁盘存储，但对于数组的计算而言，拥有一个 <quote>扩展</quote> 或 <quote>解构</quote> 的表示要好得多，其中所有元素的起始位置都已被标识出来。<acronym>TOAST</acronym> 指针机制通过允许一个按引用传递的 Datum 指向标准 varlena 值（磁盘表示）或指向内存中某处扩展表示的 <acronym>TOAST</acronym> 指针，来支持这一需求。这种扩展表示的细节由数据类型决定，不过它必须有一个标准头部并满足 <filename>src/include/utils/expandeddatum.h</filename> 中给出的其他 API 要求。处理该数据类型的 C 层函数可以选择处理任一表示。不了解扩展表示、只是对其输入应用 <function>PG_DETOAST_DATUM</function> 的函数将自动收到传统的 varlena 表示；因此，对扩展表示的支持可以逐步引入，一次一个函数。
 </para>
 
 <para>
-<acronym>TOAST</acronym> pointers to expanded values are further broken down
-into <firstterm>read-write</firstterm> and <firstterm>read-only</firstterm> pointers.
-The pointed-to representation is the same either way, but a function that
-receives a read-write pointer is allowed to modify the referenced value
-in-place, whereas one that receives a read-only pointer must not; it must
-first create a copy if it wants to make a modified version of the value.
-This distinction and some associated conventions make it possible to avoid
-unnecessary copying of expanded values during query execution.
+指向扩展值的 <acronym>TOAST</acronym> 指针进一步分为 <firstterm>读写</firstterm> 和 <firstterm>只读</firstterm> 指针。两种情况下所指向的表示是相同的，但接收读写指针的函数可以就地修改所引用的值，而接收只读指针的函数则不可以；如果它想要创建该值的修改版本，必须先创建一个副本。这种区分以及一些相关约定使得在查询执行期间避免不必要地复制扩展值成为可能。
 </para>
 
 <para>
-For all types of in-memory <acronym>TOAST</acronym> pointer, the <acronym>TOAST</acronym>
-management code ensures that no such pointer datum can accidentally get
-stored on disk.  In-memory <acronym>TOAST</acronym> pointers are automatically
-expanded to normal in-line varlena values before storage &mdash; and then
-possibly converted to on-disk <acronym>TOAST</acronym> pointers, if the containing
-tuple would otherwise be too big.
+对于所有类型的内存中 <acronym>TOAST</acronym> 指针，<acronym>TOAST</acronym> 管理代码确保不会有此类指针 Datum 意外存储到磁盘上。内存中的 <acronym>TOAST</acronym> 指针在存储 &mdash; 之前会自动扩展为普通的行内 varlena 值，然后，如果包含它的元组否则会太大，则可能转换为磁盘上的 <acronym>TOAST</acronym> 指针。
 </para>
 
 </sect2>
