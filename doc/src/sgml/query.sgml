@@ -208,33 +208,29 @@ Hayward    37    54    \N    1994-11-29
    <title>查询一个表</title>
 
    <para>
-    <indexterm><primary>query</primary></indexterm>
+    <indexterm><primary>查询</primary></indexterm>
     <indexterm><primary>SELECT</primary></indexterm>
 
-    To retrieve data from a table, the table is
-    <firstterm>queried</firstterm>.  An <acronym>SQL</acronym>
-    <command>SELECT</command> statement is used to do this.  The
-    statement is divided into a select list (the part that lists the
-    columns to be returned), a table list (the part that lists the
-    tables from which to retrieve the data), and an optional
-    qualification (the part that specifies any restrictions).  For
-    example, to retrieve all the rows of table
-    <structname>weather</structname>, type:
+    要从一个表中检索数据，就要对该表进行<firstterm>查询</firstterm>。这通过 <acronym>SQL</acronym>
+    <command>SELECT</command> 语句来完成。该语句分为选择列表（列出要返回的列的部分）、
+    表列表（列出要从中检索数据的表的部分）以及一个可选的
+    限定条件（指定任何限制条件的部分）。例如，要检索表
+    <structname>weather</structname> 的所有行，输入：
 <programlisting>
 SELECT * FROM weather;
 </programlisting>
-    Here <literal>*</literal> is a shorthand for <quote>all columns</quote>.
+    这里的 <literal>*</literal> 是<quote>所有列</quote>的简写。
      <footnote>
       <para>
        虽然 <literal>SELECT *</literal> 对于临时查询很有用，但在生产代码中它被普遍认为是不好的风格，因为向表中添加一列会改变结果。
       </para>
      </footnote>
-    So the same result would be had with:
+    因此，用下面的语句也能得到同样的结果：
 <programlisting>
 SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
 </programlisting>
 
-    The output should be:
+    输出应该是：
 
 <screen>
      city      | temp_lo | temp_hi | prcp |    date
@@ -307,10 +303,9 @@ SELECT * FROM weather
 
    <para>
     <indexterm><primary>DISTINCT</primary></indexterm>
-    <indexterm><primary>duplicate</primary></indexterm>
+    <indexterm><primary>重复</primary></indexterm>
 
-    You can request that duplicate rows be removed from the result of
-    a query:
+    你可以要求从查询结果中删除重复的行：
 
 <programlisting>
 SELECT DISTINCT city
@@ -325,9 +320,9 @@ SELECT DISTINCT city
 (2 rows)
 </screen>
 
-    Here again, the result row ordering might vary.
-    You can ensure consistent results by using <literal>DISTINCT</literal> and
-    <literal>ORDER BY</literal> together:
+    同样，结果行的顺序可能不同。
+    你可以通过同时使用 <literal>DISTINCT</literal> 和
+    <literal>ORDER BY</literal> 来确保结果一致：
      <footnote>
       <para>
        在某些数据库系统中（包括 <productname>PostgreSQL</productname> 的较旧版本），<literal>DISTINCT</literal> 的实现会自动对行排序，因此 <literal>ORDER BY</literal> 是不必要的。但 SQL 标准并不要求这样做，而且当前的 <productname>PostgreSQL</productname> 并不保证 <literal>DISTINCT</literal> 会使行有序。
@@ -351,24 +346,24 @@ SELECT DISTINCT city
    </indexterm>
 
    <para>
-    Thus far, our queries have only accessed one table at a time.
-    Queries can access multiple tables at once, or access the same
-    table in such a way that multiple rows of the table are being
-    processed at the same time.  Queries that access multiple tables
-    (or multiple instances of the same table) at one time are called
-    <firstterm>join</firstterm> queries.  They combine rows from one table
-    with rows from a second table, with an expression specifying which rows
-    are to be paired.  For example, to return all the weather records together
-    with the location of the associated city, the database needs to compare
-    the <structfield>city</structfield>
-    column of each row of the <structname>weather</structname> table with the
-    <structfield>name</structfield> column of all rows in the <structname>cities</structname>
-    table, and select the pairs of rows where these values match.<footnote>
+    到目前为止，我们的查询一次只访问一个表。
+查询可以一次访问多个表，或者以如下方式访问同一个
+表：同时处理该表中的多行。
+一次访问多个表
+（或同一个表的多个实例）的查询称为
+<firstterm>连接</firstterm>查询。它们将一个表中的行
+与第二个表中的行组合起来，并用一个表达式指定哪些行
+要配对。例如，要返回所有天气记录以及
+关联城市的位置，数据库需要比较
+<structfield>city</structfield>
+列（<structname>weather</structname> 表中每一行的）与
+<structfield>name</structfield> 列（<structname>cities</structname> 表中所有行的），
+并选出这些值匹配的行对。<footnote>
      <para>
       这只是一个概念模型。连接通常以比实际逐对比较所有可能行更高效的方式执行，但对用户来说这是不可见的。
      </para>
     </footnote>
-    This would be accomplished by the following query:
+    这可以通过下面的查询来完成：
 
 <programlisting>
 SELECT * FROM weather JOIN cities ON city = name;
@@ -385,7 +380,7 @@ SELECT * FROM weather JOIN cities ON city = name;
    </para>
 
    <para>
-    Observe two things about the result set:
+    请注意关于结果集的两件事：
     <itemizedlist>
      <listitem>
       <para>
@@ -600,9 +595,8 @@ SELECT city FROM weather
     <indexterm><primary>GROUP BY</primary></indexterm>
     <indexterm><primary>HAVING</primary></indexterm>
 
-    Aggregates are also very useful in combination with <literal>GROUP
-    BY</literal> clauses.  For example, we can get the number of readings
-    and the maximum low temperature observed in each city with:
+    聚合函数与 <literal>GROUP
+    BY</literal> 子句结合使用也非常有用。例如，我们可以用以下语句得到每个城市的读数数量和观测到的最低温度的最大值：
 
 <programlisting>
 SELECT city, count(*), max(temp_lo)
@@ -618,10 +612,8 @@ SELECT city, count(*), max(temp_lo)
 (2 rows)
 </screen>
 
-    which gives us one output row per city.  Each aggregate result is
-    computed over the table rows matching that city.
-    We can filter these grouped
-    rows using <literal>HAVING</literal>:
+    这会为每个城市给出一行输出。每个聚合结果都是在该城市对应的表行上计算得出的。
+    我们可以使用 <literal>HAVING</literal> 过滤这些分组后的行：
 
 <programlisting>
 SELECT city, count(*), max(temp_lo)
@@ -637,10 +629,7 @@ SELECT city, count(*), max(temp_lo)
 (1 row)
 </screen>
 
-    which gives us the same results for only the cities that have all
-    <structfield>temp_lo</structfield> values below 40.  Finally, if we only care about
-    cities whose
-    names begin with <quote><literal>S</literal></quote>, we might do:
+    这样我们只会得到那些所有 <structfield>temp_lo</structfield> 值都低于 40 的城市，结果与之前相同。最后，如果我们只关心名称以 <quote><literal>S</literal></quote> 开头的城市，可以这样做：
 
 <programlisting>
 SELECT city, count(*), max(temp_lo)
