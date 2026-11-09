@@ -316,21 +316,17 @@ SELECT phraseto_tsquery('the cats ate the rats');
  </sect1>
 
  <sect1 id="textsearch-tables">
-  <title>Tables and Indexes</title>
+  <title>表和索引</title>
 
   <para>
-   The examples in the previous section illustrated full text matching using
-   simple constant strings.  This section shows how to search table data,
-   optionally using indexes.
+   上一节中的示例演示了使用简单常量字符串进行全文匹配。本节展示如何搜索表数据，可选择使用索引。
   </para>
 
   <sect2 id="textsearch-tables-search">
-   <title>Searching a Table</title>
+   <title>搜索表</title>
 
    <para>
-    It is possible to do a full text search without an index.  A simple query
-    to print the <structname>title</structname> of each row that contains the word
-    <literal>friend</literal> in its <structfield>body</structfield> field is:
+    可以在没有索引的情况下进行全文检索。一个简单的查询，用于打印在其 <structfield>body</structfield> 字段中包含单词 <literal>friend</literal> 的每一行的 <structname>title</structname>，如下所示：
 
 <programlisting>
 SELECT title
@@ -338,9 +334,7 @@ FROM pgweb
 WHERE to_tsvector('english', body) @@ to_tsquery('english', 'friend');
 </programlisting>
 
-    This will also find related words such as <literal>friends</literal>
-    and <literal>friendly</literal>, since all these are reduced to the same
-    normalized lexeme.
+    这也会找到相关单词，例如 <literal>friends</literal> 和 <literal>friendly</literal>，因为所有这些单词都会被归约为同一个规范化词素。
    </para>
 
    <para>
@@ -359,9 +353,7 @@ WHERE to_tsvector(body) @@ to_tsquery('friend');
    </para>
 
    <para>
-    A more complex example is to
-    select the ten most recent documents that contain <literal>create</literal> and
-    <literal>table</literal> in the <structname>title</structname> or <structname>body</structname>:
+    一个更复杂的示例是选择在 <structname>title</structname> 或 <structname>body</structname> 中包含 <literal>create</literal> 和 <literal>table</literal> 的十个最新文档：
 
 <programlisting>
 SELECT title
@@ -371,72 +363,63 @@ ORDER BY last_mod_date DESC
 LIMIT 10;
 </programlisting>
 
-    For clarity we omitted the <function>coalesce</function> function calls
-    which would be needed to find rows that contain <literal>NULL</literal>
-    in one of the two fields.
+    为清晰起见，我们省略了 <function>coalesce</function> 函数调用，而在查找两个字段之一中包含 <literal>NULL</literal> 的行时，这些调用是必需的。
    </para>
 
    <para>
-    Although these queries will work without an index, most applications
-    will find this approach too slow, except perhaps for occasional ad-hoc
-    searches.  Practical use of text searching usually requires creating
-    an index.
+    尽管这些查询在没有索引的情况下也能工作，但大多数应用
+    会发现这种方法太慢，或许只有偶尔的即席搜索除外。文本
+    检索的实际使用通常需要创建索引。
    </para>
 
   </sect2>
 
   <sect2 id="textsearch-tables-index">
-   <title>Creating Indexes</title>
+   <title>创建索引</title>
 
    <para>
-    We can create a <acronym>GIN</acronym> index (<xref
-    linkend="textsearch-indexes"/>) to speed up text searches:
+    我们可以创建一个 <acronym>GIN</acronym> 索引（<xref
+    linkend="textsearch-indexes"/>）来加速文本检索：
 
 <programlisting>
 CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector('english', body));
 </programlisting>
 
-    Notice that the 2-argument version of <function>to_tsvector</function> is
-    used.  Only text search functions that specify a configuration name can
-    be used in expression indexes (<xref linkend="indexes-expressional"/>).
-    This is because the index contents must be unaffected by <xref
-    linkend="guc-default-text-search-config"/>.  If they were affected, the
-    index contents might be inconsistent because different entries could
-    contain <type>tsvector</type>s that were created with different text search
-    configurations, and there would be no way to guess which was which.  It
-    would be impossible to dump and restore such an index correctly.
+    请注意这里使用的是 <function>to_tsvector</function> 的双参数版本。只有指定了
+    配置名的文本检索函数才能用于表达式索引（<xref linkend="indexes-expressional"/>）。
+    这是因为索引内容必须不受 <xref
+    linkend="guc-default-text-search-config"/> 的影响。如果它们受到影响，
+    索引内容就可能不一致，因为不同的条目可能包含用不同文本检索
+    配置创建的 <type>tsvector</type>，而且无法猜测哪个是哪个。也就
+    不可能正确地转储和恢复这样的索引。
    </para>
 
    <para>
-    Because the two-argument version of <function>to_tsvector</function> was
-    used in the index above, only a query reference that uses the 2-argument
-    version of <function>to_tsvector</function> with the same configuration
-    name will use that index.  That is, <literal>WHERE
-    to_tsvector('english', body) @@ 'a &amp; b'</literal> can use the index,
-    but <literal>WHERE to_tsvector(body) @@ 'a &amp; b'</literal> cannot.
-    This ensures that an index will be used only with the same configuration
-    used to create the index entries.
+    由于上面的索引中使用了 <function>to_tsvector</function> 的双参数版本，只有使用
+    相同配置名的 <function>to_tsvector</function> 双参数版本的查询引用才会使用该索引。
+    也就是说，<literal>WHERE
+    to_tsvector('english', body) @@ 'a &amp; b'</literal> 可以使用该索引，
+    但 <literal>WHERE to_tsvector(body) @@ 'a &amp; b'</literal> 不能。
+    这确保了索引只会与创建索引条目时所用的相同配置一起使用。
    </para>
 
   <para>
-    It is possible to set up more complex expression indexes wherein the
-    configuration name is specified by another column, e.g.:
+    可以建立更复杂的表达式索引，其中配置名由另一列指定，例如：
 
 <programlisting>
 CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector(config_name, body));
 </programlisting>
 
-    where <literal>config_name</literal> is a column in the <literal>pgweb</literal>
-    table.  This allows mixed configurations in the same index while
-    recording which configuration was used for each index entry.  This
-    would be useful, for example, if the document collection contained
-    documents in different languages.  Again,
-    queries that are meant to use the index must be phrased to match, e.g.,
-    <literal>WHERE to_tsvector(config_name, body) @@ 'a &amp; b'</literal>.
+    其中 <literal>config_name</literal> 是 <literal>pgweb</literal>
+    表中的一个列。这允许在同一个索引中混合使用多种配置，同时
+    记录每个索引条目使用的是哪种配置。例如，如果文档集合中包含
+    不同语言的文档，这会很有用。同样，
+    打算使用该索引的查询必须写成与之匹配的形式，例如
+    <literal>WHERE to_tsvector(config_name, body) @@ 'a &amp; b'</literal>。
    </para>
 
    <para>
-    Indexes can even concatenate columns:
+    索引甚至可以连接多个列：
 
 <programlisting>
 CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector('english', title || ' ' || body));
@@ -444,13 +427,7 @@ CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector('english', title || ' ' |
    </para>
 
    <para>
-    Another approach is to create a separate <type>tsvector</type> column
-    to hold the output of <function>to_tsvector</function>.  To keep this
-    column automatically up to date with its source data, use a stored
-    generated column.  This example is a
-    concatenation of <literal>title</literal> and <literal>body</literal>,
-    using <function>coalesce</function> to ensure that one field will still be
-    indexed when the other is <literal>NULL</literal>:
+    另一种方法是创建一个单独的 <type>tsvector</type> 列来保存 <function>to_tsvector</function> 的输出。为了让该列自动与其源数据保持同步，可使用存储生成列。本例将 <literal>title</literal> 与 <literal>body</literal> 连接起来，并使用 <function>coalesce</function> 确保当其中一个字段为 <literal>NULL</literal> 时另一个字段仍能被索引：
 
 <programlisting>
 ALTER TABLE pgweb
@@ -458,13 +435,13 @@ ALTER TABLE pgweb
                GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(body, ''))) STORED;
 </programlisting>
 
-    Then we create a <acronym>GIN</acronym> index to speed up the search:
+    然后我们创建一个 <acronym>GIN</acronym> 索引以加速搜索：
 
 <programlisting>
 CREATE INDEX textsearch_idx ON pgweb USING GIN (textsearchable_index_col);
 </programlisting>
 
-    Now we are ready to perform a fast full text search:
+    现在我们就可以执行快速的全文检索了：
 
 <programlisting>
 SELECT title
