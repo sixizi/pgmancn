@@ -1159,18 +1159,14 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    When a conflicting query is short, it's typically desirable to allow it to
-    complete by delaying WAL application for a little bit; but a long delay in
-    WAL application is usually not desirable.  So the cancel mechanism has
-    parameters, <xref linkend="guc-max-standby-archive-delay"/> and <xref
-    linkend="guc-max-standby-streaming-delay"/>, that define the maximum
-    allowed delay in WAL application.  Conflicting queries will be canceled
-    once it has taken longer than the relevant delay setting to apply any
-    newly-received WAL data.  There are two parameters so that different delay
-    values can be specified for the case of reading WAL data from an archive
-    (i.e., initial recovery from a base backup or <quote>catching up</quote> a
-    standby server that has fallen far behind) versus reading WAL data via
-    streaming replication.
+    当冲突的查询较短时，通常希望稍微延迟预写式日志的应用，以便让该查询完成；
+    但长时间延迟预写式日志的应用通常是不可取的。因此，取消机制提供了参数
+    <xref linkend="guc-max-standby-archive-delay"/> 和 <xref
+    linkend="guc-max-standby-streaming-delay"/>，用于定义预写式日志应用所允许的
+    最大延迟。一旦应用任何新接收的预写式日志数据所花费的时间超过相应的延迟设置，
+    冲突的查询就会被取消。之所以提供两个参数，是为了能够针对从归档中读取预写式日志数据
+    （即从基础备份进行初始恢复，或让已远远落后的备用服务器<quote>追赶</quote>）
+    与通过流复制读取预写式日志数据这两种情况，分别指定不同的延迟值。
    </para>
 
    <para>
@@ -1194,16 +1190,8 @@ synchronous_standby_names = 'ANY 2 (s1, s2, s3)'
    </para>
 
    <para>
-    Row version cleanup isn't the only potential cause of conflicts with
-    standby queries.  All index-only scans (including those that run on
-    standbys) must use an <acronym>MVCC</acronym> snapshot that
-    <quote>agrees</quote> with the visibility map.  Conflicts are therefore
-    required whenever <command>VACUUM</command> <link
-     linkend="vacuum-for-visibility-map">sets a page as all-visible in the
-     visibility map</link> containing one or more rows
-    <emphasis>not</emphasis> visible to all standby queries.  So even running
-    <command>VACUUM</command> against a table with no updated or deleted rows
-    requiring cleanup might lead to conflicts.
+    行版本清理并不是导致与备用服务器查询发生冲突的唯一潜在原因。所有仅索引扫描（包括在备用服务器上运行的那些）都必须使用与可见性映射“一致”的 <acronym>MVCC</acronym> 快照。<quote>agrees</quote>因此，每当 <command>VACUUM</command> <link
+     linkend="vacuum-for-visibility-map">在可见性映射中将某个页面设置为全部可见</link>，而该页面包含一行或多行对备用服务器上的某些查询<emphasis>不</emphasis>可见的数据时，就必须产生冲突。所以，即使对一个没有需要清理的已更新或已删除行的表运行 <command>VACUUM</command>，也可能导致冲突。
    </para>
 
    <para>
@@ -1325,15 +1313,12 @@ HINT:  You can then restart the server after making the necessary configuration 
    </para>
 
    <para>
-    It is important that the administrator select appropriate settings for
-    <xref linkend="guc-max-standby-archive-delay"/> and <xref
-    linkend="guc-max-standby-streaming-delay"/>.  The best choices vary
-    depending on business priorities.  For example if the server is primarily
-    tasked as a High Availability server, then you will want low delay
-    settings, perhaps even zero, though that is a very aggressive setting. If
-    the standby server is tasked as an additional server for decision support
-    queries then it might be acceptable to set the maximum delay values to
-    many hours, or even -1 which means wait forever for queries to complete.
+    管理员为 <xref linkend="guc-max-standby-archive-delay"/> 和 <xref
+    linkend="guc-max-standby-streaming-delay"/> 选择合适的设置很重要。最佳选择
+    因业务优先级而异。例如，如果服务器主要承担高可用性服务器的任务，那么你会希望使用低延迟
+    设置，甚至可能为零，尽管那是非常激进的设置。如果备用服务器承担用于决策支持
+    查询的额外服务器的任务，那么将最大延迟值设置为许多小时，甚至 -1（表示永远等待查询完成）
+    也许是可以接受的。
    </para>
 
    <para>
@@ -1389,13 +1374,7 @@ HINT:  You can then restart the server after making the necessary configuration 
    </para>
 
    <para>
-    The <productname>Nagios</productname> plugin <productname>check_pgsql</productname> will
-    work, because the simple information it checks for exists.
-    The <productname>check_postgres</productname> monitoring script will also work,
-    though some reported values could give different or confusing results.
-    For example, last vacuum time will not be maintained, since no
-    vacuum occurs on the standby.  Vacuums running on the primary
-    do still send their changes to the standby.
+    <productname>Nagios</productname> 插件 <productname>check_pgsql</productname> 可以工作，因为它所检查的简单信息是存在的。<productname>check_postgres</productname> 监控脚本也可以工作，尽管某些报告的值可能会给出不同或令人困惑的结果。例如，上次清理时间将不会被维护，因为备服务器上不会发生清理。在主服务器上运行的清理仍然会把它们的更改发送到备服务器。
    </para>
 
    <para>
