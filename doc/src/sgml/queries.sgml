@@ -1123,7 +1123,7 @@ GROUP BY GROUPING SETS (
 
 
  <sect1 id="queries-select-lists">
-  <title>Select Lists</title>
+  <title>选择列表</title>
 
   <indexterm>
    <primary>SELECT</primary>
@@ -1131,68 +1131,43 @@ GROUP BY GROUPING SETS (
   </indexterm>
 
   <para>
-   As shown in the previous section,
-   the table expression in the <command>SELECT</command> command
-   constructs an intermediate virtual table by possibly combining
-   tables, views, eliminating rows, grouping, etc.  This table is
-   finally passed on to processing by the <firstterm>select list</firstterm>.  The select
-   list determines which <emphasis>columns</emphasis> of the
-   intermediate table are actually output.
+   如上一节所示，<command>SELECT</command> 命令中的表表达式通过可能组合表、视图、消除行、分组等操作构造出一个中间虚拟表。这个表最终被传递给<firstterm>选择列表</firstterm>进行处理。选择列表决定中间表的哪些<emphasis>列</emphasis>实际被输出。
   </para>
 
   <sect2 id="queries-select-list-items">
-   <title>Select-List Items</title>
+   <title>选择列表项</title>
 
    <indexterm>
     <primary>*</primary>
    </indexterm>
 
    <para>
-    The simplest kind of select list is <literal>*</literal> which
-    emits all columns that the table expression produces.  Otherwise,
-    a select list is a comma-separated list of value expressions (as
-    defined in <xref linkend="sql-expressions"/>).  For instance, it
-    could be a list of column names:
+    最简单的选择列表形式是 <literal>*</literal>，它输出表表达式产生的所有列。否则，选择列表是一个用逗号分隔的值表达式列表（如 <xref linkend="sql-expressions"/> 中所定义）。例如，它可以是一个列名列表：
 <programlisting>
 SELECT a, b, c FROM ...
 </programlisting>
-     The columns names <literal>a</literal>, <literal>b</literal>, and <literal>c</literal>
-     are either the actual names of the columns of tables referenced
-     in the <literal>FROM</literal> clause, or the aliases given to them as
-     explained in <xref linkend="queries-table-aliases"/>.  The name
-     space available in the select list is the same as in the
-     <literal>WHERE</literal> clause, unless grouping is used, in which case
-     it is the same as in the <literal>HAVING</literal> clause.
+     列名 <literal>a</literal>、<literal>b</literal> 和 <literal>c</literal> 要么是 <literal>FROM</literal> 子句中引用的表的列的实际名称，要么是按 <xref linkend="queries-table-aliases"/> 中所述赋予它们的别名。选择列表中可用的名字空间与 <literal>WHERE</literal> 子句中的相同，除非使用了分组，在这种情况下它与 <literal>HAVING</literal> 子句中的相同。
    </para>
 
    <para>
-    If more than one table has a column of the same name, the table
-    name must also be given, as in:
+    如果多个表具有同名的列，则还必须给出表名，如下所示：
 <programlisting>
 SELECT tbl1.a, tbl2.a, tbl1.b FROM ...
 </programlisting>
-    When working with multiple tables, it can also be useful to ask for
-    all the columns of a particular table:
+    在处理多个表时，请求某个特定表的所有列也可能很有用：
 <programlisting>
 SELECT tbl1.*, tbl2.a FROM ...
 </programlisting>
-    See <xref linkend="rowtypes-usage"/> for more about
-    the <replaceable>table_name</replaceable><literal>.*</literal> notation.
+    关于 <replaceable>table_name</replaceable><literal>.*</literal> 记法的更多信息，请参见 <xref linkend="rowtypes-usage"/>。
    </para>
 
    <para>
-    If an arbitrary value expression is used in the select list, it
-    conceptually adds a new virtual column to the returned table.  The
-    value expression is evaluated once for each result row, with
-    the row's values substituted for any column references.  But the
-    expressions in the select list do not have to reference any
-    columns in the table expression of the <literal>FROM</literal> clause;
-    they can be constant arithmetic expressions, for instance.
+    如果在选择列表中使用任意值表达式，从概念上讲，它会向返回的表中添加一个新的虚拟列。该值表达式对每个结果行求值一次，并用该行的值替换任何列引用。但是，选择列表中的表达式不必引用 <literal>FROM</literal> 子句的表表达式中的任何列；例如，它们可以是常量算术表达式。
    </para>
   </sect2>
 
   <sect2 id="queries-column-labels">
-   <title>Column Labels</title>
+   <title>列标签</title>
 
    <indexterm zone="queries-column-labels">
     <primary>alias</primary>
@@ -1200,52 +1175,35 @@ SELECT tbl1.*, tbl2.a FROM ...
    </indexterm>
 
    <para>
-    The entries in the select list can be assigned names for subsequent
-    processing, such as for use in an <literal>ORDER BY</literal> clause
-    or for display by the client application.  For example:
+    选择列表中的项可以被赋予名称，以便后续处理，例如用于 <literal>ORDER BY</literal> 子句或在客户端应用程序中显示。例如：
 <programlisting>
 SELECT a AS value, b + c AS sum FROM ...
 </programlisting>
    </para>
 
    <para>
-    If no output column name is specified using <literal>AS</literal>,
-    the system assigns a default column name.  For simple column references,
-    this is the name of the referenced column.  For function
-    calls, this is the name of the function.  For complex expressions,
-    the system will generate a generic name.
+    如果没有使用 <literal>AS</literal> 指定输出列名，系统会分配一个默认的列名。对于简单的列引用，默认名就是被引用列的名称。对于函数调用，默认名就是函数名。对于复杂表达式，系统将生成一个通用名称。
    </para>
 
    <para>
-    The <literal>AS</literal> key word is usually optional, but in some
-    cases where the desired column name matches a
-    <productname>PostgreSQL</productname> key word, you must write
-    <literal>AS</literal> or double-quote the column name in order to
-    avoid ambiguity.
-    (<xref linkend="sql-keywords-appendix"/> shows which key words
-    require <literal>AS</literal> to be used as a column label.)
-    For example, <literal>FROM</literal> is one such key word, so this
-    does not work:
+    <literal>AS</literal> 关键字通常是可选的，但在某些情况下，如果所需的列名与某个 <productname>PostgreSQL</productname> 关键字相同，则必须写出 <literal>AS</literal> 或给列名加上双引号，以避免歧义。
+    （<xref linkend="sql-keywords-appendix"/> 显示了哪些关键字在用作列标签时必须使用 <literal>AS</literal>。）
+    例如，<literal>FROM</literal> 就是这样一个关键字，因此下面的写法不行：
 <programlisting>
 SELECT a from, b + c AS sum FROM ...
 </programlisting>
-    but either of these do:
+    但下面两种写法都可以：
 <programlisting>
 SELECT a AS from, b + c AS sum FROM ...
 SELECT a "from", b + c AS sum FROM ...
 </programlisting>
-    For greatest safety against possible
-    future key word additions, it is recommended that you always either
-    write <literal>AS</literal> or double-quote the output column name.
+    为了最大程度地防止将来可能新增的关键字带来的问题，建议您总是写出 <literal>AS</literal> 或给输出列名加上双引号。
    </para>
 
    <note>
     <para>
-     The naming of output columns here is different from that done in
-     the <literal>FROM</literal> clause (see <xref
-     linkend="queries-table-aliases"/>).  It is possible
-     to rename the same column twice, but the name assigned in
-     the select list is the one that will be passed on.
+     这里对输出列的命名与 <literal>FROM</literal> 子句中所做的命名不同（参见 <xref
+     linkend="queries-table-aliases"/>）。可以将同一列重命名两次，但传递下去的是在选择列表中赋予的名称。
     </para>
    </note>
   </sect2>
@@ -1267,15 +1225,11 @@ SELECT a "from", b + c AS sum FROM ...
    </indexterm>
 
    <para>
-    After the select list has been processed, the result table can
-    optionally be subject to the elimination of duplicate rows.  The
-    <literal>DISTINCT</literal> key word is written directly after
-    <literal>SELECT</literal> to specify this:
+    在选择列表处理完毕之后，结果表可以选择性地消除重复行。<literal>DISTINCT</literal> 关键字直接写在 <literal>SELECT</literal> 之后来指定这一点：
 <synopsis>
 SELECT DISTINCT <replaceable>select_list</replaceable> ...
 </synopsis>
-    (Instead of <literal>DISTINCT</literal> the key word <literal>ALL</literal>
-    can be used to specify the default behavior of retaining all rows.)
+    （可以使用关键字 <literal>ALL</literal> 代替 <literal>DISTINCT</literal>，以指定保留所有行的默认行为。）
    </para>
 
    <indexterm>
@@ -1284,35 +1238,20 @@ SELECT DISTINCT <replaceable>select_list</replaceable> ...
    </indexterm>
 
    <para>
-    Obviously, two rows are considered distinct if they differ in at
-    least one column value.  Null values are considered equal in this
-    comparison.
+    显然，如果两行在至少一个列值上不同，它们就被认为是不同的。在此比较中，空值被视为相等。
    </para>
 
    <para>
-    Alternatively, an arbitrary expression can determine what rows are
-    to be considered distinct:
+    或者，可以用任意表达式来确定哪些行应被视为不同：
 <synopsis>
 SELECT DISTINCT ON (<replaceable>expression</replaceable> <optional>, <replaceable>expression</replaceable> ...</optional>) <replaceable>select_list</replaceable> ...
 </synopsis>
-    Here <replaceable>expression</replaceable> is an arbitrary value
-    expression that is evaluated for all rows.  A set of rows for
-    which all the expressions are equal are considered duplicates, and
-    only the first row of the set is kept in the output.  Note that
-    the <quote>first row</quote> of a set is unpredictable unless the
-    query is sorted on enough columns to guarantee a unique ordering
-    of the rows arriving at the <literal>DISTINCT</literal> filter.
-    (<literal>DISTINCT ON</literal> processing occurs after <literal>ORDER
-    BY</literal> sorting.)
+    这里 <replaceable>expression</replaceable> 是一个任意值表达式，会对所有行求值。所有表达式都相等的一组行被视为重复行，只有该组的第一行会保留在输出中。请注意，除非查询按足够多的列排序以保证到达 <literal>DISTINCT</literal> 过滤器的行具有唯一顺序，否则一组行中的<quote>第一行</quote>是不可预测的。（<literal>DISTINCT ON</literal> 处理发生在 <literal>ORDER
+    BY</literal> 排序之后。）
    </para>
 
    <para>
-    The <literal>DISTINCT ON</literal> clause is not part of the SQL standard
-    and is sometimes considered bad style because of the potentially
-    indeterminate nature of its results.  With judicious use of
-    <literal>GROUP BY</literal> and subqueries in <literal>FROM</literal>, this
-    construct can be avoided, but it is often the most convenient
-    alternative.
+    <literal>DISTINCT ON</literal> 子句不是 SQL 标准的一部分，而且由于其结果可能具有不确定性，有时被认为是不良风格。通过在 <literal>FROM</literal> 中审慎使用 <literal>GROUP BY</literal> 和子查询，可以避免这种构造，但它往往是最方便的替代方案。
    </para>
   </sect2>
  </sect1>
