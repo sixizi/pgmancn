@@ -3709,7 +3709,7 @@ a0ee-bc99-9c0b-4ef8-bb6d-6bb9-bd38-0a11
   </sect1>
 
   <sect1 id="datatype-xml">
-   <title><acronym>XML</acronym> Type</title>
+   <title><acronym>XML</acronym> 类型</title>
 
    <indexterm zone="datatype-xml">
     <primary>XML</primary>
@@ -3726,77 +3726,63 @@ a0ee-bc99-9c0b-4ef8-bb6d-6bb9-bd38-0a11
    </para>
 
    <para>
-    The <type>xml</type> type can store well-formed
-    <quote>documents</quote>, as defined by the XML standard, as well
-    as <quote>content</quote> fragments, which are defined by reference
-    to the more permissive
-    <ulink url="https://www.w3.org/TR/2010/REC-xpath-datamodel-20101214/#DocumentNode"><quote>document node</quote></ulink>
-    of the XQuery and XPath data model.
-    Roughly, this means that content fragments can have
-    more than one top-level element or character node.  The expression
-    <literal><replaceable>xmlvalue</replaceable> IS DOCUMENT</literal>
-    can be used to evaluate whether a particular <type>xml</type>
-    value is a full document or only a content fragment.
+    <type>xml</type> 类型既可以存储 XML 标准所定义的良构<quote>文档</quote>，也可以存储<quote>内容</quote>片段，后者是参照 XQuery 和 XPath 数据模型中更为宽松的 <ulink url="https://www.w3.org/TR/2010/REC-xpath-datamodel-20101214/#DocumentNode"><quote>文档节点</quote></ulink> 定义的。粗略地说，这意味着内容片段可以有多个顶层元素或字符节点。表达式 <literal><replaceable>xmlvalue</replaceable> IS DOCUMENT</literal> 可用于判断某个 <type>xml</type> 值是完整文档还是仅为内容片段。
    </para>
 
    <para>
-    Limits and compatibility notes for the <type>xml</type> data type
-    can be found in <xref linkend="xml-limits-conformance"/>.
+    <type>xml</type> 数据类型的限制和兼容性说明可在 <xref linkend="xml-limits-conformance"/> 中找到。
    </para>
 
    <sect2 id="datatype-xml-creating">
-    <title>Creating XML Values</title>
+    <title>创建 XML 值</title>
    <para>
-    To produce a value of type <type>xml</type> from character data,
-    use the function
-    <function>xmlparse</function>:<indexterm><primary>xmlparse</primary></indexterm>
+    要从字符数据产生 <type>xml</type> 类型的值，请使用函数 <function>xmlparse</function>：<indexterm><primary>xmlparse</primary></indexterm>
 <synopsis>
 XMLPARSE ( { DOCUMENT | CONTENT } <replaceable>value</replaceable>)
 </synopsis>
-    Examples:
+    示例：
 <programlisting><![CDATA[
 XMLPARSE (DOCUMENT '<?xml version="1.0"?><book><title>Manual</title><chapter>...</chapter></book>')
 XMLPARSE (CONTENT 'abc<foo>bar</foo><bar>foo</bar>')
 ]]></programlisting>
-    While this is the only way to convert character strings into XML
-    values according to the SQL standard, the PostgreSQL-specific
-    syntaxes:
+    虽然按照 SQL 标准，这是将字符串转换为 XML 值的唯一方式，但 PostgreSQL 特有的语法：
 <programlisting><![CDATA[
 xml '<foo>bar</foo>'
 '<foo>bar</foo>'::xml
 ]]></programlisting>
-    can also be used.
+    也可以使用。
    </para>
 
    <para>
-    The <type>xml</type> type does not validate input values
-    against a document type declaration
-    (DTD),<indexterm><primary>DTD</primary></indexterm>
-    even when the input value specifies a DTD.
-    There is also currently no built-in support for validating against
-    other XML schema languages such as XML Schema.
+    <type>xml</type> 类型不会根据文档类型声明
+    (DTD)<indexterm><primary>DTD</primary></indexterm>
+    验证输入值，
+    即使输入值指定了 DTD 也是如此。
+    目前也没有内置支持来根据
+    其他 XML 模式语言（如 XML Schema）进行验证。
    </para>
 
    <para>
-    The inverse operation, producing a character string value from
-    <type>xml</type>, uses the function
-    <function>xmlserialize</function>:<indexterm><primary>xmlserialize</primary></indexterm>
+    反向操作，即从 <type>xml</type> 产生一个字符串值，
+    使用函数
+    <function>xmlserialize</function>：<indexterm><primary>xmlserialize</primary></indexterm>
 <synopsis>
 XMLSERIALIZE ( { DOCUMENT | CONTENT } <replaceable>value</replaceable> AS <replaceable>type</replaceable> [ [ NO ] INDENT ] )
 </synopsis>
-    <replaceable>type</replaceable> can be
-    <type>character</type>, <type>character varying</type>, or
-    <type>text</type> (or an alias for one of those).  Again, according
-    to the SQL standard, this is the only way to convert between type
-    <type>xml</type> and character types, but PostgreSQL also allows
-    you to simply cast the value.
+    <replaceable>type</replaceable> 可以是
+    <type>character</type>、<type>character varying</type> 或
+    <type>text</type>（或其中之一别名）。同样，
+    根据 SQL 标准，这是在类型
+    <type>xml</type> 与字符类型之间进行转换的唯一方式，
+    但 PostgreSQL 也允许
+    你直接对该值进行造型。
    </para>
 
    <para>
-    The <literal>INDENT</literal> option causes the result to be
-    pretty-printed, while <literal>NO INDENT</literal> (which is the
-    default) just emits the original input string.  Casting to a character
-    type likewise produces the original string.
+    <literal>INDENT</literal> 选项使结果
+    被美化打印，而 <literal>NO INDENT</literal>（它是
+    默认值）只是输出原始输入字符串。造型为字符
+    类型同样产生原始字符串。
    </para>
 
    <para>
@@ -3822,94 +3808,39 @@ SET xmloption TO { DOCUMENT | CONTENT };
    </sect2>
 
    <sect2 id="datatype-xml-encoding-handling">
-    <title>Encoding Handling</title>
+    <title>编码处理</title>
    <para>
-    Care must be taken when dealing with multiple character encodings
-    on the client, server, and in the XML data passed through them.
-    When using the text mode to pass queries to the server and query
-    results to the client (which is the normal mode), PostgreSQL
-    converts all character data passed between the client and the
-    server and vice versa to the character encoding of the respective
-    end; see <xref linkend="multibyte"/>.  This includes string
-    representations of XML values, such as in the above examples.
-    This would ordinarily mean that encoding declarations contained in
-    XML data can become invalid as the character data is converted
-    to other encodings while traveling between client and server,
-    because the embedded encoding declaration is not changed.  To cope
-    with this behavior, encoding declarations contained in
-    character strings presented for input to the <type>xml</type> type
-    are <emphasis>ignored</emphasis>, and content is assumed
-    to be in the current server encoding.  Consequently, for correct
-    processing, character strings of XML data must be sent
-    from the client in the current client encoding.  It is the
-    responsibility of the client to either convert documents to the
-    current client encoding before sending them to the server, or to
-    adjust the client encoding appropriately.  On output, values of
-    type <type>xml</type> will not have an encoding declaration, and
-    clients should assume all data is in the current client
-    encoding.
+    在处理客户端、服务器以及通过它们传递的 XML 数据中的多种字符编码时，必须格外小心。当使用文本模式向服务器传递查询、向客户端传递查询结果时（这是常规模式），PostgreSQL 会把客户端与服务器之间双向传递的所有字符数据转换为相应端的字符编码；参见 <xref linkend="multibyte"/>。这包括 XML 值的字符串表示形式，例如上述示例中的情况。这通常意味着，XML 数据中包含的编码声明可能会在字符数据往返于客户端与服务器之间被转换为其他编码时变得无效，因为内嵌的编码声明并不会被改变。为应对这一行为，提交给 <type>xml</type> 类型作为输入的字符串中所包含的编码声明会被<emphasis>忽略</emphasis>，并假定内容采用当前服务器编码。因此，为了正确处理，XML 数据的字符串必须以当前客户端编码从客户端发送。客户端有责任在将文档发送到服务器之前将其转换为当前客户端编码，或者适当地调整客户端编码。在输出时，<type>xml</type> 类型的值不会带有编码声明，客户端应假定所有数据都采用当前客户端编码。
    </para>
 
    <para>
-    When using binary mode to pass query parameters to the server
-    and query results back to the client, no encoding conversion
-    is performed, so the situation is different.  In this case, an
-    encoding declaration in the XML data will be observed, and if it
-    is absent, the data will be assumed to be in UTF-8 (as required by
-    the XML standard; note that PostgreSQL does not support UTF-16).
-    On output, data will have an encoding declaration
-    specifying the client encoding, unless the client encoding is
-    UTF-8, in which case it will be omitted.
+    当使用二进制模式向服务器传递查询参数、并向客户端返回查询结果时，不会执行编码转换，因此情况有所不同。在这种情况下，XML 数据中的编码声明会被遵循；如果缺少编码声明，则假定数据为 UTF-8（这是 XML 标准的要求；请注意 PostgreSQL 不支持 UTF-16）。在输出时，数据会带有指定客户端编码的编码声明，除非客户端编码为 UTF-8，此时该声明将被省略。
    </para>
 
    <para>
-    Needless to say, processing XML data with PostgreSQL will be less
-    error-prone and more efficient if the XML data encoding, client encoding,
-    and server encoding are the same.  Since XML data is internally
-    processed in UTF-8, computations will be most efficient if the
-    server encoding is also UTF-8.
+    不用说，如果 XML 数据编码、客户端编码和服务器编码相同，那么用 PostgreSQL 处理 XML 数据将更不易出错、效率更高。由于 XML 数据在内部以 UTF-8 处理，如果服务器编码也是 UTF-8，计算效率将最高。
    </para>
 
    <caution>
     <para>
-     Some XML-related functions may not work at all on non-ASCII data
-     when the server encoding is not UTF-8.  This is known to be an
-     issue for <function>xmltable()</function> and <function>xpath()</function> in particular.
+     当服务器编码不是 UTF-8 时，某些与 XML 相关的函数在非 ASCII 数据上可能完全无法工作。已知这尤其是 <function>xmltable()</function> 和 <function>xpath()</function> 的问题。
     </para>
    </caution>
    </sect2>
 
    <sect2 id="datatype-xml-accessing-xml-values">
-   <title>Accessing XML Values</title>
+   <title>访问 XML 值</title>
 
    <para>
-    The <type>xml</type> data type is unusual in that it does not
-    provide any comparison operators.  This is because there is no
-    well-defined and universally useful comparison algorithm for XML
-    data.  One consequence of this is that you cannot retrieve rows by
-    comparing an <type>xml</type> column against a search value.  XML
-    values should therefore typically be accompanied by a separate key
-    field such as an ID.  An alternative solution for comparing XML
-    values is to convert them to character strings first, but note
-    that character string comparison has little to do with a useful
-    XML comparison method.
+    <type>xml</type> 数据类型的特殊之处在于它不提供任何比较运算符。这是因为对于 XML 数据，不存在定义明确且普遍有用的比较算法。这样做的一个后果是，你无法通过将 <type>xml</type> 列与搜索值进行比较来检索行。因此，XML 值通常应伴随一个单独的关键字段，例如 ID。比较 XML 值的另一种解决方案是先将它们转换为字符串，但请注意，字符串比较与有用的 XML 比较方法几乎没有关系。
    </para>
 
    <para>
-    Since there are no comparison operators for the <type>xml</type>
-    data type, it is not possible to create an index directly on a
-    column of this type.  If speedy searches in XML data are desired,
-    possible workarounds include casting the expression to a
-    character string type and indexing that, or indexing an XPath
-    expression.  Of course, the actual query would have to be adjusted
-    to search by the indexed expression.
+    由于 <type>xml</type> 数据类型没有比较运算符，因此无法直接在该类型的列上创建索引。如果需要对 XML 数据进行快速搜索，可能的变通方法包括将表达式转换为字符串类型并对其建立索引，或者对 XPath 表达式建立索引。当然，实际查询必须调整为先按被索引的表达式进行搜索。
    </para>
 
    <para>
-    The text-search functionality in PostgreSQL can also be used to speed
-    up full-document searches of XML data.  The necessary
-    preprocessing support is, however, not yet available in the PostgreSQL
-    distribution.
+    PostgreSQL 中的全文检索功能也可用于加速对 XML 数据的全文档搜索。不过，PostgreSQL 发行版中尚未提供必要的前期处理支持。
    </para>
    </sect2>
   </sect1>
