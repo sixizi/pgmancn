@@ -108,130 +108,69 @@
   </sect1>
 
   <sect1 id="parser-stage">
-   <title>The Parser Stage</title>
+   <title>解析器阶段</title>
 
    <para>
-    The <firstterm>parser stage</firstterm> consists of two parts:
+    <firstterm>解析器阶段</firstterm>由两部分组成：
 
     <itemizedlist>
      <listitem>
       <para>
-       The <firstterm>parser</firstterm> defined in
-       <filename>gram.y</filename> and <filename>scan.l</filename> is
-       built using the Unix tools <application>bison</application>
-       and <application>flex</application>.
+       定义在 <filename>gram.y</filename> 和 <filename>scan.l</filename> 中的<firstterm>解析器</firstterm>是使用 Unix 工具 <application>bison</application> 和 <application>flex</application> 构建的。
       </para>
      </listitem>
      <listitem>
       <para>
-       The <firstterm>transformation process</firstterm> does
-       modifications and augmentations to the data structures returned by the parser.
+       <firstterm>转换过程</firstterm>对解析器返回的数据结构进行修改和扩充。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <sect2 id="parser-stage-parser">
-    <title>Parser</title>
+    <title>解析器</title>
 
     <para>
-     The parser has to check the query string (which arrives as plain
-     text) for valid syntax. If the syntax is correct a
-     <firstterm>parse tree</firstterm> is built up and handed back;
-     otherwise an error is returned. The parser and lexer are
-     implemented using the well-known Unix tools <application>bison</application>
-     and <application>flex</application>.
+     解析器必须检查查询字符串（以纯文本形式到达）的语法是否有效。如果语法正确，就会构建一棵<firstterm>解析树</firstterm>并将其交回；否则返回一个错误。解析器和词法分析器是使用著名的 Unix 工具 <application>bison</application> 和 <application>flex</application> 实现的。
     </para>
 
     <para>
-     The <firstterm>lexer</firstterm> is defined in the file
-     <filename>scan.l</filename> and is responsible
-     for recognizing <firstterm>identifiers</firstterm>,
-     the <firstterm>SQL key words</firstterm> etc. For
-     every key word or identifier that is found, a <firstterm>token</firstterm>
-     is generated and handed to the parser.
+     <firstterm>词法分析器</firstterm>定义在文件 <filename>scan.l</filename> 中，负责识别<firstterm>标识符</firstterm>、<firstterm>SQL 关键字</firstterm>等。对于找到的每个关键字或标识符，都会生成一个<firstterm>记号</firstterm>并交给解析器。
     </para>
 
     <para>
-     The parser is defined in the file <filename>gram.y</filename> and
-     consists of a set of <firstterm>grammar rules</firstterm> and
-     <firstterm>actions</firstterm> that are executed whenever a rule
-     is fired. The code of the actions (which is actually C code) is
-     used to build up the parse tree.
+     解析器定义在文件 <filename>gram.y</filename> 中，由一组<firstterm>语法规则</firstterm>和<firstterm>动作</firstterm>组成，每当某条规则被触发时就会执行相应的动作。动作的代码（实际上是 C 代码）用于构建解析树。
     </para>
 
     <para>
-     The file <filename>scan.l</filename> is transformed to the C
-     source file <filename>scan.c</filename> using the program
-     <application>flex</application> and <filename>gram.y</filename> is
-     transformed to <filename>gram.c</filename> using
-     <application>bison</application>.  After these transformations
-     have taken place a normal C compiler can be used to create the
-     parser. Never make any changes to the generated C files as they
-     will be overwritten the next time <application>flex</application>
-     or <application>bison</application> is called.
+     文件 <filename>scan.l</filename> 使用程序 <application>flex</application> 转换为 C 源文件 <filename>scan.c</filename>，而 <filename>gram.y</filename> 使用 <application>bison</application> 转换为 <filename>gram.c</filename>。完成这些转换之后，就可以使用普通的 C 编译器来创建解析器。绝不要对生成的 C 文件做任何修改，因为下次调用 <application>flex</application> 或 <application>bison</application> 时它们将被覆盖。
 
      <note>
       <para>
-       The mentioned transformations and compilations are normally done
-       automatically using the <firstterm>makefiles</firstterm>
-       shipped with the <productname>PostgreSQL</productname>
-       source distribution.
+       上述转换和编译通常使用 <productname>PostgreSQL</productname> 源代码分发中附带的<firstterm>makefile</firstterm>自动完成。
       </para>
      </note>
     </para>
 
     <para>
-     A detailed description of <application>bison</application> or
-     the grammar rules given in <filename>gram.y</filename> would be
-     beyond the scope of this manual. There are many books and
-     documents dealing with <application>flex</application> and
-     <application>bison</application>. You should be familiar with
-     <application>bison</application> before you start to study the
-     grammar given in <filename>gram.y</filename> otherwise you won't
-     understand what happens there.
+     详细描述 <application>bison</application> 或 <filename>gram.y</filename> 中给出的语法规则超出了本手册的范围。有许多书籍和文档讨论 <application>flex</application> 和 <application>bison</application>。在开始研究 <filename>gram.y</filename> 中给出的语法之前，你应当熟悉 <application>bison</application>，否则你将无法理解其中发生的事情。
     </para>
 
    </sect2>
 
    <sect2 id="parser-stage-transformation-process">
-     <title>Transformation Process</title>
+     <title>转换过程</title>
 
     <para>
-     The parser stage creates a parse tree using only fixed rules about
-     the syntactic structure of SQL.  It does not make any lookups in the
-     system catalogs, so there is no possibility to understand the detailed
-     semantics of the requested operations.  After the parser completes,
-     the <firstterm>transformation process</firstterm> takes the tree handed
-     back by the parser as input and does the semantic interpretation needed
-     to understand which tables, functions, and operators are referenced by
-     the query.  The data structure that is built to represent this
-     information is called the <firstterm>query tree</firstterm>.
+     解析器阶段仅使用关于 SQL 语法结构的固定规则来创建解析树。它不在系统目录中做任何查找，因此不可能理解所请求操作的详细语义。解析器完成后，<firstterm>转换过程</firstterm>以解析器交回的树作为输入，执行所需的语义解释，以理解查询引用了哪些表、函数和运算符。为表示这些信息而构建的数据结构称为<firstterm>查询树</firstterm>。
     </para>
 
     <para>
-     The reason for separating raw parsing from semantic analysis is that
-     system catalog lookups can only be done within a transaction, and we
-     do not wish to start a transaction immediately upon receiving a query
-     string.  The raw parsing stage is sufficient to identify the transaction
-     control commands (<command>BEGIN</command>, <command>ROLLBACK</command>, etc.), and
-     these can then be correctly executed without any further analysis.
-     Once we know that we are dealing with an actual query (such as
-     <command>SELECT</command> or <command>UPDATE</command>), it is okay to
-     start a transaction if we're not already in one.  Only then can the
-     transformation process be invoked.
+     将原始解析与语义分析分离的原因在于，系统目录查找只能在事务内进行，而我们不希望在收到查询字符串后立即启动事务。原始解析阶段足以识别事务控制命令（<command>BEGIN</command>、<command>ROLLBACK</command> 等），随后这些命令无需任何进一步分析即可正确执行。一旦我们知道正在处理的是实际查询（例如 <command>SELECT</command> 或 <command>UPDATE</command>），那么如果尚未处于事务中，就可以启动事务。只有到那时才能调用转换过程。
     </para>
 
     <para>
-     The query tree created by the transformation process is structurally
-     similar to the raw parse tree in most places, but it has many differences
-     in detail.  For example, a <structname>FuncCall</structname> node in the
-     parse tree represents something that looks syntactically like a function
-     call.  This might be transformed to either a <structname>FuncExpr</structname>
-     or <structname>Aggref</structname> node depending on whether the referenced
-     name turns out to be an ordinary function or an aggregate function.
-     Also, information about the actual data types of columns and expression
-     results is added to the query tree.
+     由转换过程创建的查询树在大多数地方与原始解析树在结构上相似，但在细节上有许多差异。例如，解析树中的 <structname>FuncCall</structname> 节点表示在语法上看起来像函数调用的东西。根据所引用的名称最终是普通函数还是聚合函数，它可能被转换为 <structname>FuncExpr</structname> 或 <structname>Aggref</structname> 节点。此外，关于列和表达式结果的实际数据类型的信息也会被添加到查询树中。
     </para>
    </sect2>
   </sect1>
