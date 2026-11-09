@@ -837,22 +837,19 @@ ALTER SEQUENCE <replaceable class="parameter">tablename</replaceable>_<replaceab
   </sect1>
 
   <sect1 id="datatype-money">
-   <title>Monetary Types</title>
+   <title>货币类型</title>
 
    <para>
-    The <type>money</type> type stores a currency amount with a fixed
-    fractional precision; see <xref
-    linkend="datatype-money-table"/>.  The fractional precision is
-    determined by the database's <xref linkend="guc-lc-monetary"/> setting.
-    The range shown in the table assumes there are two fractional digits.
-    Input is accepted in a variety of formats, including integer and
-    floating-point literals, as well as typical
-    currency formatting, such as <literal>'$1,000.00'</literal>.
-    Output is generally in the latter form but depends on the locale.
+    <type>money</type> 类型存储带有固定小数精度的货币金额；请参见 <xref
+    linkend="datatype-money-table"/>。小数精度由数据库的 <xref linkend="guc-lc-monetary"/> 设置决定。
+    表中显示的范围假定有两位小数。
+    输入可接受多种格式，包括整数和浮点字面量，以及典型的
+    货币格式，例如 <literal>'$1,000.00'</literal>。
+    输出通常采用后一种形式，但取决于区域设置。
    </para>
 
     <table id="datatype-money-table">
-     <title>Monetary Types</title>
+     <title>货币类型</title>
      <tgroup cols="4">
       <colspec colname="col1" colwidth="2*"/>
       <colspec colname="col2" colwidth="1*"/>
@@ -860,62 +857,57 @@ ALTER SEQUENCE <replaceable class="parameter">tablename</replaceable>_<replaceab
       <colspec colname="col4" colwidth="2*"/>
       <thead>
        <row>
-        <entry>Name</entry>
-        <entry>Storage Size</entry>
-        <entry>Description</entry>
-        <entry>Range</entry>
+        <entry>名称</entry>
+        <entry>存储尺寸</entry>
+        <entry>描述</entry>
+        <entry>范围</entry>
        </row>
       </thead>
       <tbody>
        <row>
         <entry><type>money</type></entry>
-        <entry>8 bytes</entry>
-        <entry>currency amount</entry>
-        <entry>-92233720368547758.08 to +92233720368547758.07</entry>
+        <entry>8 字节</entry>
+        <entry>货币金额</entry>
+        <entry>-92233720368547758.08 到 +92233720368547758.07</entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
    <para>
-    Since the output of this data type is locale-sensitive, it might not
-    work to load <type>money</type> data into a database that has a different
-    setting of <varname>lc_monetary</varname>.  To avoid problems, before
-    restoring a dump into a new database make sure <varname>lc_monetary</varname> has
-    the same or equivalent value as in the database that was dumped.
+    由于此数据类型的输出与区域设置相关，把 <type>money</type> 数据载入到
+    <varname>lc_monetary</varname> 设置不同的数据库中可能无法正常工作。为避免出现问题，
+    在把转储恢复到新数据库之前，请确保 <varname>lc_monetary</varname> 的值与被转储的数据库中的值相同或等价。
    </para>
 
    <para>
-    Values of the <type>numeric</type>, <type>int</type>, and
-    <type>bigint</type> data types can be cast to <type>money</type>.
-    Conversion from the <type>real</type> and <type>double precision</type>
-    data types can be done by casting to <type>numeric</type> first, for
-    example:
+    <type>numeric</type>、<type>int</type> 和 <type>bigint</type> 数据类型的值可以转换为 <type>money</type>。
+    从 <type>real</type> 和 <type>double precision</type> 数据类型进行转换时，可以先转换为 <type>numeric</type>，
+    例如：
 <programlisting>
 SELECT '12.34'::float8::numeric::money;
 </programlisting>
-    However, this is not recommended.  Floating point numbers should not be
-    used to handle money due to the potential for rounding errors.
+    但是，不建议这样做。由于存在舍入误差的可能性，不应使用浮点数来处理货币。
    </para>
 
    <para>
-    A <type>money</type> value can be cast to <type>numeric</type> without
-    loss of precision. Conversion to other types could potentially lose
-    precision, and must also be done in two stages:
+    一个 <type>money</type> 值可以转换为 <type>numeric</type>，而不会
+    损失精度。转换为其他类型可能会损失
+    精度，并且也必须分两个阶段完成：
 <programlisting>
 SELECT '52093.89'::money::numeric::float8;
 </programlisting>
    </para>
 
    <para>
-    Division of a <type>money</type> value by an integer value is performed
-    with truncation of the fractional part towards zero.  To get a rounded
-    result, divide by a floating-point value, or cast the <type>money</type>
-    value to <type>numeric</type> before dividing and back to <type>money</type>
-    afterwards.  (The latter is preferable to avoid risking precision loss.)
-    When a <type>money</type> value is divided by another <type>money</type>
-    value, the result is <type>double precision</type> (i.e., a pure number,
-    not money); the currency units cancel each other out in the division.
+    <type>money</type> 值除以整数值时，会执行
+    向零截断小数部分的除法。要得到四舍五入的
+    结果，请除以一个浮点值，或者在除法之前将 <type>money</type>
+    值转换为 <type>numeric</type>，之后再转换回 <type>money</type>。
+    （后者更可取，以避免精度损失的风险。）
+    当一个 <type>money</type> 值除以另一个 <type>money</type>
+    值时，结果是 <type>double precision</type>（即一个纯数字，
+    而不是货币）；货币单位在除法中相互抵消。
    </para>
   </sect1>
 
