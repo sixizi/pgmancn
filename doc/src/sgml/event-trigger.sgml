@@ -16,44 +16,30 @@
   </para>
 
   <sect1 id="event-trigger-definition">
-   <title>Overview of Event Trigger Behavior</title>
+   <title>事件触发器行为概述</title>
 
    <para>
-     An event trigger fires whenever the event with which it is associated
-     occurs in the database in which it is defined. Currently, the
-     supported events are
-     <literal>login</literal>,
-     <literal>ddl_command_start</literal>,
-     <literal>ddl_command_end</literal>,
+     每当与其关联的事件在定义该触发器的数据库中发生时，事件触发器就会被触发。目前支持的事件有
+     <literal>login</literal>、
+     <literal>ddl_command_start</literal>、
+     <literal>ddl_command_end</literal>、
      <literal>table_rewrite</literal>
-     and <literal>sql_drop</literal>.
-     Support for additional events may be added in future releases.
+     和 <literal>sql_drop</literal>。
+     未来版本可能会增加对其他事件的支持。
    </para>
 
    <sect2 id="event-trigger-login">
     <title>login</title>
 
    <para>
-     The <literal>login</literal> event occurs when an authenticated user logs
-     into the system. Any bug in a trigger procedure for this event may
-     prevent successful login to the system. Such bugs may be worked around by
-     setting <xref linkend="guc-event-triggers"/> to <literal>false</literal>
-     either in a connection string or configuration file. Alternatively, you can
-     restart the system in single-user mode (as event triggers are
-     disabled in this mode). See the <xref linkend="app-postgres"/> reference
-     page for details about using single-user mode.
-     The <literal>login</literal> event will also fire on standby servers.
-     To prevent servers from becoming inaccessible, such triggers must avoid
-     writing anything to the database when running on a standby.
-     Also, it's recommended to avoid long-running queries in
-     <literal>login</literal> event triggers.  Note that, for instance,
-     canceling a connection in <application>psql</application> will not cancel
-     the in-progress <literal>login</literal> trigger.
+     当已认证用户登录系统时，会发生 <literal>login</literal> 事件。该事件的触发器过程中的任何缺陷都可能阻止成功登录系统。此类缺陷可以通过在连接字符串或配置文件中将 <xref linkend="guc-event-triggers"/> 设置为 <literal>false</literal> 来规避。或者，你可以以单用户模式重启系统（因为在此模式下事件触发器被禁用）。关于使用单用户模式的详细信息，请参阅 <xref linkend="app-postgres"/> 参考页。
+     <literal>login</literal> 事件也会在备服务器上触发。
+     为防止服务器变得无法访问，此类触发器在备机上运行时必须避免向数据库写入任何内容。
+     此外，建议避免在 <literal>login</literal> 事件触发器中执行长时间运行的查询。请注意，例如，在 <application>psql</application> 中取消连接不会取消正在进行的 <literal>login</literal> 触发器。
    </para>
 
    <para>
-     For an example on how to use the <literal>login</literal> event trigger,
-     see <xref linkend="event-trigger-database-login-example"/>.
+     关于如何使用 <literal>login</literal> 事件触发器的示例，请参阅 <xref linkend="event-trigger-database-login-example"/>。
    </para>
    </sect2>
 
@@ -61,8 +47,7 @@
     <title>ddl_command_start</title>
 
    <para>
-     The <literal>ddl_command_start</literal> event occurs just before the
-     execution of a DDL command.  DDL commands in this context are:
+     <literal>ddl_command_start</literal> 事件在 DDL 命令执行之前发生。此上下文中的 DDL 命令包括：
      <itemizedlist>
       <listitem><para><literal>CREATE</literal></para></listitem>
       <listitem><para><literal>ALTER</literal></para></listitem>
@@ -75,28 +60,23 @@
       <listitem><para><literal>REVOKE</literal></para></listitem>
       <listitem><para><literal>SECURITY LABEL</literal></para></listitem>
      </itemizedlist>
-     <literal>ddl_command_start</literal> also occurs just before the
-     execution of a <literal>SELECT INTO</literal> command, since this is
-     equivalent to <literal>CREATE TABLE AS</literal>.
+     <literal>ddl_command_start</literal> 也会在 <literal>SELECT INTO</literal> 命令执行之前发生，因为这等价于 <literal>CREATE TABLE AS</literal>。
    </para>
 
    <para>
-     As an exception, this event does not occur for DDL commands targeting
-     shared objects:
+     作为例外，针对共享对象的 DDL 命令不会触发此事件：
      <itemizedlist>
-      <listitem><para>databases</para></listitem>
-      <listitem><para>roles (role definitions and role memberships)</para></listitem>
-      <listitem><para>tablespaces</para></listitem>
-      <listitem><para>parameter privileges</para></listitem>
+      <listitem><para>数据库</para></listitem>
+      <listitem><para>角色（角色定义和角色成员关系）</para></listitem>
+      <listitem><para>表空间</para></listitem>
+      <listitem><para>参数权限</para></listitem>
       <listitem><para><command>ALTER SYSTEM</command></para></listitem>
      </itemizedlist>
-     This event also does not occur for commands targeting event triggers
-     themselves.
+     对于针对事件触发器本身的命令，该事件同样不会发生。
    </para>
 
    <para>
-     No check whether the affected object exists or doesn't exist is performed
-     before the event trigger fires.
+     在事件触发器触发之前，不会检查受影响的对象是否存在。
    </para>
    </sect2>
 
@@ -104,15 +84,7 @@
     <title>ddl_command_end</title>
 
    <para>
-    The <literal>ddl_command_end</literal> event occurs just after the execution of
-    the same set of commands as <literal>ddl_command_start</literal>.  To
-    obtain more details on the <acronym>DDL</acronym>
-    operations that took place, use the set-returning function
-    <literal>pg_event_trigger_ddl_commands()</literal> from the
-    <literal>ddl_command_end</literal> event trigger code (see
-    <xref linkend="functions-event-triggers"/>).  Note that the trigger fires
-    after the actions have taken place (but before the transaction commits),
-    and thus the system catalogs can be read as already changed.
+    <literal>ddl_command_end</literal> 事件在与 <literal>ddl_command_start</literal> 相同的一组命令执行完毕之后立即发生。要获取有关所发生的 <acronym>DDL</acronym> 操作的更多细节，请在 <literal>ddl_command_end</literal> 事件触发器代码中使用集合返回函数 <literal>pg_event_trigger_ddl_commands()</literal>（参见 <xref linkend="functions-event-triggers"/>）。请注意，该触发器是在相关动作已经发生之后（但在事务提交之前）触发的，因此可以按已经变更的状态读取系统目录。
    </para>
    </sect2>
 
@@ -120,20 +92,11 @@
     <title>sql_drop</title>
 
    <para>
-    The <literal>sql_drop</literal> event occurs just before the
-    <literal>ddl_command_end</literal> event trigger for any operation that drops
-    database objects.  Note that besides the obvious <literal>DROP</literal>
-    commands, some <literal>ALTER</literal> commands can also trigger an
-    <literal>sql_drop</literal> event.
+    <literal>sql_drop</literal> 事件在针对任何删除数据库对象的操作的 <literal>ddl_command_end</literal> 事件触发器之前发生。请注意，除了显而易见的 <literal>DROP</literal> 命令之外，某些 <literal>ALTER</literal> 命令也可能触发 <literal>sql_drop</literal> 事件。
    </para>
 
    <para>
-    To list the objects that have been dropped, use the
-    set-returning function <literal>pg_event_trigger_dropped_objects()</literal> from the
-    <literal>sql_drop</literal> event trigger code (see
-    <xref linkend="functions-event-triggers"/>). Note that
-    the trigger is executed after the objects have been deleted from the
-    system catalogs, so it's not possible to look them up anymore.
+    要列出已被删除的对象，请在 <literal>sql_drop</literal> 事件触发器代码中使用集合返回函数 <literal>pg_event_trigger_dropped_objects()</literal>（参见 <xref linkend="functions-event-triggers"/>）。请注意，该触发器在对象已从系统目录中删除之后才执行，因此无法再查找它们。
    </para>
    </sect2>
 
@@ -156,43 +119,26 @@
    </sect2>
 
    <sect2 id="event-trigger-aborted-transactions">
-    <title>Event Triggers in Aborted Transactions</title>
+    <title>已中止事务中的事件触发器</title>
 
    <para>
-     Event triggers (like other functions) cannot be executed in an aborted
-     transaction.  Thus, if a DDL command fails with an error, any associated
-     <literal>ddl_command_end</literal> triggers will not be executed.  Conversely,
-     if a <literal>ddl_command_start</literal> trigger fails with an error, no
-     further event triggers will fire, and no attempt will be made to execute
-     the command itself.  Similarly, if a <literal>ddl_command_end</literal> trigger
-     fails with an error, the effects of the DDL statement will be rolled
-     back, just as they would be in any other case where the containing
-     transaction aborts.
+     事件触发器（与其他函数一样）无法在已中止的事务中执行。因此，如果某个 DDL 命令因错误而失败，任何关联的 <literal>ddl_command_end</literal> 触发器都不会被执行。反过来，如果某个 <literal>ddl_command_start</literal> 触发器因错误而失败，则不会再触发其他事件触发器，也不会尝试执行该命令本身。同样，如果某个 <literal>ddl_command_end</literal> 触发器因错误而失败，DDL 语句的效果将被回滚，就像在包含它的事务中止的任何其他情况中一样。
    </para>
    </sect2>
 
    <sect2 id="event-trigger-creating">
-    <title>Creating Event Triggers</title>
+    <title>创建事件触发器</title>
 
    <para>
-     Event triggers are created using the command <xref linkend="sql-createeventtrigger"/>.
-     In order to create an event trigger, you must first create a function with
-     the special return type <literal>event_trigger</literal>.  This function
-     need not (and may not) return a value; the return type serves merely as
-     a signal that the function is to be invoked as an event trigger.
+     事件触发器使用 <xref linkend="sql-createeventtrigger"/> 命令创建。要创建事件触发器，你必须首先创建一个具有特殊返回类型 <literal>event_trigger</literal> 的函数。该函数不需要（也不可以）返回值；返回类型仅仅作为一种信号，表示该函数将作为事件触发器被调用。
    </para>
 
    <para>
-     If more than one event trigger is defined for a particular event, they will
-     fire in alphabetical order by trigger name.
+     如果为特定事件定义了多个事件触发器，它们将按触发器名称的字母顺序触发。
    </para>
 
    <para>
-     A trigger definition can also specify a <literal>WHEN</literal>
-     condition so that, for example, a <literal>ddl_command_start</literal>
-     trigger can be fired only for particular commands which the user wishes
-     to intercept. A common use of such triggers is to restrict the range of
-     DDL operations which users may perform.
+     触发器定义还可以指定 <literal>WHEN</literal> 条件，以便例如 <literal>ddl_command_start</literal> 触发器仅对用户希望拦截的特定命令触发。此类触发器的一个常见用途是限制用户可以执行的 DDL 操作的范围。
    </para>
    </sect2>
   </sect1>
