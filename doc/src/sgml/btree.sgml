@@ -179,19 +179,16 @@
  <secondary>in_range</secondary>
 </indexterm>
     <para>
-     Optionally, a btree operator family may provide
-     <firstterm>in_range</firstterm> support function(s), registered
-     under support function number 3.  These are not used during btree
-     index operations; rather, they extend the semantics of the
-     operator family so that it can support window clauses containing
-     the <literal>RANGE</literal> <replaceable>offset</replaceable>
-     <literal>PRECEDING</literal> and <literal>RANGE</literal>
+     作为可选项，btree 运算符族可以提供
+     <firstterm>in_range</firstterm> 支持函数，注册为支持函数编号 3。
+     这些函数在 btree 索引操作期间不会被使用；相反，它们扩展了运算符族的语义，
+     使其能够支持包含 <literal>RANGE</literal> <replaceable>offset</replaceable>
+     <literal>PRECEDING</literal> 以及 <literal>RANGE</literal>
      <replaceable>offset</replaceable> <literal>FOLLOWING</literal>
-     frame bound types (see <xref
-      linkend="syntax-window-functions"/>).  Fundamentally, the extra
-     information provided is how to add or subtract an
-     <replaceable>offset</replaceable> value in a way that is
-     compatible with the family's data ordering.
+     框架边界类型的窗口子句（参见 <xref
+      linkend="syntax-window-functions"/>）。
+     从根本上说，所提供的额外信息就是如何以与该运算符族的数据排序相兼容的方式，
+     对一个 <replaceable>offset</replaceable> 值进行加法或减法运算。
     </para>
 
     <para>
@@ -481,21 +478,18 @@ options(<replaceable>relopts</replaceable> <type>local_relopts *</type>) returns
    </para>
   </note>
   <para>
-   Bottom-up index deletion performs the vast majority of all garbage
-   index tuple cleanup for particular indexes with certain workloads.
-   This is expected with any B-Tree index that is subject to
-   significant version churn from <command>UPDATE</command>s that
-   rarely or never logically modify the columns that the index covers.
-   The average and worst-case number of versions per logical row can
-   be kept low purely through targeted incremental deletion passes.
-   It's quite possible that the on-disk size of certain indexes will
-   never increase by even one single page/block despite
-   <emphasis>constant</emphasis> version churn from
-   <command>UPDATE</command>s.  Even then, an exhaustive <quote>clean
-    sweep</quote> by a <command>VACUUM</command> operation (typically
-   run in an autovacuum worker process) will eventually be required as
-   a part of <emphasis>collective</emphasis> cleanup of the table and
-   each of its indexes.
+   对于某些工作负载下的特定索引，自底向上索引删除承担了
+   绝大部分垃圾索引元组的清理工作。
+   如果某个 B-Tree 索引因 <command>UPDATE</command> 而产生大量版本更替，
+   而这些更新很少或从不在逻辑上修改该索引所覆盖的列，那么出现这种情况是意料之中的。
+   仅通过有针对性的增量删除过程，就能使每个逻辑行的平均版本数
+   和最坏情况下的版本数保持在较低水平。
+   某些索引的磁盘大小完全有可能连一个页/块都不会增加，
+   尽管存在<emphasis>持续不断</emphasis>的、由
+   <command>UPDATE</command> 造成的版本更替。即便如此，最终仍需要一次彻底的<quote>全面
+    清扫</quote>，由 <command>VACUUM</command> 操作（通常在自动清理工作进程中运行）来完成，
+   作为对表及其每个索引进行<emphasis>整体</emphasis>清理的
+   一部分。
   </para>
   <para>
    与 <command>VACUUM</command> 不同，自底向上索引删除并不就最旧的垃圾索引元组可能有多旧提供任何强有力的保证。不允许任何索引保留<quote>浮动垃圾</quote>索引元组，这些元组在表和其所有索引共同享有的保守截止点之前就已死亡。这一基本的表级不变式使得回收表 <acronym>TID</acronym> 变得安全。正因如此，不同的逻辑行才有可能随时间推移重用同一个表 <acronym>TID</acronym>（不过，对于生命周期跨越同一 <command>VACUUM</command> 周期的两个逻辑行，这永远不会发生）。
