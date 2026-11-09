@@ -995,7 +995,7 @@ CREATE INDEX test1c_content_y_index ON test1c (content COLLATE "y");
 
 
  <sect1 id="indexes-examine">
-  <title>Examining Index Usage</title>
+  <title>检查索引使用情况</title>
 
   <indexterm zone="indexes-examine">
    <primary>index</primary>
@@ -1003,92 +1003,43 @@ CREATE INDEX test1c_content_y_index ON test1c (content COLLATE "y");
   </indexterm>
 
   <para>
-   Although indexes in <productname>PostgreSQL</productname> do not need
-   maintenance or tuning, it is still important to check
-   which indexes are actually used by the real-life query workload.
-   Examining index usage for an individual query is done with the
-   <xref linkend="sql-explain"/>
-   command; its application for this purpose is
-   illustrated in <xref linkend="using-explain"/>.
-   It is also possible to gather overall statistics about index usage
-   in a running server, as described in <xref linkend="monitoring-stats"/>.
+   尽管 <productname>PostgreSQL</productname> 中的索引不需要维护或调优，但检查实际查询负载中真正使用了哪些索引仍然很重要。检查单个查询的索引使用情况可以通过 <xref linkend="sql-explain"/> 命令完成；该命令在这方面的应用在 <xref linkend="using-explain"/> 中说明。也可以收集运行中服务器上索引使用情况的总体统计信息，如 <xref linkend="monitoring-stats"/> 所述。
   </para>
 
   <para>
-   It is difficult to formulate a general procedure for determining
-   which indexes to create.  There are a number of typical cases that
-   have been shown in the examples throughout the previous sections.
-   A good deal of experimentation is often necessary.
-   The rest of this section gives some tips for that:
+   很难制定一个确定应创建哪些索引的通用流程。前面的各节示例中已经展示了许多典型情况。通常需要进行大量实验。本节余下的部分给出一些提示：
   </para>
 
   <itemizedlist>
    <listitem>
     <para>
-     Always run <xref linkend="sql-analyze"/>
-     first.  This command
-     collects statistics about the distribution of the values in the
-     table.  This information is required to estimate the number of rows
-     returned by a query, which is needed by the planner to assign
-     realistic costs to each possible query plan.  In absence of any
-     real statistics, some default values are assumed, which are
-     almost certain to be inaccurate.  Examining an application's
-     index usage without having run <command>ANALYZE</command> is
-     therefore a lost cause.
-     See <xref linkend="vacuum-for-statistics"/>
-     and <xref linkend="autovacuum"/> for more information.
+     始终先运行 <xref linkend="sql-analyze"/>。该命令收集有关表中值分布情况的统计信息。这些信息用于估算查询返回的行数，而查询规划器需要用它来为每个可能的查询计划分配符合实际的代价。在没有任何真实统计信息的情况下，会假定一些默认值，而这些默认值几乎肯定是不准确的。因此，在没有运行 <command>ANALYZE</command> 的情况下检查应用程序的索引使用情况是徒劳的。更多信息请参见 <xref linkend="vacuum-for-statistics"/> 和 <xref linkend="autovacuum"/>。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Use real data for experimentation.  Using test data for setting
-     up indexes will tell you what indexes you need for the test data,
-     but that is all.
+     使用真实数据进行实验。使用测试数据来设置索引只会告诉你测试数据需要哪些索引，仅此而已。
     </para>
 
     <para>
-     It is especially fatal to use very small test data sets.
-     While selecting 1000 out of 100000 rows could be a candidate for
-     an index, selecting 1 out of 100 rows will hardly be, because the
-     100 rows probably fit within a single disk page, and there
-     is no plan that can beat sequentially fetching 1 disk page.
+     使用非常小的测试数据集尤其致命。从 100000 行中选出 1000 行可能是索引的候选，而从 100 行中选出 1 行则几乎不可能，因为这 100 行很可能能放入单个磁盘页面，并且没有任何计划能胜过顺序读取 1 个磁盘页面。
     </para>
 
     <para>
-     Also be careful when making up test data, which is often
-     unavoidable when the application is not yet in production.
-     Values that are very similar, completely random, or inserted in
-     sorted order will skew the statistics away from the distribution
-     that real data would have.
+     在构造测试数据时也要小心，这在应用尚未投入生产时往往是不可避免的。非常相似的值、完全随机的值，或按排序顺序插入的值，都会使统计信息偏离真实数据所具有的分布。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     When indexes are not used, it can be useful for testing to force
-     their use.  There are run-time parameters that can turn off
-     various plan types (see <xref linkend="runtime-config-query-enable"/>).
-     For instance, turning off sequential scans
-     (<varname>enable_seqscan</varname>) and nested-loop joins
-     (<varname>enable_nestloop</varname>), which are the most basic plans,
-     will force the system to use a different plan.  If the system
-     still chooses a sequential scan or nested-loop join then there is
-     probably a more fundamental reason why the index is not being
-     used; for example, the query condition does not match the index.
-     (What kind of query can use what kind of index is explained in
-     the previous sections.)
+     当索引未被使用时，为了测试而强制使用索引可能会很有用。有一些运行时参数可以关闭各种计划类型（见 <xref linkend="runtime-config-query-enable"/>）。例如，关闭顺序扫描（<varname>enable_seqscan</varname>）和嵌套循环连接（<varname>enable_nestloop</varname>）——它们是最基本的计划——将迫使系统使用不同的计划。如果系统仍然选择顺序扫描或嵌套循环连接，那么索引未被使用很可能有更根本的原因；例如，查询条件与索引不匹配。（前几节解释了什么样的查询可以使用什么样的索引。）
     </para>
    </listitem>
 
    <listitem>
     <para>
-     If forcing index usage does use the index, then there are two
-     possibilities: Either the system is right and using the index is
-     indeed not appropriate, or the cost estimates of the query plans
-     are not reflecting reality.  So you should time your query with
-     and without indexes.  The <command>EXPLAIN ANALYZE</command>
-     command can be useful here.
+     如果强制使用索引确实用到了索引，那么有两种可能：要么系统是对的，使用索引确实不合适；要么查询计划的代价估算没有反映实际情况。因此，你应该在有索引和无索引的情况下分别对查询计时。<command>EXPLAIN ANALYZE</command> 命令在这里会很有用。
     </para>
    </listitem>
 
@@ -1107,10 +1058,7 @@ CREATE INDEX test1c_content_y_index ON test1c (content COLLATE "y");
     </para>
 
     <para>
-     If you do not succeed in adjusting the costs to be more
-     appropriate, then you might have to resort to forcing index usage
-     explicitly.  You might also want to contact the
-     <productname>PostgreSQL</productname> developers to examine the issue.
+     如果你未能成功地把代价调整得更合适，那么你可能不得不求助于显式地强制使用索引。你可能还想联系 <productname>PostgreSQL</productname> 的开发者来研究这个问题。
     </para>
    </listitem>
   </itemizedlist>
