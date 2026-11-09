@@ -345,7 +345,7 @@ SELECT dblink_disconnect('myconn');
 
   <refnamediv>
    <refname>dblink</refname>
-   <refpurpose>executes a query in a remote database</refpurpose>
+   <refpurpose>在远程数据库中执行一个查询</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -357,32 +357,29 @@ dblink(text sql [, bool fail_on_error]) returns setof record
   </refsynopsisdiv>
 
   <refsect1>
-   <title>Description</title>
+   <title>描述</title>
 
    <para>
-    <function>dblink</function> executes a query (usually a <command>SELECT</command>,
-    but it can be any SQL statement that returns rows) in a remote database.
+    <function>dblink</function> 在远程数据库中执行一个查询（通常是 <command>SELECT</command>，
+    但也可以是任何返回行的 SQL 语句）。
    </para>
 
    <para>
-    When two <type>text</type> arguments are given, the first one is first
-    looked up as a persistent connection's name; if found, the command
-    is executed on that connection.  If not found, the first argument
-    is treated as a connection info string as for <function>dblink_connect</function>,
-    and the indicated connection is made just for the duration of this command.
+    当给出两个 <type>text</type> 参数时，首先将第一个参数作为持久连接的名称进行查找；如果找到，
+    则在该连接上执行该命令。如果未找到，则将第一个参数视为与 <function>dblink_connect</function> 相同的连接信息字符串，
+    并且所指示的连接仅在此命令执行期间建立。
    </para>
   </refsect1>
 
   <refsect1>
-   <title>Arguments</title>
+   <title>参数</title>
 
    <variablelist>
     <varlistentry>
      <term><parameter>connname</parameter></term>
      <listitem>
       <para>
-       Name of the connection to use; omit this parameter to use the
-       unnamed connection.
+       要使用的连接名称；省略此参数则使用未命名连接。
       </para>
      </listitem>
     </varlistentry>
@@ -391,8 +388,7 @@ dblink(text sql [, bool fail_on_error]) returns setof record
      <term><parameter>connstr</parameter></term>
      <listitem>
       <para>
-       A connection info string, as previously described for
-       <function>dblink_connect</function>.
+       连接信息字符串，如前面针对 <function>dblink_connect</function> 所述。
       </para>
      </listitem>
     </varlistentry>
@@ -401,8 +397,7 @@ dblink(text sql [, bool fail_on_error]) returns setof record
      <term><parameter>sql</parameter></term>
      <listitem>
       <para>
-       The SQL query that you wish to execute in the remote database,
-       for example <literal>select * from foo</literal>.
+       你希望在远程数据库中执行的 SQL 查询，例如 <literal>select * from foo</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -411,10 +406,7 @@ dblink(text sql [, bool fail_on_error]) returns setof record
      <term><parameter>fail_on_error</parameter></term>
      <listitem>
       <para>
-       If true (the default when omitted) then an error thrown on the
-       remote side of the connection causes an error to also be thrown
-       locally. If false, the remote error is locally reported as a NOTICE,
-       and the function returns no rows.
+       如果为 true（省略时的默认值），则连接远程端抛出的错误也会导致本地抛出错误。如果为 false，则远程错误在本地报告为 NOTICE，并且该函数不返回任何行。
       </para>
      </listitem>
     </varlistentry>
@@ -422,16 +414,10 @@ dblink(text sql [, bool fail_on_error]) returns setof record
   </refsect1>
 
   <refsect1>
-   <title>Return Value</title>
+   <title>返回值</title>
 
    <para>
-    The function returns the row(s) produced by the query.  Since
-    <function>dblink</function> can be used with any query, it is declared
-    to return <type>record</type>, rather than specifying any particular
-    set of columns.  This means that you must specify the expected
-    set of columns in the calling query &mdash; otherwise
-    <productname>PostgreSQL</productname> would not know what to expect.
-    Here is an example:
+    该函数返回查询产生的行。由于 <function>dblink</function> 可用于任何查询，因此它被声明为返回 <type>record</type>，而不是指定任何特定的列集合。这意味着你必须在调用查询 &mdash; 中指定预期的列集合，否则 <productname>PostgreSQL</productname> 将不知道预期什么。下面是一个示例：
 
 <programlisting>
 SELECT *
@@ -441,31 +427,17 @@ SELECT *
     WHERE proname LIKE 'bytea%';
 </programlisting>
 
-    The <quote>alias</quote> part of the <literal>FROM</literal> clause must
-    specify the column names and types that the function will return.
-    (Specifying column names in an alias is actually standard SQL
-    syntax, but specifying column types is a <productname>PostgreSQL</productname>
-    extension.)  This allows the system to understand what
-    <literal>*</literal> should expand to, and what <structname>proname</structname>
-    in the <literal>WHERE</literal> clause refers to, in advance of trying
-    to execute the function.  At run time, an error will be thrown
-    if the actual query result from the remote database does not
-    have the same number of columns shown in the <literal>FROM</literal> clause.
-    The column names need not match, however, and <function>dblink</function>
-    does not insist on exact type matches either.  It will succeed
-    so long as the returned data strings are valid input for the
-    column type declared in the <literal>FROM</literal> clause.
+    <literal>FROM</literal> 子句的 <quote>别名</quote> 部分必须指定该函数将返回的列名和类型。（在别名中指定列名实际上是标准 SQL 语法，但指定列类型是 <productname>PostgreSQL</productname> 的扩展。）这使得系统能够在尝试执行该函数之前就理解 <literal>*</literal> 应展开成什么，以及 <literal>WHERE</literal> 子句中的 <structname>proname</structname> 指的是什么。在运行时，如果来自远程数据库的实际查询结果与 <literal>FROM</literal> 子句中显示的列数不同，则会抛出错误。不过，列名不必匹配，<function>dblink</function> 也不要求类型完全匹配。只要返回的数据字符串是 <literal>FROM</literal> 子句中声明的列类型的有效输入，它就会成功。
    </para>
   </refsect1>
 
   <refsect1>
-   <title>Notes</title>
+   <title>说明</title>
 
    <para>
-    A convenient way to use <function>dblink</function> with predetermined
-    queries is to create a view.
-    This allows the column type information to be buried in the view,
-    instead of having to spell it out in every query.  For example,
+    配合预先确定的查询使用 <function>dblink</function> 的一种便捷方式是创建视图。
+    这样可以将列类型信息隐藏在视图中，
+    而不必在每个查询中将其逐一写明。例如，
 
 <programlisting>
 CREATE VIEW myremote_pg_proc AS
@@ -479,7 +451,7 @@ SELECT * FROM myremote_pg_proc WHERE proname LIKE 'bytea%';
   </refsect1>
 
   <refsect1>
-   <title>Examples</title>
+   <title>示例</title>
 
 <screen>
 SELECT * FROM dblink('dbname=postgres options=-csearch_path=',
