@@ -31,7 +31,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>SET TRANSACTION</refname>
-  <refpurpose>set the characteristics of the current transaction</refpurpose>
+  <refpurpose>设置当前事务的特性</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -49,37 +49,26 @@ SET SESSION CHARACTERISTICS AS TRANSACTION <replaceable class="parameter">transa
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   The <command>SET TRANSACTION</command> command sets the
-   characteristics of the current transaction. It has no effect on any
-   subsequent transactions.  <command>SET SESSION
-   CHARACTERISTICS</command> sets the default transaction
-   characteristics for subsequent transactions of a session.  These
-   defaults can be overridden by <command>SET TRANSACTION</command>
-   for an individual transaction.
+   <command>SET TRANSACTION</command> 命令设置当前事务的特性。它不会对后续的任何事务产生影响。<command>SET SESSION
+   CHARACTERISTICS</command> 为会话的后续事务设置默认事务特性。对于单个事务，这些默认值可以被 <command>SET TRANSACTION</command> 覆盖。
   </para>
 
   <para>
-   The available transaction characteristics are the transaction
-   isolation level, the transaction access mode (read/write or
-   read-only), and the deferrable mode.
-   In addition, a snapshot can be selected, though only for the current
-   transaction, not as a session default.
+   可用的事务特性包括事务隔离级别、事务访问模式（读/写或只读）以及可延迟模式。此外，还可以选择一个快照，不过只能用于当前事务，而不能作为会话默认值。
   </para>
 
   <para>
-   The isolation level of a transaction determines what data the
-   transaction can see when other transactions are running concurrently:
+   事务的隔离级别决定了当其他事务并发运行时，该事务能看到哪些数据：
 
    <variablelist>
     <varlistentry>
      <term><literal>READ COMMITTED</literal></term>
      <listitem>
       <para>
-       A statement can only see rows committed before it began. This
-       is the default.
+       一条语句只能看到在它开始之前已提交的行。这是默认值。
       </para>
      </listitem>
     </varlistentry>
@@ -88,9 +77,7 @@ SET SESSION CHARACTERISTICS AS TRANSACTION <replaceable class="parameter">transa
      <term><literal>REPEATABLE READ</literal></term>
      <listitem>
       <para>
-       All statements of the current transaction can only see rows committed
-       before the first query or data-modification statement was executed in
-       this transaction.
+       当前事务的所有语句只能看到在该事务中执行第一个查询或数据修改语句之前已提交的行。
       </para>
      </listitem>
     </varlistentry>
@@ -99,142 +86,95 @@ SET SESSION CHARACTERISTICS AS TRANSACTION <replaceable class="parameter">transa
      <term><literal>SERIALIZABLE</literal></term>
      <listitem>
       <para>
-       All statements of the current transaction can only see rows committed
-       before the first query or data-modification statement was executed in
-       this transaction.  If a pattern of reads and writes among concurrent
-       serializable transactions would create a situation which could not
-       have occurred for any serial (one-at-a-time) execution of those
-       transactions, one of them will be rolled back with a
-       <literal>serialization_failure</literal> error.
+       当前事务的所有语句只能看到在该事务中执行第一个查询或数据修改语句之前已提交的行。如果并发可串行化事务之间的读写模式会造成一种对这些事务的任何串行（一次一个）执行都不可能发生的情况，那么其中一个事务将被回滚，并产生一个 <literal>serialization_failure</literal> 错误。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
 
-   The SQL standard defines one additional level, <literal>READ
-   UNCOMMITTED</literal>.
-   In <productname>PostgreSQL</productname> <literal>READ
-   UNCOMMITTED</literal> is treated as <literal>READ COMMITTED</literal>.
+   SQL 标准定义了一个额外的级别，<literal>READ
+   UNCOMMITTED</literal>。在 <productname>PostgreSQL</productname> 中，<literal>READ
+   UNCOMMITTED</literal> 被当作 <literal>READ COMMITTED</literal> 处理。
   </para>
 
   <para>
-   The transaction isolation level cannot be changed after the first query or
-   data-modification statement (<command>SELECT</command>,
-   <command>INSERT</command>, <command>DELETE</command>,
-   <command>UPDATE</command>, <command>MERGE</command>,
-   <command>FETCH</command>, or
-   <command>COPY</command>) of a transaction has been executed.  See
-   <xref linkend="mvcc"/> for more information about transaction
-   isolation and concurrency control.
+   在事务的第一个查询或数据修改语句（<command>SELECT</command>、<command>INSERT</command>、<command>DELETE</command>、<command>UPDATE</command>、<command>MERGE</command>、<command>FETCH</command> 或 <command>COPY</command>）执行之后，事务隔离级别就不能再更改。有关事务隔离和并发控制的更多信息，请参见 <xref linkend="mvcc"/>。
   </para>
 
   <para>
-   The transaction access mode determines whether the transaction is
-   read/write or read-only.  Read/write is the default.  When a
-   transaction is read-only, the following SQL commands are
-   disallowed: <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, <command>MERGE</command>, and
-   <command>COPY FROM</command> if the
-   table they would write to is not a temporary table; all
-   <literal>CREATE</literal>, <literal>ALTER</literal>, and
-   <literal>DROP</literal> commands; <literal>COMMENT</literal>,
-   <literal>GRANT</literal>, <literal>REVOKE</literal>,
-   <literal>TRUNCATE</literal>; and <literal>EXPLAIN ANALYZE</literal>
-   and <literal>EXECUTE</literal> if the command they would execute is
-   among those listed.  This is a high-level notion of read-only that
-   does not prevent all writes to disk.
+   事务访问模式决定事务是读/写还是只读。读/写是默认值。当事务为只读时，以下 SQL 命令被禁止：<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command>、<command>MERGE</command> 和 <command>COPY FROM</command>（如果它们要写入的表不是临时表）；所有 <literal>CREATE</literal>、<literal>ALTER</literal> 和 <literal>DROP</literal> 命令；<literal>COMMENT</literal>、<literal>GRANT</literal>、<literal>REVOKE</literal>、<literal>TRUNCATE</literal>；以及 <literal>EXPLAIN ANALYZE</literal> 和 <literal>EXECUTE</literal>（如果它们要执行的命令属于上述所列命令）。这是一种高层次的只读概念，并不能阻止所有对磁盘的写入。
   </para>
 
   <para>
-   The <literal>DEFERRABLE</literal> transaction property has no effect
-   unless the transaction is also <literal>SERIALIZABLE</literal> and
-   <literal>READ ONLY</literal>.  When all three of these properties are
-   selected for a
-   transaction, the transaction may block when first acquiring its snapshot,
-   after which it is able to run without the normal overhead of a
-   <literal>SERIALIZABLE</literal> transaction and without any risk of
-   contributing to or being canceled by a serialization failure.  This mode
-   is well suited for long-running reports or backups.
+   除非事务同时也是 <literal>SERIALIZABLE</literal> 和 <literal>READ ONLY</literal>，否则 <literal>DEFERRABLE</literal> 事务属性没有效果。当为一个事务同时选择这三个属性时，该事务在首次获取快照时可能会阻塞，之后它就能在没有 <literal>SERIALIZABLE</literal> 事务通常开销的情况下运行，并且没有任何导致序列化失败或被其取消的风险。此模式非常适合长时间运行的报表或备份。
   </para>
 
   <para>
-   The <literal>SET TRANSACTION SNAPSHOT</literal> command allows a new
-   transaction to run with the same <firstterm>snapshot</firstterm> as an existing
-   transaction.  The pre-existing transaction must have exported its snapshot
-   with the <literal>pg_export_snapshot</literal> function (see <xref
-   linkend="functions-snapshot-synchronization"/>).  That function returns a
-   snapshot identifier, which must be given to <literal>SET TRANSACTION
-   SNAPSHOT</literal> to specify which snapshot is to be imported.  The
-   identifier must be written as a string literal in this command, for example
-   <literal>'00000003-0000001B-1'</literal>.
-   <literal>SET TRANSACTION SNAPSHOT</literal> can only be executed at the
-   start of a transaction, before the first query or
-   data-modification statement (<command>SELECT</command>,
-   <command>INSERT</command>, <command>DELETE</command>,
-   <command>UPDATE</command>, <command>MERGE</command>,
-   <command>FETCH</command>, or
-   <command>COPY</command>) of the transaction.  Furthermore, the transaction
-   must already be set to <literal>SERIALIZABLE</literal> or
-   <literal>REPEATABLE READ</literal> isolation level (otherwise, the snapshot
-   would be discarded immediately, since <literal>READ COMMITTED</literal> mode takes
-   a new snapshot for each command).  If the importing transaction uses
-   <literal>SERIALIZABLE</literal> isolation level, then the transaction that
-   exported the snapshot must also use that isolation level.  Also, a
-   non-read-only serializable transaction cannot import a snapshot from a
-   read-only transaction.
+   <literal>SET TRANSACTION SNAPSHOT</literal> 命令允许新事务使用与现有事务相同的<firstterm>快照</firstterm>运行。已存在的事务必须已经用 <literal>pg_export_snapshot</literal> 函数导出其快照（见 <xref
+   linkend="functions-snapshot-synchronization"/>）。该函数返回一个快照标识符，必须将其传给 <literal>SET TRANSACTION
+   SNAPSHOT</literal> 以指定要导入哪个快照。在该命令中，标识符必须写成字符串字面量，例如
+   <literal>'00000003-0000001B-1'</literal>。
+   <literal>SET TRANSACTION SNAPSHOT</literal> 只能在事务开始时执行，即在事务的第一条查询或
+   数据修改语句（<command>SELECT</command>、
+   <command>INSERT</command>、<command>DELETE</command>、
+   <command>UPDATE</command>、<command>MERGE</command>、
+   <command>FETCH</command> 或
+   <command>COPY</command>）之前。此外，该事务
+   必须已经设置为 <literal>SERIALIZABLE</literal> 或
+   <literal>REPEATABLE READ</literal> 隔离级别（否则快照
+   会立即被丢弃，因为 <literal>READ COMMITTED</literal> 模式会
+   为每条命令取一个新快照）。如果导入事务使用
+   <literal>SERIALIZABLE</literal> 隔离级别，那么导出该快照的事务
+   也必须使用该隔离级别。另外，
+   非只读的可串行化事务不能从
+   只读事务导入快照。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   If <command>SET TRANSACTION</command> is executed without a prior
-   <command>START TRANSACTION</command> or <command>BEGIN</command>,
-   it emits a warning and otherwise has no effect.
+   如果执行 <command>SET TRANSACTION</command> 之前没有执行过
+   <command>START TRANSACTION</command> 或 <command>BEGIN</command>，
+   它会发出一个警告，除此之外没有其他效果。
   </para>
 
   <para>
-   It is possible to dispense with <command>SET TRANSACTION</command>
-   by instead specifying the desired <replaceable
-   class="parameter">transaction_modes</replaceable> in
-   <command>BEGIN</command> or <command>START TRANSACTION</command>.
-   But that option is not available for <command>SET TRANSACTION
-   SNAPSHOT</command>.
+   可以通过在 <command>BEGIN</command> 或 <command>START TRANSACTION</command>
+   中指定所需的 <replaceable
+   class="parameter">transaction_modes</replaceable> 来省去 <command>SET TRANSACTION</command>。
+   但该选项对 <command>SET TRANSACTION
+   SNAPSHOT</command> 不可用。
   </para>
 
   <para>
-   The session default transaction modes can also be set or examined via the
-   configuration parameters <xref linkend="guc-default-transaction-isolation"/>,
-   <xref linkend="guc-default-transaction-read-only"/>, and
-   <xref linkend="guc-default-transaction-deferrable"/>.
-   (In fact <command>SET SESSION CHARACTERISTICS</command> is just a
-   verbose equivalent for setting these variables with <command>SET</command>.)
-   This means the defaults can be set in the configuration file, via
-   <command>ALTER DATABASE</command>, etc.  Consult <xref linkend="runtime-config"/>
-   for more information.
+   会话默认事务模式也可以通过配置参数 <xref linkend="guc-default-transaction-isolation"/>、
+   <xref linkend="guc-default-transaction-read-only"/> 和
+   <xref linkend="guc-default-transaction-deferrable"/> 来设置或查看。
+   （实际上 <command>SET SESSION CHARACTERISTICS</command> 只是用 <command>SET</command> 设置这些变量的
+   冗长等价形式。）
+   这意味着可以在配置文件中、通过
+   <command>ALTER DATABASE</command> 等方式设置默认值。更多信息请参阅 <xref linkend="runtime-config"/>。
   </para>
 
   <para>
-   The current transaction's modes can similarly be set or examined via the
-   configuration parameters <xref linkend="guc-transaction-isolation"/>,
-   <xref linkend="guc-transaction-read-only"/>, and
-   <xref linkend="guc-transaction-deferrable"/>.  Setting one of these
-   parameters acts the same as the corresponding <command>SET
-   TRANSACTION</command> option, with the same restrictions on when it can
-   be done.  However, these parameters cannot be set in the configuration
-   file, or from any source other than live SQL.
+   当前事务的模式同样可以通过配置参数 <xref linkend="guc-transaction-isolation"/>、
+   <xref linkend="guc-transaction-read-only"/> 和
+   <xref linkend="guc-transaction-deferrable"/> 来设置或查看。设置其中一个
+   参数与相应的 <command>SET
+   TRANSACTION</command> 选项作用相同，对其可执行时机的限制也相同。
+   但是，这些参数不能在配置文件中设置，
+   也不能从除实时 SQL 之外的任何来源设置。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   To begin a new transaction with the same snapshot as an already
-   existing transaction, first export the snapshot from the existing
-   transaction. That will return the snapshot identifier, for example:
+   要使用与一个已存在事务相同的快照开始一个新事务，首先从那个已存在的事务中导出快照。该操作将返回快照标识符，例如：
 
 <programlisting>
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -245,9 +185,8 @@ SELECT pg_export_snapshot();
 (1 row)
 </programlisting>
 
-   Then give the snapshot identifier in a <command>SET TRANSACTION
-   SNAPSHOT</command> command at the beginning of the newly opened
-   transaction:
+   然后在新打开的事务开始时，在 <command>SET TRANSACTION
+   SNAPSHOT</command> 命令中给出该快照标识符：
 
 <programlisting>
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -256,35 +195,23 @@ SET TRANSACTION SNAPSHOT '00000003-0000001B-1';
  </refsect1>
 
  <refsect1 id="r1-sql-set-transaction-3">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   These commands are defined in the <acronym>SQL</acronym> standard,
-   except for the <literal>DEFERRABLE</literal> transaction mode
-   and the <command>SET TRANSACTION SNAPSHOT</command> form, which are
-   <productname>PostgreSQL</productname> extensions.
+   这些命令在 <acronym>SQL</acronym> 标准中定义，但 <literal>DEFERRABLE</literal> 事务模式和 <command>SET TRANSACTION SNAPSHOT</command> 形式除外，它们是 <productname>PostgreSQL</productname> 扩展。
   </para>
 
   <para>
-   <literal>SERIALIZABLE</literal> is the default transaction
-   isolation level in the standard.  In
-   <productname>PostgreSQL</productname> the default is ordinarily
-   <literal>READ COMMITTED</literal>, but you can change it as
-   mentioned above.
+   <literal>SERIALIZABLE</literal> 是标准中的默认事务隔离级别。在 <productname>PostgreSQL</productname> 中，默认通常是 <literal>READ COMMITTED</literal>，但你可以如上所述更改它。
   </para>
 
   <para>
-   In the SQL standard, there is one other transaction characteristic
-   that can be set with these commands: the size of the diagnostics
-   area.  This concept is specific to embedded SQL, and therefore is
-   not implemented in the <productname>PostgreSQL</productname> server.
+   在 SQL 标准中，还有另一个可以用这些命令设置的事务特性：诊断区域的大小。这个概念特定于嵌入式 SQL，因此未在 <productname>PostgreSQL</productname> 服务器中实现。
   </para>
 
   <para>
-   The SQL standard requires commas between successive <replaceable
-   class="parameter">transaction_modes</replaceable>, but for historical
-   reasons <productname>PostgreSQL</productname> allows the commas to be
-   omitted.
+   SQL 标准要求在连续的 <replaceable
+   class="parameter">transaction_modes</replaceable> 之间使用逗号，但出于历史原因，<productname>PostgreSQL</productname> 允许省略逗号。
   </para>
  </refsect1>
 </refentry>
