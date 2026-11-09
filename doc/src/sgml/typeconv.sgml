@@ -21,27 +21,14 @@
 </para>
 
 <sect1 id="typeconv-overview">
-<title>Overview</title>
+<title>概述</title>
 
 <para>
-<acronym>SQL</acronym> is a strongly typed language. That is, every data item
-has an associated data type which determines its behavior and allowed usage.
-<productname>PostgreSQL</productname> has an extensible type system that is
-more general and flexible than other <acronym>SQL</acronym> implementations.
-Hence, most type conversion behavior in <productname>PostgreSQL</productname>
-is governed by general rules rather than by ad hoc
-heuristics.  This allows the use of mixed-type expressions even with
-user-defined types.
+<acronym>SQL</acronym> 是一种强类型语言。也就是说，每个数据项都有一个关联的数据类型，该类型决定其行为和允许的用法。<productname>PostgreSQL</productname> 具有可扩展的类型系统，它比其他 <acronym>SQL</acronym> 实现更通用、更灵活。因此，<productname>PostgreSQL</productname> 中的大多数类型转换行为由通用规则而非临时的启发式规则支配。这使得即使对于用户定义的类型也可以使用混合类型表达式。
 </para>
 
 <para>
-The <productname>PostgreSQL</productname> scanner/parser divides lexical
-elements into five fundamental categories: integers, non-integer numbers,
-strings, identifiers, and key words.  Constants of most non-numeric types are
-first classified as strings. The <acronym>SQL</acronym> language definition
-allows specifying type names with strings, and this mechanism can be used in
-<productname>PostgreSQL</productname> to start the parser down the correct
-path. For example, the query:
+<productname>PostgreSQL</productname> 扫描器/解析器将词法元素划分为五个基本类别：整数、非整数数字、字符串、标识符和关键字。大多数非数值类型的常量首先被归类为字符串。<acronym>SQL</acronym> 语言定义允许用字符串指定类型名，该机制可用于在 <productname>PostgreSQL</productname> 中让解析器走上正确的路径。例如，查询：
 
 <screen>
 SELECT text 'Origin' AS "label", point '(0,0)' AS "value";
@@ -52,10 +39,7 @@ SELECT text 'Origin' AS "label", point '(0,0)' AS "value";
 (1 row)
 </screen>
 
-has two literal constants, of type <type>text</type> and <type>point</type>.
-If a type is not specified for a string literal, then the placeholder type
-<type>unknown</type> is assigned initially, to be resolved in later
-stages as described below.
+有两个字面常量，类型分别为 <type>text</type> 和 <type>point</type>。如果没有为字符串字面量指定类型，则最初会赋予占位符类型 <type>unknown</type>，并在后续阶段按如下所述进行解析。
 </para>
 
 <para>
@@ -66,60 +50,41 @@ parser:
 <variablelist>
 <varlistentry>
 <term>
-Function calls
+函数调用
 </term>
 <listitem>
 <para>
-Much of the <productname>PostgreSQL</productname> type system is built around a
-rich set of functions. Functions can have one or more arguments.
-Since <productname>PostgreSQL</productname> permits function
-overloading, the function name alone does not uniquely identify the function
-to be called; the parser must select the right function based on the data
-types of the supplied arguments.
+<productname>PostgreSQL</productname> 类型系统的很大一部分是围绕丰富的函数集构建的。函数可以有一个或多个参数。由于 <productname>PostgreSQL</productname> 允许函数重载，仅凭函数名不能唯一确定要调用的函数；解析器必须根据所提供参数的数据类型选择正确的函数。
 </para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>
-Operators
+运算符
 </term>
 <listitem>
 <para>
-<productname>PostgreSQL</productname> allows expressions with
-prefix (one-argument) operators,
-as well as infix (two-argument) operators.  Like functions, operators can
-be overloaded, so the same problem of selecting the right operator
-exists.
+<productname>PostgreSQL</productname> 允许使用前缀（一元）运算符以及中缀（二元）运算符的表达式。与函数一样，运算符可以被重载，因此同样存在选择正确运算符的问题。
 </para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>
-Value Storage
+值存储
 </term>
 <listitem>
 <para>
-<acronym>SQL</acronym> <command>INSERT</command> and <command>UPDATE</command> statements place the results of
-expressions into a table. The expressions in the statement must be matched up
-with, and perhaps converted to, the types of the target columns.
+<acronym>SQL</acronym>、<command>INSERT</command> 和 <command>UPDATE</command> 语句将表达式的结果放入表中。语句中的表达式必须与目标列的类型相匹配，并且可能需要进行转换。
 </para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>
-<literal>UNION</literal>, <literal>CASE</literal>, and related constructs
+<literal>UNION</literal>、<literal>CASE</literal> 及相关构造
 </term>
 <listitem>
 <para>
-Since all query results from a unionized <command>SELECT</command> statement
-must appear in a single set of columns, the types of the results of each
-<command>SELECT</command> clause must be matched up and converted to a uniform set.
-Similarly, the result expressions of a <literal>CASE</literal> construct must be
-converted to a common type so that the <literal>CASE</literal> expression as a whole
-has a known output type.  Some other constructs, such
-as <literal>ARRAY[]</literal> and the <function>GREATEST</function>
-and <function>LEAST</function> functions, likewise require determination of a
-common type for several subexpressions.
+由于来自 UNION 化的 <command>SELECT</command> 语句的所有查询结果都必须出现在同一组列中，因此每个 <command>SELECT</command> 子句的结果类型必须相互匹配并转换为统一的类型集合。同样，<literal>CASE</literal> 构造的结果表达式必须转换为公共类型，以便整个 <literal>CASE</literal> 表达式具有已知的输出类型。某些其他构造，例如 <literal>ARRAY[]</literal> 以及 <function>GREATEST</function> 和 <function>LEAST</function> 函数，同样需要为若干子表达式确定公共类型。
 </para>
 </listitem>
 </varlistentry>
@@ -127,14 +92,7 @@ common type for several subexpressions.
 </para>
 
 <para>
-The system catalogs store information about which conversions, or
-<firstterm>casts</firstterm>, exist between which data types, and how to
-perform those conversions.  Additional casts can be added by the user
-with the <xref linkend="sql-createcast"/>
-command.  (This is usually
-done in conjunction with defining new data types.  The set of casts
-between built-in types has been carefully crafted and is best not
-altered.)
+系统目录存储了哪些数据类型之间存在哪些转换（即<firstterm>造型</firstterm>）以及如何执行这些转换的信息。用户可以使用 <xref linkend="sql-createcast"/> 命令添加额外的造型。（这通常与定义新数据类型一起进行。内置类型之间的造型集合经过精心设计，最好不要改动。）
 </para>
 
 <indexterm>
@@ -143,19 +101,7 @@ altered.)
 </indexterm>
 
 <para>
-An additional heuristic provided by the parser allows improved determination
-of the proper casting behavior among groups of types that have implicit casts.
-Data types are divided into several basic <firstterm>type
-categories</firstterm>, including <type>boolean</type>, <type>numeric</type>,
-<type>string</type>, <type>bitstring</type>, <type>datetime</type>,
-<type>timespan</type>, <type>geometric</type>, <type>network</type>, and
-user-defined.  (For a list see <xref linkend="catalog-typcategory-table"/>;
-but note it is also possible to create custom type categories.)  Within each
-category there can be one or more <firstterm>preferred types</firstterm>, which
-are preferred when there is a choice of possible types.  With careful selection
-of preferred types and available implicit casts, it is possible to ensure that
-ambiguous expressions (those with multiple candidate parsing solutions) can be
-resolved in a useful way.
+解析器提供的额外启发式规则可以更好地确定具有隐式转换的类型组之间的正确转换行为。数据类型被划分为几个基本<firstterm>类型类别</firstterm>，包括 <type>boolean</type>、<type>numeric</type>、<type>string</type>、<type>bitstring</type>、<type>datetime</type>、<type>timespan</type>、<type>geometric</type>、<type>network</type> 以及用户定义的类别。（列表见 <xref linkend="catalog-typcategory-table"/>；但请注意，也可以创建自定义类型类别。）每个类别中可以有一个或多个<firstterm>首选类型</firstterm>，当存在多种可能类型时，会优先选择这些类型。通过仔细选择首选类型和可用的隐式转换，可以确保以有用的方式解决有歧义的表达式（即那些有多个候选解析方案的表达式）。
 </para>
 
 <para>
@@ -164,25 +110,19 @@ All type conversion rules are designed with several principles in mind:
 <itemizedlist>
 <listitem>
 <para>
-Implicit conversions should never have surprising or unpredictable outcomes.
+隐式转换绝不应产生令人意外或不可预测的结果。
 </para>
 </listitem>
 
 <listitem>
 <para>
-There should be no extra overhead in the parser or executor
-if a query does not need implicit type conversion.
-That is, if a query is well-formed and the types already match, then the query should execute
-without spending extra time in the parser and without introducing unnecessary implicit conversion
-calls in the query.
+如果查询不需要隐式类型转换，解析器或执行器中就不应有额外的开销。也就是说，如果查询形式良好且类型已经匹配，那么查询执行时不应在解析器中花费额外时间，也不应在查询中引入不必要的隐式转换调用。
 </para>
 </listitem>
 
 <listitem>
 <para>
-Additionally, if a query usually requires an implicit conversion for a function, and
-if then the user defines a new function with the correct argument types, the parser
-should use this new function and no longer do implicit conversion to use the old function.
+此外，如果某个查询通常需要为某个函数进行隐式转换，而随后用户定义了具有正确参数类型的新函数，那么解析器应使用这个新函数，而不再进行隐式转换来使用旧函数。
 </para>
 </listitem>
 </itemizedlist>
