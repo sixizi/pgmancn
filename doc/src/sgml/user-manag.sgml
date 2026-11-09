@@ -225,59 +225,35 @@ ALTER ROLE myname SET enable_indexscan TO off;
  </sect1>
 
  <sect1 id="role-membership">
-  <title>Role Membership</title>
+  <title>角色成员关系</title>
 
   <indexterm zone="role-membership">
    <primary>role</primary><secondary>membership in</secondary>
   </indexterm>
 
   <para>
-   It is frequently convenient to group users together to ease
-   management of privileges: that way, privileges can be granted to, or
-   revoked from, a group as a whole.  In <productname>PostgreSQL</productname>
-   this is done by creating a role that represents the group, and then
-   granting <firstterm>membership</firstterm> in the group role to individual user
-   roles.
+   为了方便权限管理，经常需要将用户分组：这样，权限就可以作为一个整体授予组或从组撤销。在 <productname>PostgreSQL</productname> 中，这是通过创建一个代表该组的角色，然后将组角色中的<firstterm>成员资格</firstterm>授予各个用户角色来实现的。
   </para>
 
   <para>
-   To set up a group role, first create the role:
+   要设置组角色，首先创建该角色：
 <synopsis>
 CREATE ROLE <replaceable>name</replaceable>;
 </synopsis>
-   Typically a role being used as a group would not have the <literal>LOGIN</literal>
-   attribute, though you can set it if you wish.
+通常，用作组的角色不会有 <literal>LOGIN</literal> 属性，不过如果你愿意也可以设置它。
   </para>
 
   <para>
-   Once the group role exists, you can add and remove members using the
-   <link linkend="sql-grant"><command>GRANT</command></link> and
-   <link linkend="sql-revoke"><command>REVOKE</command></link> commands:
+   一旦组角色存在，你就可以使用 <link linkend="sql-grant"><command>GRANT</command></link> 和 <link linkend="sql-revoke"><command>REVOKE</command></link> 命令添加和移除成员：
 <synopsis>
 GRANT <replaceable>group_role</replaceable> TO <replaceable>role1</replaceable>, ... ;
 REVOKE <replaceable>group_role</replaceable> FROM <replaceable>role1</replaceable>, ... ;
 </synopsis>
-   You can grant membership to other group roles, too (since there isn't
-   really any distinction between group roles and non-group roles).  The
-   database will not let you set up circular membership loops.  Also,
-   it is not permitted to grant membership in a role to
-   <literal>PUBLIC</literal>.
+你也可以将成员资格授予其他组角色（因为组角色和非组角色之间实际上没有任何区别）。数据库不会允许你建立循环的成员关系。此外，不允许将角色的成员资格授予 <literal>PUBLIC</literal>。
   </para>
 
   <para>
-   The members of a group role can use the privileges of the role in two
-   ways.  First, member roles that have been granted membership with the
-   <literal>SET</literal> option can do
-   <link linkend="sql-set-role"><command>SET ROLE</command></link> to
-   temporarily <quote>become</quote> the group role.  In this state, the
-   database session has access to the privileges of the group role rather
-   than the original login role, and any database objects created are
-   considered owned by the group role, not the login role.  Second, member
-   roles that have been granted membership with the
-   <literal>INHERIT</literal> option automatically have use of the
-   privileges of those directly or indirectly a member of, though the
-   chain stops at memberships lacking the inherit option.  As an example,
-   suppose we have done:
+   组角色的成员可以通过两种方式使用该角色的权限。首先，以 <literal>SET</literal> 选项被授予成员资格的成员角色可以执行 <link linkend="sql-set-role"><command>SET ROLE</command></link> 来临时<quote>成为</quote>该组角色。在这种状态下，数据库会话访问的是组角色的权限，而不是原始登录角色的权限，并且所创建的任何数据库对象都被视为由组角色拥有，而不是登录角色。其次，以 <literal>INHERIT</literal> 选项被授予成员资格的成员角色自动可以使用其直接或间接所属的那些角色的权限，不过该链条在缺少 inherit 选项的成员关系处终止。举例来说，假设我们执行了：
 <programlisting>
 CREATE ROLE joe LOGIN;
 CREATE ROLE admin;
@@ -287,28 +263,15 @@ GRANT admin TO joe WITH INHERIT TRUE;
 GRANT wheel TO admin WITH INHERIT FALSE;
 GRANT island TO joe WITH INHERIT TRUE, SET FALSE;
 </programlisting>
-   Immediately after connecting as role <literal>joe</literal>, a database
-   session will have use of privileges granted directly to <literal>joe</literal>
-   plus any privileges granted to <literal>admin</literal> and
-   <literal>island</literal>, because <literal>joe</literal>
-   <quote>inherits</quote> those privileges.  However, privileges
-   granted to <literal>wheel</literal> are not available, because even though
-   <literal>joe</literal> is indirectly a member of <literal>wheel</literal>, the
-   membership is via <literal>admin</literal> which was granted using
-   <literal>WITH INHERIT FALSE</literal>. After:
+在以角色 <literal>joe</literal> 连接之后，数据库会话立即就可以使用直接授予 <literal>joe</literal> 的权限，以及授予 <literal>admin</literal> 和 <literal>island</literal> 的任何权限，因为 <literal>joe</literal> <quote>继承</quote>了这些权限。但是，授予 <literal>wheel</literal> 的权限不可用，因为尽管 <literal>joe</literal> 间接是 <literal>wheel</literal> 的成员，但该成员关系是通过 <literal>admin</literal> 实现的，而它是使用 <literal>WITH INHERIT FALSE</literal> 授予的。在执行以下命令之后：
 <programlisting>
 SET ROLE admin;
 </programlisting>
-   the session would have use of only those privileges granted to
-   <literal>admin</literal>, and not those granted to <literal>joe</literal> or
-   <literal>island</literal>.  After:
+该会话将只能使用授予 <literal>admin</literal> 的那些权限，而不能使用授予 <literal>joe</literal> 或 <literal>island</literal> 的权限。在执行以下命令之后：
 <programlisting>
 SET ROLE wheel;
 </programlisting>
-   the session would have use of only those privileges granted to
-   <literal>wheel</literal>, and not those granted to either <literal>joe</literal>
-   or <literal>admin</literal>.  The original privilege state can be restored
-   with any of:
+该会话将只能使用授予 <literal>wheel</literal> 的那些权限，而不能使用授予 <literal>joe</literal> 或 <literal>admin</literal> 的权限。可以使用以下任意命令恢复原来的权限状态：
 <programlisting>
 SET ROLE joe;
 SET ROLE NONE;
@@ -318,56 +281,30 @@ RESET ROLE;
 
   <note>
    <para>
-    The <command>SET ROLE</command> command always allows selecting any role
-    that the original login role is directly or indirectly a member of,
-    provided that there is a chain of membership grants each of which has
-    <literal>SET TRUE</literal> (which is the default).
-    Thus, in the above example, it is not necessary to become
-    <literal>admin</literal> before becoming <literal>wheel</literal>.
-    On the other hand, it is not possible to become <literal>island</literal>
-    at all; <literal>joe</literal> can only access those privileges via
-    inheritance.
+    <command>SET ROLE</command> 命令总是允许选择原始登录角色直接或间接是其成员的任何角色，前提是存在一条成员资格授予链，其中每一次授予都具有 <literal>SET TRUE</literal>（这是默认值）。因此，在上面的示例中，不必先成为 <literal>admin</literal> 再成为 <literal>wheel</literal>。另一方面，完全不可能成为 <literal>island</literal>；<literal>joe</literal> 只能通过继承来访问那些权限。
    </para>
   </note>
 
   <note>
    <para>
-    In the SQL standard, there is a clear distinction between users and roles,
-    and users do not automatically inherit privileges while roles do.  This
-    behavior can be obtained in <productname>PostgreSQL</productname> by giving
-    roles being used as SQL roles the <literal>INHERIT</literal> attribute, while
-    giving roles being used as SQL users the <literal>NOINHERIT</literal> attribute.
-    However, <productname>PostgreSQL</productname> defaults to giving all roles
-    the <literal>INHERIT</literal> attribute, for backward compatibility with pre-8.1
-    releases in which users always had use of permissions granted to groups
-    they were members of.
+    在 SQL 标准中，用户和角色之间有明确的区别，用户不会自动继承权限，而角色会。在 <productname>PostgreSQL</productname> 中，可以通过给用作 SQL 角色的角色赋予 <literal>INHERIT</literal> 属性，同时给用作 SQL 用户的角色赋予 <literal>NOINHERIT</literal> 属性来获得这种行为。不过，<productname>PostgreSQL</productname> 默认给所有角色赋予 <literal>INHERIT</literal> 属性，以便向后兼容 8.1 之前的版本，在那些版本中用户始终可以使用授予其所属组的权限。
    </para>
   </note>
 
   <para>
-   The role attributes <literal>LOGIN</literal>, <literal>SUPERUSER</literal>,
-   <literal>CREATEDB</literal>, and <literal>CREATEROLE</literal> can be thought of as
-   special privileges, but they are never inherited as ordinary privileges
-   on database objects are.  You must actually <command>SET ROLE</command> to a
-   specific role having one of these attributes in order to make use of
-   the attribute.  Continuing the above example, we might choose to
-   grant <literal>CREATEDB</literal> and <literal>CREATEROLE</literal> to the
-   <literal>admin</literal> role.  Then a session connecting as role <literal>joe</literal>
-   would not have these privileges immediately, only after doing
-   <command>SET ROLE admin</command>.
+   角色属性 <literal>LOGIN</literal>、<literal>SUPERUSER</literal>、<literal>CREATEDB</literal> 和 <literal>CREATEROLE</literal> 可以被视为特殊权限，但它们绝不会像数据库对象上的普通权限那样被继承。你必须实际 <command>SET ROLE</command> 到具有这些属性之一的特定角色，才能使用该属性。继续上面的示例，我们可能选择把 <literal>CREATEDB</literal> 和 <literal>CREATEROLE</literal> 授予 <literal>admin</literal> 角色。那么以角色 <literal>joe</literal> 连接的会话不会立即拥有这些权限，只有在执行 <command>SET ROLE admin</command> 之后才会拥有。
   </para>
 
   <para>
   </para>
 
   <para>
-   To destroy a group role, use <link
-   linkend="sql-droprole"><command>DROP ROLE</command></link>:
+   要删除组角色，请使用 <link
+   linkend="sql-droprole"><command>DROP ROLE</command></link>：
 <synopsis>
 DROP ROLE <replaceable>name</replaceable>;
 </synopsis>
-   Any memberships in the group role are automatically revoked (but the
-   member roles are not otherwise affected).
+   组角色中的任何成员资格都会被自动撤销（但成员角色在其他方面不受影响）。
   </para>
  </sect1>
 
