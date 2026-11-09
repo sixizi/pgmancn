@@ -1526,7 +1526,7 @@ SELECT <replaceable>select_list</replaceable> FROM <replaceable>table_expression
 
 
  <sect1 id="queries-with">
-  <title><literal>WITH</literal> Queries (Common Table Expressions)</title>
+  <title><literal>WITH</literal> 查询（公共表表达式）</title>
 
   <indexterm zone="queries-with">
    <primary>WITH</primary>
@@ -1539,24 +1539,14 @@ SELECT <replaceable>select_list</replaceable> FROM <replaceable>table_expression
   </indexterm>
 
   <para>
-   <literal>WITH</literal> provides a way to write auxiliary statements for use in a
-   larger query.  These statements, which are often referred to as Common
-   Table Expressions or <acronym>CTE</acronym>s, can be thought of as defining
-   temporary tables that exist just for one query.  Each auxiliary statement
-   in a <literal>WITH</literal> clause can be a <command>SELECT</command>,
-   <command>INSERT</command>, <command>UPDATE</command>, <command>DELETE</command>,
-   or <command>MERGE</command>; and the
-   <literal>WITH</literal> clause itself is attached to a primary statement that can
-   also be a <command>SELECT</command>, <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, or <command>MERGE</command>.
+   <literal>WITH</literal> 提供了一种编写辅助语句以便在更大查询中使用的方法。这些语句通常被称为公共表表达式或 <acronym>CTE</acronym>，可以认为它们定义了仅为一个查询而存在的临时表。<literal>WITH</literal> 子句中的每个辅助语句可以是 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command>；而 <literal>WITH</literal> 子句本身附加到主语句上，主语句也可以是 <command>SELECT</command>、<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command>。
   </para>
 
  <sect2 id="queries-with-select">
-   <title><command>SELECT</command> in <literal>WITH</literal></title>
+   <title><literal>WITH</literal> 中的 <command>SELECT</command></title>
 
   <para>
-   The basic value of <command>SELECT</command> in <literal>WITH</literal> is to
-   break down complicated queries into simpler parts.  An example is:
+   <literal>WITH</literal> 中 <command>SELECT</command> 的基本价值在于将复杂查询分解为更简单的部分。例如：
 
 <programlisting>
 WITH regional_sales AS (
@@ -1577,32 +1567,19 @@ WHERE region IN (SELECT region FROM top_regions)
 GROUP BY region, product;
 </programlisting>
 
-   which displays per-product sales totals in only the top sales regions.
-   The <literal>WITH</literal> clause defines two auxiliary statements named
-   <structname>regional_sales</structname> and <structname>top_regions</structname>,
-   where the output of <structname>regional_sales</structname> is used in
-   <structname>top_regions</structname> and the output of <structname>top_regions</structname>
-   is used in the primary <command>SELECT</command> query.
-   This example could have been written without <literal>WITH</literal>,
-   but we'd have needed two levels of nested sub-<command>SELECT</command>s.  It's a bit
-   easier to follow this way.
+   它只显示顶级销售区域中每个产品的销售总额。<literal>WITH</literal> 子句定义了两个名为 <structname>regional_sales</structname> 和 <structname>top_regions</structname> 的辅助语句，其中 <structname>regional_sales</structname> 的输出用于 <structname>top_regions</structname>，而 <structname>top_regions</structname> 的输出用于主 <command>SELECT</command> 查询。这个例子也可以不使用 <literal>WITH</literal> 来编写，但那样就需要两层嵌套的子 <command>SELECT</command>。用这种方式更容易理解一些。
   </para>
  </sect2>
 
  <sect2 id="queries-with-recursive">
-  <title>Recursive Queries</title>
+  <title>递归查询</title>
 
   <para>
    <indexterm>
     <primary>RECURSIVE</primary>
     <secondary>in common table expressions</secondary>
    </indexterm>
-   The optional <literal>RECURSIVE</literal> modifier changes <literal>WITH</literal>
-   from a mere syntactic convenience into a feature that accomplishes
-   things not otherwise possible in standard SQL.  Using
-   <literal>RECURSIVE</literal>, a <literal>WITH</literal> query can refer to its own
-   output.  A very simple example is this query to sum the integers from 1
-   through 100:
+   可选的 <literal>RECURSIVE</literal> 修饰符将 <literal>WITH</literal> 从单纯的语法便利转变为能够完成标准 SQL 中原本无法实现的功能的特性。使用 <literal>RECURSIVE</literal>，<literal>WITH</literal> 查询可以引用其自身的输出。一个非常简单的例子是下面这个对 1 到 100 的整数求和的查询：
 
 <programlisting>
 WITH RECURSIVE t(n) AS (
@@ -1613,46 +1590,38 @@ WITH RECURSIVE t(n) AS (
 SELECT sum(n) FROM t;
 </programlisting>
 
-   The general form of a recursive <literal>WITH</literal> query is always a
-   <firstterm>non-recursive term</firstterm>, then <literal>UNION</literal> (or
-   <literal>UNION ALL</literal>), then a
-   <firstterm>recursive term</firstterm>, where only the recursive term can contain
-   a reference to the query's own output.  Such a query is executed as
-   follows:
+   递归 <literal>WITH</literal> 查询的一般形式总是：一个<firstterm>非递归项</firstterm>，然后是 <literal>UNION</literal>（或 <literal>UNION ALL</literal>），然后是一个<firstterm>递归项</firstterm>，其中只有递归项可以包含对查询自身输出的引用。这样的查询按如下方式执行：
   </para>
 
   <procedure>
-   <title>Recursive Query Evaluation</title>
+   <title>递归查询求值</title>
 
    <step performance="required">
     <para>
-     Evaluate the non-recursive term.  For <literal>UNION</literal> (but not
-     <literal>UNION ALL</literal>), discard duplicate rows.  Include all remaining
-     rows in the result of the recursive query, and also place them in a
-     temporary <firstterm>working table</firstterm>.
+     求值非递归项。对于 <literal>UNION</literal>（但不包括
+     <literal>UNION ALL</literal>），丢弃重复行。将所有剩余行包含在递归查询的结果中，
+     并将它们放入一个临时的<firstterm>工作表</firstterm>中。
     </para>
    </step>
 
    <step performance="required">
     <para>
-     So long as the working table is not empty, repeat these steps:
+     只要工作表不为空，就重复以下步骤：
     </para>
     <substeps>
      <step performance="required">
       <para>
-       Evaluate the recursive term, substituting the current contents of
-       the working table for the recursive self-reference.
-       For <literal>UNION</literal> (but not <literal>UNION ALL</literal>), discard
-       duplicate rows and rows that duplicate any previous result row.
-       Include all remaining rows in the result of the recursive query, and
-       also place them in a temporary <firstterm>intermediate table</firstterm>.
+       求值递归项，用工作表的当前内容替换递归自引用。
+       对于 <literal>UNION</literal>（但不包括 <literal>UNION ALL</literal>），丢弃
+       重复行以及与任何先前结果行重复的行。
+       将所有剩余行包含在递归查询的结果中，
+       并将它们放入一个临时的<firstterm>中间表</firstterm>中。
       </para>
      </step>
 
      <step performance="required">
       <para>
-       Replace the contents of the working table with the contents of the
-       intermediate table, then empty the intermediate table.
+       用中间表的内容替换工作表的内容，然后清空中间表。
       </para>
      </step>
     </substeps>
@@ -1661,23 +1630,17 @@ SELECT sum(n) FROM t;
 
   <note>
    <para>
-    While <literal>RECURSIVE</literal> allows queries to be specified
-    recursively, internally such queries are evaluated iteratively.
+    虽然 <literal>RECURSIVE</literal> 允许以递归方式指定查询，
+    但在内部，此类查询是以迭代方式求值的。
    </para>
   </note>
 
   <para>
-   In the example above, the working table has just a single row in each step,
-   and it takes on the values from 1 through 100 in successive steps.  In
-   the 100th step, there is no output because of the <literal>WHERE</literal>
-   clause, and so the query terminates.
+   在上面的例子中，工作表在每一步中只有一行，并且在连续的步骤中依次取 1 到 100 的值。在第 100 步中，由于 <literal>WHERE</literal> 子句的存在而没有输出，因此查询终止。
   </para>
 
   <para>
-   Recursive queries are typically used to deal with hierarchical or
-   tree-structured data.  A useful example is this query to find all the
-   direct and indirect sub-parts of a product, given only a table that
-   shows immediate inclusions:
+   递归查询通常用于处理层次化或树状结构的数据。一个有用的例子是下面这个查询：在只给定一张显示直接包含关系的表的情况下，找出某个产品的所有直接和间接子部件：
 
 <programlisting>
 WITH RECURSIVE included_parts(sub_part, part, quantity) AS (
@@ -1694,23 +1657,14 @@ GROUP BY sub_part
   </para>
 
   <sect3 id="queries-with-search">
-   <title>Search Order</title>
+   <title>搜索顺序</title>
 
    <para>
-    When computing a tree traversal using a recursive query, you might want to
-    order the results in either depth-first or breadth-first order.  This can
-    be done by computing an ordering column alongside the other data columns
-    and using that to sort the results at the end.  Note that this does not
-    actually control in which order the query evaluation visits the rows; that
-    is as always in SQL implementation-dependent.  This approach merely
-    provides a convenient way to order the results afterwards.
+    在使用递归查询计算树遍历时，你可能希望按深度优先或广度优先的顺序对结果排序。这可以通过在其它数据列之外再计算一个排序列，并在最后用它来对结果排序来实现。请注意，这实际上并不控制查询求值访问行的顺序；和往常一样，那取决于 SQL 实现。这种方法只是提供了一种方便的方式，以便事后对结果排序。
    </para>
 
    <para>
-    To create a depth-first order, we compute for each result row an array of
-    rows that we have visited so far.  For example, consider the following
-    query that searches a table <structname>tree</structname> using a
-    <structfield>link</structfield> field:
+    为了创建深度优先顺序，我们为每个结果行计算一个到目前为止已访问过的行的数组。例如，考虑下面这个使用 <structfield>link</structfield> 字段搜索表 <structname>tree</structname> 的查询：
 
 <programlisting>
 WITH RECURSIVE search_tree(id, link, data) AS (
@@ -1724,7 +1678,7 @@ WITH RECURSIVE search_tree(id, link, data) AS (
 SELECT * FROM search_tree;
 </programlisting>
 
-    To add depth-first ordering information, you can write this:
+    要添加深度优先排序信息，可以这样写：
 
 <programlisting>
 WITH RECURSIVE search_tree(id, link, data, <emphasis>path</emphasis>) AS (
@@ -1740,9 +1694,7 @@ SELECT * FROM search_tree <emphasis>ORDER BY path</emphasis>;
    </para>
 
    <para>
-    In the general case where more than one field needs to be used to identify
-    a row, use an array of rows.  For example, if we needed to track fields
-    <structfield>f1</structfield> and <structfield>f2</structfield>:
+    在需要用多个字段来标识一行的常见情况下，请使用行的数组。例如，如果我们需要跟踪字段 <structfield>f1</structfield> 和 <structfield>f2</structfield>：
 
 <programlisting>
 WITH RECURSIVE search_tree(id, link, data, <emphasis>path</emphasis>) AS (
@@ -1759,15 +1711,12 @@ SELECT * FROM search_tree <emphasis>ORDER BY path</emphasis>;
 
    <tip>
     <para>
-     Omit the <literal>ROW()</literal> syntax in the common case where only one
-     field needs to be tracked.  This allows a simple array rather than a
-     composite-type array to be used, gaining efficiency.
+     在只需要跟踪一个字段的常见情况下，省略 <literal>ROW()</literal> 语法。这样可以使用简单数组而不是复合类型数组，从而提高效率。
     </para>
    </tip>
 
    <para>
-    To create a breadth-first order, you can add a column that tracks the depth
-    of the search, for example:
+    要创建广度优先顺序，可以添加一个跟踪搜索深度的列，例如：
 
 <programlisting>
 WITH RECURSIVE search_tree(id, link, data, <emphasis>depth</emphasis>) AS (
@@ -1781,22 +1730,17 @@ WITH RECURSIVE search_tree(id, link, data, <emphasis>depth</emphasis>) AS (
 SELECT * FROM search_tree <emphasis>ORDER BY depth</emphasis>;
 </programlisting>
 
-    To get a stable sort, add data columns as secondary sorting columns.
+要获得稳定的排序，请添加数据列作为次级排序键。
    </para>
 
    <tip>
     <para>
-     The recursive query evaluation algorithm produces its output in
-     breadth-first search order.  However, this is an implementation detail and
-     it is perhaps unsound to rely on it.  The order of the rows within each
-     level is certainly undefined, so some explicit ordering might be desired
-     in any case.
+     递归查询求值算法按广度优先搜索顺序产生其输出。然而，这是一个实现细节，依赖它可能并不稳妥。每一层内行的顺序当然是不确定的，因此在任何情况下可能都需要一些显式的排序。
     </para>
    </tip>
 
    <para>
-    There is built-in syntax to compute a depth- or breadth-first sort column.
-    For example:
+    有内置语法可用于计算深度优先或广度优先的排序列。例如：
 
 <programlisting>
 WITH RECURSIVE search_tree(id, link, data) AS (
@@ -1819,30 +1763,15 @@ WITH RECURSIVE search_tree(id, link, data) AS (
 ) <emphasis>SEARCH BREADTH FIRST BY id SET ordercol</emphasis>
 SELECT * FROM search_tree ORDER BY ordercol;
 </programlisting>
-    This syntax is internally expanded to something similar to the above
-    hand-written forms.  The <literal>SEARCH</literal> clause specifies whether
-    depth- or breadth first search is wanted, the list of columns to track for
-    sorting, and a column name that will contain the result data that can be
-    used for sorting.  That column will implicitly be added to the output rows
-    of the CTE.
+此语法在内部会展开为类似于上述手写形式的形式。<literal>SEARCH</literal> 子句指定需要深度优先还是广度优先搜索、用于排序要跟踪的列列表，以及一个包含可用于排序的结果数据的列名。该列将被隐式添加到 CTE 的输出行中。
    </para>
   </sect3>
 
   <sect3 id="queries-with-cycle">
-   <title>Cycle Detection</title>
+   <title>环检测</title>
 
   <para>
-   When working with recursive queries it is important to be sure that
-   the recursive part of the query will eventually return no tuples,
-   or else the query will loop indefinitely.  Sometimes, using
-   <literal>UNION</literal> instead of <literal>UNION ALL</literal> can accomplish this
-   by discarding rows that duplicate previous output rows.  However, often a
-   cycle does not involve output rows that are completely duplicate: it may be
-   necessary to check just one or a few fields to see if the same point has
-   been reached before.  The standard method for handling such situations is
-   to compute an array of the already-visited values.  For example, consider again
-   the following query that searches a table <structname>graph</structname> using a
-   <structfield>link</structfield> field:
+   在处理递归查询时，务必确保查询的递归部分最终不会返回任何元组，否则查询将无限循环。有时，使用 <literal>UNION</literal> 代替 <literal>UNION ALL</literal> 可以通过丢弃与先前输出行重复的行来实现这一点。然而，环通常并不涉及完全重复的输出行：可能只需要检查一个或几个字段，以判断是否到达过同一点。处理此类情况的标准方法是计算一个已访问值的数组。例如，再次考虑以下查询，它使用 <structfield>link</structfield> 字段搜索表 <structname>graph</structname>：
 
 <programlisting>
 WITH RECURSIVE search_graph(id, link, data, depth) AS (
@@ -1856,12 +1785,7 @@ WITH RECURSIVE search_graph(id, link, data, depth) AS (
 SELECT * FROM search_graph;
 </programlisting>
 
-   This query will loop if the <structfield>link</structfield> relationships contain
-   cycles.  Because we require a <quote>depth</quote> output, just changing
-   <literal>UNION ALL</literal> to <literal>UNION</literal> would not eliminate the looping.
-   Instead we need to recognize whether we have reached the same row again
-   while following a particular path of links.  We add two columns
-   <structfield>is_cycle</structfield> and <structfield>path</structfield> to the loop-prone query:
+如果 <structfield>link</structfield> 关系包含环，此查询将循环。由于我们需要一个<quote>深度</quote>输出，仅仅将 <literal>UNION ALL</literal> 改为 <literal>UNION</literal> 并不能消除循环。相反，我们需要在沿着特定链接路径前进时识别是否再次到达同一行。我们向容易产生环的查询添加两个列 <structfield>is_cycle</structfield> 和 <structfield>path</structfield>：
 
 <programlisting>
 WITH RECURSIVE search_graph(id, link, data, depth, <emphasis>is_cycle, path</emphasis>) AS (
@@ -1879,14 +1803,11 @@ WITH RECURSIVE search_graph(id, link, data, depth, <emphasis>is_cycle, path</emp
 SELECT * FROM search_graph;
 </programlisting>
 
-   Aside from preventing cycles, the array value is often useful in its own
-   right as representing the <quote>path</quote> taken to reach any particular row.
+除了防止环之外，数组值本身通常也很有用，因为它表示到达任何特定行所经过的<quote>路径</quote>。
   </para>
 
   <para>
-   In the general case where more than one field needs to be checked to
-   recognize a cycle, use an array of rows.  For example, if we needed to
-   compare fields <structfield>f1</structfield> and <structfield>f2</structfield>:
+   在需要检查多个字段才能识别环的一般情况下，使用行数组。例如，如果我们需要比较字段 <structfield>f1</structfield> 和 <structfield>f2</structfield>：
 
 <programlisting>
 WITH RECURSIVE search_graph(id, link, data, depth, <emphasis>is_cycle, path</emphasis>) AS (
@@ -1907,15 +1828,12 @@ SELECT * FROM search_graph;
 
   <tip>
    <para>
-    Omit the <literal>ROW()</literal> syntax in the common case where only one field
-    needs to be checked to recognize a cycle.  This allows a simple array
-    rather than a composite-type array to be used, gaining efficiency.
+    在只需检查一个字段即可识别环的常见情况下，省略 <literal>ROW()</literal> 语法。这样可以使用简单数组而不是复合类型数组，从而提高效率。
    </para>
   </tip>
 
   <para>
-   There is built-in syntax to simplify cycle detection.  The above query can
-   also be written like this:
+   有内置语法可以简化环检测。上面的查询也可以写成这样：
 <programlisting>
 WITH RECURSIVE search_graph(id, link, data, depth) AS (
     SELECT g.id, g.link, g.data, 1
@@ -1927,32 +1845,17 @@ WITH RECURSIVE search_graph(id, link, data, depth) AS (
 ) <emphasis>CYCLE id SET is_cycle USING path</emphasis>
 SELECT * FROM search_graph;
 </programlisting>
-   and it will be internally rewritten to the above form.  The
-   <literal>CYCLE</literal> clause specifies first the list of columns to
-   track for cycle detection, then a column name that will show whether a
-   cycle has been detected, and finally the name of another column that will track the
-   path.  The cycle and path columns will implicitly be added to the output
-   rows of the CTE.
+   它会在内部被重写为上面的形式。<literal>CYCLE</literal> 子句首先指定用于环检测的跟踪列列表，然后指定一个列名，用于显示是否检测到环，最后指定另一个列名，用于跟踪路径。cycle 列和 path 列将被隐式添加到 CTE 的输出行中。
   </para>
 
   <tip>
    <para>
-    The cycle path column is computed in the same way as the depth-first
-    ordering column show in the previous section.  A query can have both a
-    <literal>SEARCH</literal> and a <literal>CYCLE</literal> clause, but a
-    depth-first search specification and a cycle detection specification would
-    create redundant computations, so it's more efficient to just use the
-    <literal>CYCLE</literal> clause and order by the path column.  If
-    breadth-first ordering is wanted, then specifying both
-    <literal>SEARCH</literal> and <literal>CYCLE</literal> can be useful.
+    环路径列的计算方式与上一节中展示的深度优先排序列相同。一个查询可以同时具有 <literal>SEARCH</literal> 和 <literal>CYCLE</literal> 子句，但深度优先搜索规范和环检测规范会产生冗余计算，因此只使用 <literal>CYCLE</literal> 子句并按路径列排序会更高效。如果想要广度优先排序，那么同时指定 <literal>SEARCH</literal> 和 <literal>CYCLE</literal> 会很有用。
    </para>
   </tip>
 
   <para>
-   A helpful trick for testing queries
-   when you are not certain if they might loop is to place a <literal>LIMIT</literal>
-   in the parent query.  For example, this query would loop forever without
-   the <literal>LIMIT</literal>:
+   当你不能确定查询是否会循环时，一个有用的测试技巧是在父查询中放置一个 <literal>LIMIT</literal>。例如，如果没有 <literal>LIMIT</literal>，这个查询会永远循环：
 
 <programlisting>
 WITH RECURSIVE t(n) AS (
@@ -1963,74 +1866,53 @@ WITH RECURSIVE t(n) AS (
 SELECT n FROM t <emphasis>LIMIT 100</emphasis>;
 </programlisting>
 
-   This works because <productname>PostgreSQL</productname>'s implementation
-   evaluates only as many rows of a <literal>WITH</literal> query as are actually
-   fetched by the parent query.  Using this trick in production is not
-   recommended, because other systems might work differently.  Also, it
-   usually won't work if you make the outer query sort the recursive query's
-   results or join them to some other table, because in such cases the
-   outer query will usually try to fetch all of the <literal>WITH</literal> query's
-   output anyway.
+   这之所以有效，是因为 <productname>PostgreSQL</productname> 的实现只计算父查询实际取用的那么多 <literal>WITH</literal> 查询的行。不建议在生产环境中使用这个技巧，因为其他系统可能以不同方式工作。此外，如果你让外层查询对递归查询的结果排序或将它们与其他表连接，这通常不会起作用，因为在这种情况下，外层查询通常无论如何都会尝试取用 <literal>WITH</literal> 查询的全部输出。
   </para>
   </sect3>
  </sect2>
 
  <sect2 id="queries-with-cte-materialization">
-  <title>Common Table Expression Materialization</title>
+  <title>公共表表达式物化</title>
 
   <para>
-   A useful property of <literal>WITH</literal> queries is that they are
-   normally evaluated only once per execution of the parent query, even if
-   they are referred to more than once by the parent query or
-   sibling <literal>WITH</literal> queries.
-   Thus, expensive calculations that are needed in multiple places can be
-   placed within a <literal>WITH</literal> query to avoid redundant work.  Another
-   possible application is to prevent unwanted multiple evaluations of
-   functions with side-effects.
-   However, the other side of this coin is that the optimizer is not able to
-   push restrictions from the parent query down into a multiply-referenced
-   <literal>WITH</literal> query, since that might affect all uses of the
-   <literal>WITH</literal> query's output when it should affect only one.
-   The multiply-referenced <literal>WITH</literal> query will be
-   evaluated as written, without suppression of rows that the parent query
-   might discard afterwards.  (But, as mentioned above, evaluation might stop
-   early if the reference(s) to the query demand only a limited number of
-   rows.)
+   <literal>WITH</literal> 查询的一个有用特性是，它们通常只在父查询的每次执行中求值一次，即使父查询或同级 <literal>WITH</literal> 查询多次引用它们也是如此。
+   因此，在多个地方都需要的昂贵计算可以放在 <literal>WITH</literal> 查询中，以避免重复工作。另一个
+   可能的应用是防止对带有副作用的函数进行不必要的多次求值。
+   然而，事情的另一面是，优化器无法将父查询的限制条件下推到被多次引用的
+   <literal>WITH</literal> 查询中，因为那可能会影响 <literal>WITH</literal> 查询输出的所有使用处，而实际上只应影响其中一个。
+   被多次引用的 <literal>WITH</literal> 查询将按所写的方式求值，不会抑制父查询
+   之后可能丢弃的行。（但是，如上所述，如果对该查询的引用只要求有限数量的
+   行，求值可能会提前停止。）
   </para>
 
   <para>
-   However, if a <literal>WITH</literal> query is non-recursive and
-   side-effect-free (that is, it is a <literal>SELECT</literal> containing
-   no volatile functions) then it can be folded into the parent query,
-   allowing joint optimization of the two query levels.  By default, this
-   happens if the parent query references the <literal>WITH</literal> query
-   just once, but not if it references the <literal>WITH</literal> query
-   more than once.  You can override that decision by
-   specifying <literal>MATERIALIZED</literal> to force separate calculation
-   of the <literal>WITH</literal> query, or by specifying <literal>NOT
-   MATERIALIZED</literal> to force it to be merged into the parent query.
-   The latter choice risks duplicate computation of
-   the <literal>WITH</literal> query, but it can still give a net savings if
-   each usage of the <literal>WITH</literal> query needs only a small part
-   of the <literal>WITH</literal> query's full output.
+   然而，如果 <literal>WITH</literal> 查询是非递归且无副作用的（也就是说，它是一个
+   不包含易变函数的 <literal>SELECT</literal>），那么它可以被折叠进父查询，
+   从而允许对两个查询层次进行联合优化。默认情况下，如果父查询只引用
+   <literal>WITH</literal> 查询一次，就会发生这种情况；如果引用 <literal>WITH</literal> 查询
+   多次，则不会。你可以通过指定 <literal>MATERIALIZED</literal> 强制
+   <literal>WITH</literal> 查询单独计算，或指定 <literal>NOT
+   MATERIALIZED</literal> 强制将其合并到父查询中，来覆盖该决定。
+   后一种选择存在重复计算
+   <literal>WITH</literal> 查询的风险，但如果 <literal>WITH</literal> 查询的每次使用只需要
+   <literal>WITH</literal> 查询全部输出的一小部分，它仍然可以带来净节省。
   </para>
 
   <para>
-   A simple example of these rules is
+   这些规则的一个简单例子是
 <programlisting>
 WITH w AS (
     SELECT * FROM big_table
 )
 SELECT * FROM w WHERE key = 123;
 </programlisting>
-   This <literal>WITH</literal> query will be folded, producing the same
-   execution plan as
+   这个 <literal>WITH</literal> 查询将被折叠，产生与
 <programlisting>
 SELECT * FROM big_table WHERE key = 123;
 </programlisting>
-   In particular, if there's an index on <structfield>key</structfield>,
-   it will probably be used to fetch just the rows having <literal>key =
-   123</literal>.  On the other hand, in
+   相同的执行计划。特别是，如果 <structfield>key</structfield> 上有索引，
+   它很可能被用来只获取具有 <literal>key =
+   123</literal> 的行。另一方面，在
 <programlisting>
 WITH w AS (
     SELECT * FROM big_table
@@ -2038,10 +1920,8 @@ WITH w AS (
 SELECT * FROM w AS w1 JOIN w AS w2 ON w1.key = w2.ref
 WHERE w2.key = 123;
 </programlisting>
-   the <literal>WITH</literal> query will be materialized, producing a
-   temporary copy of <structname>big_table</structname> that is then
-   joined with itself &mdash; without benefit of any index.  This query
-   will be executed much more efficiently if written as
+   中，<literal>WITH</literal> 查询将被物化，产生
+   <structname>big_table</structname> 的临时副本，然后与自身连接 &mdash;，无法利用任何索引。如果写成
 <programlisting>
 WITH w AS NOT MATERIALIZED (
     SELECT * FROM big_table
@@ -2049,43 +1929,32 @@ WITH w AS NOT MATERIALIZED (
 SELECT * FROM w AS w1 JOIN w AS w2 ON w1.key = w2.ref
 WHERE w2.key = 123;
 </programlisting>
-   so that the parent query's restrictions can be applied directly
-   to scans of <structname>big_table</structname>.
+   使父查询的限制条件可以直接应用于对 <structname>big_table</structname> 的扫描，这个查询
+   的执行效率会高得多。
   </para>
 
   <para>
-   An example where <literal>NOT MATERIALIZED</literal> could be
-   undesirable is
+   <literal>NOT MATERIALIZED</literal> 可能不可取的一个例子是
 <programlisting>
 WITH w AS (
     SELECT key, very_expensive_function(val) as f FROM some_table
 )
 SELECT * FROM w AS w1 JOIN w AS w2 ON w1.f = w2.f;
 </programlisting>
-   Here, materialization of the <literal>WITH</literal> query ensures
-   that <function>very_expensive_function</function> is evaluated only
-   once per table row, not twice.
+   这里，<literal>WITH</literal> 查询的物化确保
+   <function>very_expensive_function</function> 对每个表行只求值一次，而不是两次。
   </para>
 
   <para>
-   The examples above only show <literal>WITH</literal> being used with
-   <command>SELECT</command>, but it can be attached in the same way to
-   <command>INSERT</command>, <command>UPDATE</command>,
-   <command>DELETE</command>, or <command>MERGE</command>.
-   In each case it effectively provides temporary table(s) that can
-   be referred to in the main command.
+   上面的例子只展示了 <literal>WITH</literal> 与 <command>SELECT</command> 一起使用的情况，但它可以用同样的方式附加到 <command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command> 上。在每种情况下，它都有效地提供了可在主命令中引用的临时表。
   </para>
  </sect2>
 
  <sect2 id="queries-with-modifying">
-   <title>Data-Modifying Statements in <literal>WITH</literal></title>
+   <title><literal>WITH</literal> 中的数据修改语句</title>
 
    <para>
-    You can use data-modifying statements (<command>INSERT</command>,
-    <command>UPDATE</command>, <command>DELETE</command>, or
-    <command>MERGE</command>) in <literal>WITH</literal>.  This
-    allows you to perform several different operations in the same query.
-    An example is:
+    你可以在 <literal>WITH</literal> 中使用数据修改语句（<command>INSERT</command>、<command>UPDATE</command>、<command>DELETE</command> 或 <command>MERGE</command>）。这允许你在同一个查询中执行若干不同的操作。例如：
 
 <programlisting>
 WITH moved_rows AS (
@@ -2099,35 +1968,15 @@ INSERT INTO products_log
 SELECT * FROM moved_rows;
 </programlisting>
 
-    This query effectively moves rows from <structname>products</structname> to
-    <structname>products_log</structname>.  The <command>DELETE</command> in <literal>WITH</literal>
-    deletes the specified rows from <structname>products</structname>, returning their
-    contents by means of its <literal>RETURNING</literal> clause; and then the
-    primary query reads that output and inserts it into
-    <structname>products_log</structname>.
+    这个查询有效地将行从 <structname>products</structname> 移动到 <structname>products_log</structname>。<literal>WITH</literal> 中的 <command>DELETE</command> 从 <structname>products</structname> 中删除指定的行，并通过其 <literal>RETURNING</literal> 子句返回这些行的内容；然后主查询读取该输出并将其插入到 <structname>products_log</structname> 中。
    </para>
 
    <para>
-    A fine point of the above example is that the <literal>WITH</literal> clause is
-    attached to the <command>INSERT</command>, not the sub-<command>SELECT</command> within
-    the <command>INSERT</command>.  This is necessary because data-modifying
-    statements are only allowed in <literal>WITH</literal> clauses that are attached
-    to the top-level statement.  However, normal <literal>WITH</literal> visibility
-    rules apply, so it is possible to refer to the <literal>WITH</literal>
-    statement's output from the sub-<command>SELECT</command>.
+    上述示例的一个细节是，<literal>WITH</literal> 子句附加在 <command>INSERT</command> 上，而不是 <command>INSERT</command> 内的子 <command>SELECT</command> 上。这是必要的，因为数据修改语句只允许出现在附加到顶层语句的 <literal>WITH</literal> 子句中。不过，普通的 <literal>WITH</literal> 可见性规则仍然适用，因此可以从子 <command>SELECT</command> 中引用 <literal>WITH</literal> 语句的输出。
    </para>
 
    <para>
-    Data-modifying statements in <literal>WITH</literal> usually have
-    <literal>RETURNING</literal> clauses (see <xref linkend="dml-returning"/>),
-    as shown in the example above.
-    It is the output of the <literal>RETURNING</literal> clause, <emphasis>not</emphasis> the
-    target table of the data-modifying statement, that forms the temporary
-    table that can be referred to by the rest of the query.  If a
-    data-modifying statement in <literal>WITH</literal> lacks a <literal>RETURNING</literal>
-    clause, then it forms no temporary table and cannot be referred to in
-    the rest of the query.  Such a statement will be executed nonetheless.
-    A not-particularly-useful example is:
+    <literal>WITH</literal> 中的数据修改语句通常带有 <literal>RETURNING</literal> 子句（参见 <xref linkend="dml-returning"/>），如上面的示例所示。构成可被查询其余部分引用的临时表的是 <literal>RETURNING</literal> 子句的输出，<emphasis>而不是</emphasis>数据修改语句的目标表。如果 <literal>WITH</literal> 中的数据修改语句缺少 <literal>RETURNING</literal> 子句，那么它不会构成临时表，也无法在查询的其余部分中被引用。尽管如此，这样的语句仍会被执行。一个不太有用的例子是：
 
 <programlisting>
 WITH t AS (
@@ -2136,15 +1985,11 @@ WITH t AS (
 DELETE FROM bar;
 </programlisting>
 
-    This example would remove all rows from tables <structname>foo</structname> and
-    <structname>bar</structname>.  The number of affected rows reported to the client
-    would only include rows removed from <structname>bar</structname>.
+    这个示例将从表 <structname>foo</structname> 和 <structname>bar</structname> 中删除所有行。报告给客户端的受影响行数将只包括从 <structname>bar</structname> 中删除的行。
    </para>
 
    <para>
-    Recursive self-references in data-modifying statements are not
-    allowed.  In some cases it is possible to work around this limitation by
-    referring to the output of a recursive <literal>WITH</literal>, for example:
+    数据修改语句中不允许递归自引用。在某些情况下，可以通过引用递归 <literal>WITH</literal> 的输出来绕过这一限制，例如：
 
 <programlisting>
 WITH RECURSIVE included_parts(sub_part, part) AS (
@@ -2158,29 +2003,15 @@ DELETE FROM parts
   WHERE part IN (SELECT part FROM included_parts);
 </programlisting>
 
-    This query would remove all direct and indirect subparts of a product.
+    这个查询将删除某个产品的所有直接和间接子部件。
    </para>
 
    <para>
-    Data-modifying statements in <literal>WITH</literal> are executed exactly once,
-    and always to completion, independently of whether the primary query
-    reads all (or indeed any) of their output.  Notice that this is different
-    from the rule for <command>SELECT</command> in <literal>WITH</literal>: as stated in the
-    previous section, execution of a <command>SELECT</command> is carried only as far
-    as the primary query demands its output.
+    <literal>WITH</literal> 中的数据修改语句恰好执行一次，并且总是执行到完成，与主查询是否读取其全部（或实际上任何）输出无关。请注意，这与 <literal>WITH</literal> 中 <command>SELECT</command> 的规则不同：如上一节所述，<command>SELECT</command> 的执行只在主查询需要其输出时才进行。
    </para>
 
    <para>
-    The sub-statements in <literal>WITH</literal> are executed concurrently with
-    each other and with the main query.  Therefore, when using data-modifying
-    statements in <literal>WITH</literal>, the order in which the specified updates
-    actually happen is unpredictable.  All the statements are executed with
-    the same <firstterm>snapshot</firstterm> (see <xref linkend="mvcc"/>), so they
-    cannot <quote>see</quote> one another's effects on the target tables.  This
-    alleviates the effects of the unpredictability of the actual order of row
-    updates, and means that <literal>RETURNING</literal> data is the only way to
-    communicate changes between different <literal>WITH</literal> sub-statements and
-    the main query.  An example of this is that in
+    <literal>WITH</literal> 中的子语句彼此之间以及与主查询并发执行。因此，在 <literal>WITH</literal> 中使用数据修改语句时，指定的更新实际发生的顺序是不可预测的。所有语句都使用相同的<firstterm>快照</firstterm>执行（见 <xref linkend="mvcc"/>），因此它们无法<quote>看到</quote>彼此对目标表的影响。这减轻了行更新实际顺序不可预测所带来的影响，也意味着 <literal>RETURNING</literal> 数据是在不同 <literal>WITH</literal> 子语句与主查询之间传递更改的唯一方式。一个例子是，在
 
 <programlisting>
 WITH t AS (
@@ -2190,8 +2021,7 @@ WITH t AS (
 SELECT * FROM products;
 </programlisting>
 
-    the outer <command>SELECT</command> would return the original prices before the
-    action of the <command>UPDATE</command>, while in
+    中，外层 <command>SELECT</command> 会返回 <command>UPDATE</command> 动作之前的原始价格，而在
 
 <programlisting>
 WITH t AS (
@@ -2201,25 +2031,15 @@ WITH t AS (
 SELECT * FROM t;
 </programlisting>
 
-    the outer <command>SELECT</command> would return the updated data.
+    中，外层 <command>SELECT</command> 会返回更新后的数据。
    </para>
 
    <para>
-    Trying to update the same row twice in a single statement is not
-    supported.  Only one of the modifications takes place, but it is not easy
-    (and sometimes not possible) to reliably predict which one.  This also
-    applies to deleting a row that was already updated in the same statement:
-    only the update is performed.  Therefore you should generally avoid trying
-    to modify a single row twice in a single statement.  In particular avoid
-    writing <literal>WITH</literal> sub-statements that could affect the same rows
-    changed by the main statement or a sibling sub-statement.  The effects
-    of such a statement will not be predictable.
+    在单条语句中尝试两次更新同一行是不被支持的。只有其中一个修改会生效，但可靠地预测是哪一个并不容易（有时甚至不可能）。这也适用于删除在同一语句中已被更新过的行：只会执行更新。因此，通常应避免在单条语句中尝试两次修改同一行。尤其要避免编写可能影响主语句或同级子语句所修改的同一批行的 <literal>WITH</literal> 子语句。这类语句的影响将是不可预测的。
    </para>
 
    <para>
-    At present, any table used as the target of a data-modifying statement in
-    <literal>WITH</literal> must not have a conditional rule, nor an <literal>ALSO</literal>
-    rule, nor an <literal>INSTEAD</literal> rule that expands to multiple statements.
+    目前，任何用作 <literal>WITH</literal> 中数据修改语句目标的表都不能带有条件规则，也不能带有 <literal>ALSO</literal> 规则，也不能带有会展开为多条语句的 <literal>INSTEAD</literal> 规则。
    </para>
 
   </sect2>
