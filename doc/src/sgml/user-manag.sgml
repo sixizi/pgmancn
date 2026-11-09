@@ -16,7 +16,7 @@
  </para>
 
  <sect1 id="database-roles">
-  <title>Database Roles</title>
+  <title>数据库角色</title>
 
   <indexterm zone="database-roles">
    <primary>role</primary>
@@ -35,21 +35,13 @@
   </indexterm>
 
   <para>
-   Database roles are conceptually completely separate from
-   operating system users. In practice it might be convenient to
-   maintain a correspondence, but this is not required. Database roles
-   are global across a database cluster installation (and not
-   per individual database). To create a role use the <link
-   linkend="sql-createrole"><command>CREATE ROLE</command></link> SQL command:
+   数据库角色在概念上完全独立于操作系统用户。在实践中，维护一种对应关系可能比较方便，但这并不是必需的。数据库角色在整个数据库集簇安装范围内是全局的（而不是针对单个数据库）。要创建一个角色，请使用 <link
+   linkend="sql-createrole"><command>CREATE ROLE</command></link> SQL 命令：
 <synopsis>
 CREATE ROLE <replaceable>name</replaceable>;
 </synopsis>
-   <replaceable>name</replaceable> follows the rules for SQL
-   identifiers: either unadorned without special characters, or
-   double-quoted.  (In practice, you will usually want to add additional
-   options, such as <literal>LOGIN</literal>, to the command.  More details appear
-   below.)  To remove an existing role, use the analogous
-   <link linkend="sql-droprole"><command>DROP ROLE</command></link> command:
+   <replaceable>name</replaceable> 遵循 SQL 标识符的规则：要么不加修饰且不含特殊字符，要么使用双引号。（在实践中，你通常希望给该命令添加额外的选项，例如 <literal>LOGIN</literal>。更多细节见下文。）要删除一个已有角色，请使用类似的
+   <link linkend="sql-droprole"><command>DROP ROLE</command></link> 命令：
 <synopsis>
 DROP ROLE <replaceable>name</replaceable>;
 </synopsis>
@@ -64,10 +56,8 @@ DROP ROLE <replaceable>name</replaceable>;
   </indexterm>
 
   <para>
-   For convenience, the programs <xref linkend="app-createuser"/>
-   and <xref linkend="app-dropuser"/> are provided as wrappers
-   around these SQL commands that can be called from the shell command
-   line:
+   为方便起见，提供了 <xref linkend="app-createuser"/>
+   和 <xref linkend="app-dropuser"/> 程序，它们是对这些 SQL 命令的包装，可以从 shell 命令行调用：
 <synopsis>
 createuser <replaceable>name</replaceable>
 dropuser <replaceable>name</replaceable>
@@ -75,56 +65,31 @@ dropuser <replaceable>name</replaceable>
   </para>
 
   <para>
-   To determine the set of existing roles, examine the <structname>pg_roles</structname>
-   system catalog, for example:
+   要确定现有角色的集合，请查看 <structname>pg_roles</structname>
+   系统目录，例如：
 <synopsis>
 SELECT rolname FROM pg_roles;
 </synopsis>
-   or to see just those capable of logging in:
+   或者只查看那些能够登录的角色：
 <synopsis>
 SELECT rolname FROM pg_roles WHERE rolcanlogin;
 </synopsis>
-   The <xref linkend="app-psql"/> program's <literal>\du</literal> meta-command
-   is also useful for listing the existing roles.
+   <xref linkend="app-psql"/> 程序的 <literal>\du</literal> 元命令对于列出现有角色也很有用。
   </para>
 
   <para>
-   In order to bootstrap the database system, a freshly initialized
-   system always contains one predefined login-capable role. This role
-   is always a <quote>superuser</quote>, and it will have
-   the same name as the operating system user that initialized the
-   database cluster with <command>initdb</command> unless a different name
-   is specified.  This role is often named
-   <literal>postgres</literal>. In order to create more roles you
-   first have to connect as this initial role.
+   为了引导数据库系统，刚初始化的系统总是包含一个预定义的、可登录的角色。该角色始终是一个<quote>超级用户</quote>，并且除非指定了不同的名称，否则它将与使用 <command>initdb</command> 初始化数据库集簇的操作系统用户同名。该角色通常命名为
+   <literal>postgres</literal>。要创建更多角色，你必须首先以这个初始角色连接。
   </para>
 
   <para>
-   Every connection to the database server is made using the name of some
-   particular role, and this role determines the initial access privileges for
-   commands issued in that connection.
-   The role name to use for a particular database
-   connection is indicated by the client that is initiating the
-   connection request in an application-specific fashion. For example,
-   the <command>psql</command> program uses the
-   <option>-U</option> command line option to indicate the role to
-   connect as.  Many applications assume the name of the current
-   operating system user by default (including
-   <command>createuser</command> and <command>psql</command>).  Therefore it
-   is often convenient to maintain a naming correspondence between
-   roles and operating system users.
+   每个到数据库服务器的连接都是使用某个特定角色的名称建立的，而该角色决定了在该连接中发出的命令的初始访问权限。用于特定数据库连接的角色名称由发起连接请求的客户端以应用程序特定的方式指明。例如，<command>psql</command> 程序使用
+   <option>-U</option> 命令行选项来指明要连接的角色。许多应用程序默认采用当前操作系统用户的名称（包括
+   <command>createuser</command> 和 <command>psql</command>）。因此，在角色和操作系统用户之间保持命名对应关系通常很方便。
   </para>
 
   <para>
-   The set of database roles a given client connection can connect as
-   is determined by the client authentication setup, as explained in
-   <xref linkend="client-authentication"/>. (Thus, a client is not
-   limited to connect as the role matching
-   its operating system user, just as a person's login name
-   need not match his or her real name.)  Since the role
-   identity determines the set of privileges available to a connected
-   client, it is important to carefully configure privileges when setting up
-   a multiuser environment.
+   一个给定的客户端连接能以哪些数据库角色进行连接，是由客户端认证设置决定的，如 <xref linkend="client-authentication"/> 中所述。（因此，客户端并不限于以与其操作系统用户相匹配的角色连接，正如一个人的登录名不必与其真实姓名一致。）由于角色身份决定了一个已连接的客户端可用的权限集合，因此在建立多用户环境时仔细配置权限非常重要。
   </para>
  </sect1>
 
