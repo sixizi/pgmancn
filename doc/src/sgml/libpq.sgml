@@ -5781,11 +5781,10 @@ int PQendcopy(PGconn *conn);
  </sect1>
 
  <sect1 id="libpq-control">
-  <title>Control Functions</title>
+  <title>控制函数</title>
 
   <para>
-   These functions control miscellaneous details of <application>libpq</application>'s
-   behavior.
+   这些函数控制 <application>libpq</application> 行为的各种细节。
   </para>
 
   <variablelist>
@@ -5794,15 +5793,13 @@ int PQendcopy(PGconn *conn);
 
     <listitem>
      <para>
-      Returns the client encoding.
+      返回客户端编码。
 <synopsis>
 int PQclientEncoding(const PGconn *<replaceable>conn</replaceable>);
 </synopsis>
 
-      Note that it returns the encoding ID, not a symbolic string
-      such as <literal>EUC_JP</literal>. If unsuccessful, it returns -1.
-      To convert an encoding ID to an encoding name, you
-      can use:
+      注意它返回的是编码 ID，而不是诸如 <literal>EUC_JP</literal> 这样的符号字符串。如果失败，则返回 -1。
+      要把编码 ID 转换为编码名称，你可以使用：
 
 <synopsis>
 char *pg_encoding_to_char(int <replaceable>encoding_id</replaceable>);
@@ -5816,16 +5813,14 @@ char *pg_encoding_to_char(int <replaceable>encoding_id</replaceable>);
 
     <listitem>
      <para>
-      Sets the client encoding.
+      设置客户端编码。
 <synopsis>
 int PQsetClientEncoding(PGconn *<replaceable>conn</replaceable>, const char *<replaceable>encoding</replaceable>);
 </synopsis>
 
-      <replaceable>conn</replaceable> is a connection to the server,
-      and <replaceable>encoding</replaceable> is the encoding you want to
-      use. If the function successfully sets the encoding, it returns 0,
-      otherwise -1. The current encoding for this connection can be
-      determined by using <xref linkend="libpq-PQclientEncoding"/>.
+      <replaceable>conn</replaceable> 是到服务器的连接，
+      而 <replaceable>encoding</replaceable> 是你想要使用的编码。如果该函数成功设置编码，则返回 0，
+      否则返回 -1。此连接的当前编码可以通过使用 <xref linkend="libpq-PQclientEncoding"/> 来确定。
      </para>
     </listitem>
    </varlistentry>
@@ -5835,8 +5830,8 @@ int PQsetClientEncoding(PGconn *<replaceable>conn</replaceable>, const char *<re
 
     <listitem>
      <para>
-      Determines the verbosity of messages returned by
-      <xref linkend="libpq-PQerrorMessage"/> and <xref linkend="libpq-PQresultErrorMessage"/>.
+      确定由
+      <xref linkend="libpq-PQerrorMessage"/> 和 <xref linkend="libpq-PQresultErrorMessage"/> 返回的消息的详细程度。
 <synopsis>
 typedef enum
 {
@@ -5849,25 +5844,25 @@ typedef enum
 PGVerbosity PQsetErrorVerbosity(PGconn *conn, PGVerbosity verbosity);
 </synopsis>
 
-      <xref linkend="libpq-PQsetErrorVerbosity"/> sets the verbosity mode,
-      returning the connection's previous setting.
-      In <firstterm>TERSE</firstterm> mode, returned messages include
-      severity, primary text, and position only; this will normally fit on a
-      single line.  The <firstterm>DEFAULT</firstterm> mode produces messages
-      that include the above plus any detail, hint, or context fields (these
-      might span multiple lines).  The <firstterm>VERBOSE</firstterm> mode
-      includes all available fields.  The <firstterm>SQLSTATE</firstterm>
-      mode includes only the error severity and the <symbol>SQLSTATE</symbol>
-      error code, if one is available (if not, the output is like
-      <firstterm>TERSE</firstterm> mode).
+      <xref linkend="libpq-PQsetErrorVerbosity"/> 设置详细程度模式，
+      并返回该连接之前的设置。
+      在 <firstterm>TERSE</firstterm> 模式下，返回的消息仅包含
+      严重性、主要文本和位置；这通常能放在
+      一行内。<firstterm>DEFAULT</firstterm> 模式生成的消息
+      包含上述内容以及任何 detail、hint 或 context 字段（这些
+      可能跨越多行）。<firstterm>VERBOSE</firstterm> 模式
+      包含所有可用字段。<firstterm>SQLSTATE</firstterm>
+      模式仅包含错误严重性和 <symbol>SQLSTATE</symbol>
+      错误码（如果可用；如果不可用，则输出类似于
+      <firstterm>TERSE</firstterm> 模式）。
      </para>
 
      <para>
-      Changing the verbosity setting does not affect the messages available
-      from already-existing <structname>PGresult</structname> objects, only
-      subsequently-created ones.
-      (But see <xref linkend="libpq-PQresultVerboseErrorMessage"/> if you
-      want to print a previous error with a different verbosity.)
+      更改详细程度设置不会影响从已存在的 <structname>PGresult</structname> 对象
+      可获得的消息，只影响
+      之后创建的对象。
+      （但如果你想以不同的详细程度打印先前的错误，请参见
+      <xref linkend="libpq-PQresultVerboseErrorMessage"/>。）
      </para>
     </listitem>
    </varlistentry>
@@ -5877,9 +5872,9 @@ PGVerbosity PQsetErrorVerbosity(PGconn *conn, PGVerbosity verbosity);
 
     <listitem>
      <para>
-      Determines the handling of <literal>CONTEXT</literal> fields in messages
-      returned by <xref linkend="libpq-PQerrorMessage"/>
-      and <xref linkend="libpq-PQresultErrorMessage"/>.
+      确定由 <xref linkend="libpq-PQerrorMessage"/>
+      和 <xref linkend="libpq-PQresultErrorMessage"/> 返回的消息中
+      <literal>CONTEXT</literal> 字段的处理方式。
 <synopsis>
 typedef enum
 {
@@ -5891,26 +5886,26 @@ typedef enum
 PGContextVisibility PQsetErrorContextVisibility(PGconn *conn, PGContextVisibility show_context);
 </synopsis>
 
-      <xref linkend="libpq-PQsetErrorContextVisibility"/> sets the context display mode,
-      returning the connection's previous setting.  This mode controls
-      whether the <literal>CONTEXT</literal> field is included in messages.
-      The <firstterm>NEVER</firstterm> mode
-      never includes <literal>CONTEXT</literal>, while <firstterm>ALWAYS</firstterm> always
-      includes it if available.  In <firstterm>ERRORS</firstterm> mode (the
-      default), <literal>CONTEXT</literal> fields are included only in error
-      messages, not in notices and warnings.
-      (However, if the verbosity setting is <firstterm>TERSE</firstterm>
-      or <firstterm>SQLSTATE</firstterm>, <literal>CONTEXT</literal> fields
-      are omitted regardless of the context display mode.)
+      <xref linkend="libpq-PQsetErrorContextVisibility"/> 设置上下文显示模式，
+      并返回该连接之前的设置。此模式控制
+      消息中是否包含 <literal>CONTEXT</literal> 字段。
+      <firstterm>NEVER</firstterm> 模式
+      从不包含 <literal>CONTEXT</literal>，而 <firstterm>ALWAYS</firstterm> 在可用时
+      总是包含它。在 <firstterm>ERRORS</firstterm> 模式（默认）
+      下，<literal>CONTEXT</literal> 字段仅包含在错误
+      消息中，而不包含在通知和警告中。
+      （但是，如果详细程度设置为 <firstterm>TERSE</firstterm>
+      或 <firstterm>SQLSTATE</firstterm>，则无论上下文显示模式如何，
+      <literal>CONTEXT</literal> 字段都会被省略。）
      </para>
 
      <para>
-      Changing this mode does not
-      affect the messages available from
-      already-existing <structname>PGresult</structname> objects, only
-      subsequently-created ones.
-      (But see <xref linkend="libpq-PQresultVerboseErrorMessage"/> if you
-      want to print a previous error with a different display mode.)
+      更改此模式不会
+      影响从已存在的 <structname>PGresult</structname> 对象
+      可获得的消息，只影响
+      之后创建的对象。
+      （但如果你想以不同的显示模式打印先前的错误，请参见
+      <xref linkend="libpq-PQresultVerboseErrorMessage"/>。）
      </para>
     </listitem>
    </varlistentry>
@@ -5920,35 +5915,32 @@ PGContextVisibility PQsetErrorContextVisibility(PGconn *conn, PGContextVisibilit
 
     <listitem>
      <para>
-      Enables tracing of the client/server communication to a debugging file
-      stream.
+      启用对客户端/服务器通信的跟踪，将其输出到调试文件流。
 <synopsis>
 void PQtrace(PGconn *conn, FILE *stream);
 </synopsis>
      </para>
 
      <para>
-      Each line consists of: an optional timestamp, a direction indicator
-      (<literal>F</literal> for messages from client to server
-      or <literal>B</literal> for messages from server to client),
-      message length, message type, and message contents.
-      Non-message contents fields (timestamp, direction, length and message type)
-      are separated by a tab. Message contents are separated by a space.
-      Protocol strings are enclosed in double quotes, while strings used as data
-      values are enclosed in single quotes.  Non-printable chars are printed as
-      hexadecimal escapes.
-      Further message-type-specific detail can be found in
-      <xref linkend="protocol-message-formats"/>.
+      每一行由以下内容组成：可选的时间戳、方向指示符
+      （<literal>F</literal> 表示从客户端发往服务器的消息，
+      <literal>B</literal> 表示从服务器发往客户端的消息）、
+      消息长度、消息类型和消息内容。
+      非消息内容的字段（时间戳、方向、长度和消息类型）
+      之间用制表符分隔。消息内容之间用空格分隔。
+      协议字符串用双引号括起，而用作数据值的字符串用单引号括起。
+      不可打印字符以十六进制转义形式打印。
+      有关特定消息类型的更多细节，请参见
+      <xref linkend="protocol-message-formats"/>。
      </para>
 
      <note>
       <para>
-       On Windows, if the <application>libpq</application> library and an application are
-       compiled with different flags, this function call will crash the
-       application because the internal representation of the <literal>FILE</literal>
-       pointers differ.  Specifically, multithreaded/single-threaded,
-       release/debug, and static/dynamic flags should be the same for the
-       library and all applications using that library.
+       在 Windows 上，如果 <application>libpq</application> 库和某个应用程序使用不同的标志编译，
+       那么此函数调用将导致应用程序崩溃，
+       因为 <literal>FILE</literal> 指针的内部表示不同。
+       具体来说，多线程/单线程、release/debug 和静态/动态标志
+       对于该库以及使用该库的所有应用程序应当相同。
       </para>
      </note>
 
@@ -5960,21 +5952,20 @@ void PQtrace(PGconn *conn, FILE *stream);
 
     <listitem>
      <para>
-      Controls the tracing behavior of client/server communication.
+      控制客户端/服务器通信的跟踪行为。
 <synopsis>
 void PQsetTraceFlags(PGconn *conn, int flags);
 </synopsis>
      </para>
 
      <para>
-      <literal>flags</literal> contains flag bits describing the operating mode
-      of tracing.
-      If <literal>flags</literal> contains <literal>PQTRACE_SUPPRESS_TIMESTAMPS</literal>,
-      then the timestamp is not included when printing each message.
-      If <literal>flags</literal> contains <literal>PQTRACE_REGRESS_MODE</literal>,
-      then some fields are redacted when printing each message, such as object
-      OIDs, to make the output more convenient to use in testing frameworks.
-      This function must be called after calling <function>PQtrace</function>.
+      <literal>flags</literal> 包含描述跟踪操作模式的标志位。
+      如果 <literal>flags</literal> 包含 <literal>PQTRACE_SUPPRESS_TIMESTAMPS</literal>，
+      那么在打印每条消息时不包含时间戳。
+      如果 <literal>flags</literal> 包含 <literal>PQTRACE_REGRESS_MODE</literal>，
+      那么在打印每条消息时会对某些字段进行脱敏处理，例如对象
+      OID，以使输出更便于在测试框架中使用。
+      必须在调用 <function>PQtrace</function> 之后调用此函数。
      </para>
 
     </listitem>
@@ -5985,7 +5976,7 @@ void PQsetTraceFlags(PGconn *conn, int flags);
 
     <listitem>
      <para>
-      Disables tracing started by <xref linkend="libpq-PQtrace"/>.
+      禁用由 <xref linkend="libpq-PQtrace"/> 启动的跟踪。
 <synopsis>
 void PQuntrace(PGconn *conn);
 </synopsis>
