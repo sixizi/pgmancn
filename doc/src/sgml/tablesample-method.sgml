@@ -71,13 +71,10 @@ method_name(internal) RETURNS tsm_handler
  </para>
 
  <sect1 id="tablesample-support-functions">
-  <title>Sampling Method Support Functions</title>
+  <title>采样方法支持函数</title>
 
   <para>
-   The TSM handler function returns a palloc'd <type>TsmRoutine</type> struct
-   containing pointers to the support functions described below.  Most of
-   the functions are required, but some are optional, and those pointers can
-   be NULL.
+   TSM 处理函数返回一个由 palloc 分配的 <type>TsmRoutine</type> 结构，其中包含指向下文所述支持函数的指针。大多数函数是必需的，但有些是可选的，这些指针可以为 NULL。
   </para>
 
   <para>
@@ -90,20 +87,7 @@ SampleScanGetSampleSize (PlannerInfo *root,
                          double *tuples);
 </programlisting>
 
-   This function is called during planning.  It must estimate the number of
-   relation pages that will be read during a sample scan, and the number of
-   tuples that will be selected by the scan.  (For example, these might be
-   determined by estimating the sampling fraction, and then multiplying
-   the <literal>baserel-&gt;pages</literal> and <literal>baserel-&gt;tuples</literal>
-   numbers by that, being sure to round the results to integral values.)
-   The <literal>paramexprs</literal> list holds the expression(s) that are
-   parameters to the <literal>TABLESAMPLE</literal> clause.  It is recommended to
-   use <function>estimate_expression_value()</function> to try to reduce these
-   expressions to constants, if their values are needed for estimation
-   purposes; but the function must provide size estimates even if they cannot
-   be reduced, and it should not fail even if the values appear invalid
-   (remember that they're only estimates of what the run-time values will be).
-   The <literal>pages</literal> and <literal>tuples</literal> parameters are outputs.
+   此函数在规划期间被调用。它必须估计一次采样扫描期间将读取的关系页面数，以及该扫描将选出的元组数。（例如，可以通过估计采样比例，然后将 <literal>baserel-&gt;pages</literal> 和 <literal>baserel-&gt;tuples</literal> 数值乘以该比例来确定这些值，并确保将结果舍入为整数值。）<literal>paramexprs</literal> 列表包含作为 <literal>TABLESAMPLE</literal> 子句参数的表达式。如果为了估算需要这些表达式的值，建议使用 <function>estimate_expression_value()</function> 尝试将这些表达式化简为常量；但即使无法化简，该函数也必须提供大小估计，并且即使这些值看起来无效也不应失败（请记住，它们只是对运行时值的估计）。<literal>pages</literal> 和 <literal>tuples</literal> 参数是输出。
   </para>
 
   <para>
@@ -113,33 +97,15 @@ InitSampleScan (SampleScanState *node,
                 int eflags);
 </programlisting>
 
-   Initialize for execution of a SampleScan plan node.
-   This is called during executor startup.
-   It should perform any initialization needed before processing can start.
-   The <structname>SampleScanState</structname> node has already been created, but
-   its <structfield>tsm_state</structfield> field is NULL.
-   The <function>InitSampleScan</function> function can palloc whatever internal
-   state data is needed by the sampling method, and store a pointer to
-   it in <literal>node-&gt;tsm_state</literal>.
-   Information about the table to scan is accessible through other fields
-   of the <structname>SampleScanState</structname> node (but note that the
-   <literal>node-&gt;ss.ss_currentScanDesc</literal> scan descriptor is not set
-   up yet).
-   <literal>eflags</literal> contains flag bits describing the executor's
-   operating mode for this plan node.
+   为执行 SampleScan 计划节点进行初始化。此函数在执行器启动期间被调用。它应执行处理开始之前所需的任何初始化。<structname>SampleScanState</structname> 节点已经创建，但其 <structfield>tsm_state</structfield> 字段为 NULL。<function>InitSampleScan</function> 函数可以 palloc 采样方法所需的任何内部状态数据，并将指向它的指针存储在 <literal>node-&gt;tsm_state</literal> 中。关于要扫描的表的信息可通过 <structname>SampleScanState</structname> 节点的其他字段访问（但请注意，<literal>node-&gt;ss.ss_currentScanDesc</literal> 扫描描述符尚未设置）。<literal>eflags</literal> 包含描述执行器针对此计划节点运行模式的标志位。
   </para>
 
   <para>
-   When <literal>(eflags &amp; EXEC_FLAG_EXPLAIN_ONLY)</literal> is true,
-   the scan will not actually be performed, so this function should only do
-   the minimum required to make the node state valid for <command>EXPLAIN</command>
-   and <function>EndSampleScan</function>.
+   当 <literal>(eflags &amp; EXEC_FLAG_EXPLAIN_ONLY)</literal> 为 true 时，扫描实际上不会执行，因此此函数只应执行使节点状态对 <command>EXPLAIN</command> 和 <function>EndSampleScan</function> 有效所需的最低限度操作。
   </para>
 
   <para>
-   This function can be omitted (set the pointer to NULL), in which case
-   <function>BeginSampleScan</function> must perform all initialization needed
-   by the sampling method.
+   此函数可以省略（将指针设置为 NULL），在这种情况下，<function>BeginSampleScan</function> 必须执行采样方法所需的所有初始化。
   </para>
 
   <para>
@@ -151,48 +117,22 @@ BeginSampleScan (SampleScanState *node,
                  uint32 seed);
 </programlisting>
 
-   Begin execution of a sampling scan.
-   This is called just before the first attempt to fetch a tuple, and
-   may be called again if the scan needs to be restarted.
-   Information about the table to scan is accessible through fields
-   of the <structname>SampleScanState</structname> node (but note that the
-   <literal>node-&gt;ss.ss_currentScanDesc</literal> scan descriptor is not set
-   up yet).
-   The <literal>params</literal> array, of length <literal>nparams</literal>, contains the
-   values of the parameters supplied in the <literal>TABLESAMPLE</literal> clause.
-   These will have the number and types specified in the sampling
-   method's <literal>parameterTypes</literal> list, and have been checked
-   to not be null.
-   <literal>seed</literal> contains a seed to use for any random numbers generated
-   within the sampling method; it is either a hash derived from the
-   <literal>REPEATABLE</literal> value if one was given, or the result
-   of <literal>random()</literal> if not.
+   开始执行采样扫描。
+   此函数在第一次尝试抓取元组之前被调用，如果扫描需要重新开始，可能会再次被调用。
+   关于要扫描的表的信息可以通过 <structname>SampleScanState</structname> 节点的字段访问（但请注意，<literal>node-&gt;ss.ss_currentScanDesc</literal> 扫描描述符尚未建立）。
+   长度为 <literal>nparams</literal> 的 <literal>params</literal> 数组包含在 <literal>TABLESAMPLE</literal> 子句中提供的参数值。
+   这些参数将具有采样方法的 <literal>parameterTypes</literal> 列表中指定的数量和类型，并且已经过检查确认不为空。
+   <literal>seed</literal> 包含一个种子，用于采样方法内部生成的任何随机数；如果给定了 <literal>REPEATABLE</literal> 值，则它是从该值派生的哈希，否则是 <literal>random()</literal> 的结果。
   </para>
 
   <para>
-   This function may adjust the fields <literal>node-&gt;use_bulkread</literal>
-   and <literal>node-&gt;use_pagemode</literal>.
-   If <literal>node-&gt;use_bulkread</literal> is <literal>true</literal>, which it is by
-   default, the scan will use a buffer access strategy that encourages
-   recycling buffers after use.  It might be reasonable to set this
-   to <literal>false</literal> if the scan will visit only a small fraction of the
-   table's pages.
-   If <literal>node-&gt;use_pagemode</literal> is <literal>true</literal>, which it is by
-   default, the scan will perform visibility checking in a single pass for
-   all tuples on each visited page.  It might be reasonable to set this
-   to <literal>false</literal> if the scan will select only a small fraction of the
-   tuples on each visited page.  That will result in fewer tuple visibility
-   checks being performed, though each one will be more expensive because it
-   will require more locking.
+   此函数可以调整字段 <literal>node-&gt;use_bulkread</literal> 和 <literal>node-&gt;use_pagemode</literal>。
+   如果 <literal>node-&gt;use_bulkread</literal> 为 <literal>true</literal>（默认情况下如此），扫描将使用一种鼓励在使用后回收缓冲区的缓冲区访问策略。如果扫描只访问表页面的很小一部分，将此设置为 <literal>false</literal> 可能是合理的。
+   如果 <literal>node-&gt;use_pagemode</literal> 为 <literal>true</literal>（默认情况下如此），扫描将对每个访问页面上的所有元组执行单遍可见性检查。如果扫描在每个访问页面上只选择很小一部分元组，将此设置为 <literal>false</literal> 可能是合理的。这将导致执行的元组可见性检查更少，尽管每次检查会更昂贵，因为它需要更多的锁定。
   </para>
 
   <para>
-   If the sampling method is
-   marked <literal>repeatable_across_scans</literal>, it must be able to
-   select the same set of tuples during a rescan as it did originally, that is
-   a fresh call of <function>BeginSampleScan</function> must lead to selecting the
-   same tuples as before (if the <literal>TABLESAMPLE</literal> parameters
-   and seed don't change).
+   如果采样方法被标记为 <literal>repeatable_across_scans</literal>，它必须能够在重新扫描期间选择与最初相同的元组集合，也就是说，重新调用 <function>BeginSampleScan</function> 必须导致选择与之前相同的元组（如果 <literal>TABLESAMPLE</literal> 参数和种子不变）。
   </para>
 
   <para>
@@ -201,16 +141,11 @@ BlockNumber
 NextSampleBlock (SampleScanState *node, BlockNumber nblocks);
 </programlisting>
 
-   Returns the block number of the next page to be scanned, or
-   <literal>InvalidBlockNumber</literal> if no pages remain to be scanned.
+   返回下一个要扫描的页面的块号，如果没有剩余页面需要扫描，则返回 <literal>InvalidBlockNumber</literal>。
   </para>
 
   <para>
-   This function can be omitted (set the pointer to NULL), in which case
-   the core code will perform a sequential scan of the entire relation.
-   Such a scan can use synchronized scanning, so that the sampling method
-   cannot assume that the relation pages are visited in the same order on
-   each scan.
+   此函数可以省略（将指针设置为 NULL），在这种情况下，核心代码将对整个关系执行顺序扫描。这样的扫描可以使用同步扫描，因此采样方法不能假定每次扫描时关系页面以相同的顺序被访问。
   </para>
 
   <para>
@@ -221,35 +156,18 @@ NextSampleTuple (SampleScanState *node,
                  OffsetNumber maxoffset);
 </programlisting>
 
-   Returns the offset number of the next tuple to be sampled on the
-   specified page, or <literal>InvalidOffsetNumber</literal> if no tuples remain to
-   be sampled.  <literal>maxoffset</literal> is the largest offset number in use
-   on the page.
+   返回指定页面上下一个要采样的元组的偏移号，如果没有剩余元组需要采样，则返回 <literal>InvalidOffsetNumber</literal>。<literal>maxoffset</literal> 是页面上正在使用的最大偏移号。
   </para>
 
   <note>
    <para>
-    <function>NextSampleTuple</function> is not explicitly told which of the offset
-    numbers in the range <literal>1 .. maxoffset</literal> actually contain valid
-    tuples.  This is not normally a problem since the core code ignores
-    requests to sample missing or invisible tuples; that should not result in
-    any bias in the sample.  However, if necessary, the function can use
-    <literal>node-&gt;donetuples</literal> to examine how many of the tuples
-    it returned were valid and visible.
+    <function>NextSampleTuple</function> 并不会明确得知范围 <literal>1 .. maxoffset</literal> 中哪些偏移量编号实际上包含有效元组。这通常不是问题，因为核心代码会忽略对缺失或不可见元组的采样请求；这不应导致样本中出现任何偏差。不过，如有必要，该函数可以使用 <literal>node-&gt;donetuples</literal> 来检查它返回的元组中有多少是有效且可见的。
    </para>
   </note>
 
   <note>
    <para>
-    <function>NextSampleTuple</function> must <emphasis>not</emphasis> assume
-    that <literal>blockno</literal> is the same page number returned by the most
-    recent <function>NextSampleBlock</function> call.  It was returned by some
-    previous <function>NextSampleBlock</function> call, but the core code is allowed
-    to call <function>NextSampleBlock</function> in advance of actually scanning
-    pages, so as to support prefetching.  It is OK to assume that once
-    sampling of a given page begins, successive <function>NextSampleTuple</function>
-    calls all refer to the same page until <literal>InvalidOffsetNumber</literal> is
-    returned.
+    <function>NextSampleTuple</function> <emphasis>不得</emphasis>假定 <literal>blockno</literal> 与最近一次 <function>NextSampleBlock</function> 调用返回的页号相同。它是由之前的某次 <function>NextSampleBlock</function> 调用返回的，但核心代码允许在实际扫描页之前就调用 <function>NextSampleBlock</function>，以支持预取。可以假定：一旦对给定页的采样开始，后续的 <function>NextSampleTuple</function> 调用都会引用同一页，直到返回 <literal>InvalidOffsetNumber</literal> 为止。
    </para>
   </note>
 
@@ -259,11 +177,8 @@ void
 EndSampleScan (SampleScanState *node);
 </programlisting>
 
-   End the scan and release resources.  It is normally not important
-   to release palloc'd memory, but any externally-visible resources
-   should be cleaned up.
-   This function can be omitted (set the pointer to NULL) in the common
-   case where no such resources exist.
+   结束扫描并释放资源。通常释放 palloc 分配的内存并不重要，但任何外部可见的资源都应清理干净。
+   在不存在此类资源的常见情况下，可以省略该函数（将指针设为 NULL）。
   </para>
 
  </sect1>
