@@ -247,26 +247,19 @@ INSERT INTO people (id, name, address) VALUES (<emphasis>DEFAULT</emphasis>, 'C'
  </sect1>
 
  <sect1 id="ddl-generated-columns">
-  <title>Generated Columns</title>
+  <title>生成列</title>
 
   <indexterm zone="ddl-generated-columns">
    <primary>generated column</primary>
   </indexterm>
 
   <para>
-   A generated column is a special column that is always computed from other
-   columns.  Thus, it is for columns what a view is for tables.  There are two
-   kinds of generated columns: stored and virtual.  A stored generated column
-   is computed when it is written (inserted or updated) and occupies storage
-   as if it were a normal column.  A virtual generated column occupies no
-   storage and is computed when it is read.  Thus, a virtual generated column
-   is similar to a view and a stored generated column is similar to a
-   materialized view (except that it is always updated automatically).
+   生成列是一种特殊列，其值总是由其他列计算得出。因此，它之于列就如同视图之于表。生成列有两种：存储生成列和虚拟生成列。存储生成列在写入（插入或更新）时计算，并像普通列一样占用存储空间。虚拟生成列不占用存储空间，在读取时计算。因此，虚拟生成列类似于视图，存储生成列类似于物化视图（区别在于它总是自动更新）。
   </para>
 
   <para>
-   To create a generated column, use the <literal>GENERATED ALWAYS
-   AS</literal> clause in <command>CREATE TABLE</command>, for example:
+   要创建生成列，请在 <command>CREATE TABLE</command> 中使用 <literal>GENERATED ALWAYS
+   AS</literal> 子句，例如：
 <programlisting>
 CREATE TABLE people (
     ...,
@@ -274,27 +267,15 @@ CREATE TABLE people (
     height_in numeric <emphasis>GENERATED ALWAYS AS (height_cm / 2.54)</emphasis>
 );
 </programlisting>
-   A generated column is by default of the virtual kind.  Use the keywords
-   <literal>VIRTUAL</literal> or <literal>STORED</literal> to make the choice
-   explicit.  See <xref linkend="sql-createtable"/> for more details.
+   生成列默认是虚拟类型。使用关键字 <literal>VIRTUAL</literal> 或 <literal>STORED</literal> 可以明确指定选择。更多细节请参见 <xref linkend="sql-createtable"/>。
   </para>
 
   <para>
-   A generated column cannot be written to directly.  In
-   <command>INSERT</command> or <command>UPDATE</command> commands, a value
-   cannot be specified for a generated column, but the keyword
-   <literal>DEFAULT</literal> may be specified.
+   不能直接向生成列写入数据。在 <command>INSERT</command> 或 <command>UPDATE</command> 命令中，不能为生成列指定值，但可以指定关键字 <literal>DEFAULT</literal>。
   </para>
 
   <para>
-   Consider the differences between a column with a default and a generated
-   column.  The column default is evaluated once when the row is first
-   inserted if no other value was provided; a generated column is updated
-   whenever the row changes and cannot be overridden.  A column default may
-   not refer to other columns of the table; a generation expression would
-   normally do so.  A column default can use volatile functions, for example
-   <literal>random()</literal> or functions referring to the current time;
-   this is not allowed for generated columns.
+   考虑带默认值的列与生成列之间的区别。如果未提供其他值，列默认值在行首次插入时求值一次；生成列在行发生变化时更新，且不能被覆盖。列默认值不能引用表的其他列；而生成表达式通常会这样做。列默认值可以使用易变函数，例如 <literal>random()</literal> 或引用当前时间的函数；生成列不允许这样做。
   </para>
 
   <para>
@@ -304,40 +285,32 @@ CREATE TABLE people (
    <itemizedlist>
     <listitem>
      <para>
-      The generation expression can only use immutable functions and cannot
-      use subqueries or reference anything other than the current row in any
-      way.
+      生成表达式只能使用不可变函数，不能使用子查询，也不能以任何方式引用当前行以外的任何内容。
      </para>
     </listitem>
     <listitem>
      <para>
-      A generation expression cannot reference another generated column.
+      生成表达式不能引用另一个生成列。
      </para>
     </listitem>
     <listitem>
      <para>
-      A generation expression cannot reference a system column, except
-      <varname>tableoid</varname>.
+      生成表达式不能引用系统列，但 <varname>tableoid</varname> 除外。
      </para>
     </listitem>
     <listitem>
      <para>
-      A virtual generated column cannot have a user-defined type, and the
-      generation expression of a virtual generated column must not reference
-      user-defined functions or types, that is, it can only use built-in
-      functions or types.  This applies also indirectly, such as for functions
-      or types that underlie operators or casts.  (This restriction does not
-      exist for stored generated columns.)
+      虚拟生成列不能具有用户定义类型，并且虚拟生成列的生成表达式不得引用用户定义函数或类型，也就是说，它只能使用内置函数或类型。这也间接适用，例如对于作为运算符或转换的基础的函数或类型。（此限制不适用于存储生成列。）
      </para>
     </listitem>
     <listitem>
      <para>
-      A generated column cannot have a column default or an identity definition.
+      生成列不能有列默认值或标识定义。
      </para>
     </listitem>
     <listitem>
      <para>
-      A generated column cannot be part of a partition key.
+      生成列不能是分区键的一部分。
      </para>
     </listitem>
     <listitem>
@@ -347,60 +320,37 @@ CREATE TABLE people (
      </para>
     </listitem>
     <listitem>
-     <para>For inheritance and partitioning:</para>
+     <para>关于继承和分区：</para>
      <itemizedlist>
       <listitem>
        <para>
-        If a parent column is a generated column, its child column must also
-        be a generated column of the same kind (stored or virtual); however,
-        the child column can have a different generation expression.
+        如果父列是生成列，其子列也必须是相同种类（stored 或 virtual）的生成列；不过，子列可以具有不同的生成表达式。
        </para>
 
        <para>
-        For stored generated columns, the generation expression that is
-        actually applied during insert or update of a row is the one
-        associated with the table that the row is physically in.  (This is
-        unlike the behavior for column defaults: for those, the default value
-        associated with the table named in the query applies.)  For virtual
-        generated columns, the generation expression of the table named in the
-        query applies when a table is read.
+        对于存储型生成列，在插入或更新行时实际应用的生成表达式是与该行物理所在表相关联的那个。（这与列默认值的行为不同：对于列默认值，适用的是查询中所指定表关联的默认值。）对于虚拟生成列，在读取表时适用的是查询中所指定表的生成表达式。
        </para>
       </listitem>
       <listitem>
        <para>
-        If a parent column is not a generated column, its child column must
-        not be generated either.
+        如果父列不是生成列，其子列也不能是生成列。
        </para>
       </listitem>
       <listitem>
        <para>
-        For inherited tables, if you write a child column definition without
-        any <literal>GENERATED</literal> clause in <command>CREATE TABLE
-        ... INHERITS</command>, then its <literal>GENERATED</literal> clause
-        will automatically be copied from the parent.  <command>ALTER TABLE
-        ... INHERIT</command> will insist that parent and child columns
-        already match as to generation status, but it will not require their
-        generation expressions to match.
+        对于继承表，如果你在 <command>CREATE TABLE
+        ... INHERITS</command> 中编写子列定义时未带任何 <literal>GENERATED</literal> 子句，那么其 <literal>GENERATED</literal> 子句将自动从父表复制。<command>ALTER TABLE
+        ... INHERIT</command> 会坚持要求父列和子列在生成状态上已经匹配，但不要求它们的生成表达式匹配。
        </para>
       </listitem>
       <listitem>
        <para>
-        Similarly for partitioned tables, if you write a child column
-        definition without any <literal>GENERATED</literal> clause
-        in <command>CREATE TABLE ... PARTITION OF</command>, then
-        its <literal>GENERATED</literal> clause will automatically be copied
-        from the parent.  <command>ALTER TABLE ... ATTACH PARTITION</command>
-        will insist that parent and child columns already match as to
-        generation status, but it will not require their generation
-        expressions to match.
+        类似地，对于分区表，如果你在 <command>CREATE TABLE ... PARTITION OF</command> 中编写子列定义时未带任何 <literal>GENERATED</literal> 子句，那么其 <literal>GENERATED</literal> 子句将自动从父表复制。<command>ALTER TABLE ... ATTACH PARTITION</command> 会坚持要求父列和子列在生成状态上已经匹配，但不要求它们的生成表达式匹配。
        </para>
       </listitem>
       <listitem>
        <para>
-        In case of multiple inheritance, if one parent column is a generated
-        column, then all parent columns must be generated columns.  If they
-        do not all have the same generation expression, then the desired
-        expression for the child must be specified explicitly.
+        在多重继承的情况下，如果有一个父列是生成列，那么所有父列都必须是生成列。如果它们不都具有相同的生成表达式，则必须显式指定子列所需的表达式。
        </para>
       </listitem>
      </itemizedlist>
@@ -413,10 +363,7 @@ CREATE TABLE people (
    <itemizedlist>
     <listitem>
      <para>
-      Generated columns maintain access privileges separately from their
-      underlying base columns.  So, it is possible to arrange it so that a
-      particular role can read from a generated column but not from the
-      underlying base columns.
+      生成列与它们的底层基列分开维护访问权限。因此，可以做出这样的安排：某个特定角色能够从生成列读取，但不能从底层基列读取。
      </para>
 
      <para>
@@ -427,36 +374,23 @@ CREATE TABLE people (
     </listitem>
     <listitem>
      <para>
-      Privileges of functions used in generation expressions are checked when
-      the expression is actually executed, on write or read respectively, as
-      if the generation expression had been called directly from the query
-      using the generated column.  The user of a generated column must have
-      permissions to call all functions used by the generation expression.
-      Functions in the generation expression are executed with the privileges
-      of the user executing the query or the function owner, depending on
-      whether the functions are defined as <literal>SECURITY INVOKER</literal>
-      or <literal>SECURITY DEFINER</literal>.
-      <!-- matches create_view.sgml -->
+      生成表达式中使用的函数的权限在表达式实际执行时检查，分别在写入或读取时进行，就好像生成表达式是直接从使用该生成列的查询中调用的一样。生成列的用户必须具有调用生成表达式所使用的所有函数的权限。生成表达式中的函数以执行查询的用户或函数所有者的权限执行，取决于这些函数定义为 <literal>SECURITY INVOKER</literal>
+还是 <literal>SECURITY DEFINER</literal>。
+<!-- matches create_view.sgml -->
      </para>
     </listitem>
     <listitem>
      <para>
-      Generated columns are, conceptually, updated after
-      <literal>BEFORE</literal> triggers have run.  Therefore, changes made to
-      base columns in a <literal>BEFORE</literal> trigger will be reflected in
-      generated columns.  But conversely, it is not allowed to access
-      generated columns in <literal>BEFORE</literal> triggers.
+      从概念上讲，生成列在 <literal>BEFORE</literal> 触发器运行之后更新。因此，在 <literal>BEFORE</literal> 触发器中对基列所做的更改将反映到生成列中。但反过来，不允许在 <literal>BEFORE</literal> 触发器中访问生成列。
      </para>
     </listitem>
     <listitem>
      <para>
-      Generated columns are allowed to be replicated during logical replication
-      according to the <command>CREATE PUBLICATION</command> parameter
-      <link linkend="sql-createpublication-params-with-publish-generated-columns">
-      <literal>publish_generated_columns</literal></link> or by including them
-      in the column list of the <command>CREATE PUBLICATION</command> command.
-      This is currently only supported for stored generated columns.
-      See <xref linkend="logical-replication-gencols"/> for details.
+      根据 <command>CREATE PUBLICATION</command> 参数
+<link linkend="sql-createpublication-params-with-publish-generated-columns">
+<literal>publish_generated_columns</literal></link>，或通过将生成列包含在 <command>CREATE PUBLICATION</command> 命令的列列表中，允许在逻辑复制期间复制生成列。
+目前仅对存储生成列支持此功能。
+详情请参见 <xref linkend="logical-replication-gencols"/>。
      </para>
     </listitem>
    </itemizedlist>
