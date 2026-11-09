@@ -17,7 +17,7 @@ PostgreSQL documentation
  <refnamediv>
   <refname>ALTER DOMAIN</refname>
   <refpurpose>
-   修改域的定义
+   change the definition of a domain
   </refpurpose>
  </refnamediv>
 
@@ -50,10 +50,11 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>描述</title>
+  <title>Description</title>
 
   <para>
-   <command>ALTER DOMAIN</command> 修改现有域的定义。它有几种子形式：
+   <command>ALTER DOMAIN</command> 更改现有域的定义。
+   有几种子形式：
   </para>
 
   <variablelist>
@@ -61,7 +62,9 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>SET</literal>/<literal>DROP DEFAULT</literal></term>
     <listitem>
      <para>
-      这些形式设置或移除域的默认值。注意，默认值只对后续的 <command>INSERT</command> 命令生效；它们不会影响表中已经使用该域的行。
+      这些形式用于设置或移除域的默认值。请注意，
+      默认值仅适用于后续的 <command>INSERT</command>
+      命令；它们不会影响使用该域的表中已存在的行。
      </para>
     </listitem>
    </varlistentry>
@@ -70,7 +73,9 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>SET</literal>/<literal>DROP NOT NULL</literal></term>
     <listitem>
      <para>
-      这些形式改变域是标记为允许 NULL 值还是拒绝 NULL 值。只有当使用该域的列中不包含空值时，才能 <literal>SET NOT NULL</literal>。
+      这些形式用于更改域是否被标记为允许 NULL 值或拒绝 NULL 值。
+      只有当使用该域的列不包含 NULL 值时，
+      才能执行 <literal>SET NOT NULL</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -79,7 +84,13 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>ADD <replaceable class="parameter">domain_constraint</replaceable> [ NOT VALID ]</literal></term>
     <listitem>
      <para>
-      这种形式向域中添加一个新约束。当向域中添加新约束时，所有使用该域的列都会针对新添加的约束进行检查。可以通过使用 <literal>NOT VALID</literal> 选项添加新约束来抑制这些检查；之后可以使用 <command>ALTER DOMAIN ... VALIDATE CONSTRAINT</command> 使该约束生效。新插入或更新的行始终会针对所有约束进行检查，即使是标记为 <literal>NOT VALID</literal> 的约束。<literal>NOT VALID</literal> 只被 <literal>CHECK</literal> 约束接受。
+      此形式用于向域添加新约束。
+      向域添加新约束时，所有使用该域的列都将根据
+      新添加的约束进行检查。可以通过使用
+      <literal>NOT VALID</literal> 选项添加新约束来跳过这些检查；之后可以使用
+      <command>ALTER DOMAIN ... VALIDATE CONSTRAINT</command> 使该约束生效。
+      新插入或更新的行始终会根据所有约束进行检查，即使是标记为 <literal>NOT VALID</literal> 的约束。
+      <literal>NOT VALID</literal> 仅适用于 <literal>CHECK</literal> 约束。
      </para>
     </listitem>
    </varlistentry>
@@ -88,7 +99,9 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>DROP CONSTRAINT [ IF EXISTS ]</literal></term>
     <listitem>
      <para>
-      这种形式删除域上的约束。如果指定了 <literal>IF EXISTS</literal> 而该约束不存在，则不会抛出错误。在这种情况下，会改为发出一个提示。
+      此形式用于删除域上的约束。
+      如果指定了 <literal>IF EXISTS</literal> 而该约束不存在，
+      则不会抛出错误。在这种情况下，将改为发出一条通知。
      </para>
     </listitem>
    </varlistentry>
@@ -97,7 +110,7 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>RENAME CONSTRAINT</literal></term>
     <listitem>
      <para>
-      这种形式更改域上约束的名称。
+      此形式用于更改域上约束的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -106,7 +119,9 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>VALIDATE CONSTRAINT</literal></term>
     <listitem>
      <para>
-      这种形式验证先前添加为 <literal>NOT VALID</literal> 的约束，也就是说，它验证域类型的表列中的所有值都满足指定的约束。
+      此形式验证先前以
+      <literal>NOT VALID</literal> 方式添加的约束，即验证域类型的表列中的
+      所有值是否满足指定的约束。
      </para>
     </listitem>
    </varlistentry>
@@ -115,7 +130,7 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>OWNER</literal></term>
     <listitem>
      <para>
-      这种形式将域的所有者更改为指定的用户。
+      此形式将域的所有者更改为指定的用户。
      </para>
     </listitem>
    </varlistentry>
@@ -124,7 +139,7 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>RENAME</literal></term>
     <listitem>
      <para>
-      这种形式更改域的名称。
+      此形式更改域的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -133,25 +148,26 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
     <term><literal>SET SCHEMA</literal></term>
     <listitem>
      <para>
-      这种形式更改域的模式。与该域关联的任何约束也会一并移入新模式中。
+      此形式更改域的模式。与域关联的所有约束
+      也会移动到新模式中。
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   要使用 <command>ALTER DOMAIN</command>，您必须拥有该域。
-   要更改域的所属模式，您还必须对新模式具有
+   要使用 <command>ALTER DOMAIN</command>，你必须拥有该域。
+   要更改域的模式，你还必须对新模式具有
    <literal>CREATE</literal> 权限。
-   要更改所有者，您必须能够 <literal>SET ROLE</literal> 到
-   新的拥有角色，并且该角色必须对域的模式具有 <literal>CREATE</literal> 权限。
-   （这些限制确保更改所有者不会做任何您通过删除并重新创建域所做不到的事情。
-   不过，超级用户可以更改任何域的所有权。）
+   要更改所有者，你必须能够 <literal>SET ROLE</literal> 到新的
+   所有者角色，并且该角色必须对该域的模式具有 <literal>CREATE</literal> 权限。
+   （这些限制确保更改所有者不会执行任何你无法通过删除并重新创建该域来完成的操作。
+   但是，超级用户无论如何都可以更改任何域的所有权。）
   </para>
  </refsect1>
 
  <refsect1>
-  <title>参数</title>
+  <title>Parameters</title>
 
    <para>
     <variablelist>
@@ -159,7 +175,8 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
       <term><replaceable class="parameter">name</replaceable></term>
       <listitem>
        <para>
-        要更改的现有域的名称（可能带有模式限定）。
+        要更改的现有域的名称
+        （可能是模式限定的）。
        </para>
       </listitem>
      </varlistentry>
@@ -186,7 +203,7 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
       <term><literal>NOT VALID</literal></term>
       <listitem>
        <para>
-        不验证现有已存储数据的约束有效性。
+        不为验证约束有效性而检查现有存储的数据。
        </para>
       </listitem>
      </varlistentry>
@@ -196,7 +213,8 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
       <term><literal>CASCADE</literal></term>
       <listitem>
        <para>
-        自动删除依赖于该约束的对象，以及进而依赖于这些对象的所有对象
+        自动删除依赖于该约束的对象，
+        以及依次依赖于这些对象的所有对象
         （参见 <xref linkend="ddl-depend"/>）。
        </para>
       </listitem>
@@ -206,7 +224,7 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
       <term><literal>RESTRICT</literal></term>
       <listitem>
        <para>
-        如果存在任何依赖对象，则拒绝删除该约束。这是默认行为。
+        如果有任何依赖对象，则拒绝删除该约束。这是默认行为。
        </para>
       </listitem>
      </varlistentry>
@@ -252,23 +270,29 @@ ALTER DOMAIN <replaceable class="parameter">name</replaceable>
   </refsect1>
 
  <refsect1>
-  <title>说明</title>
+  <title>Notes</title>
 
   <para>
-   尽管 <command>ALTER DOMAIN ADD CONSTRAINT</command> 会尝试验证现有已存储的数据是否满足新约束，但这种检查并非万无一失，因为该命令无法<quote>看到</quote>新插入或更新但尚未提交的表行。如果存在并发操作可能插入坏数据的风险，正确的做法是使用 <literal>NOT VALID</literal> 选项添加该约束，提交该命令，等待在该提交之前启动的所有事务完成，然后发出 <command>ALTER DOMAIN VALIDATE
-   CONSTRAINT</command> 来搜索违反该约束的数据。这种方法是可靠的，因为一旦约束被提交，所有新事务都保证会针对域类型的新值强制执行该约束。
+   尽管 <command>ALTER DOMAIN ADD CONSTRAINT</command> 会尝试验证现有存储的数据是否满足新约束，但这种检查并非万无一失，因为该命令
+   无法<quote>看到</quote>新插入或更新但尚未提交的表行。如果存在并发操作可能插入坏数据的隐患，
+   应采取的做法是使用 <literal>NOT VALID</literal> 选项添加约束，提交该命令，等待在该提交之前启动的所有事务
+   完成，然后发出 <command>ALTER DOMAIN VALIDATE
+   CONSTRAINT</command> 来搜索违反约束的数据。这种方法是可靠的，因为一旦约束被提交，
+   就可以保证所有新事务都会对域类型的新值强制执行该约束。
   </para>
 
   <para>
-   目前，如果数据库中任何表的容器类型列（复合列、数组列或范围列）中使用了指定的域或任何派生域，<command>ALTER DOMAIN ADD CONSTRAINT</command>、<command>ALTER
+   目前，如果指定的域或任何派生域被用于数据库中任何表内的容器类型列
+   （组合列、数组列或范围列）中，<command>ALTER DOMAIN ADD CONSTRAINT</command>、<command>ALTER
    DOMAIN VALIDATE CONSTRAINT</command> 和 <command>ALTER DOMAIN SET NOT
-   NULL</command> 都会失败。它们最终应被改进为能够针对此类嵌套值验证新约束。
+   NULL</command> 将会失败。
+   它们最终应得到改进，以便能够对此类嵌套值验证新约束。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>示例</title>
+  <title>Examples</title>
 
   <para>
    要向域添加 <literal>NOT NULL</literal> 约束：
@@ -282,7 +306,7 @@ ALTER DOMAIN zipcode DROP NOT NULL;
   </para>
 
   <para>
-   要向域添加检查约束：
+   To add a check constraint to a domain:
 <programlisting>
 ALTER DOMAIN zipcode ADD CONSTRAINT zipchk CHECK (char_length(VALUE) = 5);
 </programlisting>
@@ -296,33 +320,33 @@ ALTER DOMAIN zipcode DROP CONSTRAINT zipchk;
   </para>
 
   <para>
-   要重命名域上的检查约束：
+   To rename a check constraint on a domain:
 <programlisting>
 ALTER DOMAIN zipcode RENAME CONSTRAINT zipchk TO zip_check;
 </programlisting>
   </para>
 
   <para>
-   要将域移动到不同的模式：
+   要将该域移动到一个不同的模式中：
 <programlisting>
 ALTER DOMAIN zipcode SET SCHEMA customers;
 </programlisting></para>
  </refsect1>
 
  <refsect1 id="sql-alterdomain-compatibility">
-  <title>兼容性</title>
+  <title>Compatibility</title>
 
   <para>
    <command>ALTER DOMAIN</command> 符合 <acronym>SQL</acronym> 标准，但 <literal>OWNER</literal>、<literal>RENAME</literal>、<literal>SET SCHEMA</literal> 和
    <literal>VALIDATE CONSTRAINT</literal> 变体除外，它们是
-   <productname>PostgreSQL</productname> 扩展。<literal>ADD CONSTRAINT</literal> 变体的 <literal>NOT VALID</literal>
-   子句也是
+   <productname>PostgreSQL</productname> 扩展。<literal>NOT VALID</literal> 子句
+   （在 <literal>ADD CONSTRAINT</literal> 变体中）也是
    <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1 id="sql-alterdomain-see-also">
-  <title>另请参阅</title>
+  <title>See Also</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-createdomain"/></member>
