@@ -13,128 +13,84 @@
   </para>
 
   <sect1 id="config-setting">
-   <title>Setting Parameters</title>
+   <title>设置参数</title>
 
    <sect2 id="config-setting-names-values">
-    <title>Parameter Names and Values</title>
+    <title>参数名称和值</title>
 
     <para>
-     All parameter names are case-insensitive. Every parameter takes a
-     value of one of five types: boolean, string, integer, floating point,
-     or enumerated (enum).  The type determines the syntax for setting the
-     parameter:
+     所有参数名称都不区分大小写。每个参数取值的类型为以下五种之一：布尔、字符串、整数、浮点数或枚举（enum）。类型决定了设置该参数的语法：
     </para>
 
     <itemizedlist>
      <listitem>
       <para>
-       <emphasis>Boolean:</emphasis>
-       Values can be written as
-       <literal>on</literal>,
-       <literal>off</literal>,
-       <literal>true</literal>,
-       <literal>false</literal>,
-       <literal>yes</literal>,
-       <literal>no</literal>,
-       <literal>1</literal>,
+       <emphasis>布尔：</emphasis>
+       值可以写成
+       <literal>on</literal>、
+       <literal>off</literal>、
+       <literal>true</literal>、
+       <literal>false</literal>、
+       <literal>yes</literal>、
+       <literal>no</literal>、
+       <literal>1</literal>、
        <literal>0</literal>
-       (all case-insensitive) or any unambiguous prefix of one of these.
+       （均不区分大小写），或这些值中任意一个无歧义的前缀。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <emphasis>String:</emphasis>
-       In general, enclose the value in single quotes, doubling any single
-       quotes within the value.  Quotes can usually be omitted if the value
-       is a simple number or identifier, however.
-       (Values that match an SQL keyword require quoting in some contexts.)
+       <emphasis>字符串：</emphasis>
+       通常，将值用单引号括起来，并将值内的任何单引号双写。不过，如果值是一个简单的数字或标识符，通常可以省略引号。
+       （与 SQL 关键字匹配的值在某些上下文中需要加引号。）
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <emphasis>Numeric (integer and floating point):</emphasis>
-       Numeric parameters can be specified in the customary integer and
-       floating-point formats; fractional values are rounded to the nearest
-       integer if the parameter is of integer type.  Integer parameters
-       additionally accept hexadecimal input (beginning
-       with <literal>0x</literal>) and octal input (beginning
-       with <literal>0</literal>), but these formats cannot have a fraction.
-       Do not use thousands separators.
-       Quotes are not required, except for hexadecimal input.
+       <emphasis>数值（整数和浮点数）：</emphasis>
+       数值参数可以用常规的整数和浮点数格式指定；如果参数是整数类型，则小数值会舍入到最接近的整数。整数参数还接受十六进制输入（以 <literal>0x</literal> 开头）和八进制输入（以 <literal>0</literal> 开头），但这些格式不能带小数部分。不要使用千位分隔符。除十六进制输入外，不需要引号。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <emphasis>Numeric with Unit:</emphasis>
-       Some numeric parameters have an implicit unit, because they describe
-       quantities of memory or time. The unit might be bytes, kilobytes, blocks
-       (typically eight kilobytes), milliseconds, seconds, or minutes.
-       An unadorned numeric value for one of these settings will use the
-       setting's default unit, which can be learned from
-       <structname>pg_settings</structname>.<structfield>unit</structfield>.
-       For convenience, settings can be given with a unit specified explicitly,
-       for example <literal>'120 ms'</literal> for a time value, and they will be
-       converted to whatever the parameter's actual unit is.  Note that the
-       value must be written as a string (with quotes) to use this feature.
-       The unit name is case-sensitive, and there can be whitespace between
-       the numeric value and the unit.
+       <emphasis>带单位的数值：</emphasis>
+       有些数值参数具有隐含单位，因为它们描述的是内存或时间的量。单位可能是字节、千字节、块（通常为八千字节）、毫秒、秒或分钟。对于这类设置，不带单位的数值将使用该设置的默认单位，可以从 <structname>pg_settings</structname>.<structfield>unit</structfield> 中了解到该默认单位。为方便起见，可以在指定设置时显式给出单位，例如用 <literal>'120 ms'</literal> 表示时间值，它们会被转换为该参数的实际单位。注意，要使用此功能，值必须写成字符串（带引号）。单位名称区分大小写，数值和单位之间可以有空白。
 
        <itemizedlist>
         <listitem>
          <para>
-          Valid memory units are <literal>B</literal> (bytes),
-          <literal>kB</literal> (kilobytes),
-          <literal>MB</literal> (megabytes), <literal>GB</literal>
-          (gigabytes), and <literal>TB</literal> (terabytes).
-          The multiplier for memory units is 1024, not 1000.
+          合法的内存单位是 <literal>B</literal>（字节）、<literal>kB</literal>（千字节）、<literal>MB</literal>（兆字节）、<literal>GB</literal>（吉字节）和 <literal>TB</literal>（太字节）。内存单位的乘数是 1024，而不是 1000。
          </para>
         </listitem>
 
         <listitem>
          <para>
-          Valid time units are
-          <literal>us</literal> (microseconds),
-          <literal>ms</literal> (milliseconds),
-          <literal>s</literal> (seconds), <literal>min</literal> (minutes),
-          <literal>h</literal> (hours), and <literal>d</literal> (days).
+          合法的时间单位是 <literal>us</literal>（微秒）、<literal>ms</literal>（毫秒）、<literal>s</literal>（秒）、<literal>min</literal>（分钟）、<literal>h</literal>（小时）和 <literal>d</literal>（天）。
          </para>
         </listitem>
        </itemizedlist>
 
-       If a fractional value is specified with a unit, it will be rounded
-       to a multiple of the next smaller unit if there is one.
-       For example, <literal>30.1 GB</literal> will be converted
-       to <literal>30822 MB</literal> not <literal>32319628902 B</literal>.
-       If the parameter is of integer type, a final rounding to integer
-       occurs after any unit conversion.
+       如果带单位指定了小数值，则会将其舍入到下一个更小单位的整数倍（如果存在这样的单位）。例如，<literal>30.1 GB</literal> 会被转换为 <literal>30822 MB</literal>，而不是 <literal>32319628902 B</literal>。如果参数是整数类型，则在完成任何单位转换之后，还会最终舍入为整数。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       <emphasis>Enumerated:</emphasis>
-       Enumerated-type parameters are written in the same way as string
-       parameters, but are restricted to have one of a limited set of
-       values.  The values allowable for such a parameter can be found from
-       <structname>pg_settings</structname>.<structfield>enumvals</structfield>.
-       Enum parameter values are case-insensitive.
+       <emphasis>枚举：</emphasis>
+       枚举类型参数的写法与字符串参数相同，但被限制为只能取一组有限值中的一个。此类参数允许的取值可以从 <structname>pg_settings</structname>.<structfield>enumvals</structfield> 中找到。枚举参数值不区分大小写。
       </para>
      </listitem>
     </itemizedlist>
    </sect2>
 
    <sect2 id="config-setting-configuration-file">
-    <title>Parameter Interaction via the Configuration File</title>
+    <title>通过配置文件进行参数交互</title>
 
     <para>
-     The most fundamental way to set these parameters is to edit the file
-     <filename>postgresql.conf</filename><indexterm><primary>postgresql.conf</primary></indexterm>,
-     which is normally kept in the data directory.  A default copy is
-     installed when the database cluster directory is initialized.
-     An example of what this file might look like is:
+     设置这些参数最根本的方法是编辑文件 <filename>postgresql.conf</filename><indexterm><primary>postgresql.conf</primary></indexterm>，该文件通常存放在数据目录中。在初始化数据库集簇目录时会安装一份默认副本。该文件可能类似如下所示：
 <programlisting>
 # This is a comment
 log_connections = all
@@ -142,55 +98,22 @@ log_destination = 'syslog'
 search_path = '"$user", public'
 shared_buffers = 128MB
 </programlisting>
-     One parameter is specified per line. The equal sign between name and
-     value is optional. Whitespace is insignificant (except within a quoted
-     parameter value) and blank lines are
-     ignored. Hash marks (<literal>#</literal>) designate the remainder
-     of the line as a comment.  Parameter values that are not simple
-     identifiers or numbers must be single-quoted.  To embed a single
-     quote in a parameter value, write either two quotes (preferred)
-     or backslash-quote.
-     If the file contains multiple entries for the same parameter,
-     all but the last one are ignored.
+     每行指定一个参数。名称与值之间的等号是可选的。空白字符无关紧要（引号内的参数值除外），空行会被忽略。井号（<literal>#</literal>）表示该行其余部分为注释。不是简单标识符或数字的参数值必须用单引号括起来。要在参数值中嵌入单引号，可以写两个引号（首选）或反斜杠加引号。如果文件中包含同一参数的多个条目，则除最后一个之外的所有条目都会被忽略。
     </para>
 
     <para>
-     Parameters set in this way provide default values for the cluster.
-     The settings seen by active sessions will be these values unless they
-     are overridden.  The following sections describe ways in which the
-     administrator or user can override these defaults.
+     以这种方式设置的参数为集簇提供默认值。除非被覆盖，否则活动会话看到的设置将是这些值。以下各节介绍管理员或用户覆盖这些默认值的方法。
     </para>
 
     <para>
      <indexterm>
       <primary>SIGHUP</primary>
      </indexterm>
-     The configuration file is reread whenever the main server process
-     receives a <systemitem>SIGHUP</systemitem> signal; this signal is most easily
-     sent by running <literal>pg_ctl reload</literal> from the command line or by
-     calling the SQL function <function>pg_reload_conf()</function>. The main
-     server process also propagates this signal to all currently running
-     server processes, so that existing sessions also adopt the new values
-     (this will happen after they complete any currently-executing client
-     command).  Alternatively, you can
-     send the signal to a single server process directly.  Some parameters
-     can only be set at server start; any changes to their entries in the
-     configuration file will be ignored until the server is restarted.
-     Invalid parameter settings in the configuration file are likewise
-     ignored (but logged) during <systemitem>SIGHUP</systemitem> processing.
+     每当主服务器进程收到 <systemitem>SIGHUP</systemitem> 信号时，就会重新读取配置文件；发送该信号最简单的方法是在命令行运行 <literal>pg_ctl reload</literal>，或调用 SQL 函数 <function>pg_reload_conf()</function>。主服务器进程还会将该信号传播给所有当前正在运行的服务器进程，以便现有会话也采用新值（这将在它们完成当前正在执行的客户端命令之后发生）。或者，您也可以直接将信号发送给单个服务器进程。有些参数只能在服务器启动时设置；在服务器重启之前，对配置文件中这些条目的任何更改都会被忽略。在 <systemitem>SIGHUP</systemitem> 处理期间，配置文件中无效的参数设置同样会被忽略（但会记录日志）。
     </para>
 
     <para>
-     In addition to <filename>postgresql.conf</filename>,
-     a <productname>PostgreSQL</productname> data directory contains a file
-     <filename>postgresql.auto.conf</filename><indexterm><primary>postgresql.auto.conf</primary></indexterm>,
-     which has the same format as <filename>postgresql.conf</filename> but
-     is intended to be edited automatically, not manually.  This file holds
-     settings provided through the <link linkend="sql-altersystem"><command>ALTER SYSTEM</command></link> command.
-     This file is read whenever <filename>postgresql.conf</filename> is,
-     and its settings take effect in the same way.  Settings
-     in <filename>postgresql.auto.conf</filename> override those
-     in <filename>postgresql.conf</filename>.
+     除了 <filename>postgresql.conf</filename> 之外，<productname>PostgreSQL</productname> 数据目录还包含一个文件 <filename>postgresql.auto.conf</filename><indexterm><primary>postgresql.auto.conf</primary></indexterm>，其格式与 <filename>postgresql.conf</filename> 相同，但它是供自动编辑而非手动编辑的。该文件保存通过 <link linkend="sql-altersystem"><command>ALTER SYSTEM</command></link> 命令提供的设置。每当读取 <filename>postgresql.conf</filename> 时也会读取该文件，其设置以相同方式生效。<filename>postgresql.auto.conf</filename> 中的设置会覆盖 <filename>postgresql.conf</filename> 中的设置。
     </para>
 
     <para>
@@ -205,79 +128,49 @@ shared_buffers = 128MB
     </para>
 
     <para>
-     The system view
-     <link linkend="view-pg-file-settings"><structname>pg_file_settings</structname></link>
-     can be helpful for pre-testing changes to the configuration files, or for
-     diagnosing problems if a <systemitem>SIGHUP</systemitem> signal did not have the
-     desired effects.
+     系统视图 <link linkend="view-pg-file-settings"><structname>pg_file_settings</structname></link> 有助于预先测试对配置文件的更改，或者在 <systemitem>SIGHUP</systemitem> 信号未产生预期效果时诊断问题。
     </para>
    </sect2>
 
    <sect2 id="config-setting-sql">
-    <title>Parameter Interaction via SQL</title>
+    <title>通过 SQL 进行参数交互</title>
 
      <para>
-      <productname>PostgreSQL</productname> provides three SQL
-      commands to establish configuration defaults.
-      The already-mentioned <command>ALTER SYSTEM</command> command
-      provides an SQL-accessible means of changing global defaults; it is
-      functionally equivalent to editing <filename>postgresql.conf</filename>.
-      In addition, there are two commands that allow setting of defaults
-      on a per-database or per-role basis:
+      <productname>PostgreSQL</productname> 提供了三个 SQL 命令来建立配置默认值。前面提到的 <command>ALTER SYSTEM</command> 命令提供了一种可通过 SQL 访问的方式来更改全局默认值；它在功能上等同于编辑 <filename>postgresql.conf</filename>。此外，还有两个命令允许按数据库或按角色设置默认值：
      </para>
 
      <itemizedlist>
      <listitem>
       <para>
-       The <link linkend="sql-alterdatabase"><command>ALTER DATABASE</command></link> command allows global
-       settings to be overridden on a per-database basis.
+       <link linkend="sql-alterdatabase"><command>ALTER DATABASE</command></link> 命令允许按数据库覆盖全局设置。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       The <link linkend="sql-alterrole"><command>ALTER ROLE</command></link> command allows both global and
-       per-database settings to be overridden with user-specific values.
+       <link linkend="sql-alterrole"><command>ALTER ROLE</command></link> 命令允许用用户特定的值覆盖全局设置和按数据库的设置。
       </para>
      </listitem>
     </itemizedlist>
 
      <para>
-      Values set with <command>ALTER DATABASE</command> and <command>ALTER ROLE</command>
-      are applied only when starting a fresh database session.  They
-      override values obtained from the configuration files or server
-      command line, and constitute defaults for the rest of the session.
-      Note that some settings cannot be changed after server start, and
-      so cannot be set with these commands (or the ones listed below).
+      用 <command>ALTER DATABASE</command> 和 <command>ALTER ROLE</command> 设置的值只在启动新的数据库会话时应用。它们覆盖从配置文件或服务器命令行获得的值，并构成该会话其余部分的默认值。注意，某些设置在服务器启动后无法更改，因此不能用这些命令（或下面列出的命令）设置。
     </para>
 
      <para>
-      Once a client is connected to the database, <productname>PostgreSQL</productname>
-      provides two additional SQL commands (and equivalent functions) to
-      interact with session-local configuration settings:
+      一旦客户端连接到数据库，<productname>PostgreSQL</productname> 提供两个额外的 SQL 命令（以及等价的函数）来与会话本地配置设置交互：
     </para>
 
     <itemizedlist>
      <listitem>
      <para>
-      The <link linkend="sql-show"><command>SHOW</command></link> command allows inspection of the
-      current value of any parameter.  The corresponding SQL function is
-      <function>current_setting(setting_name text)</function>
-      (see <xref linkend="functions-admin-set"/>).
+      <link linkend="sql-show"><command>SHOW</command></link> 命令允许检查任何参数的当前值。对应的 SQL 函数是 <function>current_setting(setting_name text)</function>（见 <xref linkend="functions-admin-set"/>）。
      </para>
      </listitem>
 
      <listitem>
       <para>
-       The <link linkend="sql-set"><command>SET</command></link> command allows modification of the
-       current value of those parameters that can be set locally to a
-       session; it has no effect on other sessions.
-       Many parameters can be set this way by any user, but some can
-       only be set by superusers and users who have been
-       granted <literal>SET</literal> privilege on that parameter.
-       The corresponding SQL function is
-       <function>set_config(setting_name, new_value, is_local)</function>
-       (see <xref linkend="functions-admin-set"/>).
+       <link linkend="sql-set"><command>SET</command></link> 命令允许修改那些可以在会话本地设置的参数的当前值；它不影响其他会话。许多参数任何用户都可以用这种方式设置，但有些参数只能由超级用户以及已被授予该参数 <literal>SET</literal> 权限的用户设置。对应的 SQL 函数是 <function>set_config(setting_name, new_value, is_local)</function>（见 <xref linkend="functions-admin-set"/>）。
       </para>
      </listitem>
     </itemizedlist>
@@ -291,21 +184,15 @@ shared_buffers = 128MB
     <itemizedlist>
      <listitem>
       <para>
-       Querying this view is similar to using <command>SHOW ALL</command> but
-       provides more detail.  It is also more flexible, since it's possible
-       to specify filter conditions or join against other relations.
+       查询此视图类似于使用 <command>SHOW ALL</command>，但提供了更多细节。它也更加灵活，因为可以指定过滤条件或与其他关系进行连接。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Using <command>UPDATE</command> on this view, specifically
-       updating the <structname>setting</structname> column, is the equivalent
-       of issuing <command>SET</command> commands.  For example, the equivalent of
-<programlisting>
+       在此视图上使用 <command>UPDATE</command>，特别是更新 <structname>setting</structname> 列，等同于发出 <command>SET</command> 命令。例如，<programlisting>
 SET configuration_parameter TO DEFAULT;
-</programlisting>
-       is:
+</programlisting> 的等价形式是：
 <programlisting>
 UPDATE pg_settings SET setting = reset_val WHERE name = 'configuration_parameter';
 </programlisting>
@@ -316,52 +203,33 @@ UPDATE pg_settings SET setting = reset_val WHERE name = 'configuration_parameter
    </sect2>
 
    <sect2 id="config-setting-shell">
-    <title>Parameter Interaction via the Shell</title>
+    <title>通过 shell 与参数交互</title>
 
      <para>
-      In addition to setting global defaults or attaching
-      overrides at the database or role level, you can pass settings to
-      <productname>PostgreSQL</productname> via shell facilities.
-      Both the server and <application>libpq</application> client library
-      accept parameter values via the shell.
+      除了设置全局默认值或在数据库或角色级别附加覆盖值之外，你还可以通过 shell 设施将设置传递给 <productname>PostgreSQL</productname>。服务器和 <application>libpq</application> 客户端库都接受通过 shell 传递的参数值。
      </para>
 
      <itemizedlist>
       <listitem>
       <para>
-       During server startup, parameter settings can be
-       passed to the <command>postgres</command> command via the
-       <option>-c name=value</option> command-line parameter, or its equivalent
-       <option>--name=value</option> variation.  For example,
+       在服务器启动期间，可以通过 <option>-c name=value</option> 命令行参数或其等价的 <option>--name=value</option> 变体将参数设置传递给 <command>postgres</command> 命令。例如，
 <programlisting>
 postgres -c log_connections=all --log-destination='syslog'
 </programlisting>
-       Settings provided in this way override those set via
-       <filename>postgresql.conf</filename> or <command>ALTER SYSTEM</command>,
-       so they cannot be changed globally without restarting the server.
+以这种方式提供的设置会覆盖通过 <filename>postgresql.conf</filename> 或 <command>ALTER SYSTEM</command> 设置的设置，因此不重启服务器就无法全局更改它们。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      When starting a client session via <application>libpq</application>,
-      parameter settings can be
-      specified using the <envar>PGOPTIONS</envar> environment variable.
-      Settings established in this way constitute defaults for the life
-      of the session, but do not affect other sessions.
-      For historical reasons, the format of <envar>PGOPTIONS</envar> is
-      similar to that used when launching the <command>postgres</command>
-      command; specifically, the <option>-c</option>, or prepended
-      <literal>--</literal>, before the name must be specified. For example,
+      通过 <application>libpq</application> 启动客户端会话时，可以使用 <envar>PGOPTIONS</envar> 环境变量指定参数设置。以这种方式建立的设置构成该会话生命周期内的默认值，但不会影响其他会话。由于历史原因，<envar>PGOPTIONS</envar> 的格式类似于启动 <command>postgres</command> 命令时使用的格式；具体来说，必须指定名称之前的 <option>-c</option>，或前置的 <literal>--</literal>。例如，
 <programlisting>
 env PGOPTIONS="-c geqo=off --statement-timeout=5min" psql
 </programlisting>
      </para>
 
      <para>
-      Other clients and libraries might provide their own mechanisms,
-      via the shell or otherwise, that allow the user to alter session
-      settings without direct use of SQL commands.
+      其他客户端和库可能会通过 shell 或其他方式提供它们自己的机制，让用户无需直接使用 SQL 命令即可更改会话设置。
      </para>
     </listitem>
    </itemizedlist>
@@ -369,13 +237,10 @@ env PGOPTIONS="-c geqo=off --statement-timeout=5min" psql
    </sect2>
 
    <sect2 id="config-includes">
-    <title>Managing Configuration File Contents</title>
+    <title>管理配置文件内容</title>
 
      <para>
-      <productname>PostgreSQL</productname> provides several features for breaking
-      down complex <filename>postgresql.conf</filename> files into sub-files.
-      These features are especially useful when managing multiple servers
-      with related, but not identical, configurations.
+      <productname>PostgreSQL</productname> 提供了若干功能，可将复杂的 <filename>postgresql.conf</filename> 文件拆分为多个子文件。在管理多台具有相关但不完全相同配置的服务器时，这些功能特别有用。
      </para>
 
      <para>
@@ -383,18 +248,11 @@ env PGOPTIONS="-c geqo=off --statement-timeout=5min" psql
        <primary><literal>include</literal></primary>
        <secondary>in configuration file</secondary>
       </indexterm>
-      In addition to individual parameter settings,
-      the <filename>postgresql.conf</filename> file can contain <firstterm>include
-      directives</firstterm>, which specify another file to read and process as if
-      it were inserted into the configuration file at this point.  This
-      feature allows a configuration file to be divided into physically
-      separate parts.  Include directives simply look like:
+      除了单个参数设置之外，<filename>postgresql.conf</filename> 文件还可以包含<firstterm>include 指令</firstterm>，用于指定另一个文件，并像该文件被插入到配置文件中此位置一样读取和处理它。此功能允许把一个配置文件划分为物理上分离的多个部分。include 指令的形式很简单：
 <programlisting>
 include 'filename'
 </programlisting>
-      If the file name is not an absolute path, it is taken as relative to
-      the directory containing the referencing configuration file.
-      Inclusions can be nested.
+      如果文件名不是绝对路径，则视为相对于包含该引用配置文件的目录。包含可以嵌套。
      </para>
 
      <para>
@@ -402,12 +260,7 @@ include 'filename'
        <primary><literal>include_if_exists</literal></primary>
        <secondary>in configuration file</secondary>
       </indexterm>
-      There is also an <literal>include_if_exists</literal> directive, which acts
-      the same as the <literal>include</literal> directive, except
-      when the referenced file does not exist or cannot be read.  A regular
-      <literal>include</literal> will consider this an error condition, but
-      <literal>include_if_exists</literal> merely logs a message and continues
-      processing the referencing configuration file.
+      还有一个 <literal>include_if_exists</literal> 指令，其作用与 <literal>include</literal> 指令相同，区别在于所引用的文件不存在或无法读取时的行为。普通的 <literal>include</literal> 会将其视为错误情况，而 <literal>include_if_exists</literal> 仅记录一条消息并继续处理引用它的配置文件。
      </para>
 
      <para>
@@ -415,83 +268,45 @@ include 'filename'
        <primary><literal>include_dir</literal></primary>
        <secondary>in configuration file</secondary>
       </indexterm>
-      The <filename>postgresql.conf</filename> file can also contain
-      <literal>include_dir</literal> directives, which specify an entire
-      directory of configuration files to include.  These look like
+      <filename>postgresql.conf</filename> 文件还可以包含 <literal>include_dir</literal> 指令，用于指定要包含的整个配置目录。它们的形式如下：
 <programlisting>
 include_dir 'directory'
 </programlisting>
-      Non-absolute directory names are taken as relative to the directory
-      containing the referencing configuration file.  Within the specified
-      directory, only non-directory files whose names end with the
-      suffix <literal>.conf</literal> will be included.  File names that
-      start with the <literal>.</literal> character are also ignored, to
-      prevent mistakes since such files are hidden on some platforms.  Multiple
-      files within an include directory are processed in file name order
-      (according to C locale rules, i.e., numbers before letters, and
-      uppercase letters before lowercase ones).
+      非绝对目录名视为相对于包含该引用配置文件的目录。在指定的目录中，只会包含名称以 <literal>.conf</literal> 后缀结尾的非目录文件。以 <literal>.</literal> 字符开头的文件名也会被忽略，以避免出错，因为此类文件在某些平台上属于隐藏文件。包含目录中的多个文件按文件名顺序处理（依据 C 区域规则，即数字排在字母之前，大写字母排在小写字母之前）。
      </para>
 
      <para>
-      Include files or directories can be used to logically separate portions
-      of the database configuration, rather than having a single large
-      <filename>postgresql.conf</filename> file.  Consider a company that has two
-      database servers, each with a different amount of memory.  There are
-      likely elements of the configuration both will share, for things such
-      as logging.  But memory-related parameters on the server will vary
-      between the two.  And there might be server specific customizations,
-      too.  One way to manage this situation is to break the custom
-      configuration changes for your site into three files.  You could add
-      this to the end of your <filename>postgresql.conf</filename> file to include
-      them:
+      包含文件或目录可用于在逻辑上分隔数据库配置的各个部分，而不是使用单个大型的 <filename>postgresql.conf</filename> 文件。考虑一家公司拥有两台数据库服务器，每台的内存大小不同。配置中很可能有一些两者共享的元素，例如用于日志记录的部分。但服务器上与内存相关的参数在两者之间会有所不同。而且可能还有针对特定服务器的自定义设置。管理这种情况的一种方法是将您站点的自定义配置更改拆分为三个文件。您可以将以下内容添加到 <filename>postgresql.conf</filename> 文件的末尾以包含它们：
 <programlisting>
 include 'shared.conf'
 include 'memory.conf'
 include 'server.conf'
 </programlisting>
-      All systems would have the same <filename>shared.conf</filename>.  Each
-      server with a particular amount of memory could share the
-      same <filename>memory.conf</filename>; you might have one for all servers
-      with 8GB of RAM, another for those having 16GB.  And
-      finally <filename>server.conf</filename> could have truly server-specific
-      configuration information in it.
+      所有系统都将具有相同的 <filename>shared.conf</filename>。每台具有特定内存量的服务器可以共享相同的 <filename>memory.conf</filename>；您可以为所有具有 8GB RAM 的服务器准备一个，为具有 16GB 的服务器准备另一个。最后，<filename>server.conf</filename> 中可以包含真正针对特定服务器的配置信息。
      </para>
 
      <para>
-      Another possibility is to create a configuration file directory and
-      put this information into files there. For example, a <filename>conf.d</filename>
-      directory could be referenced at the end of <filename>postgresql.conf</filename>:
+      另一种可能性是创建一个配置文件目录，并将这些信息放入其中的文件里。例如，可以在 <filename>postgresql.conf</filename> 的末尾引用一个 <filename>conf.d</filename> 目录：
 <programlisting>
 include_dir 'conf.d'
 </programlisting>
-      Then you could name the files in the <filename>conf.d</filename> directory
-      like this:
+      然后您可以像这样命名 <filename>conf.d</filename> 目录中的文件：
 <programlisting>
 00shared.conf
 01memory.conf
 02server.conf
 </programlisting>
-       This naming convention establishes a clear order in which these
-       files will be loaded.  This is important because only the last
-       setting encountered for a particular parameter while the server is
-       reading configuration files will be used.  In this example,
-       something set in <filename>conf.d/02server.conf</filename> would override a
-       value set in <filename>conf.d/01memory.conf</filename>.
+       这种命名约定确立了这些文件加载的明确顺序。这一点很重要，因为在服务器读取配置文件的过程中，对于某个特定参数，只有最后遇到的设置会被使用。在此示例中，在 <filename>conf.d/02server.conf</filename> 中设置的某项内容将覆盖在 <filename>conf.d/01memory.conf</filename> 中设置的值。
      </para>
 
      <para>
-      You might instead use this approach to naming the files
-      descriptively:
+      您也可以改用这种描述性命名文件的方法：
 <programlisting>
 00shared.conf
 01memory-8GB.conf
 02server-foo.conf
 </programlisting>
-      This sort of arrangement gives a unique name for each configuration file
-      variation.  This can help eliminate ambiguity when several servers have
-      their configurations all stored in one place, such as in a version
-      control repository.  (Storing database configuration files under version
-      control is another good practice to consider.)
+      这种安排为每种配置文件变体提供了唯一的名称。当多台服务器的配置都存储在一个地方（例如版本控制仓库）时，这有助于消除歧义。（将数据库配置文件置于版本控制之下是另一个值得考虑的良好实践。）
      </para>
     </sect2>
    </sect1>
