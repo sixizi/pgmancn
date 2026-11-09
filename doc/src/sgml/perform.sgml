@@ -1289,16 +1289,14 @@ SELECT * FROM x, y, a, b, c WHERE something AND somethingelse;
  </sect1>
 
  <sect1 id="populate">
-  <title>Populating a Database</title>
+  <title>填充数据库</title>
 
   <para>
-   One might need to insert a large amount of data when first populating
-   a database. This section contains some suggestions on how to make
-   this process as efficient as possible.
+   在初次填充数据库时，可能需要插入大量数据。本节包含一些关于如何让这一过程尽可能高效的建议。
   </para>
 
   <sect2 id="disable-autocommit">
-   <title>Disable Autocommit</title>
+   <title>禁用自动提交</title>
 
    <indexterm>
     <primary>autocommit</primary>
@@ -1306,205 +1304,129 @@ SELECT * FROM x, y, a, b, c WHERE something AND somethingelse;
    </indexterm>
 
    <para>
-    When using multiple <command>INSERT</command>s, turn off autocommit and just do
-    one commit at the end.  (In plain
-    SQL, this means issuing <command>BEGIN</command> at the start and
-    <command>COMMIT</command> at the end.  Some client libraries might
-    do this behind your back, in which case you need to make sure the
-    library does it when you want it done.)  If you allow each
-    insertion to be committed separately,
-    <productname>PostgreSQL</productname> is doing a lot of work for
-    each row that is added.  An additional benefit of doing all
-    insertions in one transaction is that if the insertion of one row
-    were to fail then the insertion of all rows inserted up to that
-    point would be rolled back, so you won't be stuck with partially
-    loaded data.
+    在使用多个 <command>INSERT</command> 时，请关闭自动提交，只在最后执行一次提交。（在纯
+    SQL 中，这意味着在开始时发出 <command>BEGIN</command>，在结束时发出
+    <command>COMMIT</command>。某些客户端库可能会在背后替你完成这件事，在这种情况下，你需要确保该库在你希望完成时才去做。）如果你允许每次
+    插入都单独提交，
+    <productname>PostgreSQL</productname> 就要为添加的每一行做大量工作。把所有
+    插入都放在一个事务中完成的另一个好处是，如果某一行的插入
+    失败，那么到该点为止插入的所有行都会被回滚，这样你就不会
+    陷入数据只加载了一部分的状态。
    </para>
   </sect2>
 
   <sect2 id="populate-copy-from">
-   <title>Use <command>COPY</command></title>
+   <title>使用 <command>COPY</command></title>
 
    <para>
-    Use <link linkend="sql-copy"><command>COPY</command></link> to load
-    all the rows in one command, instead of using a series of
-    <command>INSERT</command> commands.  The <command>COPY</command>
-    command is optimized for loading large numbers of rows; it is less
-    flexible than <command>INSERT</command>, but incurs significantly
-    less overhead for large data loads. Since <command>COPY</command>
-    is a single command, there is no need to disable autocommit if you
-    use this method to populate a table.
+    使用 <link linkend="sql-copy"><command>COPY</command></link> 在一条命令中加载
+    所有行，而不是使用一系列
+    <command>INSERT</command> 命令。<command>COPY</command>
+    命令针对加载大量行进行了优化；它不如 <command>INSERT</command> 灵活，
+    但对于大数据量加载，其开销要小得多。由于 <command>COPY</command>
+    是一条单一命令，如果你使用这种方法填充表，就无需禁用自动提交。
    </para>
 
    <para>
-    If you cannot use <command>COPY</command>, it might help to use <link
-    linkend="sql-prepare"><command>PREPARE</command></link> to create a
-    prepared <command>INSERT</command> statement, and then use
-    <command>EXECUTE</command> as many times as required.  This avoids
-    some of the overhead of repeatedly parsing and planning
-    <command>INSERT</command>. Different interfaces provide this facility
-    in different ways; look for <quote>prepared statements</quote> in the interface
-    documentation.
+    如果无法使用 <command>COPY</command>，使用 <link
+    linkend="sql-prepare"><command>PREPARE</command></link> 创建一个预备 <command>INSERT</command> 语句，然后按需多次使用
+    <command>EXECUTE</command>，可能会有所帮助。这可以避免重复解析和规划
+    <command>INSERT</command> 的部分开销。不同的接口以不同方式提供这一便利；
+    请在接口文档中查找 <quote>预备语句</quote>。
    </para>
 
    <para>
-    Note that loading a large number of rows using
-    <command>COPY</command> is almost always faster than using
-    <command>INSERT</command>, even if <command>PREPARE</command> is used and
-    multiple insertions are batched into a single transaction.
+    请注意，使用 <command>COPY</command> 装载大量行几乎总是比使用
+    <command>INSERT</command> 更快，即使使用了 <command>PREPARE</command> 并将多次插入批处理到
+    单个事务中也是如此。
    </para>
 
    <para>
-    <command>COPY</command> is fastest when used within the same
-    transaction as an earlier <command>CREATE TABLE</command> or
-    <command>TRUNCATE</command> command. In such cases no WAL
-    needs to be written, because in case of an error, the files
-    containing the newly loaded data will be removed anyway.
-    However, this consideration only applies when
-    <xref linkend="guc-wal-level"/> is <literal>minimal</literal>
-    as all commands must write WAL otherwise.
+    当 <command>COPY</command> 与先前的 <command>CREATE TABLE</command> 或
+    <command>TRUNCATE</command> 命令在同一事务中使用时速度最快。在这种情况下不需要
+    写入 WAL，因为一旦出错，包含新装载数据的文件
+    无论如何都会被删除。不过，这一考虑仅适用于
+    <xref linkend="guc-wal-level"/> 为 <literal>minimal</literal> 的情况，
+    否则所有命令都必须写入 WAL。
    </para>
 
   </sect2>
 
   <sect2 id="populate-rm-indexes">
-   <title>Remove Indexes</title>
+   <title>删除索引</title>
 
    <para>
-    If you are loading a freshly created table, the fastest method is to
-    create the table, bulk load the table's data using
-    <command>COPY</command>, then create any indexes needed for the
-    table.  Creating an index on pre-existing data is quicker than
-    updating it incrementally as each row is loaded.
+    如果要装载一个刚创建的表，最快的方法是：创建该表，使用
+    <command>COPY</command> 批量装载表中的数据，然后创建该表所需的任何索引。
+    在已有数据上创建索引比在每行装载时
+    增量更新索引更快。
    </para>
 
    <para>
-    If you are adding large amounts of data to an existing table,
-    it might be a win to drop the indexes,
-    load the table, and then recreate the indexes.  Of course, the
-    database performance for other users might suffer
-    during the time the indexes are missing.  One should also think
-    twice before dropping a unique index, since the error checking
-    afforded by the unique constraint will be lost while the index is
-    missing.
+    如果要向现有表添加大量数据，删除索引、装载表数据，
+    然后重新创建索引可能会带来好处。当然，在索引缺失期间，
+    其他用户的数据库性能可能会受到影响。在删除唯一索引之前
+    也应当三思，因为索引缺失期间，唯一约束所提供的
+    错误检查将会丢失。
    </para>
   </sect2>
 
   <sect2 id="populate-rm-fkeys">
-   <title>Remove Foreign Key Constraints</title>
+   <title>移除外键约束</title>
 
    <para>
-    Just as with indexes, a foreign key constraint can be checked
-    <quote>in bulk</quote> more efficiently than row-by-row.  So it might be
-    useful to drop foreign key constraints, load data, and re-create
-    the constraints.  Again, there is a trade-off between data load
-    speed and loss of error checking while the constraint is missing.
+    与索引一样，外键约束的检查也可以<quote>批量</quote>进行，比逐行检查更高效。因此，先删除外键约束、加载数据、再重新创建约束可能是有用的。同样，在约束缺失期间，数据加载速度与错误检查的缺失之间需要权衡。
    </para>
 
    <para>
-    What's more, when you load data into a table with existing foreign key
-    constraints, each new row requires an entry in the server's list of
-    pending trigger events (since it is the firing of a trigger that checks
-    the row's foreign key constraint).  Loading many millions of rows can
-    cause the trigger event queue to overflow available memory, leading to
-    intolerable swapping or even outright failure of the command.  Therefore
-    it may be <emphasis>necessary</emphasis>, not just desirable, to drop and re-apply
-    foreign keys when loading large amounts of data.  If temporarily removing
-    the constraint isn't acceptable, the only other recourse may be to split
-    up the load operation into smaller transactions.
+    此外，当你向一个已存在外键约束的表加载数据时，每个新行都需要在服务器的待处理触发器事件列表中增加一个条目（因为正是触发器的触发才检查该行的外键约束）。加载数百万行可能导致触发器事件队列溢出可用内存，从而引发难以忍受的交换，甚至命令彻底失败。因此，在加载大量数据时，删除并重新应用外键可能是<emphasis>必要的</emphasis>，而不仅仅是可取的。如果临时移除约束不可接受，唯一其他的办法可能是把加载操作拆分成更小的事务。
    </para>
   </sect2>
 
   <sect2 id="populate-work-mem">
-   <title>Increase <varname>maintenance_work_mem</varname></title>
+   <title>增加 <varname>maintenance_work_mem</varname></title>
 
    <para>
-    Temporarily increasing the <xref linkend="guc-maintenance-work-mem"/>
-    configuration variable when loading large amounts of data can
-    lead to improved performance.  This will help to speed up <command>CREATE
-    INDEX</command> commands and <command>ALTER TABLE ADD FOREIGN KEY</command> commands.
-    It won't do much for <command>COPY</command> itself, so this advice is
-    only useful when you are using one or both of the above techniques.
+    在加载大量数据时临时增大 <xref linkend="guc-maintenance-work-mem"/>
+    配置变量可以提升性能。这有助于加快 <command>CREATE
+    INDEX</command> 命令和 <command>ALTER TABLE ADD FOREIGN KEY</command> 命令。
+    它对 <command>COPY</command> 本身帮助不大，因此这条建议仅当你使用上述技巧中的一种或两种时才有用。
    </para>
   </sect2>
 
   <sect2 id="populate-max-wal-size">
-   <title>Increase <varname>max_wal_size</varname></title>
+   <title>增加 <varname>max_wal_size</varname></title>
 
    <para>
-    Temporarily increasing the <xref linkend="guc-max-wal-size"/>
-    configuration variable can also
-    make large data loads faster.  This is because loading a large
-    amount of data into <productname>PostgreSQL</productname> will
-    cause checkpoints to occur more often than the normal checkpoint
-    frequency (specified by the <varname>checkpoint_timeout</varname>
-    configuration variable). Whenever a checkpoint occurs, all dirty
-    pages must be flushed to disk. By increasing
-    <varname>max_wal_size</varname> temporarily during bulk
-    data loads, the number of checkpoints that are required can be
-    reduced.
+    临时增大 <xref linkend="guc-max-wal-size"/> 配置变量也能加快大数据量的加载速度。这是因为向 <productname>PostgreSQL</productname> 中加载大量数据会导致检查点比正常的检查点频率（由 <varname>checkpoint_timeout</varname> 配置变量指定）更频繁地发生。每当发生检查点时，所有脏页都必须刷写到磁盘。在批量数据加载期间临时增大 <varname>max_wal_size</varname>，可以减少所需的检查点数量。
    </para>
   </sect2>
 
   <sect2 id="populate-pitr">
-   <title>Disable WAL Archival and Streaming Replication</title>
+   <title>禁用 WAL 归档和流复制</title>
 
    <para>
-    When loading large amounts of data into an installation that uses
-    WAL archiving or streaming replication, it might be faster to take a
-    new base backup after the load has completed than to process a large
-    amount of incremental WAL data.  To prevent incremental WAL logging
-    while loading, disable archiving and streaming replication, by setting
-    <xref linkend="guc-wal-level"/> to <literal>minimal</literal>,
-    <xref linkend="guc-archive-mode"/> to <literal>off</literal>, and
-    <xref linkend="guc-max-wal-senders"/> to zero.
-    But note that changing these settings requires a server restart,
-    and makes any base backups taken before unavailable for archive
-    recovery and standby server, which may lead to data loss.
+    当向使用 WAL 归档或流复制的安装中加载大量数据时，在加载完成后重新进行一次基础备份，可能比处理大量增量 WAL 数据更快。为避免在加载期间产生增量 WAL 日志，可以禁用归档和流复制，即将 <xref linkend="guc-wal-level"/> 设置为 <literal>minimal</literal>、将 <xref linkend="guc-archive-mode"/> 设置为 <literal>off</literal>，并将 <xref linkend="guc-max-wal-senders"/> 设置为零。但请注意，更改这些设置需要重启服务器，并且会使此前进行的任何基础备份无法用于归档恢复和备用服务器，这可能导致数据丢失。
    </para>
 
    <para>
-    Aside from avoiding the time for the archiver or WAL sender to process the
-    WAL data, doing this will actually make certain commands faster, because
-    they do not to write WAL at all if <varname>wal_level</varname>
-    is <literal>minimal</literal> and the current subtransaction (or top-level
-    transaction) created or truncated the table or index they change.  (They
-    can guarantee crash safety more cheaply by doing
-    an <function>fsync</function> at the end than by writing WAL.)
+    除了避免归档器或 WAL 发送进程处理 WAL 数据所需的时间之外，这样做实际上还会使某些命令更快，因为如果 <varname>wal_level</varname> 为 <literal>minimal</literal>，并且当前子事务（或顶层事务）创建或截断了它们所更改的表或索引，那么这些命令根本不需要写入 WAL。（与写入 WAL 相比，它们在结束时执行一次 <function>fsync</function> 可以更廉价地保证崩溃安全性。）
    </para>
   </sect2>
 
   <sect2 id="populate-analyze">
-   <title>Run <command>ANALYZE</command> Afterwards</title>
+   <title>之后运行 <command>ANALYZE</command></title>
 
    <para>
-    Whenever you have significantly altered the distribution of data
-    within a table, running <link linkend="sql-analyze"><command>ANALYZE</command></link> is strongly recommended. This
-    includes bulk loading large amounts of data into the table.  Running
-    <command>ANALYZE</command> (or <command>VACUUM ANALYZE</command>)
-    ensures that the planner has up-to-date statistics about the
-    table.  With no statistics or obsolete statistics, the planner might
-    make poor decisions during query planning, leading to poor
-    performance on any tables with inaccurate or nonexistent
-    statistics.  Note that if the autovacuum daemon is enabled, it might
-    run <command>ANALYZE</command> automatically; see
-    <xref linkend="vacuum-for-statistics"/>
-    and <xref linkend="autovacuum"/> for more information.
+    每当你显著改变了表中数据的分布时，强烈建议运行 <link linkend="sql-analyze"><command>ANALYZE</command></link>。这包括向表中批量加载大量数据。运行 <command>ANALYZE</command>（或 <command>VACUUM ANALYZE</command>）可确保规划器拥有关于该表的最新统计信息。如果没有统计信息或统计信息过时，规划器在查询规划期间可能做出糟糕的决策，从而导致任何统计信息不准确或不存在的表性能不佳。请注意，如果启用了自动清理守护进程，它可能会自动运行 <command>ANALYZE</command>；更多信息请参见 <xref linkend="vacuum-for-statistics"/> 和 <xref linkend="autovacuum"/>。
    </para>
   </sect2>
 
   <sect2 id="populate-pg-dump">
-   <title>Some Notes about <application>pg_dump</application></title>
+   <title>关于 <application>pg_dump</application> 的一些说明</title>
 
    <para>
-    Dump scripts generated by <application>pg_dump</application> automatically apply
-    several, but not all, of the above guidelines.  To restore a
-    <application>pg_dump</application> dump as quickly as possible, you need to
-    do a few extra things manually.  (Note that these points apply while
-    <emphasis>restoring</emphasis> a dump, not while <emphasis>creating</emphasis> it.
-    The same points apply whether loading a text dump with
-    <application>psql</application> or using <application>pg_restore</application> to load
-    from a <application>pg_dump</application> archive file.)
+    由 <application>pg_dump</application> 生成的转储脚本会自动应用上述指导原则中的若干条，但并非全部。为了尽可能快地恢复 <application>pg_dump</application> 转储，你需要手动做一些额外的事情。（请注意，这些要点适用于<emphasis>恢复</emphasis>转储时，而不是<emphasis>创建</emphasis>转储时。无论使用 <application>psql</application> 加载文本转储，还是使用 <application>pg_restore</application> 从 <application>pg_dump</application> 归档文件加载，这些要点都同样适用。）
    </para>
 
    <para>
@@ -1516,54 +1438,32 @@ SELECT * FROM x, y, a, b, c WHERE something AND somethingelse;
     <itemizedlist>
      <listitem>
       <para>
-       Set appropriate (i.e., larger than normal) values for
-       <varname>maintenance_work_mem</varname> and
-       <varname>max_wal_size</varname>.
+       为 <varname>maintenance_work_mem</varname> 和 <varname>max_wal_size</varname> 设置合适的（即比通常更大的）值。
       </para>
      </listitem>
      <listitem>
       <para>
-       If using WAL archiving or streaming replication, consider disabling
-       them during the restore. To do that, set <varname>archive_mode</varname>
-       to <literal>off</literal>,
-       <varname>wal_level</varname> to <literal>minimal</literal>, and
-       <varname>max_wal_senders</varname> to zero before loading the dump.
-       Afterwards, set them back to the right values and take a fresh
-       base backup.
+       如果使用了 WAL 归档或流复制，考虑在恢复期间禁用它们。为此，在加载转储之前，将 <varname>archive_mode</varname> 设置为 <literal>off</literal>，将 <varname>wal_level</varname> 设置为 <literal>minimal</literal>，并将 <varname>max_wal_senders</varname> 设置为零。之后，将它们重新设置为正确的值，并重新进行一次基础备份。
       </para>
      </listitem>
      <listitem>
       <para>
-       Experiment with the parallel dump and restore modes of both
-       <application>pg_dump</application> and <application>pg_restore</application> and find the
-       optimal number of concurrent jobs to use. Dumping and restoring in
-       parallel by means of the <option>-j</option> option should give you a
-       significantly higher performance over the serial mode.
+       试验 <application>pg_dump</application> 和 <application>pg_restore</application> 的并行转储和恢复模式，找出要使用的最佳并发作业数。通过 <option>-j</option> 选项进行并行转储和恢复，其性能应显著高于串行模式。
       </para>
      </listitem>
      <listitem>
       <para>
-       Consider whether the whole dump should be restored as a single
-       transaction.  To do that, pass the <option>-1</option> or
-       <option>--single-transaction</option> command-line option to
-       <application>psql</application> or <application>pg_restore</application>. When using this
-       mode, even the smallest of errors will rollback the entire restore,
-       possibly discarding many hours of processing.  Depending on how
-       interrelated the data is, that might seem preferable to manual cleanup,
-       or not.  <command>COPY</command> commands will run fastest if you use a single
-       transaction and have WAL archiving turned off.
+       考虑是否应将整个转储作为单个事务来恢复。为此，请向 <application>psql</application> 或 <application>pg_restore</application> 传递 <option>-1</option> 或 <option>--single-transaction</option> 命令行选项。使用此模式时，即使是最小的错误也会回滚整个恢复过程，可能会丢弃许多小时的处理成果。根据数据之间的相互关联程度，这可能看起来比手动清理更可取，也可能不是。如果使用单个事务并关闭 WAL 归档，<command>COPY</command> 命令将运行得最快。
       </para>
      </listitem>
      <listitem>
       <para>
-       If multiple CPUs are available in the database server, consider using
-       <application>pg_restore</application>'s <option>--jobs</option> option.  This
-       allows concurrent data loading and index creation.
+       如果数据库服务器中有多个 CPU 可用，可以考虑使用 <application>pg_restore</application> 的 <option>--jobs</option> 选项。这样可以并发地加载数据和创建索引。
       </para>
      </listitem>
      <listitem>
       <para>
-       Run <command>ANALYZE</command> afterwards.
+       之后运行 <command>ANALYZE</command>。
       </para>
      </listitem>
     </itemizedlist>
@@ -1576,10 +1476,7 @@ SELECT * FROM x, y, a, b, c WHERE something AND somethingelse;
 
      <footnote>
       <para>
-       You can get the effect of disabling foreign keys by using
-       the <option>--disable-triggers</option> option &mdash; but realize that
-       that eliminates, rather than just postpones, foreign key
-       validation, and so it is possible to insert bad data if you use it.
+       你可以通过使用 <option>--disable-triggers</option> 选项 &mdash; 来达到禁用外键的效果，但要意识到这样做是彻底取消外键验证，而不只是推迟验证，因此如果使用该选项，就有可能插入错误的数据。
       </para>
      </footnote>
 
