@@ -3939,17 +3939,11 @@ $$ LANGUAGE plpgsql;
   </sect1>
 
  <sect1 id="plpgsql-development-tips">
-  <title>Tips for Developing in <application>PL/pgSQL</application></title>
+  <title>在 <application>PL/pgSQL</application> 中开发的技巧</title>
 
    <para>
-    One good way to develop in
-    <application>PL/pgSQL</application> is to use the text editor of your
-    choice to create your functions, and in another window, use
-    <application>psql</application> to load and test those functions.
-    If you are doing it this way, it
-    is a good idea to write the function using <command>CREATE OR
-    REPLACE FUNCTION</command>. That way you can just reload the file to update
-    the function definition.  For example:
+    在 <application>PL/pgSQL</application> 中开发的一个好方法是，使用你选择的文本编辑器创建函数，并在另一个窗口中使用 <application>psql</application> 来加载和测试这些函数。如果你采用这种方式，最好使用 <command>CREATE OR
+    REPLACE FUNCTION</command> 编写函数。这样你只需重新加载文件即可更新函数定义。例如：
 <programlisting>
 CREATE OR REPLACE FUNCTION testfunc(integer) RETURNS integer AS $$
           ....
@@ -3958,134 +3952,105 @@ $$ LANGUAGE plpgsql;
    </para>
 
    <para>
-    While running <application>psql</application>, you can load or reload such
-    a function definition file with:
+    在运行 <application>psql</application> 时，你可以用以下命令加载或重新加载这样的函数定义文件：
 <programlisting>
 \i filename.sql
 </programlisting>
-    and then immediately issue SQL commands to test the function.
+    然后立即发出 SQL 命令来测试该函数。
    </para>
 
    <para>
-    Another good way to develop in <application>PL/pgSQL</application> is with a
-    GUI database access tool that facilitates development in a
-    procedural language. One example of such a tool is
-    <application>pgAdmin</application>, although others exist. These tools often
-    provide convenient features such as escaping single quotes and
-    making it easier to recreate and debug functions.
+    在 <application>PL/pgSQL</application> 中开发的另一个好方法是使用 GUI 数据库访问工具，它便于用过程语言进行开发。此类工具的一个例子是 <application>pgAdmin</application>，尽管还存在其他工具。这些工具通常提供便利的功能，例如转义单引号，以及使重新创建和调试函数更加容易。
    </para>
 
   <sect2 id="plpgsql-quote-tips">
-   <title>Handling of Quotation Marks</title>
+   <title>引号的处理</title>
 
    <para>
-    The code of a <application>PL/pgSQL</application> function is specified in
-    <command>CREATE FUNCTION</command> as a string literal.  If you
-    write the string literal in the ordinary way with surrounding
-    single quotes, then any single quotes inside the function body
-    must be doubled; likewise any backslashes must be doubled (assuming
-    escape string syntax is used).
-    Doubling quotes is at best tedious, and in more complicated cases
-    the code can become downright incomprehensible, because you can
-    easily find yourself needing half a dozen or more adjacent quote marks.
-    It's recommended that you instead write the function body as a
-    <quote>dollar-quoted</quote> string literal (see <xref
-    linkend="sql-syntax-dollar-quoting"/>).  In the dollar-quoting
-    approach, you never double any quote marks, but instead take care to
-    choose a different dollar-quoting delimiter for each level of
-    nesting you need.  For example, you might write the <command>CREATE
-    FUNCTION</command> command as:
+    <application>PL/pgSQL</application> 函数的代码在 <command>CREATE FUNCTION</command> 中以字符串字面量的形式指定。如果你以普通方式用单引号包围来书写该字符串字面量，那么函数体内的任何单引号都必须双写；同样，任何反斜杠也必须双写（假定使用转义字符串语法）。双写引号充其量只是繁琐，而在更复杂的情况下，代码会变得完全无法理解，因为你很容易发现自己需要半打甚至更多相邻的引号。建议你改为把函数体写成 <quote>美元引用</quote>的字符串字面量（参见 <xref
+    linkend="sql-syntax-dollar-quoting"/>）。在美元引用方式中，你永远不需要双写任何引号，而是要小心地为每一层嵌套选择一个不同的美元引用定界符。例如，你可以把 <command>CREATE
+    FUNCTION</command> 命令写成：
 <programlisting>
 CREATE OR REPLACE FUNCTION testfunc(integer) RETURNS integer AS $PROC$
           ....
 $PROC$ LANGUAGE plpgsql;
 </programlisting>
-    Within this, you might use quote marks for simple literal strings in
-    SQL commands and <literal>$$</literal> to delimit fragments of SQL commands
-    that you are assembling as strings.  If you need to quote text that
-    includes <literal>$$</literal>, you could use <literal>$Q$</literal>, and so on.
+    在此之中，你可以对 SQL 命令中的简单字面量字符串使用引号，并使用 <literal>$$</literal> 来界定你正在拼接为字符串的 SQL 命令片段。如果你需要引用包含 <literal>$$</literal> 的文本，你可以使用 <literal>$Q$</literal>，依此类推。
    </para>
 
    <para>
-    The following chart shows what you have to do when writing quote
-    marks without dollar quoting.  It might be useful when translating
-    pre-dollar quoting code into something more comprehensible.
+    下面的图表展示了在不使用美元引用时书写引号需要做什么。在把使用美元引用之前的代码转换成更易理解的形式时，它可能会有用。
   </para>
 
   <variablelist>
    <varlistentry id="plpgsql-quote-tips-1-quot">
-    <term>1 quotation mark</term>
+    <term>1 个引号</term>
     <listitem>
      <para>
-      To begin and end the function body, for example:
+      用于开始和结束函数体，例如：
 <programlisting>
 CREATE FUNCTION foo() RETURNS integer AS '
           ....
 ' LANGUAGE plpgsql;
 </programlisting>
-      Anywhere within a single-quoted function body, quote marks
-      <emphasis>must</emphasis> appear in pairs.
+      在单引号函数体内的任何位置，引号<emphasis>必须</emphasis>成对出现。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry id="plpgsql-quote-tips-2-quot">
-    <term>2 quotation marks</term>
+    <term>2 个引号</term>
     <listitem>
      <para>
-      For string literals inside the function body, for example:
+      用于函数体内的字符串字面量，例如：
 <programlisting>
 a_output := ''Blah'';
 SELECT * FROM users WHERE f_name=''foobar'';
 </programlisting>
-      In the dollar-quoting approach, you'd just write:
+      在美元引用方式中，你只需写成：
 <programlisting>
 a_output := 'Blah';
 SELECT * FROM users WHERE f_name='foobar';
 </programlisting>
-      which is exactly what the <application>PL/pgSQL</application> parser would see
-      in either case.
+      无论哪种情况，<application>PL/pgSQL</application> 解析器看到的都正是这个内容。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry id="plpgsql-quote-tips-4-quot">
-    <term>4 quotation marks</term>
+    <term>4 个引号</term>
     <listitem>
      <para>
-      When you need a single quotation mark in a string constant inside the
-      function body, for example:
+      当需要在函数体内的字符串常量中使用一个单引号时，例如：
 <programlisting>
 a_output := a_output || '' AND name LIKE ''''foobar'''' AND xyz''
 </programlisting>
-      The value actually appended to <literal>a_output</literal> would be:
-      <literal> AND name LIKE 'foobar' AND xyz</literal>.
+      实际追加到 <literal>a_output</literal> 的值将是：
+      <literal> AND name LIKE 'foobar' AND xyz</literal>。
      </para>
      <para>
-      In the dollar-quoting approach, you'd write:
+      在美元引用方式中，你会这样写：
 <programlisting>
 a_output := a_output || $$ AND name LIKE 'foobar' AND xyz$$
 </programlisting>
-      being careful that any dollar-quote delimiters around this are not
-      just <literal>$$</literal>.
+      注意其周围的任何美元引用定界符不能只是 <literal>$$</literal>。
      </para>
     </listitem>
    </varlistentry>
 
    <varlistentry id="plpgsql-quote-tips-6-quot">
-    <term>6 quotation marks</term>
+    <term>6 个引号</term>
     <listitem>
      <para>
-      When a single quotation mark in a string inside the function body is
-      adjacent to the end of that string constant, for example:
+      当函数体内字符串中的单个引号紧邻该字符串常量的末尾时，例如：
 <programlisting>
 a_output := a_output || '' AND name LIKE ''''foobar''''''
 </programlisting>
-      The value appended to <literal>a_output</literal> would then be:
-      <literal> AND name LIKE 'foobar'</literal>.
+      那么追加到 <literal>a_output</literal> 的值将是：
+      <literal> AND name LIKE 'foobar'</literal>。
      </para>
      <para>
-      In the dollar-quoting approach, this becomes:
+      在美元引用方式中，这就变成：
 <programlisting>
 a_output := a_output || $$ AND name LIKE 'foobar'$$
 </programlisting>
@@ -4094,15 +4059,10 @@ a_output := a_output || $$ AND name LIKE 'foobar'$$
    </varlistentry>
 
    <varlistentry id="plpgsql-quote-tips-10-quot">
-    <term>10 quotation marks</term>
+    <term>10 个引号</term>
     <listitem>
      <para>
-      When you want two single quotation marks in a string constant (which
-      accounts for 8 quotation marks) and this is adjacent to the end of that
-      string constant (2 more).  You will probably only need that if
-      you are writing a function that generates other functions, as in
-      <xref linkend="plpgsql-porting-ex2"/>.
-      For example:
+      当你想要在一个字符串常量中有两个单引号（这要算作 8 个引号），并且它紧邻该字符串常量的末尾（再加 2 个）。你可能只有在编写生成其他函数的函数时才需要这样做，如 <xref linkend="plpgsql-porting-ex2"/> 中所示。例如：
 <programlisting>
 a_output := a_output || '' if v_'' ||
     referrer_keys.kind || '' like ''''''''''
@@ -4110,21 +4070,20 @@ a_output := a_output || '' if v_'' ||
     then return ''''''  || referrer_keys.referrer_type
     || ''''''; end if;'';
 </programlisting>
-      The value of <literal>a_output</literal> would then be:
+      那么 <literal>a_output</literal> 的值将是：
 <programlisting>
 if v_... like ''...'' then return ''...''; end if;
 </programlisting>
      </para>
      <para>
-      In the dollar-quoting approach, this becomes:
+      在使用美元引用的方法中，这就变成：
 <programlisting>
 a_output := a_output || $$ if v_$$ || referrer_keys.kind || $$ like '$$
     || referrer_keys.key_string || $$'
     then return '$$  || referrer_keys.referrer_type
     || $$'; end if;$$;
 </programlisting>
-      where we assume we only need to put single quote marks into
-      <literal>a_output</literal>, because it will be re-quoted before use.
+      这里我们假定只需要把单引号放入 <literal>a_output</literal>，因为它在使用前会被重新引用。
      </para>
     </listitem>
    </varlistentry>
@@ -4132,37 +4091,30 @@ a_output := a_output || $$ if v_$$ || referrer_keys.kind || $$ like '$$
 
   </sect2>
   <sect2 id="plpgsql-extra-checks">
-   <title>Additional Compile-Time and Run-Time Checks</title>
+   <title>额外的编译时和运行时检查</title>
 
    <para>
-    To aid the user in finding instances of simple but common problems before
-    they cause harm, <application>PL/pgSQL</application> provides additional
-    <replaceable>checks</replaceable>. When enabled, depending on the configuration, they
-    can be used to emit either a <literal>WARNING</literal> or an <literal>ERROR</literal>
-    during the compilation of a function. A function which has received
-    a <literal>WARNING</literal> can be executed without producing further messages,
-    so you are advised to test in a separate development environment.
+    为了帮助用户在简单但常见的问题造成危害之前发现它们，<application>PL/pgSQL</application> 提供了额外的
+    <replaceable>checks</replaceable>。启用后，根据配置的不同，它们可用于在函数编译期间发出
+    <literal>WARNING</literal> 或 <literal>ERROR</literal>。收到 <literal>WARNING</literal> 的函数可以执行而不会产生更多消息，
+    因此建议你在单独的开发环境中进行测试。
    </para>
 
    <para>
-    Setting <varname>plpgsql.extra_warnings</varname>, or
-    <varname>plpgsql.extra_errors</varname>, as appropriate, to <literal>"all"</literal>
-    is encouraged in development and/or testing environments.
+    在开发和/或测试环境中，鼓励酌情将 <varname>plpgsql.extra_warnings</varname> 或
+    <varname>plpgsql.extra_errors</varname> 设置为 <literal>"all"</literal>。
    </para>
 
    <para>
-    These additional checks are enabled through the configuration variables
-    <varname>plpgsql.extra_warnings</varname> for warnings and
-    <varname>plpgsql.extra_errors</varname> for errors. Both can be set either to
-    a comma-separated list of checks, <literal>"none"</literal> or
-    <literal>"all"</literal>. The default is <literal>"none"</literal>. Currently
-    the list of available checks includes:
+    这些额外的检查通过配置变量启用：<varname>plpgsql.extra_warnings</varname> 用于警告，
+    <varname>plpgsql.extra_errors</varname> 用于错误。两者都可以设置为以逗号分隔的检查列表、<literal>"none"</literal> 或
+    <literal>"all"</literal>。默认值为 <literal>"none"</literal>。目前可用的检查列表包括：
     <variablelist>
      <varlistentry id="plpgsql-extra-checks-shadowed-variables">
       <term><varname>shadowed_variables</varname></term>
       <listitem>
        <para>
-        Checks if a declaration shadows a previously defined variable.
+        检查一个声明是否遮蔽了先前定义的变量。
        </para>
       </listitem>
      </varlistentry>
@@ -4171,16 +4123,11 @@ a_output := a_output || $$ if v_$$ || referrer_keys.kind || $$ like '$$
       <term><varname>strict_multi_assignment</varname></term>
       <listitem>
        <para>
-        Some <application>PL/pgSQL</application> commands allow assigning
-        values to more than one variable at a time, such as
-        <command>SELECT INTO</command>.  Typically, the number of target
-        variables and the number of source variables should match, though
-        <application>PL/pgSQL</application> will use <literal>NULL</literal>
-        for missing values and extra variables are ignored.  Enabling this
-        check will cause <application>PL/pgSQL</application> to throw a
-        <literal>WARNING</literal> or <literal>ERROR</literal> whenever the
-        number of target variables and the number of source variables are
-        different.
+        某些 <application>PL/pgSQL</application> 命令允许一次为多个变量赋值，例如
+        <command>SELECT INTO</command>。通常，目标变量的数量与源变量的数量应当匹配，不过
+        <application>PL/pgSQL</application> 会对缺失的值使用 <literal>NULL</literal>，而多余的变量会被忽略。启用此
+        检查后，只要目标变量的数量与源变量的数量不同，<application>PL/pgSQL</application> 就会抛出
+        <literal>WARNING</literal> 或 <literal>ERROR</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -4189,19 +4136,17 @@ a_output := a_output || $$ if v_$$ || referrer_keys.kind || $$ like '$$
       <term><varname>too_many_rows</varname></term>
       <listitem>
        <para>
-        Enabling this check will cause <application>PL/pgSQL</application> to
-        check if a given query returns more than one row when an
-        <literal>INTO</literal> clause is used.  As an <literal>INTO</literal>
-        statement will only ever use one row, having a query return multiple
-        rows is generally either inefficient and/or nondeterministic and
-        therefore is likely an error.
+        启用此检查将使 <application>PL/pgSQL</application> 检查在使用
+        <literal>INTO</literal> 子句时给定查询是否返回多于一行。由于 <literal>INTO</literal>
+        语句只会使用一行，查询返回多行通常要么低效和/或具有不确定性，
+        因此很可能是错误。
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    The following example shows the effect of <varname>plpgsql.extra_warnings</varname>
-    set to <varname>shadowed_variables</varname>:
+    下面的示例展示了将 <varname>plpgsql.extra_warnings</varname>
+    设置为 <varname>shadowed_variables</varname> 的效果：
 <programlisting>
 SET plpgsql.extra_warnings TO 'shadowed_variables';
 
@@ -4217,9 +4162,9 @@ LINE 3: f1 int;
         ^
 CREATE FUNCTION
 </programlisting>
-    The below example shows the effects of setting
-    <varname>plpgsql.extra_warnings</varname> to
-    <varname>strict_multi_assignment</varname>:
+    下面的示例展示了将
+    <varname>plpgsql.extra_warnings</varname> 设置为
+    <varname>strict_multi_assignment</varname> 的效果：
 <programlisting>
 SET plpgsql.extra_warnings TO 'strict_multi_assignment';
 
