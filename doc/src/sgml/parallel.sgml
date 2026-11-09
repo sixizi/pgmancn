@@ -280,120 +280,73 @@ EXPLAIN SELECT * FROM pgbench_accounts WHERE filler LIKE '%x%';
  </sect1>
 
  <sect1 id="parallel-safety">
-  <title>Parallel Safety</title>
+  <title>并行安全性</title>
 
   <para>
-    The planner classifies operations involved in a query as either
-    <firstterm>parallel safe</firstterm>, <firstterm>parallel restricted</firstterm>,
-    or <firstterm>parallel unsafe</firstterm>.  A parallel safe operation is one that
-    does not conflict with the use of parallel query.  A parallel restricted
-    operation is one that cannot be performed in a parallel worker, but that
-    can be performed in the leader while parallel query is in use.  Therefore,
-    parallel restricted operations can never occur below a <literal>Gather</literal>
-    or <literal>Gather Merge</literal> node, but can occur elsewhere in a plan that
-    contains such a node.  A parallel unsafe operation is one that cannot
-    be performed while parallel query is in use, not even in the leader.
-    When a query contains anything that is parallel unsafe, parallel query
-    is completely disabled for that query.
+    规划器将查询中涉及的操作分类为<firstterm>并行安全</firstterm>、<firstterm>并行受限</firstterm>或<firstterm>并行不安全</firstterm>。并行安全的操作是指与并行查询的使用不冲突的操作。并行受限的操作是指不能在并行工作者中执行，但在使用并行查询时可以在领导者中执行的操作。因此，并行受限的操作绝不会出现在 <literal>Gather</literal> 或 <literal>Gather Merge</literal> 节点之下，但可以出现在包含此类节点的计划的其他位置。并行不安全的操作是指在使用并行查询时不能执行的操作，即使在领导者中也不能执行。当查询包含任何并行不安全的内容时，该查询的并行查询会被完全禁用。
   </para>
 
   <para>
-    The following operations are always parallel restricted:
+    以下操作始终是并行受限的：
   </para>
 
   <itemizedlist>
     <listitem>
       <para>
-        Scans of common table expressions (CTEs).
+        对公共表表达式（CTE）的扫描。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        Scans of temporary tables.
+        对临时表的扫描。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        Scans of foreign tables, unless the foreign data wrapper has
-        an <literal>IsForeignScanParallelSafe</literal> API that indicates otherwise.
+        对外部表的扫描，除非外部数据包装器具有表明并非如此的 <literal>IsForeignScanParallelSafe</literal> API。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        Plan nodes that reference a correlated <literal>SubPlan</literal>.
+        引用相关 <literal>SubPlan</literal> 的计划节点。
       </para>
     </listitem>
   </itemizedlist>
 
  <sect2 id="parallel-labeling">
-  <title>Parallel Labeling for Functions and Aggregates</title>
+  <title>函数和聚合的并行标记</title>
 
   <para>
-    The planner cannot automatically determine whether a user-defined
-    function or aggregate is parallel safe, parallel restricted, or parallel
-    unsafe, because this would require predicting every operation that the
-    function could possibly perform.  In general, this is equivalent to the
-    Halting Problem and therefore impossible.  Even for simple functions
-    where it could conceivably be done, we do not try, since this would be expensive
-    and error-prone.  Instead, all user-defined functions are assumed to
-    be parallel unsafe unless otherwise marked.  When using
-    <xref linkend="sql-createfunction"/> or
-    <xref linkend="sql-alterfunction"/>, markings can be set by specifying
-    <literal>PARALLEL SAFE</literal>, <literal>PARALLEL RESTRICTED</literal>, or
-    <literal>PARALLEL UNSAFE</literal> as appropriate.  When using
-    <xref linkend="sql-createaggregate"/>, the
-    <literal>PARALLEL</literal> option can be specified with <literal>SAFE</literal>,
-    <literal>RESTRICTED</literal>, or <literal>UNSAFE</literal> as the corresponding value.
+    查询规划器无法自动判断用户定义的函数或聚合是并行安全、并行受限还是并行不安全，因为这需要预测该函数可能执行的每一个操作。一般而言，这等价于停机问题，因而无法做到。即使对于可以想象能够做到这一点的简单函数，我们也不做尝试，因为这样做代价高昂且容易出错。相反，除非另有标记，所有用户定义的函数都被假定为并行不安全。在使用
+    <xref linkend="sql-createfunction"/> 或
+    <xref linkend="sql-alterfunction"/> 时，可以通过酌情指定
+    <literal>PARALLEL SAFE</literal>、<literal>PARALLEL RESTRICTED</literal> 或
+    <literal>PARALLEL UNSAFE</literal> 来设置标记。在使用
+    <xref linkend="sql-createaggregate"/> 时，可以指定
+    <literal>PARALLEL</literal> 选项，其对应值为 <literal>SAFE</literal>、
+    <literal>RESTRICTED</literal> 或 <literal>UNSAFE</literal>。
   </para>
 
   <para>
-    Functions and aggregates must be marked <literal>PARALLEL UNSAFE</literal>
-    if they write to the database, change the transaction state (other than by
-    using a subtransaction for error recovery), access sequences, or make
-    persistent changes to
-    settings.  Similarly, functions must be marked <literal>PARALLEL
-    RESTRICTED</literal> if they access temporary tables, client connection state,
-    cursors, prepared statements, or miscellaneous backend-local state that
-    the system cannot synchronize across workers. For example,
-    <literal>setseed</literal> and <literal>random</literal> are parallel restricted for
-    this last reason.
+    如果函数和聚合会写入数据库、更改事务状态（为错误恢复而使用子事务除外）、访问序列，或对设置进行持久性更改，则必须将它们标记为 <literal>PARALLEL UNSAFE</literal>。同样，如果函数会访问临时表、客户端连接状态、游标、预备语句，或系统无法在各工作进程之间同步的其他后端本地状态，则必须将其标记为 <literal>PARALLEL
+    RESTRICTED</literal>。例如，由于最后这一原因，<literal>setseed</literal> 和 <literal>random</literal> 属于并行受限。
   </para>
 
   <para>
-    In general, if a function is labeled as being safe when it is restricted or
-    unsafe, or if it is labeled as being restricted when it is in fact unsafe,
-    it may throw errors or produce wrong answers when used in a parallel query.
-    C-language functions could in theory exhibit totally undefined behavior if
-    mislabeled, since there is no way for the system to protect itself against
-    arbitrary C code, but in most likely cases the result will be no worse than
-    for any other function. If in doubt, it is probably best to label functions
-    as <literal>UNSAFE</literal>.
+    一般而言，如果一个函数实际上是并行受限或不安全的，却被标记为并行安全，或者实际上是并行不安全的，却被标记为并行受限，那么它在并行查询中使用时可能会抛出错误或产生错误的结果。C 语言函数如果被错误标记，理论上可能表现出完全未定义的行为，因为系统无法保护自己免受任意 C 代码的影响，但在大多数可能的情况下，其结果不会比其他任何函数更糟。如果有疑问，最好将函数标记为 <literal>UNSAFE</literal>。
   </para>
 
   <para>
-    If a function executed within a parallel worker acquires locks that are
-    not held by the leader, for example by querying a table not referenced in
-    the query, those locks will be released at worker exit, not end of
-    transaction. If you write a function that does this, and this behavior
-    difference is important to you, mark such functions as
+    如果在并行工作进程中执行的函数获取了领导者未持有的锁，例如通过查询查询中未引用的表，那么这些锁将在工作进程退出时释放，而不是在事务结束时释放。如果你编写的函数会这样做，并且这种行为差异对你很重要，请将此类函数标记为
     <literal>PARALLEL RESTRICTED</literal>
-    to ensure that they execute only in the leader.
+    以确保它们只在领导者中执行。
   </para>
 
   <para>
-    Note that the query planner does not consider deferring the evaluation of
-    parallel-restricted functions or aggregates involved in the query in
-    order to obtain a superior plan.  So, for example, if a <literal>WHERE</literal>
-    clause applied to a particular table is parallel restricted, the query
-    planner will not consider performing a scan of that table in the parallel
-    portion of a plan.  In some cases, it would be
-    possible (and perhaps even efficient) to include the scan of that table in
-    the parallel portion of the query and defer the evaluation of the
-    <literal>WHERE</literal> clause so that it happens above the <literal>Gather</literal>
-    node.  However, the planner does not do this.
+    请注意，查询规划器不会为了获得更优的计划而考虑推迟对查询中涉及的并行受限函数或聚合函数的求值。因此，例如，如果应用于某个特定表的 <literal>WHERE</literal> 子句是并行受限的，查询规划器就不会考虑在计划的并行部分中对该表执行扫描。在某些情况下，可以将该表的扫描包含在查询的并行部分中，并推迟 <literal>WHERE</literal> 子句的求值，使其在 <literal>Gather</literal> 节点之上进行，这是可行的（甚至可能是高效的）。然而，规划器并不会这样做。
   </para>
 
  </sect2>
