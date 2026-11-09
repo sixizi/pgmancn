@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>LISTEN</refname>
-  <refpurpose>listen for a notification</refpurpose>
+  <refpurpose>监听通知</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -26,54 +26,47 @@ LISTEN <replaceable class="parameter">channel</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>LISTEN</command> registers the current session as a
-   listener on the notification channel named <replaceable
-   class="parameter">channel</replaceable>.
-   If the current session is already registered as a listener for
-   this notification channel, nothing is done.
+   <command>LISTEN</command> 将当前会话注册为名为 <replaceable
+   class="parameter">channel</replaceable> 的通知通道的监听者。
+   如果当前会话已经注册为该通知通道的监听者，则不做任何操作。
   </para>
 
   <para>
-   Whenever the command <command>NOTIFY <replaceable
-   class="parameter">channel</replaceable></command> is invoked, either
-   by this session or another one connected to the same database, all
-   the sessions currently listening on that notification channel are
-   notified, and each will in turn notify its connected client
-   application.
+   每当命令 <command>NOTIFY <replaceable
+   class="parameter">channel</replaceable></command> 被调用时（无论是本会话还是连接到同一数据库的另一个会话调用），
+   当前正在监听该通知通道的所有会话都会收到通知，
+   并且每个会话会依次通知其连接的客户端应用。
   </para>
 
   <para>
-   A session can be unregistered for a given notification channel with the
-   <command>UNLISTEN</command> command.  A session's listen
-   registrations are automatically cleared when the session ends.
+   可以使用 <command>UNLISTEN</command> 命令为一个给定的通知通道注销会话。
+   会话结束时，该会话的监听注册会被自动清除。
   </para>
 
   <para>
-   The method a client application must use to detect notification events depends on
-   which <productname>PostgreSQL</productname> application programming interface it
-   uses.  With the <application>libpq</application> library, the application issues
-   <command>LISTEN</command> as an ordinary SQL command, and then must
-   periodically call the function <function>PQnotifies</function> to find out
-   whether any notification events have been received.  Other interfaces such as
-   <application>libpgtcl</application> provide higher-level methods for handling notify events; indeed,
-   with <application>libpgtcl</application> the application programmer should not even issue
-   <command>LISTEN</command> or <command>UNLISTEN</command> directly.  See the
-   documentation for the interface you are using for more details.
+   客户端应用检测通知事件所必须使用的方法取决于它使用哪种
+   <productname>PostgreSQL</productname> 应用程序编程接口。使用 <application>libpq</application> 库时，应用将
+   <command>LISTEN</command> 作为普通 SQL 命令发出，然后必须
+   定期调用函数 <function>PQnotifies</function> 来查明是否已收到任何通知事件。其他接口（如
+   <application>libpgtcl</application>）提供了处理通知事件的更高级方法；实际上，
+   使用 <application>libpgtcl</application> 时，应用程序员甚至不应直接发出
+   <command>LISTEN</command> 或 <command>UNLISTEN</command>。有关更多详细信息，请参阅
+   你所使用接口的文档。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">channel</replaceable></term>
     <listitem>
      <para>
-      Name of a notification channel (any identifier).
+      通知通道的名称（任意标识符）。
      </para>
     </listitem>
    </varlistentry>
@@ -81,50 +74,43 @@ LISTEN <replaceable class="parameter">channel</replaceable>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   <command>LISTEN</command> takes effect at transaction commit.
-   If <command>LISTEN</command> or <command>UNLISTEN</command> is executed
-   within a transaction that later rolls back, the set of notification
-   channels being listened to is unchanged.
+   <command>LISTEN</command> 在事务提交时生效。
+   如果在一个稍后回滚的事务中执行了 <command>LISTEN</command> 或 <command>UNLISTEN</command>，
+   则正在监听的通知通道集合保持不变。
   </para>
 
   <para>
-   A transaction that has executed <command>LISTEN</command> cannot be
-   prepared for two-phase commit.
+   执行了 <command>LISTEN</command> 的事务无法为两阶段提交进行预备。
   </para>
 
   <para>
-   There is a race condition when first setting up a listening session:
-   if concurrently-committing transactions are sending notify events,
-   exactly which of those will the newly listening session receive?
-   The answer is that the session will receive all events committed after
-   an instant during the transaction's commit step.  But that is slightly
-   later than any database state that the transaction could have observed
-   in queries.  This leads to the following rule for
-   using <command>LISTEN</command>: first execute (and commit!) that
-   command, then in a new transaction inspect the database state as needed
-   by the application logic, then rely on notifications to find out about
-   subsequent changes to the database state.  The first few received
-   notifications might refer to updates already observed in the initial
-   database inspection, but this is usually harmless.
+   在首次建立监听会话时存在一种竞争条件：
+   如果并发提交的事务正在发送通知事件，
+   新建立的监听会话究竟会收到其中的哪些事件？
+   答案是：该会话将收到在该事务提交步骤中某个瞬间之后提交的所有事件。
+   但这比该事务在其查询中可能观察到的任何数据库状态都要稍晚一些。
+   由此得出使用 <command>LISTEN</command> 的以下规则：
+   首先执行（并提交！）该命令，然后在一个新事务中按应用程序逻辑的需要检查数据库状态，
+   之后依靠通知来了解数据库状态的后续更改。
+   最初收到的少数通知可能涉及在初始数据库检查中已经观察到的更新，
+   但这通常是无害的。
   </para>
 
   <para>
    <xref linkend="sql-notify"/>
-   contains a more extensive
-   discussion of the use of <command>LISTEN</command> and
-   <command>NOTIFY</command>.
+   包含对 <command>LISTEN</command> 和
+   <command>NOTIFY</command> 用法的更详细讨论。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Configure and execute a listen/notify sequence from
-   <application>psql</application>:
+   从 <application>psql</application> 配置并执行一个 listen/notify 序列：
 
 <programlisting>
 LISTEN virtual;
@@ -134,16 +120,15 @@ Asynchronous notification "virtual" received from server process with PID 8448.
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   There is no <command>LISTEN</command> statement in the SQL
-   standard.
+   SQL 标准中没有 <command>LISTEN</command> 语句。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-notify"/></member>
