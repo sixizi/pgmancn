@@ -400,212 +400,107 @@ make check EXTRA_TESTS=numeric_big
   </sect1>
 
   <sect1 id="regress-evaluation">
-   <title>Test Evaluation</title>
+   <title>测试评估</title>
 
    <para>
-    Some properly installed and fully functional
-    <productname>PostgreSQL</productname> installations can
-    <quote>fail</quote> some of these regression tests due to
-    platform-specific artifacts such as varying floating-point representation
-    and message wording. The tests are currently evaluated using a simple
-    <command>diff</command> comparison against the outputs
-    generated on a reference system, so the results are sensitive to
-    small system differences.  When a test is reported as
-    <quote>failed</quote>, always examine the differences between
-    expected and actual results; you might find that the
-    differences are not significant.  Nonetheless, we still strive to
-    maintain accurate reference files across all supported platforms,
-    so it can be expected that all tests pass.
+    某些正确安装且功能完整的 <productname>PostgreSQL</productname> 安装可能会由于平台相关的差异（例如浮点表示形式不同和消息措辞不同）而在这些回归测试中<quote>失败</quote>。目前，这些测试是通过将输出与参考系统上生成的输出进行简单的 <command>diff</command> 比较来评估的，因此结果对微小的系统差异很敏感。当某个测试被报告为<quote>失败</quote>时，请务必检查预期结果与实际结果之间的差异；你可能会发现这些差异并不重要。尽管如此，我们仍努力在所有受支持的平台上维护准确的参考文件，因此可以预期所有测试都能通过。
    </para>
 
    <para>
-    The actual outputs of the regression tests are in files in the
-    <filename>src/test/regress/results</filename> directory. The test
-    script uses <command>diff</command> to compare each output
-    file against the reference outputs stored in the
-    <filename>src/test/regress/expected</filename> directory.  Any
-    differences are saved for your inspection in
-    <filename>src/test/regress/regression.diffs</filename>.
-    (When running a test suite other than the core tests, these files
-    of course appear in the relevant subdirectory,
-    not <filename>src/test/regress</filename>.)
+    回归测试的实际输出位于 <filename>src/test/regress/results</filename> 目录下的文件中。测试脚本使用 <command>diff</command> 将每个输出文件与存储在 <filename>src/test/regress/expected</filename> 目录中的参考输出进行比较。任何差异都会保存到 <filename>src/test/regress/regression.diffs</filename> 中供你检查。（当运行核心测试之外的测试套件时，这些文件当然会出现在相关的子目录中，而不是 <filename>src/test/regress</filename> 中。）
    </para>
 
    <para>
-    If you don't
-    like the <command>diff</command> options that are used by default, set the
-    environment variable <envar>PG_REGRESS_DIFF_OPTS</envar>, for
-    instance <literal>PG_REGRESS_DIFF_OPTS='-c'</literal>.  (Or you
-    can run <command>diff</command> yourself, if you prefer.)
+    如果你不喜欢默认使用的 <command>diff</command> 选项，可以设置环境变量 <envar>PG_REGRESS_DIFF_OPTS</envar>，例如 <literal>PG_REGRESS_DIFF_OPTS='-c'</literal>。（或者，如果你愿意，也可以自己运行 <command>diff</command>。）
    </para>
 
    <para>
-    If for some reason a particular platform generates a <quote>failure</quote>
-    for a given test, but inspection of the output convinces you that
-    the result is valid, you can add a new comparison file to silence
-    the failure report in future test runs.  See
-    <xref linkend="regress-variant"/> for details.
+    如果由于某种原因，某个特定平台在给定测试中产生了<quote>失败</quote>，但检查输出后你确信结果是有效的，那么你可以添加一个新的比较文件，以便在未来的测试运行中不再报告该失败。详情请参见 <xref linkend="regress-variant"/>。
    </para>
 
    <sect2 id="regress-evaluation-message-differences">
-    <title>Error Message Differences</title>
+    <title>错误消息差异</title>
 
     <para>
-     Some of the regression tests involve intentional invalid input
-     values.  Error messages can come from either the
-     <productname>PostgreSQL</productname> code or from the host
-     platform system routines. In the latter case, the messages can
-     vary between platforms, but should reflect similar
-     information. These differences in messages will result in a
-     <quote>failed</quote> regression test that can be validated by
-     inspection.
+     有些回归测试会故意使用无效的输入值。错误消息可能来自 <productname>PostgreSQL</productname> 代码，也可能来自宿主平台的系统例程。对于后者，不同平台的消息可能有所不同，但应当反映相似的信息。这些消息差异会导致回归测试<quote>失败</quote>，可以通过人工检查来确认。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-locale-differences">
-    <title>Locale Differences</title>
+    <title>区域设置差异</title>
 
     <para>
-     If you run the tests against a server that was
-     initialized with a collation-order locale other than C, then
-     there might be differences due to sort order and subsequent
-     failures.  The regression test suite is set up to handle this
-     problem by providing alternate result files that together are
-     known to handle a large number of locales.
+     如果针对使用非 C 的排序规则区域设置初始化的服务器运行测试，那么可能会因排序顺序而产生差异，并随之出现失败。回归测试套件通过提供备用结果文件来应对这一问题，这些文件合在一起已知能够处理大量区域设置。
     </para>
 
     <para>
-     To run the tests in a different locale when using the
-     temporary-installation method, pass the appropriate
-     locale-related environment variables on
-     the <command>make</command> command line, for example:
+     在使用临时安装方法时，要在不同的区域设置下运行测试，请在 <command>make</command> 命令行上传递相应的区域设置相关环境变量，例如：
 <programlisting>
 make check LANG=de_DE.utf8
 </programlisting>
-     (The regression test driver unsets <envar>LC_ALL</envar>, so it
-     does not work to choose the locale using that variable.)  To use
-     no locale, either unset all locale-related environment variables
-     (or set them to <literal>C</literal>) or use the following
-     special invocation:
+     （回归测试驱动程序会取消设置 <envar>LC_ALL</envar>，因此使用该变量来选择区域设置是行不通的。）要使用无区域设置，可以取消设置所有区域设置相关环境变量（或将它们设置为 <literal>C</literal>），或者使用以下特殊调用：
 <programlisting>
 make check NO_LOCALE=1
 </programlisting>
-     When running the tests against an existing installation, the
-     locale setup is determined by the existing installation.  To
-     change it, initialize the database cluster with a different
-     locale by passing the appropriate options
-     to <command>initdb</command>.
+     针对现有安装运行测试时，区域设置由现有安装决定。要更改它，请通过向 <command>initdb</command> 传递相应选项，以不同的区域设置初始化数据库集簇。
     </para>
 
     <para>
-     In general, it is advisable to try to run the
-     regression tests in the locale setup that is wanted for
-     production use, as this will exercise the locale- and
-     encoding-related code portions that will actually be used in
-     production.  Depending on the operating system environment, you
-     might get failures, but then you will at least know what
-     locale-specific behaviors to expect when running real
-     applications.
+     一般来说，建议尝试在生产使用所需的区域设置下运行回归测试，因为这样会实际执行生产中将使用的区域设置和编码相关代码部分。取决于操作系统环境，你可能会遇到失败，但至少你会知道在运行真实应用时可以预期哪些区域设置特定的行为。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-date-time-differences">
-    <title>Date and Time Differences</title>
+    <title>日期和时间差异</title>
 
     <para>
-     Most of the date and time results are dependent on the time zone
-     environment.  The reference files are generated for time zone
-     <literal>America/Los_Angeles</literal>, and there will be
-     apparent failures if the tests are not run with that time zone setting.
-     The regression test driver sets environment variable
-     <envar>PGTZ</envar> to <literal>America/Los_Angeles</literal>,
-     which normally ensures proper results.
+     大部分日期和时间结果依赖于时区环境。参考文件是为时区 <literal>America/Los_Angeles</literal> 生成的，如果没有在该时区设置下运行测试，就会出现明显的失败。回归测试驱动程序将环境变量 <envar>PGTZ</envar> 设置为 <literal>America/Los_Angeles</literal>，这通常能确保得到正确的结果。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-float-differences">
-    <title>Floating-Point Differences</title>
+    <title>浮点差异</title>
 
     <para>
-     Some of the tests involve computing 64-bit floating-point numbers (<type>double
-     precision</type>) from table columns. Differences in
-     results involving mathematical functions of <type>double
-     precision</type> columns have been observed.  The <literal>float8</literal> and
-     <literal>geometry</literal> tests are particularly prone to small differences
-     across platforms, or even with different compiler optimization settings.
-     Human eyeball comparison is needed to determine the real
-     significance of these differences which are usually 10 places to
-     the right of the decimal point.
+     有些测试涉及从表列计算 64 位浮点数（<type>double
+     precision</type>）。已经观察到涉及 <type>double
+     precision</type> 列的数学函数的结果存在差异。<literal>float8</literal> 和 <literal>geometry</literal> 测试尤其容易在不同平台之间，甚至在不同的编译器优化设置下出现细微差异。需要人工目视比较来确定这些差异的真实意义，这些差异通常出现在小数点后第 10 位。
     </para>
 
     <para>
-     Some systems display minus zero as <literal>-0</literal>, while others
-     just show <literal>0</literal>.
+     有些系统将负零显示为 <literal>-0</literal>，而另一些系统只显示 <literal>0</literal>。
     </para>
 
     <para>
-     Some systems signal errors from <function>pow()</function> and
-     <function>exp()</function> differently from the mechanism
-     expected by the current <productname>PostgreSQL</productname>
-     code.
+     有些系统从 <function>pow()</function> 和 <function>exp()</function> 报告错误的方式与当前 <productname>PostgreSQL</productname> 代码所期望的机制不同。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-ordering-differences">
-    <title>Row Ordering Differences</title>
+    <title>行顺序差异</title>
 
     <para>
-You might see differences in which the same rows are output in a
-different order than what appears in the expected file.  In most cases
-this is not, strictly speaking, a bug.  Most of the regression test
-scripts are not so pedantic as to use an <literal>ORDER BY</literal> for every single
-<literal>SELECT</literal>, and so their result row orderings are not well-defined
-according to the SQL specification.  In practice, since we are
-looking at the same queries being executed on the same data by the same
-software, we usually get the same result ordering on all platforms,
-so the lack of <literal>ORDER BY</literal> is not a problem.  Some queries do exhibit
-cross-platform ordering differences, however.  When testing against an
-already-installed server, ordering differences can also be caused by
-non-C locale settings or non-default parameter settings, such as custom values
-of <varname>work_mem</varname> or the planner cost parameters.
+你可能会看到差异：相同的行以与期望文件中出现的顺序不同的顺序输出。在大多数情况下，严格来说这不算 bug。大多数回归测试脚本并没有严格到为每一个 <literal>SELECT</literal> 都使用 <literal>ORDER BY</literal>，因此根据 SQL 规范，它们的结果行顺序并没有明确定义。在实践中，由于我们考察的是相同的软件在相同的数据上执行相同的查询，通常在所有平台上都会得到相同的结果顺序，因此缺少 <literal>ORDER BY</literal> 并不是问题。不过，某些查询确实会表现出跨平台的顺序差异。在针对已安装的服务器进行测试时，顺序差异也可能由非 C 的 locale 设置或非默认的参数设置引起，例如自定义的 <varname>work_mem</varname> 值或规划器开销参数。
     </para>
 
     <para>
-Therefore, if you see an ordering difference, it's not something to
-worry about, unless the query does have an <literal>ORDER BY</literal> that your
-result is violating.  However, please report it anyway, so that we can add an
-<literal>ORDER BY</literal> to that particular query to eliminate the bogus
-<quote>failure</quote> in future releases.
+因此，如果你看到顺序差异，不必担心，除非该查询确实带有 <literal>ORDER BY</literal> 而你的结果违反了它。不过，还是请报告它，以便我们能为那个特定查询添加 <literal>ORDER BY</literal>，从而在未来的版本中消除这个虚假的 <quote>失败</quote>。
     </para>
 
     <para>
-You might wonder why we don't order all the regression test queries explicitly
-to get rid of this issue once and for all.  The reason is that that would
-make the regression tests less useful, not more, since they'd tend
-to exercise query plan types that produce ordered results to the
-exclusion of those that don't.
+你可能想知道，为什么我们不显式地对所有回归测试查询排序，以一劳永逸地消除这个问题。原因在于，那样做会使回归测试变得不那么有用，而不是更有用，因为它们会倾向于只测试产生有序结果的查询计划类型，而排除那些不产生有序结果的类型。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-stack-depth">
-    <title>Insufficient Stack Depth</title>
+    <title>栈深度不足</title>
 
     <para>
-     If the <literal>errors</literal> test results in a server crash
-     at the <literal>select infinite_recurse()</literal> command, it means that
-     the platform's limit on process stack size is smaller than the
-     <xref linkend="guc-max-stack-depth"/> parameter indicates.  This
-     can be fixed by running the server under a higher stack
-     size limit (4MB is recommended with the default value of
-     <varname>max_stack_depth</varname>).  If you are unable to do that, an
-     alternative is to reduce the value of <varname>max_stack_depth</varname>.
+     如果 <literal>errors</literal> 测试在 <literal>select infinite_recurse()</literal> 命令处导致服务器崩溃，这意味着平台对进程栈大小的限制小于 <xref linkend="guc-max-stack-depth"/> 参数所指示的值。可以通过在更高的栈大小限制下运行服务器来解决（在 <varname>max_stack_depth</varname> 为默认值时建议 4MB）。如果无法做到这一点，另一种办法是减小 <varname>max_stack_depth</varname> 的值。
     </para>
 
     <para>
-     On platforms supporting <function>getrlimit()</function>, the server should
-     automatically choose a safe value of <varname>max_stack_depth</varname>;
-     so unless you've manually overridden this setting, a failure of this
-     kind is a reportable bug.
+     在支持 <function>getrlimit()</function> 的平台上，服务器应自动选择一个安全的 <varname>max_stack_depth</varname> 值；因此，除非你手动覆盖了该设置，否则这类失败属于应报告的 bug。
     </para>
    </sect2>
 
@@ -613,26 +508,19 @@ exclusion of those that don't.
     <title>The <quote>random</quote> Test</title>
 
     <para>
-     The <literal>random</literal> test script is intended to produce
-     random results.   In very rare cases, this causes that regression
-     test to fail.  Typing:
+     <literal>random</literal> 测试脚本旨在产生随机结果。在极少数情况下，这会导致该回归测试失败。输入：
 <programlisting>
 diff results/random.out expected/random.out
 </programlisting>
-     should produce only one or a few lines of differences.  You need
-     not worry unless the random test fails repeatedly.
+     应当只产生一行或几行差异。除非随机测试反复失败，否则不必担心。
     </para>
    </sect2>
 
    <sect2 id="regress-evaluation-config-params">
-    <title>Configuration Parameters</title>
+    <title>配置参数</title>
 
     <para>
-     When running the tests against an existing installation, some non-default
-     parameter settings could cause the tests to fail.  For example, changing
-     parameters such as <varname>enable_seqscan</varname> or
-     <varname>enable_indexscan</varname> could cause plan changes that would
-     affect the results of tests that use <command>EXPLAIN</command>.
+     针对现有安装运行测试时，某些非默认参数设置可能导致测试失败。例如，更改 <varname>enable_seqscan</varname> 或 <varname>enable_indexscan</varname> 等参数可能导致计划变更，从而影响使用 <command>EXPLAIN</command> 的测试的结果。
     </para>
    </sect2>
   </sect1>
