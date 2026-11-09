@@ -1542,45 +1542,27 @@ AND c1.path[c2.level] = c2.path[c2.level];
   </indexterm>
 
   <para>
-   The view <structname>pg_locks</structname> provides access to
-   information about the locks held by active processes within the
-   database server.  See <xref linkend="mvcc"/> for more discussion
-   of locking.
+   视图 <structname>pg_locks</structname> 提供对数据库服务器中活动进程所持有的锁的相关信息的访问。关于锁定的更多讨论，请参见 <xref linkend="mvcc"/>。
   </para>
 
   <para>
-   <structname>pg_locks</structname> contains one row per active lockable
-   object, requested lock mode, and relevant process.  Thus, the same
-   lockable object might
-   appear many times, if multiple processes are holding or waiting
-   for locks on it.  However, an object that currently has no locks on it
-   will not appear at all.
+   <structname>pg_locks</structname> 为每个活动的可锁定对象、请求的锁模式以及相关进程各包含一行。因此，如果多个进程持有或等待某个可锁定对象上的锁，那么同一个可锁定对象可能会出现多次。不过，当前没有任何锁的对象根本不会出现。
   </para>
 
   <para>
-   There are several distinct types of lockable objects:
-   whole relations (e.g., tables), individual pages of relations,
-   individual tuples of relations,
-   transaction IDs (both virtual and permanent IDs),
-   and general database objects (identified by class OID and object OID,
-   in the same way as in <link linkend="catalog-pg-description"><structname>pg_description</structname></link> or
-   <link linkend="catalog-pg-depend"><structname>pg_depend</structname></link>).  Also, the right to extend a
-   relation is represented as a separate lockable object, as is the right to
-   update <structname>pg_database</structname>.<structfield>datfrozenxid</structfield>.
-   Also, <quote>advisory</quote> locks can be taken on numbers that have
-   user-defined meanings.
+   可锁定对象有几种不同的类型：整个关系（例如表）、关系的各个页面、关系的各个元组、事务 ID（包括虚拟 ID 和永久 ID），以及通用数据库对象（通过类 OID 和对象 OID 来标识，方式与 <link linkend="catalog-pg-description"><structname>pg_description</structname></link> 或 <link linkend="catalog-pg-depend"><structname>pg_depend</structname></link> 中相同）。此外，扩展关系的权利被表示为一个单独的可锁定对象，更新 <structname>pg_database</structname>.<structfield>datfrozenxid</structfield> 的权利也是如此。另外，还可以对具有用户自定义含义的数字获取<quote>咨询</quote>锁。
   </para>
 
   <table>
-   <title><structname>pg_locks</structname> Columns</title>
+   <title><structname>pg_locks</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -1591,43 +1573,41 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>locktype</structfield> <type>text</type>
       </para>
       <para>
-       Type of the lockable object:
-       <literal>relation</literal>,
-       <literal>extend</literal>,
-       <literal>frozenid</literal>,
-       <literal>page</literal>,
-       <literal>tuple</literal>,
-       <literal>transactionid</literal>,
-       <literal>virtualxid</literal>,
-       <literal>spectoken</literal>,
-       <literal>object</literal>,
-       <literal>userlock</literal>,
-       <literal>advisory</literal>, or
-       <literal>applytransaction</literal>.
-       (See also <xref linkend="wait-event-lock-table"/>.)
+       可锁定对象的类型：
+       <literal>relation</literal>、
+       <literal>extend</literal>、
+       <literal>frozenid</literal>、
+       <literal>page</literal>、
+       <literal>tuple</literal>、
+       <literal>transactionid</literal>、
+       <literal>virtualxid</literal>、
+       <literal>spectoken</literal>、
+       <literal>object</literal>、
+       <literal>userlock</literal>、
+       <literal>advisory</literal> 或
+       <literal>applytransaction</literal>。
+       （另请参见 <xref linkend="wait-event-lock-table"/>。）
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>database</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-database"><structname>pg_database</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the database in which the lock target exists, or
-       zero if the target is a shared object, or
-       null if the target is a transaction ID
+       锁目标所在数据库的 OID；如果目标是共享对象，则为零；
+       如果目标是事务 ID，则为空
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>relation</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the relation targeted by the lock, or null if the target is not
-       a relation or part of a relation
+       锁所针对的关系的 OID；如果目标不是关系或关系的一部分，则为空
       </para></entry>
      </row>
 
@@ -1636,8 +1616,8 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>page</structfield> <type>int4</type>
       </para>
       <para>
-       Page number targeted by the lock within the relation,
-       or null if the target is not a relation page or tuple
+       锁在关系内所针对的页号；
+       如果目标不是关系页或元组，则为空
       </para></entry>
      </row>
 
@@ -1646,8 +1626,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>tuple</structfield> <type>int2</type>
       </para>
       <para>
-       Tuple number targeted by the lock within the page,
-       or null if the target is not a tuple
+       锁在页内所针对的元组号，如果目标不是元组则为 null
       </para></entry>
      </row>
 
@@ -1656,9 +1635,8 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>virtualxid</structfield> <type>text</type>
       </para>
       <para>
-       Virtual ID of the transaction targeted by the lock,
-       or null if the target is not a virtual transaction ID;  see
-       <xref linkend="transactions"/>
+       锁所针对的事务的虚拟 ID，如果目标不是虚拟事务 ID 则为 null；参见
+<xref linkend="transactions"/>
       </para></entry>
      </row>
 
@@ -1667,30 +1645,27 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>transactionid</structfield> <type>xid</type>
       </para>
       <para>
-       ID of the transaction targeted by the lock, or null if the target
-       is not a transaction ID;  <xref linkend="transactions"/>
+       锁所针对的事务的 ID，如果目标不是事务 ID 则为 null；<xref linkend="transactions"/>
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>classid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+（引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       OID of the system catalog containing the lock target, or null if the
-       target is not a general database object
+       包含锁目标的系统目录的 OID，如果目标不是普通数据库对象则为 null
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>objid</structfield> <type>oid</type>
-       (references any OID column)
+（引用任意 OID 列）
       </para>
       <para>
-       OID of the lock target within its system catalog, or null if the
-       target is not a general database object
+       锁目标在其系统目录中的 OID，如果目标不是普通数据库对象则为 null
       </para></entry>
      </row>
 
@@ -1699,11 +1674,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>objsubid</structfield> <type>int2</type>
       </para>
       <para>
-       Column number targeted by the lock (the
-       <structfield>classid</structfield> and <structfield>objid</structfield> refer to the
-       table itself),
-       or zero if the target is some other general database object,
-       or null if the target is not a general database object
+       锁所针对的列号（<structfield>classid</structfield> 和 <structfield>objid</structfield> 指表本身），如果目标是其他某种普通数据库对象则为零，如果目标不是普通数据库对象则为 null
       </para></entry>
      </row>
 
@@ -1712,7 +1683,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>virtualtransaction</structfield> <type>text</type>
       </para>
       <para>
-       Virtual ID of the transaction that is holding or awaiting this lock
+       持有或等待此锁的事务的虚拟 ID
       </para></entry>
      </row>
 
@@ -1721,8 +1692,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>pid</structfield> <type>int4</type>
       </para>
       <para>
-       Process ID of the server process holding or awaiting this
-       lock, or null if the lock is held by a prepared transaction
+       持有或等待此锁的服务器进程的进程 ID，如果该锁由预备事务持有则为 null
       </para></entry>
      </row>
 
@@ -1731,7 +1701,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>mode</structfield> <type>text</type>
       </para>
       <para>
-       Name of the lock mode held or desired by this process (see <xref linkend="locking-tables"/> and <xref linkend="xact-serializable"/>)
+       此进程持有或期望的锁模式的名称（参见 <xref linkend="locking-tables"/> 和 <xref linkend="xact-serializable"/>）
       </para></entry>
      </row>
 
@@ -1740,7 +1710,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>granted</structfield> <type>bool</type>
       </para>
       <para>
-       True if lock is held, false if lock is awaited
+       如果锁已被持有则为 true，如果正在等待锁则为 false
       </para></entry>
      </row>
 
@@ -1749,8 +1719,7 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>fastpath</structfield> <type>bool</type>
       </para>
       <para>
-       True if lock was taken via fast path, false if taken via main
-       lock table
+       如果锁是通过快速路径获得的则为真，如果通过主锁表获得的则为假
       </para></entry>
      </row>
 
@@ -1759,11 +1728,10 @@ AND c1.path[c2.level] = c2.path[c2.level];
        <structfield>waitstart</structfield> <type>timestamptz</type>
       </para>
       <para>
-       Time when the server process started waiting for this lock,
-       or null if the lock is held.
-       Note that this can be null for a very short period of time after
-       the wait started even though <structfield>granted</structfield>
-       is <literal>false</literal>.
+       服务器进程开始等待此锁的时间，
+       如果该锁已被持有则为 null。
+       注意，在等待开始后的极短时间内，即使 <structfield>granted</structfield>
+       为 <literal>false</literal>，该值也可能为 null。
       </para></entry>
      </row>
     </tbody>
@@ -1771,97 +1739,78 @@ AND c1.path[c2.level] = c2.path[c2.level];
   </table>
 
   <para>
-   <structfield>granted</structfield> is true in a row representing a lock
-   held by the indicated process.  False indicates that this process is
-   currently waiting to acquire this lock, which implies that at least one
-   other process is holding or waiting for a conflicting lock mode on the same
-   lockable object.  The waiting process will sleep until the other lock is
-   released (or a deadlock situation is detected).  A single process can be
-   waiting to acquire at most one lock at a time.
+   在表示由所指示进程持有的锁的行中，<structfield>granted</structfield> 为真。
+   假表示该进程当前正在等待获取此锁，这意味着至少有一个
+   其他进程在同一可锁定对象上持有或等待冲突的锁模式。等待的进程
+   将休眠，直到其他锁被释放（或检测到死锁情况）。单个进程
+   一次最多只能等待获取一个锁。
   </para>
 
   <para>
-   Throughout running a transaction, a server process holds an exclusive lock
-   on the transaction's virtual transaction ID.  If a permanent ID is assigned
-   to the transaction (which normally happens only if the transaction changes
-   the state of the database), it also holds an exclusive lock on the
-   transaction's permanent transaction ID until it ends.  When a process finds
-   it necessary to wait specifically for another transaction to end, it does
-   so by attempting to acquire share lock on the other transaction's ID
-   (either virtual or permanent ID depending on the situation). That will
-   succeed only when the other transaction terminates and releases its locks.
+   在事务运行的整个过程中，服务器进程持有该事务的虚拟事务 ID 上的排他锁。
+   如果为该事务分配了永久 ID（通常仅在事务改变数据库状态时才会发生），
+   它还会持有该事务的永久事务 ID 上的排他锁，直到事务结束。当进程发现
+   有必要专门等待另一个事务结束时，它会尝试获取另一个事务 ID
+   （根据情况是虚拟 ID 还是永久 ID）上的共享锁来实现等待。只有当另一个
+   事务终止并释放其锁时，该尝试才会成功。
   </para>
 
   <para>
-   Although tuples are a lockable type of object,
-   information about row-level locks is stored on disk, not in memory,
-   and therefore row-level locks normally do not appear in this view.
-   If a process is waiting for a
-   row-level lock, it will usually appear in the view as waiting for the
-   permanent transaction ID of the current holder of that row lock.
+   尽管元组是一种可锁定的对象类型，
+   但行级锁的信息存储在磁盘上而非内存中，
+   因此行级锁通常不会出现在此视图中。
+   如果某个进程正在等待
+   行级锁，它通常会在此视图中显示为等待该行锁当前持有者的
+   永久事务 ID。
   </para>
 
   <para>
-   A speculative insertion lock consists of a transaction ID and a speculative
-   insertion token. The speculative insertion token is displayed in the
-   <structfield>objid</structfield> column.
+   推测性插入锁由一个事务 ID 和一个推测性插入令牌组成。推测性插入令牌
+   显示在 <structfield>objid</structfield> 列中。
   </para>
 
   <para>
-   Advisory locks can be acquired on keys consisting of either a single
-   <type>bigint</type> value or two integer values.
-   A <type>bigint</type> key is displayed with its
-   high-order half in the <structfield>classid</structfield> column, its low-order half
-   in the <structfield>objid</structfield> column, and <structfield>objsubid</structfield> equal
-   to 1. The original <type>bigint</type> value can be reassembled with the
-   expression <literal>(classid::bigint &lt;&lt; 32) |
-   objid::bigint</literal>. Integer keys are displayed with the
-   first key in the
-   <structfield>classid</structfield> column, the second key in the <structfield>objid</structfield>
-   column, and <structfield>objsubid</structfield> equal to 2.  The actual meaning of
-   the keys is up to the user.  Advisory locks are local to each database,
-   so the <structfield>database</structfield> column is meaningful for an advisory lock.
+   咨询锁可以基于由单个 <type>bigint</type> 值或两个整数值构成的键来获取。
+   一个 <type>bigint</type> 键的显示方式是：其高位部分位于 <structfield>classid</structfield> 列，低位部分
+   位于 <structfield>objid</structfield> 列，而 <structfield>objsubid</structfield> 等于 1。原始的 <type>bigint</type> 值可以用
+   表达式 <literal>(classid::bigint &lt;&lt; 32) |
+   objid::bigint</literal> 重新组合出来。整数键的显示方式是：第一个键位于
+   <structfield>classid</structfield> 列，第二个键位于 <structfield>objid</structfield> 列，而 <structfield>objsubid</structfield> 等于 2。这些键的
+   实际含义由用户自行决定。咨询锁是各数据库本地的，
+   因此 <structfield>database</structfield> 列对咨询锁是有意义的。
   </para>
 
   <para>
-   Apply transaction locks are used in parallel mode to apply the transaction
-   in logical replication. The remote transaction ID is displayed in the
-   <structfield>transactionid</structfield> column. The <structfield>objsubid</structfield>
-   displays the lock subtype which is 0 for the lock used to synchronize the
-   set of changes, and 1 for the lock used to wait for the transaction to
-   finish to ensure commit order.
+   应用事务锁在并行模式下用于在逻辑复制中应用事务。远程事务 ID 显示在
+   <structfield>transactionid</structfield> 列中。<structfield>objsubid</structfield>
+   显示锁的子类型：0 表示用于同步变更集的锁，1 表示用于等待事务
+   完成以确保提交顺序的锁。
   </para>
 
   <para>
-   <structname>pg_locks</structname> provides a global view of all locks
-   in the database cluster, not only those relevant to the current database.
-   Although its <structfield>relation</structfield> column can be joined
-   against <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield> to identify locked
-   relations, this will only work correctly for relations in the current
-   database (those for which the <structfield>database</structfield> column
-   is either the current database's OID or zero).
+   <structname>pg_locks</structname> 提供数据库集簇中所有锁的全局视图，而不仅仅是与当前数据库
+   相关的那些锁。尽管它的 <structfield>relation</structfield> 列可以与
+   <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield> 连接以标识被锁定的
+   关系，但这仅对当前数据库中的关系（即 <structfield>database</structfield> 列为当前数据库的 OID
+   或零的那些关系）才能正确工作。
   </para>
 
   <para>
-   The <structfield>pid</structfield> column can be joined to the
-   <structfield>pid</structfield> column of the
+   <structfield>pid</structfield> 列可以与
    <link linkend="monitoring-pg-stat-activity-view">
    <structname>pg_stat_activity</structname></link>
-   view to get more
-   information on the session holding or awaiting each lock,
-   for example
+   视图的 <structfield>pid</structfield> 列连接，以获取有关持有或等待每个锁的会话的更多
+   信息，例如
 <programlisting>
 SELECT * FROM pg_locks pl LEFT JOIN pg_stat_activity psa
     ON pl.pid = psa.pid;
 </programlisting>
-   Also, if you are using prepared transactions, the
-   <structfield>virtualtransaction</structfield> column can be joined to the
-   <structfield>transaction</structfield> column of the <link
+   另外，如果您使用了预备事务，则 <structfield>virtualtransaction</structfield> 列可以与
+   <link
    linkend="view-pg-prepared-xacts"><structname>pg_prepared_xacts</structname></link>
-   view to get more information on prepared transactions that hold locks.
-   (A prepared transaction can never be waiting for a lock,
-   but it continues to hold the locks it acquired while running.)
-   For example:
+   视图的 <structfield>transaction</structfield> 列连接，以获取有关持有锁的预备事务的更多信息。
+   （预备事务永远不会在等待锁，但它会继续持有其在运行期间获取的锁。）
+   例如：
 <programlisting>
 SELECT * FROM pg_locks pl LEFT JOIN pg_prepared_xacts ppx
     ON pl.virtualtransaction = '-1/' || ppx.transaction;
@@ -1869,48 +1818,15 @@ SELECT * FROM pg_locks pl LEFT JOIN pg_prepared_xacts ppx
   </para>
 
   <para>
-   While it is possible to obtain information about which processes block
-   which other processes by joining <structname>pg_locks</structname> against
-   itself, this is very difficult to get right in detail.  Such a query would
-   have to encode knowledge about which lock modes conflict with which
-   others.  Worse, the <structname>pg_locks</structname> view does not expose
-   information about which processes are ahead of which others in lock wait
-   queues, nor information about which processes are parallel workers running
-   on behalf of which other client sessions.  It is better to use
-   the <function>pg_blocking_pids()</function> function
-   (see <xref linkend="functions-info-session-table"/>) to identify which
-   process(es) a waiting process is blocked behind.
+   虽然通过将 <structname>pg_locks</structname> 与自身连接可以获得关于哪些进程阻塞了哪些其他进程的信息，但要在细节上做到正确是非常困难的。这样的查询必须编码关于哪些锁模式与哪些锁模式冲突的知识。更糟的是，<structname>pg_locks</structname> 视图并不暴露哪些进程在锁等待队列中排在哪些进程之前的信息，也不暴露哪些进程是代表哪些其他客户端会话运行的并行工作进程的信息。最好使用 <function>pg_blocking_pids()</function> 函数（参见 <xref linkend="functions-info-session-table"/>）来确定某个正在等待的进程被哪些进程阻塞。
   </para>
 
   <para>
-   The <structname>pg_locks</structname> view displays data from both the
-   regular lock manager and the predicate lock manager, which are
-   separate systems; in addition, the regular lock manager subdivides its
-   locks into regular and <firstterm>fast-path</firstterm> locks.
-   This data is not guaranteed to be entirely consistent.
-   When the view is queried,
-   data on fast-path locks (with <structfield>fastpath</structfield> = <literal>true</literal>)
-   is gathered from each backend one at a time, without freezing the state of
-   the entire lock manager, so it is possible for locks to be taken or
-   released while information is gathered.  Note, however, that these locks are
-   known not to conflict with any other lock currently in place.  After
-   all backends have been queried for fast-path locks, the remainder of the
-   regular lock manager is locked as a unit, and a consistent snapshot of all
-   remaining locks is collected as an atomic action.  After unlocking the
-   regular lock manager, the predicate lock manager is similarly locked and all
-   predicate locks are collected as an atomic action.  Thus, with the exception
-   of fast-path locks, each lock manager will deliver a consistent set of
-   results, but as we do not lock both lock managers simultaneously, it is
-   possible for locks to be taken or released after we interrogate the regular
-   lock manager and before we interrogate the predicate lock manager.
+   <structname>pg_locks</structname> 视图显示来自常规锁管理器和谓词锁管理器的数据，这两个是彼此独立的系统；此外，常规锁管理器还将其锁细分为常规锁和<firstterm>快速路径</firstterm>锁。不保证这些数据完全一致。查询该视图时，关于快速路径锁（<structfield>fastpath</structfield> = <literal>true</literal>）的数据是逐个从每个后端收集的，期间不会冻结整个锁管理器的状态，因此在收集信息的过程中锁可能被获取或释放。但请注意，已知这些锁不会与当前持有的任何其他锁冲突。在向所有后端查询完快速路径锁之后，常规锁管理器的其余部分会作为一个整体被锁定，并以原子操作的方式收集所有剩余锁的一致快照。解除对常规锁管理器的锁定后，谓词锁管理器同样被锁定，并以原子操作的方式收集所有谓词锁。因此，除快速路径锁之外，每个锁管理器都会提供一组一致的结果，但由于我们并不同时锁定两个锁管理器，在我们查询常规锁管理器之后、查询谓词锁管理器之前，锁仍可能被获取或释放。
   </para>
 
   <para>
-   Locking the regular and/or predicate lock manager could have some
-   impact on database performance if this view is very frequently accessed.
-   The locks are held only for the minimum amount of time necessary to
-   obtain data from the lock managers, but this does not completely eliminate
-   the possibility of a performance impact.
+   如果非常频繁地访问该视图，锁定常规锁管理器和/或谓词锁管理器可能会对数据库性能产生一些影响。锁只会在从锁管理器获取数据所需的最短时间内持有，但这并不能完全消除性能受到影响的可能性。
   </para>
 
  </sect1>
