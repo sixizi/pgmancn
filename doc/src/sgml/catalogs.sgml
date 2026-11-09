@@ -3086,29 +3086,24 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </indexterm>
 
   <para>
-   The catalog <structname>pg_depend</structname> records the dependency
-   relationships between database objects.  This information allows
-   <command>DROP</command> commands to find which other objects must be dropped
-   by <command>DROP CASCADE</command> or prevent dropping in the <command>DROP
-   RESTRICT</command> case.
+   系统目录 <structname>pg_depend</structname> 记录数据库对象之间的依赖关系。这些信息使得 <command>DROP</command> 命令能够找出哪些其他对象必须由 <command>DROP CASCADE</command> 删除，或者在 <command>DROP
+   RESTRICT</command> 情况下阻止删除。
   </para>
 
   <para>
-   See also <link linkend="catalog-pg-shdepend"><structname>pg_shdepend</structname></link>,
-   which performs a similar function for dependencies involving objects
-   that are shared across a database cluster.
+   另请参阅 <link linkend="catalog-pg-shdepend"><structname>pg_shdepend</structname></link>，它为涉及跨数据库集簇共享对象的依赖关系执行类似的功能。
   </para>
 
   <table>
-   <title><structname>pg_depend</structname> Columns</title>
+   <title><structname>pg_depend</structname> 列</title>
    <tgroup cols="1">
     <thead>
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
-       Column Type
+       列类型
       </para>
       <para>
-       Description
+       描述
       </para></entry>
      </row>
     </thead>
@@ -3117,20 +3112,20 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>classid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+       （引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the system catalog the dependent object is in
+       依赖对象所在的系统目录的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>objid</structfield> <type>oid</type>
-       (references any OID column)
+      （引用任意 OID 列）
       </para>
       <para>
-       The OID of the specific dependent object
+       特定依赖对象的 OID
       </para></entry>
      </row>
 
@@ -3139,30 +3134,27 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>objsubid</structfield> <type>int4</type>
       </para>
       <para>
-       For a table column, this is the column number (the
-       <structfield>objid</structfield> and <structfield>classid</structfield> refer to the
-       table itself).  For all other object types, this column is
-       zero.
+       对于表列，这是列号（<structfield>objid</structfield> 和 <structfield>classid</structfield> 引用表本身）。对于所有其他对象类型，此列为零。
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>refclassid</structfield> <type>oid</type>
-       (references <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>)
+      （引用 <link linkend="catalog-pg-class"><structname>pg_class</structname></link>.<structfield>oid</structfield>）
       </para>
       <para>
-       The OID of the system catalog the referenced object is in
+       被引用对象所在的系统目录的 OID
       </para></entry>
      </row>
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>refobjid</structfield> <type>oid</type>
-       (references any OID column)
+       （引用任意 OID 列）
       </para>
       <para>
-       The OID of the specific referenced object
+       被引用的特定对象的 OID
       </para></entry>
      </row>
 
@@ -3171,10 +3163,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>refobjsubid</structfield> <type>int4</type>
       </para>
       <para>
-       For a table column, this is the column number (the
-       <structfield>refobjid</structfield> and <structfield>refclassid</structfield> refer
-       to the table itself).  For all other object types, this column
-       is zero.
+       对于表列，这是列号（<structfield>refobjid</structfield> 和 <structfield>refclassid</structfield> 指向表本身）。对于所有其他对象类型，此列为零。
       </para></entry>
      </row>
 
@@ -3183,7 +3172,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
        <structfield>deptype</structfield> <type>char</type>
       </para>
       <para>
-       A code defining the specific semantics of this dependency relationship; see text
+       定义此依赖关系具体语义的代码；参见正文
       </para></entry>
      </row>
     </tbody>
@@ -3191,22 +3180,14 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
   </table>
 
   <para>
-   In all cases, a <structname>pg_depend</structname> entry indicates that the
-   referenced object cannot be dropped without also dropping the dependent
-   object.  However, there are several subflavors identified by
-   <structfield>deptype</structfield>:
+   在所有情况下，<structname>pg_depend</structname> 条目表示：如果不一并删除依赖对象，就无法删除被引用对象。不过，<structfield>deptype</structfield> 标识了几种子类型：
 
    <variablelist>
     <varlistentry>
      <term><symbol>DEPENDENCY_NORMAL</symbol> (<literal>n</literal>)</term>
      <listitem>
       <para>
-       A normal relationship between separately-created objects.  The
-       dependent object can be dropped without affecting the
-       referenced object.  The referenced object can only be dropped
-       by specifying <literal>CASCADE</literal>, in which case the dependent
-       object is dropped, too.  Example: a table column has a normal
-       dependency on its data type.
+       分别创建的对象之间的普通关系。删除依赖对象不会影响被引用对象。只有指定 <literal>CASCADE</literal> 时才能删除被引用对象，此时依赖对象也会被删除。示例：表列对其数据类型具有普通依赖关系。
       </para>
      </listitem>
     </varlistentry>
@@ -3215,12 +3196,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>DEPENDENCY_AUTO</symbol> (<literal>a</literal>)</term>
      <listitem>
       <para>
-       The dependent object can be dropped separately from the
-       referenced object, and should be automatically dropped
-       (regardless of <literal>RESTRICT</literal> or <literal>CASCADE</literal>
-       mode) if the referenced object is dropped.  Example: a named
-       constraint on a table is made auto-dependent on the table, so
-       that it will go away if the table is dropped.
+       依赖对象可以与被引用对象分开删除，并且如果被引用对象被删除，它应当被自动删除（无论 <literal>RESTRICT</literal> 还是 <literal>CASCADE</literal> 模式）。示例：表上的一个命名约束被设为自动依赖于该表，这样当表被删除时它也会随之消失。
       </para>
      </listitem>
     </varlistentry>
@@ -3229,23 +3205,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>DEPENDENCY_INTERNAL</symbol> (<literal>i</literal>)</term>
      <listitem>
       <para>
-       The dependent object was created as part of creation of the
-       referenced object, and is really just a part of its internal
-       implementation.  A direct <command>DROP</command> of the dependent
-       object will be disallowed outright (we'll tell the user to issue
-       a <command>DROP</command> against the referenced object, instead).
-       A <command>DROP</command> of the referenced object will result in
-       automatically dropping the dependent object
-       whether <literal>CASCADE</literal> is specified or not.  If the
-       dependent object has to be dropped due to a dependency on some other
-       object being removed, its drop is converted to a drop of the referenced
-       object, so that <literal>NORMAL</literal> and <literal>AUTO</literal>
-       dependencies of the dependent object behave much like they were
-       dependencies of the referenced object.
-       Example: a view's <literal>ON SELECT</literal> rule is made
-       internally dependent on the view, preventing it from being dropped
-       while the view remains.  Dependencies of the rule (such as tables it
-       refers to) act as if they were dependencies of the view.
+       依赖对象是作为被引用对象创建过程的一部分而创建的，实际上只是其内部实现的一部分。对依赖对象的直接 <command>DROP</command> 将被完全禁止（我们会告诉用户改为对被引用对象发出 <command>DROP</command>）。对被引用对象的 <command>DROP</command> 将导致自动删除依赖对象，无论是否指定了 <literal>CASCADE</literal>。如果依赖对象由于对某个其他对象的依赖而被移除而必须被删除，则其删除会被转换为对被引用对象的删除，这样依赖对象的 <literal>NORMAL</literal> 和 <literal>AUTO</literal> 依赖的行为就与它们是被引用对象的依赖非常相似。示例：视图的 <literal>ON SELECT</literal> 规则被设为内部依赖于该视图，从而在视图仍然存在时阻止该规则被删除。该规则的依赖（例如它所引用的表）表现得就好像它们是该视图的依赖一样。
       </para>
      </listitem>
     </varlistentry>
@@ -3255,37 +3215,10 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>DEPENDENCY_PARTITION_SEC</symbol> (<literal>S</literal>)</term>
      <listitem>
       <para>
-       The dependent object was created as part of creation of the
-       referenced object, and is really just a part of its internal
-       implementation; however, unlike <literal>INTERNAL</literal>,
-       there is more than one such referenced object.  The dependent object
-       must not be dropped unless at least one of these referenced objects
-       is dropped; if any one is, the dependent object should be dropped
-       whether or not <literal>CASCADE</literal> is specified.  Also
-       unlike <literal>INTERNAL</literal>, a drop of some other object
-       that the dependent object depends on does not result in automatic
-       deletion of any partition-referenced object.  Hence, if the drop
-       does not cascade to at least one of these objects via some other
-       path, it will be refused.  (In most cases, the dependent object
-       shares all its non-partition dependencies with at least one
-       partition-referenced object, so that this restriction does not
-       result in blocking any cascaded delete.)
-       Primary and secondary partition dependencies behave identically
-       except that the primary dependency is preferred for use in error
-       messages; hence, a partition-dependent object should have one
-       primary partition dependency and one or more secondary partition
-       dependencies.
-       Note that partition dependencies are made in addition to, not
-       instead of, any dependencies the object would normally have.  This
-       simplifies <command>ATTACH/DETACH PARTITION</command> operations:
-       the partition dependencies need only be added or removed.
-       Example: a child partitioned index is made partition-dependent
-       on both the partition table it is on and the parent partitioned
-       index, so that it goes away if either of those is dropped, but
-       not otherwise.  The dependency on the parent index is primary,
-       so that if the user tries to drop the child partitioned index,
-       the error message will suggest dropping the parent index instead
-       (not the table).
+       依赖对象是作为被引用对象创建过程的一部分而创建的，实际上只是其内部实现的一部分；不过，与 <literal>INTERNAL</literal> 不同，这样的被引用对象不止一个。依赖对象不得被删除，除非这些被引用对象中至少有一个被删除；如果其中任何一个被删除，则无论是否指定 <literal>CASCADE</literal>，依赖对象都应被删除。另外，与 <literal>INTERNAL</literal> 不同，删除依赖对象所依赖的某个其他对象不会导致任何分区引用对象被自动删除。因此，如果该删除操作没有通过其他路径级联到这些对象中的至少一个，它将被拒绝。（在大多数情况下，依赖对象与至少一个分区引用对象共享其所有非分区依赖，因此这一限制不会导致阻塞任何级联删除。）
+主分区依赖和次分区依赖的行为完全相同，只是主依赖优先用于错误消息；因此，一个分区依赖对象应有一个主分区依赖和一个或多个次分区依赖。
+注意，分区依赖是在对象通常具有的任何依赖之外额外建立的，而不是替代它们。这简化了 <command>ATTACH/DETACH PARTITION</command> 操作：只需添加或移除分区依赖。
+示例：子分区索引同时对其所在的分区表和父分区索引建立分区依赖，因此如果其中任何一个被删除，它就会被删除，否则不会。对父索引的依赖是主依赖，因此如果用户试图删除子分区索引，错误消息将建议改为删除父索引（而不是表）。
       </para>
      </listitem>
     </varlistentry>
@@ -3294,14 +3227,7 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>DEPENDENCY_EXTENSION</symbol> (<literal>e</literal>)</term>
      <listitem>
       <para>
-       The dependent object is a member of the <firstterm>extension</firstterm> that is
-       the referenced object (see
-       <link linkend="catalog-pg-extension"><structname>pg_extension</structname></link>).
-       The dependent object can be dropped only via
-       <link linkend="sql-dropextension"><command>DROP EXTENSION</command></link> on the referenced object.
-       Functionally this dependency type acts the same as
-       an <literal>INTERNAL</literal> dependency, but it's kept separate for
-       clarity and to simplify <application>pg_dump</application>.
+       依赖对象是作为被引用对象的<firstterm>扩展</firstterm>的成员（参见 <link linkend="catalog-pg-extension"><structname>pg_extension</structname></link>）。依赖对象只能通过对被引用对象执行 <link linkend="sql-dropextension"><command>DROP EXTENSION</command></link> 来删除。在功能上，此依赖类型的作用与 <literal>INTERNAL</literal> 依赖相同，但为了清晰和简化 <application>pg_dump</application>，将其单独保留。
       </para>
      </listitem>
     </varlistentry>
@@ -3310,46 +3236,21 @@ SCRAM-SHA-256$<replaceable>&lt;iteration count&gt;</replaceable>:<replaceable>&l
      <term><symbol>DEPENDENCY_AUTO_EXTENSION</symbol> (<literal>x</literal>)</term>
      <listitem>
       <para>
-       The dependent object is not a member of the extension that is the
-       referenced object (and so it should not be ignored
-       by <application>pg_dump</application>), but it cannot function
-       without the extension and should be auto-dropped if the extension is.
-       The dependent object may be dropped on its own as well.
-       Functionally this dependency type acts the same as
-       an <literal>AUTO</literal> dependency, but it's kept separate for
-       clarity and to simplify <application>pg_dump</application>.
+       依赖对象不是被引用对象所属扩展的成员（因此它不应被 <application>pg_dump</application> 忽略），但它离开该扩展就无法工作，并且如果该扩展被删除，它也应被自动删除。依赖对象也可以自行删除。在功能上，这种依赖类型与 <literal>AUTO</literal> 依赖相同，但为了清晰起见并简化 <application>pg_dump</application>，将其单独保留。
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
 
-   Other dependency flavors might be needed in future.
+   将来可能需要其他依赖类型。
   </para>
 
   <para>
-   Note that it's quite possible for two objects to be linked by more than
-   one <structname>pg_depend</structname> entry.  For example, a child
-   partitioned index would have both a partition-type dependency on its
-   associated partition table, and an auto dependency on each column of
-   that table that it indexes.  This sort of situation expresses the union
-   of multiple dependency semantics.  A dependent object can be dropped
-   without <literal>CASCADE</literal> if any of its dependencies satisfies
-   its condition for automatic dropping.  Conversely, all the
-   dependencies' restrictions about which objects must be dropped together
-   must be satisfied.
+   请注意，两个对象完全可能由多个 <structname>pg_depend</structname> 条目连接。例如，一个子分区索引既对其关联的分区表具有分区类型依赖，又对该表上它索引的每一列具有自动依赖。这种情况表达了多种依赖语义的并集。只要依赖对象的任一依赖满足其自动删除条件，该依赖对象就可以在不使用 <literal>CASCADE</literal> 的情况下被删除。反过来，所有依赖关于哪些对象必须一起删除的限制都必须得到满足。
   </para>
 
   <para>
-   Most objects created during <application>initdb</application> are
-   considered <quote>pinned</quote>, which means that the system itself
-   depends on them.  Therefore, they are never allowed to be dropped.
-   Also, knowing that pinned objects will not be dropped, the dependency
-   mechanism doesn't bother to make <structname>pg_depend</structname>
-   entries showing dependencies on them.  Thus, for example, a table
-   column of type <type>numeric</type> notionally has
-   a <literal>NORMAL</literal> dependency on the <type>numeric</type>
-   data type, but no such entry actually appears
-   in <structname>pg_depend</structname>.
+   在 <application>initdb</application> 期间创建的大多数对象被视为<quote>固定</quote>的，这意味着系统本身依赖于它们。因此，永远不允许删除它们。此外，由于知道固定对象不会被删除，依赖机制不会费心去创建显示对它们的依赖的 <structname>pg_depend</structname> 条目。因此，例如，类型为 <type>numeric</type> 的表列在概念上对 <type>numeric</type> 数据类型具有 <literal>NORMAL</literal> 依赖，但实际上 <structname>pg_depend</structname> 中不会出现这样的条目。
   </para>
 
  </sect1>
