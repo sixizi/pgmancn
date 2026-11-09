@@ -1,7 +1,7 @@
 <!-- doc/src/sgml/gist.sgml -->
 
 <sect1 id="gist">
-<title>GiST Indexes</title>
+<title>GiST 索引</title>
 
    <indexterm>
     <primary>index</primary>
@@ -9,59 +9,48 @@
    </indexterm>
 
 <sect2 id="gist-intro">
- <title>Introduction</title>
+ <title>简介</title>
 
  <para>
-   <acronym>GiST</acronym> stands for Generalized Search Tree.  It is a
-   balanced, tree-structured access method, that acts as a base template in
-   which to implement arbitrary indexing schemes. B-trees, R-trees and many
-   other indexing schemes can be implemented in <acronym>GiST</acronym>.
+   <acronym>GiST</acronym> 代表广义搜索树（Generalized Search Tree）。它是一种平衡的、树结构的访问方法，可作为实现任意索引方案的基础模板。B 树、R 树以及许多其他索引方案都可以在 <acronym>GiST</acronym> 中实现。
  </para>
 
  <para>
-  One advantage of <acronym>GiST</acronym> is that it allows the development
-  of custom data types with the appropriate access methods, by
-  an expert in the domain of the data type, rather than a database expert.
+  <acronym>GiST</acronym> 的一个优势在于，它允许由数据类型领域的专家（而非数据库专家）来开发带有合适访问方法的自定义数据类型。
  </para>
 
   <para>
-    Some of the information here is derived from the University of California
-    at Berkeley's GiST Indexing Project
-    <ulink url="http://gist.cs.berkeley.edu/">web site</ulink> and
-    Marcel Kornacker's thesis,
+    此处的一些信息源自加州大学伯克利分校的 GiST 索引项目
+    <ulink url="http://gist.cs.berkeley.edu/">网站</ulink>以及
+    Marcel Kornacker 的学位论文
     <ulink url="http://www.sai.msu.su/~megera/postgres/gist/papers/concurrency/access-methods-for-next-generation.pdf.gz">
-    Access Methods for Next-Generation Database Systems</ulink>.
-    The <acronym>GiST</acronym>
-    implementation in <productname>PostgreSQL</productname> is primarily
-    maintained by Teodor Sigaev and Oleg Bartunov, and there is more
-    information on their
-    <ulink url="http://www.sai.msu.su/~megera/postgres/gist/">web site</ulink>.
+    Access Methods for Next-Generation Database Systems</ulink>。
+    <productname>PostgreSQL</productname> 中的 <acronym>GiST</acronym>
+    实现主要由 Teodor Sigaev 和 Oleg Bartunov 维护，更多
+    信息可在他们的
+    <ulink url="http://www.sai.msu.su/~megera/postgres/gist/">网站</ulink>上找到。
   </para>
 
 </sect2>
 
 <sect2 id="gist-builtin-opclasses">
- <title>Built-in Operator Classes</title>
+ <title>内置运算符类</title>
 
  <para>
-  The core <productname>PostgreSQL</productname> distribution
-  includes the <acronym>GiST</acronym> operator classes shown in
-  <xref linkend="gist-builtin-opclasses-table"/>.
-  (Some of the optional modules described in <xref linkend="contrib"/>
-  provide additional <acronym>GiST</acronym> operator classes.)
+  核心 <productname>PostgreSQL</productname> 发行版包含 <xref linkend="gist-builtin-opclasses-table"/> 中所示的 <acronym>GiST</acronym> 运算符类。（<xref linkend="contrib"/> 中描述的一些可选模块提供了额外的 <acronym>GiST</acronym> 运算符类。）
  </para>
 
   <table id="gist-builtin-opclasses-table">
-   <title>Built-in <acronym>GiST</acronym> Operator Classes</title>
+   <title>内置 <acronym>GiST</acronym> 运算符类</title>
    <tgroup cols="3">
      <colspec colname="col1" colwidth="2*"/>
      <colspec colname="col2" colwidth="3*"/>
      <colspec colname="col3" colwidth="2*"/>
     <thead>
      <row>
-      <entry>Name</entry>
-      <entry>Indexable Operators</entry>
-      <entry>Ordering Operators</entry>
+      <entry>名称</entry>
+      <entry>可索引运算符</entry>
+      <entry>排序运算符</entry>
      </row>
     </thead>
     <tbody>
@@ -207,10 +196,7 @@
   </table>
 
  <para>
-  For historical reasons, the <literal>inet_ops</literal> operator class is
-  not the default class for types <type>inet</type> and <type>cidr</type>.
-  To use it, mention the class name in <command>CREATE INDEX</command>,
-  for example
+  由于历史原因，<literal>inet_ops</literal> 运算符类并不是类型 <type>inet</type> 和 <type>cidr</type> 的默认类。要使用它，请在 <command>CREATE INDEX</command> 中指明该类名，例如
 <programlisting>
 CREATE INDEX ON my_table USING GIST (my_inet_column inet_ops);
 </programlisting>
@@ -219,81 +205,31 @@ CREATE INDEX ON my_table USING GIST (my_inet_column inet_ops);
 </sect2>
 
 <sect2 id="gist-extensibility">
- <title>Extensibility</title>
+ <title>可扩展性</title>
 
  <para>
-   Traditionally, implementing a new index access method meant a lot of
-   difficult work.  It was necessary to understand the inner workings of the
-   database, such as the lock manager and Write-Ahead Log.  The
-   <acronym>GiST</acronym> interface has a high level of abstraction,
-   requiring the access method implementer only to implement the semantics of
-   the data type being accessed.  The <acronym>GiST</acronym> layer itself
-   takes care of concurrency, logging and searching the tree structure.
+   传统上，实现一种新的索引访问方法意味着大量困难的工作。必须理解数据库的内部机制，例如锁管理器和预写式日志。<acronym>GiST</acronym> 接口具有高度的抽象性，只要求访问方法实现者实现所访问数据类型的语义。<acronym>GiST</acronym> 层本身负责处理并发、日志记录以及树结构的搜索。
  </para>
 
  <para>
-   This extensibility should not be confused with the extensibility of the
-   other standard search trees in terms of the data they can handle.  For
-   example, <productname>PostgreSQL</productname> supports extensible B-trees
-   and hash indexes. That means that you can use
-   <productname>PostgreSQL</productname> to build a B-tree or hash over any
-   data type you want. But B-trees only support range predicates
-   (<literal>&lt;</literal>, <literal>=</literal>, <literal>&gt;</literal>),
-   and hash indexes only support equality queries.
+   这种可扩展性不应与其他标准搜索树在所能处理数据方面的可扩展性相混淆。例如，<productname>PostgreSQL</productname> 支持可扩展的 B-tree 和哈希索引。这意味着你可以使用 <productname>PostgreSQL</productname> 对任意你想要的数据类型构建 B-tree 或哈希。但 B-tree 只支持范围谓词（<literal>&lt;</literal>、<literal>=</literal>、<literal>&gt;</literal>），而哈希索引只支持等值查询。
  </para>
 
  <para>
-   So if you index, say, an image collection with a
-   <productname>PostgreSQL</productname> B-tree, you can only issue queries
-   such as <quote>is imagex equal to imagey</quote>, <quote>is imagex less
-   than imagey</quote> and <quote>is imagex greater than imagey</quote>.
-   Depending on how you define <quote>equals</quote>, <quote>less than</quote>
-   and <quote>greater than</quote> in this context, this could be useful.
-   However, by using a <acronym>GiST</acronym> based index, you could create
-   ways to ask domain-specific questions, perhaps <quote>find all images of
-   horses</quote> or <quote>find all over-exposed images</quote>.
+   因此，如果你用 <productname>PostgreSQL</productname> B-tree 为比如说一个图像集合建立索引，你只能发出诸如 <quote>imagex 是否等于 imagey</quote>、<quote>imagex 是否小于 imagey</quote> 以及 <quote>imagex 是否大于 imagey</quote> 这样的查询。取决于你在此上下文中如何定义 <quote>等于</quote>、<quote>小于</quote> 和 <quote>大于</quote>，这可能是有用的。然而，通过使用基于 <acronym>GiST</acronym> 的索引，你可以创造出提出特定领域问题的方式，比如 <quote>找出所有马的图像</quote> 或 <quote>找出所有曝光过度的图像</quote>。
  </para>
 
  <para>
-   All it takes to get a <acronym>GiST</acronym> access method up and running
-   is to implement several user-defined methods, which define the behavior of
-   keys in the tree. Of course these methods have to be pretty fancy to
-   support fancy queries, but for all the standard queries (B-trees,
-   R-trees, etc.) they're relatively straightforward. In short,
-   <acronym>GiST</acronym> combines extensibility along with generality, code
-   reuse, and a clean interface.
+   要让一种 <acronym>GiST</acronym> 访问方法正常运行起来，只需实现若干用户定义的方法，这些方法定义了树中键的行为。当然，这些方法必须相当精巧才能支持精巧的查询，但对于所有标准查询（B-tree、R-tree 等）而言，它们相对简单直接。简而言之，<acronym>GiST</acronym> 将可扩展性与通用性、代码复用以及清晰的接口结合在一起。
   </para>
 
  <para>
-   There are five methods that an index operator class for
-   <acronym>GiST</acronym> must provide, and seven that are optional.
-   Correctness of the index is ensured
-   by proper implementation of the <function>same</function>, <function>consistent</function>
-   and <function>union</function> methods, while efficiency (size and speed) of the
-   index will depend on the <function>penalty</function> and <function>picksplit</function>
-   methods.
-   Two optional methods are <function>compress</function> and
-   <function>decompress</function>, which allow an index to have internal tree data of
-   a different type than the data it indexes. The leaves are to be of the
-   indexed data type, while the other tree nodes can be of any C struct (but
-   you still have to follow <productname>PostgreSQL</productname> data type rules here,
-   see about <literal>varlena</literal> for variable sized data). If the tree's
-   internal data type exists at the SQL level, the <literal>STORAGE</literal> option
-   of the <command>CREATE OPERATOR CLASS</command> command can be used.
-   The optional eighth method is <function>distance</function>, which is needed
-   if the operator class wishes to support ordered scans (nearest-neighbor
-   searches). The optional ninth method <function>fetch</function> is needed if the
-   operator class wishes to support index-only scans, except when the
-   <function>compress</function> method is omitted. The optional tenth method
-   <function>options</function> is needed if the operator class has
-   user-specified parameters.
-   The optional eleventh method <function>sortsupport</function> is used to
-   speed up building a <acronym>GiST</acronym> index.
-   The optional twelfth method <function>stratnum</function> is used to
-   translate compare types (from
-   <filename>src/include/access/cmptype.h</filename>) into strategy numbers
-   used by the operator class.  This lets the core code look up operators for
-   temporal constraint indexes.
+   一个用于 <acronym>GiST</acronym> 的索引运算符类必须提供五个方法，另有七个方法是可选的。
+   索引的正确性通过正确实现 <function>same</function>、<function>consistent</function> 和 <function>union</function> 方法来保证，而索引的效率（大小和速度）将取决于 <function>penalty</function> 和 <function>picksplit</function> 方法。
+   两个可选方法是 <function>compress</function> 和 <function>decompress</function>，它们允许索引具有与其所索引数据不同类型的内部树数据。叶子节点应为被索引的数据类型，而其他树节点可以是任意 C 结构体（但在这里仍然必须遵循 <productname>PostgreSQL</productname> 数据类型规则，关于可变长度数据请参见 <literal>varlena</literal>）。如果树的内部数据类型在 SQL 层面存在，则可以使用 <command>CREATE OPERATOR CLASS</command> 命令的 <literal>STORAGE</literal> 选项。
+   可选的第八个方法是 <function>distance</function>，如果运算符类希望支持有序扫描（最近邻搜索），则需要该方法。如果运算符类希望支持仅索引扫描，则需要可选的第九个方法 <function>fetch</function>，除非省略了 <function>compress</function> 方法。如果运算符类具有用户指定的参数，则需要可选的第十个方法 <function>options</function>。
+   可选的第十一个方法 <function>sortsupport</function> 用于加速构建 <acronym>GiST</acronym> 索引。
+   可选的第十二个方法 <function>stratnum</function> 用于将比较类型（来自 <filename>src/include/access/cmptype.h</filename>）转换为运算符类所使用的策略编号。这使核心代码能够为时间约束索引查找运算符。
  </para>
 
  <variablelist>
@@ -301,29 +237,28 @@ CREATE INDEX ON my_table USING GIST (my_inet_column inet_ops);
      <term><function>consistent</function></term>
      <listitem>
       <para>
-       Given an index entry <literal>p</literal> and a query value <literal>q</literal>,
-       this function determines whether the index entry is
-       <quote>consistent</quote> with the query; that is, could the predicate
+       给定一个索引项 <literal>p</literal> 和一个查询值 <literal>q</literal>，
+       此函数判断该索引项是否与查询
+       <quote>一致</quote>；也就是说，对于该索引项所表示的
+       任意行，谓词
        <quote><replaceable>indexed_column</replaceable>
-       <replaceable>indexable_operator</replaceable> <literal>q</literal></quote> be true for
-       any row represented by the index entry?  For a leaf index entry this is
-       equivalent to testing the indexable condition, while for an internal
-       tree node this determines whether it is necessary to scan the subtree
-       of the index represented by the tree node.  When the result is
-       <literal>true</literal>, a <literal>recheck</literal> flag must also be returned.
-       This indicates whether the predicate is certainly true or only possibly
-       true.  If <literal>recheck</literal> = <literal>false</literal> then the index has
-       tested the predicate condition exactly, whereas if <literal>recheck</literal>
-       = <literal>true</literal> the row is only a candidate match.  In that case the
-       system will automatically evaluate the
-       <replaceable>indexable_operator</replaceable> against the actual row value to see
-       if it is really a match.  This convention allows
-       <acronym>GiST</acronym> to support both lossless and lossy index
-       structures.
+       <replaceable>indexable_operator</replaceable> <literal>q</literal></quote> 是否可能为真？对于叶子索引项，这
+       等价于测试可索引条件；而对于内部
+       树节点，这决定是否有必要扫描该树节点所表示的
+       索引子树。当结果为
+       <literal>true</literal> 时，还必须返回一个 <literal>recheck</literal> 标志。
+       它指示该谓词是确定为真还是仅为可能
+       为真。如果 <literal>recheck</literal> = <literal>false</literal>，则索引已
+       精确测试了谓词条件；而如果 <literal>recheck</literal>
+       = <literal>true</literal>，则该行只是候选匹配。在这种
+       情况下，系统将自动针对实际行值计算
+       <replaceable>indexable_operator</replaceable>，以确定它是否真的匹配。这一约定
+       允许 <acronym>GiST</acronym> 同时支持无损和有损的索引
+       结构。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_consistent(internal, data_type, smallint, oid, internal)
@@ -332,7 +267,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中相应的代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_consistent);
@@ -363,24 +298,23 @@ my_consistent(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-       Here, <varname>key</varname> is an element in the index and <varname>query</varname>
-       the value being looked up in the index. The <literal>StrategyNumber</literal>
-       parameter indicates which operator of your operator class is being
-       applied &mdash; it matches one of the operator numbers in the
-       <command>CREATE OPERATOR CLASS</command> command.
+       这里，<varname>key</varname> 是索引中的一个元素，<varname>query</varname>
+       是在索引中查找的值。<literal>StrategyNumber</literal>
+       参数指示正在应用你的运算符类中的哪个运算符 &mdash; 它与
+       <command>CREATE OPERATOR CLASS</command> 命令中的某个运算符编号相匹配。
       </para>
 
       <para>
-       Depending on which operators you have included in the class, the data
-       type of <varname>query</varname> could vary with the operator, since it will
-       be whatever type is on the right-hand side of the operator, which might
-       be different from the indexed data type appearing on the left-hand side.
-       (The above code skeleton assumes that only one type is possible; if
-       not, fetching the <varname>query</varname> argument value would have to depend
-       on the operator.)  It is recommended that the SQL declaration of
-       the <function>consistent</function> function use the opclass's indexed data
-       type for the <varname>query</varname> argument, even though the actual type
-       might be something else depending on the operator.
+       取决于你在该类中包含了哪些运算符，<varname>query</varname> 的数据
+       类型可能随运算符而变化，因为它将是
+       运算符右侧的任意类型，这可能
+       与左侧出现的被索引数据类型不同。
+       （上面的代码骨架假设只可能有一种类型；如果
+       不是这样，获取 <varname>query</varname> 参数值就必须依赖于
+       运算符。）建议 <function>consistent</function> 函数的 SQL 声明
+       对 <varname>query</varname> 参数使用运算符类的被索引数据
+       类型，即使实际类型可能因运算符不同而
+       有所不同。
       </para>
 
      </listitem>
@@ -390,13 +324,13 @@ my_consistent(PG_FUNCTION_ARGS)
      <term><function>union</function></term>
      <listitem>
       <para>
-       This method consolidates information in the tree.  Given a set of
-       entries, this function generates a new index entry that represents
-       all the given entries.
+       此方法合并树中的信息。给定一组
+       索引项，此函数生成一个表示
+       所有给定索引项的新索引项。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_union(internal, internal)
@@ -405,7 +339,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中对应的代码则可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_union);
@@ -445,29 +379,15 @@ my_union(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-        As you can see, in this skeleton we're dealing with a data type
-        where <literal>union(X, Y, Z) = union(union(X, Y), Z)</literal>. It's easy
-        enough to support data types where this is not the case, by
-        implementing the proper union algorithm in this
-        <acronym>GiST</acronym> support method.
+        如你所见，在这个骨架中我们处理的数据类型满足 <literal>union(X, Y, Z) = union(union(X, Y), Z)</literal>。要支持不满足此条件的数据类型也很容易，只需在这个 <acronym>GiST</acronym> 支持方法中实现恰当的联合算法。
       </para>
 
       <para>
-        The result of the <function>union</function> function must be a value of the
-        index's storage type, whatever that is (it might or might not be
-        different from the indexed column's type).  The <function>union</function>
-        function should return a pointer to newly <function>palloc()</function>ed
-        memory. You can't just return the input value as-is, even if there is
-        no type change.
+        <function>union</function> 函数的结果必须是索引存储类型的值，无论该类型是什么（它可能与被索引列的类型相同，也可能不同）。<function>union</function> 函数应返回一个指针，指向新 <function>palloc()</function> 的内存。即使类型没有变化，也不能直接原样返回输入值。
       </para>
 
       <para>
-       As shown above, the <function>union</function> function's
-       first <type>internal</type> argument is actually
-       a <structname>GistEntryVector</structname> pointer.  The second argument is a
-       pointer to an integer variable, which can be ignored.  (It used to be
-       required that the <function>union</function> function store the size of its
-       result value into that variable, but this is no longer necessary.)
+       如上所示，<function>union</function> 函数的第一个 <type>internal</type> 参数实际上是一个 <structname>GistEntryVector</structname> 指针。第二个参数是指向一个整数变量的指针，可以忽略。（过去要求 <function>union</function> 函数将其结果值的大小存入该变量，但现在已不再需要。）
       </para>
      </listitem>
     </varlistentry>
@@ -476,14 +396,12 @@ my_union(PG_FUNCTION_ARGS)
      <term><function>compress</function></term>
      <listitem>
       <para>
-       Converts a data item into a format suitable for physical storage in
-       an index page.
-       If the <function>compress</function> method is omitted, data items are stored
-       in the index without modification.
+       将数据项转换为适合在索引页中进行物理存储的格式。
+       如果省略了 <function>compress</function> 方法，则数据项未经修改地存储在索引中。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_compress(internal)
@@ -492,7 +410,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中对应的代码则可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_compress);
@@ -526,9 +444,7 @@ my_compress(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-       You have to adapt <replaceable>compressed_data_type</replaceable> to the specific
-       type you're converting to in order to compress your leaf nodes, of
-       course.
+       当然，你必须把 <replaceable>compressed_data_type</replaceable> 调整为要转换成的特定类型，以便压缩叶子节点。
       </para>
      </listitem>
     </varlistentry>
@@ -537,21 +453,11 @@ my_compress(PG_FUNCTION_ARGS)
      <term><function>decompress</function></term>
      <listitem>
       <para>
-       Converts the stored representation of a data item into a format that
-       can be manipulated by the other GiST methods in the operator class.
-       If the <function>decompress</function> method is omitted, it is assumed that
-       the other GiST methods can work directly on the stored data format.
-       (<function>decompress</function> is not necessarily the reverse of
-       the <function>compress</function> method; in particular,
-       if <function>compress</function> is lossy then it's impossible
-       for <function>decompress</function> to exactly reconstruct the original
-       data.  <function>decompress</function> is not necessarily equivalent
-       to <function>fetch</function>, either, since the other GiST methods might not
-       require full reconstruction of the data.)
+       把数据项已存储的表示形式转换成一种可被该运算符类中其他 GiST 方法操纵的格式。如果省略了 <function>decompress</function> 方法，则假定其他 GiST 方法可以直接处理已存储的数据格式。（<function>decompress</function> 不一定是 <function>compress</function> 方法的逆操作；特别是，如果 <function>compress</function> 是有损的，那么 <function>decompress</function> 就不可能精确重建原始数据。<function>decompress</function> 也不一定等同于 <function>fetch</function>，因为其他 GiST 方法可能不需要完整地重建数据。）
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须像这样：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_decompress(internal)
@@ -560,7 +466,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中与之匹配的代码则可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_decompress);
@@ -572,9 +478,7 @@ my_decompress(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-        The above skeleton is suitable for the case where no decompression
-        is needed.  (But, of course, omitting the method altogether is even
-        easier, and is recommended in such cases.)
+        上述骨架适用于不需要解压缩的情况。（当然，完全省略该方法甚至更简单，在这种情况下推荐这样做。）
       </para>
      </listitem>
     </varlistentry>
@@ -583,15 +487,11 @@ my_decompress(PG_FUNCTION_ARGS)
      <term><function>penalty</function></term>
      <listitem>
       <para>
-       Returns a value indicating the <quote>cost</quote> of inserting the new
-       entry into a particular branch of the tree.  Items will be inserted
-       down the path of least <function>penalty</function> in the tree.
-       Values returned by <function>penalty</function> should be non-negative.
-       If a negative value is returned, it will be treated as zero.
+       返回一个值，表示将新条目插入树中某个特定分支的<quote>代价</quote>。条目将沿着树中 <function>penalty</function> 最小的路径插入。<function>penalty</function> 返回的值应为非负数。如果返回负值，它将被当作零处理。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须像这样：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_penalty(internal, internal, internal)
@@ -600,7 +500,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;  -- in some cases penalty functions need not be strict
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中与之匹配的代码则可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_penalty);
@@ -619,18 +519,11 @@ my_penalty(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-        For historical reasons, the <function>penalty</function> function doesn't
-        just return a <type>float</type> result; instead it has to store the value
-        at the location indicated by the third argument.  The return
-        value per se is ignored, though it's conventional to pass back the
-        address of that argument.
+        由于历史原因，<function>penalty</function> 函数并不只是返回一个 <type>float</type> 结果；相反，它必须把值存储到第三个参数所指示的位置。返回值本身会被忽略，不过按惯例是回传该参数的地址。
       </para>
 
       <para>
-        The <function>penalty</function> function is crucial to good performance of
-        the index. It'll get used at insertion time to determine which branch
-        to follow when choosing where to add the new entry in the tree. At
-        query time, the more balanced the index, the quicker the lookup.
+        <function>penalty</function> 函数对于索引的良好性能至关重要。它会在插入时被用来确定在树中选择把新条目添加到何处时该走哪个分支。在查询时，索引越平衡，查找就越快。
       </para>
      </listitem>
     </varlistentry>
@@ -639,13 +532,11 @@ my_penalty(PG_FUNCTION_ARGS)
      <term><function>picksplit</function></term>
      <listitem>
       <para>
-       When an index page split is necessary, this function decides which
-       entries on the page are to stay on the old page, and which are to move
-       to the new page.
+       当需要拆分索引页时，此函数决定页上的哪些条目保留在旧页上，哪些条目移动到新页。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_picksplit(internal, internal)
@@ -654,7 +545,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        然后 C 模块中相应的代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_picksplit);
@@ -732,18 +623,11 @@ my_picksplit(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-       Notice that the <function>picksplit</function> function's result is delivered
-       by modifying the passed-in <structname>v</structname> structure.  The return
-       value per se is ignored, though it's conventional to pass back the
-       address of <structname>v</structname>.
+       请注意，<function>picksplit</function> 函数的结果是通过修改传入的 <structname>v</structname> 结构体来返回的。返回值本身会被忽略，不过按惯例应返回 <structname>v</structname> 的地址。
       </para>
 
       <para>
-        Like <function>penalty</function>, the <function>picksplit</function> function
-        is crucial to good performance of the index.  Designing suitable
-        <function>penalty</function> and <function>picksplit</function> implementations
-        is where the challenge of implementing well-performing
-        <acronym>GiST</acronym> indexes lies.
+        与 <function>penalty</function> 一样，<function>picksplit</function> 函数对于索引的良好性能至关重要。设计合适的 <function>penalty</function> 和 <function>picksplit</function> 实现，正是实现高性能 <acronym>GiST</acronym> 索引的挑战所在。
       </para>
      </listitem>
     </varlistentry>
@@ -752,13 +636,11 @@ my_picksplit(PG_FUNCTION_ARGS)
      <term><function>same</function></term>
      <listitem>
       <para>
-       Returns true if two index entries are identical, false otherwise.
-       (An <quote>index entry</quote> is a value of the index's storage type,
-       not necessarily the original indexed column's type.)
+       如果两个索引条目完全相同则返回 true，否则返回 false。（<quote>索引条目</quote>是索引存储类型的值，不一定是被索引列的原始类型。）
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_same(storage_type, storage_type, internal)
@@ -767,7 +649,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        然后 C 模块中相应的代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_same);
@@ -784,11 +666,7 @@ my_same(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-        For historical reasons, the <function>same</function> function doesn't
-        just return a Boolean result; instead it has to store the flag
-        at the location indicated by the third argument.  The return
-        value per se is ignored, though it's conventional to pass back the
-        address of that argument.
+        由于历史原因，<function>same</function> 函数并不只是返回一个布尔结果；它必须把该标志存储到第三个参数所指示的位置。返回值本身会被忽略，不过按惯例应返回该参数的地址。
       </para>
      </listitem>
     </varlistentry>
@@ -797,20 +675,11 @@ my_same(PG_FUNCTION_ARGS)
      <term><function>distance</function></term>
      <listitem>
       <para>
-       Given an index entry <literal>p</literal> and a query value <literal>q</literal>,
-       this function determines the index entry's
-       <quote>distance</quote> from the query value.  This function must be
-       supplied if the operator class contains any ordering operators.
-       A query using the ordering operator will be implemented by returning
-       index entries with the smallest <quote>distance</quote> values first,
-       so the results must be consistent with the operator's semantics.
-       For a leaf index entry the result just represents the distance to
-       the index entry; for an internal tree node, the result must be the
-       smallest distance that any child entry could have.
+       给定一个索引条目 <literal>p</literal> 和一个查询值 <literal>q</literal>，此函数确定该索引条目与查询值之间的<quote>距离</quote>。如果运算符类包含任何排序运算符，则必须提供此函数。使用排序运算符的查询将按<quote>距离</quote>值最小的索引条目优先返回的方式实现，因此结果必须与该运算符的语义一致。对于叶子索引条目，结果表示到该索引条目的距离；对于内部树节点，结果必须是其任何子条目可能具有的最小距离。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_distance(internal, data_type, smallint, oid, internal)
@@ -819,7 +688,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        And the matching code in the C module could then follow this skeleton:
+        而 C 模块中与之匹配的代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_distance);
@@ -843,35 +712,15 @@ my_distance(PG_FUNCTION_ARGS)
 }
 </programlisting>
 
-       The arguments to the <function>distance</function> function are identical to
-       the arguments of the <function>consistent</function> function.
+       <function>distance</function> 函数的参数与 <function>consistent</function> 函数的参数完全相同。
       </para>
 
       <para>
-       Some approximation is allowed when determining the distance, so long
-       as the result is never greater than the entry's actual distance. Thus,
-       for example, distance to a bounding box is usually sufficient in
-       geometric applications.  For an internal tree node, the distance
-       returned must not be greater than the distance to any of the child
-       nodes. If the returned distance is not exact, the function must set
-       <literal>*recheck</literal> to true. (This is not necessary for internal tree
-       nodes; for them, the calculation is always assumed to be inexact.) In
-       this case the executor will calculate the accurate distance after
-       fetching the tuple from the heap, and reorder the tuples if necessary.
+       在确定距离时允许进行一定的近似，只要结果永远不大于该条目的实际距离即可。因此，例如在几何应用中，到边界框的距离通常就足够了。对于内部树节点，返回的距离不得大于到任何子节点的距离。如果返回的距离不精确，函数必须将 <literal>*recheck</literal> 置为 true。（对于内部树节点则不必如此；对于它们，计算总是被假定为不精确的。）在这种情况下，执行器会在从堆中取出元组后计算准确的距离，并在必要时重新排序元组。
       </para>
 
       <para>
-       If the distance function returns <literal>*recheck = true</literal> for any
-       leaf node, the original ordering operator's return type must
-       be <type>float8</type> or <type>float4</type>, and the distance function's
-       result values must be comparable to those of the original ordering
-       operator, since the executor will sort using both distance function
-       results and recalculated ordering-operator results.  Otherwise, the
-       distance function's result values can be any finite <type>float8</type>
-       values, so long as the relative order of the result values matches the
-       order returned by the ordering operator.  (Infinity and minus infinity
-       are used internally to handle cases such as nulls, so it is not
-       recommended that <function>distance</function> functions return these values.)
+       如果距离函数对任何叶子节点返回 <literal>*recheck = true</literal>，则原始排序运算符的返回类型必须是 <type>float8</type> 或 <type>float4</type>，并且距离函数的结果值必须可与原始排序运算符的结果值比较，因为执行器将同时使用距离函数的结果和重新计算的排序运算符结果进行排序。否则，距离函数的结果值可以是任何有限的 <type>float8</type> 值，只要结果值的相对顺序与排序运算符返回的顺序一致即可。（正无穷和负无穷在内部用于处理空值等情况，因此不建议 <function>distance</function> 函数返回这些值。）
       </para>
 
      </listitem>
@@ -881,13 +730,11 @@ my_distance(PG_FUNCTION_ARGS)
      <term><function>fetch</function></term>
      <listitem>
       <para>
-       Converts the compressed index representation of a data item into the
-       original data type, for index-only scans. The returned data must be an
-       exact, non-lossy copy of the originally indexed value.
+       将数据项的压缩索引表示转换为原始数据类型，用于仅索引扫描。返回的数据必须是原始索引值的精确、无损副本。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_fetch(internal)
@@ -896,19 +743,11 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-        The argument is a pointer to a <structname>GISTENTRY</structname> struct. On
-        entry, its <structfield>key</structfield> field contains a non-NULL leaf datum in
-        compressed form. The return value is another <structname>GISTENTRY</structname>
-        struct, whose <structfield>key</structfield> field contains the same datum in its
-        original, uncompressed form. If the opclass's compress function does
-        nothing for leaf entries, the <function>fetch</function> method can return the
-        argument as-is.  Or, if the opclass does not have a compress function,
-        the <function>fetch</function> method can be omitted as well, since it would
-        necessarily be a no-op.
+参数是一个指向 <structname>GISTENTRY</structname> 结构的指针。进入时，其 <structfield>key</structfield> 字段包含一个以压缩形式存在的非 NULL 叶子数据。返回值是另一个 <structname>GISTENTRY</structname> 结构，其 <structfield>key</structfield> 字段包含同一数据的原始未压缩形式。如果 opclass 的压缩函数对叶子项不做任何处理，则 <function>fetch</function> 方法可以原样返回该参数。或者，如果 opclass 没有压缩函数，则 <function>fetch</function> 方法也可以省略，因为它必然是一个空操作。
        </para>
 
        <para>
-        The matching code in the C module could then follow this skeleton:
+        匹配的 C 模块代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_fetch);
@@ -938,9 +777,7 @@ my_fetch(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-       If the compress method is lossy for leaf entries, the operator class
-       cannot support index-only scans, and must not define
-       a <function>fetch</function> function.
+       如果压缩方法对叶子项是有损的，则该操作符类不能支持仅索引扫描，并且不得定义 <function>fetch</function> 函数。
       </para>
 
      </listitem>
@@ -950,12 +787,11 @@ my_fetch(PG_FUNCTION_ARGS)
      <term><function>options</function></term>
      <listitem>
       <para>
-       Allows definition of user-visible parameters that control operator
-       class behavior.
+       允许定义用户可见的参数来控制操作符类的行为。
       </para>
 
       <para>
-        The <acronym>SQL</acronym> declaration of the function must look like this:
+        该函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_options(internal)
@@ -966,16 +802,11 @@ LANGUAGE C STRICT;
       </para>
 
       <para>
-       The function is passed a pointer to a <structname>local_relopts</structname>
-       struct, which needs to be filled with a set of operator class
-       specific options.  The options can be accessed from other support
-       functions using the <literal>PG_HAS_OPCLASS_OPTIONS()</literal> and
-       <literal>PG_GET_OPCLASS_OPTIONS()</literal> macros.
+       该函数被传入一个指向 <structname>local_relopts</structname> 结构的指针，该结构需要填充一组操作符类特定的选项。其他支持函数可以使用 <literal>PG_HAS_OPCLASS_OPTIONS()</literal> 和 <literal>PG_GET_OPCLASS_OPTIONS()</literal> 宏来访问这些选项。
       </para>
 
        <para>
-        An example implementation of my_options() and parameters use
-        from other support functions are given below:
+        下面给出了 my_options() 的示例实现以及来自其他支持函数的参数用法：
 
 <programlisting>
 typedef enum MyEnumType
@@ -1093,10 +924,7 @@ my_compress(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-       Since the representation of the key in <acronym>GiST</acronym> is
-       flexible, it may depend on user-specified parameters.  For instance,
-       the length of key signature may be specified.  See
-       <literal>gtsvector_options()</literal> for example.
+       由于键在 <acronym>GiST</acronym> 中的表示形式是灵活的，因此它可能依赖于用户指定的参数。例如，可以指定键签名的长度。示例请参见 <literal>gtsvector_options()</literal>。
       </para>
      </listitem>
     </varlistentry>
@@ -1105,22 +933,14 @@ my_compress(PG_FUNCTION_ARGS)
      <term><function>sortsupport</function></term>
      <listitem>
       <para>
-       Returns a comparator function to sort data in a way that preserves
-       locality. It is used by <command>CREATE INDEX</command> and
-       <command>REINDEX</command> commands. The quality of the created index
-       depends on how well the sort order determined by the comparator function
-       preserves locality of the inputs.
+       返回一个比较器函数，以保持局部性的方式对数据进行排序。它由 <command>CREATE INDEX</command> 和 <command>REINDEX</command> 命令使用。所创建索引的质量取决于比较器函数所确定的排序顺序在多大程度上保持了输入的局部性。
       </para>
       <para>
-       The <function>sortsupport</function> method is optional. If it is not
-       provided, <command>CREATE INDEX</command> builds the index by inserting
-       each tuple to the tree using the <function>penalty</function> and
-       <function>picksplit</function> functions, which is much slower.
+       <function>sortsupport</function> 方法是可选的。如果未提供该方法，<command>CREATE INDEX</command> 会使用 <function>penalty</function> 和 <function>picksplit</function> 函数将每个元组插入到树中来构建索引，这种方式要慢得多。
       </para>
 
       <para>
-       The <acronym>SQL</acronym> declaration of the function must look like
-       this:
+       该函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_sortsupport(internal)
@@ -1129,18 +949,11 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-       The argument is a pointer to a <structname>SortSupport</structname>
-       struct. At a minimum, the function must fill in its comparator field.
-       The comparator takes three arguments: two Datums to compare, and
-       a pointer to the <structname>SortSupport</structname> struct. The
-       Datums are the two indexed values in the format that they are stored
-       in the index; that is, in the format returned by the
-       <function>compress</function> method. The full API is defined in
-       <filename>src/include/utils/sortsupport.h</filename>.
+       该参数是一个指向 <structname>SortSupport</structname> 结构体的指针。该函数至少必须填充其 comparator 字段。比较器接受三个参数：两个要比较的 Datum，以及一个指向 <structname>SortSupport</structname> 结构体的指针。这两个 Datum 是索引中存储的两个索引值，即 <function>compress</function> 方法返回的格式。完整的 API 定义在 <filename>src/include/utils/sortsupport.h</filename> 中。
        </para>
 
        <para>
-        The matching code in the C module could then follow this skeleton:
+        然后，C 模块中相应的匹配代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_sortsupport);
@@ -1173,19 +986,12 @@ my_sortsupport(PG_FUNCTION_ARGS)
      <term><function>translate_cmptype</function></term>
      <listitem>
       <para>
-       Given a <literal>CompareType</literal> value from
-       <filename>src/include/access/cmptype.h</filename>, returns a strategy
-       number used by this operator class for matching functionality.  The
-       function should return <literal>InvalidStrategy</literal> if the
-       operator class has no matching strategy.
+       给定来自 <filename>src/include/access/cmptype.h</filename> 的一个 <literal>CompareType</literal> 值，返回该运算符类用于匹配功能的策略号。如果该运算符类没有匹配的策略，函数应返回 <literal>InvalidStrategy</literal>。
       </para>
 
       <para>
-       This is used for temporal index constraints (i.e., <literal>PRIMARY
-       KEY</literal> and <literal>UNIQUE</literal>).  If the operator class
-       provides this function and it returns results for
-       <literal>COMPARE_EQ</literal>, it can be used in the
-       non-<literal>WITHOUT OVERLAPS</literal> part(s) of an index constraint.
+       这用于时态索引约束（即 <literal>PRIMARY
+       KEY</literal> 和 <literal>UNIQUE</literal>）。如果运算符类提供了此函数，并且它对 <literal>COMPARE_EQ</literal> 返回结果，那么它可用于索引约束的非 <literal>WITHOUT OVERLAPS</literal> 部分。
       </para>
 
       <para>
@@ -1200,8 +1006,7 @@ my_sortsupport(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-       The <acronym>SQL</acronym> declaration of the function must look like
-       this:
+       函数的 <acronym>SQL</acronym> 声明必须如下所示：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION my_translate_cmptype(integer)
@@ -1210,7 +1015,7 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 </programlisting>
 
-       And the operator family registration must look like this:
+而运算符族注册必须如下所示：
 <programlisting>
 ALTER OPERATOR FAMILY my_opfamily USING gist ADD
     FUNCTION 12 ("any", "any") my_translate_cmptype(int);
@@ -1218,7 +1023,7 @@ ALTER OPERATOR FAMILY my_opfamily USING gist ADD
       </para>
 
        <para>
-        The matching code in the C module could then follow this skeleton:
+        那么 C 模块中的匹配代码可以遵循以下骨架：
 
 <programlisting>
 PG_FUNCTION_INFO_V1(my_translate_cmptype);
@@ -1241,150 +1046,100 @@ my_translate_cmptype(PG_FUNCTION_ARGS)
       </para>
 
       <para>
-       One translation function is provided by
-       <productname>PostgreSQL</productname>:
-       <literal>gist_translate_cmptype_common</literal> is for operator classes that
-       use the <literal>RT*StrategyNumber</literal> constants.
-       The <literal>btree_gist</literal>
-       extension defines a second translation function,
-       <literal>gist_translate_cmptype_btree</literal>, for operator classes that use
-       the <literal>BT*StrategyNumber</literal> constants.
+       <productname>PostgreSQL</productname> 提供了一个转换函数：<literal>gist_translate_cmptype_common</literal> 用于使用 <literal>RT*StrategyNumber</literal> 常量的运算符类。<literal>btree_gist</literal> 扩展定义了第二个转换函数 <literal>gist_translate_cmptype_btree</literal>，用于使用 <literal>BT*StrategyNumber</literal> 常量的运算符类。
       </para>
      </listitem>
     </varlistentry>
   </variablelist>
 
   <para>
-   All the GiST support methods are normally called in short-lived memory
-   contexts; that is, <varname>CurrentMemoryContext</varname> will get reset after
-   each tuple is processed.  It is therefore not very important to worry about
-   pfree'ing everything you palloc.  However, in some cases it's useful for a
-   support method to cache data across repeated calls.  To do that, allocate
-   the longer-lived data in <literal>fcinfo-&gt;flinfo-&gt;fn_mcxt</literal>, and
-   keep a pointer to it in <literal>fcinfo-&gt;flinfo-&gt;fn_extra</literal>.  Such
-   data will survive for the life of the index operation (e.g., a single GiST
-   index scan, index build, or index tuple insertion).  Be careful to pfree
-   the previous value when replacing a <literal>fn_extra</literal> value, or the leak
-   will accumulate for the duration of the operation.
+   GiST 的所有支持方法通常都是在短生命周期的内存上下文中调用的；也就是说，每处理完一个元组后，<varname>CurrentMemoryContext</varname> 就会被重置。因此，不必太担心释放（pfree）你通过 palloc 分配的所有内存。不过，在某些情况下，让支持方法在多次重复调用之间缓存数据是很有用的。要做到这一点，请把生命周期较长的数据分配在 <literal>fcinfo-&gt;flinfo-&gt;fn_mcxt</literal> 中，并在 <literal>fcinfo-&gt;flinfo-&gt;fn_extra</literal> 中保留指向它的指针。这类数据将在索引操作的整个生命周期内存活（例如，一次 GiST 索引扫描、索引构建或索引元组插入）。在替换 <literal>fn_extra</literal> 值时，务必 pfree 掉先前的值，否则在操作持续期间，内存泄漏会不断累积。
   </para>
 
 </sect2>
 
 <sect2 id="gist-implementation">
- <title>Implementation</title>
+ <title>实现</title>
 
  <sect3 id="gist-buffering-build">
-  <title>GiST Index Build Methods</title>
+  <title>GiST 索引构建方法</title>
 
   <para>
-   The simplest way to build a GiST index is just to insert all the entries,
-   one by one.  This tends to be slow for large indexes, because if the
-   index tuples are scattered across the index and the index is large enough
-   to not fit in cache, a lot of random I/O will be
-   needed.  <productname>PostgreSQL</productname> supports two alternative
-   methods for initial build of a GiST index: <firstterm>sorted</firstterm>
-   and <firstterm>buffered</firstterm> modes.
+   构建 GiST 索引最简单的方法就是逐条插入所有条目。对于大型索引，这种做法往往很慢，因为如果索引元组分散在整个索引中，而索引又大到无法放入缓存，就会需要大量随机 I/O。<productname>PostgreSQL</productname> 支持两种用于 GiST 索引初始构建的替代方法：<firstterm>排序</firstterm>模式和<firstterm>缓冲</firstterm>模式。
   </para>
 
   <para>
-   The sorted method is only available if each of the opclasses used by the
-   index provides a <function>sortsupport</function> function, as described
-   in <xref linkend="gist-extensibility"/>.  If they do, this method is
-   usually the best, so it is used by default.
+   只有当索引使用的每个操作符类都提供了 <function>sortsupport</function> 函数（如 <xref linkend="gist-extensibility"/> 所述）时，才能使用排序方法。如果满足这一条件，此方法通常是最佳选择，因此默认使用它。
   </para>
 
   <para>
-   The buffered method works by not inserting tuples directly into the index
-   right away.  It can dramatically reduce the amount of random I/O needed
-   for non-ordered data sets.  For well-ordered data sets the benefit is
-   smaller or non-existent, because only a small number of pages receive new
-   tuples at a time, and those pages fit in cache even if the index as a
-   whole does not.
+   缓冲方法的工作方式是不立即把元组直接插入索引。对于无序数据集，它可以大幅减少所需的随机 I/O 量。对于顺序良好的数据集，收益较小甚至不存在，因为一次只有少量页面接收新元组，而且即使整个索引无法放入缓存，这些页面也能放入缓存。
   </para>
 
   <para>
-   The buffered method needs to call the <function>penalty</function>
-   function more often than the simple method does, which consumes some
-   extra CPU resources. Also, the buffers need temporary disk space, up to
-   the size of the resulting index. Buffering can also influence the quality
-   of the resulting index, in both positive and negative directions. That
-   influence depends on various factors, like the distribution of the input
-   data and the operator class implementation.
+   缓冲方法比简单方法更频繁地调用 <function>penalty</function> 函数，这会消耗一些额外的 CPU 资源。此外，缓冲区需要临时磁盘空间，最大可达结果索引的大小。缓冲还可能影响结果索引的质量，既有正面影响也有负面影响。这种影响取决于多种因素，例如输入数据的分布和运算符类的实现。
   </para>
 
   <para>
-   If sorting is not possible, then by default a GiST index build switches
-   to the buffering method when the index size reaches
-   <xref linkend="guc-effective-cache-size"/>.  Buffering can be manually
-   forced or prevented by the <literal>buffering</literal> parameter to the
-   CREATE INDEX command.  The default behavior is good for most cases, but
-   turning buffering off might speed up the build somewhat if the input data
-   is ordered.
+   如果无法进行排序，那么默认情况下，当索引大小达到 <xref linkend="guc-effective-cache-size"/> 时，GiST 索引构建会切换到缓冲方法。可以通过 CREATE INDEX 命令的 <literal>buffering</literal> 参数手动强制或阻止缓冲。默认行为对大多数情况都适用，但如果输入数据是有序的，关闭缓冲可能会在一定程度上加快构建速度。
   </para>
 
  </sect3>
 </sect2>
 
 <sect2 id="gist-examples">
- <title>Examples</title>
+ <title>示例</title>
 
  <para>
-  The <productname>PostgreSQL</productname> source distribution includes
-  several examples of index methods implemented using
-  <acronym>GiST</acronym>.  The core system currently provides text search
-  support (indexing for <type>tsvector</type> and <type>tsquery</type>) as well as
-  R-Tree equivalent functionality for some of the built-in geometric data types
-  (see <filename>src/backend/access/gist/gistproc.c</filename>).  The following
-  <filename>contrib</filename> modules also contain <acronym>GiST</acronym>
-  operator classes:
+  <productname>PostgreSQL</productname> 源代码发行版中包含若干使用 <acronym>GiST</acronym> 实现的索引方法示例。核心系统目前提供文本检索支持（为 <type>tsvector</type> 和 <type>tsquery</type> 建立索引），以及为某些内置几何数据类型提供等效于 R-Tree 的功能（参见 <filename>src/backend/access/gist/gistproc.c</filename>）。以下 <filename>contrib</filename> 模块也包含 <acronym>GiST</acronym> 运算符类：
 
  <variablelist>
   <varlistentry>
    <term><filename>btree_gist</filename></term>
    <listitem>
-    <para>B-tree equivalent functionality for several data types</para>
+    <para>若干数据类型的等效于 B-tree 的功能</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>cube</filename></term>
    <listitem>
-    <para>Indexing for multidimensional cubes</para>
+    <para>为多维立方体建立索引</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>hstore</filename></term>
    <listitem>
-    <para>Module for storing (key, value) pairs</para>
+    <para>用于存储（键、值）对的模块</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>intarray</filename></term>
    <listitem>
-    <para>RD-Tree for one-dimensional array of int4 values</para>
+    <para>用于 int4 值一维数组的 RD-Tree</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>ltree</filename></term>
    <listitem>
-    <para>Indexing for tree-like structures</para>
+    <para>用于树状结构的索引</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>pg_trgm</filename></term>
    <listitem>
-    <para>Text similarity using trigram matching</para>
+    <para>使用三元组匹配的文本相似度</para>
    </listitem>
   </varlistentry>
 
   <varlistentry>
    <term><filename>seg</filename></term>
    <listitem>
-    <para>Indexing for <quote>float ranges</quote></para>
+    <para>用于<quote>浮点范围</quote>的索引</para>
    </listitem>
   </varlistentry>
  </variablelist>
