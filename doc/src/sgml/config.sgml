@@ -8400,52 +8400,31 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
    </sect1>
 
    <sect1 id="runtime-config-locks">
-    <title>Lock Management</title>
+    <title>锁管理</title>
 
      <variablelist>
 
      <varlistentry id="guc-deadlock-timeout" xreflabel="deadlock_timeout">
       <term><varname>deadlock_timeout</varname> (<type>integer</type>)
       <indexterm>
-       <primary>deadlock</primary>
-       <secondary>timeout during</secondary>
+       <primary>死锁</primary>
+       <secondary>期间超时</secondary>
       </indexterm>
       <indexterm>
-       <primary>timeout</primary>
-       <secondary>deadlock</secondary>
+       <primary>超时</primary>
+       <secondary>死锁</secondary>
       </indexterm>
       <indexterm>
-       <primary><varname>deadlock_timeout</varname> configuration parameter</primary>
+       <primary><varname>deadlock_timeout</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This is the amount of time to wait on a lock
-        before checking to see if there is a deadlock condition. The
-        check for deadlock is relatively expensive, so the server doesn't run
-        it every time it waits for a lock. We optimistically assume
-        that deadlocks are not common in production applications and
-        just wait on the lock for a while before checking for a
-        deadlock. Increasing this value reduces the amount of time
-        wasted in needless deadlock checks, but slows down reporting of
-        real deadlock errors.
-        If this value is specified without units, it is taken as milliseconds.
-        The default is one second (<literal>1s</literal>),
-        which is probably about the smallest value you would want in
-        practice. On a heavily loaded server you might want to raise it.
-        Ideally the setting should exceed your typical transaction time,
-        so as to improve the odds that a lock will be released before
-        the waiter decides to check for deadlock.
-        Only superusers and users with the appropriate <literal>SET</literal>
-        privilege can change this setting.
+        这是在等待锁之后、检查是否存在死锁状况之前所等待的时间量。死锁检查相对昂贵，因此服务器不会每次等待锁时都执行它。我们乐观地假设死锁在生产应用中并不常见，只是先在锁上等待一段时间，然后再检查死锁。增大此值可减少浪费在无谓死锁检查上的时间，但会减慢真实死锁错误的报告速度。如果指定此值时不带单位，则按毫秒处理。默认值是一秒（<literal>1s</literal>），这大概是实践中您会想要的最小值。在负载很重的服务器上您可能希望提高它。理想情况下该设置应超过您典型的事务时间，以提高等待者在决定检查死锁之前锁已被释放的可能性。只有超级用户和具有相应 <literal>SET</literal> 权限的用户才能更改此设置。
        </para>
 
        <para>
-        When <xref linkend="guc-log-lock-waits"/> is set,
-        this parameter also determines the amount of time to wait before
-        a log message is issued about the lock wait.  If you are trying
-        to investigate locking delays you might want to set a shorter than
-        normal <varname>deadlock_timeout</varname>.
+        当设置了 <xref linkend="guc-log-lock-waits"/> 时，此参数还决定在发出关于锁等待的日志消息之前等待的时间量。如果您正试图调查锁延迟，您可能希望设置一个比正常值更短的 <varname>deadlock_timeout</varname>。
        </para>
       </listitem>
      </varlistentry>
@@ -8453,30 +8432,16 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-max-locks-per-transaction" xreflabel="max_locks_per_transaction">
       <term><varname>max_locks_per_transaction</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_locks_per_transaction</varname> configuration parameter</primary>
+       <primary><varname>max_locks_per_transaction</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The shared lock table has space for
-        <varname>max_locks_per_transaction</varname> objects
-        (e.g., tables) per server process or prepared transaction;
-        hence, no more than this many distinct objects can be locked at
-        any one time.  This parameter limits the average number of object
-        locks used by each transaction; individual transactions
-        can lock more objects as long as the locks of all transactions
-        fit in the lock table.  This is <emphasis>not</emphasis> the number of
-        rows that can be locked; that value is unlimited.  The default,
-        64, has historically proven sufficient, but you might need to
-        raise this value if you have queries that touch many different
-        tables in a single transaction, e.g., query of a parent table with
-        many children.  This parameter can only be set at server start.
+        共享锁表为每个服务器进程或预备事务提供了容纳 <varname>max_locks_per_transaction</varname> 个对象（例如表）的空间；因此，在任意时刻最多只能锁定这么多个不同的对象。此参数限制每个事务平均使用的对象锁数量；只要所有事务的锁都能容纳在锁表中，单个事务可以锁定更多对象。这<emphasis>不是</emphasis>可锁定的行数；该值是不受限制的。默认值 64 在历史上已被证明是足够的，但如果你的查询在单个事务中会访问许多不同的表（例如查询一个带有许多子表的父表），则可能需要提高此值。此参数只能在服务器启动时设置。
        </para>
 
        <para>
-        When running a standby server, you must set this parameter to have the
-        same or higher value as on the primary server. Otherwise, queries
-        will not be allowed in the standby server.
+        运行后备服务器时，必须将此参数设置为与主服务器上相同或更高的值。否则，后备服务器中将不允许查询。
        </para>
       </listitem>
      </varlistentry>
@@ -8484,24 +8449,12 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-max-pred-locks-per-transaction" xreflabel="max_pred_locks_per_transaction">
       <term><varname>max_pred_locks_per_transaction</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_pred_locks_per_transaction</varname> configuration parameter</primary>
+       <primary><varname>max_pred_locks_per_transaction</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        The shared predicate lock table has space for
-        <varname>max_pred_locks_per_transaction</varname> objects
-        (e.g., tables) per server process or prepared transaction;
-        hence, no more than this many distinct objects can be locked at
-        any one time.  This parameter limits the average number of object
-        locks used by each transaction; individual transactions
-        can lock more objects as long as the locks of all transactions
-        fit in the lock table.  This is <emphasis>not</emphasis> the number of
-        rows that can be locked; that value is unlimited.  The default,
-        64, has historically proven sufficient, but you might need to
-        raise this value if you have clients that touch many different
-        tables in a single serializable transaction. This parameter can
-        only be set at server start.
+        共享谓词锁表为每个服务器进程或预备事务提供了容纳 <varname>max_pred_locks_per_transaction</varname> 个对象（例如表）的空间；因此，在任意时刻最多只能锁定这么多个不同的对象。此参数限制每个事务平均使用的对象锁数量；只要所有事务的锁都能容纳在锁表中，单个事务可以锁定更多对象。这<emphasis>不是</emphasis>可锁定的行数；该值是不受限制的。默认值 64 在历史上已被证明是足够的，但如果你的客户端在单个可串行化事务中会访问许多不同的表，则可能需要提高此值。此参数只能在服务器启动时设置。
        </para>
       </listitem>
      </varlistentry>
@@ -8509,20 +8462,12 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-max-pred-locks-per-relation" xreflabel="max_pred_locks_per_relation">
       <term><varname>max_pred_locks_per_relation</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_pred_locks_per_relation</varname> configuration parameter</primary>
+       <primary><varname>max_pred_locks_per_relation</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This controls how many pages or tuples of a single relation can be
-        predicate-locked before the lock is promoted to covering the whole
-        relation.  Values greater than or equal to zero mean an absolute
-        limit, while negative values
-        mean <xref linkend="guc-max-pred-locks-per-transaction"/> divided by
-        the absolute value of this setting.  The default is -2, which keeps
-        the behavior from previous versions of <productname>PostgreSQL</productname>.
-        This parameter can only be set in the <filename>postgresql.conf</filename>
-        file or on the server command line.
+        这控制单个关系的多少个页面或元组可以被谓词锁定，之后锁会被提升为覆盖整个关系。大于或等于零的值表示绝对限制，而负值表示 <xref linkend="guc-max-pred-locks-per-transaction"/> 除以该设置的绝对值。默认值为 -2，这保持了 <productname>PostgreSQL</productname> 之前版本的行为。该参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
@@ -8530,15 +8475,12 @@ dynamic_library_path = '/usr/local/lib/postgresql:$libdir'
      <varlistentry id="guc-max-pred-locks-per-page" xreflabel="max_pred_locks_per_page">
       <term><varname>max_pred_locks_per_page</varname> (<type>integer</type>)
       <indexterm>
-       <primary><varname>max_pred_locks_per_page</varname> configuration parameter</primary>
+       <primary><varname>max_pred_locks_per_page</varname> 配置参数</primary>
       </indexterm>
       </term>
       <listitem>
        <para>
-        This controls how many rows on a single page can be predicate-locked
-        before the lock is promoted to covering the whole page.  The default
-        is 2.  This parameter can only be set in
-        the <filename>postgresql.conf</filename> file or on the server command line.
+        这控制单个页面上有多少行可以被谓词锁定，之后锁会被提升为覆盖整个页面。默认值为 2。该参数只能在 <filename>postgresql.conf</filename> 文件中或服务器命令行上设置。
        </para>
       </listitem>
      </varlistentry>
