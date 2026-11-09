@@ -1778,101 +1778,50 @@ CONTEXT:  processing remote data for replication origin "pg_16395" during "INSER
  </sect1>
 
  <sect1 id="logical-replication-security">
-  <title>Security</title>
+  <title>安全性</title>
 
   <para>
-   The role used for the replication connection must have
-   the <literal>REPLICATION</literal> attribute (or be a superuser).  If the
-   role lacks <literal>SUPERUSER</literal> and <literal>BYPASSRLS</literal>,
-   publisher row security policies can execute.  If the role does not trust
-   all table owners, include <literal>options=-crow_security=off</literal> in
-   the connection string; if a table owner then adds a row security policy,
-   that setting will cause replication to halt rather than execute the policy.
-   Access for the role must be configured in <filename>pg_hba.conf</filename>
-   and it must have the <literal>LOGIN</literal> attribute.
+   用于复制连接的角色必须具有 <literal>REPLICATION</literal> 属性（或者是超级用户）。如果该角色缺少 <literal>SUPERUSER</literal> 和 <literal>BYPASSRLS</literal>，发布端的行级安全策略可能会被执行。如果该角色不信任所有表所有者，请在连接字符串中包含 <literal>options=-crow_security=off</literal>；如果某个表所有者随后添加了行级安全策略，该设置将导致复制停止，而不是执行该策略。必须在 <filename>pg_hba.conf</filename> 中配置该角色的访问权限，并且它必须具有 <literal>LOGIN</literal> 属性。
   </para>
 
   <para>
-   The name of the output plugin used by the replication connection must be
-   included in the server's <xref linkend="guc-output-plugin-libraries"/>. (For
-   subscriptions, the plugin name that is used is <literal>pgoutput</literal>.)
-   Superusers may modify the trusted list per-connection, by including
-   <literal>options=-coutput_plugin_libraries=...</literal> in the connection
-   string.
+   复制连接所使用的输出插件名称必须包含在服务器的 <xref linkend="guc-output-plugin-libraries"/> 中。（对于订阅，所使用的插件名称为 <literal>pgoutput</literal>。）超级用户可以通过在连接字符串中包含 <literal>options=-coutput_plugin_libraries=...</literal> 来按连接修改可信列表。
   </para>
 
   <para>
-   In order to be able to copy the initial table data, the role used for the
-   replication connection must have the <literal>SELECT</literal> privilege on
-   a published table (or be a superuser).
+   为了能够复制初始表数据，用于复制连接的角色必须在已发布的表上具有 <literal>SELECT</literal> 权限（或者是超级用户）。
   </para>
 
   <para>
-   To create a publication, the user must have the <literal>CREATE</literal>
-   privilege in the database.
+   要创建发布，用户必须在该数据库中具有 <literal>CREATE</literal> 权限。
   </para>
 
   <para>
-   To add tables to a publication, the user must have ownership rights on the
-   table. To add all tables in schema to a publication, the user must be a
-   superuser. To create a publication that publishes all tables or all tables in
-   schema automatically, the user must be a superuser.
+   要将表添加到发布中，用户必须拥有该表的所有权。要将模式中的所有表添加到发布中，用户必须是超级用户。要创建自动发布所有表或模式中所有表的发布，用户必须是超级用户。
   </para>
 
   <para>
-   There are currently no privileges on publications.  Any subscription (that
-   is able to connect) can access any publication.  Thus, if you intend to
-   hide some information from particular subscribers, such as by using row
-   filters or column lists, or by not adding the whole table to the
-   publication, be aware that other publications in the same database could
-   expose the same information.  Publication privileges might be added to
-   <productname>PostgreSQL</productname> in the future to allow for
-   finer-grained access control.
+   目前发布上没有任何权限。任何订阅（只要能够连接）都可以访问任何发布。因此，如果你打算对某些订阅者隐藏某些信息，例如通过使用行过滤器或列列表，或者不把整张表加入发布，那么要注意同一数据库中的其他发布可能会暴露同样的信息。将来可能会为 <productname>PostgreSQL</productname> 添加发布权限，以便实现更细粒度的访问控制。
   </para>
 
   <para>
-   To create a subscription, the user must have the privileges of
-   the <literal>pg_create_subscription</literal> role, as well as
-   <literal>CREATE</literal> privileges on the database.
+   要创建订阅，用户必须具有 <literal>pg_create_subscription</literal> 角色的权限，以及在数据库上的 <literal>CREATE</literal> 权限。
   </para>
 
   <para>
-   The subscription apply process will, at a session level, run with the
-   privileges of the subscription owner. However, when performing an insert,
-   update, delete, or truncate operation on a particular table, it will switch
-   roles to the table owner and perform the operation with the table owner's
-   privileges. This means that the subscription owner needs to be able to
-   <literal>SET ROLE</literal> to each role that owns a replicated table.
+   订阅应用进程在会话级别上以订阅所有者的权限运行。不过，在对某张特定的表执行 INSERT、UPDATE、DELETE 或 TRUNCATE 操作时，它会切换角色为表的所有者，并以表所有者的权限执行该操作。这意味着订阅所有者需要能够对拥有被复制表的每个角色执行 <literal>SET ROLE</literal>。
   </para>
 
   <para>
-   If the subscription has been configured with
-   <literal>run_as_owner = true</literal>, then no user switching will
-   occur. Instead, all operations will be performed with the permissions
-   of the subscription owner. In this case, the subscription owner only
-   needs privileges to <literal>SELECT</literal>, <literal>INSERT</literal>,
-   <literal>UPDATE</literal>, and <literal>DELETE</literal> from the
-   target table, and does not need privileges to <literal>SET ROLE</literal>
-   to the table owner. However, this also means that any user who owns
-   a table into which replication is happening can execute arbitrary code with
-   the privileges of the subscription owner. For example, they could do this
-   by simply attaching a trigger to one of the tables which they own.
-   Because it is usually undesirable to allow one role to freely assume
-   the privileges of another, this option should be avoided unless user
-   security within the database is of no concern.
+   如果订阅配置了 <literal>run_as_owner = true</literal>，则不会发生用户切换。相反，所有操作都将以订阅所有者的权限执行。在这种情况下，订阅所有者只需要对目标表具有 <literal>SELECT</literal>、<literal>INSERT</literal>、<literal>UPDATE</literal> 和 <literal>DELETE</literal> 权限，而不需要对表所有者具有 <literal>SET ROLE</literal> 权限。然而，这也意味着任何拥有正在接收复制的表的用户，都能以订阅所有者的权限执行任意代码。例如，他们只需在自己拥有的某张表上附加一个触发器就能做到这一点。由于通常不希望允许一个角色随意假定另一个角色的权限，因此除非数据库内的用户安全性无关紧要，否则应避免使用此选项。
   </para>
 
   <para>
-   On the publisher, privileges are only checked once at the start of a
-   replication connection and are not re-checked as each change record is read.
+   在发布端，权限只在复制连接开始时检查一次，在读取每条变更记录时不会重新检查。
   </para>
 
   <para>
-   On the subscriber, the subscription owner's privileges are re-checked for
-   each transaction when applied. If a worker is in the process of applying a
-   transaction when the ownership of the subscription is changed by a
-   concurrent transaction, the application of the current transaction will
-   continue under the old owner's privileges.
+   在订阅端，每当应用事务时都会重新检查订阅所有者的权限。如果某个工作进程正在应用事务时，订阅的所有权被一个并发事务更改，则当前事务的应用将继续以旧所有者的权限进行。
   </para>
  </sect1>
 
