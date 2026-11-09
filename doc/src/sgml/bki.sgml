@@ -32,88 +32,34 @@
  </para>
 
  <sect1 id="system-catalog-declarations">
-  <title>System Catalog Declaration Rules</title>
+  <title>系统目录声明规则</title>
 
   <para>
-   The key part of a catalog header file is a C structure definition
-   describing the layout of each row of the catalog.  This begins with
-   a <literal>CATALOG</literal> macro, which so far as the C compiler is
-   concerned is just shorthand for <literal>typedef struct
-   FormData_<replaceable>catalogname</replaceable></literal>.
-   Each field in the struct gives rise to a catalog column.
-   Fields can be annotated using the BKI property macros described
-   in <filename>genbki.h</filename>, for example to define a default value
-   for a field or mark it as nullable or not nullable.
-   The <literal>CATALOG</literal> line can also be annotated, with some
-   other BKI property macros described in <filename>genbki.h</filename>, to
-   define other properties of the catalog as a whole, such as whether
-   it is a shared relation.
+   目录头文件的关键部分是一个 C 结构体定义，用于描述目录中每一行的布局。它以 <literal>CATALOG</literal> 宏开始，对 C 编译器而言，这只不过是 <literal>typedef struct
+   FormData_<replaceable>catalogname</replaceable></literal> 的简写。结构体中的每个字段都会产生一个目录列。可以使用 <filename>genbki.h</filename> 中描述的 BKI 属性宏为字段添加注解，例如为字段定义默认值，或将其标记为可空或不可空。<literal>CATALOG</literal> 行也可以使用 <filename>genbki.h</filename> 中描述的其他一些 BKI 属性宏添加注解，以定义目录整体的其他属性，例如它是否为共享关系。
   </para>
 
   <para>
-   The system catalog cache code (and most catalog-munging code in general)
-   assumes that the fixed-length portions of all system catalog tuples are
-   in fact present, because it maps this C struct declaration onto them.
-   Thus, all variable-length fields and nullable fields must be placed at
-   the end, and they cannot be accessed as struct fields.
-   For example, if you tried to
-   set <structname>pg_type</structname>.<structfield>typrelid</structfield>
-   to be NULL, it would fail when some piece of code tried to reference
-   <literal>typetup-&gt;typrelid</literal> (or worse,
-   <literal>typetup-&gt;typelem</literal>, because that follows
-   <structfield>typrelid</structfield>).  This would result in
-   random errors or even segmentation violations.
+   系统目录缓存代码（以及大多数处理目录的代码）假定所有系统目录元组的定长部分实际上都存在，因为它把该 C 结构体声明映射到这些部分上。因此，所有变长字段和可空字段都必须放在末尾，并且不能作为结构体字段访问。例如，如果你试图把 <structname>pg_type</structname>.<structfield>typrelid</structfield> 设置为 NULL，当某段代码试图引用 <literal>typetup-&gt;typrelid</literal>（或者更糟，引用 <literal>typetup-&gt;typelem</literal>，因为它跟在 <structfield>typrelid</structfield> 之后）时就会失败。这会导致随机错误，甚至段错误。
   </para>
 
   <para>
-   As a partial guard against this type of error, variable-length or
-   nullable fields should not be made directly visible to the C compiler.
-   This is accomplished by wrapping them in <literal>#ifdef
-   CATALOG_VARLEN</literal> ... <literal>#endif</literal> (where
-   <literal>CATALOG_VARLEN</literal> is a symbol that is never defined).
-   This prevents C code from carelessly trying to access fields that might
-   not be there or might be at some other offset.
-   As an independent guard against creating incorrect rows, we
-   require all columns that should be non-nullable to be marked so
-   in <structname>pg_attribute</structname>.  The bootstrap code will
-   automatically mark catalog columns as <literal>NOT NULL</literal>
-   if they are fixed-width and are not preceded by any nullable or
-   variable-width column.
-   Where this rule is inadequate, you can force correct marking by using
-   <literal>BKI_FORCE_NOT_NULL</literal>
-   and <literal>BKI_FORCE_NULL</literal> annotations as needed.
+   作为对此类错误的部分防护，不应让变长字段或可空字段直接对 C 编译器可见。这是通过将它们包裹在 <literal>#ifdef
+   CATALOG_VARLEN</literal> ... <literal>#endif</literal> 中实现的（其中 <literal>CATALOG_VARLEN</literal> 是一个从未定义的符号）。这可以防止 C 代码粗心地试图访问可能不存在或可能位于其他偏移处的字段。作为防止创建错误行的独立防护，我们要求所有应为非空的列都在 <structname>pg_attribute</structname> 中如此标记。如果目录列是定宽的，且前面没有任何可空或变宽列，引导代码会自动将其标记为 <literal>NOT NULL</literal>。在该规则不适用的情况下，你可以根据需要，使用 <literal>BKI_FORCE_NOT_NULL</literal> 和 <literal>BKI_FORCE_NULL</literal> 注解来强制进行正确的标记。
   </para>
 
   <para>
-   Frontend code should not include any <filename>pg_xxx.h</filename>
-   catalog header file, as these files may contain C code that won't compile
-   outside the backend.  (Typically, that happens because these files also
-   contain declarations for functions
-   in <filename>src/backend/catalog/</filename> files.)
-   Instead, frontend code may include the corresponding
-   generated <filename>pg_xxx_d.h</filename> header, which will contain
-   OID <literal>#define</literal>s and any other data that might be of use
-   on the client side.  If you want macros or other code in a catalog header
-   to be visible to frontend code, write <literal>#ifdef
-   EXPOSE_TO_CLIENT_CODE</literal> ... <literal>#endif</literal> around that
-   section to instruct <filename>genbki.pl</filename> to copy that section
-   to the <filename>pg_xxx_d.h</filename> header.
+   前端代码不应包含任何 <filename>pg_xxx.h</filename>
+   系统目录头文件，因为这些文件可能包含在后端之外无法编译的 C 代码。（通常，出现这种情况是因为这些文件还包含 <filename>src/backend/catalog/</filename> 文件中函数的声明。）
+   相反，前端代码可以包含相应的生成的 <filename>pg_xxx_d.h</filename> 头文件，其中将包含 OID <literal>#define</literal> 以及客户端可能用到的任何其他数据。如果你希望系统目录头文件中的宏或其他代码对前端代码可见，请在该部分周围写上 <literal>#ifdef
+   EXPOSE_TO_CLIENT_CODE</literal> ... <literal>#endif</literal>，以指示 <filename>genbki.pl</filename> 将该部分复制到 <filename>pg_xxx_d.h</filename> 头文件中。
   </para>
 
   <para>
-   A few of the catalogs are so fundamental that they can't even be created
-   by the <acronym>BKI</acronym> <literal>create</literal> command that's
-   used for most catalogs, because that command needs to write information
-   into these catalogs to describe the new catalog.  These are
-   called <firstterm>bootstrap</firstterm> catalogs, and defining one takes
-   a lot of extra work: you have to manually prepare appropriate entries for
-   them in the pre-loaded contents of <structname>pg_class</structname>
-   and <structname>pg_type</structname>, and those entries will need to be
-   updated for subsequent changes to the catalog's structure.
-   (Bootstrap catalogs also need pre-loaded entries
-   in <structname>pg_attribute</structname>, but
-   fortunately <filename>genbki.pl</filename> handles that chore nowadays.)
-   Avoid making new catalogs be bootstrap catalogs if at all possible.
+   少数系统目录非常基础，以至于无法通过用于大多数系统目录的 <acronym>BKI</acronym> <literal>create</literal> 命令来创建，因为该命令需要向这些系统目录写入信息以描述新的系统目录。这些被称为<firstterm>bootstrap</firstterm>系统目录，定义一个这样的目录需要大量额外工作：你必须手动在 <structname>pg_class</structname>
+   和 <structname>pg_type</structname> 的预加载内容中为它们准备适当的条目，而且随着系统目录结构的后续更改，这些条目也需要更新。
+   （bootstrap 系统目录还需要在 <structname>pg_attribute</structname> 中提供预加载条目，但幸运的是，如今 <filename>genbki.pl</filename> 会处理这项杂务。）
+   尽可能避免让新的系统目录成为 bootstrap 系统目录。
   </para>
  </sect1>
 
