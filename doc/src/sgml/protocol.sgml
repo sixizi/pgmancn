@@ -21,236 +21,128 @@
   </para>
 
  <sect1 id="protocol-overview">
-  <title>Overview</title>
+  <title>概述</title>
 
   <para>
-   The protocol has separate phases for startup and normal operation.
-   In the startup phase, the frontend opens a connection to the server
-   and authenticates itself to the satisfaction of the server.  (This might
-   involve a single message, or multiple messages depending on the
-   authentication method being used.)  If all goes well, the server then sends
-   status information to the frontend, and finally enters normal operation.
-   Except for the initial startup-request message, this part of the
-   protocol is driven by the server.
+   协议分为启动和正常操作两个独立的阶段。在启动阶段，前端打开到服务器的连接，并完成服务器所要求的身份认证。（根据所使用的认证方法，这可能涉及单条消息，也可能涉及多条消息。）如果一切顺利，服务器随后向前端发送状态信息，最后进入正常操作。除了最初的启动请求消息之外，这部分协议由服务器驱动。
   </para>
 
   <para>
-   During normal operation, the frontend sends queries and
-   other commands to the backend, and the backend sends back query results
-   and other responses.  There are a few cases (such as <command>NOTIFY</command>)
-   wherein the
-   backend will send unsolicited messages, but for the most part this portion
-   of a session is driven by frontend requests.
+   在正常操作期间，前端向后端发送查询和其他命令，后端则返回查询结果和其他响应。在少数情况下（例如 <command>NOTIFY</command>），后端会发送未经请求的消息，但大多数情况下，会话的这一部分由前端的请求驱动。
   </para>
 
   <para>
-   Termination of the session is normally by frontend choice, but can be
-   forced by the backend in certain cases.  In any case, when the backend
-   closes the connection, it will roll back any open (incomplete) transaction
-   before exiting.
+   会话的终止通常由前端选择，但在某些情况下也可以由后端强制终止。无论如何，当后端关闭连接时，它会在退出之前回滚任何打开的（未完成的）事务。
   </para>
 
   <para>
-   Within normal operation, SQL commands can be executed through either of
-   two sub-protocols.  In the <quote>simple query</quote> protocol, the frontend
-   just sends a textual query string, which is parsed and immediately
-   executed by the backend.  In the <quote>extended query</quote> protocol,
-   processing of queries is separated into multiple steps: parsing,
-   binding of parameter values, and execution.  This offers flexibility
-   and performance benefits, at the cost of extra complexity.
+   在正常操作中，SQL 命令可以通过两种子协议之一来执行。在<quote>简单查询</quote>协议中，前端只发送一个文本形式的查询字符串，后端对其解析并立即执行。在<quote>扩展查询</quote>协议中，查询的处理被分为多个步骤：解析、绑定参数值以及执行。这提供了灵活性和性能优势，代价是额外的复杂性。
   </para>
 
   <para>
-   Normal operation has additional sub-protocols for special operations
-   such as <command>COPY</command>.
+   正常操作还有用于特殊操作的附加子协议，例如 <command>COPY</command>。
   </para>
 
  <sect2 id="protocol-message-concepts">
-  <title>Messaging Overview</title>
+  <title>消息传递概述</title>
 
   <para>
-   All communication is through a stream of messages.  The first byte of a
-   message identifies the message type, and the next four bytes specify the
-   length of the rest of the message (this length count includes itself, but
-   not the message-type byte).  The remaining contents of the message are
-   determined by the message type.  For historical reasons, the very first
-   message sent by the client (the startup message) has no initial
-   message-type byte.
+   所有通信都通过消息流进行。消息的第一个字节标识消息类型，接下来的四个字节指定消息其余部分的长度（该长度计数包含它自身，但不包含消息类型字节）。消息的其余内容由消息类型决定。由于历史原因，客户端发送的第一条消息（启动消息）没有初始的消息类型字节。
   </para>
 
   <para>
-   To avoid losing synchronization with the message stream, both servers and
-   clients typically read an entire message into a buffer (using the byte
-   count) before attempting to process its contents.  This allows easy
-   recovery if an error is detected while processing the contents.  In
-   extreme situations (such as not having enough memory to buffer the
-   message), the receiver can use the byte count to determine how much
-   input to skip before it resumes reading messages.
+   为避免与消息流失去同步，服务器和客户端通常都会先将整条消息读入缓冲区（使用字节计数），然后再尝试处理其内容。这样，如果在处理内容时检测到错误，就可以轻松恢复。在极端情况下（例如没有足够的内存来缓冲该消息），接收方可以使用字节计数来确定在恢复读取消息之前需要跳过多少输入。
   </para>
 
   <para>
-   Conversely, both servers and clients must take care never to send an
-   incomplete message.  This is commonly done by marshaling the entire message
-   in a buffer before beginning to send it.  If a communications failure
-   occurs partway through sending or receiving a message, the only sensible
-   response is to abandon the connection, since there is little hope of
-   recovering message-boundary synchronization.
+   反过来，服务器和客户端都必须注意绝不发送不完整的消息。通常的做法是先将整条消息编组到缓冲区中，然后再开始发送。如果在发送或接收消息的过程中发生通信故障，唯一合理的响应就是放弃该连接，因为恢复消息边界同步的希望非常渺茫。
   </para>
  </sect2>
 
   <sect2 id="protocol-query-concepts">
-   <title>Extended Query Overview</title>
+   <title>扩展查询概述</title>
 
    <para>
-    In the extended-query protocol, execution of SQL commands is divided
-    into multiple steps.  The state retained between steps is represented
-    by two types of objects: <firstterm>prepared statements</firstterm> and
-    <firstterm>portals</firstterm>.  A prepared statement represents the result of
-    parsing and semantic analysis of a textual query string.
-    A prepared statement is not in itself ready to execute, because it might
-    lack specific values for <firstterm>parameters</firstterm>.  A portal represents
-    a ready-to-execute or already-partially-executed statement, with any
-    missing parameter values filled in.  (For <command>SELECT</command> statements,
-    a portal is equivalent to an open cursor, but we choose to use a different
-    term since cursors don't handle non-<command>SELECT</command> statements.)
+    在扩展查询协议中，SQL 命令的执行被划分为多个步骤。步骤之间保留的状态由两类对象表示：<firstterm>预备语句</firstterm>和<firstterm>门户</firstterm>。预备语句表示对文本查询字符串进行解析和语义分析的结果。预备语句本身并不可以直接执行，因为它可能缺少<firstterm>参数</firstterm>的具体值。门户表示一条可执行或已部分执行的语句，其中所有缺失的参数值都已填入。（对于 <command>SELECT</command> 语句，门户等价于一个打开的游标，但我们选择使用不同的术语，因为游标不处理非 <command>SELECT</command> 语句。）
    </para>
 
    <para>
-    The overall execution cycle consists of a <firstterm>parse</firstterm> step,
-    which creates a prepared statement from a textual query string; a
-    <firstterm>bind</firstterm> step, which creates a portal given a prepared
-    statement and values for any needed parameters; and an
-    <firstterm>execute</firstterm> step that runs a portal's query.  In the case of
-    a query that returns rows (<command>SELECT</command>, <command>SHOW</command>, etc.),
-    the execute step can be told to fetch only
-    a limited number of rows, so that multiple execute steps might be needed
-    to complete the operation.
+    整个执行循环由 <firstterm>parse</firstterm>（解析）步骤、<firstterm>bind</firstterm>（绑定）步骤和 <firstterm>execute</firstterm>（执行）步骤组成：parse 步骤从文本查询字符串创建一个预备语句；bind 步骤根据预备语句以及所需参数的值创建一个门户；execute 步骤运行门户的查询。对于返回行的查询（<command>SELECT</command>、<command>SHOW</command> 等），可以要求 execute 步骤只取回有限数量的行，因此可能需要多个 execute 步骤才能完成该操作。
    </para>
 
    <para>
-    The backend can keep track of multiple prepared statements and portals
-    (but note that these exist only within a session, and are never shared
-    across sessions).  Existing prepared statements and portals are
-    referenced by names assigned when they were created.  In addition,
-    an <quote>unnamed</quote> prepared statement and portal exist.  Although these
-    behave largely the same as named objects, operations on them are optimized
-    for the case of executing a query only once and then discarding it,
-    whereas operations on named objects are optimized on the expectation
-    of multiple uses.
+    后端可以跟踪多个预备语句和门户（但请注意，它们只存在于一个会话内，绝不会跨会话共享）。已有的预备语句和门户通过创建时赋予的名称来引用。此外，还存在一个<quote>未命名</quote>的预备语句和门户。尽管它们的行为与命名对象大体相同，但对它们的操作针对的是只执行一次查询然后将其丢弃的情形进行了优化，而对命名对象的操作则是基于多次使用的预期进行优化的。
    </para>
   </sect2>
 
   <sect2 id="protocol-format-codes">
-   <title>Formats and Format Codes</title>
+   <title>格式和格式代码</title>
 
    <para>
-    Data of a particular data type might be transmitted in any of several
-    different <firstterm>formats</firstterm>.  As of <productname>PostgreSQL</productname> 7.4
-    the only supported formats are <quote>text</quote> and <quote>binary</quote>,
-    but the protocol makes provision for future extensions.  The desired
-    format for any value is specified by a <firstterm>format code</firstterm>.
-    Clients can specify a format code for each transmitted parameter value
-    and for each column of a query result.  Text has format code zero,
-    binary has format code one, and all other format codes are reserved
-    for future definition.
+    特定数据类型的数据可以用若干不同<firstterm>格式</firstterm>中的任意一种传输。在 <productname>PostgreSQL</productname> 7.4 中，唯一支持的格式是<quote>文本</quote>和<quote>二进制</quote>，但该协议为将来的扩展预留了空间。任何值所需的格式由<firstterm>格式代码</firstterm>指定。客户端可以为每个传输的参数值以及查询结果的每一列指定格式代码。文本的格式代码为零，二进制的格式代码为一，所有其他格式代码都保留供将来定义。
    </para>
 
    <para>
-    The text representation of values is whatever strings are produced
-    and accepted by the input/output conversion functions for the
-    particular data type.  In the transmitted representation, there is
-    no trailing null character; the frontend must add one to received
-    values if it wants to process them as C strings.
-    (The text format does not allow embedded nulls, by the way.)
+    值的文本表示就是该特定数据类型的输入/输出转换函数所产生并接受的字符串。在传输的表示中，没有结尾的空字符；如果前端想按 C 字符串处理接收到的值，就必须自行添加一个空字符。（顺便说一句，文本格式不允许内嵌空字符。）
    </para>
 
    <para>
-    Binary representations for integers use network byte order (most
-    significant byte first).  For other data types consult the documentation
-    or source code to learn about the binary representation.  Keep in mind
-    that binary representations for complex data types might change across
-    server versions; the text format is usually the more portable choice.
+    整数的二进制表示使用网络字节序（最高有效字节在前）。对于其他数据类型，请查阅文档或源代码以了解其二进制表示。请记住，复杂数据类型的二进制表示可能随服务器版本而变化；文本格式通常是更具可移植性的选择。
    </para>
   </sect2>
 
   <sect2 id="protocol-versions">
-   <title>Protocol Versions</title>
+   <title>协议版本</title>
 
    <para>
-    The current, latest version of the protocol is version 3.2. However, for
-    backwards compatibility with old server versions and middleware that don't
-    support the version negotiation yet, libpq still uses protocol version 3.0
-    by default.
+    当前最新的协议版本是 3.2。不过，为了向后兼容尚不支持版本协商的旧服务器版本和中间件，libpq 默认仍然使用协议版本 3.0。
    </para>
 
    <para>
-    A single server can support multiple protocol versions.  The initial
-    startup-request message tells the server which protocol version the client
-    is attempting to use.  If the major version requested by the client is not
-    supported by the server, the connection will be rejected (for example,
-    this would occur if the client requested protocol version 4.0, which does
-    not exist as of this writing).  If the minor version requested by the
-    client is not supported by the server (e.g., the client requests version
-    3.2, but the server supports only 3.0), the server may either reject the
-    connection or may respond with a NegotiateProtocolVersion message
-    containing the highest minor protocol version which it supports.  The
-    client may then choose either to continue with the connection using the
-    specified protocol version or to abort the connection.
+    单个服务器可以支持多个协议版本。初始启动请求消息会告诉服务器客户端试图使用哪个协议版本。如果客户端请求的主版本不受服务器支持，连接将被拒绝（例如，如果客户端请求协议版本 4.0，而截至本文撰写时该版本尚不存在，就会出现这种情况）。如果客户端请求的次版本不受服务器支持（例如，客户端请求版本 3.2，但服务器只支持 3.0），服务器可以拒绝连接，也可以回复一条 NegotiateProtocolVersion 消息，其中包含它所支持的最高次协议版本。然后客户端可以选择使用指定的协议版本继续连接，或者中止连接。
    </para>
 
    <para>
-    The protocol negotiation was introduced in
-    <productname>PostgreSQL</productname> version 9.3.21. Earlier versions
-    would reject the connection if the client requested a minor version that
-    was not supported by the server.
+    协议协商是在 <productname>PostgreSQL</productname> 版本 9.3.21 中引入的。更早的版本会在客户端请求服务器不支持的次版本时拒绝连接。
    </para>
 
    <para>
-    <xref linkend="protocol-versions-table"/> shows the currently supported
-    protocol versions.
+    <xref linkend="protocol-versions-table"/> 显示了当前支持的协议版本。
    </para>
 
    <table id="protocol-versions-table">
-    <title>Protocol Versions</title>
+    <title>协议版本</title>
 
     <tgroup cols="3">
      <thead>
       <row>
-       <entry>Version</entry>
-       <entry>Supported by</entry>
-       <entry>Description</entry>
+       <entry>版本</entry>
+       <entry>支持的版本</entry>
+       <entry>描述</entry>
       </row>
      </thead>
 
      <tbody>
       <row>
       <entry>3.2</entry>
-      <entry>PostgreSQL 18 and later</entry>
-      <entry>Current latest version. The secret key used in query
-        cancellation was enlarged from 4 bytes to a variable length field. The
-        BackendKeyData message was changed to accommodate that, and the CancelRequest
-        message was redefined to have a variable length payload.
+      <entry>PostgreSQL 18 及更高版本</entry>
+      <entry>当前最新版本。用于查询取消的密钥从 4 字节扩展为可变长度字段。BackendKeyData 消息已相应修改，CancelRequest 消息被重新定义为具有可变长度负载。
       </entry>
       </row>
       <row>
       <entry>3.1</entry>
       <entry>-</entry>
-      <entry>Reserved. Version 3.1 has not been used by any PostgreSQL
-        version, but it was skipped because old versions of the popular
-        pgbouncer application had a bug in the protocol negotiation which made
-        it incorrectly claim that it supported version 3.1.
+      <entry>保留。版本 3.1 未被任何 PostgreSQL 版本使用，但之所以跳过它，是因为流行的 pgbouncer 应用程序的旧版本在协议协商中存在一个缺陷，导致它错误地声称自己支持版本 3.1。
       </entry>
       </row>
       <row>
       <entry>3.0</entry>
-      <entry>PostgreSQL 7.4 and later</entry>
+      <entry>PostgreSQL 7.4 及更高版本</entry>
       </row>
       <row>
       <entry>2.0</entry>
-      <entry>up to PostgreSQL 13</entry>
-      <entry>See previous releases of
-      the <productname>PostgreSQL</productname> documentation for
-      details</entry>
+      <entry>直至 PostgreSQL 13</entry>
+      <entry>详情请参见 <productname>PostgreSQL</productname> 文档的先前版本</entry>
       </row>
      </tbody>
     </tgroup>
