@@ -4,80 +4,44 @@
  <title>本地语言支持</title>
 
  <sect1 id="nls-translator">
-  <title>For the Translator</title>
+  <title>面向翻译者</title>
 
   <para>
    <productname>PostgreSQL</productname>
-   programs (server and client) can issue their messages in
-   your favorite language &mdash; if the messages have been translated.
-   Creating and maintaining translated message sets needs the help of
-   people who speak their own language well and want to contribute to
-   the <productname>PostgreSQL</productname> effort.  You do not have to be a
-   programmer at all
-   to do this.  This section explains how to help.
+   程序（服务器和客户端）可以用你喜欢的语言 &mdash; 发出消息，前提是这些消息已被翻译。
+   创建和维护翻译消息集需要那些精通自己语言并愿意为 <productname>PostgreSQL</productname> 工作做出贡献的人的帮助。你完全不必是程序员
+   就能做这件事。本节说明如何提供帮助。
   </para>
 
   <sect2 id="nls-translator-requirements">
-   <title>Requirements</title>
+   <title>要求</title>
 
    <para>
-    We won't judge your language skills &mdash; this section is about
-    software tools.  Theoretically, you only need a text editor.  But
-    this is only in the unlikely event that you do not want to try out
-    your translated messages.  When you configure your source tree, be
-    sure to use the <option>--enable-nls</option> option.  This will
-    also check for the <application>libintl</application> library and the
-    <filename>msgfmt</filename> program, which all end users will need
-    anyway.  To try out your work, follow the applicable portions of
-    the installation instructions.
+    我们不会评判你的语言能力 &mdash; 本节讲的是软件工具。理论上，你只需要一个文本编辑器。但这只是在你不想试用自己翻译的消息这种不太可能的情况下才成立。在配置源码树时，务必使用 <option>--enable-nls</option> 选项。这还会检查 <application>libintl</application> 库和 <filename>msgfmt</filename> 程序，而所有最终用户无论如何都会需要它们。要试用你的工作成果，请遵循安装说明中适用的部分。
    </para>
 
    <para>
-    If you want to start a new translation effort or want to do a
-    message catalog merge (described later), you will need the
-    programs <filename>xgettext</filename> and
-    <filename>msgmerge</filename>, respectively, in a GNU-compatible
-    implementation.  Later, we will try to arrange it so that if you
-    use a packaged source distribution, you won't need
-    <filename>xgettext</filename>.  (If working from Git, you will still need
-    it.)  <application>GNU Gettext 0.10.36</application> or later is currently recommended.
+    如果你想开始一项新的翻译工作，或者想进行消息目录合并（稍后介绍），你将分别需要 GNU 兼容实现中的 <filename>xgettext</filename> 和 <filename>msgmerge</filename> 程序。稍后，我们将设法做到：如果你使用打包的源码发行版，就不需要 <filename>xgettext</filename>。（如果从 Git 工作，你仍然需要它。）目前推荐使用 <application>GNU Gettext 0.10.36</application> 或更高版本。
    </para>
 
    <para>
-    Your local gettext implementation should come with its own
-    documentation.  Some of that is probably duplicated in what
-    follows, but for additional details you should look there.
+    你本地的 gettext 实现应该自带文档。其中一些内容可能与下文重复，但如需更多细节，你应该查阅那里。
    </para>
   </sect2>
 
   <sect2 id="nls-translator-concepts">
-   <title>Concepts</title>
+   <title>概念</title>
 
    <para>
-    The pairs of original (English) messages and their (possibly)
-    translated equivalents are kept in <firstterm>message
-    catalogs</firstterm>, one for each program (although related
-    programs can share a message catalog) and for each target
-    language.  There are two file formats for message catalogs:  The
-    first is the <quote>PO</quote> file (for Portable Object), which
-    is a plain text file with special syntax that translators edit.
-    The second is the <quote>MO</quote> file (for Machine Object),
-    which is a binary file generated from the respective PO file and
-    is used while the internationalized program is run.  Translators
-    do not deal with MO files; in fact hardly anyone does.
+    原始（英文）消息与它们（可能）已翻译的对应文本成对保存在 <firstterm>消息目录</firstterm> 中，每个程序一个（不过相关程序可以共享一个消息目录），并且每种目标语言一个。消息目录有两种文件格式：第一种是 <quote>PO</quote> 文件（Portable Object，可移植对象），它是一种纯文本文件，带有供翻译人员编辑的特殊语法。第二种是 <quote>MO</quote> 文件（Machine Object，机器对象），它是从相应的 PO 文件生成的二进制文件，在运行国际化程序时使用。翻译人员不处理 MO 文件；事实上几乎没有人处理它们。
    </para>
 
    <para>
-    The extension of the message catalog file is to no surprise either
-    <filename>.po</filename> or <filename>.mo</filename>.  The base
-    name is either the name of the program it accompanies, or the
-    language the file is for, depending on the situation.  This is a
-    bit confusing.  Examples are <filename>psql.po</filename> (PO file
-    for psql) or <filename>fr.mo</filename> (MO file in French).
+    消息目录文件的扩展名不出所料，要么是 <filename>.po</filename>，要么是 <filename>.mo</filename>。基本名称要么是它所伴随程序的名称，要么是该文件所对应的语言，具体取决于情况。这有点令人困惑。例如 <filename>psql.po</filename>（psql 的 PO 文件）或 <filename>fr.mo</filename>（法语的 MO 文件）。
    </para>
 
    <para>
-    The file format of the PO files is illustrated here:
+    PO 文件的文件格式在此说明：
 <programlisting>
 # comment
 
@@ -90,204 +54,134 @@ msgstr "another translated"
 
 ...
 </programlisting>
-    The msgid lines are extracted from the program source.  (They need not
-    be, but this is the most common way.)  The msgstr lines are
-    initially empty and are filled in with useful strings by the
-    translator.  The strings can contain C-style escape characters and
-    can be continued across lines as illustrated.  (The next line must
-    start at the beginning of the line.)
+    msgid 行从程序源代码中提取。（它们不必如此，但这是最常见的方式。）msgstr 行最初为空，由翻译人员填入有用的字符串。这些字符串可以包含 C 风格的转义字符，并且可以像图示那样跨行继续。（下一行必须从行首开始。）
    </para>
 
    <para>
-    The # character introduces a comment.  If whitespace immediately
-    follows the # character, then this is a comment maintained by the
-    translator.  There can also be automatic comments, which have a
-    non-whitespace character immediately following the #.  These are
-    maintained by the various tools that operate on the PO files and
-    are intended to aid the translator.
+    # 字符引入注释。如果 # 字符后面紧跟空白字符，那么这是由译者维护的注释。此外还可能有自动注释，其 # 后面紧跟一个非空白字符。这些注释由操作 PO 文件的各种工具维护，旨在帮助译者。
 <programlisting>
 #. automatic comment
 #: filename.c:1023
 #, flags, flags
 </programlisting>
-    The #. style comments are extracted from the source file where the
-    message is used.  Possibly the programmer has inserted information
-    for the translator, such as about expected alignment.  The #:
-    comments indicate the exact locations where the message is used
-    in the source.  The translator need not look at the program
-    source, but can if there is doubt about the correct
-    translation.  The #, comments contain flags that describe the
-    message in some way.  There are currently two flags:
-    <literal>fuzzy</literal> is set if the message has possibly been
-    outdated because of changes in the program source.  The translator
-    can then verify this and possibly remove the fuzzy flag.  Note
-    that fuzzy messages are not made available to the end user.  The
-    other flag is <literal>c-format</literal>, which indicates that
-    the message is a <function>printf</function>-style format
-    template.  This means that the translation should also be a format
-    string with the same number and type of placeholders.  There are
-    tools that can verify this, which key off the c-format flag.
+    #. 风格的注释是从使用该消息的源文件中提取的。程序员可能插入了供译者参考的信息，例如关于预期对齐方式的信息。#: 注释指明该消息在源文件中使用的确切位置。译者不必查看程序源代码，但如果对正确的翻译有疑问，可以查看。#, 注释包含以某种方式描述该消息的标志。目前有两个标志：如果消息可能因程序源代码的更改而过时，则设置 <literal>fuzzy</literal>。译者随后可以核实这一点，并可能移除 fuzzy 标志。请注意，fuzzy 消息不会提供给最终用户。另一个标志是 <literal>c-format</literal>，它表示该消息是一个 <function>printf</function> 风格的格式模板。这意味着译文也应当是一个格式字符串，具有相同数量和类型的占位符。有些工具可以验证这一点，它们依据 c-format 标志来工作。
    </para>
   </sect2>
 
   <sect2 id="nls-translator-message-catalogs">
-   <title>Creating and Maintaining Message Catalogs</title>
+   <title>创建和维护消息目录</title>
 
    <para>
-    OK, so how does one create a <quote>blank</quote> message
-    catalog?  First, go into the directory that contains the program
-    whose messages you want to translate.  If there is a file
-    <filename>nls.mk</filename>, then this program has been prepared
-    for translation.
+    那么，如何创建一个<quote>空白</quote>消息目录呢？首先，进入包含你想要翻译其消息的程序的目录。如果存在 <filename>nls.mk</filename> 文件，那么该程序已经为翻译做好了准备。
    </para>
 
    <para>
-    If there are already some <filename>.po</filename> files, then
-    someone has already done some translation work.  The files are
-    named <filename><replaceable>language</replaceable>.po</filename>,
-    where <replaceable>language</replaceable> is the
+    如果已经存在一些 <filename>.po</filename> 文件，那么说明已经有人完成了一些翻译工作。这些文件命名为 <filename><replaceable>language</replaceable>.po</filename>，其中 <replaceable>language</replaceable> 是
     <ulink url="https://www.loc.gov/standards/iso639-2/php/English_list.php">
-    ISO 639-1 two-letter language code (in lower case)</ulink>, e.g.,
-    <filename>fr.po</filename> for French.  If there is really a need
-    for more than one translation effort per language then the files
-    can also be named
+    ISO 639-1 双字母语言代码（小写）</ulink>，例如 <filename>fr.po</filename> 表示法语。如果确实需要为同一种语言进行多项翻译工作，那么文件也可以命名为
     <filename><replaceable>language</replaceable>_<replaceable>region</replaceable>.po</filename>
-    where <replaceable>region</replaceable> is the
+    ，其中 <replaceable>region</replaceable> 是
     <ulink url="https://www.iso.org/iso-3166-country-codes.html">
-    ISO 3166-1 two-letter country code (in upper case)</ulink>,
-    e.g.,
-    <filename>pt_BR.po</filename> for Portuguese in Brazil.  If you
-    find the language you wanted you can just start working on that
-    file.
+    ISO 3166-1 双字母国家代码（大写）</ulink>，
+    例如 <filename>pt_BR.po</filename> 表示巴西的葡萄牙语。如果你找到了想要的语言，就可以直接开始处理该文件。
    </para>
 
    <para>
-    If you need to start a new translation effort, then first run the
-    command:
+    如果你需要开始一项新的翻译工作，请首先运行以下命令：
 <programlisting>
 make init-po
 </programlisting>
-    This will create a file
-    <filename><replaceable>progname</replaceable>.pot</filename>.
-    (<filename>.pot</filename> to distinguish it from PO files that
-    are <quote>in production</quote>. The <literal>T</literal> stands for
-    <quote>template</quote>.)
-    Copy this file to
-    <filename><replaceable>language</replaceable>.po</filename> and
-    edit it.  To make it known that the new language is available,
-    also edit the file <filename>po/LINGUAS</filename> and add the
-    language (or language and country) code next to languages already listed,
-    like:
+    这将创建一个文件
+    <filename><replaceable>progname</replaceable>.pot</filename>。
+    （<filename>.pot</filename> 是为了与<quote>正在使用中</quote>的 PO 文件区分开。<literal>T</literal> 代表
+    <quote>模板</quote>。）
+    将此文件复制为
+    <filename><replaceable>language</replaceable>.po</filename> 并
+    编辑它。为了让系统知道新语言已经可用，
+    还需编辑文件 <filename>po/LINGUAS</filename>，在已列出的语言旁边
+    添加该语言（或语言和国家）代码，
+    如下所示：
 <programlisting>
 de fr
 </programlisting>
-    (Other languages can appear, of course.)
+    （当然，也可以出现其他语言。）
    </para>
 
    <para>
-    As the underlying program or library changes, messages might be
-    changed or added by the programmers.  In this case you do not need
-    to start from scratch.  Instead, run the command:
+    随着底层程序或库的变化，程序员可能会修改或添加消息。
+    在这种情况下，你不需要从头开始。而是运行以下命令：
 <programlisting>
 make update-po
 </programlisting>
-    which will create a new blank message catalog file (the pot file
-    you started with) and will merge it with the existing PO files.
-    If the merge algorithm is not sure about a particular message it
-    marks it <quote>fuzzy</quote> as explained above.  The new PO file
-    is saved with a <filename>.po.new</filename> extension.
+    该命令将创建一个新的空白消息目录文件（即你开始时使用的 pot 文件），
+    并将其与现有的 PO 文件合并。
+    如果合并算法对某条特定消息不确定，就会按上文所述
+    将其标记为<quote>模糊</quote>。新的 PO 文件
+    以 <filename>.po.new</filename> 扩展名保存。
    </para>
   </sect2>
 
   <sect2 id="nls-translator-editing-po">
-   <title>Editing the PO Files</title>
+   <title>编辑 PO 文件</title>
 
    <para>
-    The PO files can be edited with a regular text editor. There are also
-    several specialized editors for PO files which can help the process with
-    translation-specific features.
-    There is (unsurprisingly) a PO mode for Emacs, which can be quite
-    useful.
+    PO 文件可以用普通的文本编辑器编辑。此外还有
+    若干专门用于 PO 文件的编辑器，它们能借助翻译专用的功能
+    来帮助这一过程。
+    Emacs 有一个 PO 模式（这并不令人意外），它可能
+    相当有用。
    </para>
 
    <para>
-    The translator should only change the area between the quotes after
-    the msgstr directive, add comments, and alter the fuzzy flag.
+    译者只应修改 msgstr 指令后引号之间的内容、
+    添加注释，以及修改模糊标志。
    </para>
 
    <para>
-    The PO files need not be completely filled in.  The software will
-    automatically fall back to the original string if no translation
-    (or an empty translation) is available.  It is no problem to
-    submit incomplete translations for inclusions in the source tree;
-    that gives room for other people to pick up your work.  However,
-    you are encouraged to give priority to removing fuzzy entries
-    after doing a merge.  Remember that fuzzy entries will not be
-    installed; they only serve as reference for what might be the right
-    translation.
+    PO 文件不必完全填写。如果没有译文
+    （或译文为空），软件会自动回退到原始字符串。
+    提交不完整的翻译以纳入源码树是没有问题的；
+    这为其他人接手你的工作留出了空间。不过，
+    建议你在完成合并后优先处理掉模糊条目。
+    请记住，模糊条目不会被安装；它们只是作为
+    可能正确的译文的参考。
    </para>
 
    <para>
-    Here are some things to keep in mind while editing the
-    translations:
+    以下是编辑翻译时需要注意的一些事项：
     <itemizedlist>
      <listitem>
       <para>
-       Make sure that if the original ends with a newline, the
-       translation does, too.  Similarly for tabs, etc.
+       确保如果原文以换行结尾，译文也以换行结尾。制表符等也是如此。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If the original is a <function>printf</function> format string, the translation
-       also needs to be.  The translation also needs to have the same
-       format specifiers in the same order.  Sometimes the natural
-       rules of the language make this impossible or at least awkward.
-       In that case you can modify the format specifiers like this:
+       如果原文是 <function>printf</function> 格式字符串，译文也必须是。译文还必须以相同的顺序包含相同的格式说明符。有时该语言的自然规则使这不可能，或至少很别扭。在这种情况下，你可以像这样修改格式说明符：
 <programlisting>
 msgstr "Die Datei %2$s hat %1$u Zeichen."
 </programlisting>
-       Then the first placeholder will actually use the second
-       argument from the list.  The
-       <literal><replaceable>digits</replaceable>$</literal> needs to
-       follow the % immediately, before any other format manipulators.
-       (This feature really exists in the <function>printf</function>
-       family of functions.  You might not have heard of it before because
-       there is little use for it outside of message
-       internationalization.)
+       这样第一个占位符实际上将使用列表中的第二个参数。<literal><replaceable>digits</replaceable>$</literal> 必须紧跟在 % 之后，位于任何其他格式操纵符之前。（此特性确实存在于 <function>printf</function> 系列函数中。你以前可能没有听说过它，因为在消息国际化之外它几乎没有用处。）
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If the original string contains a linguistic mistake, report
-       that (or fix it yourself in the program source) and translate
-       normally.  The corrected string can be merged in when the
-       program sources have been updated.  If the original string
-       contains a factual mistake, report that (or fix it yourself)
-       and do not translate it.  Instead, you can mark the string with
-       a comment in the PO file.
+       如果原文字符串包含语言错误，请报告该错误（或自行在程序源代码中修正），然后正常翻译。修正后的字符串可以在程序源代码更新后合并进来。如果原文字符串包含事实错误，请报告该错误（或自行修正），并且不要翻译它。相反，你可以在 PO 文件中用注释标记该字符串。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       Maintain the style and tone of the original string.
-       Specifically, messages that are not sentences (<literal>cannot
-       open file %s</literal>) should probably not start with a
-       capital letter (if your language distinguishes letter case) or
-       end with a period (if your language uses punctuation marks).
-       It might help to read <xref linkend="error-style-guide"/>.
+       保持原文字符串的风格和语气。具体来说，不是句子的消息（<literal>cannot
+       open file %s</literal>）可能不应以大写字母开头（如果你的语言区分字母大小写），也不应以句点结尾（如果你的语言使用标点符号）。阅读 <xref linkend="error-style-guide"/> 可能会有帮助。
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If you don't know what a message means, or if it is ambiguous,
-       ask on the developers' mailing list.  Chances are that English
-       speaking end users might also not understand it or find it
-       ambiguous, so it's best to improve the message.
+       如果你不知道某条消息是什么意思，或者它有歧义，请在开发者邮件列表上询问。说英语的最终用户很可能也不理解它或觉得它有歧义，所以最好改进这条消息。
       </para>
      </listitem>
 
