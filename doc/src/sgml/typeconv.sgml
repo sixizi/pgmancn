@@ -43,9 +43,8 @@ SELECT text 'Origin' AS "label", point '(0,0)' AS "value";
 </para>
 
 <para>
-There are four fundamental <acronym>SQL</acronym> constructs requiring
-distinct type conversion rules in the <productname>PostgreSQL</productname>
-parser:
+有四种基本的 <acronym>SQL</acronym> 结构，在 <productname>PostgreSQL</productname>
+解析器中需要各自不同的类型转换规则：
 
 <variablelist>
 <varlistentry>
@@ -105,7 +104,7 @@ parser:
 </para>
 
 <para>
-All type conversion rules are designed with several principles in mind:
+所有类型转换规则的设计都遵循若干原则：
 
 <itemizedlist>
 <listitem>
@@ -169,10 +168,7 @@ All type conversion rules are designed with several principles in mind:
 
 <step id="op-resol-exact-match" performance="required">
 <para>
-Check for an operator accepting exactly the input argument types.
-If one exists (there can be only one exact match in the set of
-operators considered), use it.  Lack of an exact match creates a security
-hazard when calling, via qualified name
+检查是否存在接受完全相同的输入参数类型的运算符。如果存在（在考虑的运算符集合中只能有一个完全匹配），则使用它。缺少完全匹配会在通过限定名称调用时造成安全隐患
   <footnote id="op-qualified-security">
    <!-- If you edit this, consider editing func-qualified-security. -->
    <para>
@@ -180,8 +176,7 @@ hazard when calling, via qualified name
    对象的模式的搜索路径并不是一种 <link linkend="ddl-schemas-patterns">安全的模式使用方式</link>。
    </para>
   </footnote>
-(not typical), any operator found in a schema that permits untrusted users to
-create objects.  In such situations, cast arguments to force an exact match.
+（不常见），即调用在允许不受信任用户创建对象的模式中找到的任何运算符。在这种情况下，请对参数进行强制转换以强制实现完全匹配。
 </para>
 
 <substeps>
@@ -419,21 +414,14 @@ SELECT * FROM mytable WHERE val = text 'foo';
 如果某个函数声明时带有 <literal>VARIADIC</literal> 数组参数，而调用中没有使用 <literal>VARIADIC</literal> 关键字，则该函数会被视为其数组参数已按需要替换为一个或多个该元素类型的出现，以匹配该调用。经过这样的展开后，该函数可能具有与某个非可变参数函数相同的有效参数类型。在这种情况下，将使用在搜索路径中出现较早的函数；如果这两个函数位于同一模式中，则优先选择非可变参数的那个函数。
 </para>
 <para>
-This creates a security hazard when calling, via qualified name
+当通过限定名称调用时，这会造成安全隐患
   <footnote id="func-qualified-security">
    <!-- If you edit this, consider editing op-qualified-security. -->
    <para>
     对于未用模式限定的名称，不会出现这种风险，因为包含允许不受信任用户创建对象的模式的搜索路径不是一种<link linkend="ddl-schemas-patterns">安全的模式使用模式</link>。
    </para>
-  </footnote>,
-a variadic function found in a schema that permits untrusted users to create
-objects.  A malicious user can take control and execute arbitrary SQL
-functions as though you executed them.  Substitute a call bearing
-the <literal>VARIADIC</literal> keyword, which bypasses this hazard.  Calls
-populating <literal>VARIADIC "any"</literal> parameters often have no
-equivalent formulation containing the <literal>VARIADIC</literal> keyword.  To
-issue those calls safely, the function's schema must permit only trusted users
-to create objects.
+  </footnote>，
+即在允许不受信任用户创建对象的模式中找到的可变参数函数。恶意用户可以取得控制权并执行任意 SQL 函数，就如同是您执行了它们一样。请改用带有 <literal>VARIADIC</literal> 关键字的调用，这样可以绕过此隐患。填充 <literal>VARIADIC "any"</literal> 参数的调用通常没有包含 <literal>VARIADIC</literal> 关键字的等价写法。要安全地发出这些调用，函数的模式必须只允许受信任的用户创建对象。
 </para>
 </step>
 <step performance="optional">
@@ -455,15 +443,7 @@ to create objects.
 
 <step performance="required">
 <para>
-If no exact match is found, see if the function call appears
-to be a special type conversion request.  This happens if the function call
-has just one argument and the function name is the same as the (internal)
-name of some data type.  Furthermore, the function argument must be either
-an unknown-type literal, or a type that is binary-coercible to the named
-data type, or a type that could be converted to the named data type by
-applying that type's I/O functions (that is, the conversion is either to or
-from one of the standard string types).  When these conditions are met,
-the function call is treated as a form of <literal>CAST</literal> specification.
+如果没有找到完全匹配，看看该函数调用是否看起来是一种特殊的类型转换请求。当函数调用只有一个参数，并且函数名与某个数据类型的（内部）名称相同时，就会出现这种情况。此外，该函数参数必须是未知类型的字面量，或者是可以二进制转换为所指定数据类型的类型，或者是可以通过应用该类型的 I/O 函数转换为所指定数据类型的类型（也就是说，转换是到标准字符串类型之一或从标准字符串类型之一而来）。当满足这些条件时，该函数调用会被当作 <literal>CAST</literal> 指定的一种形式。
   <footnote>
    <para>
     此步骤的原因是在没有实际转换函数的情况下支持函数风格的转换说明。如果有转换函数，按照惯例它以输出类型命名，因此不需要特殊处理。有关更多说明，请参见
@@ -757,8 +737,7 @@ SQL <literal>UNION</literal> 构造必须匹配可能不同的类型，以成为
 
 <step performance="required">
 <para>
-If any input is of a domain type, treat it as being of the
-domain's base type for all subsequent steps.
+如果任何输入是域类型，则在所有后续步骤中都将其视为该域的基本类型。
   <footnote>
    <para>
     与运算符和函数的域输入处理有些类似，此行为允许通过 <literal>UNION</literal> 或类似构造保留域类型，只要用户小心确保所有输入都隐式或显式地属于该确切类型。否则将使用域的基本类型。
@@ -781,18 +760,13 @@ domain's base type for all subsequent steps.
 
 <step performance="required">
 <para>
-Select the first non-unknown input type as the candidate type,
-then consider each other non-unknown input type, left to right.
+选择第一个非 unknown 的输入类型作为候选类型，然后从左到右依次考虑其他每个非 unknown 的输入类型。
   <footnote>
    <para>
     由于历史原因，<literal>CASE</literal> 将其 <literal>ELSE</literal> 子句（如果有）视为<quote>第一个</quote>输入，而 <literal>THEN</literal> 子句则在其后考虑。在所有其他情况下，<quote>从左到右</quote>指的是表达式在查询文本中出现的顺序。
    </para>
   </footnote>
-If the candidate type can be implicitly converted to the other type,
-but not vice-versa, select the other type as the new candidate type.
-Then continue considering the remaining inputs.  If, at any stage of this
-process, a preferred type is selected, stop considering additional
-inputs.
+如果候选类型可以隐式转换为另一种类型，但反之不行，则选择另一种类型作为新的候选类型。然后继续考虑剩余的输入。如果在此过程的任一阶段选定了首选类型，则停止考虑后续输入。
 </para>
 </step>
 
