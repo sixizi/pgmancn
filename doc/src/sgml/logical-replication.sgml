@@ -1717,77 +1717,36 @@ CONTEXT:  processing remote data for replication origin "pg_16395" during "INSER
  </sect1>
 
  <sect1 id="logical-replication-architecture">
-  <title>Architecture</title>
+  <title>架构</title>
 
   <para>
-   Logical replication is built with an architecture similar to physical
-   streaming replication (see <xref linkend="streaming-replication"/>).  It is
-   implemented by <literal>walsender</literal> and <literal>apply</literal>
-   processes.  The walsender process starts logical decoding (described
-   in <xref linkend="logicaldecoding"/>) of the WAL and loads the standard
-   logical decoding output plugin (<literal>pgoutput</literal>).  The plugin
-   transforms the changes read
-   from WAL to the logical replication protocol
-   (see <xref linkend="protocol-logical-replication"/>) and filters the data
-   according to the publication specification.  The data is then continuously
-   transferred using the streaming replication protocol to the apply worker,
-   which maps the data to local tables and applies the individual changes as
-   they are received, in correct transactional order.
+   逻辑复制的架构与物理流复制类似（参见 <xref linkend="streaming-replication"/>）。它由 <literal>walsender</literal> 和 <literal>apply</literal> 进程实现。walsender 进程启动 WAL 的逻辑解码（在 <xref linkend="logicaldecoding"/> 中描述），并加载标准的逻辑解码输出插件（<literal>pgoutput</literal>）。该插件将从 WAL 中读取的更改转换为逻辑复制协议（参见 <xref linkend="protocol-logical-replication"/>），并根据发布规范过滤数据。随后，数据使用流复制协议持续传输到应用工作者，应用工作者将数据映射到本地表，并在收到各个更改时按正确的事务顺序应用它们。
   </para>
 
   <para>
-   The apply process on the subscriber database always runs with
-   <link linkend="guc-session-replication-role"><varname>session_replication_role</varname></link>
-   set to <literal>replica</literal>. This means that, by default,
-   triggers and rules will not fire on a subscriber. Users can optionally choose to
-   enable triggers and rules on a table using the
-   <link linkend="sql-altertable"><command>ALTER TABLE</command></link> command
-   and the <literal>ENABLE TRIGGER</literal> and <literal>ENABLE RULE</literal>
-   clauses.
+   订阅者数据库上的应用进程始终在 <link linkend="guc-session-replication-role"><varname>session_replication_role</varname></link> 设置为 <literal>replica</literal> 的情况下运行。这意味着，默认情况下，触发器和规则不会在订阅者上触发。用户可以选择使用 <link linkend="sql-altertable"><command>ALTER TABLE</command></link> 命令以及 <literal>ENABLE TRIGGER</literal> 和 <literal>ENABLE RULE</literal> 子句在表上启用触发器和规则。
   </para>
 
   <para>
-   The logical replication apply process currently only fires row triggers,
-   not statement triggers.  The initial table synchronization, however, is
-   implemented like a <command>COPY</command> command and thus fires both row
-   and statement triggers for <command>INSERT</command>.
+   逻辑复制应用进程目前只触发行触发器，而不触发语句触发器。不过，初始表同步的实现方式类似于 <command>COPY</command> 命令，因此会为 <command>INSERT</command> 同时触发行触发器和语句触发器。
   </para>
 
   <sect2 id="logical-replication-snapshot">
-    <title>Initial Snapshot</title>
+    <title>初始快照</title>
     <para>
-     The initial data in existing subscribed tables is snapshotted and
-     copied in parallel instances of a special kind of apply process.
-     These special apply processes are dedicated table synchronization
-     workers, spawned for each table to be synchronized.  Each table
-     synchronization process will create its own replication slot and
-     copy the existing data.  As soon as the copy is finished the table
-     contents will become visible to other backends.  Once existing data
-     is copied, the worker enters synchronization mode, which ensures
-     that the table is brought up to a synchronized state with the main
-     apply process by streaming any changes that happened during the
-     initial data copy using standard logical replication.  During this
-     synchronization phase, the changes are applied and committed in the same
-     order as they happened on the publisher.  Once synchronization is done,
-     control of the replication of the table is given back to the main apply
-     process where replication continues as normal.
+     现有已订阅表中的初始数据会被生成快照，并由一种特殊应用进程的并行实例进行复制。这些特殊应用进程是专用的表同步工作者，会为每个要同步的表启动。每个表同步进程都会创建自己的复制槽并复制现有数据。复制一旦完成，表内容就会对其他后端可见。复制完现有数据后，工作者进入同步模式，该模式通过使用标准逻辑复制流式传输初始数据复制期间发生的任何更改，确保表与主应用进程达到同步状态。在此同步阶段，更改会按照它们在发布端发生的相同顺序被应用和提交。同步完成后，表的复制控制权会交还给主应用进程，复制将照常继续。
     </para>
     <note>
      <para>
-      The publication
+      发布
       <link linkend="sql-createpublication-params-with-publish"><literal>publish</literal></link>
-      parameter only affects what DML operations will be replicated. The
-      initial data synchronization does not take this parameter into account
-      when copying the existing table data.
+      参数只影响哪些 DML 操作会被复制。初始数据同步在复制现有表数据时不会考虑此参数。
      </para>
     </note>
     <note>
      <para>
-      If a table synchronization worker fails during copy, the apply worker
-      detects the failure and respawns the table synchronization worker to
-      continue the synchronization process. This behaviour ensures that
-      transient errors do not permanently disrupt the replication setup. See
-      also <link linkend="guc-wal-retrieve-retry-interval"><varname>wal_retrieve_retry_interval</varname></link>.
+      如果表同步工作进程在复制期间失败，应用工作进程会检测到该失败，并重新生成表同步工作进程以继续同步过程。此行为可确保瞬时错误不会永久破坏复制设置。另请参见
+      <link linkend="guc-wal-retrieve-retry-interval"><varname>wal_retrieve_retry_interval</varname></link>。
      </para>
     </note>
   </sect2>
