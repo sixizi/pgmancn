@@ -961,15 +961,15 @@ SELECT am.amname AS index_method,
 
 
  <sect1 id="indexes-collations">
-  <title>Indexes and Collations</title>
+  <title>索引与排序规则</title>
 
   <para>
-   An index can support only one collation per index column.
-   If multiple collations are of interest, multiple indexes may be needed.
+   一个索引的每个索引列只能支持一种排序规则。
+   如果需要关注多种排序规则，则可能需要多个索引。
   </para>
 
   <para>
-   Consider these statements:
+   考虑以下语句：
 <programlisting>
 CREATE TABLE test1c (
     id integer,
@@ -978,19 +978,15 @@ CREATE TABLE test1c (
 
 CREATE INDEX test1c_content_index ON test1c (content);
 </programlisting>
-   The index automatically uses the collation of the
-   underlying column.  So a query of the form
+   该索引自动使用底层列的排序规则。因此，如下形式的查询
 <programlisting>
 SELECT * FROM test1c WHERE content &gt; <replaceable>constant</replaceable>;
 </programlisting>
-   could use the index, because the comparison will by default use the
-   collation of the column.  However, this index cannot accelerate queries
-   that involve some other collation.  So if queries of the form, say,
+   可以使用该索引，因为比较默认将使用该列的排序规则。然而，该索引无法加速涉及其他排序规则的查询。因此，如果如下形式的查询
 <programlisting>
 SELECT * FROM test1c WHERE content &gt; <replaceable>constant</replaceable> COLLATE "y";
 </programlisting>
-   are also of interest, an additional index could be created that supports
-   the <literal>"y"</literal> collation, like this:
+   也需要关注，可以额外创建一个支持 <literal>"y"</literal> 排序规则的索引，如下所示：
 <programlisting>
 CREATE INDEX test1c_content_y_index ON test1c (content COLLATE "y");
 </programlisting>
