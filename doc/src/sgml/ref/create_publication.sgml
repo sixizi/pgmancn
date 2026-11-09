@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE PUBLICATION</refname>
-  <refpurpose>define a new publication</refpurpose>
+  <refpurpose>定义一个新的发布</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -38,31 +38,26 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE PUBLICATION</command> adds a new publication
-   into the current database.  The publication name must be distinct from
-   the name of any existing publication in the current database.
+   <command>CREATE PUBLICATION</command> 向当前数据库中添加一个新的发布。发布名称必须与当前数据库中任何现有发布的名称不同。
   </para>
 
   <para>
-   A publication is essentially a group of tables whose data changes are
-   intended to be replicated through logical replication.  See
-   <xref linkend="logical-replication-publication"/> for details about how
-   publications fit into the logical replication setup.
+   发布本质上是一组表，其数据更改旨在通过逻辑复制进行复制。有关发布如何融入逻辑复制设置的详细信息，请参阅 <xref linkend="logical-replication-publication"/>。
    </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry id="sql-createpublication-params-name">
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of the new publication.
+      新发布的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -71,55 +66,27 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
     <term><literal>FOR TABLE</literal></term>
     <listitem>
      <para>
-      Specifies a list of tables to add to the publication.  If
-      <literal>ONLY</literal> is specified before the table name, only
-      that table is added to the publication.  If <literal>ONLY</literal> is not
-      specified, the table and all its descendant tables (if any) are added.
-      Optionally, <literal>*</literal> can be specified after the table name to
-      explicitly indicate that descendant tables are included.
-      This does not apply to a partitioned table, however.  The partitions of
-      a partitioned table are always implicitly considered part of the
-      publication, so they are never explicitly added to the publication.
+      指定要添加到发布中的表的列表。如果在表名之前指定了 <literal>ONLY</literal>，则只将该表添加到发布中。如果未指定 <literal>ONLY</literal>，则会添加该表及其所有后代表（如果有）。可选地，可以在表名之后指定 <literal>*</literal>，以显式指示包含后代表。然而，这不适用于分区表。分区表的分区始终被隐式视为发布的一部分，因此它们永远不会被显式添加到发布中。
      </para>
 
      <para>
-      If the optional <literal>WHERE</literal> clause is specified, it defines a
-      <firstterm>row filter</firstterm> expression. Rows for
-      which the <replaceable class="parameter">expression</replaceable>
-      evaluates to false or null will not be published. Note that parentheses
-      are required around the expression. It has no effect on
-      <literal>TRUNCATE</literal> commands.
+      如果指定了可选的 <literal>WHERE</literal> 子句，它将定义一个<firstterm>行过滤器</firstterm>表达式。对于 <replaceable class="parameter">expression</replaceable> 求值为 false 或 null 的行将不会被发布。注意，表达式两侧必须加括号。它对 <literal>TRUNCATE</literal> 命令没有影响。
      </para>
 
      <para>
-      When a column list is specified, only the named columns are replicated.
-      The column list can contain stored generated columns as well. If the
-      column list is omitted, the publication will replicate all non-generated
-      columns (including any added in the future) by default. Stored generated
-      columns can also be replicated if <literal>publish_generated_columns</literal>
-      is set to <literal>stored</literal>. Specifying a column list has no
-      effect on <literal>TRUNCATE</literal> commands. See
-      <xref linkend="logical-replication-col-lists"/> for details about column
-      lists.
+      当指定了列列表时，只有指定的列会被复制。列列表也可以包含存储生成列。如果省略列列表，则默认情况下发布将复制所有非生成列（包括将来添加的任何列）。如果 <literal>publish_generated_columns</literal> 设置为 <literal>stored</literal>，存储生成列也可以被复制。指定列列表对 <literal>TRUNCATE</literal> 命令没有影响。有关列列表的详细信息，请参见 <xref linkend="logical-replication-col-lists"/>。
      </para>
 
      <para>
-      Only persistent base tables and partitioned tables can be part of a
-      publication.  Temporary tables, unlogged tables, foreign tables,
-      materialized views, and regular views cannot be part of a publication.
+      只有持久基表和分区表才能成为发布的一部分。临时表、无日志表、外部表、物化视图和普通视图不能成为发布的一部分。
      </para>
 
      <para>
-      Specifying a column list when the publication also publishes
-      <literal>FOR TABLES IN SCHEMA</literal> is not supported.
+      当发布同时发布 <literal>FOR TABLES IN SCHEMA</literal> 时，不支持指定列列表。
      </para>
 
      <para>
-      When a partitioned table is added to a publication, all of its existing
-      and future partitions are implicitly considered to be part of the
-      publication.  So, even operations that are performed directly on a
-      partition are also published via publications that its ancestors are
-      part of.
+      当分区表被添加到发布中时，其所有现有和将来的分区都被隐式视为发布的一部分。因此，即使直接在分区上执行的操作，也会通过其祖先所属的发布进行发布。
      </para>
     </listitem>
    </varlistentry>
@@ -128,8 +95,7 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
     <term><literal>FOR ALL TABLES</literal></term>
     <listitem>
      <para>
-      Marks the publication as one that replicates changes for all tables in
-      the database, including tables created in the future.
+      将发布标记为复制数据库中所有表的更改，包括将来创建的表。
      </para>
     </listitem>
    </varlistentry>
@@ -138,29 +104,19 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
     <term><literal>FOR TABLES IN SCHEMA</literal></term>
     <listitem>
      <para>
-      Marks the publication as one that replicates changes for all tables in
-      the specified list of schemas, including tables created in the future.
+      将发布标记为复制指定模式列表中所有表的更改，包括将来创建的表。
      </para>
 
      <para>
-      Specifying a schema when the publication also publishes a table with a
-      column list is not supported.
+      当发布同时还发布带有列列表的表时，不支持指定模式。
      </para>
 
      <para>
-      Only persistent base tables and partitioned tables present in the schema
-      will be included as part of the publication.  Temporary tables, unlogged
-      tables, foreign tables, materialized views, and regular views from the
-      schema will not be part of the publication.
+      只有模式中存在的持久基表和分区表才会被包含为发布的一部分。模式中的临时表、无日志表、外部表、物化视图和普通视图不会成为发布的一部分。
      </para>
 
      <para>
-      When a partitioned table is published via a schema-level publication, all
-      of its existing and future partitions are implicitly considered to be part of the
-      publication, regardless of whether they are from the publication schema or not.
-      So, even operations that are performed directly on a
-      partition are also published via publications that its ancestors are
-      part of.
+      当通过模式级发布发布分区表时，其所有现有和将来的分区都隐式地被视为发布的一部分，无论它们是否来自该发布模式。因此，即使直接在分区上执行的操作，也会通过其祖先所属的发布进行发布。
      </para>
     </listitem>
    </varlistentry>
@@ -169,28 +125,17 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
     <term><literal>WITH ( <replaceable class="parameter">publication_parameter</replaceable> [= <replaceable class="parameter">value</replaceable>] [, ... ] )</literal></term>
     <listitem>
      <para>
-      This clause specifies optional parameters for a publication.  The
-      following parameters are supported:
+      此子句为发布指定可选参数。支持以下参数：
 
       <variablelist>
        <varlistentry id="sql-createpublication-params-with-publish">
         <term><literal>publish</literal> (<type>string</type>)</term>
         <listitem>
          <para>
-          This parameter determines which DML operations will be published by
-          the new publication to the subscribers.  The value is a
-          comma-separated list of operations.  The allowed operations are
-          <literal>insert</literal>, <literal>update</literal>,
-          <literal>delete</literal>, and <literal>truncate</literal>.
-          The default is to publish all actions,
-          and so the default value for this option is
-          <literal>'insert, update, delete, truncate'</literal>.
+          此参数决定新发布将向订阅者发布哪些 DML 操作。该值是一个以逗号分隔的操作列表。允许的操作有 <literal>insert</literal>、<literal>update</literal>、<literal>delete</literal> 和 <literal>truncate</literal>。默认是发布所有操作，因此该选项的默认值为 <literal>'insert, update, delete, truncate'</literal>。
          </para>
          <para>
-          This parameter only affects DML operations. In particular, the initial
-          data synchronization (see <xref linkend="logical-replication-snapshot"/>)
-          for logical replication does not take this parameter into account when
-          copying existing table data.
+          此参数仅影响 DML 操作。特别是，逻辑复制的初始数据同步（参见 <xref linkend="logical-replication-snapshot"/>）在复制现有表数据时不会考虑此参数。
          </para>
         </listitem>
        </varlistentry>
@@ -199,34 +144,25 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
         <term><literal>publish_generated_columns</literal> (<type>enum</type>)</term>
         <listitem>
          <para>
-          Specifies whether the generated columns present in the tables
-          associated with the publication should be replicated. Possible values
-          are <literal>none</literal> and <literal>stored</literal>.
+          指定与发布关联的表中的生成列是否应被复制。可能的值为 <literal>none</literal> 和 <literal>stored</literal>。
          </para>
 
          <para>
-          The default is <literal>none</literal> meaning the generated
-          columns present in the tables associated with publication will not be
-          replicated.
+          默认值为 <literal>none</literal>，意味着与发布关联的表中的生成列将不会被复制。
          </para>
 
          <para>
-          If set to <literal>stored</literal>, the stored generated columns
-          present in the tables associated with publication will be replicated.
+          如果设置为 <literal>stored</literal>，则与发布关联的表中的存储生成列将被复制。
          </para>
 
          <note>
           <para>
-           If the subscriber is from a release prior to 18, then initial table
-           synchronization won't copy generated columns even if the parameter
-           <literal>publish_generated_columns</literal> is <literal>stored</literal>
-           in the publisher.
+           如果订阅者来自 18 之前的版本，那么即使发布者中的参数 <literal>publish_generated_columns</literal> 为 <literal>stored</literal>，初始表同步也不会复制生成列。
           </para>
          </note>
 
          <para>
-          See <xref linkend="logical-replication-gencols"/> for more details about
-          logical replication of generated columns.
+          有关生成列的逻辑复制的更多细节，请参见 <xref linkend="logical-replication-gencols"/>。
          </para>
         </listitem>
        </varlistentry>
@@ -235,35 +171,19 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
         <term><literal>publish_via_partition_root</literal> (<type>boolean</type>)</term>
         <listitem>
          <para>
-          This parameter controls how changes to a partitioned table (or any of
-          its partitions) are published.  When set to <literal>true</literal>,
-          changes are published using the identity and schema of the
-          root partitioned table.  When set to <literal>false</literal> (the
-          default), changes are published using the identity and schema of the
-          individual partitions where the changes actually occurred.  Enabling
-          this option allows the changes to be replicated into a
-          non-partitioned table or into a partitioned table whose partition
-          structure differs from that of the publisher.
+          此参数控制对分区表（或其任何分区）的更改如何被发布。当设置为 <literal>true</literal> 时，更改使用根分区表的标识和模式发布。当设置为 <literal>false</literal>（默认值）时，更改使用实际发生更改的各个分区的标识和模式发布。启用此选项允许将更改复制到非分区表中，或复制到分区结构与发布者不同的分区表中。
          </para>
 
          <para>
-          There can be a case where a subscription combines multiple
-          publications. If a partitioned table is published by any
-          subscribed publications which set
-          <literal>publish_via_partition_root = true</literal>, changes on this
-          partitioned table (or on its partitions) will be published using
-          the identity and schema of this partitioned table rather than
-          that of the individual partitions.
+          可能存在这样的情况：一个订阅组合了多个发布。如果某个分区表被任何设置了 <literal>publish_via_partition_root = true</literal> 的已订阅发布所发布，则对该分区表（或其分区）的更改将使用该分区表的标识和模式发布，而不是使用各个分区的标识和模式。
          </para>
 
          <para>
-          This parameter also affects how row filters and column lists are
-          chosen for partitions; see below for details.
+          此参数还会影响如何为分区选择行过滤器和列列表；详情见下文。
          </para>
 
          <para>
-          If this is enabled, <literal>TRUNCATE</literal> operations performed
-          directly on partitions are not replicated.
+          如果启用此项，直接在分区上执行的 <literal>TRUNCATE</literal> 操作不会被复制。
          </para>
         </listitem>
        </varlistentry>
@@ -274,156 +194,105 @@ CREATE PUBLICATION <replaceable class="parameter">name</replaceable>
   </variablelist>
 
   <para>
-   When specifying a parameter of type <type>boolean</type>, the
-   <literal>=</literal> <replaceable class="parameter">value</replaceable>
-   part can be omitted, which is equivalent to
-   specifying <literal>TRUE</literal>.
+   当指定 <type>boolean</type> 类型的参数时，<literal>=</literal> <replaceable class="parameter">value</replaceable> 部分可以省略，这等同于指定 <literal>TRUE</literal>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   If <literal>FOR TABLE</literal>, <literal>FOR ALL TABLES</literal> or
-   <literal>FOR TABLES IN SCHEMA</literal> are not specified, then the
-   publication starts out with an empty set of tables.  That is useful if
-   tables or schemas are to be added later.
+   如果未指定 <literal>FOR TABLE</literal>、<literal>FOR ALL TABLES</literal> 或 <literal>FOR TABLES IN SCHEMA</literal>，那么该发布在创建时其表集合为空。如果稍后要添加表或模式，这会很有用。
   </para>
 
   <para>
-   The creation of a publication does not start replication.  It only defines
-   a grouping and filtering logic for future subscribers.
+   创建发布并不会启动复制。它只是为将来的订阅者定义分组和过滤逻辑。
   </para>
 
   <para>
-   To create a publication, the invoking user must have the
-   <literal>CREATE</literal> privilege for the current database.
-   (Of course, superusers bypass this check.)
+   要创建发布，调用用户必须对当前数据库具有 <literal>CREATE</literal> 权限。（当然，超级用户会绕过此检查。）
   </para>
 
   <para>
-   To add a table to a publication, the invoking user must have ownership
-   rights on the table.  The <command>FOR ALL TABLES</command> and
-   <command>FOR TABLES IN SCHEMA</command> clauses require the invoking
-   user to be a superuser.
+   要将表添加到发布，调用用户必须拥有该表的所有权。<command>FOR ALL TABLES</command> 和 <command>FOR TABLES IN SCHEMA</command> 子句要求调用用户是超级用户。
   </para>
 
   <para>
-   The tables added to a publication that publishes <command>UPDATE</command>
-   and/or <command>DELETE</command> operations must have
-   <literal>REPLICA IDENTITY</literal> defined.  Otherwise those operations will be
-   disallowed on those tables.
+   添加到发布（该发布发布 <command>UPDATE</command> 和/或 <command>DELETE</command> 操作）的表必须定义 <literal>REPLICA IDENTITY</literal>。否则，这些表上的那些操作将被禁止。
   </para>
 
   <para>
-   Any column list must include the <literal>REPLICA IDENTITY</literal> columns
-   in order for <command>UPDATE</command> or <command>DELETE</command>
-   operations to be published. There are no column list restrictions if the
-   publication publishes only <command>INSERT</command> operations.
+   任何列列表都必须包含 <literal>REPLICA IDENTITY</literal> 列，才能发布 <command>UPDATE</command> 或 <command>DELETE</command> 操作。如果发布只发布 <command>INSERT</command> 操作，则没有列列表限制。
   </para>
 
   <para>
-   A row filter expression (i.e., the <literal>WHERE</literal> clause) must contain only
-   columns that are covered by the <literal>REPLICA IDENTITY</literal>, in
-   order for <command>UPDATE</command> and <command>DELETE</command> operations
-   to be published. For publication of <command>INSERT</command> operations,
-   any column may be used in the <literal>WHERE</literal> expression. The
-   row filter allows simple expressions that don't have
-   user-defined functions, user-defined operators, user-defined types,
-   user-defined collations, non-immutable built-in functions, or references to
-   system columns.
+   行过滤器表达式（即 <literal>WHERE</literal> 子句）必须只包含 <literal>REPLICA IDENTITY</literal> 所涵盖的列，才能发布 <command>UPDATE</command> 和 <command>DELETE</command> 操作。对于发布 <command>INSERT</command> 操作，<literal>WHERE</literal> 表达式中可以使用任何列。行过滤器允许简单表达式，这些表达式不能包含用户定义函数、用户定义运算符、用户定义类型、用户定义排序规则、非 IMMUTABLE 的内置函数或对系统列的引用。
   </para>
 
   <para>
-   The generated columns that are part of <literal>REPLICA IDENTITY</literal>
-   must be published explicitly either by listing them in the column list or
-   by enabling the <literal>publish_generated_columns</literal> option, in
-   order for <command>UPDATE</command> and <command>DELETE</command> operations
-   to be published.
+   作为 <literal>REPLICA IDENTITY</literal> 一部分的生成列必须显式发布，方法是在列列表中列出它们或启用 <literal>publish_generated_columns</literal> 选项，才能发布 <command>UPDATE</command> 和 <command>DELETE</command> 操作。
   </para>
 
   <para>
-   The row filter on a table becomes redundant if
-   <literal>FOR TABLES IN SCHEMA</literal> is specified and the table
-   belongs to the referred schema.
+   如果指定了 <literal>FOR TABLES IN SCHEMA</literal> 且表属于所引用的模式，则表上的行过滤器将变得多余。
   </para>
 
   <para>
-   For published partitioned tables, the row filter for each
-   partition is taken from the published partitioned table if the
-   publication parameter <literal>publish_via_partition_root</literal> is true,
-   or from the partition itself if it is false (the default).
-   See <xref linkend="logical-replication-row-filter"/> for details about row
-   filters.
-   Similarly, for published partitioned tables, the column list for each
-   partition is taken from the published partitioned table if the
-   publication parameter <literal>publish_via_partition_root</literal> is true,
-   or from the partition itself if it is false.
+   对于已发布的分区表，如果发布参数 <literal>publish_via_partition_root</literal> 为 true，则每个分区的行过滤器取自已发布的分区表；如果为 false（默认值），则取自分区本身。有关行过滤器的详细信息，请参见 <xref linkend="logical-replication-row-filter"/>。同样，对于已发布的分区表，如果发布参数 <literal>publish_via_partition_root</literal> 为 true，则每个分区的列列表取自已发布的分区表；如果为 false，则取自分区本身。
   </para>
 
   <para>
-   For an <command>INSERT ... ON CONFLICT</command> command, the publication will
-   publish the operation that results from the command.  Depending
-   on the outcome, it may be published as either <command>INSERT</command> or
-   <command>UPDATE</command>, or it may not be published at all.
+   对于 <command>INSERT ... ON CONFLICT</command> 命令，发布将发布该命令产生的操作。根据结果，它可能作为 <command>INSERT</command> 或 <command>UPDATE</command> 发布，也可能根本不发布。
   </para>
 
   <para>
-   For a <command>MERGE</command> command, the publication will publish an
-   <command>INSERT</command>, <command>UPDATE</command>, or <command>DELETE</command>
-   for each row inserted, updated, or deleted.
+   对于 <command>MERGE</command> 命令，发布将针对插入、更新或删除的每一行发布 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command>。
   </para>
 
   <para>
-   <command>ATTACH</command>ing a table into a partition tree whose root is
-   published using a publication with <literal>publish_via_partition_root</literal>
-   set to <literal>true</literal> does not result in the table's existing contents
-   being replicated.
+   将表 <command>ATTACH</command> 到一个分区树中，而该分区树的根是通过把 <literal>publish_via_partition_root</literal> 设置为 <literal>true</literal> 的发布来发布的，这不会导致该表的现有内容被复制。
   </para>
 
   <para>
-   <command>COPY ... FROM</command> commands are published
-   as <command>INSERT</command> operations.
+   <command>COPY ... FROM</command> 命令会作为 <command>INSERT</command> 操作发布。
   </para>
 
   <para>
-   <acronym>DDL</acronym> operations are not published.
+   <acronym>DDL</acronym> 操作不会被发布。
   </para>
 
   <para>
-   The <literal>WHERE</literal> clause expression is executed with the role used
-   for the replication connection.
+   <literal>WHERE</literal> 子句表达式使用复制连接所用的角色执行。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Create a publication that publishes all changes in two tables:
+   创建一个发布，发布两个表中的所有更改：
 <programlisting>
 CREATE PUBLICATION mypublication FOR TABLE users, departments;
 </programlisting>
   </para>
 
   <para>
-   Create a publication that publishes all changes from active departments:
+   创建一个发布，发布 active departments 中的所有更改：
 <programlisting>
 CREATE PUBLICATION active_departments FOR TABLE departments WHERE (active IS TRUE);
 </programlisting>
   </para>
 
   <para>
-   Create a publication that publishes all changes in all tables:
+   创建一个发布，发布所有表中的所有更改：
 <programlisting>
 CREATE PUBLICATION alltables FOR ALL TABLES;
 </programlisting>
   </para>
 
   <para>
-   Create a publication that only publishes <command>INSERT</command>
-   operations in one table:
+   创建一个发布，仅发布一个表中的 <command>INSERT</command>
+   操作：
 <programlisting>
 CREATE PUBLICATION insert_only FOR TABLE mydata
     WITH (publish = 'insert');
@@ -431,43 +300,40 @@ CREATE PUBLICATION insert_only FOR TABLE mydata
   </para>
 
   <para>
-   Create a publication that publishes all changes for tables
-   <structname>users</structname>, <structname>departments</structname> and
-   all changes for all the tables present in the schema
-   <structname>production</structname>:
+   创建一个发布，发布表
+   <structname>users</structname>、<structname>departments</structname> 的所有更改，
+   以及模式
+   <structname>production</structname> 中所有表的所有更改：
 <programlisting>
 CREATE PUBLICATION production_publication FOR TABLE users, departments, TABLES IN SCHEMA production;
 </programlisting>
   </para>
 
   <para>
-   Create a publication that publishes all changes for all the tables present in
-   the schemas <structname>marketing</structname> and
-   <structname>sales</structname>:
+   创建一个发布，发布
+   模式 <structname>marketing</structname> 和
+   <structname>sales</structname> 中所有表的所有更改：
 <programlisting>
 CREATE PUBLICATION sales_publication FOR TABLES IN SCHEMA marketing, sales;
 </programlisting></para>
 
   <para>
-   Create a publication that publishes all changes for table <structname>users</structname>,
-   but replicates only columns <structname>user_id</structname> and
-   <structname>firstname</structname>:
+   创建一个发布，发布表 <structname>users</structname> 的所有更改，但只复制列 <structname>user_id</structname> 和 <structname>firstname</structname>：
 <programlisting>
 CREATE PUBLICATION users_filtered FOR TABLE users (user_id, firstname);
 </programlisting></para>
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE PUBLICATION</command> is a <productname>PostgreSQL</productname>
-   extension.
+   <command>CREATE PUBLICATION</command> 是一个 <productname>PostgreSQL</productname> 扩展。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterpublication"/></member>
