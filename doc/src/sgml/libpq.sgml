@@ -5379,7 +5379,7 @@ typedef struct
  </sect1>
 
  <sect1 id="libpq-notify">
-  <title>Asynchronous Notification</title>
+  <title>异步通知</title>
 
   <indexterm zone="libpq-notify">
    <primary>NOTIFY</primary>
@@ -5387,32 +5387,15 @@ typedef struct
   </indexterm>
 
   <para>
-   <productname>PostgreSQL</productname> offers asynchronous notification
-   via the <command>LISTEN</command> and <command>NOTIFY</command>
-   commands.  A client session registers its interest in a particular
-   notification channel with the <command>LISTEN</command> command (and
-   can stop listening with the <command>UNLISTEN</command> command).  All
-   sessions listening on a particular channel will be notified
-   asynchronously when a <command>NOTIFY</command> command with that
-   channel name is executed by any session. A <quote>payload</quote> string can
-   be passed to communicate additional data to the listeners.
+   <productname>PostgreSQL</productname> 通过 <command>LISTEN</command> 和 <command>NOTIFY</command> 命令提供异步通知。客户端会话使用 <command>LISTEN</command> 命令注册其对特定通知通道的关注（并可使用 <command>UNLISTEN</command> 命令停止监听）。当任何会话执行带有该通道名的 <command>NOTIFY</command> 命令时，所有监听该特定通道的会话都将异步收到通知。可以传递一个<quote>载荷</quote>字符串，以便向监听者传达附加数据。
   </para>
 
   <para>
-   <application>libpq</application> applications submit
-   <command>LISTEN</command>, <command>UNLISTEN</command>,
-   and <command>NOTIFY</command> commands as
-   ordinary SQL commands.  The arrival of <command>NOTIFY</command>
-   messages can subsequently be detected by calling
-   <function id="libpq-PQnotifies">PQnotifies</function>.<indexterm><primary>PQnotifies</primary></indexterm>
+   <application>libpq</application> 应用程序将 <command>LISTEN</command>、<command>UNLISTEN</command> 和 <command>NOTIFY</command> 命令作为普通 SQL 命令提交。随后可以通过调用 <function id="libpq-PQnotifies">PQnotifies</function> 来检测 <command>NOTIFY</command> 消息的到达。<indexterm><primary>PQnotifies</primary></indexterm>
   </para>
 
   <para>
-   The function <function>PQnotifies</function> returns the next notification
-   from a list of unhandled notification messages received from the server.
-   It returns a null pointer if there are no pending notifications.  Once a
-   notification is returned from <function>PQnotifies</function>, it is considered
-   handled and will be removed from the list of notifications.
+   函数 <function>PQnotifies</function> 从服务器收到的未处理通知消息列表中返回下一个通知。如果没有待处理的通知，则返回空指针。一旦从 <function>PQnotifies</function> 返回了某个通知，该通知就被视为已处理，并将从通知列表中移除。
 
 <synopsis>
 PGnotify *PQnotifies(PGconn *conn);
@@ -5425,47 +5408,28 @@ typedef struct pgNotify
 } PGnotify;
 </synopsis>
 
-   After processing a <structname>PGnotify</structname> object returned
-   by <function>PQnotifies</function>, be sure to free it with
-   <xref linkend="libpq-PQfreemem"/>.  It is sufficient to free the
-   <structname>PGnotify</structname> pointer; the
-   <structfield>relname</structfield> and <structfield>extra</structfield>
-   fields do not represent separate allocations.  (The names of these fields
-   are historical; in particular, channel names need not have anything to
-   do with relation names.)
+   在处理完由 <function>PQnotifies</function> 返回的 <structname>PGnotify</structname> 对象后，务必使用 <xref linkend="libpq-PQfreemem"/> 释放它。只需释放 <structname>PGnotify</structname> 指针即可；<structfield>relname</structfield> 和 <structfield>extra</structfield> 字段并不代表单独的分配。（这些字段的名称是历史遗留的；特别是，通道名不必与关系名有任何关系。）
   </para>
 
   <para>
-   <xref linkend="libpq-example-2"/> gives a sample program that illustrates
-   the use of asynchronous notification.
+   <xref linkend="libpq-example-2"/> 给出了一个示例程序，用于说明异步通知的用法。
   </para>
 
   <para>
-   <function>PQnotifies</function> does not actually read data from the
-   server; it just returns messages previously absorbed by another
-   <application>libpq</application> function.  In ancient releases of
-   <application>libpq</application>, the only way to ensure timely receipt
-   of <command>NOTIFY</command> messages was to constantly submit commands, even
-   empty ones, and then check <function>PQnotifies</function> after each
-   <xref linkend="libpq-PQexec"/>.  While this still works, it is deprecated
-   as a waste of processing power.
+   <function>PQnotifies</function> 实际上并不从服务器读取数据；它只是返回先前已被另一个 <application>libpq</application> 函数吸收的消息。在 <application>libpq</application> 的古老版本中，确保及时收到 <command>NOTIFY</command> 消息的唯一方法是不断提交命令（即使是空命令），然后在每次 <xref linkend="libpq-PQexec"/> 之后检查 <function>PQnotifies</function>。虽然这种做法仍然可行，但已不推荐使用，因为它浪费处理能力。
   </para>
 
   <para>
-   A better way to check for <command>NOTIFY</command> messages when you have no
-   useful commands to execute is to call
-   <xref linkend="libpq-PQconsumeInput"/>, then check
-   <function>PQnotifies</function>.  You can use
-   <function>select()</function> to wait for data to arrive from the
-   server, thereby using no <acronym>CPU</acronym> power unless there is
-   something to do.  (See <xref linkend="libpq-PQsocket"/> to obtain the file
-   descriptor number to use with <function>select()</function>.) Note that
-   this will work OK whether you submit commands with
-   <xref linkend="libpq-PQsendQuery"/>/<xref linkend="libpq-PQgetResult"/> or
-   simply use <xref linkend="libpq-PQexec"/>.  You should, however, remember
-   to check <function>PQnotifies</function> after each
-   <xref linkend="libpq-PQgetResult"/> or <xref linkend="libpq-PQexec"/>, to
-   see if any notifications came in during the processing of the command.
+   当你没有有用的命令要执行时，检查 <command>NOTIFY</command> 消息的更好方法是调用
+   <xref linkend="libpq-PQconsumeInput"/>，然后检查
+   <function>PQnotifies</function>。你可以使用
+   <function>select()</function> 等待来自服务器的数据到达，从而在没有事情可做时不消耗
+   <acronym>CPU</acronym> 资源。（参见 <xref linkend="libpq-PQsocket"/> 获取要与 <function>select()</function> 一起使用的
+   文件描述符编号。）请注意，无论你是用
+   <xref linkend="libpq-PQsendQuery"/>/<xref linkend="libpq-PQgetResult"/> 提交命令，
+   还是简单地使用 <xref linkend="libpq-PQexec"/>，这都能正常工作。不过，你应当记得
+   在每次 <xref linkend="libpq-PQgetResult"/> 或 <xref linkend="libpq-PQexec"/> 之后检查
+   <function>PQnotifies</function>，看看在处理该命令期间是否有任何通知到达。
   </para>
 
  </sect1>
