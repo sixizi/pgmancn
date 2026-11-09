@@ -46,12 +46,12 @@
   </note>
 
  <sect1 id="plperl-funcs">
-  <title>PL/Perl Functions and Arguments</title>
+  <title>PL/Perl 函数和参数</title>
 
   <para>
-   To create a function in the PL/Perl language, use the standard
+   要在 PL/Perl 语言中创建函数，请使用标准的
    <xref linkend="sql-createfunction"/>
-   syntax:
+   语法：
 
 <programlisting>
 CREATE FUNCTION <replaceable>funcname</replaceable> (<replaceable>argument-types</replaceable>)
@@ -62,20 +62,16 @@ AS $$
 $$ LANGUAGE plperl;
 </programlisting>
 
-   The body of the function is ordinary Perl code. In fact, the PL/Perl
-   glue code wraps it inside a Perl subroutine.  A PL/Perl function is
-   called in a scalar context, so it can't return a list.  You can return
-   non-scalar values (arrays, records, and sets) by returning a reference,
-   as discussed below.
+   函数体是普通的 Perl 代码。事实上，PL/Perl 的粘合代码会把它包装在一个 Perl 子程序中。PL/Perl 函数在标量上下文中被调用，因此它不能返回列表。你可以通过返回一个引用来返回非标量值（数组、记录和集合），如下文所述。
   </para>
 
   <para>
-   In a PL/Perl procedure, any return value from the Perl code is ignored.
+   在 PL/Perl 过程中，Perl 代码的任何返回值都会被忽略。
   </para>
 
   <para>
-   PL/Perl also supports anonymous code blocks called with the
-   <xref linkend="sql-do"/> statement:
+   PL/Perl 还支持用
+   <xref linkend="sql-do"/> 语句调用的匿名代码块：
 
 <programlisting>
 DO $$
@@ -83,45 +79,28 @@ DO $$
 $$ LANGUAGE plperl;
 </programlisting>
 
-   An anonymous code block receives no arguments, and whatever value it
-   might return is discarded.  Otherwise it behaves just like a function.
+   匿名代码块不接收任何参数，它可能返回的任何值都会被丢弃。除此之外，它的行为与函数完全一样。
   </para>
 
   <note>
    <para>
-    The use of named nested subroutines is dangerous in Perl, especially if
-    they refer to lexical variables in the enclosing scope. Because a PL/Perl
-    function is wrapped in a subroutine, any named subroutine you place inside
-    one will be nested. In general, it is far safer to create anonymous
-    subroutines which you call via a coderef. For more information, see the
-    entries for <literal>Variable "%s" will not stay shared</literal> and
-    <literal>Variable "%s" is not available</literal> in the
-    <citerefentry><refentrytitle>perldiag</refentrytitle></citerefentry> man page, or
-    search the Internet for <quote>perl nested named subroutine</quote>.
+    在 Perl 中使用具名嵌套子程序是危险的，尤其是当它们引用外围作用域中的词法变量时。由于 PL/Perl 函数被包装在一个子程序中，你放在其中的任何具名子程序都会成为嵌套子程序。一般来说，创建通过代码引用调用的匿名子程序要安全得多。更多信息请参见
+    <citerefentry><refentrytitle>perldiag</refentrytitle></citerefentry> 手册页中关于 <literal>Variable "%s" will not stay shared</literal> 和
+    <literal>Variable "%s" is not available</literal> 的条目，或者在互联网上搜索 <quote>perl nested named subroutine</quote>。
    </para>
   </note>
 
   <para>
-   The syntax of the <command>CREATE FUNCTION</command> command requires
-   the function body to be written as a string constant.  It is usually
-   most convenient to use dollar quoting (see <xref
-   linkend="sql-syntax-dollar-quoting"/>) for the string constant.
-   If you choose to use escape string syntax <literal>E''</literal>,
-   you must double any single quote marks (<literal>'</literal>) and backslashes
-   (<literal>\</literal>) used in the body of the function
-   (see <xref linkend="sql-syntax-strings"/>).
+   <command>CREATE FUNCTION</command> 命令的语法要求函数体写成字符串常量。通常最方便的做法是对该字符串常量使用美元引用（见 <xref
+   linkend="sql-syntax-dollar-quoting"/>）。如果你选择使用转义字符串语法 <literal>E''</literal>，则必须对函数体中使用的任何单引号（<literal>'</literal>）和反斜杠（<literal>\</literal>）进行双写（见 <xref linkend="sql-syntax-strings"/>）。
   </para>
 
   <para>
-   Arguments and results are handled as in any other Perl subroutine:
-   arguments are passed in <varname>@_</varname>, and a result value
-   is returned with <literal>return</literal> or as the last expression
-   evaluated in the function.
+   参数和结果的处理方式与任何其他 Perl 子程序相同：参数通过 <varname>@_</varname> 传入，结果值通过 <literal>return</literal> 返回，或者作为函数中最后求值的表达式返回。
   </para>
 
   <para>
-   For example, a function returning the greater of two integer values
-   could be defined as:
+   例如，一个返回两个整数值中较大者的函数可以定义为：
 
 <programlisting>
 CREATE FUNCTION perl_max (integer, integer) RETURNS integer AS $$
@@ -133,9 +112,7 @@ $$ LANGUAGE plperl;
 
   <note>
     <para>
-      Arguments will be converted from the database's encoding to UTF-8
-      for use inside PL/Perl, and then converted from UTF-8 back to the
-      database encoding upon return.
+      参数将从数据库编码转换为 UTF-8 以便在 PL/Perl 内部使用，然后在返回时从 UTF-8 转换回数据库编码。
     </para>
   </note>
 
@@ -172,39 +149,19 @@ $$ LANGUAGE plperl;
   </para>
 
   <para>
-   Anything in a function argument that is not a reference is
-   a string, which is in the standard <productname>PostgreSQL</productname>
-   external text representation for the relevant data type. In the case of
-   ordinary numeric or text types, Perl will just do the right thing and
-   the programmer will normally not have to worry about it. However, in
-   other cases the argument will need to be converted into a form that is
-   more usable in Perl. For example, the <function>decode_bytea</function>
-   function can be used to convert an argument of
-   type <type>bytea</type> into unescaped binary.
+   函数参数中任何不是引用的内容都是字符串，采用相关数据类型的标准 <productname>PostgreSQL</productname> 外部文本表示形式。对于普通的数值或文本类型，Perl 会自行正确处理，程序员通常不必担心。然而，在其他情况下，参数需要转换为在 Perl 中更易使用的形式。例如，可以使用 <function>decode_bytea</function> 函数将 <type>bytea</type> 类型的参数转换为未转义的二进制。
   </para>
 
   <para>
-   Similarly, values passed back to <productname>PostgreSQL</productname>
-   must be in the external text representation format. For example, the
-   <function>encode_bytea</function> function can be used to
-   escape binary data for a return value of type <type>bytea</type>.
+   同样，传回 <productname>PostgreSQL</productname> 的值必须采用外部文本表示格式。例如，可以使用 <function>encode_bytea</function> 函数为 <type>bytea</type> 类型的返回值转义二进制数据。
   </para>
 
   <para>
-   One case that is particularly important is boolean values.  As just
-   stated, the default behavior for <type>bool</type> values is that they
-   are passed to Perl as text, thus either <literal>'t'</literal>
-   or <literal>'f'</literal>.  This is problematic, since Perl will not
-   treat <literal>'f'</literal> as false!  It is possible to improve matters
-   by using a <quote>transform</quote> (see
-   <xref linkend="sql-createtransform"/>).  Suitable transforms are provided
-   by the <filename>bool_plperl</filename> extension.  To use it, install
-   the extension:
+   一个特别重要的情况是布尔值。正如刚才所述，<type>bool</type> 值的默认行为是将它们作为文本传递给 Perl，因此要么是 <literal>'t'</literal>，要么是 <literal>'f'</literal>。这会带来问题，因为 Perl 不会把 <literal>'f'</literal> 当作假！可以通过使用<quote>转换</quote>来改善这种情况（参见 <xref linkend="sql-createtransform"/>）。<filename>bool_plperl</filename> 扩展提供了合适的转换。要使用它，请安装该扩展：
 <programlisting>
 CREATE EXTENSION bool_plperl;  -- or bool_plperlu for PL/PerlU
 </programlisting>
-   Then use the <literal>TRANSFORM</literal> function attribute for a
-   PL/Perl function that takes or returns <type>bool</type>, for example:
+   然后对接受或返回 <type>bool</type> 的 PL/Perl 函数使用 <literal>TRANSFORM</literal> 函数属性，例如：
 <programlisting>
 CREATE FUNCTION perl_and(bool, bool) RETURNS bool
 TRANSFORM FOR TYPE bool
@@ -213,19 +170,12 @@ AS $$
   return $a &amp;&amp; $b;
 $$ LANGUAGE plperl;
 </programlisting>
-   When this transform is applied, <type>bool</type> arguments will be seen
-   by Perl as being <literal>1</literal> or empty, thus properly true or
-   false.  If the function result is type <type>bool</type>, it will be true
-   or false according to whether Perl would evaluate the returned value as
-   true.
-   Similar transformations are also performed for boolean query arguments
-   and results of SPI queries performed inside the function
-   (<xref linkend="plperl-database"/>).
+   应用此转换后，Perl 会将 <type>bool</type> 参数视为 <literal>1</literal> 或空，从而正确地表示真或假。如果函数结果是 <type>bool</type> 类型，则根据 Perl 是否会将返回值求值为真来决定它是真还是假。
+   对于布尔查询参数以及在函数内部执行的 SPI 查询的结果，也会执行类似的转换（<xref linkend="plperl-database"/>）。
   </para>
 
   <para>
-   Perl can return <productname>PostgreSQL</productname> arrays as
-   references to Perl arrays.  Here is an example:
+   Perl 可以将 <productname>PostgreSQL</productname> 数组作为对 Perl 数组的引用返回。下面是一个例子：
 
 <programlisting>
 CREATE OR REPLACE function returns_array()
@@ -238,11 +188,7 @@ select returns_array();
   </para>
 
   <para>
-   Perl passes <productname>PostgreSQL</productname> arrays as a blessed
-   <type>PostgreSQL::InServer::ARRAY</type> object. This object may be treated as an array
-   reference or a string, allowing for backward compatibility with Perl
-   code written for <productname>PostgreSQL</productname> versions below 9.1 to
-   run.  For example:
+   Perl 将 <productname>PostgreSQL</productname> 数组作为被 bless 的 <type>PostgreSQL::InServer::ARRAY</type> 对象传递。该对象可以被当作数组引用或字符串处理，从而允许为 9.1 以下版本的 <productname>PostgreSQL</productname> 编写的 Perl 代码向后兼容地运行。例如：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION concat_array_elements(text[]) RETURNS TEXT AS $$
@@ -266,17 +212,13 @@ SELECT concat_array_elements(ARRAY['PL','/','Perl']);
 
   <note>
    <para>
-    Multidimensional arrays are represented as references to
-    lower-dimensional arrays of references in a way common to every Perl
-    programmer.
+    多维数组表示为对低维引用数组的引用，这是每个 Perl 程序员都熟悉的方式。
    </para>
   </note>
   </para>
 
   <para>
-   Composite-type arguments are passed to the function as references
-   to hashes.  The keys of the hash are the attribute names of the
-   composite type.  Here is an example:
+   复合类型参数作为对哈希的引用传递给函数。哈希的键是复合类型的属性名。下面是一个例子：
 
 <programlisting>
 CREATE TABLE employee (
@@ -295,9 +237,7 @@ SELECT name, empcomp(employee.*) FROM employee;
   </para>
 
   <para>
-   A PL/Perl function can return a composite-type result using the same
-   approach: return a reference to a hash that has the required attributes.
-   For example:
+   PL/Perl 函数可以使用相同的方法返回复合类型结果：返回一个具有所需属性的哈希的引用。例如：
 
 <programlisting>
 CREATE TYPE testrowperl AS (f1 integer, f2 text, f3 text);
@@ -309,13 +249,11 @@ $$ LANGUAGE plperl;
 SELECT * FROM perl_row();
 </programlisting>
 
-   Any columns in the declared result data type that are not present in the
-   hash will be returned as null values.
+   声明的结果数据类型中任何未出现在哈希中的列都将作为空值返回。
   </para>
 
   <para>
-   Similarly, output arguments of procedures can be returned as a hash
-   reference:
+   同样，过程的输出参数可以作为哈希引用返回：
 
 <programlisting>
 CREATE PROCEDURE perl_triple(INOUT a integer, INOUT b integer) AS $$
@@ -328,14 +266,8 @@ CALL perl_triple(5, 10);
   </para>
 
   <para>
-    PL/Perl functions can also return sets of either scalar or
-    composite types.  Usually you'll want to return rows one at a
-    time, both to speed up startup time and to keep from queuing up
-    the entire result set in memory.  You can do this with
-    <function>return_next</function> as illustrated below.  Note that
-    after the last <function>return_next</function>, you must put
-    either <literal>return</literal> or (better) <literal>return
-    undef</literal>.
+    PL/Perl 函数也可以返回标量类型或复合类型的集合。通常你会希望一次返回一行，这既能加快启动时间，又能避免把整个结果集排队存放在内存中。你可以用 <function>return_next</function> 做到这一点，如下所示。注意，在最后一个 <function>return_next</function> 之后，必须放置 <literal>return</literal> 或者（更好的做法）<literal>return
+    undef</literal>。
 
 <programlisting>
 CREATE OR REPLACE FUNCTION perl_set_int(int)
@@ -357,11 +289,7 @@ RETURNS SETOF testrowperl AS $$
 $$ LANGUAGE plperl;
 </programlisting>
 
-    For small result sets, you can return a reference to an array that
-    contains either scalars, references to arrays, or references to
-    hashes for simple types, array types, and composite types,
-    respectively.  Here are some simple examples of returning the entire
-    result set as an array reference:
+    对于较小的结果集，你可以返回一个数组的引用，其中分别包含标量、数组引用或哈希引用，以对应简单类型、数组类型和复合类型。下面是一些将整个结果集作为数组引用返回的简单示例：
 
 <programlisting>
 CREATE OR REPLACE FUNCTION perl_set_int(int) RETURNS SETOF INTEGER AS $$
@@ -383,25 +311,18 @@ SELECT * FROM perl_set();
   </para>
 
   <para>
-   If you wish to use the <literal>strict</literal> pragma with your code you
-   have a few options. For temporary global use you can <command>SET</command>
-   <literal>plperl.use_strict</literal> to true.
-   This will affect subsequent compilations of <application>PL/Perl</application>
-   functions, but not functions already compiled in the current session.
-   For permanent global use you can set <literal>plperl.use_strict</literal>
-   to true in the <filename>postgresql.conf</filename> file.
+   如果你希望在自己的代码中使用 <literal>strict</literal> pragma，有几种选择。对于临时的全局使用，你可以<command>SET</command> <literal>plperl.use_strict</literal> 为 true。这会影响后续对 <application>PL/Perl</application> 函数的编译，但不会影响当前会话中已经编译过的函数。对于永久的全局使用，你可以在 <filename>postgresql.conf</filename> 文件中将 <literal>plperl.use_strict</literal> 设置为 true。
   </para>
 
   <para>
-   For permanent use in specific functions you can simply put:
+   对于在特定函数中的永久使用，你只需将以下内容放在函数体顶部：
 <programlisting>
 use strict;
 </programlisting>
-   at the top of the function body.
   </para>
 
   <para>
-  The <literal>feature</literal> pragma is also available to <function>use</function> if your Perl is version 5.10.0 or higher.
+  如果你的 Perl 版本为 5.10.0 或更高，<function>use</function> 也可以使用 <literal>feature</literal> pragma。
   </para>
 
  </sect1>
