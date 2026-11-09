@@ -465,18 +465,14 @@ psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: No such
   </sect1>
 
  <sect1 id="kernel-resources">
-  <title>Managing Kernel Resources</title>
+  <title>管理内核资源</title>
 
   <para>
-   <productname>PostgreSQL</productname> can sometimes exhaust various operating system
-   resource limits, especially when multiple copies of the server are running
-   on the same system, or in very large installations.  This section explains
-   the kernel resources used by <productname>PostgreSQL</productname> and the steps you
-   can take to resolve problems related to kernel resource consumption.
+   <productname>PostgreSQL</productname> 有时会耗尽各种操作系统资源限制，尤其是当同一系统上运行多个服务器副本时，或者在非常大型的安装中。本节说明 <productname>PostgreSQL</productname> 使用的内核资源，以及你可以采取哪些步骤来解决与内核资源消耗相关的问题。
   </para>
 
   <sect2 id="sysvipc">
-   <title>Shared Memory and Semaphores</title>
+   <title>共享内存和信号量</title>
 
    <indexterm zone="sysvipc">
     <primary>shared memory</primary>
@@ -487,43 +483,23 @@ psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: No such
    </indexterm>
 
    <para>
-    <productname>PostgreSQL</productname> requires the operating system to provide
-    inter-process communication (<acronym>IPC</acronym>) features, specifically
-    shared memory and semaphores.  Unix-derived systems typically provide
-    <quote><systemitem class="osname">System V</systemitem></quote> <acronym>IPC</acronym>,
-    <quote><systemitem class="osname">POSIX</systemitem></quote> <acronym>IPC</acronym>, or both.
-    <systemitem class="osname">Windows</systemitem> has its own implementation of
-    these features and is not discussed here.
+    <productname>PostgreSQL</productname> 要求操作系统提供进程间通信（<acronym>IPC</acronym>）功能，具体来说是共享内存和信号量。源自 Unix 的系统通常提供 <quote><systemitem class="osname">System V</systemitem></quote> <acronym>IPC</acronym>、<quote><systemitem class="osname">POSIX</systemitem></quote> <acronym>IPC</acronym>，或两者兼有。<systemitem class="osname">Windows</systemitem> 有自己对这些功能的实现，此处不予讨论。
    </para>
 
    <para>
-    By default, <productname>PostgreSQL</productname> allocates
-    a very small amount of System V shared memory, as well as a much larger
-    amount of anonymous <function>mmap</function> shared memory.
-    Alternatively, a single large System V shared memory region can be used
-    (see <xref linkend="guc-shared-memory-type"/>).
+    默认情况下，<productname>PostgreSQL</productname> 分配非常少量的 System V 共享内存，以及数量大得多的匿名 <function>mmap</function> 共享内存。另一种方式是使用单个大型 System V 共享内存区域（参见 <xref linkend="guc-shared-memory-type"/>）。
 
-    In addition a significant number of semaphores, which can be either
-    System V or POSIX style, are created at server startup.  Currently,
-    POSIX semaphores are used on Linux and FreeBSD systems while other
-    platforms use System V semaphores.
+    此外，服务器启动时会创建大量信号量，这些信号量可以是 System V 风格或 POSIX 风格。目前，Linux 和 FreeBSD 系统上使用 POSIX 信号量，而其他平台使用 System V 信号量。
    </para>
 
    <para>
-    System V <acronym>IPC</acronym> features are typically constrained by
-    system-wide allocation limits.
-    When <productname>PostgreSQL</productname> exceeds one of these limits,
-    the server will refuse to start and
-    should leave an instructive error message describing the problem
-    and what to do about it. (See also <xref
-    linkend="server-start-failures"/>.) The relevant kernel
-    parameters are named consistently across different systems; <xref
-    linkend="sysvipc-parameters"/> gives an overview. The methods to set
-    them, however, vary. Suggestions for some platforms are given below.
+    System V <acronym>IPC</acronym> 功能通常受系统级分配限制的约束。当 <productname>PostgreSQL</productname> 超过其中某一限制时，服务器将拒绝启动，并应留下一条有指导意义的错误消息，说明问题以及如何处理。（另请参见 <xref
+    linkend="server-start-failures"/>。）相关内核参数在不同系统上的命名是一致的；<xref
+    linkend="sysvipc-parameters"/> 给出了概述。不过，设置它们的方法各不相同。下面给出了一些平台的建议。
    </para>
 
    <table id="sysvipc-parameters">
-    <title><systemitem class="osname">System V</systemitem> <acronym>IPC</acronym> Parameters</title>
+    <title><systemitem class="osname">System V</systemitem> <acronym>IPC</acronym> 参数</title>
 
     <tgroup cols="3">
      <colspec colname="col1" colwidth="1*"/>
@@ -531,73 +507,71 @@ psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: No such
      <colspec colname="col3" colwidth="3*"/>
      <thead>
       <row>
-       <entry>Name</entry>
-       <entry>Description</entry>
-       <entry>Values needed to run one <productname>PostgreSQL</productname> instance</entry>
+       <entry>名称</entry>
+       <entry>描述</entry>
+       <entry>运行一个 <productname>PostgreSQL</productname> 实例所需的值</entry>
       </row>
      </thead>
 
      <tbody>
       <row>
        <entry><varname>SHMMAX</varname></entry>
-       <entry>Maximum size of shared memory segment (bytes)</entry>
-       <entry>at least 1kB, but the default is usually much higher</entry>
+       <entry>共享内存段的最大大小（字节）</entry>
+       <entry>至少 1kB，但默认值通常要高得多</entry>
       </row>
 
       <row>
        <entry><varname>SHMMIN</varname></entry>
-       <entry>Minimum size of shared memory segment (bytes)</entry>
+       <entry>共享内存段的最小大小（字节）</entry>
        <entry>1</entry>
       </row>
 
       <row>
        <entry><varname>SHMALL</varname></entry>
-       <entry>Total amount of shared memory available (bytes or pages)</entry>
-       <entry>same as <varname>SHMMAX</varname> if bytes,
-        or <literal>ceil(SHMMAX/PAGE_SIZE)</literal> if pages,
-        plus room for other applications</entry>
+       <entry>可用共享内存总量（字节或页）</entry>
+       <entry>若以字节计则与 <varname>SHMMAX</varname> 相同，若以页计则与 <literal>ceil(SHMMAX/PAGE_SIZE)</literal> 相同，再加上其他应用程序所需的空间</entry>
       </row>
 
       <row>
        <entry><varname>SHMSEG</varname></entry>
-       <entry>Maximum number of shared memory segments per process</entry>
-       <entry>only 1 segment is needed, but the default is much higher</entry>
+       <entry>每个进程的最大共享内存段数</entry>
+       <entry>只需要 1 个段，但默认值要高得多</entry>
       </row>
 
        <row>
         <entry><varname>SHMMNI</varname></entry>
-        <entry>Maximum number of shared memory segments system-wide</entry>
-        <entry>like <varname>SHMSEG</varname> plus room for other applications</entry>
+        <entry>系统范围内的最大共享内存段数</entry>
+        <entry>类似于 <varname>SHMSEG</varname>，并为其他应用留出空间</entry>
        </row>
 
        <row>
         <entry><varname>SEMMNI</varname></entry>
-        <entry>Maximum number of semaphore identifiers (i.e., sets)</entry>
-        <entry>at least <literal>ceil(num_os_semaphores / 16)</literal> plus room for other applications</entry>
+        <entry>信号量标识符（即信号量集）的最大数量</entry>
+        <entry>至少为 <literal>ceil(num_os_semaphores / 16)</literal>，并为其他应用留出空间</entry>
        </row>
 
        <row>
         <entry><varname>SEMMNS</varname></entry>
-        <entry>Maximum number of semaphores system-wide</entry>
-        <entry><literal>ceil(num_os_semaphores / 16) * 17</literal> plus room for other applications</entry>
+        <entry>系统范围内信号量的最大数量</entry>
+        <entry><literal>ceil(num_os_semaphores / 16) * 17</literal> 加上为其他应用留出的空间</entry>
        </row>
 
        <row>
         <entry><varname>SEMMSL</varname></entry>
-        <entry>Maximum number of semaphores per set</entry>
-        <entry>at least 17</entry>
+        <entry>每个信号量集中信号量的最大数量</entry>
+        <entry>至少 17</entry>
        </row>
 
        <row>
         <entry><varname>SEMMAP</varname></entry>
-        <entry>Number of entries in semaphore map</entry>
-        <entry>see text</entry>
+        <entry>信号量映射中的条目数</entry>
+        <entry>参见正文</entry>
        </row>
 
        <row>
         <entry><varname>SEMVMX</varname></entry>
-        <entry>Maximum value of semaphore</entry>
-        <entry>at least 1000 (The default is often 32767; do not change unless necessary)</entry>
+        <entry>信号量的最大值</entry>
+        <entry>至少 1000（默认值通常为 32767；除非必要，否则不要更改）</entry>
        </row>
 
      </tbody>
@@ -605,37 +579,22 @@ psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: No such
    </table>
 
    <para>
-    <productname>PostgreSQL</productname> requires a few bytes of System V shared memory
-    (typically 48 bytes, on 64-bit platforms) for each copy of the server.
-    On most modern operating systems, this amount can easily be allocated.
-    However, if you are running many copies of the server or you explicitly
-    configure the server to use large amounts of System V shared memory (see
-    <xref linkend="guc-shared-memory-type"/> and <xref
-    linkend="guc-dynamic-shared-memory-type"/>), it may be necessary to
-    increase <varname>SHMALL</varname>, which is the total amount of System V shared
-    memory system-wide.  Note that <varname>SHMALL</varname> is measured in pages
-    rather than bytes on many systems.
+    <productname>PostgreSQL</productname> 需要为每个服务器副本分配几个字节的 System V 共享内存
+    （在 64 位平台上通常为 48 字节）。在大多数现代操作系统上，这个量很容易分配。
+    但是，如果你运行许多服务器副本，或者显式地将服务器配置为使用大量
+    System V 共享内存（参见
+    <xref linkend="guc-shared-memory-type"/> 和 <xref
+    linkend="guc-dynamic-shared-memory-type"/>），则可能需要
+    增加 <varname>SHMALL</varname>，它是系统范围内 System V 共享内存的总量。
+    请注意，在许多系统上 <varname>SHMALL</varname> 以页为单位而不是字节来衡量。
    </para>
 
    <para>
-    Less likely to cause problems is the minimum size for shared
-    memory segments (<varname>SHMMIN</varname>), which should be at most
-    approximately 32 bytes for <productname>PostgreSQL</productname> (it is
-    usually just 1). The maximum number of segments system-wide
-    (<varname>SHMMNI</varname>) or per-process (<varname>SHMSEG</varname>) are unlikely
-    to cause a problem unless your system has them set to zero.
+    不太可能引发问题的是共享内存段的最小尺寸（<varname>SHMMIN</varname>），对于 <productname>PostgreSQL</productname> 而言它最多应约为 32 字节（通常仅为 1）。系统范围内（<varname>SHMMNI</varname>）或每进程（<varname>SHMSEG</varname>）的最大段数不太可能引发问题，除非你的系统将它们设置为零。
    </para>
 
    <para>
-    When using System V semaphores,
-    <productname>PostgreSQL</productname> uses one semaphore per allowed connection
-    (<xref linkend="guc-max-connections"/>), allowed autovacuum worker process
-    (<xref linkend="guc-autovacuum-worker-slots"/>), allowed WAL sender process
-    (<xref linkend="guc-max-wal-senders"/>), allowed background
-    process (<xref linkend="guc-max-worker-processes"/>), etc., in sets of 16.
-    The runtime-computed parameter <xref linkend="guc-num-os-semaphores"/>
-    reports the number of semaphores required.  This parameter can be viewed
-    before starting the server with a <command>postgres</command> command like:
+    使用 System V 信号量时，<productname>PostgreSQL</productname> 会为每个允许的连接（<xref linkend="guc-max-connections"/>）、允许的自动清理工作进程（<xref linkend="guc-autovacuum-worker-slots"/>）、允许的 WAL 发送进程（<xref linkend="guc-max-wal-senders"/>）、允许的后台进程（<xref linkend="guc-max-worker-processes"/>）等各使用一个信号量，每 16 个为一组。运行时计算的参数 <xref linkend="guc-num-os-semaphores"/> 报告所需的信号量数量。可以在启动服务器之前用如下 <command>postgres</command> 命令查看该参数：
 <programlisting>
 $ <userinput>postgres -D $PGDATA -C num_os_semaphores</userinput>
 </programlisting>
@@ -660,77 +619,43 @@ $ <userinput>postgres -D $PGDATA -C num_os_semaphores</userinput>
    </para>
 
    <para>
-    In some cases it might also be necessary to increase
-    <varname>SEMMAP</varname> to be at least on the order of
-    <varname>SEMMNS</varname>.  If the system has this parameter
-    (many do not), it defines the size of the semaphore
-    resource map, in which each contiguous block of available semaphores
-    needs an entry. When a semaphore set is freed it is either added to
-    an existing entry that is adjacent to the freed block or it is
-    registered under a new map entry. If the map is full, the freed
-    semaphores get lost (until reboot). Fragmentation of the semaphore
-    space could over time lead to fewer available semaphores than there
-    should be.
+    在某些情况下，可能还需要将 <varname>SEMMAP</varname> 增大到至少 <varname>SEMMNS</varname> 的量级。如果系统具有该参数（许多系统没有），它定义信号量资源映射的大小，其中每个可用的连续信号量块都需要一个条目。当某个信号量集被释放时，它要么被添加到与所释放块相邻的现有条目中，要么被登记在一个新的映射条目下。如果映射已满，被释放的信号量就会丢失（直到重启）。信号量空间的碎片化可能随时间推移导致可用信号量少于应有的数量。
    </para>
 
    <para>
-    Various other settings related to <quote>semaphore undo</quote>, such as
-    <varname>SEMMNU</varname> and <varname>SEMUME</varname>, do not affect
-    <productname>PostgreSQL</productname>.
+    与<quote>信号量撤销</quote>相关的各种其他设置，例如 <varname>SEMMNU</varname> 和 <varname>SEMUME</varname>，不会影响 <productname>PostgreSQL</productname>。
    </para>
 
    <para>
-    When using POSIX semaphores, the number of semaphores needed is the
-    same as for System V, that is one semaphore per allowed connection
-    (<xref linkend="guc-max-connections"/>), allowed autovacuum worker process
-    (<xref linkend="guc-autovacuum-worker-slots"/>), allowed WAL sender process
-    (<xref linkend="guc-max-wal-senders"/>), allowed background
-    process (<xref linkend="guc-max-worker-processes"/>), etc.
-    On the platforms where this option is preferred, there is no specific
-    kernel limit on the number of POSIX semaphores.
+    使用 POSIX 信号量时，所需的信号量数量与 System V 相同，即每个允许的连接（<xref linkend="guc-max-connections"/>）、允许的自动清理工作进程（<xref linkend="guc-autovacuum-worker-slots"/>）、允许的 WAL 发送进程（<xref linkend="guc-max-wal-senders"/>）、允许的后台进程（<xref linkend="guc-max-worker-processes"/>）等各需要一个信号量。在首选此选项的平台上，POSIX 信号量的数量没有特定的内核限制。
    </para>
 
 
     <variablelist>
      <varlistentry>
       <term><systemitem class="osname">FreeBSD</systemitem>
-      <indexterm><primary>FreeBSD</primary><secondary>IPC configuration</secondary></indexterm>
+      <indexterm><primary>FreeBSD</primary><secondary>IPC 配置</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        The default shared memory settings are usually good enough, unless
-        you have set <literal>shared_memory_type</literal> to <literal>sysv</literal>.
-        System V semaphores are not used on this platform.
+        默认的共享内存设置通常足够好，除非你把 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>。此平台不使用 System V 信号量。
        </para>
 
        <para>
-        The default IPC settings can be changed using
-        the <command>sysctl</command> or
-        <command>loader</command> interfaces.  The following
-        parameters can be set using <command>sysctl</command>:
+        可以使用 <command>sysctl</command> 或 <command>loader</command> 接口更改默认的 IPC 设置。以下参数可以使用 <command>sysctl</command> 设置：
 <screen>
 <prompt>#</prompt> <userinput>sysctl kern.ipc.shmall=32768</userinput>
 <prompt>#</prompt> <userinput>sysctl kern.ipc.shmmax=134217728</userinput>
 </screen>
-        To make these settings persist over reboots, modify
-        <filename>/etc/sysctl.conf</filename>.
+        要使这些设置在重启后仍然有效，请修改 <filename>/etc/sysctl.conf</filename>。
        </para>
 
        <para>
-        If you have set <literal>shared_memory_type</literal> to
-        <literal>sysv</literal>, you might also want to configure your kernel
-        to lock System V shared memory into RAM and prevent it from being paged
-        out to swap.  This can be accomplished using the <command>sysctl</command>
-        setting <literal>kern.ipc.shm_use_phys</literal>.
+        如果你已将 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>，你可能还希望配置内核，将 System V 共享内存锁定在 RAM 中，防止它被换页到交换空间。这可以通过 <command>sysctl</command> 设置 <literal>kern.ipc.shm_use_phys</literal> 来完成。
        </para>
 
        <para>
-        If running in a FreeBSD jail, you should set its
-        <literal>sysvshm</literal> parameter to <literal>new</literal>, so that
-        it has its own separate System V shared memory namespace.
-        (Before FreeBSD 11.0, it was necessary to enable shared access to
-        the host's IPC namespace from jails, and take measures to avoid
-        collisions.)
+        如果在 FreeBSD jail 中运行，应将其 <literal>sysvshm</literal> 参数设置为 <literal>new</literal>，以便它拥有自己独立的 System V 共享内存命名空间。（在 FreeBSD 11.0 之前，必须从 jail 中启用对主机 IPC 命名空间的共享访问，并采取措施避免冲突。）
        </para>
 
       </listitem>
@@ -738,61 +663,57 @@ $ <userinput>postgres -D $PGDATA -C num_os_semaphores</userinput>
 
      <varlistentry>
       <term><systemitem class="osname">NetBSD</systemitem>
-      <indexterm><primary>NetBSD</primary><secondary>IPC configuration</secondary></indexterm>
+      <indexterm><primary>NetBSD</primary><secondary>IPC 配置</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        The default shared memory settings are usually good enough, unless
-        you have set <literal>shared_memory_type</literal> to <literal>sysv</literal>.
-        However, you will need to increase <literal>kern.ipc.semmni</literal>
-        and <literal>kern.ipc.semmns</literal>,
-        as <systemitem class="osname">NetBSD</systemitem>'s default settings
-        for these are unworkably small.
+        默认的共享内存设置通常已经足够好，除非你把 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>。
+        不过，你需要增大 <literal>kern.ipc.semmni</literal>
+        和 <literal>kern.ipc.semmns</literal>，
+        因为 <systemitem class="osname">NetBSD</systemitem> 对它们的默认设置小得无法使用。
        </para>
 
        <para>
-        IPC parameters can be adjusted using <command>sysctl</command>,
-        for example:
+        IPC 参数可以使用 <command>sysctl</command> 来调整，
+        例如：
 <screen>
 <prompt>#</prompt> <userinput>sysctl -w kern.ipc.semmni=100</userinput>
 </screen>
-        To make these settings persist over reboots, modify
-        <filename>/etc/sysctl.conf</filename>.
+        要使这些设置在重启后仍然有效，请修改
+        <filename>/etc/sysctl.conf</filename>。
        </para>
 
        <para>
-        If you have set <literal>shared_memory_type</literal> to
-        <literal>sysv</literal>, you might also want to configure your kernel
-        to lock System V shared memory into RAM and prevent it from being paged
-        out to swap.  This can be accomplished using the <command>sysctl</command>
-        setting <literal>kern.ipc.shm_use_phys</literal>.
+        如果你已将 <literal>shared_memory_type</literal> 设置为
+        <literal>sysv</literal>，你可能还想配置内核，
+        将 System V 共享内存锁定在 RAM 中，防止它被换页
+        到交换空间。这可以通过 <command>sysctl</command>
+        设置 <literal>kern.ipc.shm_use_phys</literal> 来实现。
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
       <term><systemitem class="osname">OpenBSD</systemitem>
-      <indexterm><primary>OpenBSD</primary><secondary>IPC configuration</secondary></indexterm>
+      <indexterm><primary>OpenBSD</primary><secondary>IPC 配置</secondary></indexterm>
       </term>
       <listitem>
        <para>
-        The default shared memory settings are usually good enough, unless
-        you have set <literal>shared_memory_type</literal> to <literal>sysv</literal>.
-        However, you will need to
-        increase <literal>kern.seminfo.semmni</literal>
-        and <literal>kern.seminfo.semmns</literal>,
-        as <systemitem class="osname">OpenBSD</systemitem>'s default settings
-        for these are unworkably small.
+        默认的共享内存设置通常已经足够好，除非你把 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>。
+        不过，你需要
+        增大 <literal>kern.seminfo.semmni</literal>
+        和 <literal>kern.seminfo.semmns</literal>，
+        因为 <systemitem class="osname">OpenBSD</systemitem> 对它们的默认设置小得无法使用。
        </para>
 
        <para>
-        IPC parameters can be adjusted using <command>sysctl</command>,
-        for example:
+        IPC 参数可以使用 <command>sysctl</command> 进行调整，
+        例如：
 <screen>
 <prompt>#</prompt> <userinput>sysctl kern.seminfo.semmni=100</userinput>
 </screen>
-        To make these settings persist over reboots, modify
-        <filename>/etc/sysctl.conf</filename>.
+        要让这些设置在重启后仍然生效，请修改
+        <filename>/etc/sysctl.conf</filename>。
        </para>
 
       </listitem>
@@ -804,21 +725,21 @@ $ <userinput>postgres -D $PGDATA -C num_os_semaphores</userinput>
       </term>
       <listitem>
        <para>
-        The default shared memory settings are usually good enough, unless
-        you have set <literal>shared_memory_type</literal> to <literal>sysv</literal>,
-        and even then only on older kernel versions that shipped with low defaults.
-        System V semaphores are not used on this platform.
+        默认的共享内存设置通常已经足够，除非
+        你把 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>，
+        而且即便如此，也只在那些自带较低默认值的较旧内核版本上才有影响。
+        此平台不使用 System V 信号量。
        </para>
 
        <para>
-        The shared memory size settings can be changed via the
-        <command>sysctl</command> interface.  For example, to allow 16 GB:
+        共享内存大小的设置可以通过
+        <command>sysctl</command> 接口来更改。例如，要允许 16 GB：
 <screen>
 <prompt>$</prompt> <userinput>sysctl -w kernel.shmmax=17179869184</userinput>
 <prompt>$</prompt> <userinput>sysctl -w kernel.shmall=4194304</userinput>
 </screen>
-        To make these settings persist over reboots, see
-        <filename>/etc/sysctl.conf</filename>.
+        要让这些设置在重启后仍然生效，请参见
+        <filename>/etc/sysctl.conf</filename>。
        </para>
 
       </listitem>
@@ -831,13 +752,11 @@ $ <userinput>postgres -D $PGDATA -C num_os_semaphores</userinput>
       </term>
       <listitem>
        <para>
-        The default shared memory and semaphore settings are usually good enough, unless
-        you have set <literal>shared_memory_type</literal> to <literal>sysv</literal>.
+        默认的共享内存和信号量设置通常已经足够，除非
+        你把 <literal>shared_memory_type</literal> 设置为 <literal>sysv</literal>。
        </para>
        <para>
-        The recommended method for configuring shared memory in macOS
-        is to create a file named <filename>/etc/sysctl.conf</filename>,
-        containing variable assignments such as:
+        在 macOS 中配置共享内存的推荐方法是创建一个名为 <filename>/etc/sysctl.conf</filename> 的文件，其中包含诸如下列的变量赋值：
 <programlisting>
 kern.sysv.shmmax=4194304
 kern.sysv.shmmin=1
@@ -845,24 +764,19 @@ kern.sysv.shmmni=32
 kern.sysv.shmseg=8
 kern.sysv.shmall=1024
 </programlisting>
-        Note that in some macOS versions,
-        <emphasis>all five</emphasis> shared-memory parameters must be set in
-        <filename>/etc/sysctl.conf</filename>, else the values will be ignored.
+请注意，在某些 macOS 版本中，<emphasis>全部五个</emphasis>共享内存参数都必须在 <filename>/etc/sysctl.conf</filename> 中设置，否则这些值将被忽略。
        </para>
 
        <para>
-        <varname>SHMMAX</varname> can only be set to a multiple of 4096.
+        <varname>SHMMAX</varname> 只能设置为 4096 的倍数。
        </para>
 
        <para>
-        <varname>SHMALL</varname> is measured in 4 kB pages on this platform.
+        在此平台上，<varname>SHMALL</varname> 以 4 kB 页为单位计量。
        </para>
 
        <para>
-        It is possible to change all but <varname>SHMMNI</varname> on the fly, using
-        <application>sysctl</application>.  But it's still best to set up your preferred
-        values via <filename>/etc/sysctl.conf</filename>, so that the values will be
-        kept across reboots.
+        除 <varname>SHMMNI</varname> 之外，其余参数都可以使用 <application>sysctl</application> 动态修改。但最好还是通过 <filename>/etc/sysctl.conf</filename> 设置你偏好的值，这样这些值在重启后仍会保留。
        </para>
 
       </listitem>
@@ -873,30 +787,18 @@ kern.sysv.shmall=1024
       <term><systemitem class="osname">illumos</systemitem></term>
       <listitem>
        <para>
-        The default shared memory and semaphore settings are usually good enough for most
-        <productname>PostgreSQL</productname> applications.  Solaris defaults
-        to a <varname>SHMMAX</varname> of one-quarter of system <acronym>RAM</acronym>.
-        To further adjust this setting, use a project setting associated
-        with the <literal>postgres</literal> user.  For example, run the
-        following as <literal>root</literal>:
+        默认的共享内存和信号量设置通常足以满足大多数 <productname>PostgreSQL</productname> 应用的需要。Solaris 默认将 <varname>SHMMAX</varname> 设为系统 <acronym>RAM</acronym> 的四分之一。要进一步调整此设置，请使用与 <literal>postgres</literal> 用户关联的项目设置。例如，以 <literal>root</literal> 身份运行以下命令：
 <programlisting>
 projadd -c "PostgreSQL DB User" -K "project.max-shm-memory=(privileged,8GB,deny)" -U postgres -G postgres user.postgres
 </programlisting>
        </para>
 
        <para>
-        This command adds the <literal>user.postgres</literal> project and
-        sets the shared memory maximum for the <literal>postgres</literal>
-        user to 8GB, and takes effect the next time that user logs
-        in, or when you restart <productname>PostgreSQL</productname> (not reload).
-        The above assumes that <productname>PostgreSQL</productname> is run by
-        the <literal>postgres</literal> user in the <literal>postgres</literal>
-        group.  No server reboot is required.
+        此命令添加 <literal>user.postgres</literal> 项目，并将 <literal>postgres</literal> 用户的最大共享内存设为 8GB，该设置将在该用户下次登录时、或在你重启 <productname>PostgreSQL</productname>（而非重新加载）时生效。以上假设 <productname>PostgreSQL</productname> 由 <literal>postgres</literal> 组中的 <literal>postgres</literal> 用户运行。无需重启服务器。
        </para>
 
        <para>
-        Other recommended kernel setting changes for database servers which will
-        have a large number of connections are:
+        对于将拥有大量连接的数据库服务器，其他推荐的内核设置更改包括：
 <programlisting>
 project.max-shm-ids=(priv,32768,deny)
 project.max-sem-ids=(priv,4096,deny)
@@ -905,11 +807,7 @@ project.max-msg-ids=(priv,4096,deny)
        </para>
 
        <para>
-        Additionally, if you are running <productname>PostgreSQL</productname>
-        inside a zone, you may need to raise the zone resource usage
-        limits as well.  See "Chapter2:  Projects and Tasks" in the
-        <citetitle>System Administrator's Guide</citetitle> for more
-        information on <literal>projects</literal> and <command>prctl</command>.
+        此外，如果你在 zone 中运行 <productname>PostgreSQL</productname>，你可能还需要提高 zone 资源使用限制。有关 <literal>projects</literal> 和 <command>prctl</command> 的更多信息，请参阅 <citetitle>System Administrator's Guide</citetitle> 中的 “Chapter2:  Projects and Tasks”。
        </para>
       </listitem>
      </varlistentry>
@@ -927,100 +825,63 @@ project.max-msg-ids=(priv,4096,deny)
    </indexterm>
 
    <para>
-    If <productname>systemd</productname> is in use, some care must be taken
-    that IPC resources (including shared memory) are not prematurely
-    removed by the operating system.  This is especially of concern when
-    installing PostgreSQL from source.  Users of distribution packages of
-    PostgreSQL are less likely to be affected, as
-    the <literal>postgres</literal> user is then normally created as a system
-    user.
+    如果正在使用 <productname>systemd</productname>，则必须注意不要让操作系统过早地删除 IPC 资源（包括共享内存）。从源代码安装 PostgreSQL 时尤其需要注意这一点。PostgreSQL 发行版软件包的用户受影响的可能性较小，因为此时 <literal>postgres</literal> 用户通常被创建为系统用户。
    </para>
 
    <para>
-    The setting <literal>RemoveIPC</literal>
-    in <filename>logind.conf</filename> controls whether IPC objects are
-    removed when a user fully logs out.  System users are exempt.  This
-    setting defaults to on in stock <productname>systemd</productname>, but
-    some operating system distributions default it to off.
+    <filename>logind.conf</filename> 中的设置 <literal>RemoveIPC</literal> 控制当用户完全注销时是否删除 IPC 对象。系统用户不受此限制。在原版 <productname>systemd</productname> 中，该设置默认为开启，但某些操作系统发行版将其默认为关闭。
    </para>
 
    <para>
-    A typical observed effect when this setting is on is that shared memory
-    objects used for parallel query execution are removed at apparently random
-    times, leading to errors and warnings while attempting to open and remove
-    them, like
+    当此设置开启时，一个典型的观察到的现象是，用于并行查询执行的共享内存对象会在看似随机的时间被删除，导致在尝试打开和删除它们时出现错误和警告，例如
 <screen>
 WARNING:  could not remove shared memory segment "/PostgreSQL.1450751626": No such file or directory
 </screen>
-    Different types of IPC objects (shared memory vs. semaphores, System V
-    vs. POSIX) are treated slightly differently
-    by <productname>systemd</productname>, so one might observe that some IPC
-    resources are not removed in the same way as others.  But it is not
-    advisable to rely on these subtle differences.
+    <productname>systemd</productname> 对不同类型的 IPC 对象（共享内存与信号量、System V 与 POSIX）的处理略有不同，因此可能会观察到某些 IPC 资源没有像其他资源那样被删除。但不建议依赖这些细微差别。
    </para>
 
    <para>
-    A <quote>user logging out</quote> might happen as part of a maintenance
-    job or manually when an administrator logs in as
-    the <literal>postgres</literal> user or something similar, so it is hard
-    to prevent in general.
+    <quote>用户注销</quote>可能是维护作业的一部分，也可能是管理员以 <literal>postgres</literal> 用户或类似身份登录时手动发生的，因此通常很难防止。
    </para>
 
    <para>
-    What is a <quote>system user</quote> is determined
-    at <productname>systemd</productname> compile time from
-    the <symbol>SYS_UID_MAX</symbol> setting
-    in <filename>/etc/login.defs</filename>.
+    所谓<quote>系统用户</quote>是在 <productname>systemd</productname> 编译时根据 <filename>/etc/login.defs</filename> 中的 <symbol>SYS_UID_MAX</symbol> 设置确定的。
    </para>
 
    <para>
-    Packaging and deployment scripts should be careful to create
-    the <literal>postgres</literal> user as a system user by
-    using <literal>useradd -r</literal>, <literal>adduser --system</literal>,
-    or equivalent.
+    打包和部署脚本应小心地使用 <literal>useradd -r</literal>、<literal>adduser --system</literal> 或等效方法将 <literal>postgres</literal> 用户创建为系统用户。
    </para>
 
    <para>
-    Alternatively, if the user account was created incorrectly or cannot be
-    changed, it is recommended to set
+    或者，如果用户账户创建不正确或无法更改，建议在 <filename>/etc/systemd/logind.conf</filename> 或其他适当的配置文件中设置
 <programlisting>
 RemoveIPC=no
-</programlisting>
-    in <filename>/etc/systemd/logind.conf</filename> or another appropriate
-    configuration file.
+</programlisting>。
    </para>
 
    <caution>
     <para>
-     At least one of these two things has to be ensured, or the PostgreSQL
-     server will be very unreliable.
+     必须至少确保这两件事之一，否则 PostgreSQL 服务器将非常不可靠。
     </para>
    </caution>
   </sect2>
 
   <sect2 id="kernel-resources-limits">
-   <title>Resource Limits</title>
+   <title>资源限制</title>
 
    <para>
-    Unix-like operating systems enforce various kinds of resource limits
-    that might interfere with the operation of your
-    <productname>PostgreSQL</productname> server. Of particular
-    importance are limits on the number of processes per user, the
-    number of open files per process, and the amount of memory available
-    to each process. Each of these have a <quote>hard</quote> and a
-    <quote>soft</quote> limit. The soft limit is what actually counts
-    but it can be changed by the user up to the hard limit. The hard
-    limit can only be changed by the root user. The system call
-    <function>setrlimit</function> is responsible for setting these
-    parameters. The shell's built-in command <command>ulimit</command>
-    (Bourne shells) or <command>limit</command> (<application>csh</application>) is
-    used to control the resource limits from the command line. On
-    BSD-derived systems the file <filename>/etc/login.conf</filename>
-    controls the various resource limits set during login. See the
-    operating system documentation for details. The relevant
-    parameters are <varname>maxproc</varname>,
-    <varname>openfiles</varname>, and <varname>datasize</varname>. For
-    example:
+    类 Unix 操作系统会实施各种资源限制，这些限制可能会干扰你的
+    <productname>PostgreSQL</productname> 服务器的运行。特别重要的是每个用户的进程数限制、
+    每个进程的打开文件数限制，以及每个进程可用的内存量。
+    其中每一项都有<quote>硬</quote>限制和<quote>软</quote>限制。
+    实际起作用的是软限制，但用户可以将其提高到硬限制为止。
+    硬限制只能由 root 用户更改。系统调用
+    <function>setrlimit</function> 负责设置这些参数。shell 的内置命令 <command>ulimit</command>
+    （Bourne shell）或 <command>limit</command>（<application>csh</application>）用于从命令行控制资源限制。
+    在 BSD 衍生系统上，文件 <filename>/etc/login.conf</filename>
+    控制登录时设置的各种资源限制。详情请参阅
+    操作系统文档。相关参数是 <varname>maxproc</varname>、
+    <varname>openfiles</varname> 和 <varname>datasize</varname>。例如：
 <programlisting>
 default:\
 ...
@@ -1029,76 +890,51 @@ default:\
         :openfiles-cur=256:\
 ...
 </programlisting>
-    (<literal>-cur</literal> is the soft limit.  Append
-    <literal>-max</literal> to set the hard limit.)
+    （<literal>-cur</literal> 是软限制。追加
+    <literal>-max</literal> 可设置硬限制。）
    </para>
 
    <para>
-    Kernels can also have system-wide limits on some resources.
+    内核还可以对某些资源设置系统范围的限制。
     <itemizedlist>
      <listitem>
       <para>
-      On <productname>Linux</productname> the kernel parameter
-      <varname>fs.file-max</varname> determines the maximum number of open
-      files that the kernel will support.  It can be changed with
-      <literal>sysctl -w fs.file-max=<replaceable>N</replaceable></literal>.
-      To make the setting persist across reboots, add an assignment
-      in <filename>/etc/sysctl.conf</filename>.
-      The maximum limit of files per process is fixed at the time the
-      kernel is compiled; see
-      <filename>/usr/src/linux/Documentation/proc.txt</filename> for
-      more information.
+      在 <productname>Linux</productname> 上，内核参数
+      <varname>fs.file-max</varname> 决定内核支持的最大打开文件数。
+      可以用 <literal>sysctl -w fs.file-max=<replaceable>N</replaceable></literal> 更改它。
+      要使该设置在重启后仍然有效，请在 <filename>/etc/sysctl.conf</filename> 中添加一项赋值。
+      每个进程的文件数上限在内核编译时即已固定；更多信息请参阅
+      <filename>/usr/src/linux/Documentation/proc.txt</filename>。
       </para>
      </listitem>
     </itemizedlist>
    </para>
 
    <para>
-    The <productname>PostgreSQL</productname> server uses one process
-    per connection so you should provide for at least as many processes
-    as allowed connections, in addition to what you need for the rest
-    of your system.  This is usually not a problem but if you run
-    several servers on one machine things might get tight.
+    <productname>PostgreSQL</productname> 服务器为每个连接使用一个进程，因此除了系统其余部分所需之外，
+    你至少应提供与允许连接数一样多的进程。这通常不是问题，
+    但如果你在一台机器上运行多个服务器，资源可能会变得紧张。
    </para>
 
    <para>
-    The factory default limit on open files is often set to
-    <quote>socially friendly</quote> values that allow many users to
-    coexist on a machine without using an inappropriate fraction of
-    the system resources.  If you run many servers on a machine this
-    is perhaps what you want, but on dedicated servers you might want to
-    raise this limit.
+    打开文件的出厂默认限制通常设置为<quote>对社会友好</quote>的值，
+    使许多用户可以在同一台机器上共存，而不会占用不恰当比例的系统资源。
+    如果你在一台机器上运行多个服务器，这也许正是你想要的，
+    但在专用服务器上，你可能希望提高此限制。
    </para>
 
    <para>
-    On the other side of the coin, some systems allow individual
-    processes to open large numbers of files; if more than a few
-    processes do so then the system-wide limit can easily be exceeded.
-    If you find this happening, and you do not want to alter the
-    system-wide limit, you can set <productname>PostgreSQL</productname>'s <xref
-    linkend="guc-max-files-per-process"/> configuration parameter to
-    limit the consumption of open files.
+    另一方面，有些系统允许单个进程打开大量文件；如果有多个进程这样做，就很容易超出系统级限制。如果你发现出现了这种情况，而又不想修改系统级限制，可以设置 <productname>PostgreSQL</productname> 的 <xref
+    linkend="guc-max-files-per-process"/> 配置参数来限制打开文件的消耗。
    </para>
 
    <para>
-    Another kernel limit that may be of concern when supporting large
-    numbers of client connections is the maximum socket connection queue
-    length.  If more than that many connection requests arrive within a very
-    short period, some may get rejected before the <productname>PostgreSQL</productname> server can service
-    the requests, with those clients receiving unhelpful connection failure
-    errors such as <quote>Resource temporarily unavailable</quote> or
-    <quote>Connection refused</quote>.  The default queue length limit is 128
-    on many platforms.  To raise it, adjust the appropriate kernel parameter
-    via <application>sysctl</application>, then restart the <productname>PostgreSQL</productname> server.
-    The parameter is variously named <varname>net.core.somaxconn</varname>
-    on Linux, <varname>kern.ipc.soacceptqueue</varname> on newer FreeBSD,
-    and <varname>kern.ipc.somaxconn</varname> on macOS and other BSD
-    variants.
+    在支持大量客户端连接时，另一个可能值得关注的内核限制是套接字连接队列的最大长度。如果在很短时间内到达的连接请求超过该数量，其中一些可能在 <productname>PostgreSQL</productname> 服务器能够处理这些请求之前就被拒绝，这些客户端会收到无用的连接失败错误，例如 <quote>Resource temporarily unavailable</quote> 或 <quote>Connection refused</quote>。在许多平台上，默认的队列长度限制是 128。要提高该限制，请通过 <application>sysctl</application> 调整相应的内核参数，然后重启 <productname>PostgreSQL</productname> 服务器。该参数在 Linux 上名为 <varname>net.core.somaxconn</varname>，在较新的 FreeBSD 上名为 <varname>kern.ipc.soacceptqueue</varname>，在 macOS 和其他 BSD 变体上名为 <varname>kern.ipc.somaxconn</varname>。
    </para>
   </sect2>
 
   <sect2 id="linux-memory-overcommit">
-   <title>Linux Memory Overcommit</title>
+   <title>Linux 内存过量使用</title>
 
    <indexterm>
     <primary>memory overcommit</primary>
@@ -1113,118 +949,63 @@ default:\
    </indexterm>
 
    <para>
-    The default virtual memory behavior on Linux is not
-    optimal for <productname>PostgreSQL</productname>. Because of the
-    way that the kernel implements memory overcommit, the kernel might
-    terminate the <productname>PostgreSQL</productname> postmaster (the
-    supervisor server process) if the memory demands of either
-    <productname>PostgreSQL</productname> or another process cause the
-    system to run out of virtual memory.
+    Linux 上默认的虚拟内存行为对 <productname>PostgreSQL</productname> 而言并非最优。由于内核实现内存过量使用的方式，如果 <productname>PostgreSQL</productname> 或其他进程的内存需求导致系统虚拟内存耗尽，内核可能会终止 <productname>PostgreSQL</productname> postmaster（监督服务器进程）。
    </para>
 
    <para>
-    If this happens, you will see a kernel message that looks like
-    this (consult your system documentation and configuration on where
-    to look for such a message):
+    如果发生这种情况，你会看到类似下面的内核消息（请查阅系统文档和配置，了解在哪里查找此类消息）：
 <programlisting>
 Out of Memory: Killed process 12345 (postgres).
 </programlisting>
-    This indicates that the <filename>postgres</filename> process
-    has been terminated due to memory pressure.
-    Although existing database connections will continue to function
-    normally, no new connections will be accepted.  To recover,
-    <productname>PostgreSQL</productname> will need to be restarted.
+    这表明 <filename>postgres</filename> 进程已因内存压力而被终止。虽然现有的数据库连接会继续正常工作，但不会接受新连接。要恢复，需要重启 <productname>PostgreSQL</productname>。
    </para>
 
    <para>
-    One way to avoid this problem is to run
-    <productname>PostgreSQL</productname> on a machine where you can
-    be sure that other processes will not run the machine out of
-    memory.  If memory is tight, increasing the swap space of the
-    operating system can help avoid the problem, because the
-    out-of-memory (OOM) killer is invoked only when physical memory and
-    swap space are exhausted.
+    避免此问题的一种方法是在能够确保其他进程不会耗尽机器内存的机器上运行 <productname>PostgreSQL</productname>。如果内存紧张，增加操作系统的交换空间有助于避免该问题，因为只有在物理内存和交换空间都耗尽时才会触发内存不足（OOM）杀手。
    </para>
 
    <para>
-    If <productname>PostgreSQL</productname> itself is the cause of the
-    system running out of memory, you can avoid the problem by changing
-    your configuration.  In some cases, it may help to lower memory-related
-    configuration parameters, particularly
-    <link linkend="guc-shared-buffers"><varname>shared_buffers</varname></link>,
-    <link linkend="guc-work-mem"><varname>work_mem</varname></link>, and
-    <link linkend="guc-hash-mem-multiplier"><varname>hash_mem_multiplier</varname></link>.
-    In other cases, the problem may be caused by allowing too many
-    connections to the database server itself.  In many cases, it may
-    be better to reduce
+    如果 <productname>PostgreSQL</productname> 本身就是系统内存耗尽的原因，你可以通过更改配置来避免该问题。在某些情况下，降低与内存相关的配置参数可能会有帮助，特别是
+    <link linkend="guc-shared-buffers"><varname>shared_buffers</varname></link>、
+    <link linkend="guc-work-mem"><varname>work_mem</varname></link> 和
+    <link linkend="guc-hash-mem-multiplier"><varname>hash_mem_multiplier</varname></link>。
+    在另一些情况下，问题可能是由于允许过多连接连到数据库服务器本身造成的。在许多情况下，更好的做法是减少
     <link linkend="guc-max-connections"><varname>max_connections</varname></link>
-    and instead make use of external connection-pooling software.
+    并转而使用外部连接池软件。
    </para>
 
    <para>
-    It is possible to modify the
-    kernel's behavior so that it will not <quote>overcommit</quote> memory.
-    Although this setting will not prevent the <ulink
-    url="https://lwn.net/Articles/104179/">OOM killer</ulink> from being invoked
-    altogether, it will lower the chances significantly and will therefore
-    lead to more robust system behavior.  This is done by selecting strict
-    overcommit mode via <command>sysctl</command>:
+    可以修改内核的行为，使其不会<quote>过量提交</quote>内存。
+    尽管此设置不会完全阻止调用 <ulink
+    url="https://lwn.net/Articles/104179/">OOM killer</ulink>，
+    但它会显著降低发生的几率，从而带来更稳健的系统行为。这可以通过 <command>sysctl</command> 选择严格过量提交模式来完成：
 <programlisting>
 sysctl -w vm.overcommit_memory=2
 </programlisting>
-    or placing an equivalent entry in <filename>/etc/sysctl.conf</filename>.
-    You might also wish to modify the related setting
-    <varname>vm.overcommit_ratio</varname>.  For details see the kernel documentation
-    file <ulink url="https://www.kernel.org/doc/Documentation/vm/overcommit-accounting"></ulink>.
+    或者在 <filename>/etc/sysctl.conf</filename> 中放置一个等效的条目。
+    你可能还希望修改相关设置
+    <varname>vm.overcommit_ratio</varname>。有关详细信息，请参阅内核文档
+    文件 <ulink url="https://www.kernel.org/doc/Documentation/vm/overcommit-accounting"></ulink>。
    </para>
 
    <para>
-    Another approach, which can be used with or without altering
-    <varname>vm.overcommit_memory</varname>, is to set the process-specific
-    <firstterm>OOM score adjustment</firstterm> value for the postmaster process to
-    <literal>-1000</literal>, thereby guaranteeing it will not be targeted by the OOM
-    killer.  The simplest way to do this is to execute
-<programlisting>
+    另一种方法无论是否修改 <varname>vm.overcommit_memory</varname> 都可以使用，就是把 postmaster 进程的进程级 <firstterm>OOM score adjustment</firstterm> 值设置为 <literal>-1000</literal>，从而保证它不会成为 OOM killer 的目标。最简单的方法是在 <productname>PostgreSQL</productname> 启动脚本中、调用 <filename>postgres</filename> 之前执行 <programlisting>
 echo -1000 > /proc/self/oom_score_adj
-</programlisting>
-    in the <productname>PostgreSQL</productname> startup script just before
-    invoking <filename>postgres</filename>.
-    Note that this action must be done as root, or it will have no effect;
-    so a root-owned startup script is the easiest place to do it.  If you
-    do this, you should also set these environment variables in the startup
-    script before invoking <filename>postgres</filename>:
+</programlisting>。注意此操作必须以 root 身份完成，否则不会生效；因此由 root 拥有的启动脚本是最方便的地方。如果这样做，还应该在启动脚本中、调用 <filename>postgres</filename> 之前设置这些环境变量：
 <programlisting>
 export PG_OOM_ADJUST_FILE=/proc/self/oom_score_adj
 export PG_OOM_ADJUST_VALUE=0
 </programlisting>
-    These settings will cause postmaster child processes to run with the
-    normal OOM score adjustment of zero, so that the OOM killer can still
-    target them at need.  You could use some other value for
-    <envar>PG_OOM_ADJUST_VALUE</envar> if you want the child processes to run
-    with some other OOM score adjustment.  (<envar>PG_OOM_ADJUST_VALUE</envar>
-    can also be omitted, in which case it defaults to zero.)  If you do not
-    set <envar>PG_OOM_ADJUST_FILE</envar>, the child processes will run with the
-    same OOM score adjustment as the postmaster, which is unwise since the
-    whole point is to ensure that the postmaster has a preferential setting.
+    这些设置将使 postmaster 的子进程以正常的 OOM 分数调整值零运行，这样 OOM killer 在需要时仍可以以它们为目标。如果你希望子进程以其他 OOM 分数调整值运行，可以为 <envar>PG_OOM_ADJUST_VALUE</envar> 使用其他值。（<envar>PG_OOM_ADJUST_VALUE</envar> 也可以省略，此时默认为零。）如果你不设置 <envar>PG_OOM_ADJUST_FILE</envar>，子进程将以与 postmaster 相同的 OOM 分数调整值运行，这并不明智，因为整个要点就是确保 postmaster 拥有优先的设置。
    </para>
 
   </sect2>
 
   <sect2 id="linux-huge-pages">
-   <title>Linux Huge Pages</title>
+   <title>Linux 大页</title>
 
    <para>
-    Using huge pages reduces overhead when using large contiguous chunks of
-    memory, as <productname>PostgreSQL</productname> does, particularly when
-    using large values of <xref linkend="guc-shared-buffers"/>.  To use this
-    feature in <productname>PostgreSQL</productname> you need a kernel
-    with <varname>CONFIG_HUGETLBFS=y</varname> and
-    <varname>CONFIG_HUGETLB_PAGE=y</varname>. You will also have to configure
-    the operating system to provide enough huge pages of the desired size.
-    The runtime-computed parameter
-    <xref linkend="guc-shared-memory-size-in-huge-pages"/> reports the number
-    of huge pages required.  This parameter can be viewed before starting the
-    server with a <command>postgres</command> command like:
+    使用大页可以减少使用大块连续内存时的开销，<productname>PostgreSQL</productname> 就是如此，尤其是在使用较大的 <xref linkend="guc-shared-buffers"/> 值时。要在 <productname>PostgreSQL</productname> 中使用此特性，你需要一个支持 <varname>CONFIG_HUGETLBFS=y</varname> 和 <varname>CONFIG_HUGETLB_PAGE=y</varname> 的内核。你还必须配置操作系统以提供足够数量的所需大小的大页。运行时计算的参数 <xref linkend="guc-shared-memory-size-in-huge-pages"/> 报告所需的大页数量。可以在启动服务器之前用如下 <command>postgres</command> 命令查看该参数：
 <programlisting>
 $ <userinput>postgres -D $PGDATA -C shared_memory_size_in_huge_pages</userinput>
 3170
@@ -1234,61 +1015,36 @@ $ <userinput>ls /sys/kernel/mm/hugepages</userinput>
 hugepages-1048576kB  hugepages-2048kB
 </programlisting>
 
-     In this example the default is 2MB, but you can also explicitly request
-     either 2MB or 1GB with <xref linkend="guc-huge-page-size"/> to adapt
-     the number of pages calculated by
-     <varname>shared_memory_size_in_huge_pages</varname>.
+     在此示例中默认值为 2MB，但你也可以用 <xref linkend="guc-huge-page-size"/> 显式请求 2MB 或 1GB，以调整由 <varname>shared_memory_size_in_huge_pages</varname> 计算出的页数。
 
-     While we need at least <literal>3170</literal> huge pages in this example,
-     a larger setting would be appropriate if other programs on the machine
-     also need huge pages.
-     We can set this with:
+     虽然在此示例中我们至少需要 <literal>3170</literal> 个大页，但如果机器上的其他程序也需要大页，则更大的设置会更合适。我们可以这样设置：
 <programlisting>
 # <userinput>sysctl -w vm.nr_hugepages=3170</userinput>
 </programlisting>
-     Don't forget to add this setting to <filename>/etc/sysctl.conf</filename>
-     so that it is reapplied after reboots.  For non-default huge page sizes,
-     we can instead use:
+     不要忘记将此设置添加到 <filename>/etc/sysctl.conf</filename>，以便在重启后重新应用。对于非默认的大页大小，我们可以改用：
 <programlisting>
 # <userinput>echo 3170 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages</userinput>
 </programlisting>
-    It is also possible to provide these settings at boot time using
-    kernel parameters such as <literal>hugepagesz=2M hugepages=3170</literal>.
+    也可以在启动时使用诸如 <literal>hugepagesz=2M hugepages=3170</literal> 之类的内核参数来提供这些设置。
    </para>
 
    <para>
-    Sometimes the kernel is not able to allocate the desired number of huge
-    pages immediately due to fragmentation, so it might be necessary
-    to repeat the command or to reboot.  (Immediately after a reboot, most of
-    the machine's memory should be available to convert into huge pages.)
-    To verify the huge page allocation situation for a given size, use:
+    有时由于碎片化，内核无法立即分配所需数量的巨大页，因此可能需要重复执行该命令或重启系统。（重启之后，机器的大部分内存应当可用于转换为巨大页。）要验证给定大小的巨大页分配情况，请使用：
 <programlisting>
 $ <userinput>cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages</userinput>
 </programlisting>
    </para>
 
    <para>
-    It may also be necessary to give the database server's operating system
-    user permission to use huge pages by setting
-    <varname>vm.hugetlb_shm_group</varname> via <application>sysctl</application>, and/or
-    give permission to lock memory with <command>ulimit -l</command>.
+    可能还需要通过 <application>sysctl</application> 设置 <varname>vm.hugetlb_shm_group</varname>，赋予数据库服务器的操作系统用户使用巨大页的权限，和/或通过 <command>ulimit -l</command> 赋予锁定内存的权限。
    </para>
 
    <para>
-    The default behavior for huge pages in
-    <productname>PostgreSQL</productname> is to use them when possible, with
-    the system's default huge page size, and
-    to fall back to normal pages on failure. To enforce the use of huge
-    pages, you can set <xref linkend="guc-huge-pages"/>
-    to <literal>on</literal> in <filename>postgresql.conf</filename>.
-    Note that with this setting <productname>PostgreSQL</productname> will fail to
-    start if not enough huge pages are available.
+    <productname>PostgreSQL</productname> 中巨大页的默认行为是在可能时使用它们（使用系统的默认巨大页大小），并在失败时回退到普通页。要强制使用巨大页，可以在 <filename>postgresql.conf</filename> 中将 <xref linkend="guc-huge-pages"/> 设置为 <literal>on</literal>。请注意，使用此设置时，如果没有足够的巨大页可用，<productname>PostgreSQL</productname> 将无法启动。
    </para>
 
    <para>
-    For a detailed description of the <productname>Linux</productname> huge
-    pages feature have a look
-    at <ulink url="https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt"></ulink>.
+    有关 <productname>Linux</productname> 巨大页功能的详细说明，请查看 <ulink url="https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt"></ulink>。
    </para>
 
   </sect2>
