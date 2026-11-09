@@ -918,39 +918,18 @@ include $(PGXS)
   </sect1>
 
   <sect1 id="extend-pgxs">
-   <title>Extension Building Infrastructure</title>
+   <title>扩展构建基础设施</title>
 
    <indexterm zone="extend-pgxs">
     <primary>pgxs</primary>
    </indexterm>
 
    <para>
-    If you are thinking about distributing your
-    <productname>PostgreSQL</productname> extension modules, setting up a
-    portable build system for them can be fairly difficult.  Therefore
-    the <productname>PostgreSQL</productname> installation provides a build
-    infrastructure for extensions, called <acronym>PGXS</acronym>, so
-    that simple extension modules can be built simply against an
-    already installed server.  <acronym>PGXS</acronym> is mainly intended
-    for extensions that include C code, although it can be used for
-    pure-SQL extensions too.  Note that <acronym>PGXS</acronym> is not
-    intended to be a universal build system framework that can be used
-    to build any software interfacing to <productname>PostgreSQL</productname>;
-    it simply automates common build rules for simple server extension
-    modules.  For more complicated packages, you might need to write your
-    own build system.
+    如果你正在考虑分发你的 <productname>PostgreSQL</productname> 扩展模块，为它们建立一个可移植的构建系统可能会相当困难。因此，<productname>PostgreSQL</productname> 安装提供了一套用于扩展的构建基础设施，称为 <acronym>PGXS</acronym>，这样简单的扩展模块就可以直接针对已安装的服务器进行构建。<acronym>PGXS</acronym> 主要面向包含 C 代码的扩展，不过它也可以用于纯 SQL 扩展。请注意，<acronym>PGXS</acronym> 并不打算成为一个通用的构建系统框架，用来构建任何与 <productname>PostgreSQL</productname> 对接的软件；它只是把简单服务器扩展模块的常见构建规则自动化了。对于更复杂的软件包，你可能需要编写自己的构建系统。
    </para>
 
    <para>
-    To use the <acronym>PGXS</acronym> infrastructure for your extension,
-    you must write a simple makefile.
-    In the makefile, you need to set some variables
-    and include the global <acronym>PGXS</acronym> makefile.
-    Here is an example that builds an extension module named
-    <literal>isbn_issn</literal>, consisting of a shared library containing
-    some C code, an extension control file, an SQL script, an include file
-    (only needed if other modules might need to access the extension functions
-    without going via SQL), and a documentation text file:
+    要为你的扩展使用 <acronym>PGXS</acronym> 基础设施，你必须编写一个简单的 makefile。在 makefile 中，你需要设置一些变量，并包含全局的 <acronym>PGXS</acronym> makefile。下面是一个示例，它构建一个名为 <literal>isbn_issn</literal> 的扩展模块，该模块由一个包含一些 C 代码的共享库、一个扩展控制文件、一个 SQL 脚本、一个包含文件（仅当其他模块可能需要不通过 SQL 直接访问扩展函数时才需要）以及一个文档文本文件组成：
 <programlisting>
 MODULES = isbn_issn
 EXTENSION = isbn_issn
@@ -962,21 +941,18 @@ PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 </programlisting>
-    The last three lines should always be the same.  Earlier in the
-    file, you assign variables or add custom
-    <application>make</application> rules.
+    最后三行应当始终相同。在文件的前面部分，你可以赋值变量或添加自定义的 <application>make</application> 规则。
    </para>
 
    <para>
-    Set one of these three variables to specify what is built:
+    设置以下三个变量之一来指定要构建的内容：
 
     <variablelist>
      <varlistentry id="extend-pgxs-modules">
       <term><varname>MODULES</varname></term>
       <listitem>
        <para>
-        list of shared-library objects to be built from source files with same
-        stem (do not include library suffixes in this list)
+        要从具有相同主文件名的源文件构建的共享库对象列表（此列表中不要包含库后缀）
        </para>
       </listitem>
      </varlistentry>
@@ -985,8 +961,8 @@ include $(PGXS)
       <term><varname>MODULE_big</varname></term>
       <listitem>
        <para>
-        a shared library to build from multiple source files
-        (list object files in <varname>OBJS</varname>)
+        要从多个源文件构建的共享库
+        （在 <varname>OBJS</varname> 中列出对象文件）
        </para>
       </listitem>
      </varlistentry>
@@ -995,23 +971,23 @@ include $(PGXS)
       <term><varname>PROGRAM</varname></term>
       <listitem>
        <para>
-        an executable program to build
-        (list object files in <varname>OBJS</varname>)
+        用于构建的可执行程序
+        （在 <varname>OBJS</varname> 中列出目标文件）
        </para>
       </listitem>
      </varlistentry>
     </variablelist>
 
-    The following variables can also be set:
+    还可以设置以下变量：
 
     <variablelist>
      <varlistentry id="extend-pgxs-extension">
       <term><varname>EXTENSION</varname></term>
       <listitem>
        <para>
-        extension name(s); for each name you must provide an
-        <literal><replaceable>extension</replaceable>.control</literal> file,
-        which will be installed into
+        扩展名；对于每个名称，你必须提供一个
+        <literal><replaceable>extension</replaceable>.control</literal> 文件，
+        它将被安装到
         <literal><replaceable>prefix</replaceable>/share/extension</literal>
        </para>
       </listitem>
@@ -1021,11 +997,10 @@ include $(PGXS)
       <term><varname>MODULEDIR</varname></term>
       <listitem>
        <para>
-        subdirectory of <literal><replaceable>prefix</replaceable>/share</literal>
-        into which DATA and DOCS files should be installed
-        (if not set, default is <literal>extension</literal> if
-        <varname>EXTENSION</varname> is set,
-        or <literal>contrib</literal> if not)
+        <literal><replaceable>prefix</replaceable>/share</literal> 的子目录，
+        DATA 和 DOCS 文件应安装到其中
+        （如果未设置，当设置了 <varname>EXTENSION</varname> 时默认为 <literal>extension</literal>，
+        否则默认为 <literal>contrib</literal>）
        </para>
       </listitem>
      </varlistentry>
@@ -1034,7 +1009,7 @@ include $(PGXS)
       <term><varname>DATA</varname></term>
       <listitem>
        <para>
-        random files to install into <literal><replaceable>prefix</replaceable>/share/$MODULEDIR</literal>
+        要安装到 <literal><replaceable>prefix</replaceable>/share/$MODULEDIR</literal> 的任意文件
        </para>
       </listitem>
      </varlistentry>
@@ -1043,9 +1018,9 @@ include $(PGXS)
       <term><varname>DATA_built</varname></term>
       <listitem>
        <para>
-        random files to install into
-        <literal><replaceable>prefix</replaceable>/share/$MODULEDIR</literal>,
-        which need to be built first
+        要安装到
+        <literal><replaceable>prefix</replaceable>/share/$MODULEDIR</literal> 的任意文件，
+        这些文件需要先构建
        </para>
       </listitem>
      </varlistentry>
@@ -1054,8 +1029,9 @@ include $(PGXS)
       <term><varname>DATA_TSEARCH</varname></term>
       <listitem>
        <para>
-        random files to install under
+        要安装到
         <literal><replaceable>prefix</replaceable>/share/tsearch_data</literal>
+        下的随机文件
        </para>
       </listitem>
      </varlistentry>
@@ -1064,8 +1040,9 @@ include $(PGXS)
       <term><varname>DOCS</varname></term>
       <listitem>
        <para>
-        random files to install under
+        要安装到
         <literal><replaceable>prefix</replaceable>/doc/$MODULEDIR</literal>
+        下的随机文件
        </para>
       </listitem>
      </varlistentry>
@@ -1075,13 +1052,13 @@ include $(PGXS)
       <term><varname>HEADERS_built</varname></term>
       <listitem>
        <para>
-        Files to (optionally build and) install under
-        <literal><replaceable>prefix</replaceable>/include/server/$MODULEDIR/$MODULE_big</literal>.
+        要（可选地构建并）安装到
+        <literal><replaceable>prefix</replaceable>/include/server/$MODULEDIR/$MODULE_big</literal> 下的文件。
        </para>
        <para>
-        Unlike <literal>DATA_built</literal>, files in <literal>HEADERS_built</literal>
-        are not removed by the <literal>clean</literal> target; if you want them removed,
-        also add them to <literal>EXTRA_CLEAN</literal> or add your own rules to do it.
+        与 <literal>DATA_built</literal> 不同，<literal>HEADERS_built</literal>
+        中的文件不会被 <literal>clean</literal> 目标删除；如果你希望它们被删除，
+        也要把它们加入 <literal>EXTRA_CLEAN</literal>，或者添加你自己的规则来完成删除。
        </para>
       </listitem>
      </varlistentry>
@@ -1091,23 +1068,19 @@ include $(PGXS)
       <term><varname>HEADERS_built_$MODULE</varname></term>
       <listitem>
        <para>
-        Files to install (after building if specified) under
-        <literal><replaceable>prefix</replaceable>/include/server/$MODULEDIR/$MODULE</literal>,
-        where <literal>$MODULE</literal> must be a module name used
-        in <literal>MODULES</literal> or <literal>MODULE_big</literal>.
+        要安装（如果指定了则先构建）到
+        <literal><replaceable>prefix</replaceable>/include/server/$MODULEDIR/$MODULE</literal>
+        下的文件，
+        其中 <literal>$MODULE</literal> 必须是用于
+        <literal>MODULES</literal> 或 <literal>MODULE_big</literal> 中的模块名。
        </para>
        <para>
-        Unlike <literal>DATA_built</literal>, files in <literal>HEADERS_built_$MODULE</literal>
-        are not removed by the <literal>clean</literal> target; if you want them removed,
-        also add them to <literal>EXTRA_CLEAN</literal> or add your own rules to do it.
+        与 <literal>DATA_built</literal> 不同，<literal>HEADERS_built_$MODULE</literal>
+        中的文件不会被 <literal>clean</literal> 目标删除；如果你希望它们被删除，
+        也要把它们加入 <literal>EXTRA_CLEAN</literal>，或者添加你自己的规则来完成删除。
        </para>
        <para>
-        It is legal to use both variables for the same module, or any
-        combination, unless you have two module names in the
-        <literal>MODULES</literal> list that differ only by the presence of a
-        prefix <literal>built_</literal>, which would cause ambiguity. In
-        that (hopefully unlikely) case, you should use only the
-        <literal>HEADERS_built_$MODULE</literal> variables.
+        对同一个模块同时使用这两个变量，或任意组合使用，都是合法的，除非 <literal>MODULES</literal> 列表中有两个模块名仅相差一个前缀 <literal>built_</literal>，这会导致歧义。在这种（希望不太可能的）情况下，你应该只使用 <literal>HEADERS_built_$MODULE</literal> 变量。
        </para>
       </listitem>
      </varlistentry>
@@ -1116,8 +1089,7 @@ include $(PGXS)
       <term><varname>SCRIPTS</varname></term>
       <listitem>
        <para>
-        script files (not binaries) to install into
-        <literal><replaceable>prefix</replaceable>/bin</literal>
+        要安装到 <literal><replaceable>prefix</replaceable>/bin</literal> 的脚本文件（不是二进制文件）
        </para>
       </listitem>
      </varlistentry>
@@ -1126,9 +1098,7 @@ include $(PGXS)
       <term><varname>SCRIPTS_built</varname></term>
       <listitem>
        <para>
-        script files (not binaries) to install into
-        <literal><replaceable>prefix</replaceable>/bin</literal>,
-        which need to be built first
+        要安装到 <literal><replaceable>prefix</replaceable>/bin</literal> 的脚本文件（不是二进制文件），这些文件需要先构建
        </para>
       </listitem>
      </varlistentry>
@@ -1137,7 +1107,7 @@ include $(PGXS)
       <term><varname>REGRESS</varname></term>
       <listitem>
        <para>
-        list of regression test cases (without suffix), see below
+        回归测试用例列表（不带后缀），见下文
        </para>
       </listitem>
      </varlistentry>
@@ -1146,7 +1116,7 @@ include $(PGXS)
       <term><varname>REGRESS_OPTS</varname></term>
       <listitem>
        <para>
-        additional switches to pass to <application>pg_regress</application>
+        传递给 <application>pg_regress</application> 的额外开关
        </para>
       </listitem>
      </varlistentry>
@@ -1155,7 +1125,7 @@ include $(PGXS)
       <term><varname>ISOLATION</varname></term>
       <listitem>
        <para>
-        list of isolation test cases, see below for more details
+        隔离测试用例列表，详见下文
        </para>
       </listitem>
      </varlistentry>
@@ -1164,8 +1134,7 @@ include $(PGXS)
       <term><varname>ISOLATION_OPTS</varname></term>
       <listitem>
        <para>
-        additional switches to pass to
-        <application>pg_isolation_regress</application>
+        传递给 <application>pg_isolation_regress</application> 的额外开关
        </para>
       </listitem>
      </varlistentry>
@@ -1174,7 +1143,7 @@ include $(PGXS)
       <term><varname>TAP_TESTS</varname></term>
       <listitem>
        <para>
-        switch defining if TAP tests need to be run, see below
+        定义是否需要运行 TAP 测试的开关，参见下文
        </para>
       </listitem>
      </varlistentry>
@@ -1183,8 +1152,7 @@ include $(PGXS)
       <term><varname>NO_INSTALL</varname></term>
       <listitem>
        <para>
-        don't define an <literal>install</literal> target, useful for test
-        modules that don't need their build products to be installed
+        不定义 <literal>install</literal> 目标，适用于不需要安装其构建产物的测试模块
        </para>
       </listitem>
      </varlistentry>
@@ -1193,7 +1161,7 @@ include $(PGXS)
       <term><varname>NO_INSTALLCHECK</varname></term>
       <listitem>
        <para>
-        don't define an <literal>installcheck</literal> target, useful e.g., if tests require special configuration, or don't use <application>pg_regress</application>
+        不定义 <literal>installcheck</literal> 目标，例如当测试需要特殊配置或不使用 <application>pg_regress</application> 时很有用
        </para>
       </listitem>
      </varlistentry>
@@ -1202,7 +1170,7 @@ include $(PGXS)
       <term><varname>EXTRA_CLEAN</varname></term>
       <listitem>
        <para>
-        extra files to remove in <literal>make clean</literal>
+        在 <literal>make clean</literal> 中要删除的额外文件
        </para>
       </listitem>
      </varlistentry>
@@ -1211,7 +1179,7 @@ include $(PGXS)
       <term><varname>PG_CPPFLAGS</varname></term>
       <listitem>
        <para>
-        will be prepended to <varname>CPPFLAGS</varname>
+        将被添加到 <varname>CPPFLAGS</varname> 之前
        </para>
       </listitem>
      </varlistentry>
@@ -1220,7 +1188,7 @@ include $(PGXS)
       <term><varname>PG_CFLAGS</varname></term>
       <listitem>
        <para>
-        will be appended to <varname>CFLAGS</varname>
+        将被追加到 <varname>CFLAGS</varname>
        </para>
       </listitem>
      </varlistentry>
@@ -1229,7 +1197,7 @@ include $(PGXS)
       <term><varname>PG_CXXFLAGS</varname></term>
       <listitem>
        <para>
-        will be appended to <varname>CXXFLAGS</varname>
+        将被追加到 <varname>CXXFLAGS</varname>
        </para>
       </listitem>
      </varlistentry>
@@ -1238,7 +1206,7 @@ include $(PGXS)
       <term><varname>PG_LDFLAGS</varname></term>
       <listitem>
        <para>
-        will be prepended to <varname>LDFLAGS</varname>
+        将被前置到 <varname>LDFLAGS</varname>
        </para>
       </listitem>
      </varlistentry>
@@ -1247,7 +1215,7 @@ include $(PGXS)
       <term><varname>PG_LIBS</varname></term>
       <listitem>
        <para>
-        will be added to <varname>PROGRAM</varname> link line
+        将被添加到 <varname>PROGRAM</varname> 链接行
        </para>
       </listitem>
      </varlistentry>
@@ -1256,7 +1224,7 @@ include $(PGXS)
       <term><varname>SHLIB_LINK</varname></term>
       <listitem>
        <para>
-        will be added to <varname>MODULE_big</varname> link line
+        将被添加到 <varname>MODULE_big</varname> 链接行
        </para>
       </listitem>
      </varlistentry>
@@ -1265,10 +1233,8 @@ include $(PGXS)
       <term><varname>PG_CONFIG</varname></term>
       <listitem>
        <para>
-        path to <application>pg_config</application> program for the
-        <productname>PostgreSQL</productname> installation to build against
-        (typically just <literal>pg_config</literal> to use the first one in your
-        <varname>PATH</varname>)
+        用于构建所针对的 <productname>PostgreSQL</productname> 安装的 <application>pg_config</application> 程序路径
+        （通常只需 <literal>pg_config</literal> 即可使用 <varname>PATH</varname> 中的第一个）
        </para>
       </listitem>
      </varlistentry>
@@ -1276,43 +1242,22 @@ include $(PGXS)
    </para>
 
    <para>
-    Put this makefile as <literal>Makefile</literal> in the directory
-    which holds your extension. Then you can do
-    <literal>make</literal> to compile, and then <literal>make
-    install</literal> to install your module.  By default, the extension is
-    compiled and installed for the
-    <productname>PostgreSQL</productname> installation that
-    corresponds to the first <command>pg_config</command> program
-    found in your <varname>PATH</varname>.  You can use a different installation by
-    setting <varname>PG_CONFIG</varname> to point to its
-    <command>pg_config</command> program, either within the makefile
-    or on the <literal>make</literal> command line.
+    将此 makefile 作为 <literal>Makefile</literal> 放在存放你的扩展的目录中。然后你可以执行 <literal>make</literal> 进行编译，再执行 <literal>make
+    install</literal> 安装你的模块。默认情况下，扩展是针对 <productname>PostgreSQL</productname> 安装进行编译和安装的，该安装对应于在你的 <varname>PATH</varname> 中找到的第一个 <command>pg_config</command> 程序。你可以通过将 <varname>PG_CONFIG</varname> 设置为指向其 <command>pg_config</command> 程序来使用不同的安装，这可以在 makefile 中设置，也可以在 <literal>make</literal> 命令行上设置。
    </para>
 
    <para>
-    You can select a separate directory prefix in which to install your
-    extension's files, by setting the <command>make</command> variable
-    <varname>prefix</varname> when executing <literal>make install</literal>
-    like so:
+    你可以通过在执行 <literal>make install</literal> 时像下面这样设置 <command>make</command> 变量 <varname>prefix</varname>，来选择安装扩展文件的单独目录前缀：
 <programlisting>
 make install prefix=/usr/local/postgresql
 </programlisting>
-    This will install the extension control and SQL files into
-    <filename>/usr/local/postgresql/share</filename> and the shared modules into
-    <filename>/usr/local/postgresql/lib</filename>.  If the prefix does not
-    include the strings <literal>postgres</literal> or
-    <literal>pgsql</literal>, such as
+    这会将扩展控制文件和 SQL 文件安装到 <filename>/usr/local/postgresql/share</filename>，并将共享模块安装到 <filename>/usr/local/postgresql/lib</filename>。如果前缀不包含字符串 <literal>postgres</literal> 或 <literal>pgsql</literal>，例如
 <programlisting>
 make install prefix=/usr/local/extras
 </programlisting>
-    then <literal>postgresql</literal> will be appended to the directory
-    names, installing the control and SQL files into
-    <filename>/usr/local/extras/share/postgresql/extension</filename> and the
-    shared modules into <filename>/usr/local/extras/lib/postgresql</filename>.
-    Either way, you'll need to set <xref
-    linkend="guc-extension-control-path"/> and <xref
-    linkend="guc-dynamic-library-path"/> to enable the
-    <productname>PostgreSQL</productname> server to find the files:
+    那么 <literal>postgresql</literal> 将被追加到目录名后，从而将控制文件和 SQL 文件安装到 <filename>/usr/local/extras/share/postgresql/extension</filename>，并将共享模块安装到 <filename>/usr/local/extras/lib/postgresql</filename>。无论采用哪种方式，你都需要设置 <xref
+    linkend="guc-extension-control-path"/> 和 <xref
+    linkend="guc-dynamic-library-path"/>，以便 <productname>PostgreSQL</productname> 服务器能够找到这些文件：
 <programlisting>
 extension_control_path = '/usr/local/extras/share/postgresql:$system'
 dynamic_library_path = '/usr/local/extras/lib/postgresql:$libdir'
@@ -1320,11 +1265,7 @@ dynamic_library_path = '/usr/local/extras/lib/postgresql:$libdir'
    </para>
 
    <para>
-    You can also run <literal>make</literal> in a directory outside the source
-    tree of your extension, if you want to keep the build directory separate.
-    This procedure is also called a
-    <indexterm><primary>VPATH</primary></indexterm><firstterm>VPATH</firstterm>
-    build.  Here's how:
+    如果你希望将构建目录分开，你也可以在扩展源码树之外的目录中运行 <literal>make</literal>。此过程也称为 <indexterm><primary>VPATH</primary></indexterm><firstterm>VPATH</firstterm> 构建。方法如下：
 <programlisting>
 mkdir build_dir
 cd build_dir
@@ -1334,74 +1275,31 @@ make -f /path/to/extension/source/tree/Makefile install
    </para>
 
    <para>
-    Alternatively, you can set up a directory for a VPATH build in a similar
-    way to how it is done for the core code. One way to do this is using the
-    core script <filename>config/prep_buildtree</filename>. Once this has been done
-    you can build by setting the <literal>make</literal> variable
-    <varname>VPATH</varname> like this:
+    或者，你可以采用与核心代码类似的方式为 VPATH 构建设置一个目录。一种方法是使用核心脚本 <filename>config/prep_buildtree</filename>。完成之后，你可以像下面这样设置 <literal>make</literal> 变量 <varname>VPATH</varname> 来进行构建：
 <programlisting>
 make VPATH=/path/to/extension/source/tree
 make VPATH=/path/to/extension/source/tree install
 </programlisting>
-    This procedure can work with a greater variety of directory layouts.
+    此过程可以适用于更多种类的目录布局。
    </para>
 
    <para>
-    The scripts listed in the <varname>REGRESS</varname> variable are used for
-    regression testing of your module, which can be invoked by <literal>make
-    installcheck</literal> after doing <literal>make install</literal>.  For this to
-    work you must have a running <productname>PostgreSQL</productname> server.
-    The script files listed in <varname>REGRESS</varname> must appear in a
-    subdirectory named <literal>sql/</literal> in your extension's directory.
-    These files must have extension <literal>.sql</literal>, which must not be
-    included in the <varname>REGRESS</varname> list in the makefile.  For each
-    test there should also be a file containing the expected output in a
-    subdirectory named <literal>expected/</literal>, with the same stem and
-    extension <literal>.out</literal>.  <literal>make installcheck</literal>
-    executes each test script with <application>psql</application>, and compares the
-    resulting output to the matching expected file.  Any differences will be
-    written to the file <literal>regression.diffs</literal> in <command>diff
-    -c</command> format.  Note that trying to run a test that is missing its
-    expected file will be reported as <quote>trouble</quote>, so make sure you
-    have all expected files.
+    <varname>REGRESS</varname> 变量中列出的脚本用于对模块进行回归测试，可以在执行 <literal>make install</literal> 之后通过 <literal>make
+    installcheck</literal> 调用。要使其正常工作，必须有一个正在运行的 <productname>PostgreSQL</productname> 服务器。<varname>REGRESS</varname> 中列出的脚本文件必须出现在扩展目录下名为 <literal>sql/</literal> 的子目录中。这些文件必须具有扩展名 <literal>.sql</literal>，且该扩展名不得包含在 makefile 的 <varname>REGRESS</varname> 列表中。对于每个测试，还应在名为 <literal>expected/</literal> 的子目录中有一个包含预期输出的文件，其主干名相同、扩展名为 <literal>.out</literal>。<literal>make installcheck</literal> 使用 <application>psql</application> 执行每个测试脚本，并将结果输出与匹配的预期文件进行比较。任何差异都将以 <literal>regression.diffs</literal> 格式写入 <command>diff
+    -c</command> 文件。请注意，尝试运行缺少预期文件的测试将被报告为 <quote>trouble</quote>，因此请确保您拥有所有预期文件。
    </para>
 
    <para>
-    The scripts listed in the <varname>ISOLATION</varname> variable are used
-    for tests stressing behavior of concurrent session with your module, which
-    can be invoked by <literal>make installcheck</literal> after doing
-    <literal>make install</literal>.  For this to work you must have a
-    running <productname>PostgreSQL</productname> server.  The script files
-    listed in <varname>ISOLATION</varname> must appear in a subdirectory
-    named <literal>specs/</literal> in your extension's directory.  These files
-    must have extension <literal>.spec</literal>, which must not be included
-    in the <varname>ISOLATION</varname> list in the makefile.  For each test
-    there should also be a file containing the expected output in a
-    subdirectory named <literal>expected/</literal>, with the same stem and
-    extension <literal>.out</literal>.  <literal>make installcheck</literal>
-    executes each test script, and compares the resulting output to the
-    matching expected file.  Any differences will be written to the file
-    <literal>output_iso/regression.diffs</literal> in
-    <command>diff -c</command> format.  Note that trying to run a test that is
-    missing its expected file will be reported as <quote>trouble</quote>, so
-    make sure you have all expected files.
+    <varname>ISOLATION</varname> 变量中列出的脚本用于测试模块在并发会话下的行为，可以在执行 <literal>make install</literal> 之后通过 <literal>make installcheck</literal> 调用。要使其正常工作，必须有一个正在运行的 <productname>PostgreSQL</productname> 服务器。<varname>ISOLATION</varname> 中列出的脚本文件必须出现在扩展目录下名为 <literal>specs/</literal> 的子目录中。这些文件必须具有扩展名 <literal>.spec</literal>，且该扩展名不得包含在 makefile 的 <varname>ISOLATION</varname> 列表中。对于每个测试，还应在名为 <literal>expected/</literal> 的子目录中有一个包含预期输出的文件，其主干名相同、扩展名为 <literal>.out</literal>。<literal>make installcheck</literal> 执行每个测试脚本，并将结果输出与匹配的预期文件进行比较。任何差异都将以 <command>diff -c</command> 格式写入 <literal>output_iso/regression.diffs</literal> 文件。请注意，尝试运行缺少预期文件的测试将被报告为 <quote>trouble</quote>，因此请确保您拥有所有预期文件。
    </para>
 
    <para>
-    <literal>TAP_TESTS</literal> enables the use of TAP tests.  Data from each
-    run is present in a subdirectory named <literal>tmp_check/</literal>.
-    See also <xref linkend="regress-tap"/> for more details.
+    <literal>TAP_TESTS</literal> 启用 TAP 测试的使用。每次运行的数据都位于名为 <literal>tmp_check/</literal> 的子目录中。更多细节另请参阅 <xref linkend="regress-tap"/>。
    </para>
 
    <tip>
     <para>
-     The easiest way to create the expected files is to create empty files,
-     then do a test run (which will of course report differences).  Inspect
-     the actual result files found in the <literal>results/</literal>
-     directory (for tests in <literal>REGRESS</literal>), or
-     <literal>output_iso/results/</literal> directory (for tests in
-     <literal>ISOLATION</literal>), then copy them to
-     <literal>expected/</literal> if they match what you expect from the test.
+     创建预期文件最简单的方法是创建空文件，然后运行一次测试（这当然会报告差异）。检查在 <literal>results/</literal> 目录（对于 <literal>REGRESS</literal> 中的测试）或 <literal>output_iso/results/</literal> 目录（对于 <literal>ISOLATION</literal> 中的测试）中找到的实际结果文件，如果它们与您对测试的预期相符，就将它们复制到 <literal>expected/</literal>。
     </para>
 
    </tip>
