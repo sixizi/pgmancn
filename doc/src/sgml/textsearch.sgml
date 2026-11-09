@@ -1654,94 +1654,87 @@ LIMIT 10;
  </sect1>
 
  <sect1 id="textsearch-parsers">
-  <title>Parsers</title>
+  <title>解析器</title>
 
   <para>
-   Text search parsers are responsible for splitting raw document text
-   into <firstterm>tokens</firstterm> and identifying each token's type, where
-   the set of possible types is defined by the parser itself.
-   Note that a parser does not modify the text at all &mdash; it simply
-   identifies plausible word boundaries.  Because of this limited scope,
-   there is less need for application-specific custom parsers than there is
-   for custom dictionaries.  At present <productname>PostgreSQL</productname>
-   provides just one built-in parser, which has been found to be useful for a
-   wide range of applications.
+   文本检索解析器负责把原始文档文本切分成<firstterm>记号</firstterm>（token），并标识每个记号的类型，而可能的类型集合由解析器自身定义。
+   注意，解析器完全不修改文本 &mdash; 它只是识别出合理的词边界。由于这一范围有限，与自定义词典相比，对应用程序专用的自定义解析器的需求要少一些。目前 <productname>PostgreSQL</productname>
+   只提供了一个内置解析器，人们发现它对广泛的应用场景都很有用。
   </para>
 
   <para>
-   The built-in parser is named <literal>pg_catalog.default</literal>.
-   It recognizes 23 token types, shown in <xref linkend="textsearch-default-parser"/>.
+   内置解析器名为 <literal>pg_catalog.default</literal>。
+   它能识别 23 种记号类型，如 <xref linkend="textsearch-default-parser"/> 所示。
   </para>
 
   <table id="textsearch-default-parser">
-   <title>Default Parser's Token Types</title>
+   <title>默认解析器的记号类型</title>
    <tgroup cols="3">
     <colspec colname="col1" colwidth="2*"/>
     <colspec colname="col2" colwidth="2*"/>
     <colspec colname="col3" colwidth="3*"/>
     <thead>
      <row>
-      <entry>Alias</entry>
-      <entry>Description</entry>
-      <entry>Example</entry>
+      <entry>别名</entry>
+      <entry>描述</entry>
+      <entry>示例</entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry><literal>asciiword</literal></entry>
-      <entry>Word, all ASCII letters</entry>
+      <entry>词，全部为 ASCII 字母</entry>
       <entry><literal>elephant</literal></entry>
      </row>
      <row>
       <entry><literal>word</literal></entry>
-      <entry>Word, all letters</entry>
+      <entry>词，全部为字母</entry>
       <entry><literal>ma&ntilde;ana</literal></entry>
      </row>
      <row>
       <entry><literal>numword</literal></entry>
-      <entry>Word, letters and digits</entry>
+      <entry>词，字母和数字</entry>
       <entry><literal>beta1</literal></entry>
      </row>
      <row>
       <entry><literal>asciihword</literal></entry>
-      <entry>Hyphenated word, all ASCII</entry>
+      <entry>带连字符的词，全部为 ASCII</entry>
       <entry><literal>up-to-date</literal></entry>
      </row>
      <row>
       <entry><literal>hword</literal></entry>
-      <entry>Hyphenated word, all letters</entry>
+      <entry>带连字符的词，全部为字母</entry>
       <entry><literal>l&oacute;gico-matem&aacute;tica</literal></entry>
      </row>
      <row>
       <entry><literal>numhword</literal></entry>
-      <entry>Hyphenated word, letters and digits</entry>
+      <entry>带连字符的单词、字母和数字</entry>
       <entry><literal>postgresql-beta1</literal></entry>
      </row>
      <row>
       <entry><literal>hword_asciipart</literal></entry>
-      <entry>Hyphenated word part, all ASCII</entry>
-      <entry><literal>postgresql</literal> in the context <literal>postgresql-beta1</literal></entry>
+      <entry>带连字符的单词部分，全为 ASCII</entry>
+      <entry><literal>postgresql</literal> 在上下文 <literal>postgresql-beta1</literal> 中</entry>
      </row>
      <row>
       <entry><literal>hword_part</literal></entry>
-      <entry>Hyphenated word part, all letters</entry>
-      <entry><literal>l&oacute;gico</literal> or <literal>matem&aacute;tica</literal>
-       in the context <literal>l&oacute;gico-matem&aacute;tica</literal></entry>
+      <entry>带连字符的单词部分，全为字母</entry>
+      <entry><literal>l&oacute;gico</literal> 或 <literal>matem&aacute;tica</literal>
+       在上下文 <literal>l&oacute;gico-matem&aacute;tica</literal> 中</entry>
      </row>
      <row>
       <entry><literal>hword_numpart</literal></entry>
-      <entry>Hyphenated word part, letters and digits</entry>
-      <entry><literal>beta1</literal> in the context
-       <literal>postgresql-beta1</literal></entry>
+      <entry>带连字符的单词部分，字母和数字</entry>
+      <entry><literal>beta1</literal> 在 <literal>postgresql-beta1</literal> 上下文中</entry>
      </row>
      <row>
       <entry><literal>email</literal></entry>
-      <entry>Email address</entry>
+      <entry>电子邮件地址</entry>
       <entry><literal>foo@example.com</literal></entry>
      </row>
      <row>
       <entry><literal>protocol</literal></entry>
-      <entry>Protocol head</entry>
+      <entry>协议头</entry>
       <entry><literal>http://</literal></entry>
      </row>
      <row>
@@ -1751,58 +1744,58 @@ LIMIT 10;
      </row>
      <row>
       <entry><literal>host</literal></entry>
-      <entry>Host</entry>
+      <entry>主机</entry>
       <entry><literal>example.com</literal></entry>
      </row>
      <row>
       <entry><literal>url_path</literal></entry>
-      <entry>URL path</entry>
-      <entry><literal>/stuff/index.html</literal>, in the context of a URL</entry>
+      <entry>URL 路径</entry>
+      <entry><literal>/stuff/index.html</literal>，在 URL 的上下文中</entry>
      </row>
      <row>
       <entry><literal>file</literal></entry>
-      <entry>File or path name</entry>
-      <entry><literal>/usr/local/foo.txt</literal>, if not within a URL</entry>
+      <entry>文件名或路径名</entry>
+      <entry><literal>/usr/local/foo.txt</literal>，如果不在 URL 中</entry>
      </row>
      <row>
       <entry><literal>sfloat</literal></entry>
-      <entry>Scientific notation</entry>
+      <entry>科学记数法</entry>
       <entry><literal>-1.234e56</literal></entry>
      </row>
      <row>
       <entry><literal>float</literal></entry>
-      <entry>Decimal notation</entry>
+      <entry>十进制记数法</entry>
       <entry><literal>-1.234</literal></entry>
      </row>
      <row>
       <entry><literal>int</literal></entry>
-      <entry>Signed integer</entry>
+      <entry>有符号整数</entry>
       <entry><literal>-1234</literal></entry>
      </row>
      <row>
       <entry><literal>uint</literal></entry>
-      <entry>Unsigned integer</entry>
+      <entry>无符号整数</entry>
       <entry><literal>1234</literal></entry>
      </row>
      <row>
       <entry><literal>version</literal></entry>
-      <entry>Version number</entry>
+      <entry>版本号</entry>
       <entry><literal>8.3.0</literal></entry>
      </row>
      <row>
       <entry><literal>tag</literal></entry>
-      <entry>XML tag</entry>
+      <entry>XML 标签</entry>
       <entry><literal>&lt;a href="dictionaries.html"&gt;</literal></entry>
      </row>
      <row>
       <entry><literal>entity</literal></entry>
-      <entry>XML entity</entry>
+      <entry>XML 实体</entry>
       <entry><literal>&amp;amp;</literal></entry>
      </row>
      <row>
       <entry><literal>blank</literal></entry>
-      <entry>Space symbols</entry>
-      <entry>(any whitespace or punctuation not otherwise recognized)</entry>
+      <entry>空白符号</entry>
+      <entry>（任何未被其他规则识别的空白或标点符号）</entry>
      </row>
     </tbody>
    </tgroup>
@@ -1810,38 +1803,20 @@ LIMIT 10;
 
   <note>
    <para>
-    The parser's notion of a <quote>letter</quote> is determined by the database's
-    locale setting, specifically <varname>lc_ctype</varname>.  Words containing
-    only the basic ASCII letters are reported as a separate token type,
-    since it is sometimes useful to distinguish them.  In most European
-    languages, token types <literal>word</literal> and <literal>asciiword</literal>
-    should be treated alike.
+    解析器对<quote>字母</quote>的认定由数据库的 locale 设置决定，具体来说是 <varname>lc_ctype</varname>。仅包含基本 ASCII 字母的词会作为一种单独的记号类型报告，因为有时区分它们很有用。在大多数欧洲语言中，记号类型 <literal>word</literal> 和 <literal>asciiword</literal> 应当作相同处理。
    </para>
 
    <para>
-    <literal>email</literal> does not support all valid email characters as
-    defined by <ulink url="https://datatracker.ietf.org/doc/html/rfc5322">RFC 5322</ulink>.
-    Specifically, the only non-alphanumeric characters supported for
-    email user names are period, dash, and underscore.
+    <literal>email</literal> 并不支持 <ulink url="https://datatracker.ietf.org/doc/html/rfc5322">RFC 5322</ulink> 所定义的全部有效电子邮件字符。具体来说，电子邮件用户名所支持的非字母数字字符只有句点、短横线和下划线。
    </para>
 
    <para>
-    <literal>tag</literal> does not support all valid tag names as defined by
-    <ulink url="https://www.w3.org/TR/xml/">W3C Recommendation, XML</ulink>.
-    Specifically, the only tag names supported are those starting with an
-    ASCII letter, underscore, or colon, and containing only letters, digits,
-    hyphens, underscores, periods, and colons. <literal>tag</literal> also
-    includes XML comments starting with <literal>&lt;!--</literal> and ending
-    with <literal>--&gt;</literal>, and XML declarations (but note that this
-    includes anything starting with <literal>&lt;?x</literal> and ending with
-    <literal>&gt;</literal>).
+    <literal>tag</literal> 并不支持 <ulink url="https://www.w3.org/TR/xml/">W3C Recommendation, XML</ulink> 所定义的全部有效标签名。具体来说，所支持的标签名仅限于以 ASCII 字母、下划线或冒号开头，并且只包含字母、数字、连字符、下划线、句点和冒号的那些名称。<literal>tag</literal> 还包括以 <literal>&lt;!--</literal> 开头并以 <literal>--&gt;</literal> 结尾的 XML 注释，以及 XML 声明（但请注意，这包括任何以 <literal>&lt;?x</literal> 开头并以 <literal>&gt;</literal> 结尾的内容）。
    </para>
   </note>
 
   <para>
-   It is possible for the parser to produce overlapping tokens from the same
-   piece of text.  As an example, a hyphenated word will be reported both
-   as the entire word and as each component:
+   解析器有可能从同一段文本中产生相互重叠的记号。例如，一个带连字符的词既会作为整个词报告，也会作为各个组成部分分别报告：
 
 <screen>
 SELECT alias, description, token FROM ts_debug('foo-bar-beta1');
@@ -1855,9 +1830,7 @@ SELECT alias, description, token FROM ts_debug('foo-bar-beta1');
  hword_numpart   | Hyphenated word part, letters and digits | beta1
 </screen>
 
-   This behavior is desirable since it allows searches to work for both
-   the whole compound word and for components.  Here is another
-   instructive example:
+   这种行为是可取的，因为它使得搜索既能匹配整个复合词，也能匹配各个组成部分。下面是另一个有启发性的例子：
 
 <screen>
 SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.html');
