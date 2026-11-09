@@ -252,50 +252,27 @@ dropdb <replaceable class="parameter">dbname</replaceable>
  </sect1>
 
  <sect1 id="manage-ag-tablespaces">
-  <title>Tablespaces</title>
+  <title>表空间</title>
 
   <indexterm zone="manage-ag-tablespaces">
    <primary>tablespace</primary>
   </indexterm>
 
   <para>
-   Tablespaces in <productname>PostgreSQL</productname> allow database administrators to
-   define locations in the file system where the files representing
-   database objects can be stored. Once created, a tablespace can be referred
-   to by name when creating database objects.
+   <productname>PostgreSQL</productname> 中的表空间允许数据库管理员定义文件系统中的位置，用于存储代表数据库对象的文件。创建后，在创建数据库对象时可以通过名称引用表空间。
   </para>
 
   <para>
-   By using tablespaces, an administrator can control the disk layout
-   of a <productname>PostgreSQL</productname> installation. This is useful in at
-   least two ways. First, if the partition or volume on which the
-   cluster was initialized runs out of space and cannot be extended,
-   a tablespace can be created on a different partition and used
-   until the system can be reconfigured.
+   通过使用表空间，管理员可以控制 <productname>PostgreSQL</productname> 安装的磁盘布局。这至少在两个方面有用。首先，如果初始化数据库集簇所在的分区或卷空间耗尽且无法扩展，可以在不同的分区上创建表空间并使用它，直到系统可以重新配置。
   </para>
 
   <para>
-   Second, tablespaces allow an administrator to use knowledge of the
-   usage pattern of database objects to optimize performance. For
-   example, an index which is very heavily used can be placed on a
-   very fast, highly available disk, such as an expensive solid state
-   device. At the same time a table storing archived data which is
-   rarely used or not performance critical could be stored on a less
-   expensive, slower disk system.
+   其次，表空间允许管理员利用对数据库对象使用模式的了解来优化性能。例如，可以将使用非常频繁的索引放在速度非常快、高可用性的磁盘上，例如昂贵的固态设备。同时，存储归档数据的表很少使用或不是性能关键，可以存储在较便宜、较慢的磁盘系统上。
   </para>
 
   <warning>
    <para>
-     Even though located outside the main PostgreSQL data directory,
-     tablespaces are an integral part of the database cluster and
-     <emphasis>cannot</emphasis> be treated as an autonomous collection
-     of data files. They are dependent on metadata contained in the main
-     data directory, and therefore cannot be attached to a different
-     database cluster or backed up individually.  Similarly, if you lose
-     a tablespace (file deletion, disk failure, etc.), the database cluster
-     might become unreadable or unable to start.  Placing a tablespace
-     on a temporary file system like a RAM disk risks the reliability of
-     the entire cluster.
+     即使位于主 PostgreSQL 数据目录之外，表空间也是数据库集簇不可分割的一部分，<emphasis>不能</emphasis>被视为独立的数据文件集合。它们依赖于主数据目录中包含的元数据，因此不能附加到不同的数据库集簇或单独备份。同样，如果丢失表空间（文件删除、磁盘故障等），数据库集簇可能变得不可读或无法启动。将表空间放在临时文件系统（如 RAM 磁盘）上会危及整个数据库集簇的可靠性。
    </para>
   </warning>
 
@@ -316,108 +293,77 @@ CREATE TABLESPACE fastspace LOCATION '/ssd1/postgresql/data';
 
   <note>
    <para>
-    There is usually not much point in making more than one
-    tablespace per logical file system, since you cannot control the location
-    of individual files within a logical file system.  However,
-    <productname>PostgreSQL</productname> does not enforce any such limitation, and
-    indeed it is not directly aware of the file system boundaries on your
-    system.  It just stores files in the directories you tell it to use.
+    通常，每个逻辑文件系统上创建多个表空间没有太大意义，因为你无法控制逻辑文件系统内各个文件的位置。不过，<productname>PostgreSQL</productname> 并不强制任何此类限制，而且它实际上并不直接了解你系统上的文件系统边界。它只是把文件存放在你告诉它使用的目录中。
    </para>
   </note>
 
   <para>
-   Creation of the tablespace itself must be done as a database superuser,
-   but after that you can allow ordinary database users to use it.
-   To do that, grant them the <literal>CREATE</literal> privilege on it.
+   表空间本身的创建必须以数据库超级用户身份完成，但之后你可以允许普通数据库用户使用它。要做到这一点，授予他们该表空间上的 <literal>CREATE</literal> 权限。
   </para>
 
   <para>
-   Tables, indexes, and entire databases can be assigned to
-   particular tablespaces. To do so, a user with the <literal>CREATE</literal>
-   privilege on a given tablespace must pass the tablespace name as a
-   parameter to the relevant command. For example, the following creates
-   a table in the tablespace <literal>space1</literal>:
+   表、索引和整个数据库都可以分配给特定的表空间。为此，拥有给定表空间上 <literal>CREATE</literal> 权限的用户必须把表空间名称作为参数传给相关命令。例如，下面的语句在表空间 <literal>space1</literal> 中创建一个表：
 <programlisting>
 CREATE TABLE foo(i int) TABLESPACE space1;
 </programlisting>
   </para>
 
   <para>
-   Alternatively, use the <xref linkend="guc-default-tablespace"/> parameter:
+   或者，使用 <xref linkend="guc-default-tablespace"/> 参数：
 <programlisting>
 SET default_tablespace = space1;
 CREATE TABLE foo(i int);
 </programlisting>
-   When <varname>default_tablespace</varname> is set to anything but an empty
-   string, it supplies an implicit <literal>TABLESPACE</literal> clause for
-   <command>CREATE TABLE</command> and <command>CREATE INDEX</command> commands that
-   do not have an explicit one.
+当 <varname>default_tablespace</varname> 被设置为非空字符串时，它会为没有显式指定表空间的 <command>CREATE TABLE</command> 和 <command>CREATE INDEX</command> 命令提供一个隐式的 <literal>TABLESPACE</literal> 子句。
   </para>
 
   <para>
-   There is also a <xref linkend="guc-temp-tablespaces"/> parameter, which
-   determines the placement of temporary tables and indexes, as well as
-   temporary files that are used for purposes such as sorting large data
-   sets.  This can be a list of tablespace names, rather than only one,
-   so that the load associated with temporary objects can be spread over
-   multiple tablespaces.  A random member of the list is picked each time
-   a temporary object is to be created.
+   还有一个 <xref linkend="guc-temp-tablespaces"/> 参数，它决定临时表和索引以及用于排序大型数据集等目的的临时文件的位置。它可以是一个表空间名称列表，而不只是一个，这样与临时对象相关的负载就可以分散到多个表空间上。每次要创建临时对象时，都会从列表中随机选取一个成员。
   </para>
 
   <para>
-   The tablespace associated with a database is used to store the system
-   catalogs of that database.  Furthermore, it is the default tablespace
-   used for tables, indexes, and temporary files created within the database,
-   if no <literal>TABLESPACE</literal> clause is given and no other selection is
-   specified by <varname>default_tablespace</varname> or
-   <varname>temp_tablespaces</varname> (as appropriate).
-   If a database is created without specifying a tablespace for it,
-   it uses the same tablespace as the template database it is copied from.
+   与数据库关联的表空间用于存储该数据库的系统目录。此外，如果未给出 <literal>TABLESPACE</literal> 子句，且 <varname>default_tablespace</varname> 或 <varname>temp_tablespaces</varname>（视情况而定）未指定其他选择，那么它就是该数据库内创建的表、索引和临时文件所使用的默认表空间。如果创建数据库时没有为它指定表空间，则它使用与其复制来源的模板数据库相同的表空间。
   </para>
 
   <para>
-   Two tablespaces are automatically created when the database cluster
-   is initialized.  The
-   <literal>pg_global</literal> tablespace is used only for shared system catalogs. The
-   <literal>pg_default</literal> tablespace is the default tablespace of the
-   <literal>template1</literal> and <literal>template0</literal> databases (and, therefore,
-   will be the default tablespace for other databases as well, unless
-   overridden by a <literal>TABLESPACE</literal> clause in <command>CREATE
-   DATABASE</command>).
+   数据库集簇初始化时会自动创建两个表空间。
+   <literal>pg_global</literal> 表空间仅用于共享的系统目录。<literal>pg_default</literal> 表空间是
+   <literal>template1</literal> 和 <literal>template0</literal> 数据库的默认表空间（因此，
+   它也将是其他数据库的默认表空间，除非被
+   <command>CREATE
+   DATABASE</command> 中的 <literal>TABLESPACE</literal> 子句覆盖）。
   </para>
 
   <para>
-   Once created, a tablespace can be used from any database, provided
-   the requesting user has sufficient privilege. This means that a tablespace
-   cannot be dropped until all objects in all databases using the tablespace
-   have been removed.
+   表空间一旦创建，就可以从任何数据库中使用，前提是
+   发起请求的用户具有足够的权限。这意味着，在使用该表空间的
+   所有数据库中的所有对象被删除之前，该表空间不能被删除。
   </para>
 
   <para>
-   To remove an empty tablespace, use the <xref
+   要删除一个空的表空间，请使用 <xref
    linkend="sql-droptablespace"/>
-   command.
+   命令。
   </para>
 
   <para>
-   To determine the set of existing tablespaces, examine the
+   要确定现有表空间的集合，请查看
    <link linkend="catalog-pg-tablespace"><structname>pg_tablespace</structname>
-   </link> system catalog, for example
+   </link> 系统目录，例如
 <synopsis>
 SELECT spcname, spcowner::regrole, pg_tablespace_location(oid) FROM pg_tablespace;
 </synopsis>
-   It is possible to find which databases use which tablespaces;
-   see <xref linkend="functions-info-catalog-table"/>.  The <xref
-   linkend="app-psql"/> program's <literal>\db</literal> meta-command
-   is also useful for listing the existing tablespaces.
+   可以找出哪些数据库使用了哪些表空间；
+   参见 <xref linkend="functions-info-catalog-table"/>。<xref
+   linkend="app-psql"/> 程序的 <literal>\db</literal> 元命令
+   对于列出现有表空间也很有用。
   </para>
 
   <para>
-   The directory <filename>$PGDATA/pg_tblspc</filename> contains symbolic links that
-   point to each of the non-built-in tablespaces defined in the cluster.
-   Although not recommended, it is possible to adjust the tablespace
-   layout by hand by redefining these links. Under no circumstances perform
-   this operation while the server is running.
+   目录 <filename>$PGDATA/pg_tblspc</filename> 包含指向集簇中定义的每个非内置表空间的
+   符号链接。虽然不推荐，但可以通过重新定义这些链接来
+   手动调整表空间布局。在任何情况下都不要在服务器运行时
+   执行此操作。
   </para>
 
  </sect1>
