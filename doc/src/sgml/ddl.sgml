@@ -3866,7 +3866,7 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
  </sect1>
 
  <sect1 id="ddl-depend">
-  <title>Dependency Tracking</title>
+  <title>依赖跟踪</title>
 
   <indexterm zone="ddl-depend">
    <primary>CASCADE</primary>
@@ -3879,20 +3879,12 @@ EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
   </indexterm>
 
   <para>
-   When you create complex database structures involving many tables
-   with foreign key constraints, views, triggers, functions, etc. you
-   implicitly create a net of dependencies between the objects.
-   For instance, a table with a foreign key constraint depends on the
-   table it references.
+   当你创建涉及许多表、带有外键约束、视图、触发器、函数等的复杂数据库结构时，你就在对象之间隐式地创建了一张依赖网。例如，一个带有外键约束的表依赖于它所引用的表。
   </para>
 
   <para>
-   To ensure the integrity of the entire database structure,
-   <productname>PostgreSQL</productname> makes sure that you cannot
-   drop objects that other objects still depend on.  For example,
-   attempting to drop the products table we considered in <xref
-   linkend="ddl-constraints-fk"/>, with the orders table depending on
-   it, would result in an error message like this:
+   为确保整个数据库结构的完整性，<productname>PostgreSQL</productname> 会确保你无法删除其他对象仍然依赖的对象。例如，尝试删除我们在 <xref
+   linkend="ddl-constraints-fk"/> 中考虑过的 products 表，而 orders 表依赖于它，就会产生如下错误消息：
 <screen>
 DROP TABLE products;
 
@@ -3900,56 +3892,29 @@ ERROR:  cannot drop table products because other objects depend on it
 DETAIL:  constraint orders_product_no_fkey on table orders depends on table products
 HINT:  Use DROP ... CASCADE to drop the dependent objects too.
 </screen>
-   The error message contains a useful hint: if you do not want to
-   bother deleting all the dependent objects individually, you can run:
+   该错误消息包含一条有用的提示：如果你不想逐个删除所有依赖对象，可以运行：
 <screen>
 DROP TABLE products CASCADE;
 </screen>
-   and all the dependent objects will be removed, as will any objects
-   that depend on them, recursively.  In this case, it doesn't remove
-   the orders table, it only removes the foreign key constraint.
-   It stops there because nothing depends on the foreign key constraint.
-   (If you want to check what <command>DROP ... CASCADE</command> will do,
-   run <command>DROP</command> without <literal>CASCADE</literal> and read the
-   <literal>DETAIL</literal> output.)
+   所有依赖对象都将被删除，任何依赖于它们的对象也会被递归删除。在这种情况下，它不会删除 orders 表，只会删除外键约束。它到此为止，因为没有任何对象依赖于该外键约束。（如果你想查看 <command>DROP ... CASCADE</command> 会做什么，请在不带 <literal>CASCADE</literal> 的情况下运行 <command>DROP</command> 并阅读 <literal>DETAIL</literal> 的输出。）
   </para>
 
   <para>
-   Almost all <command>DROP</command> commands in <productname>PostgreSQL</productname> support
-   specifying <literal>CASCADE</literal>.  Of course, the nature of
-   the possible dependencies varies with the type of the object.  You
-   can also write <literal>RESTRICT</literal> instead of
-   <literal>CASCADE</literal> to get the default behavior, which is to
-   prevent dropping objects that any other objects depend on.
+   <productname>PostgreSQL</productname> 中几乎所有 <command>DROP</command> 命令都支持指定 <literal>CASCADE</literal>。当然，可能的依赖的性质因对象类型而异。你也可以写 <literal>RESTRICT</literal> 而不是 <literal>CASCADE</literal> 来获得默认行为，即阻止删除任何其他对象所依赖的对象。
   </para>
 
   <note>
    <para>
-    According to the SQL standard, specifying either
-    <literal>RESTRICT</literal> or <literal>CASCADE</literal> is
-    required in a <command>DROP</command> command.  No database system actually
-    enforces that rule, but whether the default behavior
-    is <literal>RESTRICT</literal> or <literal>CASCADE</literal> varies
-    across systems.
+    根据 SQL 标准，在 <command>DROP</command> 命令中必须指定 <literal>RESTRICT</literal> 或 <literal>CASCADE</literal>。没有数据库系统实际强制执行该规则，但默认行为是 <literal>RESTRICT</literal> 还是 <literal>CASCADE</literal> 因系统而异。
    </para>
   </note>
 
   <para>
-   If a <command>DROP</command> command lists multiple
-   objects, <literal>CASCADE</literal> is only required when there are
-   dependencies outside the specified group.  For example, when saying
-   <literal>DROP TABLE tab1, tab2</literal> the existence of a foreign
-   key referencing <literal>tab1</literal> from <literal>tab2</literal> would not mean
-   that <literal>CASCADE</literal> is needed to succeed.
+   如果一条 <command>DROP</command> 命令列出多个对象，则只有当指定组之外存在依赖时，才需要 <literal>CASCADE</literal>。例如，当执行 <literal>DROP TABLE tab1, tab2</literal> 时，存在从 <literal>tab2</literal> 引用 <literal>tab1</literal> 的外键并不意味着需要 <literal>CASCADE</literal> 才能成功。
   </para>
 
   <para>
-   For a user-defined function or procedure whose body is defined as a string
-   literal, <productname>PostgreSQL</productname> tracks
-   dependencies associated with the function's externally-visible properties,
-   such as its argument and result types, but <emphasis>not</emphasis> dependencies
-   that could only be known by examining the function body.  As an example,
-   consider this situation:
+   对于函数体定义为字符串字面量的用户定义函数或过程，<productname>PostgreSQL</productname> 会跟踪与该函数外部可见属性（例如其参数类型和结果类型）相关的依赖关系，但<emphasis>不会</emphasis>跟踪只有通过检查函数体才能得知的依赖关系。举例来说，考虑以下情况：
 
 <programlisting>
 CREATE TYPE rainbow AS ENUM ('red', 'orange', 'yellow',
@@ -3962,24 +3927,11 @@ CREATE FUNCTION get_color_note (rainbow) RETURNS text AS
   LANGUAGE SQL;
 </programlisting>
 
-   (See <xref linkend="xfunc-sql"/> for an explanation of SQL-language
-   functions.)  <productname>PostgreSQL</productname> will be aware that
-   the <function>get_color_note</function> function depends on the <type>rainbow</type>
-   type: dropping the type would force dropping the function, because its
-   argument type would no longer be defined.  But <productname>PostgreSQL</productname>
-   will not consider <function>get_color_note</function> to depend on
-   the <structname>my_colors</structname> table, and so will not drop the function if
-   the table is dropped.  While there are disadvantages to this approach,
-   there are also benefits.  The function is still valid in some sense if the
-   table is missing, though executing it would cause an error; creating a new
-   table of the same name would allow the function to work again.
+   （有关 SQL 语言函数的说明，请参见 <xref linkend="xfunc-sql"/>。）<productname>PostgreSQL</productname> 会知道 <function>get_color_note</function> 函数依赖于 <type>rainbow</type> 类型：删除该类型将强制删除该函数，因为其参数类型将不再被定义。但 <productname>PostgreSQL</productname> 不会认为 <function>get_color_note</function> 依赖于 <structname>my_colors</structname> 表，因此如果该表被删除，也不会删除该函数。这种方法虽然有缺点，但也有好处。如果表缺失，该函数在某种意义上仍然有效，尽管执行它会导致错误；创建一个同名的新表将使该函数重新正常工作。
   </para>
 
   <para>
-   On the other hand, for an SQL-language function or procedure whose body
-   is written in SQL-standard style, the body is parsed at function
-   definition time and all dependencies recognized by the parser are
-   stored.  Thus, if we write the function above as
+   另一方面，对于函数体以 SQL 标准风格编写的 SQL 语言函数或过程，函数体在函数定义时就会被解析，解析器识别的所有依赖关系都会被存储。因此，如果我们把上面的函数写成
 
 <programlisting>
 CREATE FUNCTION get_color_note (rainbow) RETURNS text
@@ -3988,8 +3940,7 @@ BEGIN ATOMIC
 END;
 </programlisting>
 
-   then the function's dependency on the <structname>my_colors</structname>
-   table will be known and enforced by <command>DROP</command>.
+   那么该函数对 <structname>my_colors</structname> 表的依赖关系将被 <command>DROP</command> 所知悉并强制执行。
   </para>
  </sect1>
 
