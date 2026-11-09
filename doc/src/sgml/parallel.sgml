@@ -47,36 +47,26 @@ EXPLAIN SELECT * FROM pgbench_accounts WHERE filler LIKE '%x%';
  </sect1>
 
  <sect1 id="when-can-parallel-query-be-used">
-  <title>When Can Parallel Query Be Used?</title>
+  <title>何时可以使用并行查询？</title>
 
   <para>
-    There are several settings that can cause the query planner not to
-    generate a parallel query plan under any circumstances.  In order for
-    any parallel query plans whatsoever to be generated, the following
-    settings must be configured as indicated.
+    有若干设置可能导致查询规划器在任何情况下都不生成并行查询计划。为了能够生成任何并行查询计划，必须按照指示配置以下设置。
   </para>
 
   <itemizedlist>
     <listitem>
       <para>
-        <xref linkend="guc-max-parallel-workers-per-gather"/> must be set to a
-        value that is greater than zero. This is a special case of the more
-        general principle that no more workers should be used than the number
-        configured via <varname>max_parallel_workers_per_gather</varname>.
+        <xref linkend="guc-max-parallel-workers-per-gather"/> 必须设置为大于零的值。这是更一般原则的一个特例：使用的工作进程数量不应超过通过 <varname>max_parallel_workers_per_gather</varname> 配置的数量。
       </para>
     </listitem>
   </itemizedlist>
 
   <para>
-    In addition, the system must not be running in single-user mode.  Since
-    the entire database system is running as a single process in this situation,
-    no background workers will be available.
+    此外，系统不能运行在单用户模式下。因为在这种情况下整个数据库系统作为单个进程运行，所以不会有可用的后台工作进程。
   </para>
 
   <para>
-    Even when it is in general possible for parallel query plans to be
-    generated, the planner will not generate them for a given query
-    if any of the following are true:
+    即使通常可以生成并行查询计划，如果以下任一条件为真，规划器也不会为给定查询生成并行计划：
   </para>
 
   <itemizedlist>
@@ -108,78 +98,65 @@ EXPLAIN SELECT * FROM pgbench_accounts WHERE filler LIKE '%x%';
 
     <listitem>
       <para>
-        The query might be suspended during execution. In any situation in
-        which the system thinks that partial or incremental execution might
-        occur, no parallel plan is generated. For example, a cursor created
-        using <link linkend="sql-declare">DECLARE CURSOR</link> will never use
-        a parallel plan. Similarly, a PL/pgSQL loop of the form
-        <literal>FOR x IN query LOOP .. END LOOP</literal> will never use a
-        parallel plan, because the parallel query system is unable to verify
-        that the code in the loop is safe to execute while parallel query is
-        active.
+        查询在执行期间可能被挂起。在任何系统认为可能发生部分执行或增量执行的情况下，都不会生成并行计划。例如，使用 <link linkend="sql-declare">DECLARE CURSOR</link> 创建的游标将永远不会使用并行计划。类似地，形式为 <literal>FOR x IN query LOOP .. END LOOP</literal> 的 PL/pgSQL 循环将永远不会使用并行计划，因为并行查询系统无法验证循环中的代码在并行查询活动时是否可以安全执行。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        The query uses any function marked <literal>PARALLEL UNSAFE</literal>.
-        Most system-defined functions are <literal>PARALLEL SAFE</literal>,
-        but user-defined functions are marked <literal>PARALLEL
-        UNSAFE</literal> by default. See the discussion of
-        <xref linkend="parallel-safety"/>.
+        查询使用了任何被标记为 <literal>PARALLEL UNSAFE</literal> 的函数。
+        大多数系统定义的函数都是 <literal>PARALLEL SAFE</literal>，
+        但用户定义的函数默认被标记为 <literal>PARALLEL
+        UNSAFE</literal>。参见
+        <xref linkend="parallel-safety"/> 中的讨论。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        The query is running inside of another query that is already parallel.
-        For example, if a function called by a parallel query issues an SQL
-        query itself, that query will never use a parallel plan. This is a
-        limitation of the current implementation, but it may not be desirable
-        to remove this limitation, since it could result in a single query
-        using a very large number of processes.
+        该查询运行在另一个已经并行的查询内部。
+        例如，如果一个由并行查询调用的函数自身发出了一条 SQL
+        查询，那么该查询将永远不会使用并行计划。这是当前实现的一个
+        限制，但移除这一限制可能并不可取，因为它可能导致单个查询
+        使用非常大量的进程。
       </para>
     </listitem>
   </itemizedlist>
 
   <para>
-    Even when a parallel query plan is generated for a particular query, there
-    are several circumstances under which it will be impossible to execute
-    that plan in parallel at execution time.  If this occurs, the leader
-    will execute the portion of the plan below the <literal>Gather</literal>
-    node entirely by itself, almost as if the <literal>Gather</literal> node were
-    not present.  This will happen if any of the following conditions are met:
+    即使为某个特定查询生成了并行查询计划，在执行时仍会有
+    若干情况导致无法并行执行该计划。如果出现这种情况，领导者
+    将完全由自己执行 <literal>Gather</literal>
+    节点以下的计划部分，几乎就像 <literal>Gather</literal> 节点
+    不存在一样。如果满足以下任一条件，就会发生这种情况：
   </para>
 
   <itemizedlist>
     <listitem>
       <para>
-        No background workers can be obtained because of the limitation that
-        the total number of background workers cannot exceed
-        <xref linkend="guc-max-worker-processes"/>.
+        由于后台工作进程总数不能超过
+        <xref linkend="guc-max-worker-processes"/> 这一限制，
+        无法获得后台工作进程。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        No background workers can be obtained because of the limitation that
-        the total number of background workers launched for purposes of
-        parallel query cannot exceed <xref linkend="guc-max-parallel-workers"/>.
+        由于为并行查询启动的后台工作进程总数不能超过
+        <xref linkend="guc-max-parallel-workers"/> 这一限制，
+        无法获得后台工作进程。
       </para>
     </listitem>
 
     <listitem>
       <para>
-        The client sends an Execute message with a non-zero fetch count.
-        See the discussion of the
-        <link linkend="protocol-flow-ext-query">extended query protocol</link>.
-        Since <link linkend="libpq">libpq</link> currently provides no way to
-        send such a message, this can only occur when using a client that
-        does not rely on libpq.  If this is a frequent
-        occurrence, it may be a good idea to set
-        <xref linkend="guc-max-parallel-workers-per-gather"/> to zero in
-        sessions where it is likely, so as to avoid generating query plans
-        that may be suboptimal when run serially.
+        客户端发送了一条带有非零 fetch 计数的 Execute 消息。
+        参见<link linkend="protocol-flow-ext-query">扩展查询协议</link>的讨论。
+        由于<link linkend="libpq">libpq</link> 目前不提供发送此类消息的方式，
+        因此只有在使用不依赖 libpq 的客户端时才会发生这种情况。如果这种情况
+        频繁发生，那么在可能出现这种情况的会话中将
+        <xref linkend="guc-max-parallel-workers-per-gather"/> 设置为零可能是个好主意，
+        以避免生成在串行执行时可能次优的查询计划。
       </para>
     </listitem>
   </itemizedlist>
