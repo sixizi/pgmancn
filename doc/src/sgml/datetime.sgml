@@ -344,7 +344,7 @@
   </sect1>
 
   <sect1 id="datetime-config-files">
-  <title>Date/Time Configuration Files</title>
+  <title>日期/时间配置文件</title>
 
    <indexterm>
     <primary>time zone</primary>
@@ -352,66 +352,63 @@
    </indexterm>
 
    <para>
-    Since timezone abbreviations are not well standardized,
-    <productname>PostgreSQL</productname> provides a means to customize
-    the set of abbreviations accepted in datetime input.
-    There are two sources for these abbreviations:
+    由于时区缩写并没有很好地标准化，
+    <productname>PostgreSQL</productname> 提供了一种方法来定制
+    在日期时间输入中可接受的缩写集合。
+    这些缩写有两个来源：
 
     <orderedlist>
      <listitem>
       <para>
-       The <xref linkend="guc-timezone"/> run-time parameter is usually
-       set to the name of an entry in the IANA time zone database.
-       If that zone has widely-used zone abbreviations, they will appear
-       in the IANA data, and <productname>PostgreSQL</productname> will
-       preferentially recognize those abbreviations with the meanings
-       given in the IANA data.
-       For example, if <varname>timezone</varname> is set
-       to <literal>America/New_York</literal> then <literal>EST</literal>
-       will be understood as UTC-5 and <literal>EDT</literal> will be
-       understood as UTC-4.  (These IANA abbreviations will also be used
-       in datetime output, if <xref linkend="guc-datestyle"/> is set to a
-       style that prefers non-numeric zone abbreviations.)
+       <xref linkend="guc-timezone"/> 运行时参数通常
+       被设置为 IANA 时区数据库中某一项的名称。
+       如果该时区有广泛使用的时区缩写，它们会出现在
+       IANA 数据中，并且 <productname>PostgreSQL</productname> 会
+       优先识别这些缩写，其含义
+       与 IANA 数据中给出的相同。
+       例如，如果 <varname>timezone</varname> 被设置为
+       <literal>America/New_York</literal>，那么 <literal>EST</literal>
+       将被理解为 UTC-5，而 <literal>EDT</literal> 将被
+       理解为 UTC-4。（如果 <xref linkend="guc-datestyle"/> 被设置为
+       偏好非数字时区缩写的风格，这些 IANA 缩写也会
+       用于日期时间输出。）
       </para>
      </listitem>
 
      <listitem>
       <para>
-       If an abbreviation is not found in the current IANA time zone,
-       it is sought in the list specified by the
-       <xref linkend="guc-timezone-abbreviations"/> run-time parameter.
-       The <varname>timezone_abbreviations</varname> list is primarily
-       useful for allowing datetime input to recognize abbreviations for
-       time zones other than the current zone.  (These abbreviations will
-       not be used in datetime output.)
+       如果在当前 IANA 时区中找不到某个缩写，
+       就会在
+       <xref linkend="guc-timezone-abbreviations"/> 运行时参数指定的列表中查找。
+       <varname>timezone_abbreviations</varname> 列表主要
+       用于让日期时间输入能够识别当前时区以外的
+       时区缩写。（这些缩写
+       不会用于日期时间输出。）
       </para>
      </listitem>
     </orderedlist>
    </para>
 
    <para>
-    While the <varname>timezone_abbreviations</varname> parameter
-    can be altered by any database user, the possible values for it
-    are under the control of the database administrator &mdash; they
-    are in fact names of configuration files stored in
-    <filename>.../share/timezonesets/</filename> of the installation directory.
-    By adding or altering files in that directory, the administrator
-    can set local policy for timezone abbreviations.
+    虽然任何数据库用户都可以更改 <varname>timezone_abbreviations</varname> 参数，
+    但其可能的值由数据库管理员控制 &mdash; 它们
+    实际上是存储在安装目录的
+    <filename>.../share/timezonesets/</filename> 中的配置文件的名称。
+    通过在该目录中添加或修改文件，管理员
+    可以为时区缩写设置本地策略。
    </para>
 
    <para>
-    <varname>timezone_abbreviations</varname> can be set to any file name
-    found in <filename>.../share/timezonesets/</filename>, if the file's name
-    is entirely alphabetic.  (The prohibition against non-alphabetic
-    characters in <varname>timezone_abbreviations</varname> prevents reading
-    files outside the intended directory, as well as reading editor
-    backup files and other extraneous files.)
+    <varname>timezone_abbreviations</varname> 可以被设置为在 <filename>.../share/timezonesets/</filename> 中找到的
+    任何文件名，前提是该文件的名称
+    完全由字母组成。（禁止 <varname>timezone_abbreviations</varname> 中出现
+    非字母字符，可以防止读取
+    预期目录之外的文件，以及读取编辑器
+    备份文件和其他无关文件。）
    </para>
 
    <para>
-    A timezone abbreviation file can contain blank lines and comments
-    beginning with <literal>#</literal>.  Non-comment lines must have one of
-    these formats:
+    时区缩写文件可以包含空行和以 <literal>#</literal> 开头的注释。非注释行必须采用下列格式之一：
 
 <synopsis>
 <replaceable>zone_abbreviation</replaceable> <replaceable>offset</replaceable>
@@ -423,95 +420,50 @@
    </para>
 
    <para>
-    A <replaceable>zone_abbreviation</replaceable> is just the abbreviation
-    being defined.  An <replaceable>offset</replaceable> is an integer giving
-    the equivalent offset in seconds from UTC, positive being east from
-    Greenwich and negative being west.  For example, -18000 would be five
-    hours west of Greenwich, or North American east coast standard time.
-    <literal>D</literal> indicates that the zone name represents local
-    daylight-savings time rather than standard time.
+    <replaceable>zone_abbreviation</replaceable> 就是要定义的缩写。<replaceable>offset</replaceable> 是一个整数，给出与 UTC 等效的偏移量（以秒为单位），正值表示格林尼治以东，负值表示以西。例如，-18000 表示格林尼治以西五小时，即北美东海岸标准时间。<literal>D</literal> 表示该时区名代表本地夏令时而非标准时间。
    </para>
 
    <para>
-    Alternatively, a <replaceable>time_zone_name</replaceable> can be given, referencing
-    a zone name defined in the IANA timezone database.  The zone's definition
-    is consulted to see whether the abbreviation is or has been in use in
-    that zone, and if so, the appropriate meaning is used &mdash; that is,
-    the meaning that was currently in use at the timestamp whose value is
-    being determined, or the meaning in use immediately before that if it
-    wasn't current at that time, or the oldest meaning if it was used only
-    after that time.  This behavior is essential for dealing with
-    abbreviations whose meaning has historically varied.  It is also allowed
-    to define an abbreviation in terms of a zone name in which that
-    abbreviation does not appear; then using the abbreviation is just
-    equivalent to writing out the zone name.
+    另一种方式是给出 <replaceable>time_zone_name</replaceable>，引用 IANA 时区数据库中定义的时区名。系统会查阅该时区的定义，以确定该缩写在该时区中是否正在使用或曾经使用过；如果是，则采用相应的含义 &mdash; 即在该值所对应的时间戳当时正在使用的含义，或者如果当时并未使用，则采用紧接其前使用的含义，或者如果只在该时间之后才使用，则采用最旧的含义。这种行为对于处理含义在历史上发生过变化的缩写至关重要。也允许用某个时区名来定义缩写，即使该缩写并未出现在该时区名中；此时使用该缩写就等同于写出该时区名。
    </para>
 
    <tip>
     <para>
-     Using a simple integer <replaceable>offset</replaceable> is preferred
-     when defining an abbreviation whose offset from UTC has never changed,
-     as such abbreviations are much cheaper to process than those that
-     require consulting a time zone definition.
+     在定义与 UTC 的偏移量从未改变过的缩写时，最好使用简单的整数 <replaceable>offset</replaceable>，因为处理这类缩写比处理需要查阅时区定义的缩写要廉价得多。
     </para>
    </tip>
 
    <para>
-    The <literal>@INCLUDE</literal> syntax allows inclusion of another file in the
-    <filename>.../share/timezonesets/</filename> directory.  Inclusion can be nested,
-    to a limited depth.
+    <literal>@INCLUDE</literal> 语法允许包含 <filename>.../share/timezonesets/</filename> 目录中的另一个文件。包含可以嵌套，但深度有限。
    </para>
 
    <para>
-    The <literal>@OVERRIDE</literal> syntax indicates that subsequent entries in the
-    file can override previous entries (typically, entries obtained from
-    included files).  Without this, conflicting definitions of the same
-    timezone abbreviation are considered an error.
+    <literal>@OVERRIDE</literal> 语法表示文件中后续的条目可以覆盖先前的条目（通常是从被包含文件中获得的条目）。如果没有这一语法，同一时区缩写的冲突定义将被视为错误。
    </para>
 
    <para>
-    In an unmodified installation, the file <filename>Default</filename> contains
-    all the non-conflicting time zone abbreviations for most of the world.
-    Additional files <filename>Australia</filename> and <filename>India</filename> are
-    provided for those regions: these files first include the
-    <literal>Default</literal> file and then add or modify abbreviations as needed.
+    在未修改的安装中，文件 <filename>Default</filename> 包含世界上大部分地区所有不冲突的时区缩写。还为这些区域提供了额外的文件 <filename>Australia</filename> 和 <filename>India</filename>：这些文件首先包含 <literal>Default</literal> 文件，然后根据需要添加或修改缩写。
    </para>
 
    <para>
-    For reference purposes, a standard installation also contains files
-    <filename>Africa.txt</filename>, <filename>America.txt</filename>, etc., containing
-    information about every time zone abbreviation known to be in use
-    according to the IANA timezone database.  The zone name
-    definitions found in these files can be copied and pasted into a custom
-    configuration file as needed.  Note that these files cannot be directly
-    referenced as <varname>timezone_abbreviations</varname> settings, because of
-    the dot embedded in their names.
+    作为参考，标准安装还包含文件 <filename>Africa.txt</filename>、<filename>America.txt</filename> 等，其中包含根据 IANA 时区数据库已知在用的每个时区缩写的相关信息。这些文件中找到的时区名称定义可以根据需要复制并粘贴到自定义配置文件中。请注意，这些文件不能直接作为 <varname>timezone_abbreviations</varname> 设置引用，因为它们的名称中嵌入了点号。
    </para>
 
    <note>
     <para>
-     If an error occurs while reading the time zone abbreviation set, no new
-     value is applied and the old set is kept. If the error occurs while
-     starting the database, startup fails.
+     如果在读取时区缩写集时发生错误，则不会应用新值，并保留旧的集合。如果错误发生在启动数据库时，则启动失败。
     </para>
    </note>
 
    <caution>
     <para>
-     Time zone abbreviations defined in the configuration file override
-     non-timezone meanings built into <productname>PostgreSQL</productname>.
-     For example, the <filename>Australia</filename> configuration file defines
-     <literal>SAT</literal> (for South Australian Standard Time).  When this
-     file is active, <literal>SAT</literal> will not be recognized as an abbreviation
-     for Saturday.
+     配置文件中定义的时区缩写会覆盖内置于 <productname>PostgreSQL</productname> 中的非时区含义。例如，<filename>Australia</filename> 配置文件定义了 <literal>SAT</literal>（南澳大利亚标准时间）。当此文件处于活动状态时，<literal>SAT</literal> 将不会被识别为星期六的缩写。
     </para>
    </caution>
 
    <caution>
     <para>
-     If you modify files in <filename>.../share/timezonesets/</filename>,
-     it is up to you to make backups &mdash; a normal database dump
-     will not include this directory.
+     如果你修改了 <filename>.../share/timezonesets/</filename> 中的文件，则需要自行进行备份 &mdash; 普通的数据库转储不会包含此目录。
     </para>
    </caution>
 
