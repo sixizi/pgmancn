@@ -50,23 +50,21 @@ EXEC SQL ...;
  </sect1>
 
  <sect1 id="ecpg-connect">
-  <title>Managing Database Connections</title>
+  <title>管理数据库连接</title>
 
   <para>
-   This section describes how to open, close, and switch database
-   connections.
+   本节描述如何打开、关闭和切换数据库连接。
   </para>
 
   <sect2 id="ecpg-connecting">
-   <title>Connecting to the Database Server</title>
+   <title>连接到数据库服务器</title>
 
   <para>
-   One connects to a database using the following statement:
+   使用以下语句连接到数据库：
 <programlisting>
 EXEC SQL CONNECT TO <replaceable>target</replaceable> <optional>AS <replaceable>connection-name</replaceable></optional> <optional>USER <replaceable>user-name</replaceable></optional>;
 </programlisting>
-   The <replaceable>target</replaceable> can be specified in the
-   following ways:
+   <replaceable>target</replaceable> 可以通过以下方式指定：
 
    <itemizedlist>
     <listitem>
@@ -89,13 +87,13 @@ EXEC SQL CONNECT TO <replaceable>target</replaceable> <optional>AS <replaceable>
 
     <listitem>
      <simpara>
-      an SQL string literal containing one of the above forms
+      包含上述形式之一的 SQL 字符串字面量
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      a reference to a character variable containing one of the above forms (see examples)
+      对包含上述形式之一的字符变量的引用（参见示例）
      </simpara>
     </listitem>
 
@@ -106,28 +104,15 @@ EXEC SQL CONNECT TO <replaceable>target</replaceable> <optional>AS <replaceable>
     </listitem>
    </itemizedlist>
 
-   The connection target <literal>DEFAULT</literal> initiates a connection
-   to the default database under the default user name.  No separate
-   user name or connection name can be specified in that case.
+   连接目标 <literal>DEFAULT</literal> 会以默认用户名发起一个到默认数据库的连接。在这种情况下，不能另外指定用户名或连接名。
   </para>
 
   <para>
-   If you specify the connection target directly (that is, not as a string
-   literal or variable reference), then the components of the target are
-   passed through normal SQL parsing; this means that, for example,
-   the <replaceable>hostname</replaceable> must look like one or more SQL
-   identifiers separated by dots, and those identifiers will be
-   case-folded unless double-quoted.  Values of
-   any <replaceable>options</replaceable> must be SQL identifiers,
-   integers, or variable references.  Of course, you can put nearly
-   anything into an SQL identifier by double-quoting it.
-   In practice, it is probably less error-prone to use a (single-quoted)
-   string literal or a variable reference than to write the connection
-   target directly.
+   如果直接指定连接目标（即不作为字符串字面量或变量引用来指定），那么目标的各个组成部分会经过普通的 SQL 解析；这意味着，例如 <replaceable>hostname</replaceable> 必须看起来像由一个或多个点分隔的 SQL 标识符，并且这些标识符除非用双引号引用，否则会被大小写折叠。任何 <replaceable>options</replaceable> 的值必须是 SQL 标识符、整数或变量引用。当然，通过加双引号，你几乎可以把任何内容放进 SQL 标识符中。在实践中，使用（单引号引用的）字符串字面量或变量引用，可能比直接书写连接目标更不容易出错。
   </para>
 
   <para>
-   There are also different ways to specify the user name:
+   指定用户名也有不同的方式：
 
    <itemizedlist>
     <listitem>
@@ -155,44 +140,23 @@ EXEC SQL CONNECT TO <replaceable>target</replaceable> <optional>AS <replaceable>
     </listitem>
    </itemizedlist>
 
-   As above, the parameters <replaceable>username</replaceable> and
-   <replaceable>password</replaceable> can be an SQL identifier, an
-   SQL string literal, or a reference to a character variable.
+   如上所述，参数 <replaceable>username</replaceable> 和 <replaceable>password</replaceable> 可以是 SQL 标识符、SQL 字符串字面量，或对字符变量的引用。
   </para>
 
   <para>
-   If the connection target includes any <replaceable>options</replaceable>,
-   those consist of
-   <literal><replaceable>keyword</replaceable>=<replaceable>value</replaceable></literal>
-   specifications separated by ampersands (<literal>&amp;</literal>).
-   The allowed key words are the same ones recognized
-   by <application>libpq</application> (see
-   <xref linkend="libpq-paramkeywords"/>).  Spaces are ignored before
-   any <replaceable>keyword</replaceable> or <replaceable>value</replaceable>,
-   though not within or after one.  Note that there is no way to
-   write <literal>&amp;</literal> within a <replaceable>value</replaceable>.
+   如果连接目标中包含任何 <replaceable>options</replaceable>，那么它们由以 & 符号（<literal>&amp;</literal>）分隔的 <literal><replaceable>keyword</replaceable>=<replaceable>value</replaceable></literal> 规格组成。允许的关键词与 <application>libpq</application> 所识别的关键词相同（参见 <xref linkend="libpq-paramkeywords"/>）。在任何 <replaceable>keyword</replaceable> 或 <replaceable>value</replaceable> 之前会忽略空格，但在其中或其后则不会。注意，无法在 <replaceable>value</replaceable> 中书写 <literal>&amp;</literal>。
   </para>
 
   <para>
-   Notice that when specifying a socket connection
-   (with the <literal>unix:</literal> prefix), the host name must be
-   exactly <literal>localhost</literal>.  To select a non-default
-   socket directory, write the directory's pathname as the value of
-   a <varname>host</varname> option in
-   the <replaceable>options</replaceable> part of the target.
+   注意，当指定套接字连接（带有 <literal>unix:</literal> 前缀）时，主机名必须正好是 <literal>localhost</literal>。要选择非默认的套接字目录，请把该目录的路径名写为目标中 <replaceable>options</replaceable> 部分里 <varname>host</varname> 选项的值。
   </para>
 
   <para>
-   The <replaceable>connection-name</replaceable> is used to handle
-   multiple connections in one program.  It can be omitted if a
-   program uses only one connection.  The most recently opened
-   connection becomes the current connection, which is used by default
-   when an SQL statement is to be executed (see later in this
-   chapter).
+   <replaceable>connection-name</replaceable> 用于在一个程序中处理多个连接。如果程序只使用一个连接，则可以省略它。最近打开的连接成为当前连接，在执行 SQL 语句时默认使用该连接（见本章后面的内容）。
   </para>
 
   <para>
-   Here are some examples of <command>CONNECT</command> statements:
+   以下是一些 <command>CONNECT</command> 语句的示例：
 <programlisting>
 EXEC SQL CONNECT TO mydb@sql.mydomain.com;
 
@@ -207,71 +171,48 @@ EXEC SQL END DECLARE SECTION;
 EXEC SQL CONNECT TO :target USER :user USING :passwd;
 /* or EXEC SQL CONNECT TO :target USER :user/:passwd; */
 </programlisting>
-   The last example makes use of the feature referred to above as
-   character variable references.  You will see in later sections how C
-   variables can be used in SQL statements when you prefix them with a
-   colon.
+   最后一个示例使用了上文提到的字符变量引用特性。在后面的章节中你将看到，当在 C 变量前加上冒号时，就可以在 SQL 语句中使用它们。
   </para>
 
   <para>
-   Be advised that the format of the connection target is not
-   specified in the SQL standard.  So if you want to develop portable
-   applications, you might want to use something based on the last
-   example above to encapsulate the connection target string
-   somewhere.
+   请注意，连接目标的格式并未在 SQL 标准中规定。因此，如果你想要开发可移植的应用程序，可能需要使用基于上面最后一个示例的某种方式，将连接目标字符串封装在某处。
   </para>
 
   <para>
-   If untrusted users have access to a database that has not adopted a
-   <link linkend="ddl-schemas-patterns">secure schema usage pattern</link>,
-   begin each session by removing publicly-writable schemas
-   from <varname>search_path</varname>.  For example,
-   add <literal>options=-c search_path=</literal>
-   to <literal><replaceable>options</replaceable></literal>, or
-   issue <literal>EXEC SQL SELECT pg_catalog.set_config('search_path', '',
-   false);</literal> after connecting.  This consideration is not specific to
-   ECPG; it applies to every interface for executing arbitrary SQL commands.
+   如果不受信任的用户可以访问尚未采用<link linkend="ddl-schemas-patterns">安全的模式使用模式</link>的数据库，那么在每个会话开始时从 <varname>search_path</varname> 中移除可公开写入的模式。例如，将 <literal>options=-c search_path=</literal> 添加到 <literal><replaceable>options</replaceable></literal>，或在连接后执行 <literal>EXEC SQL SELECT pg_catalog.set_config('search_path', '',
+   false);</literal>。这一考虑并非 ECPG 特有；它适用于每一个用于执行任意 SQL 命令的接口。
   </para>
   </sect2>
 
   <sect2 id="ecpg-set-connection">
-   <title>Choosing a Connection</title>
+   <title>选择连接</title>
 
   <para>
-   SQL statements in embedded SQL programs are by default executed on
-   the current connection, that is, the most recently opened one.  If
-   an application needs to manage multiple connections, then there are
-   three ways to handle this.
+   嵌入式 SQL 程序中的 SQL 语句默认在当前连接上执行，即最近打开的那个连接。如果应用程序需要管理多个连接，那么有三种方式来处理这一点。
   </para>
 
   <para>
-   The first option is to explicitly choose a connection for each SQL
-   statement, for example:
+   第一个选项是为每条 SQL 语句显式选择一个连接，例如：
 <programlisting>
 EXEC SQL AT <replaceable>connection-name</replaceable> SELECT ...;
 </programlisting>
-   This option is particularly suitable if the application needs to
-   use several connections in mixed order.
+   如果应用程序需要以混合顺序使用多个连接，这个选项特别合适。
   </para>
 
   <para>
-   If your application uses multiple threads of execution, they cannot share a
-   connection concurrently. You must either explicitly control access to the connection
-   (using mutexes) or use a connection for each thread.
+   如果你的应用程序使用多个执行线程，它们不能并发共享一个连接。你必须显式控制对连接的访问（使用互斥量），或者为每个线程使用一个连接。
   </para>
 
   <para>
-   The second option is to execute a statement to switch the current
-   connection.  That statement is:
+   第二个选项是执行一条语句来切换当前连接。该语句是：
 <programlisting>
 EXEC SQL SET CONNECTION <replaceable>connection-name</replaceable>;
 </programlisting>
-   This option is particularly convenient if many statements are to be
-   executed on the same connection.
+   如果要在同一个连接上执行许多语句，这个选项特别方便。
   </para>
 
   <para>
-   Here is an example program managing multiple database connections:
+   这里是一个管理多个数据库连接的示例程序：
 <programlisting><![CDATA[
 #include <stdio.h>
 
@@ -308,7 +249,7 @@ main()
 }
 ]]></programlisting>
 
-   This example would produce this output:
+   这个示例将产生如下输出：
 <screen>
 current=testdb3 (should be testdb3)
 current=testdb2 (should be testdb2)
@@ -317,18 +258,15 @@ current=testdb1 (should be testdb1)
   </para>
 
   <para>
-  The third option is to declare an SQL identifier linked to
-  the connection, for example:
+  第三个选项是声明一个链接到该连接的 SQL 标识符，例如：
 <programlisting>
 EXEC SQL AT <replaceable>connection-name</replaceable> DECLARE <replaceable>statement-name</replaceable> STATEMENT;
 EXEC SQL PREPARE <replaceable>statement-name</replaceable> FROM :<replaceable>dyn-string</replaceable>;
 </programlisting>
-   Once you link an SQL identifier to a connection, you execute dynamic SQL
-   without an AT clause. Note that this option behaves like preprocessor
-   directives, therefore the link is enabled only in the file.
+   一旦你把一个 SQL 标识符链接到一个连接，就可以执行不带 AT 子句的动态 SQL。注意，这个选项的行为类似于预处理器指令，因此该链接只在文件中有效。
   </para>
   <para>
-   Here is an example program using this option:
+   这里是一个使用该选项的示例程序：
 <programlisting><![CDATA[
 #include <stdio.h>
 
@@ -350,7 +288,7 @@ int main(){
 }
 ]]></programlisting>
 
-   This example would produce this output, even if the default connection is testdb:
+   这个示例将产生如下输出，即使默认连接是 testdb：
 <screen>
 postgres
 </screen>
@@ -358,15 +296,14 @@ postgres
   </sect2>
 
   <sect2 id="ecpg-disconnect">
-   <title>Closing a Connection</title>
+   <title>关闭连接</title>
 
   <para>
-   To close a connection, use the following statement:
+   要关闭一个连接，请使用以下语句：
 <programlisting>
 EXEC SQL DISCONNECT <optional><replaceable>connection</replaceable></optional>;
 </programlisting>
-   The <replaceable>connection</replaceable> can be specified
-   in the following ways:
+   <replaceable>connection</replaceable> 可以通过以下方式指定：
 
    <itemizedlist>
     <listitem>
@@ -388,13 +325,11 @@ EXEC SQL DISCONNECT <optional><replaceable>connection</replaceable></optional>;
     </listitem>
    </itemizedlist>
 
-   If no connection name is specified, the current connection is
-   closed.
+   如果没有指定连接名，则关闭当前连接。
   </para>
 
   <para>
-   It is good style that an application always explicitly disconnect
-   from every connection it opened.
+   应用程序始终显式地断开它打开的每一个连接，是一种良好的风格。
   </para>
   </sect2>
 
