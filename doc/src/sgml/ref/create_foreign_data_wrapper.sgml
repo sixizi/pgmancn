@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE FOREIGN DATA WRAPPER</refname>
-  <refpurpose>define a new foreign-data wrapper</refpurpose>
+  <refpurpose>定义一个新的外部数据包装器</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -29,32 +29,30 @@ CREATE FOREIGN DATA WRAPPER <replaceable class="parameter">name</replaceable>
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE FOREIGN DATA WRAPPER</command> creates a new
-   foreign-data wrapper.  The user who defines a foreign-data wrapper
-   becomes its owner.
+   <command>CREATE FOREIGN DATA WRAPPER</command> 创建一个新的外部数据包装器。定义外部数据包装器的用户将成为其所有者。
   </para>
 
   <para>
-   The foreign-data wrapper name must be unique within the database.
+   外部数据包装器的名称在数据库内必须唯一。
   </para>
 
   <para>
-   Only superusers can create foreign-data wrappers.
+   只有超级用户才能创建外部数据包装器。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name of the foreign-data wrapper to be created.
+      要创建的外部数据包装器的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -62,17 +60,15 @@ CREATE FOREIGN DATA WRAPPER <replaceable class="parameter">name</replaceable>
    <varlistentry>
     <term><literal>HANDLER <replaceable class="parameter">handler_function</replaceable></literal></term>
     <listitem>
-     <para><replaceable class="parameter">handler_function</replaceable> is the
-      name of a previously registered function that will be called to
-      retrieve the execution functions for foreign tables.
-      The handler function must take no arguments, and
-      its return type must be <type>fdw_handler</type>.
+     <para><replaceable class="parameter">handler_function</replaceable> 是先前注册的函数的名称，该函数将被调用来获取外部表的执行函数。
+      处理函数必须不接受任何参数，
+      并且其返回类型必须是 <type>fdw_handler</type>。
      </para>
 
      <para>
-      It is possible to create a foreign-data wrapper with no handler
-      function, but foreign tables using such a wrapper can only be declared,
-      not accessed.
+      可以创建不带处理函数的外部数据包装器，
+      但使用这种包装器的外部表只能被声明，
+      不能被访问。
      </para>
     </listitem>
    </varlistentry>
@@ -81,20 +77,18 @@ CREATE FOREIGN DATA WRAPPER <replaceable class="parameter">name</replaceable>
     <term><literal>VALIDATOR <replaceable class="parameter">validator_function</replaceable></literal></term>
     <listitem>
      <para><replaceable class="parameter">validator_function</replaceable>
-      is the name of a previously registered function that will be called to
-      check the generic options given to the foreign-data wrapper, as
-      well as options for foreign servers, user mappings and foreign tables
-      using the foreign-data wrapper.  If no validator function or <literal>NO
-      VALIDATOR</literal> is specified, then options will not be
-      checked at creation time.  (Foreign-data wrappers will possibly
-      ignore or reject invalid option specifications at run time,
-      depending on the implementation.)  The validator function must
-      take two arguments: one of type <type>text[]</type>, which will
-      contain the array of options as stored in the system catalogs,
-      and one of type <type>oid</type>, which will be the OID of the
-      system catalog containing the options. The return type is ignored;
-      the function should report invalid options using the
-      <function>ereport(ERROR)</function> function.
+      是先前注册的函数的名称，该函数将被调用来检查给予外部数据包装器的通用选项，
+      以及使用该外部数据包装器的外部服务器、用户映射和外部表的选项。
+      如果没有指定验证器函数或 <literal>NO
+      VALIDATOR</literal>，那么在创建时不会检查选项。
+      （外部数据包装器可能会在运行时忽略或拒绝无效的选项声明，
+      具体取决于实现。）验证器函数必须
+      接受两个参数：一个类型为 <type>text[]</type>，其中
+      包含存储在系统目录中的选项数组；
+      另一个类型为 <type>oid</type>，它将是包含这些选项的
+      系统目录的 OID。返回类型被忽略；
+      该函数应使用
+      <function>ereport(ERROR)</function> 函数报告无效选项。
      </para>
     </listitem>
    </varlistentry>
@@ -103,10 +97,10 @@ CREATE FOREIGN DATA WRAPPER <replaceable class="parameter">name</replaceable>
     <term><literal>OPTIONS ( <replaceable class="parameter">option</replaceable> '<replaceable class="parameter">value</replaceable>' [, ... ] )</literal></term>
     <listitem>
      <para>
-      This clause specifies options for the new foreign-data wrapper.
-      The allowed option names and values are specific to each foreign
-      data wrapper and are validated using the foreign-data wrapper's
-      validator function.  Option names must be unique.
+      此子句为新外部数据包装器指定选项。
+      允许的选项名称和值特定于每个外部
+      数据包装器，并使用该外部数据包装器的
+      验证器函数进行验证。选项名称必须唯一。
      </para>
     </listitem>
    </varlistentry>
@@ -114,37 +108,32 @@ CREATE FOREIGN DATA WRAPPER <replaceable class="parameter">name</replaceable>
  </refsect1>
 
  <refsect1>
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   <productname>PostgreSQL</productname>'s foreign-data functionality is still under
-   active development.  Optimization of queries is primitive (and mostly left
-   to the wrapper, too).  Thus, there is considerable room for future
-   performance improvements.
+   <productname>PostgreSQL</productname> 的外部数据功能仍在积极开发中。查询优化还很原始（而且大部分也留给包装器处理）。因此，未来在性能提升方面还有相当大的空间。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Create a useless foreign-data wrapper <literal>dummy</literal>:
+   创建一个无用的外部数据包装器 <literal>dummy</literal>：
 <programlisting>
 CREATE FOREIGN DATA WRAPPER dummy;
 </programlisting>
   </para>
 
   <para>
-   Create a foreign-data wrapper <literal>file</literal> with
-   handler function <literal>file_fdw_handler</literal>:
+   创建一个带有处理函数 <literal>file_fdw_handler</literal> 的外部数据包装器 <literal>file</literal>：
 <programlisting>
 CREATE FOREIGN DATA WRAPPER file HANDLER file_fdw_handler;
 </programlisting>
   </para>
 
   <para>
-   Create a foreign-data wrapper <literal>mywrapper</literal> with some
-   options:
+   创建一个带有若干选项的外部数据包装器 <literal>mywrapper</literal>：
 <programlisting>
 CREATE FOREIGN DATA WRAPPER mywrapper
     OPTIONS (debug 'true');
@@ -152,24 +141,23 @@ CREATE FOREIGN DATA WRAPPER mywrapper
  </refsect1>
 
  <refsect1>
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   <command>CREATE FOREIGN DATA WRAPPER</command> conforms to ISO/IEC
-   9075-9 (SQL/MED), with the exception that the <literal>HANDLER</literal>
-   and <literal>VALIDATOR</literal> clauses are extensions and the standard
-   clauses <literal>LIBRARY</literal> and <literal>LANGUAGE</literal>
-   are not implemented in <productname>PostgreSQL</productname>.
+   <command>CREATE FOREIGN DATA WRAPPER</command> 符合 ISO/IEC
+   9075-9 (SQL/MED)，但 <literal>HANDLER</literal>
+   和 <literal>VALIDATOR</literal> 子句属于扩展，并且标准
+   子句 <literal>LIBRARY</literal> 和 <literal>LANGUAGE</literal>
+   未在 <productname>PostgreSQL</productname> 中实现。
   </para>
 
   <para>
-   Note, however, that the SQL/MED functionality as a whole is not yet
-   conforming.
+   但是请注意，SQL/MED 功能整体上尚未符合标准。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-alterforeigndatawrapper"/></member>
