@@ -15,89 +15,55 @@
   </para>
 
   <sect1 id="query-path">
-   <title>The Path of a Query</title>
+   <title>查询的路径</title>
 
    <para>
-    Here we give a short overview of the stages a query has to pass
-    to obtain a result.
+    这里我们简要概述一个查询为了获得结果所必须经过的各个阶段。
    </para>
 
    <procedure>
     <step>
      <para>
-      A connection from an application program to the <productname>PostgreSQL</productname>
-      server has to be established. The application program transmits a
-      query to the server and waits to receive the results sent back by the
-      server.
+      应用程序与 <productname>PostgreSQL</productname>
+      服务器之间的连接必须建立。应用程序向服务器发送查询，并等待接收服务器发回的结果。
      </para>
     </step>
 
     <step>
      <para>
-      The <firstterm>parser stage</firstterm> checks the query
-      transmitted by the application
-      program for correct syntax and creates
-      a <firstterm>query tree</firstterm>.
+      <firstterm>解析器阶段</firstterm>检查应用程序发送的查询的语法是否正确，并创建一个<firstterm>查询树</firstterm>。
      </para>
     </step>
 
     <step>
      <para>
-      The <firstterm>rewrite system</firstterm> takes
-      the query tree created by the parser stage and looks for
-      any <firstterm>rules</firstterm> (stored in the
-      <firstterm>system catalogs</firstterm>) to apply to
-      the query tree.  It performs the
-      transformations given in the <firstterm>rule bodies</firstterm>.
+      <firstterm>重写系统</firstterm>接收解析器阶段创建的查询树，并查找任何可应用于该查询树的<firstterm>规则</firstterm>（存储在<firstterm>系统目录</firstterm>中）。它执行<firstterm>规则体</firstterm>中给出的变换。
      </para>
 
      <para>
-      One application of the rewrite system is in the realization of
-      <firstterm>views</firstterm>.
-      Whenever a query against a view
-      (i.e., a <firstterm>virtual table</firstterm>) is made,
-      the rewrite system rewrites the user's query to
-      a query that accesses the <firstterm>base tables</firstterm> given in
-      the <firstterm>view definition</firstterm> instead.
+      重写系统的一个应用是实现<firstterm>视图</firstterm>。每当针对视图（即<firstterm>虚拟表</firstterm>）进行查询时，重写系统就会把用户的查询重写为访问<firstterm>视图定义</firstterm>中给出的<firstterm>基表</firstterm>的查询。
      </para>
     </step>
 
     <step>
      <para>
-      The <firstterm>planner/optimizer</firstterm> takes
-      the (rewritten) query tree and creates a
-      <firstterm>query plan</firstterm> that will be the input to the
-      <firstterm>executor</firstterm>.
+      <firstterm>查询规划器/优化器</firstterm>接收（经过重写的）查询树，并创建一个<firstterm>查询计划</firstterm>，该计划将作为<firstterm>执行器</firstterm>的输入。
      </para>
 
      <para>
-      It does so by first creating all possible <firstterm>paths</firstterm>
-      leading to the same result. For example if there is an index on a
-      relation to be scanned, there are two paths for the
-      scan. One possibility is a simple sequential scan and the other
-      possibility is to use the index. Next the cost for the execution of
-      each path is estimated and the cheapest path is chosen.  The cheapest
-      path is expanded into a complete plan that the executor can use.
+      它首先创建所有能导向相同结果的可能的<firstterm>路径</firstterm>。例如，如果要扫描的关系上存在一个索引，那么该扫描就有两条路径。一种可能是简单的顺序扫描，另一种可能是使用索引。接下来，估算每条路径的执行代价，并选择代价最低的路径。代价最低的路径会被展开为执行器可以使用的完整计划。
      </para>
     </step>
 
     <step>
      <para>
-      The executor recursively steps through
-      the <firstterm>plan tree</firstterm> and
-      retrieves rows in the way represented by the plan.
-      The executor makes use of the
-      <firstterm>storage system</firstterm> while scanning
-      relations, performs <firstterm>sorts</firstterm> and <firstterm>joins</firstterm>,
-      evaluates <firstterm>qualifications</firstterm> and finally hands back the rows derived.
+      执行器递归地遍历<firstterm>计划树</firstterm>，并按照计划所表示的方式检索行。执行器在扫描关系时使用<firstterm>存储系统</firstterm>，执行<firstterm>排序</firstterm>和<firstterm>连接</firstterm>，计算<firstterm>限定条件</firstterm>，最后返回所得到的行。
      </para>
     </step>
    </procedure>
 
    <para>
-    In the following sections we will cover each of the above listed items
-    in more detail to give a better understanding of <productname>PostgreSQL</productname>'s internal
-    control and data structures.
+    在接下来的各节中，我们将更详细地介绍上面列出的每一项，以便更好地理解 <productname>PostgreSQL</productname> 的内部控制和数据结构。
    </para>
   </sect1>
 
