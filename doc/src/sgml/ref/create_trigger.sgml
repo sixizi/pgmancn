@@ -21,7 +21,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>CREATE TRIGGER</refname>
-  <refpurpose>define a new trigger</refpurpose>
+  <refpurpose>定义一个新触发器</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -45,109 +45,75 @@ CREATE [ OR REPLACE ] [ CONSTRAINT ] TRIGGER <replaceable class="parameter">name
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
 
   <para>
-   <command>CREATE TRIGGER</command> creates a new trigger.
-   <command>CREATE OR REPLACE TRIGGER</command> will either create a
-   new trigger, or replace an existing trigger.  The
-   trigger will be associated with the specified table, view, or foreign table
-   and will execute the specified
-   function <replaceable class="parameter">function_name</replaceable> when
-   certain operations are performed on that table.
+   <command>CREATE TRIGGER</command> 创建一个新触发器。
+   <command>CREATE OR REPLACE TRIGGER</command> 会创建一个新触发器，或者替换一个已有的触发器。该触发器将与指定的表、视图或外部表关联，并在对该表执行某些操作时执行指定的函数 <replaceable class="parameter">function_name</replaceable>。
   </para>
 
   <para>
-   To replace the current definition of an existing trigger, use
-   <command>CREATE OR REPLACE TRIGGER</command>, specifying the existing
-   trigger's name and parent table.  All other properties are replaced.
+   要替换已有触发器的当前定义，请使用 <command>CREATE OR REPLACE TRIGGER</command>，并指定该已有触发器的名称和父表。所有其他属性都会被替换。
   </para>
 
   <para>
-   The trigger can be specified to fire before the
-   operation is attempted on a row (before constraints are checked and
-   the <command>INSERT</command>, <command>UPDATE</command>, or
-   <command>DELETE</command> is attempted); or after the operation has
-   completed (after constraints are checked and the
-   <command>INSERT</command>, <command>UPDATE</command>, or
-   <command>DELETE</command> has completed); or instead of the operation
-   (in the case of inserts, updates or deletes on a view).
-   If the trigger fires before or instead of the event, the trigger can skip
-   the operation for the current row, or change the row being inserted (for
-   <command>INSERT</command> and <command>UPDATE</command> operations
-   only). If the trigger fires after the event, all changes, including
-   the effects of other triggers, are <quote>visible</quote>
-   to the trigger.
+   触发器可以指定为在对行尝试执行操作之前触发（在检查约束以及尝试 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command> 之前）；或者在操作完成之后触发（在检查约束以及 <command>INSERT</command>、<command>UPDATE</command> 或 <command>DELETE</command> 完成之后）；或者代替该操作触发（对于视图上的插入、更新或删除的情况）。如果触发器在事件之前或代替事件触发，触发器可以跳过当前行的操作，或者更改被插入的行（仅限 <command>INSERT</command> 和 <command>UPDATE</command> 操作）。如果触发器在事件之后触发，所有更改（包括其他触发器的影响）对该触发器都是<quote>可见的</quote>。
   </para>
 
   <para>
-   A trigger that is marked <literal>FOR EACH ROW</literal> is called
-   once for every row that the operation modifies. For example, a
-   <command>DELETE</command> that affects 10 rows will cause any
-   <literal>ON DELETE</literal> triggers on the target relation to be
-   called 10 separate times, once for each deleted row. In contrast, a
-   trigger that is marked <literal>FOR EACH STATEMENT</literal> only
-   executes once for any given operation, regardless of how many rows
-   it modifies (in particular, an operation that modifies zero rows
-   will still result in the execution of any applicable <literal>FOR
-   EACH STATEMENT</literal> triggers).
+   标记为 <literal>FOR EACH ROW</literal> 的触发器会针对该操作修改的每一行被调用一次。例如，影响 10 行的 <command>DELETE</command> 会导致目标关系上的任何 <literal>ON DELETE</literal> 触发器被分别调用 10 次，每删除一行调用一次。相比之下，标记为 <literal>FOR EACH STATEMENT</literal> 的触发器对于任何给定操作只执行一次，无论它修改了多少行（特别是，修改零行的操作仍会导致执行任何适用的 <literal>FOR
+   EACH STATEMENT</literal> 触发器）。
   </para>
 
   <para>
-   Triggers that are specified to fire <literal>INSTEAD OF</literal> the trigger
-   event must be marked <literal>FOR EACH ROW</literal>, and can only be defined
-   on views. <literal>BEFORE</literal> and <literal>AFTER</literal> triggers on a view
-   must be marked as <literal>FOR EACH STATEMENT</literal>.
+   指定为 <literal>INSTEAD OF</literal> 触发器事件而触发的触发器必须标记为 <literal>FOR EACH ROW</literal>，并且只能定义在视图上。视图上的 <literal>BEFORE</literal> 和 <literal>AFTER</literal> 触发器必须标记为 <literal>FOR EACH STATEMENT</literal>。
   </para>
 
   <para>
-   In addition, triggers may be defined to fire for
-   <command>TRUNCATE</command>, though only
-   <literal>FOR EACH STATEMENT</literal>.
+   此外，触发器也可以定义为针对 <command>TRUNCATE</command> 触发，不过只能是 <literal>FOR EACH STATEMENT</literal>。
   </para>
 
   <para>
-   The following table summarizes which types of triggers may be used on
-   tables, views, and foreign tables:
+   下表总结了哪些类型的触发器可用于表、视图和外部表：
   </para>
 
   <informaltable id="supported-trigger-types">
    <tgroup cols="4">
     <thead>
      <row>
-      <entry>When</entry>
-      <entry>Event</entry>
-      <entry>Row-level</entry>
-      <entry>Statement-level</entry>
+      <entry>时机</entry>
+      <entry>事件</entry>
+      <entry>行级</entry>
+      <entry>语句级</entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry align="center" morerows="1"><literal>BEFORE</literal></entry>
       <entry align="center"><command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command></entry>
-      <entry align="center">Tables and foreign tables</entry>
-      <entry align="center">Tables, views, and foreign tables</entry>
+      <entry align="center">表和外部表</entry>
+      <entry align="center">表、视图和外部表</entry>
      </row>
      <row>
       <entry align="center"><command>TRUNCATE</command></entry>
       <entry align="center">&mdash;</entry>
-      <entry align="center">Tables and foreign tables</entry>
+      <entry align="center">表和外部表</entry>
      </row>
      <row>
       <entry align="center" morerows="1"><literal>AFTER</literal></entry>
       <entry align="center"><command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command></entry>
-      <entry align="center">Tables and foreign tables</entry>
-      <entry align="center">Tables, views, and foreign tables</entry>
+      <entry align="center">表和外部表</entry>
+      <entry align="center">表、视图和外部表</entry>
      </row>
      <row>
       <entry align="center"><command>TRUNCATE</command></entry>
       <entry align="center">&mdash;</entry>
-      <entry align="center">Tables and foreign tables</entry>
+      <entry align="center">表和外部表</entry>
      </row>
      <row>
       <entry align="center" morerows="1"><literal>INSTEAD OF</literal></entry>
       <entry align="center"><command>INSERT</command>/<command>UPDATE</command>/<command>DELETE</command></entry>
-      <entry align="center">Views</entry>
+      <entry align="center">视图</entry>
       <entry align="center">&mdash;</entry>
      </row>
      <row>
@@ -160,84 +126,64 @@ CREATE [ OR REPLACE ] [ CONSTRAINT ] TRIGGER <replaceable class="parameter">name
   </informaltable>
 
   <para>
-   Also, a trigger definition can specify a Boolean <literal>WHEN</literal>
-   condition, which will be tested to see whether the trigger should
-   be fired.  In row-level triggers the <literal>WHEN</literal> condition can
-   examine the old and/or new values of columns of the row.  Statement-level
-   triggers can also have <literal>WHEN</literal> conditions, although the feature
-   is not so useful for them since the condition cannot refer to any values
-   in the table.
+   此外，触发器定义可以指定一个布尔 <literal>WHEN</literal>
+   条件，将测试该条件以确定是否应触发触发器。在行级触发器中，<literal>WHEN</literal>
+   条件可以检查该行各列的旧值和/或新值。语句级触发器也可以有 <literal>WHEN</literal>
+   条件，尽管该特性对它们不那么有用，因为该条件不能引用表中的任何值。
   </para>
 
   <para>
-   If multiple triggers of the same kind are defined for the same event,
-   they will be fired in alphabetical order by name.
+   如果为同一事件定义了多个同类触发器，它们将按名称的字母顺序触发。
   </para>
 
   <para>
-   When the <literal>CONSTRAINT</literal> option is specified, this command creates a
-   <firstterm>constraint trigger</firstterm>.<indexterm><primary>trigger</primary>
+   当指定 <literal>CONSTRAINT</literal> 选项时，此命令创建一个
+   <firstterm>约束触发器</firstterm>。<indexterm><primary>trigger</primary>
    <secondary>constraint trigger</secondary></indexterm>
-   This is the same as a regular trigger
-   except that the timing of the trigger firing can be adjusted using
-   <link linkend="sql-set-constraints"><command>SET CONSTRAINTS</command></link>.
-   Constraint triggers must be <literal>AFTER ROW</literal> triggers on plain
-   tables (not foreign tables).  They
-   can be fired either at the end of the statement causing the triggering
-   event, or at the end of the containing transaction; in the latter case they
-   are said to be <firstterm>deferred</firstterm>.  A pending deferred-trigger firing
-   can also be forced to happen immediately by using <command>SET
-   CONSTRAINTS</command>.  Constraint triggers are expected to raise an exception
-   when the constraints they implement are violated.
+   这与常规触发器相同，只是可以使用
+   <link linkend="sql-set-constraints"><command>SET CONSTRAINTS</command></link> 调整触发器触发的时间。
+   约束触发器必须是普通表（而非外部表）上的 <literal>AFTER ROW</literal> 触发器。它们
+   可以在导致触发事件的语句末尾触发，也可以在包含它的事务末尾触发；在后一种情况下，
+   称它们为 <firstterm>延迟的</firstterm>。还可以使用 <command>SET
+   CONSTRAINTS</command> 强制立即执行挂起的延迟触发器触发。
+   当约束触发器所实现的约束被违反时，预期它会抛出异常。
   </para>
 
   <para>
-   The <literal>REFERENCING</literal> option enables collection
-   of <firstterm>transition relations</firstterm>, which are row sets that include all
-   of the rows inserted, deleted, or modified by the current SQL statement.
-   This feature lets the trigger see a global view of what the statement did,
-   not just one row at a time.  This option is only allowed for
-   an <literal>AFTER</literal> trigger on a plain table (not a foreign table).
-   The trigger should not be a constraint trigger.  Also, if the trigger is
-   an <literal>UPDATE</literal> trigger, it must not specify
-   a <replaceable class="parameter">column_name</replaceable> list when using
-   this option.
-   <literal>OLD TABLE</literal> may only be specified once, and only for a trigger
-   that can fire on <literal>UPDATE</literal> or <literal>DELETE</literal>; it creates a
-   transition relation containing the <firstterm>before-images</firstterm> of all rows
-   updated or deleted by the statement.
-   Similarly, <literal>NEW TABLE</literal> may only be specified once, and only for
-   a trigger that can fire on <literal>UPDATE</literal> or <literal>INSERT</literal>;
-   it creates a transition relation containing the <firstterm>after-images</firstterm>
-   of all rows updated or inserted by the statement.
+   <literal>REFERENCING</literal> 选项允许收集
+   <firstterm>过渡关系</firstterm>，即包含当前 SQL 语句插入、删除或修改的所有行的行集。
+   此特性让触发器能看到该语句所做事情的全局视图，
+   而不仅仅是一次一行。此选项仅允许用于
+   普通表（而非外部表）上的 <literal>AFTER</literal> 触发器。
+   该触发器不应是约束触发器。此外，如果触发器是
+   <literal>UPDATE</literal> 触发器，在使用此选项时它不得指定
+   <replaceable class="parameter">column_name</replaceable> 列表。
+   <literal>OLD TABLE</literal> 只能指定一次，且只能用于可在 <literal>UPDATE</literal> 或 <literal>DELETE</literal> 上触发的触发器；
+   它会创建一个过渡关系，其中包含该语句更新或删除的所有行的 <firstterm>前映像</firstterm>。
+   类似地，<literal>NEW TABLE</literal> 只能指定一次，且只能用于可在 <literal>UPDATE</literal> 或 <literal>INSERT</literal> 上触发的触发器；
+   它会创建一个过渡关系，其中包含该语句更新或插入的所有行的 <firstterm>后映像</firstterm>。
   </para>
 
   <para>
-   <command>SELECT</command> does not modify any rows so you cannot
-   create <command>SELECT</command> triggers.  Rules and views may provide
-   workable solutions to problems that seem to need <command>SELECT</command>
-   triggers.
+   <command>SELECT</command> 不修改任何行，因此你不能创建 <command>SELECT</command> 触发器。规则和视图可以为那些似乎需要 <command>SELECT</command> 触发器的问题提供可行的解决方案。
   </para>
 
   <para>
-   Refer to <xref linkend="triggers"/> for more information about triggers.
+   有关触发器的更多信息，请参阅 <xref linkend="triggers"/>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Parameters</title>
+  <title>参数</title>
 
   <variablelist>
    <varlistentry>
     <term><replaceable class="parameter">name</replaceable></term>
     <listitem>
      <para>
-      The name to give the new trigger.  This must be distinct from
-      the name of any other trigger for the same table.
-      The name cannot be schema-qualified &mdash; the trigger inherits the
-      schema of its table.  For a constraint trigger, this is also the name to
-      use when modifying the trigger's behavior using
-      <command>SET CONSTRAINTS</command>.
+      为新触发器指定的名称。该名称必须与同一表上任何其他触发器的名称不同。
+      名称不能使用模式限定&mdash;触发器继承其表的模式。对于约束触发器，在使用
+      <command>SET CONSTRAINTS</command> 修改触发器行为时，这也是要使用的名称。
      </para>
     </listitem>
    </varlistentry>
@@ -248,9 +194,8 @@ CREATE [ OR REPLACE ] [ CONSTRAINT ] TRIGGER <replaceable class="parameter">name
     <term><literal>INSTEAD OF</literal></term>
     <listitem>
      <para>
-      Determines whether the function is called before, after, or instead of
-      the event.  A constraint trigger can only be specified as
-      <literal>AFTER</literal>.
+      决定函数是在事件之前、之后还是代替事件被调用。约束触发器只能指定为
+      <literal>AFTER</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -259,29 +204,23 @@ CREATE [ OR REPLACE ] [ CONSTRAINT ] TRIGGER <replaceable class="parameter">name
     <term><replaceable class="parameter">event</replaceable></term>
     <listitem>
      <para>
-      One of <literal>INSERT</literal>, <literal>UPDATE</literal>,
-      <literal>DELETE</literal>, or <literal>TRUNCATE</literal>;
-      this specifies the event that will fire the trigger. Multiple
-      events can be specified using <literal>OR</literal>, except when
-      transition relations are requested.
+      <literal>INSERT</literal>、<literal>UPDATE</literal>、
+      <literal>DELETE</literal> 或 <literal>TRUNCATE</literal> 之一；
+      这指定将触发触发器的事件。可以使用 <literal>OR</literal> 指定多个
+      事件，但请求转移关系时除外。
      </para>
 
      <para>
-      For <literal>UPDATE</literal> events, it is possible to
-      specify a list of columns using this syntax:
+      对于 <literal>UPDATE</literal> 事件，可以使用以下语法指定一个列列表：
 <synopsis>
 UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</replaceable> ... ]
 </synopsis>
-      The trigger will only fire if at least one of the listed columns
-      is mentioned as a target of the <command>UPDATE</command> command
-      or if one of the listed columns is a generated column that depends on a
-      column that is the target of the <command>UPDATE</command>.
+      只有当列出的列中至少有一列被指定为 <command>UPDATE</command> 命令的目标，或者列出的列中有一列是依赖于作为 <command>UPDATE</command> 目标的列的生成列时，触发器才会触发。
      </para>
 
      <para>
-      <literal>INSTEAD OF UPDATE</literal> events do not allow a list of columns.
-      A column list cannot be specified when requesting transition relations,
-      either.
+      <literal>INSTEAD OF UPDATE</literal> 事件不允许列列表。
+      在请求转移关系时也不能指定列列表。
      </para>
     </listitem>
    </varlistentry>
@@ -290,8 +229,7 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">table_name</replaceable></term>
     <listitem>
      <para>
-      The name (optionally schema-qualified) of the table, view, or foreign
-      table the trigger is for.
+      触发器所针对的表、视图或外部表的名称（可选模式限定）。
      </para>
     </listitem>
    </varlistentry>
@@ -300,10 +238,7 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">referenced_table_name</replaceable></term>
     <listitem>
      <para>
-      The (possibly schema-qualified) name of another table referenced by the
-      constraint.  This option is used for foreign-key constraints and is not
-      recommended for general use.  This can only be specified for
-      constraint triggers.
+      该约束引用的另一个表的名称（可以是模式限定的）。此选项用于外键约束，不建议一般使用。只能为约束触发器指定。
      </para>
     </listitem>
    </varlistentry>
@@ -315,10 +250,8 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><literal>INITIALLY DEFERRED</literal></term>
     <listitem>
      <para>
-      The default timing of the trigger.
-      See the <xref linkend="sql-createtable"/> documentation for details of
-      these constraint options.  This can only be specified for constraint
-      triggers.
+      触发器的默认时机。
+      有关这些约束选项的详细信息，请参阅 <xref linkend="sql-createtable"/> 文档。只能为约束触发器指定。
      </para>
     </listitem>
    </varlistentry>
@@ -327,9 +260,7 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><literal>REFERENCING</literal></term>
     <listitem>
      <para>
-      This keyword immediately precedes the declaration of one or two
-      relation names that provide access to the transition relations of the
-      triggering statement.
+      该关键字紧接在一个或两个关系名称的声明之前，这些关系名称提供对触发语句的转移关系的访问。
      </para>
     </listitem>
    </varlistentry>
@@ -339,9 +270,7 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><literal>NEW TABLE</literal></term>
     <listitem>
      <para>
-      This clause indicates whether the following relation name is for the
-      before-image transition relation or the after-image transition
-      relation.
+      此子句指示后面的关系名是用于前映像转换关系还是后映像转换关系。
      </para>
     </listitem>
    </varlistentry>
@@ -350,8 +279,7 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">transition_relation_name</replaceable></term>
     <listitem>
      <para>
-      The (unqualified) name to be used within the trigger for this
-      transition relation.
+      在触发器内用于此转换关系的（非限定）名称。
      </para>
     </listitem>
    </varlistentry>
@@ -362,11 +290,8 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
 
     <listitem>
      <para>
-      This specifies whether the trigger function should be fired
-      once for every row affected by the trigger event, or just once
-      per SQL statement. If neither is specified, <literal>FOR EACH
-      STATEMENT</literal> is the default.  Constraint triggers can only
-      be specified <literal>FOR EACH ROW</literal>.
+      这指定触发器函数是应该对受触发事件影响的每一行触发一次，还是每个 SQL 语句只触发一次。如果两者都未指定，<literal>FOR EACH
+      STATEMENT</literal> 是默认值。约束触发器只能指定 <literal>FOR EACH ROW</literal>。
      </para>
     </listitem>
    </varlistentry>
@@ -375,34 +300,22 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">condition</replaceable></term>
     <listitem>
      <para>
-      A Boolean expression that determines whether the trigger function
-      will actually be executed.  If <literal>WHEN</literal> is specified, the
-      function will only be called if the <replaceable
-      class="parameter">condition</replaceable> returns <literal>true</literal>.
-      In <literal>FOR EACH ROW</literal> triggers, the <literal>WHEN</literal>
-      condition can refer to columns of the old and/or new row values
-      by writing <literal>OLD.<replaceable
-      class="parameter">column_name</replaceable></literal> or
-      <literal>NEW.<replaceable
-      class="parameter">column_name</replaceable></literal> respectively.
-      Of course, <literal>INSERT</literal> triggers cannot refer to <literal>OLD</literal>
-      and <literal>DELETE</literal> triggers cannot refer to <literal>NEW</literal>.
+      一个布尔表达式，决定触发器函数是否实际被执行。如果指定了 <literal>WHEN</literal>，则只有当 <replaceable
+      class="parameter">condition</replaceable> 返回 <literal>true</literal> 时才会调用该函数。在 <literal>FOR EACH ROW</literal> 触发器中，<literal>WHEN</literal> 条件可以通过分别写 <literal>OLD.<replaceable
+      class="parameter">column_name</replaceable></literal> 或 <literal>NEW.<replaceable
+      class="parameter">column_name</replaceable></literal> 来引用旧行和/或新行值的列。当然，<literal>INSERT</literal> 触发器不能引用 <literal>OLD</literal>，<literal>DELETE</literal> 触发器不能引用 <literal>NEW</literal>。
      </para>
 
-     <para><literal>INSTEAD OF</literal> triggers do not support <literal>WHEN</literal>
-      conditions.
+     <para><literal>INSTEAD OF</literal> 触发器不支持 <literal>WHEN</literal> 条件。
      </para>
 
      <para>
-      Currently, <literal>WHEN</literal> expressions cannot contain
-      subqueries.
+      目前，<literal>WHEN</literal> 表达式不能包含子查询。
      </para>
 
      <para>
-      Note that for constraint triggers, evaluation of the <literal>WHEN</literal>
-      condition is not deferred, but occurs immediately after the row update
-      operation is performed. If the condition does not evaluate to true then
-      the trigger is not queued for deferred execution.
+      请注意，对于约束触发器，<literal>WHEN</literal>
+      条件的求值不会被延迟，而是在行更新操作执行后立即发生。如果条件求值结果不为真，则该触发器不会被排队等待延迟执行。
      </para>
     </listitem>
    </varlistentry>
@@ -411,17 +324,16 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">function_name</replaceable></term>
     <listitem>
      <para>
-      A user-supplied function that is declared as taking no arguments
-      and returning type <literal>trigger</literal>, which is executed when
-      the trigger fires.
+      一个用户提供的函数，声明为不接受参数
+      并返回类型 <literal>trigger</literal>，在触发器被触发时执行。
      </para>
 
      <para>
-      In the syntax of <literal>CREATE TRIGGER</literal>, the keywords
-      <literal>FUNCTION</literal> and <literal>PROCEDURE</literal> are
-      equivalent, but the referenced function must in any case be a function,
-      not a procedure.  The use of the keyword <literal>PROCEDURE</literal>
-      here is historical and deprecated.
+      在 <literal>CREATE TRIGGER</literal> 的语法中，关键字
+      <literal>FUNCTION</literal> 和 <literal>PROCEDURE</literal> 是
+      等价的，但被引用的函数在任何情况下都必须是函数，
+      而不是过程。此处使用关键字 <literal>PROCEDURE</literal>
+      是历史遗留做法，已废弃。
      </para>
     </listitem>
    </varlistentry>
@@ -430,14 +342,12 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
     <term><replaceable class="parameter">arguments</replaceable></term>
     <listitem>
      <para>
-      An optional comma-separated list of arguments to be provided to
-      the function when the trigger is executed.  The arguments are
-      literal string constants.  Simple names and numeric constants
-      can be written here, too, but they will all be converted to
-      strings.  Please check the description of the implementation
-      language of the trigger function to find out how these arguments
-      can be accessed within the function; it might be different from
-      normal function arguments.
+      一个可选的、以逗号分隔的参数列表，在触发器执行时
+      提供给该函数。这些参数是字面字符串常量。简单的名称和数字常量
+      也可以写在这里，但它们都会被转换为
+      字符串。请查阅触发器函数的实现语言的描述，
+      以了解如何在函数内部访问这些参数；它可能与
+      普通函数参数有所不同。
      </para>
     </listitem>
    </varlistentry>
@@ -445,151 +355,74 @@ UPDATE OF <replaceable>column_name1</replaceable> [, <replaceable>column_name2</
  </refsect1>
 
  <refsect1 id="sql-createtrigger-notes">
-  <title>Notes</title>
+  <title>说明</title>
 
   <para>
-   To create or replace a trigger on a table, the user must have the
-   <literal>TRIGGER</literal> privilege on the table.  The user must
-   also have <literal>EXECUTE</literal> privilege on the trigger function.
+   要在表上创建或替换触发器，用户必须在该表上具有
+   <literal>TRIGGER</literal> 权限。用户还必须
+   对触发器函数具有 <literal>EXECUTE</literal> 权限。
   </para>
 
   <para>
-   Use <link linkend="sql-droptrigger"><command>DROP TRIGGER</command></link> to remove a trigger.
+   使用 <link linkend="sql-droptrigger"><command>DROP TRIGGER</command></link> 删除触发器。
   </para>
 
   <para>
-   Creating a row-level trigger on a partitioned table will cause an
-   identical <quote>clone</quote> trigger to be created on each of its
-   existing partitions; and any partitions created or attached later will have
-   an identical trigger, too.  If there is a conflictingly-named trigger on a
-   child partition already, an error occurs unless <command>CREATE OR REPLACE
-   TRIGGER</command> is used, in which case that trigger is replaced with a
-   clone trigger.  When a partition is detached from its parent, its clone
-   triggers are removed.
+   在分区表上创建行级触发器会导致在其每个现有分区上创建相同的<quote>克隆</quote>触发器；之后创建或附加的任何分区也将具有相同的触发器。如果子分区上已经存在名称冲突的触发器，则会发生错误，除非使用了 <command>CREATE OR REPLACE
+   TRIGGER</command>，在这种情况下该触发器会被克隆触发器替换。当分区从父表分离时，其克隆触发器会被移除。
   </para>
 
   <para>
-   A column-specific trigger (one defined using the <literal>UPDATE OF
-   <replaceable>column_name</replaceable></literal> syntax) will fire when any
-   of its columns are listed as targets in the <command>UPDATE</command>
-   command's <literal>SET</literal> list.  It is possible for a column's value
-   to change even when the trigger is not fired, because changes made to the
-   row's contents by <literal>BEFORE UPDATE</literal> triggers are not considered.
-   Conversely, a command such as <literal>UPDATE ... SET x = x ...</literal>
-   will fire a trigger on column <literal>x</literal>, even though the column's
-   value did not change.
+   列特定触发器（使用 <literal>UPDATE OF
+   <replaceable>column_name</replaceable></literal> 语法定义的触发器）在其任一列被列为 <command>UPDATE</command> 命令的 <literal>SET</literal> 列表中的目标时触发。即使触发器未被触发，列的值也可能发生变化，因为由 <literal>BEFORE UPDATE</literal> 触发器对行内容所做的更改不会被考虑。相反，诸如 <literal>UPDATE ... SET x = x ...</literal> 之类的命令会在列 <literal>x</literal> 上触发触发器，即使该列的值并未改变。
   </para>
 
   <para>
-   In a <literal>BEFORE</literal> trigger, the <literal>WHEN</literal> condition is
-   evaluated just before the function is or would be executed, so using
-   <literal>WHEN</literal> is not materially different from testing the same
-   condition at the beginning of the trigger function.  Note in particular
-   that the <literal>NEW</literal> row seen by the condition is the current value,
-   as possibly modified by earlier triggers.  Also, a <literal>BEFORE</literal>
-   trigger's <literal>WHEN</literal> condition is not allowed to examine the
-   system columns of the <literal>NEW</literal> row (such as <literal>ctid</literal>),
-   because those won't have been set yet.
+   在 <literal>BEFORE</literal> 触发器中，<literal>WHEN</literal> 条件在函数被执行或将要执行之前立即求值，因此使用 <literal>WHEN</literal> 与在触发器函数开头测试相同条件在实质上没有区别。特别要注意，该条件所看到的 <literal>NEW</literal> 行是当前值，可能已被先前的触发器修改。此外，<literal>BEFORE</literal> 触发器的 <literal>WHEN</literal> 条件不允许检查 <literal>NEW</literal> 行的系统列（例如 <literal>ctid</literal>），因为这些列尚未被设置。
   </para>
 
   <para>
-   In an <literal>AFTER</literal> trigger, the <literal>WHEN</literal> condition is
-   evaluated just after the row update occurs, and it determines whether an
-   event is queued to fire the trigger at the end of statement.  So when an
-   <literal>AFTER</literal> trigger's <literal>WHEN</literal> condition does not return
-   true, it is not necessary to queue an event nor to re-fetch the row at end
-   of statement.  This can result in significant speedups in statements that
-   modify many rows, if the trigger only needs to be fired for a few of the
-   rows.
+   在 <literal>AFTER</literal> 触发器中，<literal>WHEN</literal> 条件在行更新发生后立即求值，它决定是否将事件排队以便在语句结束时触发触发器。因此，当 <literal>AFTER</literal> 触发器的 <literal>WHEN</literal> 条件未返回真时，既不需要排队事件，也不需要在语句结束时重新获取该行。如果触发器只需要为少数行触发，这可以显著加快修改许多行的语句的速度。
   </para>
 
   <para>
-   In some cases it is possible for a single SQL command to fire more than
-   one kind of trigger.  For instance an <command>INSERT</command> with
-   an <literal>ON CONFLICT DO UPDATE</literal> clause may cause both insert and
-   update operations, so it will fire both kinds of triggers as needed.
-   The transition relations supplied to triggers are
-   specific to their event type; thus an <command>INSERT</command> trigger
-   will see only the inserted rows, while an <command>UPDATE</command>
-   trigger will see only the updated rows.
+   在某些情况下，单个 SQL 命令可能触发不止一种触发器。例如，带有 <literal>ON CONFLICT DO UPDATE</literal> 子句的 <command>INSERT</command> 可能同时导致插入和更新操作，因此它会根据需要触发这两种触发器。提供给触发器的过渡关系特定于其事件类型；因此 <command>INSERT</command> 触发器只会看到插入的行，而 <command>UPDATE</command> 触发器只会看到更新的行。
   </para>
 
   <para>
-   Row updates or deletions caused by foreign-key enforcement actions, such
-   as <literal>ON UPDATE CASCADE</literal> or <literal>ON DELETE SET NULL</literal>, are
-   treated as part of the SQL command that caused them (note that such
-   actions are never deferred).  Relevant triggers on the affected table will
-   be fired, so that this provides another way in which an SQL command might
-   fire triggers not directly matching its type.  In simple cases, triggers
-   that request transition relations will see all changes caused in their
-   table by a single original SQL command as a single transition relation.
-   However, there are cases in which the presence of an <literal>AFTER ROW</literal>
-   trigger that requests transition relations will cause the foreign-key
-   enforcement actions triggered by a single SQL command to be split into
-   multiple steps, each with its own transition relation(s).  In such cases,
-   any statement-level triggers that are present will be fired once per
-   creation of a transition relation set, ensuring that the triggers see
-   each affected row in a transition relation once and only once.
+   由外键强制动作（例如 <literal>ON UPDATE CASCADE</literal> 或 <literal>ON DELETE SET NULL</literal>）引起的行更新或删除，被视为导致它们的 SQL 命令的一部分（注意此类动作永远不会被延迟）。受影响表上的相关触发器将被触发，因此这提供了另一种方式，使得一条 SQL 命令可能触发与其类型不直接匹配的触发器。在简单情况下，请求转移关系的触发器将把由单条原始 SQL 命令在其表中引起的所有更改视为单个转移关系。然而，在某些情况下，存在请求转移关系的 <literal>AFTER ROW</literal> 触发器会导致由单条 SQL 命令触发的外键强制动作被拆分为多个步骤，每个步骤都有自己的转移关系。在这种情况下，任何存在的语句级触发器将在每次创建转移关系集时被触发一次，确保触发器在转移关系中看到每个受影响的行一次且仅一次。
   </para>
 
   <para>
-   Statement-level triggers on a view are fired only if the action on the
-   view is handled by a row-level <literal>INSTEAD OF</literal> trigger.
-   If the action is handled by an <literal>INSTEAD</literal> rule, then
-   whatever statements are emitted by the rule are executed in place of the
-   original statement naming the view, so that the triggers that will be
-   fired are those on tables named in the replacement statements.
-   Similarly, if the view is automatically updatable, then the action is
-   handled by automatically rewriting the statement into an action on the
-   view's base table, so that the base table's statement-level triggers are
-   the ones that are fired.
+   视图上的语句级触发器只有在视图上的动作由行级 <literal>INSTEAD OF</literal> 触发器处理时才会被触发。如果该动作由 <literal>INSTEAD</literal> 规则处理，那么该规则发出的任何语句都会代替命名该视图的原始语句被执行，因此将被触发的触发器是替换语句中所命名表上的触发器。类似地，如果视图是自动可更新的，则该动作通过自动将语句重写为对视图基表的动作来处理，因此被触发的是基表的语句级触发器。
   </para>
 
   <para>
-   Modifying a partitioned table or a table with inheritance children fires
-   statement-level triggers attached to the explicitly named table, but not
-   statement-level triggers for its partitions or child tables.  In contrast,
-   row-level triggers are fired on the rows in affected partitions or
-   child tables, even if they are not explicitly named in the query.
-   If a statement-level trigger has been defined with transition relations
-   named by a <literal>REFERENCING</literal> clause, then before and after
-   images of rows are visible from all affected partitions or child tables.
-   In the case of inheritance children, the row images include only columns
-   that are present in the table that the trigger is attached to.
+   修改分区表或带有继承子表的表会触发附加到显式命名表上的语句级触发器，但不会触发其分区或子表的语句级触发器。相反，行级触发器会在受影响的分区或子表中的行上触发，即使这些表未在查询中显式命名。如果语句级触发器已通过 <literal>REFERENCING</literal> 子句命名了转移关系，那么所有受影响的分区或子表中的行的前映像和后映像都是可见的。对于继承子表，行映像仅包含触发器所附加到的表中存在的列。
   </para>
 
   <para>
-   Currently, row-level triggers with transition relations cannot be defined
-   on partitions or inheritance child tables.  Also, triggers on partitioned
-   tables may not be <literal>INSTEAD OF</literal>.
+   目前，带有转换关系的行级触发器不能定义在分区或继承子表上。此外，分区表上的触发器可能无法 <literal>INSTEAD OF</literal>。
   </para>
 
   <para>
-   Currently, the <literal>OR REPLACE</literal> option is not supported for
-   constraint triggers.
+   目前，约束触发器不支持 <literal>OR REPLACE</literal> 选项。
   </para>
 
   <para>
-   Replacing an existing trigger within a transaction that has already
-   performed updating actions on the trigger's table is not recommended.
-   Trigger firing decisions, or portions of firing decisions, that have
-   already been made will not be reconsidered, so the effects could be
-   surprising.
+   不建议在已经对触发器所在表执行了更新操作的事务中替换现有触发器。已经做出的触发器触发决定（或部分触发决定）不会被重新考虑，因此效果可能令人意外。
   </para>
 
   <para>
-   There are a few built-in trigger functions that can be used to
-   solve common problems without having to write your own trigger code;
-   see <xref linkend="functions-trigger"/>.
+   有一些内置触发器函数可用于解决常见问题，而无需编写自己的触发器代码；参见 <xref linkend="functions-trigger"/>。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createtrigger-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Execute the function <function>check_account_update</function> whenever
-   a row of the table <literal>accounts</literal> is about to be updated:
+   每当表 <literal>accounts</literal> 的一行即将被更新时，执行函数 <function>check_account_update</function>：
 
 <programlisting>
 CREATE TRIGGER check_update
@@ -598,9 +431,7 @@ CREATE TRIGGER check_update
     EXECUTE FUNCTION check_account_update();
 </programlisting>
 
-   Modify that trigger definition to only execute the function if
-   column <literal>balance</literal> is specified as a target in
-   the <command>UPDATE</command> command:
+   修改该触发器定义，使其仅在 <command>UPDATE</command> 命令中将列 <literal>balance</literal> 指定为目标时才执行该函数：
 
 <programlisting>
 CREATE OR REPLACE TRIGGER check_update
@@ -609,8 +440,7 @@ CREATE OR REPLACE TRIGGER check_update
     EXECUTE FUNCTION check_account_update();
 </programlisting>
 
-   This form only executes the function if column <literal>balance</literal>
-   has in fact changed value:
+   此形式仅在列 <literal>balance</literal> 的值确实发生变化时才执行该函数：
 
 <programlisting>
 CREATE TRIGGER check_update
@@ -620,8 +450,7 @@ CREATE TRIGGER check_update
     EXECUTE FUNCTION check_account_update();
 </programlisting>
 
-   Call a function to log updates of <literal>accounts</literal>, but only if
-   something changed:
+   调用一个函数来记录 <literal>accounts</literal> 的更新，但仅在发生了某些变化时：
 
 <programlisting>
 CREATE TRIGGER log_update
@@ -631,8 +460,7 @@ CREATE TRIGGER log_update
     EXECUTE FUNCTION log_account_update();
 </programlisting>
 
-   Execute the function <function>view_insert_row</function> for each row to insert
-   rows into the tables underlying a view:
+   对每一行执行函数 <function>view_insert_row</function>，以将行插入到视图底层的表中：
 
 <programlisting>
 CREATE TRIGGER view_insert
@@ -641,9 +469,7 @@ CREATE TRIGGER view_insert
     EXECUTE FUNCTION view_insert_row();
 </programlisting>
 
-   Execute the function <function>check_transfer_balances_to_zero</function> for each
-   statement to confirm that the <literal>transfer</literal> rows offset to a net of
-   zero:
+   对每条语句执行函数 <function>check_transfer_balances_to_zero</function>，以确认 <literal>transfer</literal> 行偏移的净值为零：
 
 <programlisting>
 CREATE TRIGGER transfer_insert
@@ -653,9 +479,7 @@ CREATE TRIGGER transfer_insert
     EXECUTE FUNCTION check_transfer_balances_to_zero();
 </programlisting>
 
-   Execute the function <function>check_matching_pairs</function> for each row to
-   confirm that changes are made to matching pairs at the same time (by the
-   same statement):
+   对每一行执行函数 <function>check_matching_pairs</function>，以确认对匹配对的更改是同时（由同一条语句）进行的：
 
 <programlisting>
 CREATE TRIGGER paired_items_update
@@ -667,13 +491,12 @@ CREATE TRIGGER paired_items_update
   </para>
 
   <para>
-   <xref linkend="trigger-example"/> contains a complete example of a trigger
-   function written in C.
+   <xref linkend="trigger-example"/> 包含一个用 C 编写的触发器函数的完整示例。
   </para>
  </refsect1>
 
  <refsect1 id="sql-createtrigger-compatibility">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <!--
    It's not clear whether SQL/MED contemplates triggers on foreign tables.
@@ -684,43 +507,24 @@ CREATE TRIGGER paired_items_update
   -->
 
   <para>
-   The <command>CREATE TRIGGER</command> statement in
-   <productname>PostgreSQL</productname> implements a subset of the
-   <acronym>SQL</acronym> standard. The following functionalities are currently
-   missing:
+   <productname>PostgreSQL</productname> 中的 <command>CREATE TRIGGER</command> 语句实现了 <acronym>SQL</acronym> 标准的一个子集。目前缺少以下功能：
 
    <itemizedlist>
     <listitem>
      <para>
-      While transition table names for <literal>AFTER</literal> triggers are
-      specified using the <literal>REFERENCING</literal> clause in the standard way,
-      the row variables used in <literal>FOR EACH ROW</literal> triggers may not be
-      specified in a <literal>REFERENCING</literal> clause.  They are available in a
-      manner that is dependent on the language in which the trigger function
-      is written, but is fixed for any one language.  Some languages
-      effectively behave as though there is a <literal>REFERENCING</literal> clause
-      containing <literal>OLD ROW AS OLD NEW ROW AS NEW</literal>.
+      虽然 <literal>AFTER</literal> 触发器的转换表名称是按照标准方式使用 <literal>REFERENCING</literal> 子句指定的，但在 <literal>FOR EACH ROW</literal> 触发器中使用的行变量可能无法在 <literal>REFERENCING</literal> 子句中指定。它们的可用方式取决于编写触发器函数所用的语言，但对任何一种语言都是固定的。某些语言实际上表现得就好像存在一个包含 <literal>OLD ROW AS OLD NEW ROW AS NEW</literal> 的 <literal>REFERENCING</literal> 子句一样。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      The standard allows transition tables to be used with
-      column-specific <literal>UPDATE</literal> triggers, but then the set of rows
-      that should be visible in the transition tables depends on the
-      trigger's column list.  This is not currently implemented by
-      <productname>PostgreSQL</productname>.
+      标准允许将转换表用于特定列的 <literal>UPDATE</literal> 触发器，但此时转换表中应可见的行集合取决于触发器的列列表。<productname>PostgreSQL</productname> 目前尚未实现这一点。
      </para>
     </listitem>
 
     <listitem>
      <para>
-      <productname>PostgreSQL</productname> only allows the execution
-      of a user-defined function for the triggered action.  The standard
-      allows the execution of a number of other SQL commands, such as
-      <command>CREATE TABLE</command>, as the triggered action.  This
-      limitation is not hard to work around by creating a user-defined
-      function that executes the desired commands.
+      <productname>PostgreSQL</productname> 只允许为触发动作执行用户定义的函数。标准允许执行若干其他 SQL 命令（例如 <command>CREATE TABLE</command>）作为触发动作。通过创建一个执行所需命令的用户定义函数，这一限制并不难绕过。
      </para>
     </listitem>
 
@@ -728,46 +532,30 @@ CREATE TRIGGER paired_items_update
   </para>
 
   <para>
-   SQL specifies that multiple triggers should be fired in
-   time-of-creation order.  <productname>PostgreSQL</productname> uses
-   name order, which was judged to be more convenient.
+   SQL 规定多个触发器应按创建时间顺序触发。<productname>PostgreSQL</productname> 使用名称顺序，这被认为更方便。
   </para>
 
   <para>
-   SQL specifies that <literal>BEFORE DELETE</literal> triggers on cascaded
-   deletes fire <emphasis>after</emphasis> the cascaded <literal>DELETE</literal> completes.
-   The <productname>PostgreSQL</productname> behavior is for <literal>BEFORE
-   DELETE</literal> to always fire before the delete action, even a cascading
-   one.  This is considered more consistent.  There is also nonstandard
-   behavior if <literal>BEFORE</literal> triggers modify rows or prevent
-   updates during an update that is caused by a referential action.  This can
-   lead to constraint violations or stored data that does not honor the
-   referential constraint.
+   SQL 规定，级联删除上的 <literal>BEFORE DELETE</literal> 触发器在级联 <literal>DELETE</literal> 完成<emphasis>之后</emphasis>触发。<productname>PostgreSQL</productname> 的行为是 <literal>BEFORE
+   DELETE</literal> 总是在删除动作之前触发，即使是级联删除也是如此。这被认为更加一致。如果 <literal>BEFORE</literal> 触发器在由引用动作引起的更新期间修改行或阻止更新，还存在非标准行为。这可能导致违反约束或存储的数据不遵守引用约束。
   </para>
 
   <para>
-   The ability to specify multiple actions for a single trigger using
-   <literal>OR</literal> is a <productname>PostgreSQL</productname> extension of
-   the SQL standard.
+   使用 <literal>OR</literal> 为单个触发器指定多个动作的能力是 SQL 标准的 <productname>PostgreSQL</productname> 扩展。
   </para>
 
   <para>
-   The ability to fire triggers for <command>TRUNCATE</command> is a
-   <productname>PostgreSQL</productname> extension of the SQL standard, as is the
-   ability to define statement-level triggers on views.
+   为 <command>TRUNCATE</command> 触发触发器的能力是 SQL 标准的 <productname>PostgreSQL</productname> 扩展，在视图上定义语句级触发器的能力也是如此。
   </para>
 
   <para>
-   <command>CREATE CONSTRAINT TRIGGER</command> is a
-   <productname>PostgreSQL</productname> extension of the <acronym>SQL</acronym>
-   standard.
-   So is the <literal>OR REPLACE</literal> option.
+   <command>CREATE CONSTRAINT TRIGGER</command> 是 <acronym>SQL</acronym> 标准的 <productname>PostgreSQL</productname> 扩展。<literal>OR REPLACE</literal> 选项也是如此。
   </para>
 
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另见</title>
 
   <simplelist type="inline">
    <member><xref linkend="sql-altertrigger"/></member>
