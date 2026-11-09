@@ -180,63 +180,49 @@ SET
  </sect1>
 
  <sect1 id="jit-extensibility">
-  <title>Extensibility</title>
+  <title>可扩展性</title>
 
   <sect2 id="jit-extensibility-bitcode">
-   <title>Inlining Support for Extensions</title>
+   <title>对扩展的内联支持</title>
    <para>
-    <productname>PostgreSQL</productname>'s <acronym>JIT</acronym>
-    implementation can inline the bodies of functions
-    of types <literal>C</literal> and <literal>internal</literal>, as well as
-    operators based on such functions.  To do so for functions in extensions,
-    the definitions of those functions need to be made available.
-    When using <link linkend="extend-pgxs">PGXS</link> to build an extension
-    against a server that has been compiled with LLVM JIT support, the
-    relevant files will be built and installed automatically.
+    <productname>PostgreSQL</productname> 的 <acronym>JIT</acronym>
+    实现可以内联 <literal>C</literal> 和 <literal>internal</literal> 类型的函数体，
+    以及基于此类函数的运算符。要对扩展中的函数做到这一点，
+    需要让这些函数的定义可用。
+    当使用 <link linkend="extend-pgxs">PGXS</link> 针对已使用 LLVM JIT 支持编译的服务器
+    构建扩展时，相关文件将被自动构建并安装。
    </para>
 
    <para>
-    The relevant files have to be installed into
-    <filename>$pkglibdir/bitcode/$extension/</filename> and a summary of them
-    into <filename>$pkglibdir/bitcode/$extension.index.bc</filename>, where
-    <literal>$pkglibdir</literal> is the directory returned by
-    <literal>pg_config --pkglibdir</literal> and <literal>$extension</literal>
-    is the base name of the extension's shared library.
+    相关文件必须安装到 <filename>$pkglibdir/bitcode/$extension/</filename> 中，
+    它们的摘要信息安装到 <filename>$pkglibdir/bitcode/$extension.index.bc</filename> 中，其中
+    <literal>$pkglibdir</literal> 是 <literal>pg_config --pkglibdir</literal> 返回的目录，<literal>$extension</literal>
+    是扩展共享库的基本名称。
 
     <note>
      <para>
-      For functions built into <productname>PostgreSQL</productname> itself,
-      the bitcode is installed into
-      <literal>$pkglibdir/bitcode/postgres</literal>.
+      对于内置于 <productname>PostgreSQL</productname> 本身的函数，
+      其位码安装到
+      <literal>$pkglibdir/bitcode/postgres</literal> 中。
      </para>
     </note>
    </para>
   </sect2>
 
   <sect2 id="jit-pluggable">
-   <title>Pluggable <acronym>JIT</acronym> Providers</title>
+   <title>可插拔的 <acronym>JIT</acronym> 提供程序</title>
 
    <para>
-    <productname>PostgreSQL</productname> provides a <acronym>JIT</acronym>
-    implementation based on <productname>LLVM</productname>.  The interface to
-    the <acronym>JIT</acronym> provider is pluggable and the provider can be
-    changed without recompiling (although currently, the build process only
-    provides inlining support data for <productname>LLVM</productname>).
-    The active provider is chosen via the setting
-    <xref linkend="guc-jit-provider"/>.
+    <productname>PostgreSQL</productname> 提供了一个基于 <productname>LLVM</productname> 的 <acronym>JIT</acronym>
+    实现。到 <acronym>JIT</acronym> 提供者的接口是可插拔的，并且可以在不重新编译的情况下更换提供者（尽管目前构建过程只为 <productname>LLVM</productname> 提供内联支持数据）。
+    活动的提供者通过设置
+    <xref linkend="guc-jit-provider"/> 来选择。
    </para>
 
    <sect3 id="jit-pluggable-provider-interface">
-    <title><acronym>JIT</acronym> Provider Interface</title>
+    <title><acronym>JIT</acronym> 提供者接口</title>
     <para>
-     A <acronym>JIT</acronym> provider is loaded by dynamically loading the
-     named shared library. The normal library search path is used to locate
-     the library. To provide the required <acronym>JIT</acronym> provider
-     callbacks and to indicate that the library is actually a
-     <acronym>JIT</acronym> provider, it needs to provide a C function named
-     <function>_PG_jit_provider_init</function>. This function is passed a
-     struct that needs to be filled with the callback function pointers for
-     individual actions:
+     通过动态加载指定的共享库来加载 <acronym>JIT</acronym> 提供者。使用常规的库搜索路径来定位该库。为了提供所需的 <acronym>JIT</acronym> 提供者回调并表明该库实际上是一个 <acronym>JIT</acronym> 提供者，它需要提供一个名为 <function>_PG_jit_provider_init</function> 的 C 函数。该函数会接收一个结构体，需要为其填入各个动作的回调函数指针：
 <programlisting>
 struct JitProviderCallbacks
 {
