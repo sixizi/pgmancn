@@ -16,7 +16,7 @@ PostgreSQL documentation
 
  <refnamediv>
   <refname>pg_combinebackup</refname>
-  <refpurpose>reconstruct a full backup from an incremental backup and dependent backups</refpurpose>
+  <refpurpose>从增量备份及其依赖的备份重建完整备份</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -28,46 +28,26 @@ PostgreSQL documentation
  </refsynopsisdiv>
 
  <refsect1>
-  <title>Description</title>
+  <title>描述</title>
   <para>
-   <application>pg_combinebackup</application> is used to reconstruct a
-   synthetic full backup from an
-   <link linkend="backup-incremental-backup">incremental backup</link> and the
-   earlier backups upon which it depends.
+   <application>pg_combinebackup</application> 用于从<link linkend="backup-incremental-backup">增量备份</link>及其所依赖的较早备份重建合成完整备份。
   </para>
 
   <para>
-   Specify all of the required backups on the command line from oldest to newest.
-   That is, the first backup directory should be the path to the full backup, and
-   the last should be the path to the final incremental backup
-   that you wish to restore. The reconstructed backup will be written to the
-   output directory specified by the <option>-o</option> option.
+   在命令行上按从旧到新的顺序指定所有必需的备份。也就是说，第一个备份目录应当是完整备份的路径，最后一个应当是你希望恢复的最终增量备份的路径。重建的备份将被写入由 <option>-o</option> 选项指定的输出目录。
   </para>
 
   <para>
-   <application>pg_combinebackup</application> will attempt to verify
-   that the backups you specify form a legal backup chain from which a correct
-   full backup can be reconstructed. However, it is not designed to help you
-   keep track of which backups depend on which other backups. If you remove
-   one or more of the previous backups upon which your incremental
-   backup relies, you will not be able to restore it. Moreover,
-   <application>pg_combinebackup</application> only attempts to verify that the
-   backups have the correct relationship to each other, not that each
-   individual backup is intact; for that, use
-   <xref linkend="app-pgverifybackup" />.
+   <application>pg_combinebackup</application> 将尝试验证你指定的备份是否构成一条合法的备份链，从而能够从中重建出正确的完整备份。然而，它并非设计用来帮助你跟踪哪些备份依赖于哪些其他备份。如果你删除了增量备份所依赖的一个或多个先前备份，你将无法恢复它。此外，<application>pg_combinebackup</application> 仅尝试验证各备份之间的关系是否正确，而不验证每个单独的备份是否完好；若要验证这一点，请使用 <xref linkend="app-pgverifybackup" />。
   </para>
 
   <para>
-   Since the output of <application>pg_combinebackup</application> is a
-   synthetic full backup, it can be used as an input to a future invocation of
-   <application>pg_combinebackup</application>. The synthetic full backup would
-   be specified on the command line in lieu of the chain of backups from which
-   it was reconstructed.
+   由于 <application>pg_combinebackup</application> 的输出是合成完整备份，因此它可以作为将来调用 <application>pg_combinebackup</application> 的输入。在命令行上应指定该合成完整备份，以代替重建它时所依据的那条备份链。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Options</title>
+  <title>选项</title>
 
    <para>
     <variablelist>
@@ -76,7 +56,7 @@ PostgreSQL documentation
       <term><option>--debug</option></term>
       <listitem>
        <para>
-        Print lots of debug logging output on <filename>stderr</filename>.
+        在 <filename>stderr</filename> 上打印大量调试日志输出。
        </para>
       </listitem>
      </varlistentry>
@@ -86,26 +66,21 @@ PostgreSQL documentation
       <term><option>--link</option></term>
       <listitem>
        <para>
-        Use hard links instead of copying files to the synthetic backup.
-        Reconstruction of the synthetic backup might be faster (no file copying)
-        and use less disk space, but care must be taken when using the output
-        directory, because any modifications to that directory (for example,
-        starting the server) can also affect the input directories. Likewise,
-        changes to the input directories (for example, starting the server on
-        the full backup) could affect the output directory. Thus, this option
-        is best used when the input directories are only copies that will be
-        removed after <application>pg_combinebackup</application> has completed.
+        使用硬链接而不是将文件复制到合成备份中。
+        合成备份的重建可能更快（无需复制文件）并且占用更少的磁盘空间，
+        但在使用输出目录时必须小心，因为对该目录的任何修改（例如，
+        启动服务器）也会影响输入目录。同样，对输入目录的更改
+        （例如，在完整备份上启动服务器）可能会影响输出目录。因此，当输入目录
+        只是副本并且会在 <application>pg_combinebackup</application> 完成后被删除时，此选项最为适用。
        </para>
 
        <para>
-        Requires that the input backups and the output directory are in the
-        same file system.
+        要求输入备份和输出目录位于同一文件系统中。
        </para>
 
        <para>
-        If a backup manifest is not available or does not contain checksum of
-        the right type, hard links will still be created, but the file will be
-        also read block-by-block for the checksum calculation.
+        如果备份清单不可用或不包含正确类型的校验和，
+        仍会创建硬链接，但还会逐块读取文件以计算校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -115,10 +90,9 @@ PostgreSQL documentation
       <term><option>--dry-run</option></term>
       <listitem>
        <para>
-        The <option>-n</option>/<option>--dry-run</option> option instructs
-        <command>pg_combinebackup</command> to figure out what would be done
-        without actually creating the target directory or any output files.
-        It is particularly useful in combination with <option>--debug</option>.
+        <option>-n</option>/<option>--dry-run</option> 选项指示 <command>pg_combinebackup</command> 弄清楚将会执行什么操作，
+        而不实际创建目标目录或任何输出文件。
+        它与 <option>--debug</option> 结合使用时特别有用。
        </para>
       </listitem>
      </varlistentry>
@@ -128,12 +102,7 @@ PostgreSQL documentation
       <term><option>--no-sync</option></term>
       <listitem>
        <para>
-        By default, <command>pg_combinebackup</command> will wait for all files
-        to be written safely to disk.  This option causes
-        <command>pg_combinebackup</command> to return without waiting, which is
-        faster, but means that a subsequent operating system crash can leave
-        the output backup corrupt.  Generally, this option is useful for testing
-        but should not be used when creating a production installation.
+        默认情况下，<command>pg_combinebackup</command> 会等待所有文件安全写入磁盘。此选项使 <command>pg_combinebackup</command> 不等待即返回，速度更快，但意味着随后发生的操作系统崩溃可能导致输出的备份损坏。通常，此选项对测试有用，但在创建生产安装时不应使用。
        </para>
       </listitem>
      </varlistentry>
@@ -143,8 +112,7 @@ PostgreSQL documentation
       <term><option>--output=<replaceable class="parameter">outputdir</replaceable></option></term>
       <listitem>
        <para>
-        Specifies the output directory to which the synthetic full backup
-        should be written. Currently, this argument is required.
+        指定应将合成全量备份写入的输出目录。目前，此参数是必需的。
        </para>
       </listitem>
      </varlistentry>
@@ -154,14 +122,7 @@ PostgreSQL documentation
       <term><option>--tablespace-mapping=<replaceable class="parameter">olddir</replaceable>=<replaceable class="parameter">newdir</replaceable></option></term>
       <listitem>
        <para>
-        Relocates the tablespace in directory <replaceable>olddir</replaceable>
-        to <replaceable>newdir</replaceable> during the backup.
-        <replaceable>olddir</replaceable> is the absolute path of the tablespace
-        as it exists in the final backup specified on the command line,
-        and <replaceable>newdir</replaceable> is the absolute path to use for the
-        tablespace in the reconstructed backup.  If either path needs to contain
-        an equal sign (<literal>=</literal>), precede that with a backslash.
-        This option can be specified multiple times for multiple tablespaces.
+        在备份期间将目录 <replaceable>olddir</replaceable> 中的表空间重定位到 <replaceable>newdir</replaceable>。<replaceable>olddir</replaceable> 是该表空间在命令行上指定的最终备份中存在的绝对路径，而 <replaceable>newdir</replaceable> 是在重建的备份中为该表空间使用的绝对路径。如果任一路径需要包含等号（<literal>=</literal>），请在该等号前加一个反斜杠。此选项可为多个表空间多次指定。
        </para>
       </listitem>
      </varlistentry>
@@ -170,23 +131,15 @@ PostgreSQL documentation
       <term><option>--clone</option></term>
       <listitem>
        <para>
-        Use efficient file cloning (also known as <quote>reflinks</quote> on
-        some systems) instead of copying files to the new data directory,
-        which can result in near-instantaneous copying of the data files.
+        使用高效的文件克隆（在某些系统上也称为 <quote>reflink</quote>）而不是将文件复制到新的数据目录，这可以实现数据文件的近乎瞬时复制。
        </para>
 
        <para>
-        If a backup manifest is not available or does not contain checksum of
-        the right type, file cloning will be used to copy the file, but the
-        file will be also read block-by-block for the checksum calculation.
+        如果备份清单不可用或不包含正确类型的校验和，则将使用文件克隆来复制文件，但还会逐块读取文件以计算校验和。
        </para>
 
        <para>
-        File cloning is only supported on some operating systems and file
-        systems.  If it is selected but not supported, the
-        <application>pg_combinebackup</application> run will error.  At present,
-        it is supported on Linux (kernel 4.5 or later) with Btrfs and XFS (on
-        file systems created with reflink support), and on macOS with APFS.
+        文件克隆仅在某些操作系统和文件系统上受支持。如果选择了它但不被支持，则 <application>pg_combinebackup</application> 运行将报错。目前，它在使用 Btrfs 和 XFS（在创建时支持 reflink 的文件系统上）的 Linux（内核 4.5 或更高版本）上受支持，并在使用 APFS 的 macOS 上受支持。
        </para>
       </listitem>
      </varlistentry>
@@ -195,9 +148,9 @@ PostgreSQL documentation
       <term><option>--copy</option></term>
       <listitem>
        <para>
-        Perform regular file copy.  This is the default.  (See also
-        <option>--copy-file-range</option>, <option>--clone</option>, and
-        <option>-k</option>/<option>--link</option>.)
+        执行常规文件复制。这是默认值。（另请参见
+        <option>--copy-file-range</option>、<option>--clone</option> 和
+        <option>-k</option>/<option>--link</option>。）
        </para>
       </listitem>
      </varlistentry>
@@ -206,18 +159,16 @@ PostgreSQL documentation
       <term><option>--copy-file-range</option></term>
       <listitem>
        <para>
-        Use the <function>copy_file_range</function> system call for efficient
-        copying.  On some file systems this gives results similar to
-        <option>--clone</option>, sharing physical disk blocks, while on others
-        it may still copy blocks, but do so via an optimized path.  At present,
-        it is supported on Linux and FreeBSD.
+        使用 <function>copy_file_range</function> 系统调用进行高效复制。在某些文件系统上，这会得到与
+        <option>--clone</option> 类似的结果，共享物理磁盘块；而在其他文件系统上，
+        它可能仍然复制块，但通过优化的路径进行。目前，
+        它在 Linux 和 FreeBSD 上受支持。
        </para>
 
        <para>
-        If a backup manifest is not available or does not contain checksum of
-        the right type, <function>copy_file_range</function> will be used to
-        copy the file, but the file will be also read block-by-block for the
-        checksum calculation.
+        如果备份清单不可用，或者不包含正确类型的校验和，
+        将使用 <function>copy_file_range</function> 复制文件，但还会逐块读取文件以
+        计算校验和。
        </para>
       </listitem>
      </varlistentry>
@@ -226,14 +177,13 @@ PostgreSQL documentation
       <term><option>--manifest-checksums=<replaceable class="parameter">algorithm</replaceable></option></term>
       <listitem>
        <para>
-        Like <xref linkend="app-pgbasebackup"/>,
-        <application>pg_combinebackup</application> writes a backup manifest
-        in the output directory. This option specifies the checksum algorithm
-        that should be applied to each file included in the backup manifest.
-        Currently, the available algorithms are <literal>NONE</literal>,
-        <literal>CRC32C</literal>, <literal>SHA224</literal>,
-        <literal>SHA256</literal>, <literal>SHA384</literal>,
-        and <literal>SHA512</literal>.  The default is <literal>CRC32C</literal>.
+        与 <xref linkend="app-pgbasebackup"/> 类似，
+        <application>pg_combinebackup</application> 会在输出目录中写入备份清单。此选项指定
+        应应用于备份清单中每个文件的校验和算法。
+        目前可用的算法有 <literal>NONE</literal>、
+        <literal>CRC32C</literal>、<literal>SHA224</literal>、
+        <literal>SHA256</literal>、<literal>SHA384</literal>
+        和 <literal>SHA512</literal>。默认值为 <literal>CRC32C</literal>。
        </para>
       </listitem>
      </varlistentry>
@@ -242,9 +192,8 @@ PostgreSQL documentation
       <term><option>--no-manifest</option></term>
       <listitem>
        <para>
-        Disables generation of a backup manifest. If this option is not
-        specified, a backup manifest for the reconstructed backup will be
-        written to the output directory.
+        禁止生成备份清单。如果未指定此选项，
+        重建备份的备份清单将被写入输出目录。
        </para>
       </listitem>
      </varlistentry>
@@ -253,23 +202,16 @@ PostgreSQL documentation
       <term><option>--sync-method=<replaceable class="parameter">method</replaceable></option></term>
       <listitem>
        <para>
-        When set to <literal>fsync</literal>, which is the default,
-        <command>pg_combinebackup</command> will recursively open and synchronize
-        all files in the backup directory.  When the plain format is used, the
-        search for files will follow symbolic links for the WAL directory and
-        each configured tablespace.
+        当设置为 <literal>fsync</literal>（这是默认值）时，
+        <command>pg_combinebackup</command> 将递归打开并同步备份目录中的所有文件。
+        当使用纯文本格式时，文件搜索将遵循 WAL 目录和
+        每个已配置表空间的符号链接。
        </para>
        <para>
-        On Linux, <literal>syncfs</literal> may be used instead to ask the
-        operating system to synchronize the whole file system that contains the
-        backup directory.  When the plain format is used,
-        <command>pg_combinebackup</command> will also synchronize the file systems
-        that contain the WAL files and each tablespace.  See
-        <xref linkend="guc-recovery-init-sync-method"/> for information about
-        the caveats to be aware of when using <literal>syncfs</literal>.
+        在 Linux 上，可以改用 <literal>syncfs</literal> 来要求操作系统同步包含备份目录的整个文件系统。当使用纯文本格式时，<command>pg_combinebackup</command> 还会同步包含 WAL 文件和每个表空间的文件系统。关于使用 <literal>syncfs</literal> 时需要注意的事项，请参见 <xref linkend="guc-recovery-init-sync-method"/>。
        </para>
        <para>
-        This option has no effect when <option>--no-sync</option> is used.
+        当使用 <option>--no-sync</option> 时，此选项无效。
        </para>
       </listitem>
      </varlistentry>
@@ -279,8 +221,7 @@ PostgreSQL documentation
        <term><option>--version</option></term>
        <listitem>
        <para>
-        Prints the <application>pg_combinebackup</application> version and
-        exits.
+        打印 <application>pg_combinebackup</application> 版本并退出。
        </para>
        </listitem>
      </varlistentry>
@@ -290,8 +231,7 @@ PostgreSQL documentation
        <term><option>--help</option></term>
        <listitem>
        <para>
-        Shows help about <application>pg_combinebackup</application> command
-        line arguments, and exits.
+        显示关于 <application>pg_combinebackup</application> 命令行参数的帮助，并退出。
        </para>
        </listitem>
      </varlistentry>
@@ -302,44 +242,31 @@ PostgreSQL documentation
  </refsect1>
 
  <refsect1 id="app-pgcombinebackup-limitations">
-  <title>Limitations</title>
+  <title>限制</title>
 
   <para>
-   <literal>pg_combinebackup</literal> does not recompute page checksums when
-   writing the output directory. Therefore, if any of the backups used for
-   reconstruction were taken with checksums disabled, but the final backup was
-   taken with checksums enabled, the resulting directory may contain pages
-   with invalid checksums.
+   <literal>pg_combinebackup</literal> 在写入输出目录时不会重新计算页面校验和。因此，如果用于重建的任一备份是在禁用校验和的情况下取得的，而最终备份是在启用校验和的情况下取得的，则生成的目录中可能包含校验和无效的页面。
   </para>
 
   <para>
-   To avoid this problem, taking a new full backup after changing the checksum
-   state of the cluster using <xref linkend="app-pgchecksums"/> is
-   recommended. Otherwise, you can disable and then optionally reenable
-   checksums on the directory produced by <literal>pg_combinebackup</literal>
-   in order to correct the problem.
+   为避免此问题，建议在使用 <xref linkend="app-pgchecksums"/> 更改数据库集簇的校验和状态后，重新进行一次完整备份。否则，您可以对 <literal>pg_combinebackup</literal> 生成的目录先禁用校验和，然后视需要重新启用校验和，以纠正该问题。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>Environment</title>
+  <title>环境</title>
 
   <para>
-   This utility, like most other <productname>PostgreSQL</productname> utilities,
-   uses the environment variables supported by <application>libpq</application>
-   (see <xref linkend="libpq-envars"/>).
+   与其他大多数 <productname>PostgreSQL</productname> 工具一样，此工具使用 <application>libpq</application> 支持的环境变量（参见 <xref linkend="libpq-envars"/>）。
   </para>
 
   <para>
-   The environment variable <envar>PG_COLOR</envar> specifies whether to use
-   color in diagnostic messages. Possible values are
-   <literal>always</literal>, <literal>auto</literal> and
-   <literal>never</literal>.
+   环境变量 <envar>PG_COLOR</envar> 指定是否在诊断消息中使用颜色。可能的值为 <literal>always</literal>、<literal>auto</literal> 和 <literal>never</literal>。
   </para>
  </refsect1>
 
  <refsect1>
-  <title>See Also</title>
+  <title>另请参阅</title>
 
   <simplelist type="inline">
    <member><xref linkend="app-pgbasebackup"/></member>
