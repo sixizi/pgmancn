@@ -43,11 +43,10 @@
   <!-- **** PL/Tcl description **** -->
 
    <sect1 id="pltcl-functions">
-    <title>PL/Tcl Functions and Arguments</title>
+    <title>PL/Tcl 函数和参数</title>
 
     <para>
-     To create a function in the <application>PL/Tcl</application> language, use
-     the standard <xref linkend="sql-createfunction"/> syntax:
+     要在 <application>PL/Tcl</application> 语言中创建函数，请使用标准的 <xref linkend="sql-createfunction"/> 语法：
 
 <programlisting>
 CREATE FUNCTION <replaceable>funcname</replaceable> (<replaceable>argument-types</replaceable>) RETURNS <replaceable>return-type</replaceable> AS $$
@@ -55,23 +54,17 @@ CREATE FUNCTION <replaceable>funcname</replaceable> (<replaceable>argument-types
 $$ LANGUAGE pltcl;
 </programlisting>
 
-     <application>PL/TclU</application> is the same, except that the language has to be specified as
-     <literal>pltclu</literal>.
+     <application>PL/TclU</application> 与之相同，只是必须将语言指定为 <literal>pltclu</literal>。
     </para>
 
     <para>
-     The body of the function is simply a piece of Tcl script.
-     When the function is called, the argument values are passed to the
-     Tcl script as variables named <literal>1</literal>
-     ... <literal><replaceable>n</replaceable></literal>.  The result is
-     returned from the Tcl code in the usual way, with
-     a <literal>return</literal> statement.  In a procedure, the return value
-     from the Tcl code is ignored.
+     函数体只是一段 Tcl 脚本。当函数被调用时，参数值会作为名为 <literal>1</literal>
+     ... <literal><replaceable>n</replaceable></literal> 的变量传递给 Tcl 脚本。结果通过
+     <literal>return</literal> 语句以通常方式从 Tcl 代码中返回。在过程（procedure）中，Tcl 代码的返回值会被忽略。
     </para>
 
     <para>
-     For example, a function
-     returning the greater of two integer values could be defined as:
+     例如，一个返回两个整数值中较大者的函数可以定义为：
 
 <programlisting>
 CREATE FUNCTION tcl_max(integer, integer) RETURNS integer AS $$
@@ -80,20 +73,15 @@ CREATE FUNCTION tcl_max(integer, integer) RETURNS integer AS $$
 $$ LANGUAGE pltcl STRICT;
 </programlisting>
 
-     Note the clause <literal>STRICT</literal>, which saves us from
-     having to think about null input values: if a null value is passed, the
-     function will not be called at all, but will just return a null
-     result automatically.
+     注意 <literal>STRICT</literal> 子句，它使我们不必考虑空输入值：如果传入空值，函数根本不会被调用，而只会自动返回空结果。
     </para>
 
     <para>
-     In a nonstrict function,
-     if the actual value of an argument is null, the corresponding
-     <literal>$<replaceable>n</replaceable></literal> variable will be set to an empty string.
-     To detect whether a particular argument is null, use the function
-     <literal>argisnull</literal>.  For example, suppose that we wanted <function>tcl_max</function>
-     with one null and one nonnull argument to return the nonnull
-     argument, rather than null:
+     在非严格函数中，如果参数的实际值为空，则相应的
+     <literal>$<replaceable>n</replaceable></literal> 变量将被设置为空字符串。
+     要检测某个特定参数是否为空，请使用函数
+     <literal>argisnull</literal>。例如，假设我们希望 <function>tcl_max</function>
+     在一个参数为空、一个参数非空时返回非空参数，而不是返回空：
 
 <programlisting>
 CREATE FUNCTION tcl_max(integer, integer) RETURNS integer AS $$
@@ -109,17 +97,13 @@ $$ LANGUAGE pltcl;
     </para>
 
     <para>
-     As shown above,
-     to return a null value from a PL/Tcl function, execute
-     <literal>return_null</literal>.  This can be done whether the
-     function is strict or not.
+     如上所示，
+     要从 PL/Tcl 函数返回空值，请执行
+     <literal>return_null</literal>。无论函数是否为严格函数，都可以这样做。
     </para>
 
     <para>
-     Composite-type arguments are passed to the function as Tcl
-     arrays.  The element names of the array are the attribute names
-     of the composite type. If an attribute in the passed row has the
-     null value, it will not appear in the array. Here is an example:
+     复合类型参数以 Tcl 数组的形式传递给函数。数组的元素名就是复合类型的属性名。如果传入的行中某个属性的值为空值，它不会出现在数组中。下面是一个例子：
 
 <programlisting>
 CREATE TABLE employee (
@@ -141,11 +125,7 @@ $$ LANGUAGE pltcl;
     </para>
 
     <para>
-     PL/Tcl functions can return composite-type results, too.  To do this,
-     the Tcl code must return a list of column name/value pairs matching
-     the expected result type.  Any column names omitted from the list
-     are returned as nulls, and an error is raised if there are unexpected
-     column names.  Here is an example:
+     PL/Tcl 函数也可以返回复合类型的结果。要做到这一点，Tcl 代码必须返回一个与预期结果类型相匹配的列名/值对列表。列表中省略的任何列名都将以空值返回，如果出现意外的列名则会引发错误。下面是一个例子：
 
 <programlisting>
 CREATE FUNCTION square_cube(in int, out squared int, out cubed int) AS $$
@@ -155,7 +135,7 @@ $$ LANGUAGE pltcl;
     </para>
 
     <para>
-     Output arguments of procedures are returned in the same way, for example:
+     过程的输出参数以同样的方式返回，例如：
 
 <programlisting>
 CREATE PROCEDURE tcl_triple(INOUT a integer, INOUT b integer) AS $$
@@ -168,8 +148,7 @@ CALL tcl_triple(5, 10);
 
     <tip>
      <para>
-      The result list can be made from an array representation of the
-      desired tuple with the <literal>array get</literal> Tcl command.  For example:
+      结果列表可以用 <literal>array get</literal> Tcl 命令从所需元组的数组表示形式生成。例如：
 
 <programlisting>
 CREATE FUNCTION raise_pay(employee, delta int) RETURNS employee AS $$
@@ -181,11 +160,7 @@ $$ LANGUAGE pltcl;
     </tip>
 
     <para>
-     PL/Tcl functions can return sets.  To do this, the Tcl code should
-     call <function>return_next</function> once per row to be returned,
-     passing either the appropriate value when returning a scalar type,
-     or a list of column name/value pairs when returning a composite type.
-     Here is an example returning a scalar type:
+     PL/Tcl 函数可以返回集合。要做到这一点，Tcl 代码应当为每个要返回的行调用一次 <function>return_next</function>，在返回标量类型时传入相应的值，在返回复合类型时传入列名/值对列表。下面是一个返回标量类型的例子：
 
 <programlisting>
 CREATE FUNCTION sequence(int, int) RETURNS SETOF int AS $$
@@ -195,7 +170,7 @@ CREATE FUNCTION sequence(int, int) RETURNS SETOF int AS $$
 $$ LANGUAGE pltcl;
 </programlisting>
 
-     and here is one returning a composite type:
+     下面是一个返回复合类型的例子：
 
 <programlisting>
 CREATE FUNCTION table_of_squares(int, int) RETURNS TABLE (x int, x2 int) AS $$
