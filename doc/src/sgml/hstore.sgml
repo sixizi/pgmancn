@@ -1,34 +1,32 @@
 <!-- doc/src/sgml/hstore.sgml -->
 
 <sect1 id="hstore" xreflabel="hstore">
- <title>hstore &mdash; hstore key/value datatype</title>
+ <title>hstore &mdash; hstore 键/值数据类型</title>
 
  <indexterm zone="hstore">
   <primary>hstore</primary>
  </indexterm>
 
  <para>
-  This module implements the <type>hstore</type> data type for storing sets of
-  key/value pairs within a single <productname>PostgreSQL</productname> value.
-  This can be useful in various scenarios, such as rows with many attributes
-  that are rarely examined, or semi-structured data.  Keys and values are
-  simply text strings.
+  本模块实现 <type>hstore</type> 数据类型，用于在单个 <productname>PostgreSQL</productname> 值中存储
+  键/值对集合。
+  这在各种场景中都很有用，例如包含许多很少被检查的属性的行，
+  或半结构化数据。键和值就是简单的文本字符串。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  本模块被视为<quote>可信</quote>，也就是说，它可由对当前数据库
+  具有 <literal>CREATE</literal> 权限的非超级用户安装。
  </para>
 
  <sect2 id="hstore-external-rep">
-  <title><type>hstore</type> External Representation</title>
+  <title><type>hstore</type> 外部表示</title>
 
   <para>
 
-   The text representation of an <type>hstore</type>, used for input and output,
-   includes zero or more <replaceable>key</replaceable> <literal>=&gt;</literal>
-   <replaceable>value</replaceable> pairs separated by commas. Some examples:
+   <type>hstore</type> 的文本表示用于输入和输出，
+  包含零个或多个由逗号分隔的 <replaceable>key</replaceable> <literal>=&gt;</literal>
+   <replaceable>value</replaceable> 对。一些示例：
 
 <synopsis>
 k =&gt; v
@@ -36,17 +34,15 @@ foo =&gt; bar, baz =&gt; whatever
 "1-a" =&gt; "anything at all"
 </synopsis>
 
-   The order of the pairs is not significant (and may not be reproduced on
-   output). Whitespace between pairs or around the <literal>=&gt;</literal> sign is
-   ignored. Double-quote keys and values that include whitespace, commas,
-   <literal>=</literal>s or <literal>&gt;</literal>s. To include a double quote or a
-   backslash in a key or value, escape it with a backslash.
+   对之间的顺序并不重要（并且输出时可能不会保持该顺序）。对与对之间
+   或 <literal>=&gt;</literal> 符号周围的空白会被忽略。对于包含空白、逗号、
+   <literal>=</literal> 或 <literal>&gt;</literal> 的键和值，请使用双引号括起。要在键或值中包含
+   双引号或反斜杠，请用反斜杠对其进行转义。
   </para>
 
   <para>
-   Each key in an <type>hstore</type> is unique. If you declare an <type>hstore</type>
-   with duplicate keys, only one will be stored in the <type>hstore</type> and
-   there is no guarantee as to which will be kept:
+   <type>hstore</type> 中的每个键都是唯一的。如果声明一个带有重复键的 <type>hstore</type>，
+   则只有一个键会存储在 <type>hstore</type> 中，并且不保证保留哪一个：
 
 <programlisting>
 SELECT 'a=&gt;1,a=&gt;2'::hstore;
@@ -57,59 +53,47 @@ SELECT 'a=&gt;1,a=&gt;2'::hstore;
   </para>
 
   <para>
-   A value (but not a key) can be an SQL <literal>NULL</literal>. For example:
+   值（但不是键）可以是 SQL <literal>NULL</literal>。例如：
 
 <programlisting>
 key =&gt; NULL
 </programlisting>
 
-   The <literal>NULL</literal> keyword is case-insensitive. Double-quote the
-   <literal>NULL</literal> to treat it as the ordinary string <quote>NULL</quote>.
+   <literal>NULL</literal> 关键字不区分大小写。将 <literal>NULL</literal> 用双引号括起来，即可将其视为普通字符串 <quote>NULL</quote>。
   </para>
 
   <note>
   <para>
-   Keep in mind that the <type>hstore</type> text format, when used for input,
-   applies <emphasis>before</emphasis> any required quoting or escaping. If you are
-   passing an <type>hstore</type> literal via a parameter, then no additional
-   processing is needed. But if you're passing it as a quoted literal
-   constant, then any single-quote characters and (depending on the setting of
-   the <varname>standard_conforming_strings</varname> configuration parameter)
-   backslash characters need to be escaped correctly. See
-   <xref linkend="sql-syntax-strings"/> for more on the handling of string
-   constants.
+   请记住，<type>hstore</type> 文本格式用于输入时，是在任何所需的引号或转义处理<emphasis>之前</emphasis>生效的。如果通过参数传递 <type>hstore</type> 字面量，则不需要额外的处理。但如果将其作为带引号的字面常量传递，则任何单引号字符以及（取决于 <varname>standard_conforming_strings</varname> 配置参数的设置）反斜杠字符都需要正确转义。有关字符串常量处理的更多信息，请参见 <xref linkend="sql-syntax-strings"/>。
   </para>
   </note>
 
   <para>
-   On output, double quotes always surround keys and values, even when it's
-   not strictly necessary.
+   在输出时，双引号总是包围键和值，即使并非严格必要。
   </para>
 
  </sect2>
 
  <sect2 id="hstore-ops-funcs">
-  <title><type>hstore</type> Operators and Functions</title>
+  <title><type>hstore</type> 运算符和函数</title>
 
   <para>
-   The operators provided by the <literal>hstore</literal> module are
-   shown in <xref linkend="hstore-op-table"/>, the functions
-   in <xref linkend="hstore-func-table"/>.
+   <literal>hstore</literal> 模块提供的运算符如 <xref linkend="hstore-op-table"/> 所示，函数如 <xref linkend="hstore-func-table"/> 所示。
   </para>
 
   <table id="hstore-op-table">
-   <title><type>hstore</type> Operators</title>
+   <title><type>hstore</type> 运算符</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Operator
+        运算符
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example(s)
+        示例
        </para></entry>
       </row>
      </thead>
@@ -121,8 +105,7 @@ key =&gt; NULL
         <returnvalue>text</returnvalue>
        </para>
        <para>
-        Returns value associated with given key, or <literal>NULL</literal> if
-        not present.
+        返回与给定键关联的值，如果不存在则返回 <literal>NULL</literal>。
        </para>
        <para>
         <literal>'a=&gt;x, b=&gt;y'::hstore -&gt; 'a'</literal>
@@ -136,8 +119,7 @@ key =&gt; NULL
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Returns values associated with given keys, or <literal>NULL</literal>
-        if not present.
+        返回与给定键关联的值，如果不存在则返回 <literal>NULL</literal>。
        </para>
        <para>
         <literal>'a=&gt;x, b=&gt;y, c=&gt;z'::hstore -&gt; ARRAY['c','a']</literal>
@@ -151,7 +133,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Concatenates two <type>hstore</type>s.
+        连接两个 <type>hstore</type>。
        </para>
        <para>
         <literal>'a=&gt;b, c=&gt;d'::hstore || 'c=&gt;x, d=&gt;q'::hstore</literal>
@@ -165,7 +147,7 @@ key =&gt; NULL
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>hstore</type> contain key?
+        <type>hstore</type> 是否包含键？
        </para>
        <para>
         <literal>'a=&gt;1'::hstore ? 'a'</literal>
@@ -179,7 +161,7 @@ key =&gt; NULL
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>hstore</type> contain all the specified keys?
+        <type>hstore</type> 是否包含所有指定的键？
        </para>
        <para>
         <literal>'a=&gt;1,b=&gt;2'::hstore ?&amp; ARRAY['a','b']</literal>
@@ -193,7 +175,7 @@ key =&gt; NULL
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>hstore</type> contain any of the specified keys?
+        <type>hstore</type> 是否包含任意一个指定的键？
        </para>
        <para>
         <literal>'a=&gt;1,b=&gt;2'::hstore ?| ARRAY['b','c']</literal>
@@ -207,7 +189,7 @@ key =&gt; NULL
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does left operand contain right?
+        左操作数是否包含右操作数？
        </para>
        <para>
         <literal>'a=&gt;b, b=&gt;1, c=&gt;NULL'::hstore @&gt; 'b=&gt;1'</literal>
@@ -221,7 +203,7 @@ key =&gt; NULL
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Is left operand contained in right?
+        左操作数是否被右操作数包含？
        </para>
        <para>
         <literal>'a=&gt;c'::hstore &lt;@ 'a=&gt;b, b=&gt;1, c=&gt;NULL'</literal>
@@ -235,7 +217,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes key from left operand.
+        从左操作数中删除键。
        </para>
        <para>
         <literal>'a=&gt;1, b=&gt;2, c=&gt;3'::hstore - 'b'::text</literal>
@@ -249,7 +231,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes keys from left operand.
+        从左操作数中删除键。
        </para>
        <para>
         <literal>'a=&gt;1, b=&gt;2, c=&gt;3'::hstore - ARRAY['a','b']</literal>
@@ -263,7 +245,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes pairs from left operand that match pairs in the right operand.
+        从左操作数中删除与右操作数中匹配的键值对。
        </para>
        <para>
         <literal>'a=&gt;1, b=&gt;2, c=&gt;3'::hstore - 'a=&gt;4, b=&gt;2'::hstore</literal>
@@ -277,8 +259,7 @@ key =&gt; NULL
         <returnvalue>anyelement</returnvalue>
        </para>
        <para>
-        Replaces fields in the left operand (which must be a composite type)
-        with matching values from <type>hstore</type>.
+        用 <type>hstore</type> 中的匹配值替换左操作数（必须是复合类型）中的字段。
        </para>
        <para>
         <literal>ROW(1,3) #= 'f1=>11'::hstore</literal>
@@ -292,8 +273,7 @@ key =&gt; NULL
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Converts <type>hstore</type> to an array of alternating keys and
-        values.
+        将 <type>hstore</type> 转换为键和值交替出现的数组。
        </para>
        <para>
         <literal>%% 'a=&gt;foo, b=&gt;bar'::hstore</literal>
@@ -307,7 +287,7 @@ key =&gt; NULL
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Converts <type>hstore</type> to a two-dimensional key/value array.
+        将 <type>hstore</type> 转换为二维键/值数组。
        </para>
        <para>
         <literal>%# 'a=&gt;foo, b=&gt;bar'::hstore</literal>
@@ -319,18 +299,18 @@ key =&gt; NULL
   </table>
 
   <table id="hstore-func-table">
-   <title><type>hstore</type> Functions</title>
+   <title><type>hstore</type> 函数</title>
     <tgroup cols="1">
      <thead>
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        Function
+        函数
        </para>
        <para>
-        Description
+        描述
        </para>
        <para>
-        Example(s)
+        示例
        </para></entry>
       </row>
      </thead>
@@ -343,7 +323,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Constructs an <type>hstore</type> from a record or row.
+        从记录或行构造一个 <type>hstore</type>。
        </para>
        <para>
         <literal>hstore(ROW(1,2))</literal>
@@ -357,8 +337,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Constructs an <type>hstore</type> from an array, which may be either
-        a key/value array, or a two-dimensional array.
+        从数组构造一个 <type>hstore</type>，该数组可以是键/值数组，也可以是二维数组。
        </para>
        <para>
         <literal>hstore(ARRAY['a','1','b','2'])</literal>
@@ -376,7 +355,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Constructs an <type>hstore</type> from separate key and value arrays.
+        从分离的键数组和值数组构造一个 <type>hstore</type>。
        </para>
        <para>
         <literal>hstore(ARRAY['a','b'], ARRAY['1','2'])</literal>
@@ -390,7 +369,7 @@ key =&gt; NULL
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Makes a single-item <type>hstore</type>.
+        创建一个单项 <type>hstore</type>。
        </para>
        <para>
         <literal>hstore('a', 'b')</literal>
@@ -405,7 +384,7 @@ key =&gt; NULL
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s keys as an array.
+        提取一个 <type>hstore</type> 的键作为数组。
        </para>
        <para>
         <literal>akeys('a=&gt;1,b=&gt;2')</literal>
@@ -420,7 +399,7 @@ key =&gt; NULL
         <returnvalue>setof text</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s keys as a set.
+        提取一个 <type>hstore</type> 的键作为集合。
        </para>
        <para>
         <literal>skeys('a=&gt;1,b=&gt;2')</literal>
@@ -439,7 +418,7 @@ b
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s values as an array.
+        将 <type>hstore</type> 的值提取为一个数组。
        </para>
        <para>
         <literal>avals('a=&gt;1,b=&gt;2')</literal>
@@ -454,7 +433,7 @@ b
         <returnvalue>setof text</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s values as a set.
+        将 <type>hstore</type> 的值提取为一个集合。
        </para>
        <para>
         <literal>svals('a=&gt;1,b=&gt;2')</literal>
@@ -473,8 +452,7 @@ b
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s keys and values as an array of
-        alternating keys and values.
+        将 <type>hstore</type> 的键和值提取为一个由键和值交替组成的数组。
        </para>
        <para>
         <literal>hstore_to_array('a=&gt;1,b=&gt;2')</literal>
@@ -489,8 +467,7 @@ b
         <returnvalue>text[]</returnvalue>
        </para>
        <para>
-        Extracts an <type>hstore</type>'s keys and values as a two-dimensional
-        array.
+        将 <type>hstore</type> 的键和值提取为一个二维数组。
        </para>
        <para>
         <literal>hstore_to_matrix('a=&gt;1,b=&gt;2')</literal>
@@ -505,12 +482,10 @@ b
         <returnvalue>json</returnvalue>
        </para>
        <para>
-        Converts an <type>hstore</type> to a <type>json</type> value,
-        converting all non-null values to JSON strings.
+        将 <type>hstore</type> 转换为 <type>json</type> 值，并把所有非空值转换为 JSON 字符串。
        </para>
        <para>
-        This function is used implicitly when an <type>hstore</type> value is
-        cast to <type>json</type>.
+        当把 <type>hstore</type> 值转换为 <type>json</type> 时，会隐式使用此函数。
        </para>
        <para>
         <literal>hstore_to_json('"a key"=&gt;1, b=&gt;t, c=&gt;null, d=&gt;12345, e=&gt;012345, f=&gt;1.234, g=&gt;2.345e+4')</literal>
@@ -525,12 +500,11 @@ b
         <returnvalue>jsonb</returnvalue>
        </para>
        <para>
-        Converts an <type>hstore</type> to a <type>jsonb</type> value,
-        converting all non-null values to JSON strings.
+        将 <type>hstore</type> 转换为 <type>jsonb</type> 值，
+        把所有非空值转换为 JSON 字符串。
        </para>
        <para>
-        This function is used implicitly when an <type>hstore</type> value is
-        cast to <type>jsonb</type>.
+        当把 <type>hstore</type> 值转换为 <type>jsonb</type> 时，会隐式使用此函数。
        </para>
        <para>
         <literal>hstore_to_jsonb('"a key"=&gt;1, b=&gt;t, c=&gt;null, d=&gt;12345, e=&gt;012345, f=&gt;1.234, g=&gt;2.345e+4')</literal>
@@ -545,9 +519,8 @@ b
         <returnvalue>json</returnvalue>
        </para>
        <para>
-        Converts an <type>hstore</type> to a <type>json</type> value, but
-        attempts to distinguish numerical and Boolean values so they are
-        unquoted in the JSON.
+        将 <type>hstore</type> 转换为 <type>json</type> 值，但
+        会尝试区分数值和布尔值，使它们在 JSON 中不加引号。
        </para>
        <para>
         <literal>hstore_to_json_loose('"a key"=&gt;1, b=&gt;t, c=&gt;null, d=&gt;12345, e=&gt;012345, f=&gt;1.234, g=&gt;2.345e+4')</literal>
@@ -562,9 +535,8 @@ b
         <returnvalue>jsonb</returnvalue>
        </para>
        <para>
-        Converts an <type>hstore</type> to a <type>jsonb</type> value, but
-        attempts to distinguish numerical and Boolean values so they are
-        unquoted in the JSON.
+        将 <type>hstore</type> 转换为 <type>jsonb</type> 值，但
+        会尝试区分数值和布尔值，使它们在 JSON 中不加引号。
        </para>
        <para>
         <literal>hstore_to_jsonb_loose('"a key"=&gt;1, b=&gt;t, c=&gt;null, d=&gt;12345, e=&gt;012345, f=&gt;1.234, g=&gt;2.345e+4')</literal>
@@ -579,8 +551,7 @@ b
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Extracts a subset of an <type>hstore</type> containing only the
-        specified keys.
+        提取 <type>hstore</type> 的一个子集，其中仅包含指定的键。
        </para>
        <para>
         <literal>slice('a=&gt;1,b=&gt;2,c=&gt;3'::hstore, ARRAY['b','c','x'])</literal>
@@ -597,7 +568,7 @@ b
         <parameter>value</parameter> <type>text</type> )
        </para>
        <para>
-        Extracts an <type>hstore</type>'s keys and values as a set of records.
+        将 <type>hstore</type> 的键和值提取为一组记录。
        </para>
        <para>
         <literal>select * from each('a=&gt;1,b=&gt;2')</literal>
@@ -618,7 +589,7 @@ b
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>hstore</type> contain key?
+        <type>hstore</type> 是否包含该键？
        </para>
        <para>
         <literal>exist('a=&gt;1', 'a')</literal>
@@ -628,13 +599,12 @@ b
 
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        <indexterm><primary>defined</primary></indexterm>
+        <indexterm><primary>已定义</primary></indexterm>
         <function>defined</function> ( <type>hstore</type>, <type>text</type> )
         <returnvalue>boolean</returnvalue>
        </para>
        <para>
-        Does <type>hstore</type> contain a non-<literal>NULL</literal> value
-        for key?
+        <type>hstore</type> 是否包含键为非 <literal>NULL</literal> 的值？
        </para>
        <para>
         <literal>defined('a=&gt;NULL', 'a')</literal>
@@ -644,12 +614,12 @@ b
 
       <row>
        <entry role="func_table_entry"><para role="func_signature">
-        <indexterm><primary>delete</primary></indexterm>
+        <indexterm><primary>删除</primary></indexterm>
         <function>delete</function> ( <type>hstore</type>, <type>text</type> )
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes pair with matching key.
+        删除具有匹配键的键值对。
        </para>
        <para>
         <literal>delete('a=&gt;1,b=&gt;2', 'b')</literal>
@@ -663,7 +633,7 @@ b
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes pairs with matching keys.
+        删除具有匹配键的多个键值对。
        </para>
        <para>
         <literal>delete('a=&gt;1,b=&gt;2,c=&gt;3', ARRAY['a','b'])</literal>
@@ -677,7 +647,7 @@ b
         <returnvalue>hstore</returnvalue>
        </para>
        <para>
-        Deletes pairs matching those in the second argument.
+        删除与第二个参数中相匹配的键值对。
        </para>
        <para>
         <literal>delete('a=&gt;1,b=&gt;2', 'a=&gt;4,b=&gt;2'::hstore)</literal>
@@ -692,8 +662,7 @@ b
         <returnvalue>anyelement</returnvalue>
        </para>
        <para>
-        Replaces fields in the left operand (which must be a composite type)
-        with matching values from <type>hstore</type>.
+        用来自 <type>hstore</type> 的匹配值替换左操作数（必须是复合类型）中的字段。
        </para>
        <para>
         <literal>populate_record(ROW(1,2), 'f1=>42'::hstore)</literal>
@@ -705,11 +674,7 @@ b
   </table>
 
   <para>
-   In addition to these operators and functions, values of
-   the <type>hstore</type> type can be subscripted, allowing them to act
-   like associative arrays.  Only a single subscript of type <type>text</type>
-   can be specified; it is interpreted as a key and the corresponding
-   value is fetched or stored.  For example,
+   除了这些运算符和函数之外，<type>hstore</type> 类型的值还可以使用下标，从而像关联数组一样使用。只能指定一个类型为 <type>text</type> 的下标；它被解释为键，并获取或存储相应的值。例如，
 
 <programlisting>
 CREATE TABLE mytable (h hstore);
@@ -728,22 +693,16 @@ SELECT h FROM mytable;
 (1 row)
 </programlisting>
 
-   A subscripted fetch returns <literal>NULL</literal> if the subscript
-   is <literal>NULL</literal> or that key does not exist in
-   the <type>hstore</type>.  (Thus, a subscripted fetch is not greatly
-   different from the <literal>-&gt;</literal> operator.)
-   A subscripted update fails if the subscript is <literal>NULL</literal>;
-   otherwise, it replaces the value for that key, adding an entry to
-   the <type>hstore</type> if the key does not already exist.
+   如果下标为 <literal>NULL</literal> 或者该键在 <type>hstore</type> 中不存在，则带下标的获取会返回 <literal>NULL</literal>。（因此，带下标的获取与 <literal>-&gt;</literal> 运算符没有太大区别。）
+   如果下标为 <literal>NULL</literal>，则带下标的更新会失败；否则，它会替换该键对应的值，如果该键尚不存在，则向 <type>hstore</type> 中添加一个条目。
   </para>
  </sect2>
 
  <sect2 id="hstore-indexes">
-  <title>Indexes</title>
+  <title>索引</title>
 
   <para>
-   <type>hstore</type> has GiST and GIN index support for the <literal>@&gt;</literal>,
-   <literal>?</literal>, <literal>?&amp;</literal> and <literal>?|</literal> operators. For example:
+   <type>hstore</type> 对 <literal>@&gt;</literal>、<literal>?</literal>、<literal>?&amp;</literal> 和 <literal>?|</literal> 运算符提供 GiST 和 GIN 索引支持。例如：
   </para>
 <programlisting>
 CREATE INDEX hidx ON testhstore USING GIST (h);
@@ -752,30 +711,18 @@ CREATE INDEX hidx ON testhstore USING GIN (h);
 </programlisting>
 
   <para>
-   <literal>gist_hstore_ops</literal> GiST opclass approximates a set of
-   key/value pairs as a bitmap signature.  Its optional integer parameter
-   <literal>siglen</literal> determines the
-   signature length in bytes.  The default length is 16 bytes.
-   Valid values of signature length are between 1 and 2024 bytes.  Longer
-   signatures lead to a more precise search (scanning a smaller fraction of the index and
-   fewer heap pages), at the cost of a larger index.
+   <literal>gist_hstore_ops</literal> GiST 操作符类将一组键/值对近似为位图签名。其可选的整数参数 <literal>siglen</literal> 决定签名的长度（以字节为单位）。默认长度为 16 字节。签名长度的有效值介于 1 到 2024 字节之间。较长的签名会带来更精确的搜索（扫描索引中更小的部分以及更少的堆页面），但代价是索引更大。
   </para>
 
   <para>
-   Example of creating such an index with a signature length of 32 bytes:
+   创建这样一个签名长度为 32 字节的索引的示例：
 <programlisting>
 CREATE INDEX hidx ON testhstore USING GIST (h gist_hstore_ops(siglen=32));
 </programlisting>
   </para>
 
   <para>
-   <type>hstore</type> also supports <type>btree</type> or <type>hash</type> indexes for
-   the <literal>=</literal> operator. This allows <type>hstore</type> columns to be
-   declared <literal>UNIQUE</literal>, or to be used in <literal>GROUP BY</literal>,
-   <literal>ORDER BY</literal> or <literal>DISTINCT</literal> expressions. The sort ordering
-   for <type>hstore</type> values is not particularly useful, but these indexes
-   may be useful for equivalence lookups. Create indexes for <literal>=</literal>
-   comparisons as follows:
+   <type>hstore</type> 还支持用于 <literal>=</literal> 运算符的 <type>btree</type> 或 <type>hash</type> 索引。这允许将 <type>hstore</type> 列声明为 <literal>UNIQUE</literal>，或在 <literal>GROUP BY</literal>、<literal>ORDER BY</literal> 或 <literal>DISTINCT</literal> 表达式中使用。<type>hstore</type> 值的排序顺序并不是特别有用，但这些索引对于等值查找可能有用。为 <literal>=</literal> 比较创建索引如下：
   </para>
 <programlisting>
 CREATE INDEX hidx ON testhstore USING BTREE (h);
@@ -785,33 +732,32 @@ CREATE INDEX hidx ON testhstore USING HASH (h);
  </sect2>
 
  <sect2 id="hstore-examples">
-  <title>Examples</title>
+  <title>示例</title>
 
   <para>
-   Add a key, or update an existing key with a new value:
+   添加一个键，或用新值更新已有的键：
 <programlisting>
 UPDATE tab SET h['c'] = '3';
 </programlisting>
-   Another way to do the same thing is:
+完成同样事情的另一种方式是：
 <programlisting>
 UPDATE tab SET h = h || hstore('c', '3');
 </programlisting>
-   If multiple keys are to be added or changed in one operation,
-   the concatenation approach is more efficient than subscripting:
+如果要在一次操作中添加或更改多个键，串联方法比下标方式更高效：
 <programlisting>
 UPDATE tab SET h = h || hstore(array['q', 'w'], array['11', '12']);
 </programlisting>
   </para>
 
   <para>
-   Delete a key:
+   删除一个键：
 <programlisting>
 UPDATE tab SET h = delete(h, 'k1');
 </programlisting>
   </para>
 
   <para>
-   Convert a <type>record</type> to an <type>hstore</type>:
+   将 <type>record</type> 转换为 <type>hstore</type>：
 <programlisting>
 CREATE TABLE test (col1 integer, col2 text, col3 text);
 INSERT INTO test VALUES (123, 'foo', 'bar');
@@ -825,7 +771,7 @@ SELECT hstore(t) FROM test AS t;
   </para>
 
   <para>
-   Convert an <type>hstore</type> to a predefined <type>record</type> type:
+   将 <type>hstore</type> 转换为预定义的 <type>record</type> 类型：
 <programlisting>
 CREATE TABLE test (col1 integer, col2 text, col3 text);
 
@@ -839,7 +785,7 @@ SELECT * FROM populate_record(null::test,
   </para>
 
   <para>
-   Modify an existing record using the values from an <type>hstore</type>:
+   使用 <type>hstore</type> 中的值修改现有记录：
 <programlisting>
 CREATE TABLE test (col1 integer, col2 text, col3 text);
 INSERT INTO test VALUES (123, 'foo', 'bar');
@@ -854,31 +800,28 @@ SELECT (r).* FROM (SELECT t #= '"col3"=&gt;"baz"' AS r FROM test t) s;
  </sect2>
 
  <sect2 id="hstore-statistics">
-  <title>Statistics</title>
+  <title>统计信息</title>
 
   <para>
-   The <type>hstore</type> type, because of its intrinsic liberality, could
-   contain a lot of different keys. Checking for valid keys is the task of the
-   application. The following examples demonstrate several techniques for
-   checking keys and obtaining statistics.
+   <type>hstore</type> 类型由于其固有的宽松性，可能包含许多不同的键。检查键是否有效是应用程序的任务。以下示例演示了几种检查键和获取统计信息的技术。
   </para>
 
   <para>
-   Simple example:
+   简单示例：
 <programlisting>
 SELECT * FROM each('aaa=&gt;bq, b=&gt;NULL, ""=&gt;1');
 </programlisting>
   </para>
 
   <para>
-   Using a table:
+   使用表：
 <programlisting>
 CREATE TABLE stat AS SELECT (each(h)).key, (each(h)).value FROM testhstore;
 </programlisting>
   </para>
 
   <para>
-   Online statistics:
+   在线统计信息：
 <programlisting>
 SELECT key, count(*) FROM
   (SELECT (each(h)).key FROM testhstore) AS stat
@@ -901,67 +844,50 @@ SELECT key, count(*) FROM
  </sect2>
 
  <sect2 id="hstore-compatibility">
-  <title>Compatibility</title>
+  <title>兼容性</title>
 
   <para>
-   As of PostgreSQL 9.0, <type>hstore</type> uses a different internal
-   representation than previous versions. This presents no obstacle for
-   dump/restore upgrades since the text representation (used in the dump) is
-   unchanged.
+   从 PostgreSQL 9.0 开始，<type>hstore</type> 使用的内部表示与之前的版本不同。这对转储/恢复升级不构成障碍，因为（转储中使用的）文本表示没有改变。
   </para>
 
   <para>
-   In the event of a binary upgrade, upward compatibility is maintained by
-   having the new code recognize old-format data. This will entail a slight
-   performance penalty when processing data that has not yet been modified by
-   the new code. It is possible to force an upgrade of all values in a table
-   column by doing an <literal>UPDATE</literal> statement as follows:
+   在进行二进制升级时，通过让新代码识别旧格式的数据来保持向上兼容性。在处理尚未被新代码修改过的数据时，这会带来轻微的性能损失。可以通过执行如下 <literal>UPDATE</literal> 语句来强制升级表列中的所有值：
 <programlisting>
 UPDATE tablename SET hstorecol = hstorecol || '';
 </programlisting>
   </para>
 
   <para>
-   Another way to do it is:
+   另一种做法是：
 <programlisting>
 ALTER TABLE tablename ALTER hstorecol TYPE hstore USING hstorecol || '';
 </programlisting>
-   The <command>ALTER TABLE</command> method requires an
-   <literal>ACCESS EXCLUSIVE</literal> lock on the table,
-   but does not result in bloating the table with old row versions.
+   <command>ALTER TABLE</command> 方法需要在表上获取 <literal>ACCESS EXCLUSIVE</literal> 锁，但不会因旧行版本而导致表膨胀。
   </para>
 
  </sect2>
 
  <sect2 id="hstore-transforms">
-  <title>Transforms</title>
+  <title>转换</title>
 
   <para>
-   Additional extensions are available that implement transforms for
-   the <type>hstore</type> type for the languages PL/Perl and PL/Python.  The
-   extensions for PL/Perl are called <literal>hstore_plperl</literal>
-   and <literal>hstore_plperlu</literal>, for trusted and untrusted PL/Perl.
-   If you install these transforms and specify them when creating a
-   function, <type>hstore</type> values are mapped to Perl hashes.  The
-   extension for PL/Python is called <literal>hstore_plpython3u</literal>.
-   If you use it, <type>hstore</type> values are mapped to Python dictionaries.
+   还有一些额外的扩展可用于为 PL/Perl 和 PL/Python 语言实现 <type>hstore</type> 类型的转换。用于 PL/Perl 的扩展名为 <literal>hstore_plperl</literal> 和 <literal>hstore_plperlu</literal>，分别对应可信和不可信的 PL/Perl。如果安装这些转换并在创建函数时指定它们，<type>hstore</type> 值将映射为 Perl 哈希。用于 PL/Python 的扩展名为 <literal>hstore_plpython3u</literal>。如果使用它，<type>hstore</type> 值将映射为 Python 字典。
   </para>
  </sect2>
 
  <sect2 id="hstore-authors">
-  <title>Authors</title>
+  <title>作者</title>
 
   <para>
-   Oleg Bartunov <email>oleg@sai.msu.su</email>, Moscow, Moscow University, Russia
+   Oleg Bartunov <email>oleg@sai.msu.su</email>，俄罗斯莫斯科国立大学
   </para>
 
   <para>
-   Teodor Sigaev <email>teodor@sigaev.ru</email>, Moscow, Delta-Soft Ltd., Russia
+   Teodor Sigaev <email>teodor@sigaev.ru</email>，俄罗斯莫斯科 Delta-Soft Ltd.
   </para>
 
   <para>
-   Additional enhancements by Andrew Gierth <email>andrew@tao11.riddles.org.uk</email>,
-   United Kingdom
+   其他改进由 Andrew Gierth <email>andrew@tao11.riddles.org.uk</email> 完成，英国
   </para>
  </sect2>
 
