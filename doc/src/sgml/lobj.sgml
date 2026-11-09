@@ -75,66 +75,59 @@
   </sect1>
 
   <sect1 id="lo-interfaces">
-   <title>Client Interfaces</title>
+   <title>客户端接口</title>
 
    <para>
-    This section describes the facilities that
-    <productname>PostgreSQL</productname>'s <application>libpq</application>
-    client interface library provides for accessing large objects.
-    The <productname>PostgreSQL</productname> large object interface is
-    modeled after the <acronym>Unix</acronym> file-system interface, with
-    analogues of <function>open</function>,  <function>read</function>,
-    <function>write</function>,
-    <function>lseek</function>, etc.
+    本节描述 <productname>PostgreSQL</productname> 的 <application>libpq</application>
+    客户端接口库为访问大对象所提供的功能。
+    <productname>PostgreSQL</productname> 大对象接口仿照 <acronym>Unix</acronym> 文件系统接口建模，
+    具有 <function>open</function>、<function>read</function>、
+    <function>write</function>、
+    <function>lseek</function> 等的类似物。
    </para>
 
    <para>
-    All large object manipulation using these functions
-    <emphasis>must</emphasis> take place within an SQL transaction block,
-    since large object file descriptors are only valid for the duration of
-    a transaction. Write operations, including <function>lo_open</function>
-    with the <symbol>INV_WRITE</symbol> mode, are not allowed in a read-only
-    transaction.
+    使用这些函数进行的所有大对象操作
+    <emphasis>必须</emphasis>在 SQL 事务块内进行，
+    因为大对象文件描述符仅在事务期间有效。写操作，包括以 <symbol>INV_WRITE</symbol> 模式执行 <function>lo_open</function>，
+    在只读事务中是不允许的。
    </para>
 
    <para>
-    If an error occurs while executing any one of these functions, the
-    function will return an otherwise-impossible value, typically 0 or -1.
-    A message describing the error is stored in the connection object and
-    can be retrieved with <xref linkend="libpq-PQerrorMessage"/>.
+    如果在执行这些函数中的任何一个时发生错误，
+    该函数将返回一个原本不可能的值，通常是 0 或 -1。
+    描述该错误的消息存储在连接对象中，
+    可以使用 <xref linkend="libpq-PQerrorMessage"/> 获取。
    </para>
 
    <para>
-    Client applications that use these functions should include the header file
-    <filename>libpq/libpq-fs.h</filename> and link with the
-    <application>libpq</application> library.
+    使用这些函数的客户端应用应包含头文件
+    <filename>libpq/libpq-fs.h</filename> 并链接 <application>libpq</application> 库。
    </para>
 
    <para>
-    Client applications cannot use these functions while a libpq connection is in pipeline mode.
+    当 libpq 连接处于管道模式时，客户端应用不能使用这些函数。
    </para>
 
    <sect2 id="lo-create">
-    <title>Creating a Large Object</title>
+    <title>创建大对象</title>
 
     <para>
      <indexterm><primary>lo_create</primary></indexterm>
-     The function
+     函数
 <synopsis>
 Oid lo_create(PGconn *conn, Oid lobjId);
 </synopsis>
-     creates a new large object.  The OID to be assigned can be
-     specified by <replaceable class="parameter">lobjId</replaceable>;
-     if so, failure occurs if that OID is already in use for some large
-     object.  If <replaceable class="parameter">lobjId</replaceable>
-     is <symbol>InvalidOid</symbol> (zero) then <function>lo_create</function>
-     assigns an unused OID.
-     The return value is the OID that was assigned to the new large object,
-     or <symbol>InvalidOid</symbol> (zero) on failure.
+     创建一个新的大对象。要分配的 OID 可以通过 <replaceable class="parameter">lobjId</replaceable> 指定；
+     如果指定了，那么当该 OID 已被某个大对象占用时就会失败。如果 <replaceable class="parameter">lobjId</replaceable>
+     为 <symbol>InvalidOid</symbol>（零），那么 <function>lo_create</function>
+     会分配一个未使用的 OID。
+     返回值是分配给新大对象的 OID，
+     失败时为 <symbol>InvalidOid</symbol>（零）。
     </para>
 
     <para>
-     An example:
+     一个例子：
 <programlisting>
 inv_oid = lo_create(conn, desired_oid);
 </programlisting>
@@ -142,33 +135,33 @@ inv_oid = lo_create(conn, desired_oid);
 
     <para>
      <indexterm><primary>lo_creat</primary></indexterm>
-     The older function
+     较旧的函数
 <synopsis>
 Oid lo_creat(PGconn *conn, int mode);
 </synopsis>
-     also creates a new large object, always assigning an unused OID.
-     The return value is the OID that was assigned to the new large object,
-     or <symbol>InvalidOid</symbol> (zero) on failure.
+     也会创建一个新的大对象，并且总是分配一个未使用的 OID。
+     返回值是分配给新大对象的 OID，
+     失败时为 <symbol>InvalidOid</symbol>（零）。
     </para>
 
     <para>
-     In <productname>PostgreSQL</productname> releases 8.1 and later,
-     the <replaceable class="parameter">mode</replaceable> is ignored,
-     so that <function>lo_creat</function> is exactly equivalent to
-     <function>lo_create</function> with a zero second argument.
-     However, there is little reason to use <function>lo_creat</function>
-     unless you need to work with servers older than 8.1.
-     To work with such an old server, you must
-     use <function>lo_creat</function> not <function>lo_create</function>,
-     and you must set <replaceable class="parameter">mode</replaceable> to
-     one of <symbol>INV_READ</symbol>, <symbol>INV_WRITE</symbol>,
-     or <symbol>INV_READ</symbol> <literal>|</literal> <symbol>INV_WRITE</symbol>.
-     (These symbolic constants are defined
-     in the header file <filename>libpq/libpq-fs.h</filename>.)
+     在 <productname>PostgreSQL</productname> 8.1 及更高版本中，
+     <replaceable class="parameter">mode</replaceable> 会被忽略，
+     因此 <function>lo_creat</function> 完全等价于
+     第二个参数为零的 <function>lo_create</function>。
+     不过，除非你需要与 8.1 之前的服务器打交道，
+     否则没有什么理由使用 <function>lo_creat</function>。
+     要与这样旧的服务器配合工作，你必须
+     使用 <function>lo_creat</function> 而不是 <function>lo_create</function>，
+     并且你必须把 <replaceable class="parameter">mode</replaceable> 设置为
+     <symbol>INV_READ</symbol>、<symbol>INV_WRITE</symbol>
+     或 <symbol>INV_READ</symbol> <literal>|</literal> <symbol>INV_WRITE</symbol> 之一。
+     （这些符号常量定义在
+     头文件 <filename>libpq/libpq-fs.h</filename> 中。）
     </para>
 
     <para>
-     An example:
+     一个例子：
 <programlisting>
 inv_oid = lo_creat(conn, INV_READ|INV_WRITE);
 </programlisting>
@@ -176,122 +169,96 @@ inv_oid = lo_creat(conn, INV_READ|INV_WRITE);
    </sect2>
 
    <sect2 id="lo-import">
-    <title>Importing a Large Object</title>
+    <title>导入大对象</title>
 
     <para>
      <indexterm><primary>lo_import</primary></indexterm>
-     To import an operating system file as a large object, call
+     要把一个操作系统文件导入为大对象，请调用
 <synopsis>
 Oid lo_import(PGconn *conn, const char *filename);
 </synopsis>
      <replaceable class="parameter">filename</replaceable>
-     specifies the operating system name of
-     the file to be imported as a large object.
-     The return value is the OID that was assigned to the new large object,
-     or <symbol>InvalidOid</symbol> (zero) on failure.
-     Note that the file is read by the client interface library, not by
-     the server; so it must exist in the client file system and be readable
-     by the client application.
+     指定要作为大对象导入的文件的
+     操作系统文件名。
+     返回值是分配给新大对象的 OID，
+     失败时为 <symbol>InvalidOid</symbol>（零）。
+     注意，该文件是由客户端接口库读取的，而不是由
+     服务器读取的；因此它必须存在于客户端文件系统中，并且
+     客户端应用程序能够读取它。
     </para>
 
     <para>
      <indexterm><primary>lo_import_with_oid</primary></indexterm>
-     The function
+     函数
 <synopsis>
 Oid lo_import_with_oid(PGconn *conn, const char *filename, Oid lobjId);
 </synopsis>
-     also imports a new large object.  The OID to be assigned can be
-     specified by <replaceable class="parameter">lobjId</replaceable>;
-     if so, failure occurs if that OID is already in use for some large
-     object.  If <replaceable class="parameter">lobjId</replaceable>
-     is <symbol>InvalidOid</symbol> (zero) then <function>lo_import_with_oid</function> assigns an unused
-     OID (this is the same behavior as <function>lo_import</function>).
-     The return value is the OID that was assigned to the new large object,
-     or <symbol>InvalidOid</symbol> (zero) on failure.
+     也会导入一个新大对象。要分配的 OID 可以通过
+     <replaceable class="parameter">lobjId</replaceable> 指定；
+     如果指定了，而该 OID 已被某个大对象占用，则会发生失败。
+     如果 <replaceable class="parameter">lobjId</replaceable>
+     为 <symbol>InvalidOid</symbol>（零），则 <function>lo_import_with_oid</function> 会分配一个未使用的
+     OID（这与 <function>lo_import</function> 的行为相同）。
+     返回值是分配给新大对象的 OID，
+     失败时为 <symbol>InvalidOid</symbol>（零）。
     </para>
 
     <para>
-     <function>lo_import_with_oid</function> is new as of <productname>PostgreSQL</productname>
-     8.4 and uses <function>lo_create</function> internally which is new in 8.1; if this function is run against 8.0 or before, it will
-     fail and return <symbol>InvalidOid</symbol>.
+     <function>lo_import_with_oid</function> 是 <productname>PostgreSQL</productname> 8.4 新增的，内部使用 <function>lo_create</function>，后者是 8.1 新增的；如果针对 8.0 或更早版本运行此函数，它将
+     失败并返回 <symbol>InvalidOid</symbol>。
     </para>
    </sect2>
 
    <sect2 id="lo-export">
-    <title>Exporting a Large Object</title>
+    <title>导出大对象</title>
 
     <para>
      <indexterm><primary>lo_export</primary></indexterm>
-     To export a large object
-     into an operating system file, call
+     要把一个大对象导出到操作系统文件中，请调用
 <synopsis>
 int lo_export(PGconn *conn, Oid lobjId, const char *filename);
 </synopsis>
-     The <parameter>lobjId</parameter> argument specifies the OID of the large
-     object to export and the <parameter>filename</parameter> argument
-     specifies the operating system name of the file.  Note that the file is
-     written by the client interface library, not by the server.  Returns 1
-     on success, -1 on failure.
+     <parameter>lobjId</parameter> 参数指定要导出的大对象的 OID，
+     <parameter>filename</parameter> 参数指定文件的操作系统文件名。注意，该文件是由
+     客户端接口库写入的，而不是由服务器写入的。成功时返回 1，
+     失败时返回 -1。
     </para>
    </sect2>
 
    <sect2 id="lo-open">
-    <title>Opening an Existing Large Object</title>
+    <title>打开一个已有的大对象</title>
 
     <para>
      <indexterm><primary>lo_open</primary></indexterm>
-     To open an existing large object for reading or writing, call
+     要打开一个已有的大对象进行读取或写入，请调用
 <synopsis>
 int lo_open(PGconn *conn, Oid lobjId, int mode);
 </synopsis>
-     The <parameter>lobjId</parameter> argument specifies the OID of the large
-     object to open.   The <parameter>mode</parameter> bits control whether the
-     object is opened for reading (<symbol>INV_READ</symbol>), writing
-     (<symbol>INV_WRITE</symbol>), or both.
-     (These symbolic constants are defined
-     in the header file <filename>libpq/libpq-fs.h</filename>.)
-     <function>lo_open</function> returns a (non-negative) large object
-     descriptor for later use in <function>lo_read</function>,
-     <function>lo_write</function>, <function>lo_lseek</function>,
-     <function>lo_lseek64</function>, <function>lo_tell</function>,
-     <function>lo_tell64</function>, <function>lo_truncate</function>,
-     <function>lo_truncate64</function>, and <function>lo_close</function>.
-     The descriptor is only valid for
-     the duration of the current transaction.
-     On failure, -1 is returned.
+     <parameter>lobjId</parameter> 参数指定要打开的大对象的 OID。<parameter>mode</parameter> 位控制该对象是以读取（<symbol>INV_READ</symbol>）、写入（<symbol>INV_WRITE</symbol>）还是两者兼有的方式打开。
+     （这些符号常量定义在头文件 <filename>libpq/libpq-fs.h</filename> 中。）
+     <function>lo_open</function> 返回一个（非负的）大对象描述符，供后续在 <function>lo_read</function>、
+     <function>lo_write</function>、<function>lo_lseek</function>、
+     <function>lo_lseek64</function>、<function>lo_tell</function>、
+     <function>lo_tell64</function>、<function>lo_truncate</function>、
+     <function>lo_truncate64</function> 和 <function>lo_close</function> 中使用。
+     该描述符仅在当前事务期间有效。
+     失败时返回 -1。
     </para>
 
     <para>
-     The server currently does not distinguish between modes
-     <symbol>INV_WRITE</symbol> and <symbol>INV_READ</symbol> <literal>|</literal>
-     <symbol>INV_WRITE</symbol>: you are allowed to read from the descriptor
-     in either case.  However there is a significant difference between
-     these modes and <symbol>INV_READ</symbol> alone: with <symbol>INV_READ</symbol>
-     you cannot write on the descriptor, and the data read from it will
-     reflect the contents of the large object at the time of the transaction
-     snapshot that was active when <function>lo_open</function> was executed,
-     regardless of later writes by this or other transactions.  Reading
-     from a descriptor opened with <symbol>INV_WRITE</symbol> returns
-     data that reflects all writes of other committed transactions as well
-     as writes of the current transaction.  This is similar to the behavior
-     of <literal>REPEATABLE READ</literal> versus <literal>READ COMMITTED</literal> transaction
-     modes for ordinary SQL <command>SELECT</command> commands.
+     服务器目前不区分模式
+     <symbol>INV_WRITE</symbol> 和 <symbol>INV_READ</symbol> <literal>|</literal>
+     <symbol>INV_WRITE</symbol>：无论哪种情况，你都可以从该描述符读取。然而，这些模式与单独使用 <symbol>INV_READ</symbol> 之间有显著差异：使用 <symbol>INV_READ</symbol> 时你不能向该描述符写入，并且从它读取的数据将反映执行 <function>lo_open</function> 时处于活动状态的事务快照中的大对象内容，而不管此后本事务或其他事务的写入。从以 <symbol>INV_WRITE</symbol> 打开的描述符读取时，返回的数据既反映其他已提交事务的写入，也反映当前事务的写入。这类似于普通 SQL <command>SELECT</command> 命令中 <literal>REPEATABLE READ</literal> 与 <literal>READ COMMITTED</literal> 事务模式的行为差异。
     </para>
 
     <para>
-     <function>lo_open</function> will fail if <literal>SELECT</literal>
-     privilege is not available for the large object, or
-     if <symbol>INV_WRITE</symbol> is specified and <literal>UPDATE</literal>
-     privilege is not available.
-     (Prior to <productname>PostgreSQL</productname> 11, these privilege
-     checks were instead performed at the first actual read or write call
-     using the descriptor.)
-     These privilege checks can be disabled with the
-     <xref linkend="guc-lo-compat-privileges"/> run-time parameter.
+     如果大对象没有 <literal>SELECT</literal> 权限，或者指定了 <symbol>INV_WRITE</symbol> 而没有 <literal>UPDATE</literal> 权限，<function>lo_open</function> 将失败。
+     （在 <productname>PostgreSQL</productname> 11 之前，这些权限检查是在使用该描述符的第一次实际读取或写入调用时执行的。）
+     这些权限检查可以通过 <xref linkend="guc-lo-compat-privileges"/> 运行时参数禁用。
     </para>
 
     <para>
-     An example:
+     一个例子：
 <programlisting>
 inv_fd = lo_open(conn, inv_oid, INV_READ|INV_WRITE);
 </programlisting>
@@ -299,222 +266,184 @@ inv_fd = lo_open(conn, inv_oid, INV_READ|INV_WRITE);
 </sect2>
 
 <sect2 id="lo-write">
-<title>Writing Data to a Large Object</title>
+<title>向大对象写入数据</title>
 
 <para>
      <indexterm><primary>lo_write</primary></indexterm>
-     The function
+     函数
 <synopsis>
 int lo_write(PGconn *conn, int fd, const char *buf, size_t len);
 </synopsis>
-     writes <parameter>len</parameter> bytes from <parameter>buf</parameter>
-     (which must be of size <parameter>len</parameter>) to large object
-     descriptor <parameter>fd</parameter>.  The <parameter>fd</parameter> argument must
-     have been returned by a previous <function>lo_open</function>.  The
-     number of bytes actually written is returned (in the current
-     implementation, this will always equal <parameter>len</parameter> unless
-     there is an error).  In the event of an error, the return value is -1.
+     将 <parameter>len</parameter> 字节从 <parameter>buf</parameter>
+     （其大小必须为 <parameter>len</parameter>）写入大对象描述符 <parameter>fd</parameter>。<parameter>fd</parameter> 参数必须是之前由 <function>lo_open</function> 返回的。返回实际写入的字节数（在当前实现中，除非发生错误，否则该值总是等于 <parameter>len</parameter>）。如果发生错误，返回值为 -1。
 </para>
 
 <para>
-     Although the <parameter>len</parameter> parameter is declared as
-     <type>size_t</type>, this function will reject length values larger than
-     <literal>INT_MAX</literal>.  In practice, it's best to transfer data in chunks
-     of at most a few megabytes anyway.
+     尽管 <parameter>len</parameter> 参数声明为
+     <type>size_t</type>，但此函数会拒绝大于
+     <literal>INT_MAX</literal> 的长度值。在实践中，最好还是以最多几兆字节的块为单位传输数据。
 </para>
 </sect2>
 
 <sect2 id="lo-read">
-<title>Reading Data from a Large Object</title>
+<title>从大对象读取数据</title>
 
 <para>
      <indexterm><primary>lo_read</primary></indexterm>
-     The function
+     函数
 <synopsis>
 int lo_read(PGconn *conn, int fd, char *buf, size_t len);
 </synopsis>
-     reads up to <parameter>len</parameter> bytes from large object descriptor
-     <parameter>fd</parameter> into <parameter>buf</parameter> (which must be
-     of size <parameter>len</parameter>).  The <parameter>fd</parameter>
-     argument must have been returned by a previous
-     <function>lo_open</function>.  The number of bytes actually read is
-     returned; this will be less than <parameter>len</parameter> if the end of
-     the large object is reached first.  In the event of an error, the return
-     value is -1.
+     从大对象描述符 <parameter>fd</parameter> 中最多读取 <parameter>len</parameter> 字节到 <parameter>buf</parameter>（其大小必须为 <parameter>len</parameter>）。<parameter>fd</parameter>
+     参数必须是之前由
+     <function>lo_open</function> 返回的。返回实际读取的字节数；如果先到达大对象的末尾，则该值会小于 <parameter>len</parameter>。如果发生错误，返回值为 -1。
 </para>
 
 <para>
-     Although the <parameter>len</parameter> parameter is declared as
-     <type>size_t</type>, this function will reject length values larger than
-     <literal>INT_MAX</literal>.  In practice, it's best to transfer data in chunks
-     of at most a few megabytes anyway.
+     尽管 <parameter>len</parameter> 参数声明为
+     <type>size_t</type>，但此函数会拒绝大于
+     <literal>INT_MAX</literal> 的长度值。在实践中，最好还是以最多几兆字节的块为单位传输数据。
 </para>
 </sect2>
 
 <sect2 id="lo-seek">
-<title>Seeking in a Large Object</title>
+<title>在大对象中定位</title>
 
 <para>
      <indexterm><primary>lo_lseek</primary></indexterm>
-     To change the current read or write location associated with a
-     large object descriptor, call
+     要更改与大对象描述符关联的当前读或写位置，请调用
 <synopsis>
 int lo_lseek(PGconn *conn, int fd, int offset, int whence);
 </synopsis>
-     This function moves the
-     current location pointer for the large object descriptor identified by
-     <parameter>fd</parameter> to the new location specified by
-     <parameter>offset</parameter>.  The valid values for <parameter>whence</parameter>
-     are <symbol>SEEK_SET</symbol> (seek from object start),
-     <symbol>SEEK_CUR</symbol> (seek from current position), and
-     <symbol>SEEK_END</symbol> (seek from object end).  The return value is
-     the new location pointer, or -1 on error.
+     此函数把由
+     <parameter>fd</parameter> 标识的大对象描述符的当前位置指针移动到
+     <parameter>offset</parameter> 指定的新位置。<parameter>whence</parameter>
+     的有效值为 <symbol>SEEK_SET</symbol>（从对象起始处定位）、
+     <symbol>SEEK_CUR</symbol>（从当前位置定位）以及
+     <symbol>SEEK_END</symbol>（从对象末尾定位）。返回值是
+     新的位置指针，出错时返回 -1。
 </para>
 
 <para>
      <indexterm><primary>lo_lseek64</primary></indexterm>
-     When dealing with large objects that might exceed 2GB in size,
-     instead use
+     当处理可能超过 2GB 大小的大对象时，
+     应改用
 <synopsis>
 int64_t lo_lseek64(PGconn *conn, int fd, int64_t offset, int whence);
 </synopsis>
-     This function has the same behavior
-     as <function>lo_lseek</function>, but it can accept an
-     <parameter>offset</parameter> larger than 2GB and/or deliver a result larger
-     than 2GB.
-     Note that <function>lo_lseek</function> will fail if the new location
-     pointer would be greater than 2GB.
+     此函数的行为与
+     <function>lo_lseek</function> 相同，但它可以接受大于 2GB 的
+     <parameter>offset</parameter> 和/或返回大于 2GB 的结果。
+     请注意，如果新的位置指针会大于 2GB，<function>lo_lseek</function> 将失败。
 </para>
 
 <para>
-     <function>lo_lseek64</function> is new as of <productname>PostgreSQL</productname>
-     9.3.  If this function is run against an older server version, it will
-     fail and return -1.
+     <function>lo_lseek64</function> 是 <productname>PostgreSQL</productname>
+     9.3 中新增的。如果此函数在较旧版本的服务器上运行，它将
+     失败并返回 -1。
 </para>
 
 </sect2>
 
 <sect2 id="lo-tell">
-<title>Obtaining the Seek Position of a Large Object</title>
+<title>获取大对象的定位位置</title>
 
 <para>
      <indexterm><primary>lo_tell</primary></indexterm>
-     To obtain the current read or write location of a large object descriptor,
-     call
+     要获取大对象描述符的当前读或写位置，
+     请调用
 <synopsis>
 int lo_tell(PGconn *conn, int fd);
 </synopsis>
-     If there is an error, the return value is -1.
+     如果出错，返回值为 -1。
 </para>
 
 <para>
      <indexterm><primary>lo_tell64</primary></indexterm>
-     When dealing with large objects that might exceed 2GB in size,
-     instead use
+     当处理可能超过 2GB 大小的大对象时，
+     应改用
 <synopsis>
 int64_t lo_tell64(PGconn *conn, int fd);
 </synopsis>
-     This function has the same behavior
-     as <function>lo_tell</function>, but it can deliver a result larger
-     than 2GB.
-     Note that <function>lo_tell</function> will fail if the current
-     read/write location is greater than 2GB.
+     此函数的行为与
+     <function>lo_tell</function> 相同，但它可以返回大于
+     2GB 的结果。
+     请注意，如果当前读/写位置大于 2GB，<function>lo_tell</function> 将失败。
 </para>
 
 <para>
-     <function>lo_tell64</function> is new as of <productname>PostgreSQL</productname>
-     9.3.  If this function is run against an older server version, it will
-     fail and return -1.
+     <function>lo_tell64</function> 是 <productname>PostgreSQL</productname> 9.3 版新增的。如果针对较旧的服务器版本运行此函数，它将失败并返回 -1。
 </para>
 </sect2>
 
 <sect2 id="lo-truncate">
-<title>Truncating a Large Object</title>
+<title>截断大对象</title>
 
 <para>
      <indexterm><primary>lo_truncate</primary></indexterm>
-     To truncate a large object to a given length, call
+     要将大对象截断到给定长度，请调用
 <synopsis>
 int lo_truncate(PGconn *conn, int fd, size_t len);
 </synopsis>
-     This function truncates the large object
-     descriptor <parameter>fd</parameter> to length <parameter>len</parameter>.  The
-     <parameter>fd</parameter> argument must have been returned by a
-     previous <function>lo_open</function>.  If <parameter>len</parameter> is
-     greater than the large object's current length, the large object
-     is extended to the specified length with null bytes ('\0').
-     On success, <function>lo_truncate</function> returns
-     zero.  On error, the return value is -1.
+     此函数将大对象描述符 <parameter>fd</parameter> 截断到长度 <parameter>len</parameter>。
+     <parameter>fd</parameter> 参数必须由之前的 <function>lo_open</function> 返回。如果 <parameter>len</parameter>
+     大于大对象的当前长度，则大对象将用空字节（'\0'）扩展到指定长度。
+     成功时，<function>lo_truncate</function> 返回零。出错时，返回值为 -1。
 </para>
 
 <para>
-     The read/write location associated with the descriptor
-     <parameter>fd</parameter> is not changed.
+     与描述符 <parameter>fd</parameter> 关联的读/写位置不会改变。
 </para>
 
 <para>
-     Although the <parameter>len</parameter> parameter is declared as
-     <type>size_t</type>, <function>lo_truncate</function> will reject length
-     values larger than <literal>INT_MAX</literal>.
+     尽管 <parameter>len</parameter> 参数声明为 <type>size_t</type>，但 <function>lo_truncate</function> 会拒绝大于 <literal>INT_MAX</literal> 的长度值。
 </para>
 
 <para>
      <indexterm><primary>lo_truncate64</primary></indexterm>
-     When dealing with large objects that might exceed 2GB in size,
-     instead use
+     在处理可能超过 2GB 大小的大对象时，请改用
 <synopsis>
 int lo_truncate64(PGconn *conn, int fd, int64_t len);
 </synopsis>
-     This function has the same
-     behavior as <function>lo_truncate</function>, but it can accept a
-     <parameter>len</parameter> value exceeding 2GB.
+     此函数的行为与 <function>lo_truncate</function> 相同，但它可以接受超过 2GB 的 <parameter>len</parameter> 值。
 </para>
 
 <para>
-     <function>lo_truncate</function> is new as of <productname>PostgreSQL</productname>
-     8.3; if this function is run against an older server version, it will
-     fail and return -1.
+     <function>lo_truncate</function> 是 <productname>PostgreSQL</productname> 8.3 版新增的；如果此函数在较旧版本的服务器上运行，它将失败并返回 -1。
 </para>
 
 <para>
-     <function>lo_truncate64</function> is new as of <productname>PostgreSQL</productname>
-     9.3; if this function is run against an older server version, it will
-     fail and return -1.
+     <function>lo_truncate64</function> 是 <productname>PostgreSQL</productname> 9.3 版新增的；如果此函数在较旧版本的服务器上运行，它将失败并返回 -1。
 </para>
 </sect2>
 
 <sect2 id="lo-close">
-<title>Closing a Large Object Descriptor</title>
+<title>关闭大对象描述符</title>
 
 <para>
      <indexterm><primary>lo_close</primary></indexterm>
-     A large object descriptor can be closed by calling
-<synopsis>
+     可以通过调用 <synopsis>
 int lo_close(PGconn *conn, int fd);
-</synopsis>
-     where <parameter>fd</parameter> is a
-     large object descriptor returned by <function>lo_open</function>.
-     On success, <function>lo_close</function> returns zero.  On
-     error, the return value is -1.
+</synopsis> 来关闭大对象描述符，
+     其中 <parameter>fd</parameter> 是由 <function>lo_open</function> 返回的大对象描述符。
+     成功时，<function>lo_close</function> 返回零。出错时，返回值为 -1。
 </para>
 
 <para>
-     Any large  object  descriptors that remain open at the end of a
-     transaction will be closed automatically.
+     在事务结束时仍然保持打开的任何大对象描述符都将被自动关闭。
 </para>
 </sect2>
 
    <sect2 id="lo-unlink">
-    <title>Removing a Large Object</title>
+    <title>删除大对象</title>
 
     <para>
      <indexterm><primary>lo_unlink</primary></indexterm>
-     To remove a large object from the database, call
+     要从数据库中删除一个大对象，请调用
 <synopsis>
 int lo_unlink(PGconn *conn, Oid lobjId);
 </synopsis>
-     The <parameter>lobjId</parameter> argument specifies the OID of the
-     large object to remove.  Returns 1 if successful, -1 on failure.
+     <parameter>lobjId</parameter> 参数指定要删除的大对象的 OID。成功时返回 1，失败时返回 -1。
     </para>
    </sect2>
 
