@@ -982,9 +982,9 @@ CALL transaction_test1();
  </sect1>
 
  <sect1 id="plpython-util">
-  <title>Utility Functions</title>
+  <title>实用函数</title>
   <para>
-   The <literal>plpy</literal> module also provides the functions
+   <literal>plpy</literal> 模块还提供了以下函数：
    <simplelist>
     <member><literal>plpy.debug(<replaceable>msg, **kwargs</replaceable>)</literal></member>
     <member><literal>plpy.log(<replaceable>msg, **kwargs</replaceable>)</literal></member>
@@ -995,31 +995,22 @@ CALL transaction_test1();
     <member><literal>plpy.fatal(<replaceable>msg, **kwargs</replaceable>)</literal></member>
    </simplelist>
    <indexterm><primary>elog</primary><secondary>in PL/Python</secondary></indexterm>
-   <function>plpy.error</function> and <function>plpy.fatal</function>
-   actually raise a Python exception which, if uncaught, propagates out to
-   the calling query, causing the current transaction or subtransaction to
-   be aborted.  <literal>raise plpy.Error(<replaceable>msg</replaceable>)</literal> and
-   <literal>raise plpy.Fatal(<replaceable>msg</replaceable>)</literal> are
-   equivalent to calling <literal>plpy.error(<replaceable>msg</replaceable>)</literal> and
-   <literal>plpy.fatal(<replaceable>msg</replaceable>)</literal>, respectively but
-   the <literal>raise</literal> form does not allow passing keyword arguments.
-   The other functions only generate messages of different priority levels.
-   Whether messages of a particular priority are reported to the client,
-   written to the server log, or both is controlled by the
-   <xref linkend="guc-log-min-messages"/> and
-   <xref linkend="guc-client-min-messages"/> configuration
-   variables. See <xref linkend="runtime-config"/> for more information.
+   <function>plpy.error</function> 和 <function>plpy.fatal</function>
+   实际上会抛出一个 Python 异常，如果该异常未被捕获，就会传播到调用它的查询，导致当前事务或子事务被中止。<literal>raise plpy.Error(<replaceable>msg</replaceable>)</literal> 和
+   <literal>raise plpy.Fatal(<replaceable>msg</replaceable>)</literal> 分别等价于调用 <literal>plpy.error(<replaceable>msg</replaceable>)</literal> 和
+   <literal>plpy.fatal(<replaceable>msg</replaceable>)</literal>，但 <literal>raise</literal> 形式不允许传递关键字参数。
+   其他函数只会生成不同优先级级别的消息。
+   特定优先级的消息是报告给客户端、写入服务器日志，还是两者都做，由
+   <xref linkend="guc-log-min-messages"/> 和
+   <xref linkend="guc-client-min-messages"/> 配置变量控制。更多信息请参见 <xref linkend="runtime-config"/>。
   </para>
 
   <para>
-   The <replaceable>msg</replaceable> argument is given as a positional argument.  For
-   backward compatibility, more than one positional argument can be given. In
-   that case, the string representation of the tuple of positional arguments
-   becomes the message reported to the client.
+   <replaceable>msg</replaceable> 参数以位置参数的形式给出。为了向后兼容，可以给出多个位置参数。在这种情况下，位置参数元组的字符串表示形式将成为报告给客户端的消息。
   </para>
 
   <para>
-   The following keyword-only arguments are accepted:
+   接受以下仅限关键字的参数：
    <simplelist>
     <member><literal>detail</literal></member>
     <member><literal>hint</literal></member>
@@ -1030,8 +1021,7 @@ CALL transaction_test1();
     <member><literal>datatype_name</literal></member>
     <member><literal>constraint_name</literal></member>
    </simplelist>
-   The string representation of the objects passed as keyword-only arguments
-   is used to enrich the messages reported to the client. For example:
+  作为仅限关键字参数传入的对象的字符串表示形式用于丰富报告给客户端的消息。例如：
 
 <programlisting>
 CREATE FUNCTION raise_custom_exception() RETURNS void AS $$
@@ -1052,14 +1042,14 @@ PL/Python function "raise_custom_exception"
   </para>
 
   <para>
-   Another set of utility functions are
-   <literal>plpy.quote_literal(<replaceable>string</replaceable>)</literal>,
-   <literal>plpy.quote_nullable(<replaceable>string</replaceable>)</literal>, and
-   <literal>plpy.quote_ident(<replaceable>string</replaceable>)</literal>.  They
-   are equivalent to the built-in quoting functions described in <xref
-   linkend="functions-string"/>.  They are useful when constructing
-   ad-hoc queries.  A PL/Python equivalent of dynamic SQL from <xref
-   linkend="plpgsql-quote-literal-example"/> would be:
+   另一组实用函数是
+   <literal>plpy.quote_literal(<replaceable>string</replaceable>)</literal>、
+   <literal>plpy.quote_nullable(<replaceable>string</replaceable>)</literal> 和
+   <literal>plpy.quote_ident(<replaceable>string</replaceable>)</literal>。它们
+   等价于 <xref
+   linkend="functions-string"/> 中描述的内置引用函数。它们在构造
+   临时查询时很有用。<xref
+   linkend="plpgsql-quote-literal-example"/> 中动态 SQL 的 PL/Python 等价写法如下：
 <programlisting>
 plpy.execute("UPDATE tbl SET %s = %s WHERE key = %s" % (
     plpy.quote_ident(colname),
