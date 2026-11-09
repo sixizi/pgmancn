@@ -213,31 +213,25 @@ postgres=# select * from pg_logical_slot_get_changes('regression_slot', NULL, NU
 </sect1>
 
   <sect1 id="logicaldecoding-explanation">
-   <title>Logical Decoding Concepts</title>
+   <title>逻辑解码概念</title>
    <sect2 id="logicaldecoding-explanation-log-dec">
-    <title>Logical Decoding</title>
+    <title>逻辑解码</title>
 
     <indexterm>
      <primary>Logical Decoding</primary>
     </indexterm>
 
     <para>
-     Logical decoding is the process of extracting all persistent changes
-     to a database's tables into a coherent, easy to understand format which
-     can be interpreted without detailed knowledge of the database's internal
-     state.
+     逻辑解码是指把对数据库表的所有持久性更改提取为一种连贯、易于理解的格式的过程，这种格式无需详细了解数据库的内部状态即可解释。
     </para>
 
     <para>
-     In <productname>PostgreSQL</productname>, logical decoding is implemented
-     by decoding the contents of the <link linkend="wal">write-ahead
-     log</link>, which describe changes on a storage level, into an
-     application-specific form such as a stream of tuples or SQL statements.
+     在 <productname>PostgreSQL</productname> 中，逻辑解码的实现方式是将<link linkend="wal">预写式日志</link>的内容（其描述存储层面的更改）解码为特定于应用的形式，例如元组流或 SQL 语句流。
     </para>
    </sect2>
 
    <sect2 id="logicaldecoding-replication-slots">
-    <title>Replication Slots</title>
+    <title>复制槽</title>
 
     <indexterm>
      <primary>replication slot</primary>
@@ -245,242 +239,142 @@ postgres=# select * from pg_logical_slot_get_changes('regression_slot', NULL, NU
     </indexterm>
 
     <para>
-     In the context of logical replication, a slot represents a stream of
-     changes that can be replayed to a client in the order they were made on
-     the origin server. Each slot streams a sequence of changes from a single
-     database.
+     在逻辑复制的语境中，槽表示一个更改流，可以按照这些更改在源服务器上发生的顺序将其重放到客户端。每个槽都从单个数据库流式传输一系列更改。
     </para>
 
     <note>
-     <para><productname>PostgreSQL</productname> also has streaming replication slots
-     (see <xref linkend="streaming-replication"/>), but they are used somewhat
-     differently there.
+     <para><productname>PostgreSQL</productname> 也有流复制槽（见 <xref linkend="streaming-replication"/>），但它们在那里的用法略有不同。
      </para>
     </note>
 
     <para>
-     A replication slot has an identifier that is unique across all databases
-     in a <productname>PostgreSQL</productname> cluster. Slots persist
-     independently of the connection using them and are crash-safe.
+     复制槽有一个标识符，该标识符在 <productname>PostgreSQL</productname> 集簇中的所有数据库之间是唯一的。槽独立于使用它们的连接而持久存在，并且是崩溃安全的。
     </para>
 
     <para>
-     A logical slot will emit each change just once in normal operation.
-     The current position of each slot is persisted only at checkpoint, so in
-     the case of a crash the slot might return to an earlier LSN, which will
-     then cause recent changes to be sent again when the server restarts.
-     Logical decoding clients are responsible for avoiding ill effects from
-     handling the same message more than once.  Clients may wish to record
-     the last LSN they saw when decoding and skip over any repeated data or
-     (when using the replication protocol) request that decoding start from
-     that LSN rather than letting the server determine the start point.
-     The Replication Progress Tracking feature is designed for this purpose,
-     refer to <link linkend="replication-origins">replication origins</link>.
+     在正常操作中，逻辑槽会将每个更改只发出一次。每个槽的当前位置仅在检查点时才被持久化，因此发生崩溃时，槽可能会回到较早的 LSN，这会导致服务器重启后重新发送最近的更改。逻辑解码客户端有责任避免因多次处理同一条消息而产生不良影响。客户端可能希望记录它们在解码时看到的最后一个 LSN，并跳过任何重复数据，或者（在使用复制协议时）请求从该 LSN 开始解码，而不是让服务器决定起始点。复制进度跟踪功能正是为此目的而设计的，请参阅 <link linkend="replication-origins">复制源</link>。
     </para>
 
     <para>
-     Multiple independent slots may exist for a single database. Each slot has
-     its own state, allowing different consumers to receive changes from
-     different points in the database change stream. For most applications, a
-     separate slot will be required for each consumer.
+     单个数据库可以存在多个独立的槽。每个槽都有自己的状态，允许不同的消费者从数据库更改流中的不同位置接收更改。对于大多数应用来说，每个消费者都需要一个单独的槽。
     </para>
 
     <para>
-     A logical replication slot knows nothing about the state of the
-     receiver(s).  It's even possible to have multiple different receivers using
-     the same slot at different times; they'll just get the changes following
-     on from when the last receiver stopped consuming them. Only one receiver
-     may consume changes from a slot at any given time.
+     逻辑复制槽对接收方的状态一无所知。甚至可以让多个不同的接收方在不同时间使用同一个槽；它们只会获得自上一个接收方停止消费之后发生的更改。在任何给定时间，只有一个接收方可以从一个槽消费更改。
     </para>
 
     <para>
-     A logical replication slot can also be created on a hot standby. To prevent
-     <command>VACUUM</command> from removing required rows from the system
-     catalogs, <varname>hot_standby_feedback</varname> should be set on the
-     standby. In spite of that, if any required rows get removed, the slot gets
-     invalidated. It's highly recommended to use a physical slot between the
-     primary and the standby. Otherwise, <varname>hot_standby_feedback</varname>
-     will work but only while the connection is alive (for example a node
-     restart would break it). Then, the primary may delete system catalog rows
-     that could be needed by the logical decoding on the standby (as it does
-     not know about the <literal>catalog_xmin</literal> on the standby).
-     Existing logical slots on standby also get invalidated if
-     <varname>wal_level</varname> on the primary is reduced to less than
-     <literal>logical</literal>.
-     This is done as soon as the standby detects such a change in the WAL stream.
-     It means that, for walsenders that are lagging (if any), some WAL records up
-     to the <varname>wal_level</varname> parameter change on the primary won't be
-     decoded.
+     逻辑复制槽也可以在热备库上创建。为了防止 <command>VACUUM</command> 从系统目录中移除所需行，应在备库上设置 <varname>hot_standby_feedback</varname>。尽管如此，如果任何所需行被移除，该槽就会失效。强烈建议在主库和备库之间使用物理槽。否则，<varname>hot_standby_feedback</varname> 可以工作，但仅在连接存活期间有效（例如节点重启会中断它）。然后，主库可能删除备库上逻辑解码可能需要的系统目录行（因为它不知道备库上的 <literal>catalog_xmin</literal>）。如果主库上的 <varname>wal_level</varname> 被降低到小于 <literal>logical</literal>，备库上现有的逻辑槽也会失效。一旦备库在 WAL 流中检测到此类更改，就会立即执行此操作。这意味着，对于滞后的 walsender（如果有），主库上直到 <varname>wal_level</varname> 参数更改之前的一些 WAL 记录将不会被解码。
     </para>
 
     <para>
-     Creation of a logical slot requires information about all the currently
-     running transactions. On the primary, this information is available
-     directly, but on a standby, this information has to be obtained from
-     primary. Thus, slot creation may need to wait for some activity to happen
-     on the primary. If the primary is idle, creating a logical slot on
-     standby may take noticeable time. This can be sped up by calling the
-     <function>pg_log_standby_snapshot</function> function on the primary.
+     创建逻辑槽需要有关所有当前正在运行的事务的信息。在主库上，此信息可直接获得，但在备库上，此信息必须从主库获取。因此，槽创建可能需要等待主库上发生某些活动。如果主库空闲，则在备库上创建逻辑槽可能需要相当长的时间。可以通过在主库上调用 <function>pg_log_standby_snapshot</function> 函数来加速。
     </para>
 
     <caution>
      <para>
-      Replication slots persist across crashes and know nothing about the state
-      of their consumer(s). They will prevent removal of required resources
-      even when there is no connection using them. This consumes storage
-      because neither required WAL nor required rows from the system catalogs
-      can be removed by <command>VACUUM</command> as long as they are required by a replication
-      slot.  In extreme cases this could cause the database to shut down to prevent
-      transaction ID wraparound (see <xref linkend="vacuum-for-wraparound"/>).
-      So if a slot is no longer required it should be dropped.
+      复制槽在崩溃后仍然存在，并且对其使用者的状态一无所知。即使没有连接使用它们，它们也会阻止移除所需资源。这会消耗存储空间，因为只要复制槽需要，<command>VACUUM</command> 就无法移除所需的 WAL 或系统目录中的所需行。在极端情况下，这可能导致数据库关闭以防止事务 ID 回卷（参见 <xref linkend="vacuum-for-wraparound"/>）。因此，如果不再需要某个槽，则应将其删除。
      </para>
     </caution>
 
    </sect2>
 
    <sect2 id="logicaldecoding-replication-slots-synchronization">
-    <title>Replication Slot Synchronization</title>
+    <title>复制槽同步</title>
     <para>
-     The logical replication slots on the primary can be synchronized to
-     the hot standby by using the <literal>failover</literal> parameter of
-     <link linkend="pg-create-logical-replication-slot">
-     <function>pg_create_logical_replication_slot</function></link>, or by
-     using the <link linkend="sql-createsubscription-params-with-failover">
-     <literal>failover</literal></link> option of
-     <command>CREATE SUBSCRIPTION</command> during slot creation.
-     Additionally, enabling <link linkend="guc-sync-replication-slots">
-     <varname>sync_replication_slots</varname></link> on the standby
-     is required. By enabling <link linkend="guc-sync-replication-slots">
-     <varname>sync_replication_slots</varname></link>
-     on the standby, the failover slots can be synchronized periodically in
-     the slotsync worker. For the synchronization to work, it is mandatory to
-     have a physical replication slot between the primary and the standby (i.e.,
-     <link linkend="guc-primary-slot-name"><varname>primary_slot_name</varname></link>
-     should be configured on the standby), and
-     <link linkend="guc-hot-standby-feedback"><varname>hot_standby_feedback</varname></link>
-     must be enabled on the standby. It is also necessary to specify a valid
-     <literal>dbname</literal> in the
-     <link linkend="guc-primary-conninfo"><varname>primary_conninfo</varname></link>.
-     It's highly recommended that the said physical replication slot is named in
-     <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link>
-     list on the primary, to prevent the subscriber from consuming changes
-     faster than the hot standby. Even when correctly configured, some latency
-     is expected when sending changes to logical subscribers due to the waiting
-     on slots named in
-     <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link>.
-     When <varname>synchronized_standby_slots</varname> is utilized, the
-     primary server will not completely shut down until the corresponding
-     standbys, associated with the physical replication slots specified
-     in <varname>synchronized_standby_slots</varname>, have confirmed
-     receiving the WAL up to the latest flushed position on the primary server.
+     主库上的逻辑复制槽可以通过使用 <link linkend="pg-create-logical-replication-slot">
+     <function>pg_create_logical_replication_slot</function></link> 的 <literal>failover</literal> 参数，或者在创建槽时使用 <command>CREATE SUBSCRIPTION</command> 的 <link linkend="sql-createsubscription-params-with-failover">
+     <literal>failover</literal></link> 选项，同步到热备库。
+     此外，还需要在备库上启用 <link linkend="guc-sync-replication-slots">
+     <varname>sync_replication_slots</varname></link>。通过在备库上启用 <link linkend="guc-sync-replication-slots">
+     <varname>sync_replication_slots</varname></link>，
+     故障转移槽可以在 slotsync 工作进程中定期同步。要使同步正常工作，主库和备库之间必须有一个物理复制槽（即
+     应在备库上配置 <link linkend="guc-primary-slot-name"><varname>primary_slot_name</varname></link>），并且
+     必须在备库上启用
+     <link linkend="guc-hot-standby-feedback"><varname>hot_standby_feedback</varname></link>。
+     还需要在
+     <link linkend="guc-primary-conninfo"><varname>primary_conninfo</varname></link> 中指定一个有效的
+     <literal>dbname</literal>。
+     强烈建议在主库的
+     <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link> 列表中命名上述物理复制槽，
+     以防止订阅者比热备库更快地消费变更。即使配置正确，由于需要等待
+     <link linkend="guc-synchronized-standby-slots"><varname>synchronized_standby_slots</varname></link> 中命名的槽，
+     向逻辑订阅者发送变更时仍会出现一些延迟。
+     当使用 <varname>synchronized_standby_slots</varname> 时，
+     主服务器不会完全关闭，直到与 <varname>synchronized_standby_slots</varname> 中指定的物理复制槽相关联的相应备库
+     确认已接收到截至主服务器最新刷写位置的 WAL。
     </para>
 
     <note>
      <para>
-      While enabling <link linkend="guc-sync-replication-slots">
-      <varname>sync_replication_slots</varname></link> allows for automatic
-      periodic synchronization of failover slots, they can also be manually
-      synchronized using the <link linkend="pg-sync-replication-slots">
-      <function>pg_sync_replication_slots</function></link> function on the standby.
-      However, this function is primarily intended for testing and debugging and
-      should be used with caution. Unlike automatic synchronization, it does not
-      include cyclic retries, making it more prone to synchronization failures,
-      particularly during initial sync scenarios where the required WAL files
-      or catalog rows for the slot might have already been removed or are at risk
-      of being removed on the standby. In contrast, automatic synchronization
-      via <varname>sync_replication_slots</varname> provides continuous slot
-      updates, enabling seamless failover and supporting high availability.
-      Therefore, it is the recommended method for synchronizing slots.
+      虽然启用 <link linkend="guc-sync-replication-slots">
+      <varname>sync_replication_slots</varname></link> 可以自动定期同步故障转移槽，但也可以使用备机上的 <link linkend="pg-sync-replication-slots">
+      <function>pg_sync_replication_slots</function></link> 函数手动同步它们。
+      不过，该函数主要用于测试和调试，
+      应谨慎使用。与自动同步不同，它不包含
+      循环重试，因此更容易出现同步失败，
+      尤其是在初始同步场景中，此时该槽所需的 WAL 文件
+      或系统目录行可能已被移除，或者在备机上
+      存在被移除的风险。相比之下，通过 <varname>sync_replication_slots</varname> 进行的自动同步
+      会持续更新槽，从而实现无缝故障转移
+      并支持高可用性。
+      因此，它是同步槽的推荐方法。
      </para>
     </note>
 
     <para>
-     When slot synchronization is configured as recommended,
-     and the initial synchronization is performed either automatically or
-     manually via <function>pg_sync_replication_slots</function>, the standby
-     can persist the synchronized slot only if the following condition is met:
-     The logical replication slot on the primary must retain WALs and system
-     catalog rows that are still available on the standby. This ensures data
-     integrity and allows logical replication to continue smoothly after
-     promotion.
-     If the required WALs or catalog rows have already been purged from the
-     standby, the slot will not be persisted to avoid data loss. In such
-     cases, the following log message may appear:
+     当按照推荐方式配置了槽同步，
+     并且初始同步是通过自动方式或通过 <function>pg_sync_replication_slots</function> 手动执行时，
+     只有在满足以下条件时，备机才能持久化已同步的槽：
+     主库上的逻辑复制槽必须保留备机上仍然可用的
+     WAL 和系统目录行。这确保了数据
+     完整性，并使逻辑复制在提升后能够顺利继续。
+     如果所需的 WAL 或系统目录行已从备机上清除，
+     则不会持久化该槽，以避免数据丢失。在这种
+     情况下，可能会出现以下日志消息：
 <programlisting>
 LOG:  could not synchronize replication slot "failover_slot"
 DETAIL:  Synchronization could lead to data loss, because the remote slot needs WAL at LSN 0/3003F28 and catalog xmin 754, but the standby has LSN 0/3003F28 and catalog xmin 756.
 </programlisting>
-     If the logical replication slot is actively used by a consumer, no
-     manual intervention is needed; the slot will advance automatically,
-     and synchronization will resume in the next cycle. However, if no
-     consumer is configured, it is advisable to manually advance the slot
-     on the primary using <link linkend="pg-logical-slot-get-changes">
-     <function>pg_logical_slot_get_changes</function></link> or
+     如果该逻辑复制槽正被某个消费者积极使用，则无需
+     人工干预；该槽会自动推进，
+     同步将在下一个周期恢复。但是，如果没有配置
+     消费者，建议使用 <link linkend="pg-logical-slot-get-changes">
+     <function>pg_logical_slot_get_changes</function></link> 或
      <link linkend="pg-logical-slot-get-binary-changes">
-     <function>pg_logical_slot_get_binary_changes</function></link>,
-     allowing synchronization to proceed.
+     <function>pg_logical_slot_get_binary_changes</function></link> 在主库上手动推进该槽，
+     以便同步得以继续。
     </para>
 
     <para>
-     The ability to resume logical replication after failover depends upon the
-     <link linkend="view-pg-replication-slots">pg_replication_slots</link>.<structfield>synced</structfield>
-     value for the synchronized slots on the standby at the time of failover.
-     Only persistent slots that have attained synced state as true on the standby
-     before failover can be used for logical replication after failover.
-     Temporary synced slots cannot be used for logical decoding, therefore
-     logical replication for those slots cannot be resumed. For example, if the
-     synchronized slot could not become persistent on the standby due to a
-     disabled subscription, then the subscription cannot be resumed after
-     failover even when it is enabled.
+     故障转移后能否恢复逻辑复制，取决于故障转移时备机上已同步槽的 <link linkend="view-pg-replication-slots">pg_replication_slots</link>.<structfield>synced</structfield> 值。只有在故障转移之前已在备机上达到 synced 状态为 true 的持久槽，才能在故障转移后用于逻辑复制。临时同步槽不能用于逻辑解码，因此这些槽的逻辑复制无法恢复。例如，如果由于订阅被禁用而导致同步槽无法在备机上变为持久槽，那么即使该订阅被启用，故障转移后也无法恢复该订阅。
     </para>
 
     <para>
-     To resume logical replication after failover from the synced logical
-     slots, the subscription's 'conninfo' must be altered to point to the
-     new primary server. This is done using
-     <link linkend="sql-altersubscription-params-connection"><command>ALTER SUBSCRIPTION ... CONNECTION</command></link>.
-     It is recommended that subscriptions are first disabled before promoting
-     the standby and are re-enabled after altering the connection string.
+     要从已同步的逻辑槽在故障转移后恢复逻辑复制，必须修改订阅的 'conninfo' 使其指向新的主服务器。这通过 <link linkend="sql-altersubscription-params-connection"><command>ALTER SUBSCRIPTION ... CONNECTION</command></link> 完成。建议在提升备机之前先禁用订阅，并在修改连接字符串后重新启用它们。
     </para>
     <caution>
      <para>
-      There is a chance that the old primary is up again during the promotion
-      and if subscriptions are not disabled, the logical subscribers may
-      continue to receive data from the old primary server even after promotion
-      until the connection string is altered. This might result in data
-      inconsistency issues, preventing the logical subscribers from being
-      able to continue replication from the new primary server.
+      存在一种可能：在提升期间旧主服务器重新上线，如果订阅未被禁用，逻辑订阅者可能继续从旧主服务器接收数据，即使在提升之后也是如此，直到连接字符串被修改。这可能导致数据不一致问题，使逻辑订阅者无法继续从新的主服务器进行复制。
      </para>
     </caution>
    </sect2>
 
    <sect2 id="logicaldecoding-explanation-output-plugins">
-    <title>Output Plugins</title>
+    <title>输出插件</title>
     <para>
-     Output plugins transform the data from the write-ahead log's internal
-     representation into the format the consumer of a replication slot desires.
+     输出插件将预写式日志内部表示形式的数据转换为复制槽的使用者所期望的格式。
     </para>
    </sect2>
 
    <sect2 id="logicaldecoding-explanation-exported-snapshots">
-    <title>Exported Snapshots</title>
+    <title>导出的快照</title>
     <para>
-     When a new replication slot is created using the streaming replication
-     interface (see <xref linkend="protocol-replication-create-replication-slot"/>), a
-     snapshot is exported
-     (see <xref linkend="functions-snapshot-synchronization"/>), which will show
-     exactly the state of the database after which all changes will be
-     included in the change stream. This can be used to create a new replica by
-     using <link linkend="sql-set-transaction"><literal>SET TRANSACTION
-     SNAPSHOT</literal></link> to read the state of the database at the moment
-     the slot was created. This transaction can then be used to dump the
-     database's state at that point in time, which afterwards can be updated
-     using the slot's contents without losing any changes.
+     使用流复制接口创建新的复制槽时（见 <xref linkend="protocol-replication-create-replication-slot"/>），会导出一个快照（见 <xref linkend="functions-snapshot-synchronization"/>），该快照将准确显示数据库的状态，在此状态之后的所有更改都将包含在更改流中。这可以通过使用 <link linkend="sql-set-transaction"><literal>SET TRANSACTION
+     SNAPSHOT</literal></link> 读取创建槽那一刻的数据库状态来创建一个新的副本。然后可以使用该事务转储该时间点的数据库状态，之后可以使用槽的内容对其进行更新，而不会丢失任何更改。
     </para>
     <para>
-     Applications that do not require
-     snapshot export may suppress it with the <literal>SNAPSHOT 'nothing'</literal>
-     option.
+     不需要快照导出的应用程序可以使用 <literal>SNAPSHOT 'nothing'</literal> 选项抑制它。
     </para>
    </sect2>
   </sect1>
