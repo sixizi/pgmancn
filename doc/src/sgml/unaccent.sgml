@@ -1,59 +1,47 @@
 <!-- doc/src/sgml/unaccent.sgml -->
 
 <sect1 id="unaccent" xreflabel="unaccent">
- <title>unaccent &mdash; a text search dictionary which removes diacritics</title>
+ <title>unaccent &mdash; 一个移除变音符号的文本搜索字典</title>
 
  <indexterm zone="unaccent">
   <primary>unaccent</primary>
  </indexterm>
 
  <para>
-  <filename>unaccent</filename> is a text search dictionary that removes accents
-  (diacritic signs) from lexemes.
-  It's a filtering dictionary, which means its output is
-  always passed to the next dictionary (if any), unlike the normal
-  behavior of dictionaries.  This allows accent-insensitive processing
-  for full text search.
+  <filename>unaccent</filename> 是一个从词位中移除重音（变音符号）的文本搜索字典。
+  它是一个过滤字典，这意味着它的输出总是被传递给下一个字典（如果有的话），
+  这与字典的通常行为不同。这使得全文检索可以执行不区分重音的处理。
  </para>
 
  <para>
-  The current implementation of <filename>unaccent</filename> cannot be used as a
-  normalizing dictionary for the <filename>thesaurus</filename> dictionary.
+  <filename>unaccent</filename> 的当前实现不能用作 <filename>thesaurus</filename> 字典的规范化字典。
  </para>
 
  <para>
-  This module is considered <quote>trusted</quote>, that is, it can be
-  installed by non-superusers who have <literal>CREATE</literal> privilege
-  on the current database.
+  本模块被视为<quote>可信</quote>，也就是说，它可以由在当前数据库上
+  具有 <literal>CREATE</literal> 权限的非超级用户安装。
  </para>
 
  <sect2 id="unaccent-configuration">
-  <title>Configuration</title>
+  <title>配置</title>
 
   <para>
-   An <literal>unaccent</literal> dictionary accepts the following options:
+   <literal>unaccent</literal> 字典接受以下选项：
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     <literal>RULES</literal> is the base name of the file containing the list of
-     translation rules.  This file must be stored in
-     <filename>$SHAREDIR/tsearch_data/</filename> (where <literal>$SHAREDIR</literal> means
-     the <productname>PostgreSQL</productname> installation's shared-data directory).
-     Its name must end in <literal>.rules</literal> (which is not to be included in
-     the <literal>RULES</literal> parameter).
+     <literal>RULES</literal> 是包含转换规则列表的文件的基本名。该文件必须存储在 <filename>$SHAREDIR/tsearch_data/</filename> 中（其中 <literal>$SHAREDIR</literal> 表示 <productname>PostgreSQL</productname> 安装的共享数据目录）。其名称必须以 <literal>.rules</literal> 结尾（该后缀不应包含在 <literal>RULES</literal> 参数中）。
     </para>
    </listitem>
   </itemizedlist>
   <para>
-   The rules file has the following format:
+   规则文件具有以下格式：
   </para>
   <itemizedlist>
    <listitem>
     <para>
-     Each line represents one translation rule, consisting of a character with
-     accent followed by a character without accent.  The first is translated
-     into the second.  For example,
+     每一行代表一条转换规则，由一个带重音符号的字符后跟一个不带重音符号的字符组成。前者被转换为后者。例如，
 <programlisting>
 &Agrave;        A
 &Aacute;        A
@@ -63,33 +51,25 @@
 &Aring;        A
 &AElig;        AE
 </programlisting>
-     The two characters must be separated by whitespace, and any leading or
-     trailing whitespace on a line is ignored.
+     两个字符之间必须用空白分隔，行首和行尾的任何空白都会被忽略。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Alternatively, if only one character is given on a line, instances of
-     that character are deleted; this is useful in languages where accents
-     are represented by separate characters.
+     或者，如果一行中只给出一个字符，则该字符的所有实例都会被删除；这在用单独字符表示重音符号的语言中很有用。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Actually, each <quote>character</quote> can be any string not containing
-     whitespace, so <filename>unaccent</filename> dictionaries could be used for
-     other sorts of substring substitutions besides diacritic removal.
+     实际上，每个<quote>字符</quote>都可以是任何不含空白的字符串，因此 <filename>unaccent</filename> 词典除了用于去除变音符号外，还可用于其他类型的子串替换。
     </para>
    </listitem>
 
    <listitem>
     <para>
-     Some characters, like numeric symbols, may require whitespaces in their
-     translation rule. It is possible to use double quotes around the translated
-     characters in this case. A double quote needs to be escaped with a second
-     double quote when including one in the translated character. For example:
+     某些字符（如数字符号）在其转换规则中可能需要空白。在这种情况下，可以在被转换的字符两侧使用双引号。当被转换的字符中包含双引号时，需要用第二个双引号对其进行转义。例如：
 <programlisting>
 &frac14;      " 1/4"
 &frac12;      " 1/2"
@@ -102,47 +82,31 @@
 
    <listitem>
     <para>
-     As with other <productname>PostgreSQL</productname> text search configuration files,
-     the rules file must be stored in UTF-8 encoding.  The data is
-     automatically translated into the current database's encoding when
-     loaded.  Any lines containing untranslatable characters are silently
-     ignored, so that rules files can contain rules that are not applicable in
-     the current encoding.
+     与其他 <productname>PostgreSQL</productname> 文本检索配置文件一样，规则文件必须以 UTF-8 编码存储。数据在加载时会自动转换为当前数据库的编码。任何包含无法转换字符的行都会被静默忽略，因此规则文件可以包含在当前编码下不适用的规则。
     </para>
    </listitem>
   </itemizedlist>
 
   <para>
-   A more complete example, which is directly useful for most European
-   languages, can be found in <filename>unaccent.rules</filename>, which is installed
-   in <filename>$SHAREDIR/tsearch_data/</filename> when the <filename>unaccent</filename>
-   module is installed.  This rules file translates characters with accents
-   to the same characters without accents, and it also expands ligatures
-   into the equivalent series of simple characters (for example, &AElig; to
-   AE).
+   一个更完整的示例可以直接用于大多数欧洲语言，它位于 <filename>unaccent.rules</filename> 中，当安装 <filename>unaccent</filename> 模块时，该文件会被安装到 <filename>$SHAREDIR/tsearch_data/</filename>。这个规则文件把带重音的字符转换为不带重音的相同字符，并且还会把连字展开为等价的简单字符序列（例如，把 &AElig; 转换为 AE）。
   </para>
  </sect2>
 
  <sect2 id="unaccent-usage">
-  <title>Usage</title>
+  <title>用法</title>
 
   <para>
-   Installing the <literal>unaccent</literal> extension creates a text
-   search template <literal>unaccent</literal> and a dictionary <literal>unaccent</literal>
-   based on it.  The <literal>unaccent</literal> dictionary has the default
-   parameter setting <literal>RULES='unaccent'</literal>, which makes it immediately
-   usable with the standard <filename>unaccent.rules</filename> file.
-   If you wish, you can alter the parameter, for example
+   安装 <literal>unaccent</literal> 扩展会创建一个文本检索模板 <literal>unaccent</literal> 以及一个基于它的词典 <literal>unaccent</literal>。<literal>unaccent</literal> 词典的默认参数设置为 <literal>RULES='unaccent'</literal>，这使它可以直接配合标准的 <filename>unaccent.rules</filename> 文件使用。如果需要，您可以修改该参数，例如
 
 <programlisting>
 mydb=# ALTER TEXT SEARCH DICTIONARY unaccent (RULES='my_rules');
 </programlisting>
 
-   or create new dictionaries based on the template.
+   或者基于该模板创建新的词典。
   </para>
 
   <para>
-   To test the dictionary, you can try:
+   要测试该词典，可以尝试：
 <programlisting>
 mydb=# select ts_lexize('unaccent','H&ocirc;tel');
  ts_lexize
@@ -153,8 +117,7 @@ mydb=# select ts_lexize('unaccent','H&ocirc;tel');
   </para>
 
   <para>
-   Here is an example showing how to insert the
-   <filename>unaccent</filename> dictionary into a text search configuration:
+   下面是一个示例，展示如何将 <filename>unaccent</filename> 词典插入到文本检索配置中：
 <programlisting>
 mydb=# CREATE TEXT SEARCH CONFIGURATION fr ( COPY = french );
 mydb=# ALTER TEXT SEARCH CONFIGURATION fr
@@ -182,13 +145,11 @@ mydb=# select ts_headline('fr','H&ocirc;tel de la Mer',to_tsquery('fr','Hotels')
  </sect2>
 
  <sect2 id="unaccent-functions">
- <title>Functions</title>
+ <title>函数</title>
 
  <para>
-  The <function>unaccent()</function> function removes accents (diacritic signs) from
-  a given string.  Basically, it's a wrapper around
-  <filename>unaccent</filename>-type dictionaries, but it can be used outside normal
-  text search contexts.
+  <function>unaccent()</function> 函数从给定字符串中移除重音符号（变音符号）。基本上，它是对
+  <filename>unaccent</filename> 类型字典的包装，但可以在常规全文检索上下文之外使用。
  </para>
 
  <indexterm>
@@ -200,14 +161,12 @@ unaccent(<optional><replaceable class="parameter">dictionary</replaceable> <type
 </synopsis>
 
  <para>
-  If the <replaceable class="parameter">dictionary</replaceable> argument is
-  omitted, the text search dictionary named <literal>unaccent</literal> and
-  appearing in the same schema as the <function>unaccent()</function>
-  function itself is used.
+  如果省略 <replaceable class="parameter">dictionary</replaceable> 参数，则使用名为 <literal>unaccent</literal> 且与 <function>unaccent()</function>
+  函数本身位于同一模式中的文本检索字典。
  </para>
 
  <para>
-  For example:
+  例如：
 <programlisting>
 SELECT unaccent('unaccent', 'H&ocirc;tel');
 SELECT unaccent('H&ocirc;tel');
