@@ -379,7 +379,7 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 
 <sect1 id="storage-vm">
 
-<title>Visibility Map</title>
+<title>可见性映射</title>
 
 <indexterm>
  <primary>Visibility Map</primary>
@@ -387,38 +387,19 @@ TABLE</command> 或 <command>ALTER TABLE</command> 中设置 <literal>COMPRESSIO
 <indexterm><primary>VM</primary><see>Visibility Map</see></indexterm>
 
 <para>
-Each heap relation has a Visibility Map
-(VM) to keep track of which pages contain only tuples that are known to be
-visible to all active transactions; it also keeps track of which pages contain
-only frozen tuples.  It's stored
-alongside the main relation data in a separate relation fork, named after the
-filenode number of the relation, plus a <literal>_vm</literal> suffix. For example,
-if the filenode of a relation is 12345, the VM is stored in a file called
-<filename>12345_vm</filename>, in the same directory as the main relation file.
-Note that indexes do not have VMs.
+每个堆关系都有一个可见性映射（VM），用于跟踪哪些页面只包含已知对所有活动事务可见的元组；它还跟踪哪些页面只包含已冻结的元组。它存储在主关系数据旁边的一个单独的关系分支文件中，文件名以该关系的 filenode 编号加上 <literal>_vm</literal> 后缀命名。例如，如果一个关系的 filenode 是 12345，则 VM 存储在名为 <filename>12345_vm</filename> 的文件中，与主关系文件位于同一目录。请注意，索引没有 VM。
 </para>
 
 <para>
-The visibility map stores two bits per heap page.  The first bit, if set,
-indicates that the page is all-visible, or in other words that the page does
-not contain any tuples that need to be vacuumed.
-This information can also be used
-by <link linkend="indexes-index-only-scans"><firstterm>index-only
-scans</firstterm></link> to answer queries using only the index tuple.
-The second bit, if set, means that all tuples on the page have been frozen.
-That means that even an anti-wraparound vacuum need not revisit the page.
+可见性映射为每个堆页面存储两个位。第一个位如果被设置，表示该页面是全部可见的，换句话说，该页面不包含任何需要清理的元组。此信息还可以被 <link linkend="indexes-index-only-scans"><firstterm>仅索引扫描</firstterm></link> 用来仅使用索引元组回答查询。第二个位如果被设置，表示该页面上的所有元组都已被冻结。这意味着即使是防止回卷的清理也不需要重新访问该页面。
 </para>
 
 <para>
-The map is conservative in the sense that we make sure that whenever a bit is
-set, we know the condition is true, but if a bit is not set, it might or
-might not be true. Visibility map bits are only set by vacuum, but are
-cleared by any data-modifying operations on a page.
+该映射是保守的，也就是说，我们确保每当一个位被设置时，我们知道该条件为真，但如果一个位未被设置，它可能为真也可能不为真。可见性映射的位只由清理设置，但会被页面上任何修改数据的操作清除。
 </para>
 
 <para>
-The <xref linkend="pgvisibility"/> module can be used to examine the
-information stored in the visibility map.
+<xref linkend="pgvisibility"/> 模块可用于检查存储在可见性映射中的信息。
 </para>
 
 </sect1>
