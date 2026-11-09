@@ -1,56 +1,36 @@
 <!-- doc/src/sgml/pgvisibility.sgml -->
 
 <sect1 id="pgvisibility" xreflabel="pg_visibility">
- <title>pg_visibility &mdash; visibility map information and utilities</title>
+ <title>pg_visibility &mdash; 可见性映射信息与工具</title>
 
  <indexterm zone="pgvisibility">
   <primary>pg_visibility</primary>
  </indexterm>
 
  <para>
-  The <filename>pg_visibility</filename> module provides a means for examining the
-  visibility map (VM) and page-level visibility information of a table.
-  It also provides functions to check the integrity of a visibility map and to
-  force it to be rebuilt.
+  <filename>pg_visibility</filename> 模块提供了一种检查表的可见性映射（VM）和页级可见性信息的方法。
+  它还提供了用于检查可见性映射完整性以及强制重建可见性映射的函数。
  </para>
 
  <para>
-  Three different bits are used to store information about page-level
-  visibility.  The all-visible bit in the visibility map indicates that every
-  tuple in the corresponding page of the relation is visible to every current
-  and future transaction.  The all-frozen bit in the visibility map indicates
-  that every tuple in the page is frozen; that is, no future vacuum will need
-  to modify the page until such time as a tuple is inserted, updated, deleted,
-  or locked on that page.
-  The page header's <literal>PD_ALL_VISIBLE</literal> bit has the
-  same meaning as the all-visible bit in the visibility map, but is stored
-  within the data page itself rather than in a separate data structure.
-  These two bits will normally agree, but the page's all-visible bit can
-  sometimes be set while the visibility map bit is clear after a crash
-  recovery.  The reported values can also disagree because of a change that
-  occurs after <literal>pg_visibility</literal> examines the visibility map and
-  before it examines the data page.  Any event that causes data corruption
-  can also cause these bits to disagree.
+  有三个不同的位用于存储页级可见性信息。可见性映射中的 all-visible 位表示关系的相应页面中的每个元组对所有当前和未来事务都是可见的。可见性映射中的 all-frozen 位表示页面中的每个元组都已冻结；也就是说，在该页面上插入、更新、删除或锁定元组之前，未来的 vacuum 不需要修改该页面。
+  页头中的 <literal>PD_ALL_VISIBLE</literal> 位与可见性映射中的 all-visible 位含义相同，但它存储在数据页面自身中，而不是存储在单独的数据结构中。
+  这两个位通常应当一致，但在崩溃恢复之后，页面的 all-visible 位有时会被设置，而可见性映射位却是清除的。所报告的值也可能不一致，因为 <literal>pg_visibility</literal> 检查可见性映射之后、检查数据页面之前发生了更改。任何导致数据损坏的事件也可能导致这些位不一致。
  </para>
 
  <para>
-  Functions that display information about <literal>PD_ALL_VISIBLE</literal> bits
-  are much more costly than those that only consult the visibility map,
-  because they must read the relation's data blocks rather than only the
-  (much smaller) visibility map.  Functions that check the relation's
-  data blocks are similarly expensive.
+  显示 <literal>PD_ALL_VISIBLE</literal> 位信息的函数比仅查询可见性映射的函数开销大得多，因为它们必须读取关系的数据块，而不仅仅是读取（小得多的）可见性映射。检查关系数据块的函数同样开销很大。
  </para>
 
  <sect2 id="pgvisibility-funcs">
-  <title>Functions</title>
+  <title>函数</title>
 
   <variablelist>
    <varlistentry>
     <term><function>pg_visibility_map(relation regclass, blkno bigint, all_visible OUT boolean, all_frozen OUT boolean) returns record</function></term>
     <listitem>
      <para>
-      Returns the all-visible and all-frozen bits in the visibility map for
-      the given block of the given relation.
+      返回给定关系的给定块的可见性映射中的 all-visible 位和 all-frozen 位。
      </para>
     </listitem>
    </varlistentry>
@@ -59,9 +39,7 @@
     <term><function>pg_visibility(relation regclass, blkno bigint, all_visible OUT boolean, all_frozen OUT boolean, pd_all_visible OUT boolean) returns record</function></term>
     <listitem>
      <para>
-      Returns the all-visible and all-frozen bits in the visibility map for
-      the given block of the given relation, plus the
-      <literal>PD_ALL_VISIBLE</literal> bit of that block.
+      返回给定关系的给定块的可见性映射中的全可见位和全冻结位，以及该块的 <literal>PD_ALL_VISIBLE</literal> 位。
      </para>
     </listitem>
    </varlistentry>
@@ -70,8 +48,7 @@
     <term><function>pg_visibility_map(relation regclass, blkno OUT bigint, all_visible OUT boolean, all_frozen OUT boolean) returns setof record</function></term>
     <listitem>
      <para>
-      Returns the all-visible and all-frozen bits in the visibility map for
-      each block of the given relation.
+      返回给定关系每个块的可见性映射中的全可见位和全冻结位。
      </para>
     </listitem>
    </varlistentry>
@@ -81,9 +58,7 @@
 
     <listitem>
      <para>
-      Returns the all-visible and all-frozen bits in the visibility map for
-      each block of the given relation, plus the <literal>PD_ALL_VISIBLE</literal>
-      bit of each block.
+      返回给定关系每个块的可见性映射中的全可见位和全冻结位，以及每个块的 <literal>PD_ALL_VISIBLE</literal> 位。
      </para>
     </listitem>
    </varlistentry>
@@ -93,8 +68,7 @@
 
     <listitem>
      <para>
-      Returns the number of all-visible pages and the number of all-frozen
-      pages in the relation according to the visibility map.
+      根据可见性映射，返回关系中全可见页面的数量和全冻结页面的数量。
      </para>
     </listitem>
    </varlistentry>
@@ -104,9 +78,7 @@
 
     <listitem>
      <para>
-      Returns the TIDs of non-frozen tuples stored in pages marked all-frozen
-      in the visibility map.  If this function returns a non-empty set of
-      TIDs, the visibility map is corrupt.
+      返回存储在可见性映射中标记为全冻结的页面里的非冻结元组的 TID。如果此函数返回非空的 TID 集合，则可见性映射已损坏。
      </para>
     </listitem>
    </varlistentry>
@@ -116,9 +88,7 @@
 
     <listitem>
      <para>
-      Returns the TIDs of non-all-visible tuples stored in pages marked
-      all-visible in the visibility map.  If this function returns a non-empty
-      set of TIDs, the visibility map is corrupt.
+      返回存储在可见性映射中标记为全可见的页面里的非全可见元组的 TID。如果此函数返回非空的 TID 集合，则可见性映射已损坏。
      </para>
     </listitem>
    </varlistentry>
@@ -128,27 +98,19 @@
 
     <listitem>
      <para>
-      Truncates the visibility map for the given relation.  This function is
-      useful if you believe that the visibility map for the relation is
-      corrupt and wish to force rebuilding it.  The first <command>VACUUM</command>
-      executed on the given relation after this function is executed will scan
-      every page in the relation and rebuild the visibility map.  (Until that
-      is done, queries will treat the visibility map as containing all zeroes.)
+      截断给定关系的可见性映射。如果你认为该关系的可见性映射已损坏并希望强制重建它，此函数会很有用。在执行此函数之后，对给定关系执行的第一个 <command>VACUUM</command> 将扫描该关系中的每个页面并重建可见性映射。（在完成该操作之前，查询会将可见性映射视为全零。）
      </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <para>
-   By default, these functions are executable only by superusers and roles with privileges
-   of the <literal>pg_stat_scan_tables</literal> role, with the exception of
-   <function>pg_truncate_visibility_map(relation regclass)</function> which can only
-   be executed by superusers.
+   默认情况下，这些函数只能由超级用户和具有 <literal>pg_stat_scan_tables</literal> 角色权限的角色执行，例外是 <function>pg_truncate_visibility_map(relation regclass)</function>，它只能由超级用户执行。
   </para>
  </sect2>
 
  <sect2 id="pgvisibility-author">
-  <title>Author</title>
+  <title>作者</title>
 
   <para>
    Robert Haas <email>rhaas@postgresql.org</email>
