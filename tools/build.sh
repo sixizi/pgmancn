@@ -3,6 +3,10 @@
 set -e
 cd "$(dirname "$0")/../doc/src/sgml"
 export XML_CATALOG_FILES="${XML_CATALOG_FILES:-/opt/homebrew/etc/xml/catalog}"
+PG_VERSION="${PG_VERSION:-18.6}"
+PG_MAJORVERSION="${PG_MAJORVERSION:-${PG_VERSION%%.*}}"
+printf '<!ENTITY version "%s">\n<!ENTITY majorversion "%s">\n' \
+  "$PG_VERSION" "$PG_MAJORVERSION" > version.sgml
 VER=$(sed -n 's/.*version "\(.*\)".*/\1/p' version.sgml)
 xmllint --noent --valid --nonet --path . --output postgres-full.xml postgres.sgml
 rm -rf html && mkdir -p html
